@@ -46,6 +46,7 @@ jobs:
               scripts/check-iso-host.sh
               scripts/build-iso.sh
             '
+          sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/dist/iso"
 
       - name: Generate checksum and locate ISO
         id: artifact

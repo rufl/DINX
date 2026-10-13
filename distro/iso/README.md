@@ -34,6 +34,15 @@ Smoke-test an already-built ISO:
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
 
+The workflow also captures the QEMU VGA surface through its monitor. To request the same evidence locally:
+
+```bash
+DINX_QEMU_SCREENSHOT=dist/iso/dinx/graphical-screen.ppm \
+DINX_QEMU_SCREENSHOT_DELAY=45 \
+scripts/smoke-iso.sh dist/iso/<file>.iso
+```
+
+
 Check the graphical payload inside the root SquashFS image:
 
 ```bash
@@ -52,7 +61,7 @@ The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. 
 
 `iso-profiles/dinx/profile.yaml` now includes MangoWM, Scenefx, Noctalia, greetd and ReGreet. MangoWM and Scenefx are built from pinned upstream release archives in `distro/packages`; the workflow publishes them to a temporary local pacman repository before invoking `buildiso`. The profile's `root-overlay` supplies the greetd configuration, ReGreet actions, MangoWM sessions and the Noctalia autostart.
 
-The content check proves that the ISO contains the expected compositor, shell, greeter, session and dinit payloads. It does not replace an interactive guest check: graphical login, service health and recovery TTY remain release gates.
+The content check proves that the ISO contains the expected compositor, shell, greeter, session and dinit payloads. The workflow's PPM capture is visual evidence to inspect, not an automated interactive login check: graphical login, service health and recovery TTY remain release gates.
 
 ## Profile boundary
 

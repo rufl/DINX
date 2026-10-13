@@ -26,10 +26,15 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 6. constrói a ISO com `buildiso`;
 7. valida o payload SquashFS do root;
 8. gera checksum SHA-512;
-9. mantém QEMU executando por uma janela de boot configurável;
-10. publica a ISO e o checksum como artefato privado temporário do workflow.
+9. mantém QEMU executando por uma janela de boot configurável e captura sua superfície VGA;
+10. publica a ISO, o checksum e a captura PPM como artefato privado temporário do workflow.
 
 A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango e os arquivos de serviço dinit chegaram à ISO. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede ou áudio dentro do guest.
+
+A execução também captura a superfície VGA do QEMU como artefato PPM pelo monitor. Essa captura é evidência visual para inspeção; ela não prova automaticamente a interação com o greeter, a saúde da sessão do usuário, a rede ou o áudio.
+
+Para uma captura gráfica local, defina `DINX_QEMU_SCREENSHOT` e, opcionalmente, `DINX_QEMU_SCREENSHOT_DELAY` antes de executar `scripts/smoke-iso.sh`; o workflow usa atraso de 45 segundos e publica o PPM junto com o artefato da ISO.
+
 
 ## Execução bem-sucedida observada
 

@@ -26,12 +26,17 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 6. builds the ISO with `buildiso`;
 7. validates the root SquashFS payload;
 8. generates a SHA-512 checksum;
-9. keeps QEMU running for a configurable boot window;
-10. publishes the ISO and checksum as a temporary private workflow artifact.
+9. keeps QEMU running for a configurable boot window and captures its VGA surface;
+10. publishes the ISO, checksum and PPM capture as a temporary private workflow artifact.
 
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session and dinit service files reached the ISO. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
+The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
+
+For a local graphical capture, set `DINX_QEMU_SCREENSHOT` and optionally `DINX_QEMU_SCREENSHOT_DELAY` before running `scripts/smoke-iso.sh`; the workflow uses a 45-second delay and uploads the PPM with the ISO artifact.
+
 
 ## Observed successful run
+
 
 Run [38448333502](https://github.com/rufl/dinx-alpha/actions/runs/38448333502) on commit `8f5b99d` passed all workflow steps in 8m05s:
 

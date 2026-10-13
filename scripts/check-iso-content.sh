@@ -19,10 +19,10 @@ trap 'rm -rf "$tmp_dir"' EXIT
 
 xorriso -osirrox on \
   -indev "$iso_path" \
-  -extract /artix/x86_64/rootfs.sfs "$tmp_dir/rootfs.sfs" \
+  -extract /LiveOS/rootfs.img "$tmp_dir/rootfs.img" \
   >/dev/null
 
-unsquashfs -quiet -d "$tmp_dir/rootfs" "$tmp_dir/rootfs.sfs"
+unsquashfs -quiet -d "$tmp_dir/rootfs" "$tmp_dir/rootfs.img"
 
 required_paths=(
   etc/dinit.d/greetd

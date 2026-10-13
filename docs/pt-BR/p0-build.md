@@ -29,6 +29,18 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 
 O smoke test prova que a imagem e o caminho de boot permanecem aceitos pelo QEMU durante a janela definida. Ele ainda não prova login gráfico, rede ou áudio dentro do guest; essas verificações entram depois que a imagem foundation tiver um método de teste de guest observável.
 
+## Execução bem-sucedida observada
+
+A execução [38448333502](https://github.com/rufl/dinx-alpha/actions/runs/38448333502), no commit `8f5b99d`, concluiu todas as etapas do workflow em 8m05s:
+
+- artefato ISO: `artix-dinx-dinit-20261013-x86_64.iso`;
+- tamanho: 1.409.947.648 bytes;
+- SHA-512: `9407f2da3d2bc37bd973368a7206df3b27f67a23068ee26b88529132ee03285a40db5fb108375874e7e26ece35b4602f86c153f225c27a997ad1a5872a09bc9f`;
+- janela de smoke no QEMU: 60 segundos, aprovada;
+- artefato: `dinx-foundation-iso-8f5b99dfcfc1548618d448a269d87a5f08809071`, mantido privado por 7 dias.
+
+O log serial gerado ficou vazio. Isso registra somente a aceitação do processo/caminho de boot pelo QEMU; não é evidência de login gráfico nem da saúde dos serviços dentro do guest.
+
 ## Host de desenvolvimento observado
 
 O host de desenvolvimento é EndeavourOS x86_64. `pacman`, `xorriso` e `zig` estão disponíveis. `buildiso`, `mkarchiso` e `qemu-system-x86_64` não estão instalados. Bibliotecas de usuário do QEMU e `/dev/kvm` estão presentes, mas isso não é suficiente para executar o smoke test local.

@@ -15,6 +15,27 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "required command not found: $1"
 }
 
+ensure_loop_support() {
+  if losetup -f >/dev/null 2>&1; then
+    return
+  fi
+
+  modprobe loop
+  losetup -f >/dev/null 2>&1 || fail "loop device support is unavailable"
+}
+
+ensure_loop_support_with_sudo() {
+  if sudo losetup -f >/dev/null 2>&1; then
+    return
+  fi
+
+  sudo modprobe loop
+  sudo losetup -f >/dev/null 2>&1 || fail "loop device support is unavailable"
+}
+
+require_command losetup
+
+
 require_command pacman
 require_command xorriso
 require_command buildiso
@@ -27,7 +48,7 @@ buildiso_path=$(command -v buildiso)
 
 if [[ $EUID -ne 0 ]]; then
   require_command sudo
-  sudo modprobe loop
+  ensure_loop_support_with_sudo
   exec sudo env \
     WORKSPACE_DIR="$workspace_dir" \
     "$buildiso_path" \
@@ -38,7 +59,7 @@ if [[ $EUID -ne 0 ]]; then
     "$@"
 fi
 
-modprobe loop
+ensure_loop_support
 exec "$buildiso_path" \
   -p dinx \
   -i dinit \

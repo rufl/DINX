@@ -19,12 +19,12 @@ require_command grub-mkimage
 require_command mksquashfs
 require_command mkinitcpio
 require_command yq
-require_command modprobe
+require_command losetup
 
-if [[ -e /dev/loop-control ]]; then
-  printf 'ok      /dev/loop-control\n'
+if loop_device=$(losetup -f 2>/dev/null); then
+  printf 'ok      %s\n' "$loop_device"
 else
-  printf 'missing /dev/loop-control\n'
+  printf 'missing usable loop device\n'
   missing=1
 fi
 

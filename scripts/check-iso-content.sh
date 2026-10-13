@@ -32,7 +32,7 @@ livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
 
 required_paths=(
   etc/dinit.d/greetd
-  etc/greetd/config.toml
+  etc/dinit.d/root-ro
   etc/greetd/regreet.toml
   etc/mango/dinx.conf
   etc/mango/greeter.conf

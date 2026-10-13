@@ -1,0 +1,4 @@
+# The live root is an overlay and cannot be remounted read-only.
+type = scripted
+command = /bin/true
+restart = false

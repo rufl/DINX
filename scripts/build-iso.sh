@@ -35,7 +35,6 @@ ensure_loop_support_with_sudo() {
 
 require_command losetup
 
-
 require_command pacman
 require_command xorriso
 require_command buildiso
@@ -60,7 +59,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 ensure_loop_support
-exec "$buildiso_path" \
+exec env WORKSPACE_DIR="$workspace_dir" "$buildiso_path" \
   -p dinx \
   -i dinit \
   -r "$chroots_dir" \

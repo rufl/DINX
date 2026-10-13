@@ -43,16 +43,17 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Observed successful run
 
-
-Run [38448333502](https://github.com/rufl/dinx-alpha/actions/runs/38448333502) on commit `8f5b99d` passed all workflow steps in 8m05s:
+Run [38466858660](https://github.com/rufl/dinx-alpha/actions/runs/38466858660) on commit `6834cf4` passed all workflow steps in 10m07s:
 
 - ISO artifact: `artix-dinx-dinit-20261013-x86_64.iso`;
-- size: 1,409,947,648 bytes;
-- SHA-512: `9407f2da3d2bc37bd973368a7206df3b27f67a23068ee26b88529132ee03285a40db5fb108375874e7e26ece35b4602f86c153f225c27a997ad1a5872a09bc9f`;
-- QEMU smoke window: 60 seconds, passed;
-- artifact: `dinx-foundation-iso-8f5b99dfcfc1548618d448a269d87a5f08809071`, retained privately for 7 days.
+- size: 1,497,237,504 bytes;
+- SHA-512: `96c922cf861f5e4bf59eeff1c4236f85b71f1c35542f0105dc28106b50df9376dbee18ba80e961f5f62e10b86d6e2d748e4ac3dd913c854424c387bdf86eff8d`;
+- QEMU smoke window: 90 seconds, passed;
+- payload check: MangoWM, Scenefx, Noctalia, ReGreet, greetd and dinit payloads present;
+- graphical capture: the initial frame showed the ReGreet user/session selector, and the post-input frame showed the MangoWM session with the Noctalia welcome screen;
+- artifact: `dinx-foundation-iso-6834cf48c3903da692540479a6c5c664da2bf28d`, retained privately for 7 days.
 
-The generated serial log was empty. This records QEMU/process-level acceptance only; it is not evidence of graphical login or guest service health.
+The generated serial log was empty. The two VGA captures provide evidence of greeter rendering and a successful graphical user-session transition; they do not prove networking, audio or long-term service health.
 
 ## Observed development host
 

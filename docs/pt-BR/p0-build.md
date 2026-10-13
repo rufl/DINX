@@ -44,15 +44,17 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Execução bem-sucedida observada
 
-A execução [38448333502](https://github.com/rufl/dinx-alpha/actions/runs/38448333502), no commit `8f5b99d`, concluiu todas as etapas do workflow em 8m05s:
+A execução [38466858660](https://github.com/rufl/dinx-alpha/actions/runs/38466858660), no commit `6834cf4`, concluiu todas as etapas do workflow em 10m07s:
 
 - artefato ISO: `artix-dinx-dinit-20261013-x86_64.iso`;
-- tamanho: 1.409.947.648 bytes;
-- SHA-512: `9407f2da3d2bc37bd973368a7206df3b27f67a23068ee26b88529132ee03285a40db5fb108375874e7e26ece35b4602f86c153f225c27a997ad1a5872a09bc9f`;
-- janela de smoke no QEMU: 60 segundos, aprovada;
-- artefato: `dinx-foundation-iso-8f5b99dfcfc1548618d448a269d87a5f08809071`, mantido privado por 7 dias.
+- tamanho: 1.497.237.504 bytes;
+- SHA-512: `96c922cf861f5e4bf59eeff1c4236f85b71f1c35542f0105dc28106b50df9376dbee18ba80e961f5f62e10b86d6e2d748e4ac3dd913c854424c387bdf86eff8d`;
+- janela de smoke no QEMU: 90 segundos, aprovada;
+- verificação de payload: MangoWM, Scenefx, Noctalia, ReGreet, greetd e payloads dinit presentes;
+- captura gráfica: o quadro inicial mostrou o seletor de usuário/sessão do ReGreet, e o quadro após as teclas mostrou a sessão MangoWM com a tela de boas-vindas do Noctalia;
+- artefato: `dinx-foundation-iso-6834cf48c3903da692540479a6c5c664da2bf28d`, mantido privado por 7 dias.
 
-O log serial gerado ficou vazio. Isso registra somente a aceitação do processo/caminho de boot pelo QEMU; não é evidência de login gráfico nem da saúde dos serviços dentro do guest.
+O log serial gerado ficou vazio. As duas capturas VGA fornecem evidência da renderização do greeter e da transição bem-sucedida para a sessão gráfica do usuário; não provam rede, áudio ou saúde dos serviços em longo prazo.
 
 ## Host de desenvolvimento observado
 

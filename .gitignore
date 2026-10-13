@@ -1,0 +1,20 @@
+# Zig
+.zig-cache/
+zig-out/
+
+# DINX build artifacts
+build/
+dist/
+*.iso
+*.img
+*.qcow2
+*.raw
+
+# Test output
+test-results/
+coverage/
+
+# Local tooling
+.env
+.env.*
+!.env.example

@@ -47,7 +47,7 @@ jobs:
             --volume "$RUNNER_TEMP/dinx-artools:/var/lib/artools/buildiso" \
             --workdir /workspace \
             --env DINX_ISO_OUTPUT=/workspace/dist/iso \
-            artixlinux/artixlinux:latest
+            artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
             bash -ceu '
               set -e
               pacman -Syu --noconfirm

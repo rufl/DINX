@@ -2,7 +2,7 @@
 
 [Português (Brasil)](security-model.md) · [English](../security-model.md)
 
-A DINX é uma alpha privada. O modelo de segurança prioriza instalação segura, limites de confiança explícitos e capacidade de recuperação em vez de conveniência.
+A DINX é uma alpha pública. O modelo de segurança prioriza instalação segura, limites de confiança explícitos e capacidade de recuperação em vez de conveniência.
 
 ## Hipóteses de ameaça
 
@@ -26,11 +26,11 @@ A interface deve diferenciar um serviço parado, com falha, desconhecido ou inac
 
 ## Confiança em pacotes e ISOs
 
-Antes da primeira alpha distribuível:
+Para cada release alpha distribuível:
 
 - manifestos de pacotes devem identificar entradas upstream e específicas da DINX;
 - pacotes devem ser assinados com uma chave cuja propriedade e rotação estejam documentadas;
-- checksums de ISO e pacotes devem ser publicados com o release privado;
+- checksums de ISO e pacotes devem ser publicados com cada release;
 - metadados do build devem identificar o commit de origem e o snapshot de entradas;
 - avisos de atualização devem ser explícitos porque a base é rolling.
 
@@ -44,7 +44,7 @@ O IPC opcional do Noctalia é tratado como um limite de integração não confi�
 
 ## Tratamento dos releases alpha
 
-O repositório GitHub deve permanecer privado durante a alpha. O acesso ao código, pacotes e ISOs é concedido deliberadamente. Cada release alpha deve incluir:
+O repositório GitHub é público durante a alpha. O código é público; pacotes e ISOs ainda não publicados podem ser distribuídos deliberadamente. Cada release alpha deve incluir:
 
 - escopo de hardware suportado;
 - instruções de instalação e recuperação;

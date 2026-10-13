@@ -19,9 +19,9 @@ Backlog:
 
 **Critério de saída:** uma instalação limpa inicializa, faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY.
 
-## P1 — alpha privada 0.1
+## P1 — alpha pública 0.1
 
-**Objetivo:** distribuir um snapshot conhecido como funcional dentro do projeto privado no GitHub.
+**Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
 Backlog:
 

@@ -19,9 +19,9 @@ Backlog:
 
 **Exit criterion:** a clean install boots, logs in graphically, provides the required base services and can recover through a TTY.
 
-## P1 — private alpha 0.1
+## P1 — public alpha 0.1
 
-**Goal:** distribute a known-good snapshot inside the private GitHub project.
+**Goal:** distribute a known-good snapshot through the public GitHub project.
 
 Backlog:
 

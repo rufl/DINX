@@ -139,7 +139,7 @@ jobs:
       - name: Verify graphical ISO payload
         run: scripts/check-iso-content.sh "$DINX_ISO"
 
-      - name: Upload private alpha artifact
+      - name: Upload alpha workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: dinx-foundation-iso-${{ github.sha }}

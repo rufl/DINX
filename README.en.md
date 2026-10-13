@@ -2,7 +2,7 @@
 
 [English](README.en.md) · [Português (Brasil)](README.md)
 
-DINX is a private alpha Linux platform for gaming and development.
+DINX is a public alpha Linux platform for gaming and development.
 
 The initial platform target is **x86_64**, based on **Artix Linux with dinit**, and built around a Wayland desktop using **MangoWC** and **Noctalia Shell**.
 
@@ -37,7 +37,7 @@ The applications have their own repositories for independent development cycles 
 
 ## Delivery policy
 
-The repository is intended to remain **private on GitHub during the alpha**. Alpha ISOs and packages are private release artifacts until a release is deliberately opened. Every artifact must carry its exact version, commit identity, checksum and known limitations.
+The monorepo is public on GitHub during the alpha. Alpha ISOs and packages remain pre-release artifacts until each release is deliberately published. Every artifact must carry its exact version, commit identity, checksum and known limitations.
 
 The project is a monorepo so shared contracts and release tooling remain versioned with the applications:
 
@@ -55,7 +55,7 @@ scripts/
 ## Milestones
 
 1. **P0 — Foundation:** reproducible Artix+dinit base, bootable ISO, graphical login, networking, audio, GPU acceleration and recovery TTY.
-2. **P1 — Private alpha:** install documentation, checksums, package signing, known issues and a fallback terminal.
+2. **P1 — Public alpha:** install documentation, checksums, package signing, known issues and a fallback terminal.
 3. **P2 — Noctty:** reliable PTY lifecycle, terminal semantics, rendering, Unicode, scrollback, selection and compatibility with interactive TUIs.
 4. **P3 — Nocted:** reliable editing, syntax highlighting, search, project navigation, LSP and Git status/diffs.
 5. **P4 — Dinx Control:** safe dinit service management and useful system-status views.

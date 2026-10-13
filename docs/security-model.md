@@ -2,7 +2,7 @@
 
 [English](security-model.md) · [Português (Brasil)](pt-BR/security-model.md)
 
-DINX is a private alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
+DINX is a public alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
 ## Threat assumptions
 
@@ -26,11 +26,11 @@ The interface must distinguish a service that is stopped, failed, unknown or ina
 
 ## Package and ISO trust
 
-Before the first distributable alpha:
+For each distributable alpha release:
 
 - package manifests must identify upstream and DINX-specific inputs;
 - packages must be signed with a key whose ownership and rotation process are documented;
-- ISO and package checksums must be published with the private release;
+- ISO and package checksums must be published with each release;
 - build metadata must identify the source commit and input snapshot;
 - upgrade warnings must be explicit because the base is rolling.
 
@@ -44,7 +44,7 @@ Optional Noctalia IPC is treated as an untrusted integration boundary: validate 
 
 ## Alpha release handling
 
-The GitHub repository is intended to remain private during alpha. Access to source, packages and ISOs is granted deliberately. Every alpha release must include:
+The GitHub repository is public during alpha. Source is public; unreleased packages and ISOs may still be distributed deliberately. Every alpha release must include:
 
 - supported hardware scope;
 - installation and recovery instructions;

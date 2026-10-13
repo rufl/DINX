@@ -27,7 +27,7 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 7. validates the root and live-session SquashFS payloads;
 8. generates a SHA-512 checksum;
 9. keeps QEMU running for a configurable boot window and captures its VGA surface;
-10. publishes the ISO, checksum and PPM capture as a temporary private workflow artifact.
+10. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
 
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session and dinit service files reached the ISO. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
@@ -51,7 +51,7 @@ Run [38466858660](https://github.com/rufl/dinx-alpha/actions/runs/38466858660) o
 - QEMU smoke window: 90 seconds, passed;
 - payload check: MangoWM, Scenefx, Noctalia, ReGreet, greetd and dinit payloads present;
 - graphical capture: the initial frame showed the ReGreet user/session selector, and the post-input frame showed the MangoWM session with the Noctalia welcome screen;
-- artifact: `dinx-foundation-iso-6834cf48c3903da692540479a6c5c664da2bf28d`, retained privately for 7 days.
+- artifact: `dinx-foundation-iso-6834cf48c3903da692540479a6c5c664da2bf28d`, retained for 7 days.
 
 The generated serial log was empty. The two VGA captures provide evidence of greeter rendering and a successful graphical user-session transition; they do not prove networking, audio or long-term service health.
 

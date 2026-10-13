@@ -14,6 +14,8 @@ O perfil usa o fluxo `buildiso` do Artix, não o `mkarchiso` genérico. O builde
 - suporte a dispositivos loop;
 - privilégios root para operações de chroot e mount.
 
+A execução oficial do P0 usa `.github/workflows/p0-iso.yml` em um runner Ubuntu com container Artix privilegiado. Para execução local, instale as mesmas dependências e use um ambiente com suporte de mount/chroot.
+
 Execute o probe de pré-requisitos a partir da raiz do repositório:
 
 ```bash
@@ -24,6 +26,12 @@ Construa o perfil de fundação:
 
 ```bash
 scripts/build-iso.sh
+```
+
+Teste o boot de uma ISO já construída:
+
+```bash
+scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
 
 Opções adicionais do `buildiso` são repassadas sem alteração. Por exemplo, para consultar as configurações sem executar o build:
@@ -45,7 +53,7 @@ O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-pr
 Um build de imagem bem-sucedido não é o critério de release. A ISO resultante ainda exige:
 
 1. geração de checksum;
-2. verificação de boot em VM ou hardware de teste;
+2. smoke test de boot em VM;
 3. verificação da TTY de recuperação;
 4. verificações de rede, áudio, D-Bus, portal e gráficos;
 5. relatório de instalação/atualização antes de ser rotulada como alpha.

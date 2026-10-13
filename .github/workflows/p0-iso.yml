@@ -1,0 +1,71 @@
+name: P0 ISO foundation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/p0-iso.yml"
+      - "distro/iso/**"
+      - "scripts/build-iso.sh"
+      - "scripts/check-iso-host.sh"
+      - "scripts/smoke-iso.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    name: Build and smoke-test DINX foundation ISO
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@v4
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes qemu-system-x86
+
+      - name: Build with Artix artools
+        run: |
+          docker run --rm --privileged \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            --env DINX_ISO_OUTPUT=/workspace/dist/iso \
+            artixlinux/artixlinux:latest \
+            bash -ceu '
+              set -e
+              pacman -Syu --noconfirm
+              pacman -S --needed --noconfirm artools iso-profiles
+              scripts/check-iso-host.sh
+              scripts/build-iso.sh
+            '
+
+      - name: Generate checksum and locate ISO
+        id: artifact
+        run: |
+          iso_path=$(find dist/iso -type f -name '*.iso' -print -quit)
+          test -n "$iso_path"
+          sha512sum "$iso_path" > "$iso_path.sha512"
+          printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
+          printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
+
+      - name: Boot smoke test
+        env:
+          DINX_QEMU_TIMEOUT: 60
+        run: scripts/smoke-iso.sh "$DINX_ISO"
+
+      - name: Upload private alpha artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinx-foundation-iso-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            dist/iso/**/*.iso
+            dist/iso/**/*.sha512
+            dist/iso/**/*.qemu.log

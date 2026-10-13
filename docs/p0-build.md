@@ -43,7 +43,7 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Observed successful run
 
-Run [38466858660](https://github.com/rufl/dinx-alpha/actions/runs/38466858660) on commit `6834cf4` passed all workflow steps in 10m07s:
+Run [38466858660](https://github.com/rufl/DINX/actions/runs/38466858660) on commit `6834cf4` passed all workflow steps in 10m07s:
 
 - ISO artifact: `artix-dinx-dinit-20261013-x86_64.iso`;
 - size: 1,497,237,504 bytes;

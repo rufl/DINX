@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## P0 — fundação
 
-**Objetivo:** produzir um sistema Artix+dinit reproduzível e inicializável.
+**Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
 
 Backlog:
 
@@ -17,7 +17,7 @@ Backlog:
 - manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
 - adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
 
-**Critério de saída:** uma instalação limpa inicializa, faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY.
+**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. A instalação persistente continua sendo um gate de release.
 
 ## P1 — alpha pública 0.1
 
@@ -26,6 +26,7 @@ Backlog:
 Backlog:
 
 - publicar ISO, checksums, instruções de instalação e problemas conhecidos;
+- definir e implementar o instalador persistente suportado ou um caminho manual testado;
 - estabelecer assinatura de pacotes e metadados de release;
 - fornecer terminal de fallback mínimo e configuração de shell funcional;
 - coletar relatórios de hardware e priorizar bloqueios de instalação.

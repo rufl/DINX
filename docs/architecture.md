@@ -81,16 +81,15 @@ A contract must have a documented version and a compatibility test before applic
 
 Gaming is a separate session built around Gamescope and Steam. It must not assume that the full Noctalia desktop is running underneath. Session entry, game launch, controller input, audio, session exit and return to the greeter are explicit acceptance paths.
 
-## Decisions still required before the ISO implementation
+## Decisions still required before an installable release
 
-These are intentionally not guessed in the initial documentation:
+The current P0 image is intentionally live-only. These decisions remain open before a persistent installation release:
 
-- ISO builder and installer path;
-- greeter implementation;
+- supported disk installer and partition/recovery path;
 - Wayland UI toolkit and rendering backend for first-party applications;
 - final terminal-emulation core;
 - package repository layout and signing-key ownership;
 - supported GPU and hardware matrix;
 - repository and artifact license policy.
 
-The P0 implementation should resolve these from the available Artix tooling and concrete compatibility tests, not from assumptions.
+The next implementation increments must resolve these with concrete Artix compatibility tests, not assumptions.

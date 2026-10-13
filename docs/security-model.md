@@ -4,6 +4,8 @@
 
 DINX is a public alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
+The live image intentionally includes the disposable test account `dinx` with password `dinx` so the graphical smoke path can log in. This credential is public, must never be reused and is not suitable for an installed system.
+
 ## Threat assumptions
 
 - Alpha ISOs and packages may contain defects and must not be treated as production releases.

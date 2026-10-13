@@ -18,3 +18,9 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Local credentials and private signing material
+*.key
+*.pem
+*.p12
+*.pfx

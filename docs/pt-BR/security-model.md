@@ -4,6 +4,8 @@
 
 A DINX é uma alpha pública. O modelo de segurança prioriza instalação segura, limites de confiança explícitos e capacidade de recuperação em vez de conveniência.
 
+A imagem live inclui intencionalmente a conta de teste descartável `dinx`, com senha `dinx`, para que o smoke gráfico possa fazer login. Essa credencial é pública, nunca deve ser reutilizada e não é adequada para um sistema instalado.
+
 ## Hipóteses de ameaça
 
 - ISOs e pacotes alpha podem conter defeitos e não devem ser tratados como releases de produção.

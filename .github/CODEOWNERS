@@ -1,0 +1,9 @@
+# Security-sensitive paths require owner review.
+* @rufl
+.github/ @rufl
+SECURITY.md @rufl
+SECURITY.pt-BR.md @rufl
+distro/ @rufl
+scripts/ @rufl
+docs/security-model.md @rufl
+docs/pt-BR/security-model.md @rufl

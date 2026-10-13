@@ -68,6 +68,8 @@ The alpha does not require all first-party applications to be complete. A known-
 - [Architecture](docs/architecture.md)
 - [Noctalia compatibility](docs/compatibility.md)
 - [Security model](docs/security-model.md)
+- [Easy installation guide](docs/install.md)
+- [Security policy](SECURITY.md)
 - [P0 build status](docs/p0-build.md)
 - [ISO foundation](distro/iso/README.md)
 
@@ -81,4 +83,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The P0 foundation now includes pinned MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and an optional graphical PPM capture. Interactive graphical login, base-service health and recovery-TTY verification remain release gates before the alpha label.
+The P0 foundation now includes pinned MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and automated graphical login in a VM. The current image is a validation live session; persistent installation, complete service health and recovery-TTY verification remain release gates.

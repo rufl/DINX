@@ -68,6 +68,8 @@ A alpha não exige que todos os aplicativos próprios estejam completos. Um sist
 - [Arquitetura](docs/pt-BR/architecture.md)
 - [Compatibilidade com Noctalia](docs/pt-BR/compatibility.md)
 - [Modelo de segurança](docs/pt-BR/security-model.md)
+- [Guia de instalação fácil](docs/pt-BR/install.md)
+- [Política de segurança](SECURITY.pt-BR.md)
 - [Status do build P0](docs/pt-BR/p0-build.md)
 - [Build da ISO](distro/iso/README.pt-BR.md)
 
@@ -81,4 +83,4 @@ Versões originais em inglês:
 
 ## Status atual
 
-O P0 agora inclui builds fixados do MangoWM/Scenefx, o workflow Artix da ISO, validação de payload/checksum, smoke de boot no QEMU e uma captura gráfica PPM opcional. Login gráfico interativo, saúde dos serviços base e verificação da TTY de recuperação continuam gates de release antes do rótulo alpha.
+O P0 agora inclui builds fixados do MangoWM/Scenefx, o workflow Artix da ISO, validação de payload/checksum, smoke de boot no QEMU e login gráfico automatizado em uma VM. A imagem atual é uma sessão live de validação; instalação persistente, saúde completa dos serviços e verificação da TTY de recuperação continuam gates de release.

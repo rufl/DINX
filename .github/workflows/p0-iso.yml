@@ -1,6 +1,8 @@
 name: P0 ISO foundation
 
 on:
+# This workflow intentionally does not run on pull requests: the build uses a privileged container.
+# Add an isolated validation workflow before enabling any pull-request trigger.
   workflow_dispatch:
   push:
     branches:
@@ -17,16 +19,21 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: p0-iso-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-smoke:
     name: Build and smoke-test DINX foundation ISO
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
       - name: Checkout DINX
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
@@ -40,7 +47,7 @@ jobs:
             --volume "$RUNNER_TEMP/dinx-artools:/var/lib/artools/buildiso" \
             --workdir /workspace \
             --env DINX_ISO_OUTPUT=/workspace/dist/iso \
-            artixlinux/artixlinux:latest \
+            artixlinux/artixlinux@sha256:6285cfad28cc8477f630ddc4e80ecf70bd0bf0a06be66b523e764463e5a3a3d5
             bash -ceu '
               set -e
               pacman -Syu --noconfirm
@@ -140,7 +147,7 @@ jobs:
         run: scripts/check-iso-content.sh "$DINX_ISO"
 
       - name: Upload alpha workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dinx-foundation-iso-${{ github.sha }}
           if-no-files-found: error

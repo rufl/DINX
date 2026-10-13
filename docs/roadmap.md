@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## P0 — foundation
 
-**Goal:** produce a reproducible, bootable Artix+dinit system.
+**Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
 
 Backlog:
 
@@ -17,7 +17,7 @@ Backlog:
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
 
-**Exit criterion:** a clean install boots, logs in graphically, provides the required base services and can recover through a TTY.
+**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. Persistent installation remains a release gate.
 
 ## P1 — public alpha 0.1
 
@@ -26,6 +26,7 @@ Backlog:
 Backlog:
 
 - publish the ISO, checksums, installation instructions and known issues;
+- define and implement the supported persistent installer or a tested manual installation path;
 - establish package signing and release metadata;
 - provide a minimal terminal fallback and working shell configuration;
 - collect hardware reports and prioritize installation blockers.

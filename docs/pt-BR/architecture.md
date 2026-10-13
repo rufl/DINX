@@ -81,16 +81,15 @@ Um contrato deve ter uma versão documentada e um teste de compatibilidade antes
 
 A sessão de jogos é separada e baseada em Gamescope e Steam. Ela não pode presumir que o desktop completo do Noctalia esteja em execução. Entrada na sessão, lançamento do jogo, controles, áudio, saída da sessão e retorno ao greeter são caminhos de aceitação explícitos.
 
-## Decisões ainda necessárias antes da implementação da ISO
+## Decisões ainda necessárias antes de um release instalável
 
-Estas decisões não foram inventadas na documentação inicial:
+A imagem P0 atual é intencionalmente apenas live. Estas decisões continuam abertas antes de um release com instalação persistente:
 
-- ferramenta de build da ISO e caminho do instalador;
-- implementação do greeter;
+- instalador de disco suportado e caminho de particionamento/recuperação;
 - toolkit Wayland e backend de renderização dos aplicativos próprios;
 - núcleo final de emulação de terminal;
 - layout do repositório de pacotes e responsabilidade pela chave de assinatura;
 - matriz de GPUs e hardware suportados;
 - política de licença do repositório e dos artefatos.
 
-A implementação P0 deve resolver essas questões com as ferramentas disponíveis no Artix e testes concretos de compatibilidade, não por suposição.
+Os próximos incrementos devem resolver essas questões com testes concretos de compatibilidade no Artix, não por suposição.

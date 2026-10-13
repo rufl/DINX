@@ -4,6 +4,8 @@
 
 Este diretório contém o primeiro perfil Artix `artools` da DINX e os pontos de entrada locais do build.
 
+Para o caminho voltado ao usuário de download, verificação e boot, consulte o [guia de instalação fácil](../../docs/pt-BR/install.md).
+
 ## Toolchain
 
 O perfil usa o fluxo `buildiso` do Artix, não o `mkarchiso` genérico. O builder deve fornecer:

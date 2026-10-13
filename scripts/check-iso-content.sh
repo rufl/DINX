@@ -22,7 +22,13 @@ xorriso -osirrox on \
   -extract /LiveOS/rootfs.img "$tmp_dir/rootfs.img" \
   >/dev/null
 
+xorriso -osirrox on \
+  -indev "$iso_path" \
+  -extract /LiveOS/livefs.img "$tmp_dir/livefs.img" \
+  >/dev/null
+
 manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/rootfs.img")
+livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
 
 required_paths=(
   etc/dinit.d/greetd
@@ -44,5 +50,27 @@ for path in "${required_paths[@]}"; do
 done
 
 grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
+
+livefs_required_paths=(
+  etc/artools/live.conf
+  etc/dinit.d/boot.d/NetworkManager
+  etc/dinit.d/boot.d/artix-live
+  etc/dinit.d/boot.d/greetd
+  etc/dinit.d/boot.d/logind
+  etc/dinit.d/boot.d/metalog
+  etc/dinit.d/boot.d/pacman-init
+  etc/dinit.d/boot.d/userspawn
+)
+
+for path in "${livefs_required_paths[@]}"; do
+  grep -Fq "/$path" <<<"$livefs_manifest" || fail "missing livefs path: $path"
+done
+
+live_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/artools/live.conf)
+grep -Fq 'AUTOLOGIN=false' <<<"$live_config" || fail 'live session autologin is not disabled'
+grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not dinx'
+
+live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
+grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
 printf 'ISO content check passed: MangoWM, Scenefx, Noctalia, ReGreet, greetd, and dinit payloads present.\n'

@@ -40,7 +40,7 @@ jobs:
             bash -ceu '
               set -e
               pacman -Syu --noconfirm
-              pacman -S --needed --noconfirm artools iso-profiles
+              pacman -S --needed --noconfirm artools iso-profiles mkinitcpio
               scripts/check-iso-host.sh
               scripts/build-iso.sh
             '

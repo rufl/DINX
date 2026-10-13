@@ -18,6 +18,14 @@ The initial platform target is **x86_64**, based on **Artix Linux with dinit**, 
 
 The applications should integrate deeply with DINX while remaining usable on other Linux systems whenever their platform requirements are available.
 
+## Application repositories
+
+- [Noctty](https://github.com/rufl/noctty) — private alpha terminal.
+- [Nocted](https://github.com/rufl/nocted) — private alpha code editor.
+
+The applications have their own repositories for independent development cycles while remaining connected to DINX shared contracts and releases.
+
+
 ## Initial architecture
 
 - Artix Linux + dinit

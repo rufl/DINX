@@ -81,4 +81,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The repository is at the documentation and foundation stage. The Artix `buildiso` profile and root-aware build wrapper are now present under `distro/iso/` and `scripts/`. The next implementation increment is to provide the Artix build dependencies and run the first ISO build/boot validation before making Noctty, Nocted or Dinx Control mandatory.
+The P0 foundation now includes pinned MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and an optional graphical PPM capture. Interactive graphical login, base-service health and recovery-TTY verification remain release gates before the alpha label.

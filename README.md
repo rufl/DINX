@@ -81,4 +81,4 @@ Versões originais em inglês:
 
 ## Status atual
 
-O repositório está na etapa de documentação e fundação. O perfil Artix `buildiso` e o wrapper de build com suporte a root estão em `distro/iso/` e `scripts/`. O próximo incremento é disponibilizar as dependências de build do Artix e executar a primeira validação de build e boot da ISO antes de tornar Noctty, Nocted ou Dinx Control obrigatórios.
+O P0 agora inclui builds fixados do MangoWM/Scenefx, o workflow Artix da ISO, validação de payload/checksum, smoke de boot no QEMU e uma captura gráfica PPM opcional. Login gráfico interativo, saúde dos serviços base e verificação da TTY de recuperação continuam gates de release antes do rótulo alpha.

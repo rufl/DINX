@@ -8,6 +8,9 @@ log_path=${DINX_QEMU_LOG:-}
 screenshot_path=${DINX_QEMU_SCREENSHOT:-}
 screenshot_delay=${DINX_QEMU_SCREENSHOT_DELAY:-30}
 boot_keys=${DINX_QEMU_BOOT_KEYS:-}
+post_screenshot_path=${DINX_QEMU_POST_SCREENSHOT:-}
+post_screenshot_delay=${DINX_QEMU_POST_SCREENSHOT_DELAY:-3}
+post_keys=${DINX_QEMU_POST_SCREENSHOT_KEYS:-}
 
 fail() {
   printf 'smoke-iso: %s\n' "$*" >&2
@@ -19,12 +22,48 @@ fail() {
 [[ "$timeout_seconds" =~ ^[1-9][0-9]*$ ]] || fail "DINX_QEMU_TIMEOUT must be a positive integer"
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail "DINX_QEMU_MEMORY must be a positive integer"
 [[ "$screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_SCREENSHOT_DELAY must be a non-negative integer"
+[[ "$post_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_POST_SCREENSHOT_DELAY must be a non-negative integer"
 command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not found: qemu-system-x86_64"
 command -v timeout >/dev/null 2>&1 || fail "required command not found: timeout"
 
 if [[ -z "$log_path" ]]; then
   log_path="${iso_path}.qemu.log"
 fi
+
+send_keys() {
+  local keys="$1"
+  local key
+  local input_status=0
+  local -a key_list
+
+  IFS=',' read -r -a key_list <<< "$keys"
+  for key in "${key_list[@]}"; do
+    [[ -n "$key" ]] || fail 'QEMU key list contains an empty key'
+    printf 'sendkey %s\n' "$key" \
+      | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
+    input_status=$?
+    [[ "$input_status" -eq 0 ]] || return "$input_status"
+    sleep 0.5
+  done
+}
+
+capture_screen() {
+  local path="$1"
+  printf 'screendump %s\n' "$path" \
+    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
+}
+
+validate_screenshot() {
+  local path="$1"
+  local label="$2"
+  [[ -s "$path" ]] || fail "QEMU $label screendump is empty: $path"
+  local ppm_magic=
+  IFS= read -r ppm_magic < "$path" || true
+  [[ "$ppm_magic" == P6 ]] || fail "QEMU $label screendump is not a binary PPM: $path"
+  local screenshot_size
+  screenshot_size=$(wc -c < "$path")
+  printf 'smoke-iso: %s screendump: %s (%s bytes)\n' "$label" "$path" "$screenshot_size"
+}
 
 if [[ -r /dev/kvm ]]; then
   accel=( -accel kvm )
@@ -37,9 +76,14 @@ fi
 monitor_args=( -monitor none )
 monitor_dir=
 monitor_path=
-if [[ -n "$screenshot_path" ]]; then
+if [[ -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
   command -v socat >/dev/null 2>&1 || fail "required command not found: socat"
-  mkdir -p "$(dirname "$screenshot_path")"
+  if [[ -n "$screenshot_path" ]]; then
+    mkdir -p "$(dirname "$screenshot_path")"
+  fi
+  if [[ -n "$post_screenshot_path" ]]; then
+    mkdir -p "$(dirname "$post_screenshot_path")"
+  fi
   monitor_dir=$(mktemp -d)
   monitor_path="$monitor_dir/qemu.monitor"
   monitor_args=( -monitor "unix:$monitor_path,server=on,wait=off" )
@@ -69,7 +113,8 @@ timeout --kill-after=10s "${timeout_seconds}s" \
 qemu_pid=$!
 
 dump_status=0
-if [[ -n "$screenshot_path" ]]; then
+post_dump_status=0
+if [[ -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
   monitor_ready=false
   for ((attempt = 0; attempt < 30; attempt++)); do
     if [[ -S "$monitor_path" ]]; then
@@ -80,27 +125,33 @@ if [[ -n "$screenshot_path" ]]; then
   done
 
   if [[ "$monitor_ready" == true ]]; then
-    input_status=0
     if [[ -n "$boot_keys" ]]; then
-      IFS=',' read -r -a boot_key_list <<< "$boot_keys"
-      for key in "${boot_key_list[@]}"; do
-        [[ -n "$key" ]] || fail 'DINX_QEMU_BOOT_KEYS contains an empty key'
-        printf 'sendkey %s\n' "$key" \
-          | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
-        input_status=$?
-        [[ "$input_status" -eq 0 ]] || break
-        sleep 0.5
-      done
+      send_keys "$boot_keys"
+      input_status=$?
       [[ "$input_status" -eq 0 ]] || fail 'QEMU monitor rejected boot key input'
       printf 'smoke-iso: sent QEMU boot keys: %s\n' "$boot_keys"
     fi
 
-    sleep "$screenshot_delay"
-    printf 'screendump %s\n' "$screenshot_path" \
-      | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
-    dump_status=$?
+    if [[ -n "$screenshot_path" ]]; then
+      sleep "$screenshot_delay"
+      capture_screen "$screenshot_path"
+      dump_status=$?
+    fi
+
+    if [[ -n "$post_screenshot_path" ]]; then
+      if [[ -n "$post_keys" ]]; then
+        send_keys "$post_keys"
+        input_status=$?
+        [[ "$input_status" -eq 0 ]] || fail 'QEMU monitor rejected post-screenshot key input'
+        printf 'smoke-iso: sent post-screenshot QEMU keys: %s\n' "$post_keys"
+      fi
+      sleep "$post_screenshot_delay"
+      capture_screen "$post_screenshot_path"
+      post_dump_status=$?
+    fi
   else
     dump_status=1
+    post_dump_status=1
   fi
 fi
 
@@ -118,12 +169,12 @@ fi
 
 if [[ -n "$screenshot_path" ]]; then
   [[ "$dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept screendump'
-  [[ -s "$screenshot_path" ]] || fail "QEMU screendump is empty: $screenshot_path"
-  ppm_magic=
-  IFS= read -r ppm_magic < "$screenshot_path" || true
-  [[ "$ppm_magic" == P6 ]] || fail "QEMU screendump is not a binary PPM: $screenshot_path"
-  screenshot_size=$(wc -c < "$screenshot_path")
-  printf 'smoke-iso: graphical screendump: %s (%s bytes)\n' "$screenshot_path" "$screenshot_size"
+  validate_screenshot "$screenshot_path" 'graphical'
+fi
+
+if [[ -n "$post_screenshot_path" ]]; then
+  [[ "$post_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept post-screenshot screendump'
+  validate_screenshot "$post_screenshot_path" 'post'
 fi
 
 printf 'smoke-iso: QEMU remained alive for %ss; ISO boot path accepted\n' "$timeout_seconds"

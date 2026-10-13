@@ -10,7 +10,7 @@ As correções de segurança têm como alvo a branch `main` atual e o artefato a
 
 Não abra uma issue pública para uma vulnerabilidade ainda não divulgada. Use o formulário privado de vulnerabilidades do GitHub:
 
-<https://github.com/rufl/DINX/security/advisories/new>
+<https://github.com/rufl/dinx-alpha/security/advisories/new>
 
 Inclua:
 

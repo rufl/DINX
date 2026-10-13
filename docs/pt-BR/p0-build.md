@@ -44,7 +44,7 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Execução bem-sucedida observada
 
-A execução [38471629482](https://github.com/rufl/DINX/actions/runs/38471629482), no commit `6224b58`, concluiu todas as etapas do workflow em 6m02s:
+A execução [38471629482](https://github.com/rufl/dinx-alpha/actions/runs/38471629482), no commit `6224b58`, concluiu todas as etapas do workflow em 6m02s:
 
 - artefato ISO: `artix-dinx-dinit-20261013-x86_64.iso`;
 - tamanho: 1.497.237.504 bytes;

@@ -25,7 +25,7 @@ Ainda não existe um download estável de release. O artefato do workflow públi
 
 ### Navegador
 
-1. Abra o [workflow da ISO P0](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml).
+1. Abra o [workflow da ISO P0](https://github.com/rufl/dinx-alpha/actions/workflows/p0-iso.yml).
 2. Abra a execução mais recente com marca verde de sucesso.
 3. Em **Artifacts**, baixe `dinx-foundation-iso-<commit>`.
 4. Extraia o arquivo baixado em um diretório novo.
@@ -42,7 +42,7 @@ gh auth login
 Baixe o artefato da execução bem-sucedida mais recente:
 
 ```bash
-repo=rufl/DINX
+repo=rufl/dinx-alpha
 run_id=$(gh run list \
   --repo "$repo" \
   --workflow p0-iso.yml \

@@ -10,7 +10,7 @@ Security fixes target the current `main` branch and the latest documented alpha 
 
 Do not open a public issue for an undisclosed vulnerability. Use GitHub's private vulnerability reporting form:
 
-<https://github.com/rufl/DINX/security/advisories/new>
+<https://github.com/rufl/dinx-alpha/security/advisories/new>
 
 Include:
 

@@ -127,9 +127,10 @@ jobs:
 
       - name: Boot smoke test and graphical capture
         env:
-          DINX_QEMU_TIMEOUT: 60
+          DINX_QEMU_TIMEOUT: 90
           DINX_QEMU_SCREENSHOT: dist/iso/dinx/dinx-graphical-screen.ppm
-          DINX_QEMU_SCREENSHOT_DELAY: 45
+          DINX_QEMU_SCREENSHOT_DELAY: 60
+          DINX_QEMU_BOOT_KEYS: down,down,ret
         run: scripts/smoke-iso.sh "$DINX_ISO"
 
       - name: Verify graphical ISO payload

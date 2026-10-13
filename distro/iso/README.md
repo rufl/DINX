@@ -37,8 +37,9 @@ scripts/smoke-iso.sh dist/iso/<file>.iso
 The workflow also captures the QEMU VGA surface through its monitor. To request the same evidence locally:
 
 ```bash
+DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/graphical-screen.ppm \
-DINX_QEMU_SCREENSHOT_DELAY=45 \
+DINX_QEMU_SCREENSHOT_DELAY=60 \
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
 

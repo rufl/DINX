@@ -37,8 +37,9 @@ scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 A execução remota também captura a superfície VGA do QEMU pelo monitor. Para solicitar a mesma evidência localmente:
 
 ```bash
+DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/tela-grafica.ppm \
-DINX_QEMU_SCREENSHOT_DELAY=45 \
+DINX_QEMU_SCREENSHOT_DELAY=60 \
 scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
 

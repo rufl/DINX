@@ -7,6 +7,7 @@ memory_mb=${DINX_QEMU_MEMORY:-2048}
 log_path=${DINX_QEMU_LOG:-}
 screenshot_path=${DINX_QEMU_SCREENSHOT:-}
 screenshot_delay=${DINX_QEMU_SCREENSHOT_DELAY:-30}
+boot_keys=${DINX_QEMU_BOOT_KEYS:-}
 
 fail() {
   printf 'smoke-iso: %s\n' "$*" >&2
@@ -79,6 +80,21 @@ if [[ -n "$screenshot_path" ]]; then
   done
 
   if [[ "$monitor_ready" == true ]]; then
+    input_status=0
+    if [[ -n "$boot_keys" ]]; then
+      IFS=',' read -r -a boot_key_list <<< "$boot_keys"
+      for key in "${boot_key_list[@]}"; do
+        [[ -n "$key" ]] || fail 'DINX_QEMU_BOOT_KEYS contains an empty key'
+        printf 'sendkey %s\n' "$key" \
+          | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
+        input_status=$?
+        [[ "$input_status" -eq 0 ]] || break
+        sleep 0.5
+      done
+      [[ "$input_status" -eq 0 ]] || fail 'QEMU monitor rejected boot key input'
+      printf 'smoke-iso: sent QEMU boot keys: %s\n' "$boot_keys"
+    fi
+
     sleep "$screenshot_delay"
     printf 'screendump %s\n' "$screenshot_path" \
       | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1

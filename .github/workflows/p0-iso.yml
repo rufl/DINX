@@ -53,7 +53,9 @@ jobs:
         run: |
           iso_path=$(find dist/iso -type f -name '*.iso' -print -quit)
           test -n "$iso_path"
-          sha512sum "$iso_path" > "$iso_path.sha512"
+          iso_dir=$(dirname "$iso_path")
+          iso_name=$(basename "$iso_path")
+          (cd "$iso_dir" && sha512sum "$iso_name" > "$iso_name.sha512")
           printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
 

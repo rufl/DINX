@@ -1,5 +1,7 @@
 # DINX ISO foundation
 
+[English](README.md) · [Português (Brasil)](README.pt-BR.md)
+
 This directory contains the first Artix `artools` profile for DINX and the local build entry points.
 
 ## Toolchain

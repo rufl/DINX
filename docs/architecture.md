@@ -1,5 +1,7 @@
 # DINX architecture
 
+[English](architecture.md) · [Português (Brasil)](pt-BR/architecture.md)
+
 ## Principles
 
 1. **Integrate deeply, depend loosely.** DINX applications share contracts and user experience without requiring the whole distribution at runtime.

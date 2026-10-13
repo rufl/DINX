@@ -1,35 +1,37 @@
 # DINX
 
-DINX is a private alpha Linux platform for gaming and development.
+[Português (Brasil)](README.md) · [English](README.en.md)
 
-The initial platform target is **x86_64**, based on **Artix Linux with dinit**, and built around a Wayland desktop using **MangoWC** and **Noctalia Shell**.
+DINX é uma plataforma Linux alpha privada para jogos e desenvolvimento.
 
-> Alpha software. Do not install it on systems that contain data you cannot restore.
+O alvo inicial da plataforma é **x86_64**, baseada no **Artix Linux com dinit**, com um desktop Wayland usando **MangoWC** e **Noctalia Shell**.
 
-## Product family
+> Software alpha. Não instale em sistemas que contenham dados que você não consiga restaurar.
 
-- **DINX** — the operating-system image, packages, integration contracts and release tooling.
-- **Noctty** — a terminal emulator with a Zig-owned UI and a proven terminal-emulation core.
-- **Nocted** — a lightweight code editor with syntax support, LSP and Git integration.
-- **Dinx Control** — graphical service and system management for dinit.
-- **Dinx Theme** — versioned shared design tokens and application-integration contracts.
+## Família de produtos
 
-The applications should integrate deeply with DINX while remaining usable on other Linux systems whenever their platform requirements are available.
+- **DINX** — imagem do sistema operacional, pacotes, contratos de integração e ferramentas de release.
+- **Noctty** — emulador de terminal com interface própria em Zig e um núcleo comprovado de emulação de terminal.
+- **Nocted** — editor de código leve com suporte a sintaxe, LSP e integração com Git.
+- **Dinx Control** — gerenciamento gráfico de serviços e do sistema usando dinit.
+- **Dinx Theme** — tokens de design compartilhados e contratos de integração de aplicativos, versionados.
 
-## Initial architecture
+Os aplicativos devem integrar-se profundamente à DINX, mas continuar utilizáveis em outros sistemas Linux sempre que os requisitos da plataforma estiverem disponíveis.
+
+## Arquitetura inicial
 
 - Artix Linux + dinit
 - Wayland + MangoWC + Noctalia Shell
-- PipeWire, D-Bus, portals, polkit and GPU acceleration
-- Zig as the primary application language, with mature libraries and bindings where they reduce risk
-- Versioned contracts for themes, XDG paths, `.desktop` metadata, `$TERMINAL` invocation and optional Noctalia IPC
-- Separate gaming session based on Gamescope and Steam; it must not depend on a full Noctalia desktop session underneath
+- PipeWire, D-Bus, portais, polkit e aceleração de GPU
+- Zig como linguagem primária dos aplicativos, usando bibliotecas e bindings maduros quando reduzirem o risco
+- Contratos versionados para temas, caminhos XDG, metadados `.desktop`, invocação por `$TERMINAL` e IPC opcional do Noctalia
+- Sessão de jogos separada, baseada em Gamescope e Steam; ela não deve depender de uma sessão completa do Noctalia em segundo plano
 
-## Delivery policy
+## Política de entrega
 
-The repository is intended to remain **private on GitHub during the alpha**. Alpha ISOs and packages are private release artifacts until a release is deliberately opened. Every artifact must carry its exact version, commit identity, checksum and known limitations.
+O repositório deve permanecer **privado no GitHub durante a alpha**. ISOs e pacotes alpha são artefatos privados até que um release seja deliberadamente aberto. Cada artefato deve conter sua versão exata, o commit de origem, checksum e limitações conhecidas.
 
-The project is a monorepo so shared contracts and release tooling remain versioned with the applications:
+O projeto usa um monorepo para manter contratos compartilhados e ferramentas de release versionados junto com os aplicativos:
 
 ```text
 docs/
@@ -42,24 +44,33 @@ tests/
 scripts/
 ```
 
-## Milestones
+## Marcos
 
-1. **P0 — Foundation:** reproducible Artix+dinit base, bootable ISO, graphical login, networking, audio, GPU acceleration and recovery TTY.
-2. **P1 — Private alpha:** install documentation, checksums, package signing, known issues and a fallback terminal.
-3. **P2 — Noctty:** reliable PTY lifecycle, terminal semantics, rendering, Unicode, scrollback, selection and compatibility with interactive TUIs.
-4. **P3 — Nocted:** reliable editing, syntax highlighting, search, project navigation, LSP and Git status/diffs.
-5. **P4 — Dinx Control:** safe dinit service management and useful system-status views.
-6. **P5 — Gaming beta:** Gamescope/Steam session, controller and graphics validation, suspend/resume and update testing.
+1. **P0 — Fundação:** base Artix+dinit reproduzível, ISO inicializável, login gráfico, rede, áudio, aceleração de GPU e TTY de recuperação.
+2. **P1 — Alpha privada:** documentação de instalação, checksums, assinatura de pacotes, problemas conhecidos e terminal de fallback.
+3. **P2 — Noctty:** ciclo de vida confiável de PTY, semântica de terminal, renderização, Unicode, scrollback, seleção e compatibilidade com TUIs interativas.
+4. **P3 — Nocted:** edição confiável, destaque de sintaxe, busca, navegação de projetos, LSP e status/diffs do Git.
+5. **P4 — Dinx Control:** gerenciamento seguro de serviços dinit e visualizações úteis do estado do sistema.
+6. **P5 — Beta de jogos:** sessão Gamescope/Steam, validação de controles e gráficos, suspensão/retomada e testes de atualização.
 
-The alpha does not require all first-party applications to be complete. A known-good bootable system takes priority over branding or advanced UI features.
+A alpha não exige que todos os aplicativos próprios estejam completos. Um sistema inicializável conhecido como funcional tem prioridade sobre branding ou recursos avançados de interface.
 
-## Documentation
+## Documentação
+
+- [Arquitetura](docs/pt-BR/architecture.md)
+- [Compatibilidade com Noctalia](docs/pt-BR/compatibility.md)
+- [Modelo de segurança](docs/pt-BR/security-model.md)
+- [Status do build P0](docs/pt-BR/p0-build.md)
+- [Build da ISO](distro/iso/README.pt-BR.md)
+
+Versões originais em inglês:
 
 - [Architecture](docs/architecture.md)
 - [Noctalia compatibility](docs/compatibility.md)
 - [Security model](docs/security-model.md)
 - [P0 build status](docs/p0-build.md)
+- [ISO foundation](distro/iso/README.md)
 
-## Current status
+## Status atual
 
-The repository is at the documentation and foundation stage. The Artix `buildiso` profile and root-aware build wrapper are now present under `distro/iso/` and `scripts/`. The next implementation increment is to provide the Artix build dependencies and run the first ISO build/boot validation before making Noctty, Nocted or Dinx Control mandatory.
+O repositório está na etapa de documentação e fundação. O perfil Artix `buildiso` e o wrapper de build com suporte a root estão em `distro/iso/` e `scripts/`. O próximo incremento é disponibilizar as dependências de build do Artix e executar a primeira validação de build e boot da ISO antes de tornar Noctty, Nocted ou Dinx Control obrigatórios.

@@ -1,5 +1,7 @@
 # P0 build status
 
+[English](p0-build.md) · [Português (Brasil)](pt-BR/p0-build.md)
+
 ## Selected implementation
 
 DINX uses Artix's current `artools`/`buildiso` flow with a repository-local `profile.yaml` under `distro/iso/iso-profiles/dinx`. This keeps dinit service package selection in the Artix-supported path and avoids inventing a second ISO builder.

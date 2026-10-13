@@ -1,5 +1,7 @@
 # Noctalia compatibility contract
 
+[English](compatibility.md) · [Português (Brasil)](pt-BR/compatibility.md)
+
 DINX applications complement Noctalia and must not depend on undocumented Noctalia internals. Compatibility is layered so the applications remain useful without the shell.
 
 ## Level 1 — drop-in integration

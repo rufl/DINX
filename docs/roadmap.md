@@ -1,5 +1,7 @@
 # DINX roadmap
 
+[English](roadmap.md) · [Português (Brasil)](pt-BR/roadmap.md)
+
 Milestones are capability gates, not calendar promises.
 
 ## P0 — foundation

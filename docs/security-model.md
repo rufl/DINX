@@ -1,5 +1,7 @@
 # DINX security model
 
+[English](security-model.md) · [Português (Brasil)](pt-BR/security-model.md)
+
 DINX is a private alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
 ## Threat assumptions

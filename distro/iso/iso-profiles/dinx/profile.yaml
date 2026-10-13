@@ -43,6 +43,7 @@ rootfs:
 
 livefs:
   packages:
+    - artix-grub-live
     - mkinitcpio-nfs-utils
     - squashfs-tools
   packages-init:

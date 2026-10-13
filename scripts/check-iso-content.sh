@@ -10,7 +10,7 @@ iso_path=${1:-}
 [[ -n "$iso_path" ]] || fail "usage: $0 ISO"
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
 
-for command in mktemp rm xorriso unsquashfs find; do
+for command in mktemp rm xorriso unsquashfs grep; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -22,7 +22,7 @@ xorriso -osirrox on \
   -extract /LiveOS/rootfs.img "$tmp_dir/rootfs.img" \
   >/dev/null
 
-unsquashfs -quiet -no-xattrs -d "$tmp_dir/rootfs" "$tmp_dir/rootfs.img"
+manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/rootfs.img")
 
 required_paths=(
   etc/dinit.d/greetd
@@ -40,10 +40,9 @@ required_paths=(
 )
 
 for path in "${required_paths[@]}"; do
-  [[ -e "$tmp_dir/rootfs/$path" ]] || fail "missing ISO path: $path"
+  grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
 
-scenefx_library=$(find "$tmp_dir/rootfs/usr/lib" -type f -name 'libscenefx*' -print -quit)
-[[ -n "$scenefx_library" ]] || fail 'missing Scenefx library'
+grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
 
 printf 'ISO content check passed: MangoWM, Scenefx, Noctalia, ReGreet, greetd, and dinit payloads present.\n'

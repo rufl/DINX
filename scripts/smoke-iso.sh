@@ -5,6 +5,8 @@ iso_path=${1:-}
 timeout_seconds=${DINX_QEMU_TIMEOUT:-60}
 memory_mb=${DINX_QEMU_MEMORY:-2048}
 log_path=${DINX_QEMU_LOG:-}
+screenshot_path=${DINX_QEMU_SCREENSHOT:-}
+screenshot_delay=${DINX_QEMU_SCREENSHOT_DELAY:-30}
 
 fail() {
   printf 'smoke-iso: %s\n' "$*" >&2
@@ -15,6 +17,7 @@ fail() {
 [[ -f "$iso_path" ]] || fail "ISO does not exist: $iso_path"
 [[ "$timeout_seconds" =~ ^[1-9][0-9]*$ ]] || fail "DINX_QEMU_TIMEOUT must be a positive integer"
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail "DINX_QEMU_MEMORY must be a positive integer"
+[[ "$screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_SCREENSHOT_DELAY must be a non-negative integer"
 command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not found: qemu-system-x86_64"
 command -v timeout >/dev/null 2>&1 || fail "required command not found: timeout"
 
@@ -30,6 +33,24 @@ else
   printf '%s\n' 'smoke-iso: using TCG acceleration'
 fi
 
+monitor_args=( -monitor none )
+monitor_dir=
+monitor_path=
+if [[ -n "$screenshot_path" ]]; then
+  command -v socat >/dev/null 2>&1 || fail "required command not found: socat"
+  mkdir -p "$(dirname "$screenshot_path")"
+  monitor_dir=$(mktemp -d)
+  monitor_path="$monitor_dir/qemu.monitor"
+  monitor_args=( -monitor "unix:$monitor_path,server=on,wait=off" )
+fi
+
+cleanup() {
+  if [[ -n "$monitor_dir" ]]; then
+    rm -rf "$monitor_dir"
+  fi
+}
+trap cleanup EXIT
+
 set +e
 timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 \
@@ -38,12 +59,36 @@ timeout --kill-after=10s "${timeout_seconds}s" \
   -cdrom "$iso_path" \
   -boot order=d \
   -display none \
-  -monitor none \
+  "${monitor_args[@]}" \
   -serial "file:$log_path" \
   -netdev user,id=net0 \
   -device virtio-net-pci,netdev=net0 \
   -no-reboot \
-  -no-shutdown
+  -no-shutdown &
+qemu_pid=$!
+
+dump_status=0
+if [[ -n "$screenshot_path" ]]; then
+  monitor_ready=false
+  for ((attempt = 0; attempt < 30; attempt++)); do
+    if [[ -S "$monitor_path" ]]; then
+      monitor_ready=true
+      break
+    fi
+    sleep 1
+  done
+
+  if [[ "$monitor_ready" == true ]]; then
+    sleep "$screenshot_delay"
+    printf 'screendump %s\n' "$screenshot_path" \
+      | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
+    dump_status=$?
+  else
+    dump_status=1
+  fi
+fi
+
+wait "$qemu_pid"
 status=$?
 set -e
 
@@ -53,6 +98,12 @@ if [[ "$status" -ne 124 ]]; then
     cat "$log_path" >&2
   fi
   exit 1
+fi
+
+if [[ -n "$screenshot_path" ]]; then
+  [[ "$dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept screendump'
+  [[ -s "$screenshot_path" ]] || fail "QEMU screendump is empty: $screenshot_path"
+  printf 'smoke-iso: graphical screendump: %s\n' "$screenshot_path"
 fi
 
 printf 'smoke-iso: QEMU remained alive for %ss; ISO boot path accepted\n' "$timeout_seconds"

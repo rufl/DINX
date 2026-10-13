@@ -30,7 +30,7 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes qemu-system-x86 squashfs-tools xorriso
+          sudo apt-get install --yes qemu-system-x86 squashfs-tools xorriso socat
 
       - name: Build with Artix artools
         run: |
@@ -125,9 +125,11 @@ jobs:
           printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
 
-      - name: Boot smoke test
+      - name: Boot smoke test and graphical capture
         env:
           DINX_QEMU_TIMEOUT: 60
+          DINX_QEMU_SCREENSHOT: dist/iso/dinx/dinx-graphical-screen.ppm
+          DINX_QEMU_SCREENSHOT_DELAY: 45
         run: scripts/smoke-iso.sh "$DINX_ISO"
 
       - name: Verify graphical ISO payload
@@ -143,3 +145,4 @@ jobs:
             dist/iso/**/*.iso
             dist/iso/**/*.sha512
             dist/iso/**/*.qemu.log
+            dist/iso/**/*.ppm

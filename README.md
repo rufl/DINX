@@ -58,8 +58,8 @@ The alpha does not require all first-party applications to be complete. A known-
 - [Architecture](docs/architecture.md)
 - [Noctalia compatibility](docs/compatibility.md)
 - [Security model](docs/security-model.md)
-- [Roadmap](docs/roadmap.md)
+- [P0 build status](docs/p0-build.md)
 
 ## Current status
 
-The repository is at the documentation and foundation stage. The next implementation increment is P0: establish the build inputs and produce a bootable, testable Artix+dinit image before making Noctty, Nocted or Dinx Control mandatory.
+The repository is at the documentation and foundation stage. The Artix `buildiso` profile and root-aware build wrapper are now present under `distro/iso/` and `scripts/`. The next implementation increment is to provide the Artix build dependencies and run the first ISO build/boot validation before making Noctty, Nocted or Dinx Control mandatory.

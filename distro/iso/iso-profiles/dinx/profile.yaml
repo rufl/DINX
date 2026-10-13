@@ -1,0 +1,56 @@
+---
+live-session:
+  user: dinx
+  password: dinx
+  autologin: false
+  use-xlibre: false
+  services:
+    - metalog
+    - NetworkManager
+  user-services:
+    - dbus
+    - pipewire
+    - pipewire-pulse
+    - wireplumber
+
+rootfs:
+  packages:
+    - dinit
+    - dinit-rc
+    - networkmanager
+    - pipewire
+    - pipewire-pulse
+    - wireplumber
+    - wayland
+    - xorg-xwayland
+    - mesa
+    - xdg-desktop-portal
+    - xdg-desktop-portal-wlr
+    - squashfs-tools
+    - mkinitcpio-nfs-utils
+    - artix-grub-live
+  packages-init:
+    dinit:
+      - dinit-user-spawn
+      - metalog-dinit
+      - networkmanager-dinit
+      - elogind-dinit
+      - dbus-dinit
+      - pipewire-dinit
+      - pipewire-pulse-dinit
+      - wireplumber-dinit
+      - artix-live-dinit
+
+livefs:
+  packages:
+    - mkinitcpio-nfs-utils
+    - squashfs-tools
+  packages-init:
+    dinit:
+      - artix-live-dinit
+      - networkmanager-dinit
+      - dbus-dinit
+      - elogind-dinit
+      - pipewire-dinit
+      - pipewire-pulse-dinit
+      - wireplumber-dinit

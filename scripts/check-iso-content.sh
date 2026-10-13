@@ -22,7 +22,7 @@ xorriso -osirrox on \
   -extract /LiveOS/rootfs.img "$tmp_dir/rootfs.img" \
   >/dev/null
 
-unsquashfs -quiet -d "$tmp_dir/rootfs" "$tmp_dir/rootfs.img"
+unsquashfs -quiet -no-xattrs -d "$tmp_dir/rootfs" "$tmp_dir/rootfs.img"
 
 required_paths=(
   etc/dinit.d/greetd

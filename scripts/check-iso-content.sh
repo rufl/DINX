@@ -41,7 +41,7 @@ required_paths=(
   usr/bin/noctalia
   usr/bin/regreet
   usr/local/libexec/dinx-regreet
-  usr/share/wayland-sessions/mango.desktop
+  usr/local/libexec/dinx-mango
   usr/share/xdg-desktop-portal/mango-portals.conf
 )
 

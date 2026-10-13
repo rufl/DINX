@@ -24,7 +24,7 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 4. compila MangoWM e Scenefx e os serve em um repositório pacman local temporário;
 5. executa o probe de pré-requisitos;
 6. constrói a ISO com `buildiso`;
-7. valida o payload SquashFS do root;
+7. valida os payloads SquashFS do root e da sessão live;
 8. gera checksum SHA-512;
 9. mantém QEMU executando por uma janela de boot configurável e captura sua superfície VGA;
 10. publica a ISO, o checksum e a captura PPM como artefato privado temporário do workflow.
@@ -32,6 +32,10 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango e os arquivos de serviço dinit chegaram à ISO. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede ou áudio dentro do guest.
 
 A execução também captura a superfície VGA do QEMU como artefato PPM pelo monitor. Essa captura é evidência visual para inspeção; ela não prova automaticamente a interação com o greeter, a saúde da sessão do usuário, a rede ou o áudio.
+
+A sobreposição live também substitui o serviço dinit genérico `root-ro` por um no-op: a raiz live é um overlay e não pode ser remontada somente para leitura. Esse ajuste vale apenas para a sessão live da ISO, não é uma política do sistema instalado.
+
+O wrapper do Mango habilita `WLR_RENDERER_ALLOW_SOFTWARE=1` somente quando `/dev/dri/renderD*` está ausente; portanto, o caminho QEMU headless não mascara um render node DRM real.
 
 Para uma captura gráfica local, defina `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` e, opcionalmente, `DINX_QEMU_SCREENSHOT_DELAY` antes de executar `scripts/smoke-iso.sh`; o workflow usa as mesmas teclas, atraso de 60 segundos e publica o PPM junto com o artefato da ISO.
 

@@ -60,9 +60,9 @@ The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. 
 
 ## Graphical profile
 
-`iso-profiles/dinx/profile.yaml` now includes MangoWM, Scenefx, Noctalia, greetd and ReGreet. MangoWM and Scenefx are built from pinned upstream release archives in `distro/packages`; the workflow publishes them to a temporary local pacman repository before invoking `buildiso`. The profile's `root-overlay` supplies the greetd configuration, ReGreet actions, MangoWM sessions and the Noctalia autostart.
+`iso-profiles/dinx/profile.yaml` now includes MangoWM, Scenefx, Noctalia, greetd and ReGreet. MangoWM and Scenefx are built from pinned upstream release archives in `distro/packages`; the workflow publishes them to a temporary local pacman repository before invoking `buildiso`. The profile's `root-overlay` supplies the greetd configuration, ReGreet actions, MangoWM sessions, the Noctalia autostart, a live-only no-op override for dinit's `root-ro` service and a Mango wrapper that enables software rendering only when the guest has no DRM render node.
 
-The content check proves that the ISO contains the expected compositor, shell, greeter, session and dinit payloads. The workflow's PPM capture is visual evidence to inspect, not an automated interactive login check: graphical login, service health and recovery TTY remain release gates.
+The content check proves that the root and live-session SquashFS images contain the expected compositor, shell, greeter, session and dinit payloads. The workflow's PPM capture is visual evidence to inspect, not an automated interactive login check: graphical login, service health and recovery TTY remain release gates.
 
 ## Profile boundary
 

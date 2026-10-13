@@ -103,7 +103,11 @@ fi
 if [[ -n "$screenshot_path" ]]; then
   [[ "$dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept screendump'
   [[ -s "$screenshot_path" ]] || fail "QEMU screendump is empty: $screenshot_path"
-  printf 'smoke-iso: graphical screendump: %s\n' "$screenshot_path"
+  ppm_magic=
+  IFS= read -r ppm_magic < "$screenshot_path" || true
+  [[ "$ppm_magic" == P6 ]] || fail "QEMU screendump is not a binary PPM: $screenshot_path"
+  screenshot_size=$(wc -c < "$screenshot_path")
+  printf 'smoke-iso: graphical screendump: %s (%s bytes)\n' "$screenshot_path" "$screenshot_size"
 fi
 
 printf 'smoke-iso: QEMU remained alive for %ss; ISO boot path accepted\n' "$timeout_seconds"

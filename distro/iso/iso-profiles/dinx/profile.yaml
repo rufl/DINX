@@ -15,20 +15,29 @@ live-session:
 
 rootfs:
   packages:
+    - accountsservice
+    - artix-grub-live
     - dinit
     - dinit-rc
+    - elogind
+    - greetd
+    - greetd-regreet
+    - mangowm
+    - mesa
     - networkmanager
+    - noctalia
     - pipewire
     - pipewire-pulse
-    - wireplumber
+    - polkit
+    - scenefx
+    - seatd
+    - squashfs-tools
     - wayland
-    - xorg-xwayland
-    - mesa
+    - wireplumber
     - xdg-desktop-portal
     - xdg-desktop-portal-wlr
-    - squashfs-tools
+    - xorg-xwayland
     - mkinitcpio-nfs-utils
-    - artix-grub-live
   packages-init:
     dinit:
       - dinit-user-spawn
@@ -39,6 +48,7 @@ rootfs:
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit
+      - greetd-dinit
       - artix-live-dinit
 
 livefs:

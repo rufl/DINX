@@ -1,0 +1,6 @@
+[terminal]
+vt = 1
+
+[default_session]
+command = "dbus-run-session mango -c /etc/mango/greeter.conf"
+user = "greeter"

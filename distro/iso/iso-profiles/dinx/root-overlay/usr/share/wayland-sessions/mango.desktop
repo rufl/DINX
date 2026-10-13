@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=MangoWM (DINX)
+Comment=MangoWM with Noctalia Shell
+Exec=dbus-run-session mango -c /etc/mango/dinx.conf
+Type=Application
+DesktopNames=Mango

@@ -34,6 +34,12 @@ Teste o boot de uma ISO já construída:
 scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
 
+Verifique o payload gráfico dentro da imagem SquashFS do root:
+
+```bash
+scripts/check-iso-content.sh dist/iso/<arquivo>.iso
+```
+
 Opções adicionais do `buildiso` são repassadas sem alteração. Por exemplo, para consultar as configurações sem executar o build:
 
 ```bash
@@ -42,18 +48,23 @@ scripts/build-iso.sh -q
 
 O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_ISO_OUTPUT`. O cache de chroots padrão é `/var/lib/artools/buildiso`; altere-o com `DINX_ISO_CHROOTS` quando o builder usar outro volume persistente.
 
+## Perfil gráfico
+
+`iso-profiles/dinx/profile.yaml` agora inclui MangoWM, Scenefx, Noctalia, greetd e ReGreet. MangoWM e Scenefx são compilados a partir de arquivos de release upstream fixados em `distro/packages`; o workflow publica esses pacotes em um repositório pacman local temporário antes de chamar o `buildiso`. O `root-overlay` do perfil fornece a configuração do greetd, as ações do ReGreet, as sessões MangoWM e o autostart do Noctalia.
+
+A verificação de conteúdo prova que a ISO contém os payloads esperados do compositor, shell, greeter, sessão e dinit. Ela não substitui um teste interativo do guest: login gráfico, saúde dos serviços e TTY de recuperação continuam gates de release.
+
 ## Limite do perfil
 
-`iso-profiles/dinx/profile.yaml` é o perfil de fundação. Ele seleciona os pacotes complementares de serviços dinit e os componentes mínimos de Wayland, áudio e rede necessários para a primeira validação de boot. Noctalia, MangoWC, Noctty e Nocted não são substituídos silenciosamente por aplicativos sem relação; eles só entram no perfil depois que suas fontes e licenças forem verificadas.
-
-O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-profiles` instalado e adiciona localmente as entradas específicas da DINX. A exportação de `WORKSPACE_DIR` em `scripts/build-iso.sh` torna determinística a seleção do perfil.
+O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-profiles` instalado e adiciona localmente as entradas específicas da DINX. `WORKSPACE_DIR` em `scripts/build-iso.sh` torna determinística a seleção do perfil.
 
 ## Validação do build
 
-Um build de imagem bem-sucedido não é o critério de release. A ISO resultante ainda exige:
+Um build de imagem bem-sucedido não é o critério de release. A ISO resultante exige:
 
 1. geração de checksum;
-2. smoke test de boot em VM;
-3. verificação da TTY de recuperação;
-4. verificações de rede, áudio, D-Bus, portal e gráficos;
-5. relatório de instalação/atualização antes de ser rotulada como alpha.
+2. validação do conteúdo SquashFS;
+3. smoke test de boot em VM;
+4. verificação da TTY de recuperação;
+5. verificações de rede, áudio, D-Bus, portal e gráficos;
+6. relatório de instalação/atualização antes de ser rotulada como alpha.

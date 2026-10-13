@@ -18,16 +18,18 @@ Os pontos de entrada são:
 
 O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do perfil/build mudam. Ele:
 
-1. instala QEMU no runner Ubuntu;
+1. instala QEMU e ferramentas de inspeção de ISO no runner Ubuntu;
 2. executa Artix em um container privilegiado;
-3. instala `artools` e `iso-profiles`;
-4. executa o probe de pré-requisitos;
-5. constrói a ISO com `buildiso`;
-6. gera checksum SHA-512;
-7. mantém QEMU executando por uma janela de boot configurável;
-8. publica a ISO e o checksum como artefato privado temporário do workflow.
+3. instala `artools`, `iso-profiles` e as dependências de build fixadas do MangoWM/Scenefx;
+4. compila MangoWM e Scenefx e os serve em um repositório pacman local temporário;
+5. executa o probe de pré-requisitos;
+6. constrói a ISO com `buildiso`;
+7. valida o payload SquashFS do root;
+8. gera checksum SHA-512;
+9. mantém QEMU executando por uma janela de boot configurável;
+10. publica a ISO e o checksum como artefato privado temporário do workflow.
 
-O smoke test prova que a imagem e o caminho de boot permanecem aceitos pelo QEMU durante a janela definida. Ele ainda não prova login gráfico, rede ou áudio dentro do guest; essas verificações entram depois que a imagem foundation tiver um método de teste de guest observável.
+A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango e os arquivos de serviço dinit chegaram à ISO. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede ou áudio dentro do guest.
 
 ## Execução bem-sucedida observada
 
@@ -52,8 +54,9 @@ Portanto, o build P0 deve ser executado no workflow remoto até que as dependên
 1. `scripts/check-iso-host.sh` termina com sucesso no container Artix.
 2. `scripts/build-iso.sh -q` resolve o perfil `dinx` com `dinit`.
 3. Um build limpo produz uma ISO e seus metadados de build.
-4. O checksum SHA-512 é gerado junto da ISO.
-5. `scripts/smoke-iso.sh` mantém o QEMU ativo durante a janela de boot.
-6. A ISO inicializa na sessão de fundação e oferece uma TTY de recuperação.
-7. Rede, PipeWire, D-Bus, portais e gráficos são verificados no sistema inicializado.
-8. Somente depois desses passos os pacotes do desktop e dos aplicativos próprios entram como entradas de release.
+4. A verificação gráfica encontra o compositor, shell, greeter, sessão e arquivos dinit.
+5. O checksum SHA-512 é gerado junto da ISO.
+6. `scripts/smoke-iso.sh` mantém o QEMU ativo durante a janela de boot.
+7. A ISO inicializa na sessão de fundação e oferece uma TTY de recuperação.
+8. Rede, PipeWire, D-Bus, portais e gráficos são verificados no sistema inicializado.
+9. Somente depois desses passos os pacotes do desktop e dos aplicativos próprios entram como entradas de release.

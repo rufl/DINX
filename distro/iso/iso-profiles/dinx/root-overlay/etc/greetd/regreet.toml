@@ -1,0 +1,6 @@
+[commands]
+reboot = ["loginctl", "reboot"]
+poweroff = ["loginctl", "poweroff"]
+
+[appearance]
+greeting_msg = "Bem-vindo ao DINX"

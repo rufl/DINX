@@ -1,0 +1,25 @@
+pkgname=mangowm
+_pkgname=mango
+pkgver=0.18.0
+pkgrel=1
+pkgdesc="Lightweight, feature rich modern Wayland compositor"
+url="https://mangowm.github.io"
+arch=(x86_64)
+license=(GPL-3.0-or-later)
+depends=(glibc wayland-protocols pango wayland libinput libdrm cairo pixman libdisplay-info libliftoff seatd xorg-xwayland glib2 libxcb libxkbcommon pcre2 wlroots0.20 scenefx cjson xcb-util-wm)
+provides=(wayland-compositor)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/mangowm/mango/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('984386900d8a6896a67c56e3defcc8a979c8a9bd5b3b8ba9fb1ef537965b64a1')
+
+build() {
+  meson setup build "$srcdir/$_pkgname-$pkgver" --prefix=/usr --buildtype=plain
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir="$pkgdir"
+}

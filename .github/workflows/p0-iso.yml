@@ -8,7 +8,9 @@ on:
     paths:
       - ".github/workflows/p0-iso.yml"
       - "distro/iso/**"
+      - "distro/packages/**"
       - "scripts/build-iso.sh"
+      - "scripts/check-iso-content.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/smoke-iso.sh"
 
@@ -25,10 +27,10 @@ jobs:
       - name: Checkout DINX
         uses: actions/checkout@v4
 
-      - name: Install QEMU
+      - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes qemu-system-x86
+          sudo apt-get install --yes qemu-system-x86 squashfs-tools xorriso
 
       - name: Build with Artix artools
         run: |
@@ -42,7 +44,71 @@ jobs:
             bash -ceu '
               set -e
               pacman -Syu --noconfirm
-              pacman -S --needed --noconfirm artools iso-profiles mkinitcpio
+              pacman -S --needed --noconfirm \
+                artools \
+                iso-profiles \
+                mkinitcpio \
+                base-devel \
+                cairo \
+                cjson \
+                glib2 \
+                glslang \
+                lcms2 \
+                libdisplay-info \
+                libdrm \
+                libglvnd \
+                libinput \
+                libliftoff \
+                libxcb \
+                libxkbcommon \
+                mesa \
+                meson \
+                pango \
+                pcre2 \
+                pixman \
+                python \
+                seatd \
+                wayland \
+                wayland-protocols \
+                wlroots0.20 \
+                xcb-util-wm \
+                xorg-xwayland
+
+              package_repo=/workspace/dist/packages
+              rm -rf "$package_repo"
+              mkdir -p "$package_repo"
+              useradd --create-home --user-group dinxbuild
+              chown -R dinxbuild:dinxbuild /workspace/distro/packages "$package_repo"
+
+              build_package() {
+                local package_name="$1"
+                local package_dir="/workspace/distro/packages/$package_name"
+                (
+                  cd "$package_dir"
+                  runuser -u dinxbuild -- makepkg --clean --nodeps --nocheck --noconfirm
+                )
+                find "$package_dir" -maxdepth 1 -type f -name "*.pkg.tar.zst" \
+                  -exec cp -- {} "$package_repo/" \;
+              }
+
+              build_package scenefx
+              pacman -U --noconfirm "$package_repo"/scenefx-*.pkg.tar.zst
+              build_package mangowm
+              repo-add "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
+
+              pacman_conf=$(find /usr/share/artools -type f \
+                -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
+              test -n "$pacman_conf"
+              printf "\n[dinx]\nSigLevel = Never\nServer = http://127.0.0.1:8765\n" \
+                >> "$pacman_conf"
+
+              python -m http.server 8765 \
+                --bind 127.0.0.1 \
+                --directory "$package_repo" \
+                >/tmp/dinx-package-repo.log 2>&1 &
+              repo_pid=$!
+              trap "kill $repo_pid 2>/dev/null || true" EXIT
+
               scripts/check-iso-host.sh
               scripts/build-iso.sh
             '
@@ -63,6 +129,9 @@ jobs:
         env:
           DINX_QEMU_TIMEOUT: 60
         run: scripts/smoke-iso.sh "$DINX_ISO"
+
+      - name: Verify graphical ISO payload
+        run: scripts/check-iso-content.sh "$DINX_ISO"
 
       - name: Upload private alpha artifact
         uses: actions/upload-artifact@v4

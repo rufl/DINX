@@ -34,6 +34,12 @@ Smoke-test an already-built ISO:
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
 
+Check the graphical payload inside the root SquashFS image:
+
+```bash
+scripts/check-iso-content.sh dist/iso/<file>.iso
+```
+
 Extra `buildiso` options are passed through unchanged. For example, query settings without building:
 
 ```bash
@@ -42,18 +48,23 @@ scripts/build-iso.sh -q
 
 The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. The chroot cache defaults to `/var/lib/artools/buildiso`; override it with `DINX_ISO_CHROOTS` when the builder uses another persistent volume.
 
+## Graphical profile
+
+`iso-profiles/dinx/profile.yaml` now includes MangoWM, Scenefx, Noctalia, greetd and ReGreet. MangoWM and Scenefx are built from pinned upstream release archives in `distro/packages`; the workflow publishes them to a temporary local pacman repository before invoking `buildiso`. The profile's `root-overlay` supplies the greetd configuration, ReGreet actions, MangoWM sessions and the Noctalia autostart.
+
+The content check proves that the ISO contains the expected compositor, shell, greeter, session and dinit payloads. It does not replace an interactive guest check: graphical login, service health and recovery TTY remain release gates.
+
 ## Profile boundary
 
-`iso-profiles/dinx/profile.yaml` is the foundation profile. It selects the dinit service companions and the minimum Wayland/audio/networking pieces needed for the first boot validation. Noctalia, MangoWC, Noctty or Nocted are not silently substituted with unrelated applications; they enter the profile only after their package sources and licenses are verified.
-
-The profile uses the Artix common package manifest supplied by the installed `iso-profiles` package and adds DINX-specific inputs locally. The `WORKSPACE_DIR` export in `scripts/build-iso.sh` makes the profile selection deterministic.
+The profile uses the Artix common package manifest supplied by the installed `iso-profiles` package and adds DINX-specific inputs locally. `WORKSPACE_DIR` in `scripts/build-iso.sh` makes profile selection deterministic.
 
 ## Build validation
 
-A successful image build is not the release criterion. The resulting ISO still requires:
+A successful image build is not the release criterion. The resulting ISO requires:
 
 1. checksum generation;
-2. a VM boot smoke test;
-3. recovery-TTY verification;
-4. network, audio, D-Bus, portal and graphics checks;
-5. an install/upgrade report before it is labelled alpha.
+2. SquashFS content validation;
+3. a VM boot smoke test;
+4. recovery-TTY verification;
+5. network, audio, D-Bus, portal and graphics checks;
+6. an install/upgrade report before it is labelled alpha.

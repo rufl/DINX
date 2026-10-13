@@ -32,8 +32,10 @@ jobs:
 
       - name: Build with Artix artools
         run: |
+          mkdir -p "$RUNNER_TEMP/dinx-artools"
           docker run --rm --privileged \
             --volume "$GITHUB_WORKSPACE:/workspace" \
+            --volume "$RUNNER_TEMP/dinx-artools:/var/lib/artools/buildiso" \
             --workdir /workspace \
             --env DINX_ISO_OUTPUT=/workspace/dist/iso \
             artixlinux/artixlinux:latest \

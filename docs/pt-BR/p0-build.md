@@ -44,15 +44,15 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Execução bem-sucedida observada
 
-A execução [38466858660](https://github.com/rufl/DINX/actions/runs/38466858660), no commit `6834cf4`, concluiu todas as etapas do workflow em 10m07s:
+A execução [38471629482](https://github.com/rufl/DINX/actions/runs/38471629482), no commit `6224b58`, concluiu todas as etapas do workflow em 6m02s:
 
 - artefato ISO: `artix-dinx-dinit-20261013-x86_64.iso`;
 - tamanho: 1.497.237.504 bytes;
-- SHA-512: `96c922cf861f5e4bf59eeff1c4236f85b71f1c35542f0105dc28106b50df9376dbee18ba80e961f5f62e10b86d6e2d748e4ac3dd913c854424c387bdf86eff8d`;
+- SHA-512: `adcd6cba882b368725ffa02d33e8a2ae17c3be1b9ffaa17692dbd9eb895689bb0a686530f1012a11f6d262ef2d9ab859d27c2995393aa1ded4cd50d4af42433c`;
 - janela de smoke no QEMU: 90 segundos, aprovada;
 - verificação de payload: MangoWM, Scenefx, Noctalia, ReGreet, greetd e payloads dinit presentes;
 - captura gráfica: o quadro inicial mostrou o seletor de usuário/sessão do ReGreet, e o quadro após as teclas mostrou a sessão MangoWM com a tela de boas-vindas do Noctalia;
-- artefato: `dinx-foundation-iso-6834cf48c3903da692540479a6c5c664da2bf28d`, mantido por 7 dias.
+- artefato: `dinx-foundation-iso-6224b5859de814b1d5fe7e2fae982e1c9c49918f`, mantido por 7 dias.
 
 O log serial gerado ficou vazio. As duas capturas VGA fornecem evidência da renderização do greeter e da transição bem-sucedida para a sessão gráfica do usuário; não provam rede, áudio ou saúde dos serviços em longo prazo.
 

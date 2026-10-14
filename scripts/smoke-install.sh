@@ -130,6 +130,8 @@ restart = false
 EOF
 ln -sfn ../dinx-install-smoke-marker "$target_dir/etc/dinit.d/boot.d/dinx-install-smoke-marker"
 
+printf '\nMODULES+=(virtio virtio_pci virtio_blk)\n' >> "$target_dir/etc/mkinitcpio.conf"
+printf '\nGRUB_CMDLINE_LINUX="console=ttyS0"\n' >> "$target_dir/etc/default/grub"
 printf 'smoke-install: generating the installed initramfs\n'
 chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 

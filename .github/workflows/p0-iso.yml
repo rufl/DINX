@@ -203,10 +203,11 @@ jobs:
             ${{ steps.artifact.outputs.iso_path }}.sha512
 
       - name: Upload alpha workflow artifact
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dinx-foundation-iso-${{ github.sha }}
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
           path: |
             dist/iso/**/*.iso

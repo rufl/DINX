@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@26122d68a90a95389b509398f4328884c1f7985e # pin reusable P0 workflow
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@57f12f2108bedf64ac7b7a9223f9262fc1501475 # pin reusable P0 workflow
     permissions:
       contents: read
 
@@ -115,9 +115,10 @@ jobs:
           receiver \`ddjarin\`. Run \`scripts/deploy-ztash.sh ${RELEASE_TAG}\` from a
           trusted owner machine for a preview; add \`--apply\` only after review.
 
-          This is a pre-release validation image, not a supported disk installer.
-          The live account is \`dinx\` / \`dinx\`; it is disposable and must never be
-          reused. Read the installation guide and security model before booting.
+          This release includes an experimental offline Calamares installer and KDE Partition Manager.
+          It is not a supported disk installer; verify the selected device and read the installation
+          guide before using either destructive tool.
+          The live account is \`dinx\` / \`dinx\`; it is disposable and must never be reused.
           EOF
           case "$version" in
             *-alpha*|*-beta*|*-rc*) prerelease=(--prerelease) ;;

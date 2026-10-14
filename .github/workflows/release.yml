@@ -73,8 +73,15 @@ jobs:
             "$iso_sha512" \
             "$GITHUB_SHA" \
             dist/release
+          release_evidence=()
           while IFS= read -r evidence; do
-            cp "$evidence" "dist/release/dinx-${version}-$(basename "$evidence")"
+            if [[ ! -s "$evidence" ]]; then
+              printf 'Skipping empty release evidence: %s\n' "$evidence"
+              continue
+            fi
+            evidence_asset="dist/release/dinx-${version}-$(basename "$evidence")"
+            cp "$evidence" "$evidence_asset"
+            release_evidence+=("$evidence_asset")
           done < <(find dist/release-input -type f \( -name '*.ppm' -o -name '*.qemu.log' \) -print)
           package_name="dinx-${version}-dogfood.1-windows-x86_64.zip"
           metadata_name="dinx-${version}-dogfood.1-windows-x86_64.json"
@@ -94,7 +101,7 @@ jobs:
 
           - SHA-512: \`${iso_name}.sha512\`
           - Linux QEMU boot, graphical payload and automated greeter/session captures passed in CI.
-          - The PPM captures and serial log are included as release evidence.
+          - The PPM captures are included; a serial log is included when QEMU produced non-empty output.
 
           ## Windows QEMU package
 
@@ -116,16 +123,18 @@ jobs:
             *-alpha*|*-beta*|*-rc*) prerelease=(--prerelease) ;;
             *) prerelease=() ;;
           esac
+          release_assets=(
+            "dist/release/$iso_name"
+            "dist/release/$iso_name.sha512"
+            "dist/release/$package_name"
+            "dist/release/$metadata_name"
+            "dist/release/$manifest_name"
+            dist/release/SHA256SUMS
+          )
+          release_assets+=("${release_evidence[@]}")
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "DINX ${RELEASE_TAG}" \
             --notes-file dist/release/RELEASE_NOTES.md \
             "${prerelease[@]}" \
-            "dist/release/$iso_name" \
-            "dist/release/$iso_name.sha512" \
-            "dist/release/$package_name" \
-            "dist/release/$metadata_name" \
-            "dist/release/$manifest_name" \
-            dist/release/SHA256SUMS \
-            dist/release/dinx-${version}-*.ppm \
-            dist/release/dinx-${version}-*.qemu.log
+          "${release_assets[@]}"

@@ -120,9 +120,15 @@ grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not 
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
 
-for forbidden_path in \
+for forbidden_directory in \
   etc/systemd \
-  usr/lib/systemd \
+  usr/lib/systemd; do
+  if grep -Eq "/$forbidden_directory/[^[:space:]]+" <<<"$manifest"; then
+    fail "forbidden desktop/runtime payload is present: $forbidden_directory"
+  fi
+done
+
+for forbidden_path in \
   usr/bin/systemd \
   usr/bin/systemctl \
   usr/bin/xfce4-session \

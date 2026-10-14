@@ -2,7 +2,7 @@ pkgname=mangowm
 _pkgname=mango
 pkgver=0.18.0
 _commit=a21b10fcbe6156b76ea96178d1941de5cb36137f
-pkgrel=1
+pkgrel=2
 pkgdesc="Lightweight, feature rich modern Wayland compositor"
 url="https://mangowm.github.io"
 arch=(x86_64)
@@ -23,4 +23,6 @@ check() {
 
 package() {
   meson install -C build --destdir="$pkgdir"
+  # Mango upstream installs a systemd user target; DINX uses dinit.
+  rm -rf "$pkgdir/usr/lib/systemd"
 }

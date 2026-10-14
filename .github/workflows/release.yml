@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@f5d13faa6387d35ecac8c0e674f7e98bf7ff037a # pin final P1 workflow with deterministic BIOS/IDE persistent-install smoke
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@10f55d8452128764cd6e86c75a147f7e598cdf36 # pin P1 workflow with dinit and Thunar/GVFS removable-media extras
     permissions:
       contents: read
       id-token: write

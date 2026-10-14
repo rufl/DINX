@@ -67,7 +67,6 @@ jobs:
                 cjson \
                 glib2 \
                 glslang \
-                lcms2 \
                 libdisplay-info \
                 libdrm \
                 libglvnd \
@@ -84,10 +83,10 @@ jobs:
                 seatd \
                 wayland \
                 wayland-protocols \
-                wlroots0.20 \
+                xcb-util-errors \
+                xcb-util-renderutil \
                 xcb-util-wm \
                 xorg-xwayland
-
               package_repo=/workspace/dist/packages
               rm -rf "$package_repo"
               mkdir -p "$package_repo"
@@ -105,6 +104,8 @@ jobs:
                   -exec cp -- {} "$package_repo/" \;
               }
 
+              build_package wlroots0.20
+              pacman -U --noconfirm "$package_repo"/wlroots0.20-*.pkg.tar.zst
               build_package scenefx
               pacman -U --noconfirm "$package_repo"/scenefx-*.pkg.tar.zst
               build_package mangowm
@@ -115,7 +116,6 @@ jobs:
               test -n "$pacman_conf"
               printf "\n[dinx]\nSigLevel = Never\nServer = http://127.0.0.1:8765\n" \
                 >> "$pacman_conf"
-
               python -m http.server 8765 \
                 --bind 127.0.0.1 \
                 --directory "$package_repo" \

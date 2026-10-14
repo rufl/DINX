@@ -6,7 +6,9 @@ timeout_seconds=${DINX_QEMU_TIMEOUT:-60}
 memory_mb=${DINX_QEMU_MEMORY:-2048}
 log_path=${DINX_QEMU_LOG:-}
 screenshot_path=${DINX_QEMU_SCREENSHOT:-}
+boot_screenshot_path=${DINX_QEMU_BOOT_SCREENSHOT:-}
 screenshot_delay=${DINX_QEMU_SCREENSHOT_DELAY:-30}
+boot_screenshot_delay=${DINX_QEMU_BOOT_SCREENSHOT_DELAY:-3}
 boot_keys=${DINX_QEMU_BOOT_KEYS:-}
 post_screenshot_path=${DINX_QEMU_POST_SCREENSHOT:-}
 post_screenshot_delay=${DINX_QEMU_POST_SCREENSHOT_DELAY:-10}
@@ -23,6 +25,7 @@ fail() {
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail "DINX_QEMU_MEMORY must be a positive integer"
 [[ "$screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$post_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_POST_SCREENSHOT_DELAY must be a non-negative integer"
+[[ "$boot_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_BOOT_SCREENSHOT_DELAY must be a non-negative integer"
 command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not found: qemu-system-x86_64"
 command -v timeout >/dev/null 2>&1 || fail "required command not found: timeout"
 
@@ -76,8 +79,11 @@ fi
 monitor_args=( -monitor none )
 monitor_dir=
 monitor_path=
-if [[ -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
+if [[ -n "$boot_screenshot_path" || -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
   command -v socat >/dev/null 2>&1 || fail "required command not found: socat"
+  if [[ -n "$boot_screenshot_path" ]]; then
+    mkdir -p "$(dirname "$boot_screenshot_path")"
+  fi
   if [[ -n "$screenshot_path" ]]; then
     mkdir -p "$(dirname "$screenshot_path")"
   fi
@@ -112,9 +118,10 @@ timeout --kill-after=10s "${timeout_seconds}s" \
   -no-shutdown &
 qemu_pid=$!
 
+boot_dump_status=0
 dump_status=0
 post_dump_status=0
-if [[ -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
+if [[ -n "$boot_screenshot_path" || -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
   monitor_ready=false
   for ((attempt = 0; attempt < 30; attempt++)); do
     if [[ -S "$monitor_path" ]]; then
@@ -125,6 +132,12 @@ if [[ -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
   done
 
   if [[ "$monitor_ready" == true ]]; then
+    if [[ -n "$boot_screenshot_path" ]]; then
+      sleep "$boot_screenshot_delay"
+      capture_screen "$boot_screenshot_path"
+      boot_dump_status=$?
+    fi
+
     if [[ -n "$boot_keys" ]]; then
       send_keys "$boot_keys"
       input_status=$?
@@ -150,6 +163,7 @@ if [[ -n "$screenshot_path" || -n "$post_screenshot_path" ]]; then
       post_dump_status=$?
     fi
   else
+    boot_dump_status=1
     dump_status=1
     post_dump_status=1
   fi
@@ -167,6 +181,11 @@ if [[ "$status" -ne 124 ]]; then
   exit 1
 fi
 
+
+if [[ -n "$boot_screenshot_path" ]]; then
+  [[ "$boot_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept boot screendump'
+  validate_screenshot "$boot_screenshot_path" 'boot'
+fi
 if [[ -n "$screenshot_path" ]]; then
   [[ "$dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept screendump'
   validate_screenshot "$screenshot_path" 'graphical'

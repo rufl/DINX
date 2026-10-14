@@ -100,14 +100,14 @@ jobs:
           ## Verification
 
           - SHA-512: \`${iso_name}.sha512\`
-          - Linux QEMU boot, graphical payload and automated greeter/session captures passed in CI.
-          - The PPM captures are included; a serial log is included when QEMU produced non-empty output.
+          - Linux QEMU boot, graphical payload, boot-menu evidence and automated greeter/session captures passed in CI.
+          - The PPM captures include the GRUB boot-menu frame when the release workflow uses the updated P0 workflow.
 
           ## Windows QEMU package
 
           \`${package_name}\` is a small launcher package. It downloads only the ISO URL
           pinned in \`dinx-iso.json\`, verifies the SHA-512, requires
-          \`qemu-system-x86_64.exe\`, and captures the greeter and post-input session
+          \`qemu-system-x86_64.exe\`, and captures the boot-menu, greeter and post-input session
           frames in a desktop Windows session. It does not install QEMU or a Windows
           service.
 

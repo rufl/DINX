@@ -12,7 +12,7 @@ Each alpha release contains:
 
 - `dinx-<version>-x86_64.iso` — the live validation image;
 - the matching `.iso.sha512` file;
-- Linux QEMU graphical and post-input PPM captures plus the serial log;
+- Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
 - the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`.
 
@@ -36,10 +36,11 @@ From the extracted package:
 ```
 
 The default command (`.\dinx.exe`) is equivalent. The launcher boots the ISO with
-QEMU, sends the tested greeter key sequence, captures the initial greeter frame and a
-post-input session frame, validates both as binary PPM files, and terminates QEMU.
-Evidence is retained under `evidence\` beside the package. The bounded headless gate
-used by package qualification is:
+QEMU, captures the graphical boot-menu frame before sending the tested boot keys,
+then sends the greeter key sequence, captures the initial greeter frame and a
+post-input session frame, validates all three as binary PPM files and terminates
+QEMU. Evidence is retained under `evidence\` beside the package. The bounded headless
+gate used by package qualification is:
 
 ```powershell
 .\dinx.exe --package-smoke

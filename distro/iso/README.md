@@ -68,6 +68,8 @@ The profile also owns a DINX GRUB theme override at `iso-profiles/dinx/root-over
 
 The content check proves that the root and live-session SquashFS images contain the expected compositor, shell, greeter, session and dinit payloads. The workflow's PPM capture is visual evidence to inspect, not an automated interactive login check: graphical login, service health and recovery TTY remain release gates.
 
+The workflow stores a separate `dinx-boot-screen.ppm` capture taken before the boot-menu keys are sent. Review this frame when qualifying the GRUB kernel-selection surface; it is the regression evidence for the removed opaque menu panel.
+
 ## Profile boundary
 
 The profile uses the Artix common package manifest supplied by the installed `iso-profiles` package and adds DINX-specific inputs locally. `WORKSPACE_DIR` in `scripts/build-iso.sh` makes profile selection deterministic.

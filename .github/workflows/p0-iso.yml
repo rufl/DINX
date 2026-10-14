@@ -143,6 +143,8 @@ jobs:
         env:
           DINX_QEMU_TIMEOUT: 90
           DINX_QEMU_SCREENSHOT: dist/iso/dinx/dinx-graphical-screen.ppm
+          DINX_QEMU_BOOT_SCREENSHOT: dist/iso/dinx/dinx-boot-screen.ppm
+          DINX_QEMU_BOOT_SCREENSHOT_DELAY: 3
           DINX_QEMU_SCREENSHOT_DELAY: 60
           DINX_QEMU_BOOT_KEYS: down,down,ret
           DINX_QEMU_POST_SCREENSHOT: dist/iso/dinx/dinx-session-screen.ppm

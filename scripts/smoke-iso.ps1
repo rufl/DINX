@@ -141,10 +141,11 @@ function Stop-Qemu([System.Diagnostics.Process]$Process) {
 $timeoutSeconds = if ($Mode -eq 'Visual') { Get-Setting 'DINX_QEMU_TIMEOUT' 90 } else { Get-Setting 'DINX_QEMU_TIMEOUT' 20 }
 $memoryMb = Get-Setting 'DINX_QEMU_MEMORY' 2048
 $screenshotDelay = Get-Setting 'DINX_QEMU_SCREENSHOT_DELAY' 60
+$bootScreenshotDelay = Get-Setting 'DINX_QEMU_BOOT_SCREENSHOT_DELAY' 3
 $postScreenshotDelay = Get-Setting 'DINX_QEMU_POST_SCREENSHOT_DELAY' 10
 Require-PositiveInteger 'DINX_QEMU_TIMEOUT' $timeoutSeconds
 Require-PositiveInteger 'DINX_QEMU_MEMORY' $memoryMb
-if ($screenshotDelay -lt 0 -or $postScreenshotDelay -lt 0) {
+if ($screenshotDelay -lt 0 -or $postScreenshotDelay -lt 0 -or $bootScreenshotDelay -lt 0) {
     Fail 'screenshot delays must be non-negative integers'
 }
 
@@ -206,6 +207,7 @@ if ([string]::IsNullOrWhiteSpace($postKeys)) {
     $postKeys = 'ret,d,i,n,x,ret'
 }
 $screenshotPath = Join-Path $PSScriptRoot 'evidence/dinx-qemu-graphical.ppm'
+$bootScreenshotPath = Join-Path $PSScriptRoot 'evidence/dinx-qemu-boot.ppm'
 $postScreenshotPath = Join-Path $PSScriptRoot 'evidence/dinx-qemu-session.ppm'
 
 $rawArguments = @(
@@ -228,6 +230,10 @@ $monitor = $null
 try {
     $process = Start-Process -FilePath $qemuPath -ArgumentList $arguments -WorkingDirectory $PSScriptRoot -PassThru -WindowStyle $windowStyle
     $monitor = Connect-Monitor $port $process
+    if ($visual) {
+        Start-Sleep -Seconds $bootScreenshotDelay
+        Capture-Screen $monitor $bootScreenshotPath 'boot'
+    }
     Send-Keys $monitor $bootKeys
     Write-Host "smoke-iso: sent QEMU boot keys: $bootKeys"
 

@@ -83,7 +83,7 @@ printf '%s\n' \
   '- a Windows desktop session for the visual mode.' \
   '' \
   'Commands:' \
-  '- `dinx.exe` or `dinx.exe --visual-test`: download and verify the pinned ISO, boot QEMU, capture the greeter and post-input PPM frames, then stop QEMU;' \
+  '- `dinx.exe` or `dinx.exe --visual-test`: download and verify the pinned ISO, boot QEMU, capture the boot menu, greeter and post-input PPM frames, then stop QEMU;' \
   '- `dinx.exe --package-smoke`: run the bounded headless QEMU smoke used by deployment qualification;' \
   '- `dinx.exe --help`: print the launcher contract.' \
   '' \

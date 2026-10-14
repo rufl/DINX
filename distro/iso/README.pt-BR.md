@@ -68,6 +68,8 @@ O perfil também controla um override DINX do tema GRUB em `iso-profiles/dinx/ro
 
 A verificação de conteúdo prova que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão e dinit. A captura PPM do workflow é evidência visual para inspeção, não um teste interativo automatizado: login gráfico, saúde dos serviços e TTY de recuperação continuam gates de release.
 
+O workflow armazena uma captura separada `dinx-boot-screen.ppm`, feita antes do envio das teclas do menu de boot. Esse quadro deve ser revisado ao qualificar a superfície GRUB de seleção do kernel; ele é a evidência de regressão do painel opaco removido.
+
 ## Limite do perfil
 
 O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-profiles` instalado e adiciona localmente as entradas específicas da DINX. `WORKSPACE_DIR` em `scripts/build-iso.sh` torna determinística a seleção do perfil.

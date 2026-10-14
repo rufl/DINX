@@ -83,6 +83,11 @@ Run [38628961983](https://github.com/rufl/DINX/actions/runs/38628961983) on comm
 - recovery TTY: `getty@tty2` was enabled and verified in the installed target, and the recovery capture was produced;
 - release gates: ISO payload verification, attestation and workflow artifact upload passed.
 
+## Observed removable-media extension
+
+Run [38639586656](https://github.com/rufl/DINX/actions/runs/38639586656) on commit `07aad814912058e9f22c0826b9e4b0006e7d00d3` passed after pinning the release workflow to the build containing `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin` and Tumbler. The payload check confirmed the backend/plugin files and rejected installed systemd package metadata/runtime; persistent install smoke, attestation and artifact upload also passed.
+
+
 ## Observed development host
 
 The development host is EndeavourOS x86_64. `pacman`, `xorriso` and `zig` are available. `buildiso`, `mkarchiso` and `qemu-system-x86_64` are not installed. QEMU user libraries and `/dev/kvm` are present, but that is not sufficient to run the local smoke test.

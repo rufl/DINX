@@ -11,10 +11,9 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@7a31dc7081160f221390be57d302dae9fa9391b4 # pin reusable P0 workflow with NOCTTY and NoctEd
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@101a6b2c652123db9226a67f285988de6ff3407d # pin archive-backed P0 workflow with NOCTTY and NoctEd
     permissions:
       contents: read
-    secrets: inherit
 
   publish:
     name: Publish DINX alpha release

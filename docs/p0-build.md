@@ -24,21 +24,20 @@ The entry points are:
 
 The `P0 ISO foundation` workflow runs manually or when profile/build files change. It:
 
-1. checks out DINX and the exact NOCTTY commit declared by `distro/packages/noctty/source.env`;
-2. uses `NOCTTY_REPO_TOKEN` when the private `rufl/NOCTTY` repository is not readable by the default GitHub token;
-3. creates a deterministic, SHA-256-verified source archive and validates the package/profile contract;
-4. installs QEMU and ISO inspection tools on the Ubuntu runner;
-5. runs Artix in a privileged container;
-6. installs `artools`, `iso-profiles`, Zig 0.17.0 and the pinned MangoWM/Scenefx build dependencies;
-7. builds the native `noctty` package, which contains both NOCTTY and NoctEd, then builds wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
-8. runs the prerequisite probe;
-9. builds the ISO with `buildiso`;
-10. validates the root and live-session SquashFS payloads;
-11. generates a SHA-512 checksum;
-12. keeps QEMU running for a configurable boot window and captures its VGA surface;
-13. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
+1. checks out DINX;
+2. verifies the committed NOCTTY/NoctEd source archive against `distro/packages/noctty/source.env` and validates the package/profile contract;
+3. installs QEMU and ISO inspection tools on the Ubuntu runner;
+4. runs Artix in a privileged container;
+5. installs `artools`, `iso-profiles`, Zig 0.17.0 and the pinned MangoWM/Scenefx build dependencies;
+6. builds the native `noctty` package, which contains both NOCTTY and NoctEd, then builds wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
+7. runs the prerequisite probe;
+8. builds the ISO with `buildiso`;
+9. validates the root and live-session SquashFS payloads;
+10. generates a SHA-512 checksum;
+11. keeps QEMU running for a configurable boot window and captures its VGA surface;
+12. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
 
-The pinned NOCTTY commit and source hash must exist in the GitHub repository before this workflow can run. The checkout uses `persist-credentials: false`; no source or repository token is copied into the ISO or package.
+`distro/packages/noctty/noctty-0.1.0.tar.gz` is a committed, SHA-256-verified source archive. `source.env` records the NOCTTY repository commit used to produce it; maintainers regenerate it with `scripts/prepare_first_party_apps.sh` from a clean local NOCTTY checkout and commit the archive and contract together. The CI path does not clone NOCTTY or require a repository token.
 
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, dinit service files, NOCTTY/NoctEd and the Thunar/GVFS/UDisks2 removable-media stack reached the ISO. It also asserts the standalone PolicyKit agent and rejects systemd plus full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.

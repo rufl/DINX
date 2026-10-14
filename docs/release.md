@@ -6,12 +6,12 @@ DINX releases are pre-release validation snapshots, not supported disk-installer
 The release workflow is triggered by a `v*` tag and reuses the P0 Artix build, payload
 check, SHA-512 generation and QEMU smoke path before publishing assets.
 
-The P0 build checks out the exact NOCTTY/NoctEd commit and archive hash declared in
-`distro/packages/noctty/source.env`, builds the native `noctty` package with Zig 0.17.0,
-and verifies that both applications and their desktop/editor resources are in the ISO.
-If `rufl/NOCTTY` is private, configure a repository secret named `NOCTTY_REPO_TOKEN`
-with read-only Contents access; the reusable release workflow inherits that secret.
-Publish the pinned NOCTTY commit before creating a DINX tag.
+The P0 build verifies the committed NOCTTY/NoctEd source archive against the exact
+repository commit and SHA-256 contract in `distro/packages/noctty/source.env`, builds
+the native `noctty` package with Zig 0.17.0, and verifies that both applications and
+their desktop/editor resources are in the ISO. The release path does not clone NOCTTY
+or require a repository secret; update the archive and contract together when changing
+the pinned source.
 
 ## Published assets
 

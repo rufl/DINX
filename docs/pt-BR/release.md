@@ -7,13 +7,12 @@ instalação persistente suportados. O workflow de release é acionado por uma t
 e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e o
 smoke test no QEMU antes de publicar os artefatos.
 
-O build P0 faz checkout do commit exato do NOCTTY/NoctEd e do hash do archive declarados
-em `distro/packages/noctty/source.env`, compila o pacote nativo `noctty` com Zig 0.17.0
-e verifica que os dois aplicativos e seus recursos desktop/editor estão na ISO. Se
-`rufl/NOCTTY` for privado, configure um segredo do repositório chamado
-`NOCTTY_REPO_TOKEN` com acesso somente de leitura a Contents; o workflow de release
-reutilizável herda esse segredo. Publique o commit fixado do NOCTTY antes de criar uma
-tag da DINX.
+O build P0 verifica o archive versionado do código NOCTTY/NoctEd contra o commit exato
+do repositório e o contrato SHA-256 em `distro/packages/noctty/source.env`, compila o
+pacote nativo `noctty` com Zig 0.17.0 e verifica que os dois aplicativos e seus
+recursos desktop/editor estão na ISO. O caminho de release não clona o NOCTTY nem exige
+segredo de repositório; atualize o archive e o contrato juntos quando alterar a origem
+fixada.
 
 ## Artefatos publicados
 

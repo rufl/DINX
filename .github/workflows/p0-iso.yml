@@ -46,28 +46,8 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.1
         with:
           persist-credentials: false
-      - name: Resolve pinned NOCTTY source
-        id: noctty-source
-        shell: bash
-        run: |
-          set -euo pipefail
-          ref=$(sed -n 's/^NOCTTY_REF=//p' distro/packages/noctty/source.env)
-          [[ "$ref" =~ ^[0-9a-f]{40}$ ]]
-          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout pinned NOCTTY and NoctEd source
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.1
-        with:
-          repository: rufl/NOCTTY
-          ref: ${{ steps.noctty-source.outputs.ref }}
-          path: third_party/noctty
-          token: ${{ secrets.NOCTTY_REPO_TOKEN || github.token }}
-          persist-credentials: false
-
-      - name: Prepare and verify pinned NOCTTY and NoctEd archive
-        run: |
-          ./scripts/prepare_first_party_apps.sh "$GITHUB_WORKSPACE/third_party/noctty"
-          ./scripts/check_first_party_apps.sh
+      - name: Verify pinned NOCTTY and NoctEd source archive
+        run: ./scripts/check_first_party_apps.sh
 
       - name: Install QEMU and ISO tools
         run: |

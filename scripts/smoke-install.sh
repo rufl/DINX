@@ -131,20 +131,25 @@ restart = false
 EOF
 ln -sfn ../dinx-install-smoke-marker "$target_dir/etc/dinit.d/boot.d/dinx-install-smoke-marker"
 
-printf '\nMODULES+=(virtio virtio_pci virtio_blk)\n' >> "$target_dir/etc/mkinitcpio.conf"
-printf '\nGRUB_CMDLINE_LINUX="console=ttyS0"\n' >> "$target_dir/etc/default/grub"
+printf '\nMODULES=(virtio virtio_pci virtio_blk ext4)\n' >> "$target_dir/etc/mkinitcpio.conf"
+printf '\nGRUB_CMDLINE_LINUX="console=tty0 console=ttyS0"\nGRUB_TIMEOUT=1\nGRUB_TIMEOUT_STYLE=hidden\n' >> "$target_dir/etc/default/grub"
 printf 'smoke-install: generating the installed initramfs\n'
 chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 
 printf 'smoke-install: installing BIOS GRUB into the disposable disk\n'
 chroot "$target_dir" /usr/bin/grub-install \
-  --target=i386-pc --no-floppy --recheck --boot-directory=/boot "$loop_device" >/dev/null
+  --target=i386-pc --no-floppy --recheck --disk-module=native \
+  --boot-directory=/boot "$loop_device" >/dev/null
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
+printf 'smoke-install: target mkinitcpio configuration\n'
+grep -E '^(MODULES|HOOKS)=' "$target_dir/etc/mkinitcpio.conf" || true
 printf 'smoke-install: installed initramfs storage modules\n'
-chroot "$target_dir" /usr/bin/lsinitcpio -a /boot/initramfs-linux.img \
+chroot "$target_dir" /usr/bin/lsinitcpio -n -l /boot/initramfs-linux.img \
   | grep -E '(^|/)(virtio(_pci|_blk)?|ext4)(\.ko|/)' || true
-printf 'smoke-install: generated GRUB root/linux lines\n'
-grep -E '^[[:space:]]*(linux|linuxefi|search|set root)' "$target_dir/boot/grub/grub.cfg" || true
+printf 'smoke-install: generated GRUB boot lines\n'
+grep -E '^(GRUB_TIMEOUT|GRUB_TIMEOUT_STYLE|GRUB_CMDLINE_LINUX)' "$target_dir/etc/default/grub" || true
+grep -E '^[[:space:]]*(set timeout|linux|linuxefi|search|set root)' \
+  "$target_dir/boot/grub/grub.cfg" || true
 
 
 [[ -s "$target_dir/boot/grub/grub.cfg" ]] || fail 'installed GRUB configuration is missing'

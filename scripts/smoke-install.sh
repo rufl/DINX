@@ -66,7 +66,7 @@ xorriso -osirrox on -indev "$iso_path" -extract /LiveOS/rootfs.img "$rootfs_imag
 
 printf 'smoke-install: creating disposable %s disk\n' "$disk_size"
 truncate -s "$disk_size" "$disk_image"
-printf 'label: dos\n, 100%%, 83, *\n' | sfdisk --wipe always "$disk_image" >/dev/null
+printf 'label: dos\n, , 83, *\n' | sfdisk --wipe always "$disk_image" >/dev/null
 loop_device=$(losetup --find --show --partscan "$disk_image")
 root_device="${loop_device}p1"
 for _ in {1..20}; do

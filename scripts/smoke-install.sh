@@ -145,6 +145,33 @@ chroot "$target_dir" /usr/bin/grub-install \
   --target=i386-pc --no-floppy --recheck --disk-module="$grub_disk_module" \
   --boot-directory=/boot "$loop_device" >/dev/null
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
+if ! grep -Eq '^[[:space:]]*linux[[:space:]]' "$target_dir/boot/grub/grub.cfg"; then
+  printf 'smoke-install: generated GRUB config has no Linux entry; writing deterministic smoke entry\n'
+  cat > "$target_dir/boot/grub/grub.cfg" <<EOF
+set timeout_style=hidden
+set timeout=1
+insmod part_msdos
+insmod ext2
+search --no-floppy --fs-uuid --set=root $root_uuid
+menuentry 'DINX installed smoke' {
+    linux /boot/vmlinuz-linux root=UUID=$root_uuid rw console=tty0 console=ttyS0 loglevel=3
+    initrd /boot/intel-ucode.img /boot/amd-ucode.img /boot/initramfs-linux.img
+}
+EOF
+fi
+cat > "$target_dir/tmp/dinx-grub-early.cfg" <<EOF
+search.fs_uuid $root_uuid root
+set prefix=(\$root)/boot/grub
+EOF
+chroot "$target_dir" /usr/bin/grub-mkimage \
+  -O i386-pc -d /usr/lib/grub/i386-pc -p '(hd0,msdos1)/boot/grub' \
+  -c /tmp/dinx-grub-early.cfg -o /boot/grub/i386-pc/core.img \
+  biosdisk part_msdos ext2 search search_fs_uuid normal configfile linux
+chroot "$target_dir" /usr/bin/grub-bios-setup \
+  --directory=/boot/grub/i386-pc \
+  --boot-image=/boot/grub/i386-pc/boot.img \
+  --core-image=/boot/grub/i386-pc/core.img \
+  --skip-fs-probe "$loop_device" >/dev/null
 printf 'smoke-install: target mkinitcpio configuration\n'
 grep -E '^(MODULES|HOOKS)=' "$target_dir/etc/mkinitcpio.conf" || true
 printf 'smoke-install: installed initramfs storage modules\n'
@@ -156,7 +183,9 @@ find "$target_dir/boot/grub/i386-pc" -maxdepth 1 -type f \
   -o -name 'part_msdos.mod' -o -name 'ext2.mod' -o -name 'search*.mod' -o -name 'linux.mod' \) \
   -printf '%f\n' | sort
 printf 'smoke-install: generated GRUB boot lines\n'
-
+wc -c "$target_dir/boot/grub/grub.cfg"
+grep -E '^[[:space:]]*(set timeout|linux|linuxefi|search|set root)' \
+  "$target_dir/boot/grub/grub.cfg" || true
 
 [[ -s "$target_dir/boot/grub/grub.cfg" ]] || fail 'installed GRUB configuration is missing'
 # The guest must start from the installed disk, not the live ISO.

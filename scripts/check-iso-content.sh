@@ -54,7 +54,12 @@ required_paths=(
   usr/share/applications/dinx-terminal-fallback.desktop
   usr/bin/udisksctl
   usr/lib/gvfs-udisks2-volume-monitor
+  usr/lib/gvfsd-gphoto2
+  usr/lib/gvfsd-mtp
+  usr/lib/gvfsd-smb
   usr/lib/udisks2/udisksd
+  usr/lib/thunarx-3/thunar-archive-plugin.so
+  usr/lib/tumbler-1/tumblerd
   usr/share/applications/thunar.desktop
   usr/share/dbus-1/services/org.gtk.vfs.UDisks2VolumeMonitor.service
   usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
@@ -128,6 +133,7 @@ grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
   etc/systemd \
+  var/lib/pacman/local/systemd- \
   usr/lib/systemd/systemd \
   usr/bin/systemd \
   usr/bin/systemctl \
@@ -193,4 +199,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Thunar/GVFS/UDisks2 removable-media support, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Thunar/GVFS MTP/SMB/GPhoto2/UDisks2 removable-media support, Thunar archive integration, Tumbler thumbnails, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

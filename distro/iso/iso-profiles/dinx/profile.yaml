@@ -29,8 +29,10 @@ rootfs:
     - elogind
     - exfatprogs
     - gvfs
+    - gvfs-gphoto2
+    - gvfs-mtp
+    - gvfs-smb
     - greetd
-    - greetd-regreet
     - grub
     - mangowm
     - mesa
@@ -44,10 +46,11 @@ rootfs:
     - pipewire-pulse
     - polkit
     - lxqt-policykit
-    - scenefx
     - seatd
     - thunar
+    - thunar-archive-plugin
     - thunar-volman
+    - tumbler
     - udisks2
     - udisks2-btrfs
     - squashfs-tools

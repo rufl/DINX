@@ -85,4 +85,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The P0 foundation now includes pinned wlroots/MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and automated graphical login in a VM. The release workflow now publishes tagged pre-releases with ISO checksums, Linux visual evidence and a Windows QEMU/ZTASH launcher package for DDJARIN qualification. The current image remains a validation live session; persistent installation, complete service health and recovery-TTY verification remain release gates.
+The P0 foundation now includes pinned wlroots/MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and automated graphical login in a VM. The workflow also qualifies the persistent-install contract on a disposable BIOS disk with a dinit first boot and recovery TTY, and creates artifact attestations for the ISO and checksum. The image remains a validation live session; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain release gates.

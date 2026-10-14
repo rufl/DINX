@@ -17,7 +17,7 @@ Backlog:
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
 
-**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. Persistent installation remains a release gate.
+**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI now exercises the persistent-install contract on a disposable BIOS disk; hardware installation, upgrades and rollback remain release gates.
 
 ## P1 — public alpha 0.1
 

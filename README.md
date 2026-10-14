@@ -85,4 +85,4 @@ Versões originais em inglês:
 
 ## Status atual
 
-O P0 agora inclui builds fixados do wlroots/MangoWM/Scenefx, o workflow Artix da ISO, validação de payload/checksum, smoke de boot no QEMU e login gráfico automatizado em uma VM. O workflow de release agora publica pré-releases com checksums da ISO, evidências visuais Linux e um pacote launcher Windows para QEMU e qualificação no DDJARIN via ZTASH. A imagem continua sendo uma sessão live de validação; instalação persistente, saúde completa dos serviços e verificação da TTY de recuperação continuam gates de release.
+O P0 agora inclui builds fixados do wlroots/MangoWM/Scenefx, o workflow Artix da ISO, validação de payload/checksum, smoke de boot no QEMU e login gráfico automatizado em uma VM. O workflow também qualifica em CI o contrato de instalação persistente em disco BIOS descartável, com primeiro boot dinit e TTY de recuperação, e cria atestações de artefato para a ISO e o checksum. A imagem continua sendo uma sessão live de validação; instalação em hardware, saúde completa dos serviços, UEFI, atualização, rollback e assinatura do repositório pacman continuam gates de release.

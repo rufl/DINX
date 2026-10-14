@@ -5,9 +5,6 @@ on:
 # Add an isolated validation workflow before enabling any pull-request trigger.
   workflow_dispatch:
   workflow_call:
-    secrets:
-      NOCTTY_REPO_TOKEN:
-        required: false
   push:
     branches:
       - main

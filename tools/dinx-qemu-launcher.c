@@ -2,7 +2,7 @@
 #define _UNICODE
 
 #include <stdio.h>
-#include <string.h>
+#include <wchar.h>
 #include <windows.h>
 
 static void print_usage(void) {

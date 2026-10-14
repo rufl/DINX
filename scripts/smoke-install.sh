@@ -114,14 +114,6 @@ printf 'smoke-install: enabling dinit services and recovery TTYs\n'
 for service in NetworkManager elogind greetd getty@tty2 getty@tty3; do
   ln -sfn "../$service" "$target_dir/etc/dinit.d/boot.d/$service"
 done
-
-printf 'smoke-install: generating the installed initramfs\n'
-chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
-
-printf 'smoke-install: installing BIOS GRUB into the disposable disk\n'
-grub-install --target=i386-pc --no-floppy --recheck --boot-directory="$target_dir/boot" "$loop_device" >/dev/null
-chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
-
 printf 'smoke-install: adding a first-boot marker service\n'
 mkdir -p "$target_dir/usr/local/libexec" "$target_dir/var/lib/dinx"
 cat > "$target_dir/usr/local/libexec/dinx-install-smoke-marker" <<'EOF'
@@ -137,6 +129,14 @@ command = /usr/local/libexec/dinx-install-smoke-marker
 restart = false
 EOF
 ln -sfn ../dinx-install-smoke-marker "$target_dir/etc/dinit.d/boot.d/dinx-install-smoke-marker"
+
+printf 'smoke-install: generating the installed initramfs\n'
+chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
+
+printf 'smoke-install: installing BIOS GRUB into the disposable disk\n'
+grub-install --target=i386-pc --no-floppy --recheck --boot-directory="$target_dir/boot" "$loop_device" >/dev/null
+chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
+
 
 # The guest must start from the installed disk, not the live ISO.
 umount -R "$target_dir/run"

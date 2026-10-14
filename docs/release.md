@@ -6,11 +6,18 @@ DINX releases are pre-release validation snapshots, not supported disk-installer
 The release workflow is triggered by a `v*` tag and reuses the P0 Artix build, payload
 check, SHA-512 generation and QEMU smoke path before publishing assets.
 
+The P0 build checks out the exact NOCTTY/NoctEd commit and archive hash declared in
+`distro/packages/noctty/source.env`, builds the native `noctty` package with Zig 0.17.0,
+and verifies that both applications and their desktop/editor resources are in the ISO.
+If `rufl/NOCTTY` is private, configure a repository secret named `NOCTTY_REPO_TOKEN`
+with read-only Contents access; the reusable release workflow inherits that secret.
+Publish the pinned NOCTTY commit before creating a DINX tag.
+
 ## Published assets
 
 Each alpha release contains:
 
-- `dinx-<version>-x86_64.iso` — the live validation image;
+- `dinx-<version>-x86_64.iso` — the live validation image with NOCTTY and NoctEd;
 - the matching `.iso.sha512` file;
 - Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;

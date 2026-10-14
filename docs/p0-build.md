@@ -10,9 +10,13 @@ The entry points are:
 
 - `scripts/check-iso-host.sh` — prerequisite probe;
 - `scripts/build-iso.sh` — root-aware build wrapper;
+- `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
+- `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
 - `.github/workflows/release.yml` — tagged pre-release publication and Windows QEMU package assembly;
+- `distro/packages/noctty/PKGBUILD` — native Zig package that installs NOCTTY and NoctEd;
+- `distro/packages/noctty/source.env` — repository, commit, version and SHA-256 source contract;
 - `distro/packages/wlroots0.20/PKGBUILD` — wlroots 0.20.2 source build pinned for the current Mango/Scenefx ABI;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — foundation package and service profile.
 
@@ -20,18 +24,23 @@ The entry points are:
 
 The `P0 ISO foundation` workflow runs manually or when profile/build files change. It:
 
-1. installs QEMU and ISO inspection tools on the Ubuntu runner;
-2. runs Artix in a privileged container;
-3. installs `artools`, `iso-profiles` and the pinned MangoWM/Scenefx build dependencies;
-4. builds pinned wlroots 0.20.2, MangoWM and Scenefx, then serves them from a temporary local pacman repository;
-5. runs the prerequisite probe;
-6. builds the ISO with `buildiso`;
-7. validates the root and live-session SquashFS payloads;
-8. generates a SHA-512 checksum;
-9. keeps QEMU running for a configurable boot window and captures its VGA surface;
-10. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
+1. checks out DINX and the exact NOCTTY commit declared by `distro/packages/noctty/source.env`;
+2. uses `NOCTTY_REPO_TOKEN` when the private `rufl/NOCTTY` repository is not readable by the default GitHub token;
+3. creates a deterministic, SHA-256-verified source archive and validates the package/profile contract;
+4. installs QEMU and ISO inspection tools on the Ubuntu runner;
+5. runs Artix in a privileged container;
+6. installs `artools`, `iso-profiles`, Zig 0.17.0 and the pinned MangoWM/Scenefx build dependencies;
+7. builds the native `noctty` package, which contains both NOCTTY and NoctEd, then builds wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
+8. runs the prerequisite probe;
+9. builds the ISO with `buildiso`;
+10. validates the root and live-session SquashFS payloads;
+11. generates a SHA-512 checksum;
+12. keeps QEMU running for a configurable boot window and captures its VGA surface;
+13. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
 
-The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, dinit service files, Noctty/NoctEd and the Thunar/GVFS/UDisks2 removable-media stack reached the ISO. It also asserts the standalone PolicyKit agent and rejects systemd plus full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
+The pinned NOCTTY commit and source hash must exist in the GitHub repository before this workflow can run. The checkout uses `persist-credentials: false`; no source or repository token is copied into the ISO or package.
+
+The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, dinit service files, NOCTTY/NoctEd and the Thunar/GVFS/UDisks2 removable-media stack reached the ISO. It also asserts the standalone PolicyKit agent and rejects systemd plus full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
 
 Tagged releases reuse the same build artifact through `.github/workflows/release.yml`. The release job publishes the ISO, its SHA-512, the Linux QEMU evidence and a small Windows launcher package. The launcher downloads the ISO only from its metadata-pinned HTTPS release URL, verifies the SHA-512 and runs `scripts/smoke-iso.ps1` with QEMU on Windows. Its ZTASH metadata targets the registered `ddjarin` receiver without embedding credentials.

@@ -10,9 +10,13 @@ Os pontos de entrada são:
 
 - `scripts/check-iso-host.sh` — probe de pré-requisitos;
 - `scripts/build-iso.sh` — wrapper de build com suporte a root;
+- `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do código fixado do NOCTTY/NoctEd;
+- `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
 - `.github/workflows/p0-iso.yml` — build remoto em container Artix;
 - `.github/workflows/release.yml` — publicação de pré-release por tag e montagem do pacote Windows para QEMU;
+- `distro/packages/noctty/PKGBUILD` — pacote Zig nativo que instala NOCTTY e NoctEd;
+- `distro/packages/noctty/source.env` — contrato de repositório, commit, versão e SHA-256 da origem;
 - `distro/packages/wlroots0.20/PKGBUILD` — build fixado do wlroots 0.20.2 para o ABI atual do Mango/Scenefx;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — perfil de pacotes e serviços da fundação.
 
@@ -20,18 +24,23 @@ Os pontos de entrada são:
 
 O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do perfil/build mudam. Ele:
 
-1. instala QEMU e ferramentas de inspeção de ISO no runner Ubuntu;
-2. executa Artix em um container privilegiado;
-3. instala `artools`, `iso-profiles` e as dependências de build fixadas do MangoWM/Scenefx;
-4. compila o wlroots 0.20.2 fixado, MangoWM e Scenefx, e os serve em um repositório pacman local temporário;
-5. executa o probe de pré-requisitos;
-6. constrói a ISO com `buildiso`;
-7. valida os payloads SquashFS do root e da sessão live;
-8. gera checksum SHA-512;
-9. mantém QEMU executando por uma janela de boot configurável e captura sua superfície VGA;
-10. publica a ISO, o checksum e a captura PPM como artefato temporário do workflow.
+1. faz checkout da DINX e do commit exato do NOCTTY declarado em `distro/packages/noctty/source.env`;
+2. usa `NOCTTY_REPO_TOKEN` quando o repositório privado `rufl/NOCTTY` não é legível pelo token GitHub padrão;
+3. cria um archive determinístico verificado por SHA-256 e valida o contrato do pacote/perfil;
+4. instala QEMU e ferramentas de inspeção de ISO no runner Ubuntu;
+5. executa Artix em um container privilegiado;
+6. instala `artools`, `iso-profiles`, Zig 0.17.0 e as dependências de build fixadas do MangoWM/Scenefx;
+7. compila o pacote nativo `noctty`, que contém NOCTTY e NoctEd, depois compila wlroots 0.20.2, MangoWM e Scenefx usando o repositório pacman local temporário;
+8. executa o probe de pré-requisitos;
+9. constrói a ISO com `buildiso`;
+10. valida os payloads SquashFS do root e da sessão live;
+11. gera checksum SHA-512;
+12. mantém QEMU executando por uma janela de boot configurável e captura sua superfície VGA;
+13. publica a ISO, o checksum e a captura PPM como artefato temporário do workflow.
 
-A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango, os arquivos de serviço dinit, Noctty/NoctEd e a stack de mídia removível Thunar/GVFS/UDisks2 chegaram à ISO. Ela também confirma o agente independente de PolicyKit e rejeita systemd e sessões completas do Xfce/LXQt. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede ou áudio dentro do guest.
+O commit e o hash da origem do NOCTTY precisam existir no GitHub antes da execução deste workflow. O checkout usa `persist-credentials: false`; nenhum código ou token do repositório é copiado para a ISO ou para o pacote.
+
+A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango, os arquivos de serviço dinit, NOCTTY/NoctEd e a stack de mídia removível Thunar/GVFS/UDisks2 chegaram à ISO. Ela também confirma o agente independente de PolicyKit e rejeita systemd e sessões completas do Xfce/LXQt. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede ou áudio dentro do guest.
 
 A execução também captura a superfície VGA do QEMU como artefato PPM pelo monitor. Essa captura é evidência visual para inspeção; ela não prova automaticamente a interação com o greeter, a saúde da sessão do usuário, a rede ou o áudio.
 

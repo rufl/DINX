@@ -7,11 +7,19 @@ instalação persistente suportados. O workflow de release é acionado por uma t
 e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e o
 smoke test no QEMU antes de publicar os artefatos.
 
+O build P0 faz checkout do commit exato do NOCTTY/NoctEd e do hash do archive declarados
+em `distro/packages/noctty/source.env`, compila o pacote nativo `noctty` com Zig 0.17.0
+e verifica que os dois aplicativos e seus recursos desktop/editor estão na ISO. Se
+`rufl/NOCTTY` for privado, configure um segredo do repositório chamado
+`NOCTTY_REPO_TOKEN` com acesso somente de leitura a Contents; o workflow de release
+reutilizável herda esse segredo. Publique o commit fixado do NOCTTY antes de criar uma
+tag da DINX.
+
 ## Artefatos publicados
 
 Cada release alpha contém:
 
-- `dinx-<versão>-x86_64.iso` — imagem live de validação;
+- `dinx-<versão>-x86_64.iso` — imagem live de validação com NOCTTY e NoctEd;
 - o arquivo `.iso.sha512` correspondente;
 - capturas PPM do menu de boot, gráficas e pós-entrada do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;

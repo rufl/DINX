@@ -20,11 +20,33 @@ The Windows package does not contain a second copy of the ISO. It contains a pin
 HTTPS URL and the ISO SHA-512. On first run it downloads the exact release asset to its
 private directory, verifies the checksum, and only then starts QEMU.
 
+## Verify the Windows archive
+
+Download `SHA256SUMS` from the same GitHub release as the ZIP. Do not copy a
+checksum from an older package or a different release:
+
+```powershell
+$zipPath = (Resolve-Path .\dinx-0.1.0-alpha.3-dogfood.1-windows-x86_64.zip).Path
+$zipName = Split-Path -Leaf $zipPath
+$expected = @(
+    Get-Content .\SHA256SUMS |
+        Where-Object { $_ -match [regex]::Escape($zipName) } |
+        ForEach-Object { ($_ -split '\s+')[0] }
+)
+if ($expected.Count -ne 1) {
+    throw "ZIP checksum was not found exactly once in SHA256SUMS"
+}
+$actual = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($actual -ne $expected[0].ToLowerInvariant()) {
+    throw "ZIP SHA-256 mismatch. Expected: $($expected[0]); actual: $actual"
+}
+Write-Host "ZIP SHA-256 verified: $actual"
+```
+
 ## Windows visual smoke test
 
 Requirements:
-
-- Windows x86_64;
+- Windows PowerShell or PowerShell 7;
 - QEMU System x86_64, with `qemu-system-x86_64.exe` on `PATH` or `DINX_QEMU` set;
 - a desktop session for the SDL display;
 - enough disk space for the ISO and at least 2 GiB guest memory.

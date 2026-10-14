@@ -78,7 +78,7 @@ printf '%s\n' \
   'This package launches the DINX live validation ISO in QEMU on Windows.' \
   '' \
   'Requirements:' \
-  '- Windows x86_64;' \
+  '- Windows x86_64 with Windows PowerShell or PowerShell 7;' \
   '- QEMU System x86_64 (`qemu-system-x86_64.exe`) on PATH, or DINX_QEMU set to its full path;' \
   '- a Windows desktop session for the visual mode.' \
   '' \

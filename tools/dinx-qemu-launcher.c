@@ -16,6 +16,121 @@ static void print_usage(void) {
     puts("  dinx.exe --help          Show this help");
 }
 
+static BOOL file_exists(const wchar_t *path) {
+    DWORD attributes = GetFileAttributesW(path);
+    return attributes != INVALID_FILE_ATTRIBUTES &&
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
+static BOOL copy_existing_path(
+    wchar_t *destination,
+    size_t destination_capacity,
+    const wchar_t *candidate
+) {
+    size_t length = wcslen(candidate);
+    if (length >= destination_capacity || !file_exists(candidate)) {
+        return FALSE;
+    }
+    memcpy(destination, candidate, (length + 1) * sizeof(destination[0]));
+    return TRUE;
+}
+
+static BOOL get_environment_value(
+    const wchar_t *name,
+    wchar_t *value,
+    size_t value_capacity
+) {
+    DWORD length = GetEnvironmentVariableW(name, value, (DWORD)value_capacity);
+    return length > 0 && length < value_capacity;
+}
+
+static BOOL find_powershell(wchar_t *path, size_t path_capacity) {
+    DWORD length = SearchPathW(
+        NULL,
+        L"powershell.exe",
+        NULL,
+        (DWORD)path_capacity,
+        path,
+        NULL
+    );
+    if (length > 0 && length < path_capacity && file_exists(path)) {
+        return TRUE;
+    }
+
+    wchar_t windows_directory[32768];
+    UINT windows_length = GetWindowsDirectoryW(
+        windows_directory,
+        sizeof(windows_directory) / sizeof(windows_directory[0])
+    );
+    if (windows_length > 0 &&
+        windows_length < sizeof(windows_directory) / sizeof(windows_directory[0])) {
+        wchar_t candidate[32768];
+        int candidate_length = swprintf(
+            candidate,
+            sizeof(candidate) / sizeof(candidate[0]),
+            L"%ls\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            windows_directory
+        );
+        if (candidate_length >= 0 &&
+            (size_t)candidate_length < sizeof(candidate) / sizeof(candidate[0]) &&
+            copy_existing_path(path, path_capacity, candidate)) {
+            return TRUE;
+        }
+    }
+
+    length = SearchPathW(
+        NULL,
+        L"pwsh.exe",
+        NULL,
+        (DWORD)path_capacity,
+        path,
+        NULL
+    );
+    if (length > 0 && length < path_capacity && file_exists(path)) {
+        return TRUE;
+    }
+
+    wchar_t base_directory[32768];
+    wchar_t candidate[32768];
+    if (get_environment_value(
+            L"ProgramFiles",
+            base_directory,
+            sizeof(base_directory) / sizeof(base_directory[0])
+        )) {
+        int candidate_length = swprintf(
+            candidate,
+            sizeof(candidate) / sizeof(candidate[0]),
+            L"%ls\\PowerShell\\7\\pwsh.exe",
+            base_directory
+        );
+        if (candidate_length >= 0 &&
+            (size_t)candidate_length < sizeof(candidate) / sizeof(candidate[0]) &&
+            copy_existing_path(path, path_capacity, candidate)) {
+            return TRUE;
+        }
+    }
+
+    if (get_environment_value(
+            L"LOCALAPPDATA",
+            base_directory,
+            sizeof(base_directory) / sizeof(base_directory[0])
+        )) {
+        int candidate_length = swprintf(
+            candidate,
+            sizeof(candidate) / sizeof(candidate[0]),
+            L"%ls\\Programs\\PowerShell\\7\\pwsh.exe",
+            base_directory
+        );
+        if (candidate_length >= 0 &&
+            (size_t)candidate_length < sizeof(candidate) / sizeof(candidate[0]) &&
+            copy_existing_path(path, path_capacity, candidate)) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 static int run_test(const wchar_t *mode, BOOL visual) {
     wchar_t module_path[32768];
     DWORD module_length = GetModuleFileNameW(NULL, module_path, sizeof(module_path) / sizeof(module_path[0]));
@@ -30,6 +145,18 @@ static int run_test(const wchar_t *mode, BOOL visual) {
         return 1;
     }
     *separator = L'\0';
+
+    wchar_t powershell_path[32768];
+    if (!find_powershell(
+            powershell_path,
+            sizeof(powershell_path) / sizeof(powershell_path[0])
+        )) {
+        fputs(
+            "dinx: PowerShell was not found (tried powershell.exe and pwsh.exe)\n",
+            stderr
+        );
+        return 1;
+    }
 
     wchar_t script_path[32768];
     int script_length = swprintf(
@@ -47,7 +174,8 @@ static int run_test(const wchar_t *mode, BOOL visual) {
     int command_length = swprintf(
         command_line,
         sizeof(command_line) / sizeof(command_line[0]),
-        L"powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"%ls\" -Mode %ls",
+        L"\"%ls\" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"%ls\" -Mode %ls",
+        powershell_path,
         script_path,
         mode
     );
@@ -64,7 +192,7 @@ static int run_test(const wchar_t *mode, BOOL visual) {
     PROCESS_INFORMATION process = {0};
     DWORD creation_flags = visual ? 0 : CREATE_NO_WINDOW;
     BOOL created = CreateProcessW(
-        NULL,
+        powershell_path,
         command_line,
         NULL,
         NULL,

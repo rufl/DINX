@@ -74,6 +74,15 @@ Run [38471629482](https://github.com/rufl/DINX/actions/runs/38471629482) on comm
 
 The generated serial log was empty. The two VGA captures provide evidence of greeter rendering and a successful graphical user-session transition; they do not prove networking, audio or long-term service health.
 
+## Observed P1 persistent-install run
+
+Run [38628961983](https://github.com/rufl/DINX/actions/runs/38628961983) on commit `f5d13faa6387d35ecac8c0e674f7e98bf7ff037a` passed the deterministic P1 workflow:
+
+- persistent install smoke: passed on the disposable BIOS/IDE disk after copying the ISO rootfs, removing live-only packages, creating `dinx`/fstab, generating initramfs and BIOS GRUB, and booting through the installed GRUB path;
+- first-boot marker: `/var/lib/dinx/install-smoke.booted` was verified after the 180-second QEMU boot window;
+- recovery TTY: `getty@tty2` was enabled and verified in the installed target, and the recovery capture was produced;
+- release gates: ISO payload verification, attestation and workflow artifact upload passed.
+
 ## Observed development host
 
 The development host is EndeavourOS x86_64. `pacman`, `xorriso` and `zig` are available. `buildiso`, `mkarchiso` and `qemu-system-x86_64` are not installed. QEMU user libraries and `/dev/kvm` are present, but that is not sufficient to run the local smoke test.

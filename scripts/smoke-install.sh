@@ -119,7 +119,7 @@ printf 'smoke-install: generating the installed initramfs\n'
 chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 
 printf 'smoke-install: installing BIOS GRUB into the disposable disk\n'
-grub-install --target=i386-pc --no-floppy --recheck --boot-directory="$target_dir/boot" "$disk_image" >/dev/null
+grub-install --target=i386-pc --no-floppy --recheck --boot-directory="$target_dir/boot" "$loop_device" >/dev/null
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
 
 printf 'smoke-install: adding a first-boot marker service\n'

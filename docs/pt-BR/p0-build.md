@@ -12,6 +12,7 @@ Os pontos de entrada são:
 - `scripts/build-iso.sh` — wrapper de build com suporte a root;
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
 - `.github/workflows/p0-iso.yml` — build remoto em container Artix;
+- `.github/workflows/release.yml` — publicação de pré-release por tag e montagem do pacote Windows para QEMU;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — perfil de pacotes e serviços da fundação.
 
 ## Build remoto
@@ -32,6 +33,8 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango e os arquivos de serviço dinit chegaram à ISO. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede ou áudio dentro do guest.
 
 A execução também captura a superfície VGA do QEMU como artefato PPM pelo monitor. Essa captura é evidência visual para inspeção; ela não prova automaticamente a interação com o greeter, a saúde da sessão do usuário, a rede ou o áudio.
+
+Releases por tag reutilizam o mesmo artefato de build por meio de `.github/workflows/release.yml`. O job de release publica a ISO, seu SHA-512, as evidências do QEMU Linux e um pacote launcher Windows pequeno. O launcher baixa a ISO somente da URL HTTPS fixada nos metadados, verifica o SHA-512 e executa `scripts/smoke-iso.ps1` com QEMU no Windows. Os metadados ZTASH apontam para o receptor registrado `ddjarin` sem embutir credenciais.
 
 A sobreposição live também substitui o serviço dinit genérico `root-ro` por um no-op: a raiz live é um overlay e não pode ser remontada somente para leitura. Esse ajuste vale apenas para a sessão live da ISO, não é uma política do sistema instalado.
 

@@ -31,7 +31,7 @@ A interface deve diferenciar um serviço parado, com falha, desconhecido ou inac
 Para cada release alpha distribuível:
 
 - manifestos de pacotes devem identificar entradas upstream e específicas da DINX;
-- pacotes devem ser assinados com uma chave cuja propriedade e rotação estejam documentadas;
+- pacotes alpha não assinados devem permanecer em pré-release e registrar `signing: unavailable`; não podem ser apresentados como artefatos de produção suportados;
 - checksums de ISO e pacotes devem ser publicados com cada release;
 - metadados do build devem identificar o commit de origem e o snapshot de entradas;
 - avisos de atualização devem ser explícitos porque a base é rolling.

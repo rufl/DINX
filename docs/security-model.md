@@ -31,7 +31,7 @@ The interface must distinguish a service that is stopped, failed, unknown or ina
 For each distributable alpha release:
 
 - package manifests must identify upstream and DINX-specific inputs;
-- packages must be signed with a key whose ownership and rotation process are documented;
+- unsigned alpha packages must remain pre-release and record `signing: unavailable`; they must not be presented as supported production artifacts;
 - ISO and package checksums must be published with each release;
 - build metadata must identify the source commit and input snapshot;
 - upgrade warnings must be explicit because the base is rolling.

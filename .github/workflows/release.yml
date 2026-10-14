@@ -1,0 +1,129 @@
+name: DINX release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke-test release ISO
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@main
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish DINX alpha release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download ISO build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dinx-foundation-iso-${{ github.sha }}
+          path: dist/release-input
+
+      - name: Install pinned Zig cross compiler
+        run: |
+          set -euo pipefail
+          zig_version=0.17.0
+          zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
+          zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$RUNNER_TEMP/$zig_archive" \
+            "https://ziglang.org/download/${zig_version}/${zig_archive}"
+          printf '%s  %s\n' "$zig_sha256" "$RUNNER_TEMP/$zig_archive" \
+            | sha256sum --check --status -
+          tar -xJf "$RUNNER_TEMP/$zig_archive" --directory "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
+
+      - name: Assemble release assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9._-]+$ ]]
+          input_iso=$(find dist/release-input -type f -name '*.iso' -print -quit)
+          test -n "$input_iso"
+          mkdir -p dist/release
+          iso_name="dinx-${version}-x86_64.iso"
+          cp "$input_iso" "dist/release/$iso_name"
+          (cd dist/release && sha512sum "$iso_name" > "$iso_name.sha512")
+          iso_sha512=$(cut -d ' ' -f 1 "dist/release/$iso_name.sha512")
+          release_base_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}"
+          scripts/package-windows-qemu.sh \
+            "$release_base_url" \
+            "${version}-dogfood.1" \
+            "$release_base_url/$iso_name" \
+            "$iso_sha512" \
+            "$GITHUB_SHA" \
+            dist/release
+          while IFS= read -r evidence; do
+            cp "$evidence" "dist/release/dinx-${version}-$(basename "$evidence")"
+          done < <(find dist/release-input -type f \( -name '*.ppm' -o -name '*.qemu.log' \) -print)
+          package_name="dinx-${version}-dogfood.1-windows-x86_64.zip"
+          metadata_name="dinx-${version}-dogfood.1-windows-x86_64.json"
+          manifest_name="dinx-${version}-dogfood.1-deployment-manifest.json"
+          sha256sum \
+            "dist/release/$iso_name" \
+            "dist/release/$package_name" \
+            "dist/release/$metadata_name" \
+            "dist/release/$manifest_name" \
+            > dist/release/SHA256SUMS
+          cat > dist/release/RELEASE_NOTES.md <<EOF
+          # DINX ${RELEASE_TAG}
+
+          Public alpha live-validation ISO for x86_64 Artix Linux with dinit.
+
+          ## Verification
+
+          - SHA-512: \`${iso_name}.sha512\`
+          - Linux QEMU boot, graphical payload and automated greeter/session captures passed in CI.
+          - The PPM captures and serial log are included as release evidence.
+
+          ## Windows QEMU package
+
+          \`${package_name}\` is a small launcher package. It downloads only the ISO URL
+          pinned in \`dinx-iso.json\`, verifies the SHA-512, requires
+          \`qemu-system-x86_64.exe\`, and captures the greeter and post-input session
+          frames in a desktop Windows session. It does not install QEMU or a Windows
+          service.
+
+          The package metadata and deployment manifest target the registered ZTASH
+          receiver \`ddjarin\`. Run \`scripts/deploy-ztash.sh ${RELEASE_TAG}\` from a
+          trusted owner machine for a preview; add \`--apply\` only after review.
+
+          This is a pre-release validation image, not a supported disk installer.
+          The live account is \`dinx\` / \`dinx\`; it is disposable and must never be
+          reused. Read the installation guide and security model before booting.
+          EOF
+          case "$version" in
+            *-alpha*|*-beta*|*-rc*) prerelease=(--prerelease) ;;
+            *) prerelease=() ;;
+          esac
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "DINX ${RELEASE_TAG}" \
+            --notes-file dist/release/RELEASE_NOTES.md \
+            "${prerelease[@]}" \
+            "dist/release/$iso_name" \
+            "dist/release/$iso_name.sha512" \
+            "dist/release/$package_name" \
+            "dist/release/$metadata_name" \
+            "dist/release/$manifest_name" \
+            dist/release/SHA256SUMS \
+            dist/release/dinx-${version}-*.ppm \
+            dist/release/dinx-${version}-*.qemu.log

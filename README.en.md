@@ -71,7 +71,9 @@ The alpha does not require all first-party applications to be complete. A known-
 - [Easy installation guide](docs/install.md)
 - [Security policy](SECURITY.md)
 - [P0 build status](docs/p0-build.md)
+- [Alpha release process](docs/release.md)
 - [ISO foundation](distro/iso/README.md)
+- [License](LICENSE)
 
 Portuguese (Brazil) versions:
 
@@ -83,4 +85,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The P0 foundation now includes pinned MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and automated graphical login in a VM. The current image is a validation live session; persistent installation, complete service health and recovery-TTY verification remain release gates.
+The P0 foundation now includes pinned MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and automated graphical login in a VM. The release workflow now publishes tagged pre-releases with ISO checksums, Linux visual evidence and a Windows QEMU/ZTASH launcher package for DDJARIN qualification. The current image remains a validation live session; persistent installation, complete service health and recovery-TTY verification remain release gates.

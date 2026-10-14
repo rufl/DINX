@@ -21,7 +21,16 @@ The current alpha has no signed bootloader, no supported Secure Boot path and no
 
 ## 1. Obtain the ISO artifact
 
-There is not yet a stable release download. The public workflow artifact is retained for seven days and is replaced by later runs.
+There is no supported stable release yet. Tagged alpha releases publish a verified ISO and matching checksums; the workflow artifact remains available for seven days as a fallback.
+
+### Tagged alpha release
+
+1. Open the [DINX releases](https://github.com/rufl/DINX/releases).
+2. Select the latest pre-release.
+3. Download `dinx-<version>-x86_64.iso` and its matching `.iso.sha512`.
+4. Continue with checksum verification below.
+
+The [release guide](release.md) documents the Windows QEMU launcher and ZTASH deployment path.
 
 ### Browser
 

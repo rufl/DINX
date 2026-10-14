@@ -4,17 +4,24 @@ on:
 # This workflow intentionally does not run on pull requests: the build uses a privileged container.
 # Add an isolated validation workflow before enabling any pull-request trigger.
   workflow_dispatch:
+  workflow_call:
   push:
     branches:
       - main
     paths:
       - ".github/workflows/p0-iso.yml"
+      - ".github/workflows/release.yml"
       - "distro/iso/**"
       - "distro/packages/**"
       - "scripts/build-iso.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/smoke-iso.sh"
+      - "scripts/smoke-iso.ps1"
+      - "scripts/package-windows-qemu.sh"
+      - "scripts/deploy-ztash.sh"
+      - "tools/dinx-qemu-launcher.c"
+      - "LICENSE"
 
 permissions:
   contents: read

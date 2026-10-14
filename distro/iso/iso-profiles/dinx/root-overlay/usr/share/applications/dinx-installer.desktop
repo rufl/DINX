@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Instalar DINX
+Name[pt_BR]=Instalar DINX
+GenericName=System Installer
+GenericName[pt_BR]=Instalador do sistema
+Comment=Install DINX on a disk
+Comment[pt_BR]=Instalar a DINX em um disco
+TryExec=calamares
+Exec=pkexec calamares
+Icon=calamares
+Terminal=false
+StartupNotify=true
+Categories=System;Qt;
+Keywords=dinx;calamares;installer;install;disco;

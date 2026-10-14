@@ -4,9 +4,11 @@
 
 ## Estado atual da alpha
 
-A imagem atual da DINX é uma **ISO live de validação**, não um instalador de disco suportado. Este guia cobre o caminho seguro para baixar, verificar, gravar e inicializar a sessão live. Ele não promete instalação persistente, atualizações ou preservação de dados.
+A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações, rollback ou preservação de dados.
 
-Não use a ISO em uma máquina com dados que não possam ser restaurados. A sessão live é descartável e as alterações são perdidas ao reiniciar.
+O KDE Partition Manager também está disponível como particionador gráfico independente. Use-o somente para inspecionar ou preparar um disco antes de abrir o Calamares e confirme o dispositivo nas duas aplicações.
+
+Não use a ISO em uma máquina com dados que não possam ser restaurados. A sessão live e o instalador são software alpha.
 
 ## Requisitos
 
@@ -140,7 +142,19 @@ A senha é intencionalmente pública e descartável. Nunca a reutilize em outro 
 
 Após o login, o estado gráfico testado mostra MangoWM com a tela de boas-vindas do Noctalia. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
 
-## 5. O que esta alpha pode e não pode fazer
+## 5. Instalação persistente experimental
+
+Após entrar no MangoWM:
+
+1. Abra o launcher de aplicativos e escolha **Instalar DINX**.
+2. Se a entrada não estiver disponível, execute `pkexec calamares` em um terminal.
+3. Escolha o particionamento automático ou manual e confira o disco-alvo, o modo de firmware e os pontos de montagem antes de continuar.
+4. Para preparação avançada, feche o Calamares, abra o **KDE Partition Manager**, faça e aplique as alterações necessárias, feche-o e abra o Calamares novamente.
+5. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
+
+O Calamares e o KDE Partition Manager podem apagar ou formatar dados. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
+
+## 6. O que esta alpha pode e não pode fazer
 
 ### Comprovado pelo smoke test atual
 
@@ -148,17 +162,17 @@ Após o login, o estado gráfico testado mostra MangoWM com a tela de boas-vinda
 - renderização do ReGreet;
 - login gráfico na sessão MangoWM;
 - inicialização do Noctalia;
-- presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO.
+- presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO;
+- presença da configuração de instalação offline do Calamares e do KDE Partition Manager independente.
 
-### Instalação persistente ainda não suportada
+### Ainda não suportado para produção
 
-- Esta imagem não possui instalador de disco suportado.
-- Não há persistência após reiniciar.
-- Não existe procedimento de atualização ou rollback.
-- A imagem atual não é um release de desktop ou jogos para produção.
-- Não particione nem formate um disco interno baseando-se apenas neste guia.
+- o caminho de instalação persistente é experimental e ainda exige qualificação de instalação limpa UEFI/BIOS, primeiro boot e recuperação;
+- não existe procedimento de atualização ou rollback;
+- a imagem atual não é um release de desktop ou jogos para produção;
+- não particione nem formate um disco interno baseando-se apenas neste guia.
 
-Para instalação persistente, aguarde um caminho de instalação documentado e um release com assinatura de pacotes, suporte de hardware, recuperação e atualização. O item aberto está no [roadmap](roadmap.md).
+Para instalação de produção, aguarde um release com assinatura de pacotes, suporte de hardware, recuperação e atualização. O caminho selecionado e os gates restantes estão registrados na [decisão de arquitetura](architecture.md).
 
 ## Solução de problemas
 

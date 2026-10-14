@@ -81,12 +81,19 @@ A contract must have a documented version and a compatibility test before applic
 
 Gaming is a separate session built around Gamescope and Steam. It must not assume that the full Noctalia desktop is running underneath. Session entry, game launch, controller input, audio, session exit and return to the greeter are explicit acceptance paths.
 
-## Decisions still required before an installable release
+## Installation path selected
 
-The current P0 image is intentionally live-only. These decisions remain open before a persistent installation release:
+The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile.
 
-- supported disk installer and partition/recovery path;
-- Wayland UI toolkit and rendering backend for first-party applications;
+**KDE Partition Manager** is the standalone graphical disk tool offered beside Calamares. It shares the Qt/kpmcore stack already used by Calamares and runs as a native Wayland application in the DINX session. It is intended for disk inspection and preparation before installation, not as a replacement for the installer's final mount-point selection.
+
+This path is experimental until a clean UEFI/BIOS VM installation, first boot, recovery TTY and destructive-device safeguards are qualified.
+
+## Decisions still required before a production release
+
+The installer path is selected, but these decisions remain open before a persistent production release:
+
+- Wayland UI toolkit and backend for first-party applications;
 - final terminal-emulation core;
 - package repository layout and signing-key ownership;
 - supported GPU and hardware matrix;

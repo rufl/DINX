@@ -4,9 +4,11 @@
 
 ## Current alpha status
 
-The current DINX image is a **live validation ISO**, not a supported disk installer. This guide covers the safe path to download, verify, write and boot the live system. It does not promise persistent installation, upgrades or data preservation.
+The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, upgrades, rollback or data preservation.
 
-Do not use the ISO on a machine containing data that you cannot restore. The live session is disposable and changes are lost on reboot.
+KDE Partition Manager is also available as a standalone graphical disk tool. Use it only to inspect or prepare a disk before opening Calamares, and verify the target device in both applications.
+
+Do not use the ISO on a machine containing data that you cannot restore. The live session and the installer are alpha software.
 
 ## Requirements
 
@@ -149,7 +151,19 @@ The password is intentionally public and disposable. Never reuse it on another s
 
 After login, the tested graphical state shows MangoWM with the Noctalia welcome screen. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
 
-## 5. What this alpha can and cannot do
+## 5. Experimental persistent installation
+
+After logging into MangoWM:
+
+1. Open the application launcher and choose **Instalar DINX**.
+2. If the launcher entry is unavailable, run `pkexec calamares` from a terminal.
+3. Choose automatic or manual partitioning and verify the target disk, firmware mode and mount points before continuing.
+4. For advanced preparation, close Calamares, open **KDE Partition Manager**, make and apply the required changes, close it, then reopen Calamares.
+5. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
+
+Both Calamares and KDE Partition Manager can erase or format data. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
+
+## 6. What this alpha can and cannot do
 
 ### Supported by the current smoke evidence
 
@@ -157,17 +171,17 @@ After login, the tested graphical state shows MangoWM with the Noctalia welcome 
 - ReGreet rendering;
 - graphical login into the MangoWM session;
 - Noctalia startup;
-- presence of the expected dinit, network, PipeWire and portal payloads in the ISO.
+- presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
+- presence of the Calamares offline-install configuration and standalone KDE Partition Manager.
 
-### Not a supported installation yet
+### Not production-supported yet
 
-- There is no supported disk installer in this image.
-- There is no persistence across reboot.
+- The persistent installer path is experimental and still requires clean UEFI/BIOS installation, first boot and recovery qualification.
 - There is no upgrade or rollback procedure.
 - The current image is not a production desktop or gaming release.
 - Do not repartition or format an internal disk based only on this guide.
 
-For persistent installation, wait for a documented installer path and a release with package signing, hardware support, recovery and upgrade procedures. The open item is tracked in the [roadmap](roadmap.md).
+For production installation, wait for a release with package signing, hardware support, recovery and upgrade procedures. The selected installer path and remaining gates are tracked in the [architecture decision](architecture.md).
 
 ## Troubleshooting
 

@@ -31,17 +31,32 @@ manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/rootfs.img")
 livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
 
 required_paths=(
+  etc/calamares/branding/dinx/branding.desc
+  etc/calamares/branding/dinx/stylesheet.qss
+  etc/calamares/modules/packages.conf
+  etc/calamares/modules/partition.conf
+  etc/calamares/modules/postcfg.conf
+  etc/calamares/modules/services-artix.conf
+  etc/calamares/modules/unpackfs.conf
+  etc/calamares/modules/users.conf
+  etc/calamares/modules/welcome.conf
+  etc/calamares/settings.conf
   etc/dinit.d/greetd
   etc/dinit.d/root-ro
   etc/greetd/regreet.toml
   etc/mango/dinx.conf
   etc/mango/greeter.conf
+  etc/skel/.config/noctalia/config.toml
   usr/bin/mango
   usr/bin/mmsg
   usr/bin/noctalia
+  usr/bin/calamares
+  usr/bin/partitionmanager
   usr/bin/regreet
   usr/local/libexec/dinx-regreet
   usr/local/libexec/dinx-mango
+  usr/share/applications/dinx-installer.desktop
+  usr/share/applications/org.kde.partitionmanager.desktop
   usr/share/grub/themes/artix/theme.txt
   usr/share/xdg-desktop-portal/mango-portals.conf
 )
@@ -55,6 +70,23 @@ grep -Fq 'DINX GRUB theme override.' <<<"$grub_theme" || fail 'DINX GRUB theme o
 if grep -Eq '^[[:space:]]*(menu_pixmap_style|selected_item_pixmap_style)[[:space:]]*=' <<<"$grub_theme"; then
   fail 'DINX GRUB theme still enables opaque menu textures'
 fi
+
+regreet_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/regreet.toml)
+grep -Fq 'application_prefer_dark_theme = true' <<<"$regreet_config" || fail 'ReGreet dark mode is not enabled'
+
+noctalia_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/config.toml)
+grep -Fq 'mode = "dark"' <<<"$noctalia_config" || fail 'Noctalia dark mode is not enabled'
+
+calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/settings.conf)
+grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares branding is not selected'
+grep -Fq 'services-artix' <<<"$calamares_settings" || fail 'Calamares dinit service module is not selected'
+grep -Fq 'postcfg' <<<"$calamares_settings" || fail 'Calamares dinit user-service module is not selected'
+
+calamares_branding=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/branding/dinx/stylesheet.qss)
+grep -Fq '#11151c' <<<"$calamares_branding" || fail 'DINX Calamares dark stylesheet is missing'
+
+installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
+grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'
 
 grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
 
@@ -80,4 +112,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM, Scenefx, Noctalia, ReGreet, greetd, and dinit payloads present.\n'
+printf 'ISO content check passed: MangoWM, Scenefx, Noctalia/ReGreet dark defaults, Calamares, KDE Partition Manager, greetd, and dinit payloads present.\n'

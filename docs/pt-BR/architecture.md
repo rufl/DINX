@@ -81,12 +81,19 @@ Um contrato deve ter uma versão documentada e um teste de compatibilidade antes
 
 A sessão de jogos é separada e baseada em Gamescope e Steam. Ela não pode presumir que o desktop completo do Noctalia esteja em execução. Entrada na sessão, lançamento do jogo, controles, áudio, saída da sessão e retorno ao greeter são caminhos de aceitação explícitos.
 
-## Decisões ainda necessárias antes de um release instalável
+## Caminho de instalação selecionado
 
-A imagem P0 atual é intencionalmente apenas live. Estas decisões continuam abertas antes de um release com instalação persistente:
+O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil.
 
-- instalador de disco suportado e caminho de particionamento/recuperação;
-- toolkit Wayland e backend de renderização dos aplicativos próprios;
+O **KDE Partition Manager** é o particionador gráfico independente oferecido ao lado do Calamares. Ele compartilha a stack Qt/kpmcore já usada pelo Calamares e executa como aplicação Wayland nativa na sessão DINX. Serve para inspecionar e preparar discos antes da instalação, não para substituir a seleção final de pontos de montagem do instalador.
+
+Esse caminho continua experimental até qualificarmos uma instalação limpa UEFI/BIOS em VM, o primeiro boot, a TTY de recuperação e as proteções contra seleção destrutiva de dispositivo.
+
+## Decisões ainda necessárias antes de um release de produção
+
+O caminho do instalador está selecionado, mas estas decisões continuam abertas antes de um release persistente de produção:
+
+- toolkit Wayland e backend dos aplicativos próprios;
 - núcleo final de emulação de terminal;
 - layout do repositório de pacotes e responsabilidade pela chave de assinatura;
 - matriz de GPUs e hardware suportados;

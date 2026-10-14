@@ -10,7 +10,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 Backlog:
 
-- selecionar e documentar a ferramenta de build da ISO e o caminho do instalador;
+- qualificar o instalador offline Calamares selecionado, o alvo dinit e o particionador independente;
 - definir o manifesto de pacotes base e o limite dos pacotes específicos da DINX;
 - configurar Wayland, MangoWC, Noctalia Shell e o greeter;
 - validar rede, PipeWire, D-Bus, portais, polkit e aceleração de GPU;
@@ -26,7 +26,7 @@ Backlog:
 Backlog:
 
 - publicar ISO, checksums, instruções de instalação e problemas conhecidos;
-- definir e implementar o instalador persistente suportado ou um caminho manual testado;
+- qualificar o instalador persistente experimental e o caminho de recuperação no primeiro boot;
 - estabelecer assinatura de pacotes e metadados de release;
 - fornecer terminal de fallback mínimo e configuração de shell funcional;
 - coletar relatórios de hardware e priorizar bloqueios de instalação.

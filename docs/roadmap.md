@@ -10,7 +10,7 @@ Milestones are capability gates, not calendar promises.
 
 Backlog:
 
-- select and document the ISO builder and installer path;
+- qualify the selected Calamares offline installer, dinit target and standalone partitioner;
 - define the base package manifest and DINX-specific package boundary;
 - configure Wayland, MangoWC, Noctalia Shell and the greeter;
 - validate networking, PipeWire, D-Bus, portals, polkit and GPU acceleration;
@@ -26,7 +26,7 @@ Backlog:
 Backlog:
 
 - publish the ISO, checksums, installation instructions and known issues;
-- define and implement the supported persistent installer or a tested manual installation path;
+- qualify the experimental persistent installer and first-boot recovery path;
 - establish package signing and release metadata;
 - provide a minimal terminal fallback and working shell configuration;
 - collect hardware reports and prioritize installation blockers.

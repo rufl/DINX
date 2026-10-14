@@ -1,0 +1,29 @@
+---
+componentName: dinx
+welcomeStyleCalamares: true
+welcomeExpandingLogo: false
+windowExpanding: normal
+windowSize: 960px,640px
+windowPlacement: center
+sidebar: widget
+navigation: widget
+
+strings:
+    productName: "DINX"
+    shortProductName: "DINX"
+    version: "alpha"
+    shortVersion: "alpha"
+    versionedName: "DINX alpha"
+    shortVersionedName: "DINX alpha"
+    bootloaderEntryName: "DINX"
+    productUrl: "https://github.com/rufl/DINX"
+    supportUrl: "https://github.com/rufl/DINX/issues"
+    knownIssuesUrl: "https://github.com/rufl/DINX/issues"
+    releaseNotesUrl: ""
+    donateUrl: ""
+
+style:
+    SidebarBackground: "#11151c"
+    SidebarText: "#aebbd0"
+    SidebarTextCurrent: "#ffffff"
+    SidebarBackgroundCurrent: "#236b9e"

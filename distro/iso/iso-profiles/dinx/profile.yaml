@@ -18,15 +18,23 @@ rootfs:
   packages:
     - accountsservice
     - artix-grub-live
+    - btrfs-progs
+    - calamares
+    - calamares-extensions
     - dinit
     - dinit-rc
+    - dosfstools
+    - e2fsprogs
+    - efibootmgr
     - elogind
     - greetd
     - greetd-regreet
+    - grub
     - mangowm
     - mesa
     - networkmanager
     - noctalia
+    - qt6-wayland
     - pipewire
     - pipewire-pulse
     - polkit

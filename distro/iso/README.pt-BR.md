@@ -66,6 +66,10 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 
 O perfil também controla um override DINX do tema GRUB em `iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/theme.txt`. Ele mantém o fundo, o logo, os ícones e a fonte fornecidos pelo Artix, mas remove as texturas opacas do painel/menu que apareciam como um quadrado preto na seleção gráfica do kernel. A verificação de conteúdo exige esse arquivo dentro do SquashFS do root.
 
+O perfil agora inclui o instalador experimental Calamares e o KDE Partition Manager. O Calamares copia o root filesystem da ISO sem rede, mantém o dinit como init instalado e remove os pacotes exclusivos da sessão live durante a instalação. O KDE Partition Manager fica disponível como particionador gráfico separado para inspecionar ou preparar os discos antes de abrir o instalador. As duas ferramentas podem destruir dados; confirme sempre o dispositivo selecionado.
+
+O greeter e o Noctalia recebem defaults de modo escuro pelo `root-overlay`. O Calamares usa branding DINX e um stylesheet Qt escuro. A sessão live expõe `Instalar DINX` no launcher; o particionador separado aparece como `KDE Partition Manager`.
+
 A verificação de conteúdo prova que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão e dinit. A captura PPM do workflow é evidência visual para inspeção, não um teste interativo automatizado: login gráfico, saúde dos serviços e TTY de recuperação continuam gates de release.
 
 O workflow armazena uma captura separada `dinx-boot-screen.ppm`, feita antes do envio das teclas do menu de boot. Esse quadro deve ser revisado ao qualificar a superfície GRUB de seleção do kernel; ele é a evidência de regressão do painel opaco removido.

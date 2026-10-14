@@ -45,23 +45,54 @@ profile_dir="$workspace_dir/iso-profiles/dinx"
 mkdir -p "$output_dir"
 buildiso_path=$(command -v buildiso)
 
+run_buildiso() {
+  if [[ $EUID -ne 0 ]]; then
+    sudo env \
+      WORKSPACE_DIR="$workspace_dir" \
+      "$buildiso_path" \
+      -p dinx \
+      -i dinit \
+      -r "$chroots_dir" \
+      -t "$output_dir" \
+      "$@"
+  else
+    env WORKSPACE_DIR="$workspace_dir" "$buildiso_path" \
+      -p dinx \
+      -i dinit \
+      -r "$chroots_dir" \
+      -t "$output_dir" \
+      "$@"
+  fi
+}
+
+run_buildiso_phase() {
+  local status
+  set +e
+  run_buildiso "$@"
+  status=$?
+  set -e
+  [[ $status -eq 0 || $status -eq 1 ]] || return "$status"
+}
+
+strip_systemd_payload() {
+  local image_root
+  for image_root in \
+    "$chroots_dir/dinx/artix/rootfs" \
+    "$chroots_dir/dinx/artix/livefs"; do
+    [[ -d "$image_root" ]] || continue
+    if [[ $EUID -ne 0 ]]; then
+      sudo rm -rf -- "$image_root/etc/systemd" "$image_root/usr/lib/systemd"
+    else
+      rm -rf -- "$image_root/etc/systemd" "$image_root/usr/lib/systemd"
+    fi
+  done
+}
+
 if [[ $EUID -ne 0 ]]; then
   require_command sudo
   ensure_loop_support_with_sudo
-  exec sudo env \
-    WORKSPACE_DIR="$workspace_dir" \
-    "$buildiso_path" \
-    -p dinx \
-    -i dinit \
-    -r "$chroots_dir" \
-    -t "$output_dir" \
-    "$@"
 fi
 
-ensure_loop_support
-exec env WORKSPACE_DIR="$workspace_dir" "$buildiso_path" \
-  -p dinx \
-  -i dinit \
-  -r "$chroots_dir" \
-  -t "$output_dir" \
-  "$@"
+run_buildiso_phase -x "$@"
+strip_systemd_payload
+run_buildiso_phase -z "$@"

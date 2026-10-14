@@ -46,6 +46,7 @@ required_paths=(
   etc/greetd/regreet.toml
   etc/mango/dinx.conf
   etc/mango/greeter.conf
+  etc/skel/.config/mango/config.conf
   etc/skel/.config/noctalia/config.toml
   usr/bin/mango
   usr/bin/mmsg
@@ -76,6 +77,17 @@ grep -Fq 'application_prefer_dark_theme = true' <<<"$regreet_config" || fail 'Re
 
 noctalia_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/config.toml)
 grep -Fq 'mode = "dark"' <<<"$noctalia_config" || fail 'Noctalia dark mode is not enabled'
+grep -Fq '[shell.animation]' <<<"$noctalia_config" || fail 'Noctalia animation defaults are missing'
+grep -Fq 'enabled = false' <<<"$noctalia_config" || fail 'Noctalia animations are not disabled by default'
+grep -Fq 'settings_window_translucent = false' <<<"$noctalia_config" || fail 'Noctalia Settings transparency is not disabled by default'
+grep -Fq '[shell.panel]' <<<"$noctalia_config" || fail 'Noctalia panel defaults are missing'
+grep -Fq 'transparency_mode = "solid"' <<<"$noctalia_config" || fail 'Noctalia panel transparency is not disabled by default'
+
+mango_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/mango/dinx.conf)
+grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two virtual desktops'
+grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fail 'Mango user workspace override is not enabled'
+mango_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/mango/config.conf)
+grep -Fq 'tag_num=2' <<<"$mango_user_config" || fail 'Mango user workspace default is not two'
 
 calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/settings.conf)
 grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares branding is not selected'
@@ -112,4 +124,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM, Scenefx, Noctalia/ReGreet dark defaults, Calamares, KDE Partition Manager, greetd, and dinit payloads present.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present.\n'

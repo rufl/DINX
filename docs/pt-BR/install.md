@@ -141,6 +141,7 @@ O login live testado é:
 A senha é intencionalmente pública e descartável. Nunca a reutilize em outro sistema ou rede.
 
 Após o login, o estado gráfico testado mostra MangoWM com a tela de boas-vindas do Noctalia. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
+O Noctalia inicia com animações, transparência dos painéis e transparência da janela de Settings desativadas. Isso são preferências do usuário, não bloqueios: altere-as depois em Settings do Noctalia. O Mango inicia com dois desktops virtuais; edite `~/.config/mango/config.conf` e altere `tag_num` se precisar de mais.
 
 ## 5. Instalação persistente experimental
 

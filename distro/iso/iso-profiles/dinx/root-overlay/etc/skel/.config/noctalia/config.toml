@@ -1,3 +1,12 @@
-# DINX defaults to a dark Noctalia palette.
+# DINX defaults to a dark, static, opaque Noctalia palette.
 [theme]
 mode = "dark"
+
+[shell]
+settings_window_translucent = false
+
+[shell.animation]
+enabled = false
+
+[shell.panel]
+transparency_mode = "solid"

@@ -150,6 +150,7 @@ The tested live login is:
 The password is intentionally public and disposable. Never reuse it on another system or network.
 
 After login, the tested graphical state shows MangoWM with the Noctalia welcome screen. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
+Noctalia starts with animations, panel translucency and Settings-window translucency disabled. These are user preferences, not locks: change them later in Noctalia Settings. Mango starts with two virtual desktops; edit `~/.config/mango/config.conf` and change `tag_num` if more are needed.
 
 ## 5. Experimental persistent installation
 

@@ -16,6 +16,8 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check-iso-host.sh"
+      - "scripts/prepare_first_party_apps.sh"
+      - "scripts/check_first_party_apps.sh"
       - "scripts/smoke-iso.sh"
       - "scripts/smoke-iso.ps1"
       - "scripts/package-windows-qemu.sh"

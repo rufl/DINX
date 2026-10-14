@@ -9,7 +9,10 @@ dist/
 *.img
 *.qcow2
 *.raw
-
+/distro/packages/noctty/*.tar.gz
+/distro/packages/noctty/*.pkg.tar.zst
+/distro/packages/noctty/src/
+/distro/packages/noctty/pkg/
 # Test output
 test-results/
 coverage/

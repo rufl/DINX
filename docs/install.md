@@ -25,7 +25,7 @@ There is not yet a stable release download. The public workflow artifact is reta
 
 ### Browser
 
-1. Open the [P0 ISO workflow](https://github.com/rufl/dinx-alpha/actions/workflows/p0-iso.yml).
+1. Open the [P0 ISO workflow](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml).
 2. Open the newest run with a green success mark.
 3. In **Artifacts**, download `dinx-foundation-iso-<commit>`.
 4. Extract the downloaded archive into a new directory.
@@ -42,7 +42,7 @@ gh auth login
 Download the newest successful artifact:
 
 ```bash
-repo=rufl/dinx-alpha
+repo=rufl/DINX
 run_id=$(gh run list \
   --repo "$repo" \
   --workflow p0-iso.yml \

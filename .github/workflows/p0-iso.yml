@@ -108,13 +108,13 @@ jobs:
               curl --fail --silent --show-error --location --retry 3 \
                 --output "/tmp/$zig_archive" \
                 "https://ziglang.org/download/${zig_version}/${zig_archive}"
-              actual_zig_sha=$(sha256sum "/tmp/$zig_archive" | cut -d ' ' -f 1)
-              printf 'zig_sha256=%s\n' "$actual_zig_sha"
+              actual_zig_sha=$(sha256sum "/tmp/$zig_archive" | cut -d " " -f 1)
+              printf "zig_sha256=%s\n" "$actual_zig_sha"
               test "$actual_zig_sha" = "$zig_sha256"
               tar -xJf "/tmp/$zig_archive" --directory /tmp
               export PATH="/tmp/zig-x86_64-linux-${zig_version}:$PATH"
               actual_zig_version=$(zig version)
-              printf 'zig_version=%s\n' "$actual_zig_version"
+              printf "zig_version=%s\n" "$actual_zig_version"
               test "$actual_zig_version" = "$zig_version"
               package_repo=/workspace/dist/packages
               rm -rf "$package_repo"

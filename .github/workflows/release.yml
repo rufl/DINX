@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@217c4ed89233255596020be38e9339f38b8af494 # pin reusable P0 workflow
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@26122d68a90a95389b509398f4328884c1f7985e # pin reusable P0 workflow
     permissions:
       contents: read
 

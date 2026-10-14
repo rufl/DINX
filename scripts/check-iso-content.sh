@@ -42,12 +42,19 @@ required_paths=(
   usr/bin/regreet
   usr/local/libexec/dinx-regreet
   usr/local/libexec/dinx-mango
+  usr/share/grub/themes/artix/theme.txt
   usr/share/xdg-desktop-portal/mango-portals.conf
 )
 
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
+
+grub_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/grub/themes/artix/theme.txt)
+grep -Fq 'DINX GRUB theme override.' <<<"$grub_theme" || fail 'DINX GRUB theme override is missing'
+if grep -Eq '^[[:space:]]*(menu_pixmap_style|selected_item_pixmap_style)[[:space:]]*=' <<<"$grub_theme"; then
+  fail 'DINX GRUB theme still enables opaque menu textures'
+fi
 
 grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
 

@@ -41,6 +41,8 @@ A sobreposição live também substitui o serviço dinit genérico `root-ro` por
 
 O wrapper do Mango habilita `WLR_RENDERER_ALLOW_SOFTWARE=1` somente quando `/dev/dri/renderD*` está ausente; portanto, o caminho QEMU headless não mascara um render node DRM real.
 
+O perfil agora controla a configuração do tema GRUB do Artix em `root-overlay/usr/share/grub/themes/artix/theme.txt`. Ele mantém os assets upstream de fundo, logo, ícones e fonte, mas omite as texturas opacas `menu_pixmap_style` e `selected_item_pixmap_style` que produziam um painel preto na tela gráfica de seleção do kernel. `scripts/check-iso-content.sh` verifica que esse override da DINX chega à imagem SquashFS do root.
+
 Para uma captura gráfica local, defina `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` e, opcionalmente, `DINX_QEMU_SCREENSHOT_DELAY` antes de executar `scripts/smoke-iso.sh`; o workflow usa as mesmas teclas, atraso de 60 segundos e publica o PPM junto com o artefato da ISO.
 
 Para uma segunda captura diagnóstica após entrada de teclas, defina também `DINX_QEMU_POST_SCREENSHOT` e, opcionalmente, `DINX_QEMU_POST_SCREENSHOT_DELAY` e `DINX_QEMU_POST_KEYS`. Isso não prova que o greeter aceitou as credenciais.

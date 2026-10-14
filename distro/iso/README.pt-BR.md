@@ -64,6 +64,8 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 
 `iso-profiles/dinx/profile.yaml` agora inclui MangoWM, Scenefx, Noctalia, greetd e ReGreet. MangoWM e Scenefx são compilados a partir de arquivos de release upstream fixados em `distro/packages`; o workflow publica esses pacotes em um repositório pacman local temporário antes de chamar o `buildiso`. O `root-overlay` do perfil fornece a configuração do greetd, as ações do ReGreet, as sessões MangoWM, o autostart do Noctalia, um override no-op exclusivo da sessão live para o serviço dinit `root-ro` e um wrapper do Mango que habilita renderização por software somente quando o guest não possui um render node DRM.
 
+O perfil também controla um override DINX do tema GRUB em `iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/theme.txt`. Ele mantém o fundo, o logo, os ícones e a fonte fornecidos pelo Artix, mas remove as texturas opacas do painel/menu que apareciam como um quadrado preto na seleção gráfica do kernel. A verificação de conteúdo exige esse arquivo dentro do SquashFS do root.
+
 A verificação de conteúdo prova que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão e dinit. A captura PPM do workflow é evidência visual para inspeção, não um teste interativo automatizado: login gráfico, saúde dos serviços e TTY de recuperação continuam gates de release.
 
 ## Limite do perfil

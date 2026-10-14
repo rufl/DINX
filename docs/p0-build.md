@@ -13,6 +13,7 @@ The entry points are:
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
+- `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
 - `.github/workflows/release.yml` — tagged pre-release publication and Windows QEMU package assembly;
 - `distro/packages/noctty/PKGBUILD` — native Zig package that installs NOCTTY and NoctEd;
@@ -35,9 +36,9 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 9. validates the root and live-session SquashFS payloads;
 10. generates a SHA-512 checksum;
 11. keeps QEMU running for a configurable boot window and captures its VGA surface;
-12. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
-
-`distro/packages/noctty/noctty-0.1.0.tar.gz` is a committed, SHA-256-verified source archive. `source.env` records the NOCTTY repository commit used to produce it; maintainers regenerate it with `scripts/prepare_first_party_apps.sh` from a clean local NOCTTY checkout and commit the archive and contract together. The CI path does not clone NOCTTY or require a repository token.
+12. boots a disposable BIOS disk produced from the same offline rootfs/Calamares package-removal contract, generates initramfs and GRUB, then checks a dinit first-boot marker and recovery-TTY service;
+13. creates GitHub artifact attestations for the ISO and checksum;
+14. publishes the ISO, checksum, QEMU logs and PPM captures as a temporary workflow artifact.
 
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, dinit service files, NOCTTY/NoctEd and the Thunar/GVFS/UDisks2 removable-media stack reached the ISO. It also asserts the standalone PolicyKit agent and rejects systemd plus full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
@@ -54,7 +55,7 @@ For a local graphical capture, set `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QE
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 
-The profile also embeds an experimental offline Calamares path with DINX dark branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, dark defaults for ReGreet and Noctalia, disabled Noctalia animation/transparency defaults, the two-desktop Mango default and its user override, the DINX installer launcher, the partitionmanager binary and the removable-media stack; it does not replace a destructive-disk installation test.
+The profile also embeds an experimental offline Calamares path with DINX dark branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, dark defaults for ReGreet and Noctalia, disabled Noctalia animation/transparency defaults, the two-desktop Mango default and its user override, the DINX installer launcher, the fallback `foot` terminal and the removable-media stack. `scripts/smoke-install.sh` qualifies the destructive operations on an ephemeral BIOS disk: it copies the ISO rootfs, removes live-only packages, creates a user/fstab, enables dinit plus `getty@tty2`/`tty3`, generates initramfs/GRUB, boots the disk and captures the recovery-TTY transition. It is a CI contract smoke, not arbitrary hardware qualification.
 
 For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT`, optionally `DINX_QEMU_POST_SCREENSHOT_DELAY` and `DINX_QEMU_POST_KEYS`. This does not prove that the greeter accepted credentials.
 

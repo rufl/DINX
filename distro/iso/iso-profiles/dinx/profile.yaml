@@ -35,7 +35,7 @@ rootfs:
     - mangowm
     - mesa
     - networkmanager
-    - noctty
+    - foot
     - noctalia
     - qt6-wayland
     - partitionmanager

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+if [ "${DINX_TERMINAL_FALLBACK:-0}" = 1 ]; then
+    exec foot "$@"
+fi
+
+if command -v noctty >/dev/null 2>&1; then
+    exec noctty "$@"
+fi
+
+exec foot "$@"

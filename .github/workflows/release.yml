@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -14,6 +16,8 @@ jobs:
     uses: rufl/DINX/.github/workflows/p0-iso.yml@5b219dbea592ed555c78effb76079982bbdde5f6 # pin archive-backed P0 workflow with NOCTTY and NoctEd
     permissions:
       contents: read
+      id-token: write
+      attestations: write
 
   publish:
     name: Publish DINX alpha release
@@ -23,6 +27,8 @@ jobs:
     permissions:
       actions: read
       contents: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout DINX
@@ -100,8 +106,9 @@ jobs:
           ## Verification
 
           - SHA-512: \`${iso_name}.sha512\`
-          - Linux QEMU boot, graphical payload, boot-menu evidence and automated greeter/session captures passed in CI.
-          - The PPM captures include the GRUB boot-menu frame when the release workflow uses the updated P0 workflow.
+          - Linux QEMU boot, graphical payload, boot-menu and automated greeter/session captures passed in CI.
+          - The persistent-install smoke copied the Calamares rootfs contract to an ephemeral BIOS disk, booted dinit and captured a recovery TTY frame.
+          - GitHub artifact attestations cover the ISO, checksums, Windows package and release metadata. Verify with `gh attestation verify <file> -R rufl/DINX`.
 
           ## Windows QEMU package
 
@@ -115,27 +122,48 @@ jobs:
           receiver \`ddjarin\`. Run \`scripts/deploy-ztash.sh ${RELEASE_TAG}\` from a
           trusted owner machine for a preview; add \`--apply\` only after review.
 
-          This release includes an experimental offline Calamares installer and KDE Partition Manager.
-          It is not a supported disk installer; verify the selected device and read the installation
-          guide before using either destructive tool.
+          This release includes the experimental offline Calamares installer and KDE Partition Manager.
+          The installer contract is qualified in CI on a disposable BIOS disk, but hardware installation,
+          UEFI, upgrades, rollback and data preservation remain unsupported; verify the target device and
+          read the installation guide before using either destructive tool.
           The live account is \`dinx\` / \`dinx\`; it is disposable and must never be reused.
           EOF
+      - name: Attest release provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            dist/release/*.iso
+            dist/release/*.iso.sha512
+            dist/release/*windows-x86_64.zip
+            dist/release/*windows-x86_64.json
+            dist/release/*deployment-manifest.json
+            dist/release/SHA256SUMS
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
           case "$version" in
             *-alpha*|*-beta*|*-rc*) prerelease=(--prerelease) ;;
             *) prerelease=() ;;
           esac
           release_assets=(
-            "dist/release/$iso_name"
-            "dist/release/$iso_name.sha512"
-            "dist/release/$package_name"
-            "dist/release/$metadata_name"
-            "dist/release/$manifest_name"
+            "dist/release/dinx-${version}-x86_64.iso"
+            "dist/release/dinx-${version}-x86_64.iso.sha512"
+            "dist/release/dinx-${version}-dogfood.1-windows-x86_64.zip"
+            "dist/release/dinx-${version}-dogfood.1-windows-x86_64.json"
+            "dist/release/dinx-${version}-dogfood.1-deployment-manifest.json"
             dist/release/SHA256SUMS
           )
-          release_assets+=("${release_evidence[@]}")
+          while IFS= read -r -d '' evidence; do
+            release_assets+=("$evidence")
+          done < <(find dist/release -maxdepth 1 -type f \( -name "dinx-${version}-*.ppm" -o -name "dinx-${version}-*.qemu.log" \) -print0)
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "DINX ${RELEASE_TAG}" \
             --notes-file dist/release/RELEASE_NOTES.md \
             "${prerelease[@]}" \
-          "${release_assets[@]}"
+            "${release_assets[@]}"

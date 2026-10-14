@@ -27,6 +27,21 @@ Cada release alpha contém:
 O pacote Windows não contém uma segunda cópia da ISO. Ele contém uma URL HTTPS fixada
 e o SHA-512 da ISO. Na primeira execução, baixa o artefato exato do release para o
 diretório privado, verifica o checksum e só então inicia o QEMU.
+## Verificar a procedência do release
+
+O workflow cria atestações de artefato do GitHub para a ISO, seus checksums, o
+launcher Windows e os metadados do release. Verifique cada arquivo baixado online
+com o GitHub CLI:
+
+```bash
+gh attestation verify dinx-<versão>-x86_64.iso -R rufl/DINX
+gh attestation verify dinx-<versão>-dogfood.1-windows-x86_64.zip -R rufl/DINX
+```
+
+Os arquivos `.sha512` e `SHA256SUMS` continuam úteis para verificações offline. A
+atestação prova a procedência do build no GitHub Actions; não torna o instalador
+experimental nem o suporte de hardware adequados para produção.
+
 
 ## Verificar o arquivo ZIP do Windows
 
@@ -123,9 +138,12 @@ em vez de substituir silenciosamente o renderer.
 ## Limites do release
 
 - A conta live é `dinx` / `dinx`; é pública, descartável e nunca deve ser reutilizada.
-- A imagem não é um instalador de disco suportado e não possui persistência, rollback ou
-  caminho Secure Boot assinado.
-- O alpha publica checksums, mas não assinatura do pacote ou da ISO; isso fica
-  registrado como `signing: unavailable` nos metadados dogfood.
+- A imagem ainda é um instalador de disco experimental, sem atualização, rollback ou
+  caminho Secure Boot assinado. O CI qualifica o contrato offline do rootfs em um disco
+  BIOS descartável e captura um quadro da TTY de recuperação; isso não qualifica hardware
+  arbitrário.
+- Os arquivos do release têm atestações de artefato do GitHub, mas a imagem ainda não
+  fornece uma chave de assinatura de repositório pacman nem um banco de pacotes assinado
+  para atualizações do sistema instalado.
 - O teste Windows com QEMU é uma qualificação externa do receptor. Sucesso nele não
   transforma a imagem alpha em release de hardware suportado.

@@ -35,6 +35,19 @@ Teste o boot de uma ISO já construída:
 ```bash
 scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
+Teste o contrato de instalação persistente em um disco BIOS descartável:
+
+```bash
+DINX_INSTALL_OUTPUT_DIR=dist/iso/dinx \
+scripts/smoke-install.sh dist/iso/<arquivo>.iso
+```
+
+O script extrai o rootfs da ISO, remove os pacotes exclusivos da sessão live, cria
+um disco ext4 temporário, gera initramfs e GRUB BIOS, inicializa o disco no QEMU e
+captura a transição para a TTY de recuperação. Ele exige root ou `sudo` sem senha,
+loop devices, `grub-pc-bin`, QEMU e ferramentas SquashFS. O disco é apagado ao fim
+do smoke; isso não substitui a qualificação em hardware.
+
 
 A execução remota também captura a superfície VGA do QEMU pelo monitor. Para solicitar a mesma evidência localmente:
 
@@ -71,7 +84,7 @@ O perfil agora inclui o instalador experimental Calamares e o KDE Partition Mana
 O greeter e o Noctalia recebem defaults de modo escuro pelo `root-overlay`. O Noctalia inicia com animações e transparência de painéis/janela de configurações desativadas, mas a interface de Settings pode alterar esses defaults depois. O Mango inicia com dois desktops virtuais; edite `~/.config/mango/config.conf` e altere `tag_num` para adicionar mais. A cadeia de dependências do Calamares mantém componentes do Plasma para o instalador, mas as entradas de sessão Plasma X11 e Wayland não suportadas ficam ocultas no greeter da DINX, deixando o MangoWM como sessão live. O Calamares usa branding DINX e um stylesheet Qt escuro. A sessão live expõe `Instalar DINX` no launcher; o particionador separado aparece como `KDE Partition Manager`.
 Para armazenamento removível, o perfil inclui Thunar, `thunar-volman`, GVFS, UDisks2 e o agente independente de PolicyKit do LXQt. O Thunar é executado como processo de monitoramento de volumes dentro da sessão Mango; apenas o gerenciador de arquivos é instalado, não o desktop Xfce. A sessão usa D-Bus, elogind e dinit, sem dependência de systemd. O Thunar é o manipulador padrão de `inode/directory`; o Noctalia continua sendo o shell do desktop, e nenhum `xfdesktop`, sessão Xfce ou sessão completa do LXQt é instalada.
 
-A verificação de conteúdo prova que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão e dinit. A captura PPM do workflow é evidência visual para inspeção, não um teste interativo automatizado: login gráfico, saúde dos serviços e TTY de recuperação continuam gates de release.
+A verificação de conteúdo prova que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão, terminal fallback e dinit. `scripts/smoke-install.sh` também executa o contrato offline em um disco BIOS efêmero, verifica o primeiro boot dinit e habilita as TTYs de recuperação. A captura PPM do workflow é evidência visual para inspeção, não uma qualificação de hardware arbitrário.
 
 O workflow armazena uma captura separada `dinx-boot-screen.ppm`, feita antes do envio das teclas do menu de boot. Esse quadro deve ser revisado ao qualificar a superfície GRUB de seleção do kernel; ele é a evidência de regressão do painel opaco removido.
 
@@ -85,7 +98,7 @@ Um build de imagem bem-sucedido não é o critério de release. A ISO resultante
 
 1. geração de checksum;
 2. validação do conteúdo SquashFS;
-3. smoke test de boot em VM;
+3. smoke test de boot e instalação em VM;
 4. verificação da TTY de recuperação;
 5. verificações de rede, áudio, D-Bus, portal e gráficos;
 6. relatório de instalação/atualização antes de ser rotulada como alpha.

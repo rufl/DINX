@@ -154,6 +154,28 @@ Após entrar no MangoWM:
 5. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O Calamares e o KDE Partition Manager podem apagar ou formatar dados. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
+### Primeiro boot e TTY de recuperação
+
+O contrato de instalação do CI inicializa o root filesystem copiado em um disco BIOS
+descartável e habilita `getty@tty2` e `getty@tty3` para recuperação. Em uma instalação
+real, pressione `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` no greeter para abrir uma TTY e faça
+login com o usuário criado durante a instalação. Comandos úteis:
+
+```bash
+dinitctl status greetd
+dinitctl restart greetd
+```
+
+Se a sessão gráfica não estiver disponível, use o fallback Wayland independente:
+
+```bash
+DINX_TERMINAL_FALLBACK=1 dinx-terminal
+```
+
+`Super+Enter` também inicia o `foot` diretamente na sessão Mango. `$TERMINAL` aponta
+para `dinx-terminal`, que prefere o NOCTTY e usa `foot` quando o NOCTTY não está
+instalado.
+
 
 ## 6. O que esta alpha pode e não pode fazer
 
@@ -165,15 +187,18 @@ O Calamares e o KDE Partition Manager podem apagar ou formatar dados. A confirma
 - inicialização do Noctalia;
 - presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO;
 - presença da configuração de instalação offline do Calamares e do KDE Partition Manager independente.
+- contrato de instalação do rootfs persistente em disco BIOS descartável, primeiro boot dinit e captura da TTY de recuperação no CI.
 
 ### Ainda não suportado para produção
 
-- o caminho de instalação persistente é experimental e ainda exige qualificação de instalação limpa UEFI/BIOS, primeiro boot e recuperação;
+- o instalador persistente é experimental. O CI qualifica um disco BIOS efêmero; hardware UEFI/BIOS real ainda exige relatório de hardware;
 - não existe procedimento de atualização ou rollback;
 - a imagem atual não é um release de desktop ou jogos para produção;
 - não particione nem formate um disco interno baseando-se apenas neste guia.
 
-Para instalação de produção, aguarde um release com assinatura de pacotes, suporte de hardware, recuperação e atualização. O caminho selecionado e os gates restantes estão registrados na [decisão de arquitetura](architecture.md).
+Para instalação de produção, aguarde um release com chave de assinatura do repositório
+pacman, suporte de hardware, recuperação e atualização. O caminho selecionado e os gates
+restantes estão registrados na [decisão de arquitetura](architecture.md).
 
 ## Solução de problemas
 

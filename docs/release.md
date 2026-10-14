@@ -26,6 +26,21 @@ Each alpha release contains:
 The Windows package does not contain a second copy of the ISO. It contains a pinned
 HTTPS URL and the ISO SHA-512. On first run it downloads the exact release asset to its
 private directory, verifies the checksum, and only then starts QEMU.
+## Verify release provenance
+
+The release workflow creates GitHub artifact attestations for the ISO, its checksums,
+the Windows launcher and its release metadata. Verify each downloaded file online with
+GitHub CLI:
+
+```bash
+gh attestation verify dinx-<version>-x86_64.iso -R rufl/DINX
+gh attestation verify dinx-<version>-dogfood.1-windows-x86_64.zip -R rufl/DINX
+```
+
+The `.sha512` and `SHA256SUMS` files remain useful offline integrity checks. An
+attestation proves the file's GitHub Actions build provenance; it does not make the
+experimental installer or hardware support production-ready.
+
 
 ## Verify the Windows archive
 
@@ -122,9 +137,10 @@ qualification fails explicitly instead of silently substituting another renderer
 
 - The live account is `dinx` / `dinx`; it is public, disposable and must never be
   reused.
-- The image is not a supported disk installer and has no persistence, rollback or
-  signed Secure Boot path.
-- The current alpha release publishes checksums but no package or ISO signature; this
-  is recorded as `signing: unavailable` in the dogfood metadata.
+- The image is still an experimental disk installer with no upgrade, rollback or
+  signed Secure Boot path. CI qualifies the offline rootfs contract on a disposable
+  BIOS disk and captures a recovery-TTY frame; it does not qualify arbitrary hardware.
+- Release files have GitHub artifact attestations, but the image does not yet ship a
+  pacman repository signing key or signed package database for installed-system updates.
 - The Windows QEMU test is an external receiver qualification. Its success does not
   turn the alpha image into a supported hardware release.

@@ -163,6 +163,28 @@ After logging into MangoWM:
 5. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
 Both Calamares and KDE Partition Manager can erase or format data. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
+### First boot and recovery TTY
+
+The CI installation contract boots the copied root filesystem from a disposable BIOS
+disk and enables `getty@tty2` and `getty@tty3` for recovery. On a real installation,
+press `Ctrl+Alt+F2` or `Ctrl+Alt+F3` at the greeter to reach a TTY and log in with
+the user created during installation. Useful recovery commands:
+
+```bash
+dinitctl status greetd
+dinitctl restart greetd
+```
+
+If the graphical session is unavailable, use the independent Wayland fallback:
+
+```bash
+DINX_TERMINAL_FALLBACK=1 dinx-terminal
+```
+
+`Super+Enter` also launches `foot` directly in the Mango session. `$TERMINAL` points
+to `dinx-terminal`, which prefers NOCTTY and falls back to `foot` when NOCTTY is not
+installed.
+
 
 ## 6. What this alpha can and cannot do
 
@@ -173,16 +195,19 @@ Both Calamares and KDE Partition Manager can erase or format data. The final con
 - graphical login into the MangoWM session;
 - Noctalia startup;
 - presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
+- persistent rootfs install contract on a disposable BIOS disk, dinit first boot and recovery-TTY capture in CI;
 - presence of the Calamares offline-install configuration and standalone KDE Partition Manager.
 
 ### Not production-supported yet
 
-- The persistent installer path is experimental and still requires clean UEFI/BIOS installation, first boot and recovery qualification.
+- The persistent installer is experimental. CI qualifies an ephemeral BIOS disk; real UEFI/BIOS hardware still requires a hardware report.
 - There is no upgrade or rollback procedure.
 - The current image is not a production desktop or gaming release.
 - Do not repartition or format an internal disk based only on this guide.
 
-For production installation, wait for a release with package signing, hardware support, recovery and upgrade procedures. The selected installer path and remaining gates are tracked in the [architecture decision](architecture.md).
+For production installation, wait for a release with a pacman repository signing key,
+hardware support, recovery and upgrade procedures. The selected installer path and
+remaining gates are tracked in the [architecture decision](architecture.md).
 
 ## Troubleshooting
 

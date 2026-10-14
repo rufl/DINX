@@ -19,6 +19,7 @@ on:
       - "scripts/prepare_first_party_apps.sh"
       - "scripts/check_first_party_apps.sh"
       - "scripts/smoke-iso.sh"
+      - "scripts/smoke-install.sh"
       - "scripts/smoke-iso.ps1"
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
@@ -27,6 +28,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 concurrency:
   group: p0-iso-${{ github.ref }}
@@ -49,7 +52,7 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes qemu-system-x86 squashfs-tools xorriso socat
+          sudo apt-get install --yes qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
 
       - name: Build with Artix artools
         run: |
@@ -186,6 +189,18 @@ jobs:
 
       - name: Verify graphical ISO payload
         run: scripts/check-iso-content.sh "$DINX_ISO"
+      - name: Smoke-test persistent install and recovery TTY
+        env:
+          DINX_INSTALL_OUTPUT_DIR: dist/iso/dinx
+          DINX_INSTALL_TIMEOUT: 180
+        run: scripts/smoke-install.sh "$DINX_ISO"
+
+      - name: Attest ISO and checksum provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            ${{ steps.artifact.outputs.iso_path }}
+            ${{ steps.artifact.outputs.iso_path }}.sha512
 
       - name: Upload alpha workflow artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

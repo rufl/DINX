@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=DINX Terminal (fallback)
+Name[pt_BR]=Terminal DINX (fallback)
+Comment=Terminal Wayland independente do NOCTTY
+Comment[pt_BR]=Terminal Wayland independente do NOCTTY
+Exec=foot
+TryExec=foot
+Icon=utilities-terminal
+Terminal=false
+Categories=System;TerminalEmulator;
+Keywords=terminal;foot;fallback;dinx;

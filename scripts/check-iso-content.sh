@@ -46,12 +46,12 @@ required_paths=(
   etc/greetd/regreet.toml
   etc/mango/dinx.conf
   etc/mango/greeter.conf
-  etc/skel/.config/mango/config.conf
-  etc/skel/.config/noctalia/config.toml
-  etc/xdg/mimeapps.list
-  usr/bin/lxqt-policykit-agent
-  usr/bin/thunar
-  usr/bin/thunar-volman
+  etc/profile.d/dinx.sh
+  etc/skel/.bash_profile
+  etc/skel/.bashrc
+  usr/bin/foot
+  usr/local/bin/dinx-terminal
+  usr/share/applications/dinx-terminal-fallback.desktop
   usr/bin/udisksctl
   usr/lib/gvfs-udisks2-volume-monitor
   usr/lib/udisks2/udisksd
@@ -114,9 +114,14 @@ grep -Fq 'transparency_mode = "solid"' <<<"$noctalia_config" || fail 'Noctalia p
 
 mango_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/mango/dinx.conf)
 grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two virtual desktops'
+grep -Fq 'env=TERMINAL,dinx-terminal' <<<"$mango_config" || fail 'Mango does not expose the DINX terminal contract'
 grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fail 'Mango user workspace override is not enabled'
 grep -Fq 'exec_once=lxqt-policykit-agent' <<<"$mango_config" || fail 'Mango does not start the PolicyKit authentication agent'
 grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not start the Thunar volume monitor'
+grep -Fq 'bind=SUPER,Return,spawn,foot' <<<"$mango_config" || fail 'Mango fallback terminal shortcut is missing'
+shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
+grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is missing'
+grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
 
@@ -146,6 +151,9 @@ calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.im
 grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares branding is not selected'
 grep -Fq 'services-artix' <<<"$calamares_settings" || fail 'Calamares dinit service module is not selected'
 grep -Fq 'postcfg' <<<"$calamares_settings" || fail 'Calamares dinit user-service module is not selected'
+calamares_services=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/services-artix.conf)
+grep -Fq 'getty@tty2' <<<"$calamares_services" || fail 'Calamares recovery TTY service is not selected'
+grep -Fq 'getty@tty3' <<<"$calamares_services" || fail 'Calamares second recovery TTY service is not selected'
 
 calamares_branding=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/branding/dinx/stylesheet.qss)
 grep -Fq '#11151c' <<<"$calamares_branding" || fail 'DINX Calamares dark stylesheet is missing'

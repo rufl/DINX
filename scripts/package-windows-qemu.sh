@@ -99,7 +99,7 @@ rm -f "$archive_path"
 archive_size=$(wc -c < "$archive_path")
 archive_sha256=$(sha256sum "$archive_path" | cut -d ' ' -f 1)
 printf '%s  %s\n' "$archive_sha256" "$archive_name" > "$output_dir/SHA256SUMS"
-printf '{\n  "application": "dinx",\n  "archive": "%s",\n  "build_id": "%s",\n  "channel": "dogfood",\n  "manifest_url": "%s/%s",\n  "proof": "unavailable",\n  "schema": "zeer.package-provenance/v1",\n  "sha256": "%s",\n  "signing": "unavailable",\n  "size": %s,\n  "target": "windows-x86_64",\n  "url": "%s",\n  "version": "%s"\n}\n' \
+printf '{\n  "application": "dinx",\n  "archive": "%s",\n  "build_id": "%s",\n  "channel": "dogfood",\n  "manifest_url": "%s/%s",\n  "proof": "github-artifact-attestation",\n  "schema": "zeer.package-provenance/v1",\n  "sha256": "%s",\n  "signing": "github-artifact-attestation",\n  "size": %s,\n  "target": "windows-x86_64",\n  "url": "%s",\n  "version": "%s"\n}\n' \
   "$archive_name" "$build_id" "$release_base_url" "$metadata_name" \
   "$archive_sha256" "$archive_size" "$release_url" "$package_version" > "$output_dir/$metadata_name"
 printf '{\n  "application": "dinx",\n  "build_id": "%s",\n  "channel": "dogfood",\n  "schema": "zeer.ztash-dogfood/v1",\n  "targets": [\n    {\n      "agent": "ddjarin",\n      "archive": "%s",\n      "metadata": "%s",\n      "package": "packages/%s",\n      "sha256": "%s",\n      "size": %s,\n      "target": "windows-x86_64"\n    }\n  ],\n  "version": "%s"\n}\n' \

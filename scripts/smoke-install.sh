@@ -169,8 +169,8 @@ chroot "$target_dir" /usr/bin/grub-mkimage \
   biosdisk part_msdos ext2 search search_fs_uuid normal configfile linux
 chroot "$target_dir" /usr/bin/grub-bios-setup \
   --directory=/boot/grub/i386-pc \
-  --boot-image=/boot/grub/i386-pc/boot.img \
-  --core-image=/boot/grub/i386-pc/core.img \
+  --boot-image=boot.img \
+  --core-image=core.img \
   --skip-fs-probe "$loop_device" >/dev/null
 printf 'smoke-install: target mkinitcpio configuration\n'
 grep -E '^(MODULES|HOOKS)=' "$target_dir/etc/mkinitcpio.conf" || true

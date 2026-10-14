@@ -5,8 +5,6 @@ iso_path=${1:-}
 timeout_seconds=${DINX_INSTALL_TIMEOUT:-180}
 memory_mb=${DINX_INSTALL_MEMORY:-2048}
 disk_size=${DINX_INSTALL_DISK_SIZE:-8G}
-disk_interface=${DINX_INSTALL_DISK_IF:-ide}
-grub_disk_module=${DINX_INSTALL_GRUB_DISK_MODULE:-biosdisk}
 output_dir=${DINX_INSTALL_OUTPUT_DIR:-}
 
 fail() {
@@ -19,8 +17,6 @@ fail() {
 [[ "$timeout_seconds" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_TIMEOUT must be a positive integer'
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
-[[ "$disk_interface" == ide || "$disk_interface" == virtio ]] || fail 'DINX_INSTALL_DISK_IF must be ide or virtio'
-[[ "$grub_disk_module" == biosdisk || "$grub_disk_module" == native ]] || fail 'DINX_INSTALL_GRUB_DISK_MODULE must be biosdisk or native'
 
 for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-mkconfig qemu-system-x86_64 socat timeout; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
@@ -28,7 +24,7 @@ done
 
 if [[ $EUID -ne 0 ]]; then
   command -v sudo >/dev/null 2>&1 || fail 'root or passwordless sudo is required'
-  exec sudo --preserve-env=DINX_INSTALL_TIMEOUT,DINX_INSTALL_MEMORY,DINX_INSTALL_DISK_SIZE,DINX_INSTALL_DISK_IF,DINX_INSTALL_GRUB_DISK_MODULE,DINX_INSTALL_OUTPUT_DIR \
+  exec sudo --preserve-env=DINX_INSTALL_TIMEOUT,DINX_INSTALL_MEMORY,DINX_INSTALL_DISK_SIZE,DINX_INSTALL_OUTPUT_DIR \
     "$0" "$@"
 fi
 
@@ -142,7 +138,7 @@ chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 
 printf 'smoke-install: installing BIOS GRUB into the disposable disk\n'
 chroot "$target_dir" /usr/bin/grub-install \
-  --target=i386-pc --no-floppy --recheck --disk-module="$grub_disk_module" \
+  --target=i386-pc --no-floppy --recheck --disk-module=biosdisk \
   --boot-directory=/boot "$loop_device" >/dev/null
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
 if ! grep -Eq '^[[:space:]]*linux[[:space:]]' "$target_dir/boot/grub/grub.cfg"; then
@@ -179,10 +175,10 @@ chroot "$target_dir" /usr/bin/lsinitcpio -n -l /boot/initramfs-linux.img \
   | grep -E '(^|/)(virtio(_pci|_blk)?|ata(_generic|_piix)?|ext4)(\.ko|/)' || true
 printf 'smoke-install: target GRUB modules\n'
 find "$target_dir/boot/grub/i386-pc" -maxdepth 1 -type f \
-  \( -name 'biosdisk.mod' -o -name 'native.mod' -o -name 'normal.mod' \
+  \( -name 'biosdisk.mod' -o -name 'normal.mod' \
   -o -name 'part_msdos.mod' -o -name 'ext2.mod' -o -name 'search*.mod' -o -name 'linux.mod' \) \
   -printf '%f\n' | sort
-printf 'smoke-install: generated GRUB boot lines\n'
+printf 'smoke-install: generated GRUB configuration\n'
 wc -c "$target_dir/boot/grub/grub.cfg"
 grep -E '^[[:space:]]*(set timeout|linux|linuxefi|search|set root)' \
   "$target_dir/boot/grub/grub.cfg" || true
@@ -202,8 +198,7 @@ mounted_target=false
 losetup -d "$loop_device"
 loop_device=
 
-printf 'smoke-install: booting installed disk with %s storage and %s GRUB disk module\n' \
-  "$disk_interface" "$grub_disk_module"
+printf 'smoke-install: booting installed BIOS/IDE disk\n'
 if [[ -r /dev/kvm ]]; then
   accel=(-accel kvm)
 else
@@ -216,7 +211,7 @@ timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 \
   "${accel[@]}" \
   -m "$memory_mb" \
-  -drive "file=$disk_image,format=raw,if=$disk_interface" \
+  -drive "file=$disk_image,format=raw,if=ide" \
   -display none \
   -monitor "unix:$monitor_path,server=on,wait=off" \
   -serial "file:$serial_log" \

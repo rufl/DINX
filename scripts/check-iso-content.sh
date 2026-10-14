@@ -120,9 +120,10 @@ grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not 
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
 
+# Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
   etc/systemd \
-  usr/lib/systemd \
+  usr/lib/systemd/systemd \
   usr/bin/systemd \
   usr/bin/systemctl \
   usr/bin/xfce4-session \

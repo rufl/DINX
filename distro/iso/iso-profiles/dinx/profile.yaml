@@ -35,6 +35,7 @@ rootfs:
     - networkmanager
     - noctalia
     - qt6-wayland
+    - partitionmanager
     - pipewire
     - pipewire-pulse
     - polkit

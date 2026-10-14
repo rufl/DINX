@@ -26,10 +26,21 @@ Download `SHA256SUMS` from the same GitHub release as the ZIP. Do not copy a
 checksum from an older package or a different release:
 
 ```powershell
-$zipPath = (Resolve-Path .\dinx-0.1.0-alpha.3-dogfood.1-windows-x86_64.zip).Path
-$zipName = Split-Path -Leaf $zipPath
+$downloadRoot = (Get-Location).Path
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.4'
+$zipName = 'dinx-0.1.0-alpha.4-dogfood.1-windows-x86_64.zip'
+$zipPath = Join-Path $downloadRoot $zipName
+$sumPath = Join-Path $downloadRoot 'SHA256SUMS'
+
+if (-not (Test-Path -LiteralPath $zipPath -PathType Leaf)) {
+    Invoke-WebRequest -UseBasicParsing -Uri "$releaseUrl/$zipName" -OutFile $zipPath
+}
+if (-not (Test-Path -LiteralPath $sumPath -PathType Leaf)) {
+    Invoke-WebRequest -UseBasicParsing -Uri "$releaseUrl/SHA256SUMS" -OutFile $sumPath
+}
+
 $expected = @(
-    Get-Content .\SHA256SUMS |
+    Get-Content -LiteralPath $sumPath |
         Where-Object { $_ -match [regex]::Escape($zipName) } |
         ForEach-Object { ($_ -split '\s+')[0] }
 )

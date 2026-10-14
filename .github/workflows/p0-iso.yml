@@ -53,7 +53,7 @@ jobs:
 
       - name: Build with Artix artools
         run: |
-          mkdir -p "$RUNNER_TEMP/dinx-artools"
+          mkdir -p "$RUNNER_TEMP/dinx-artools" "$GITHUB_WORKSPACE/dist/iso"
           docker run --rm --privileged \
             --volume "$GITHUB_WORKSPACE:/workspace" \
             --volume "$RUNNER_TEMP/dinx-artools:/var/lib/artools/buildiso" \
@@ -108,11 +108,14 @@ jobs:
               curl --fail --silent --show-error --location --retry 3 \
                 --output "/tmp/$zig_archive" \
                 "https://ziglang.org/download/${zig_version}/${zig_archive}"
-              printf '%s  %s\n' "$zig_sha256" "/tmp/$zig_archive" \
-                | sha256sum --check --status -
+              actual_zig_sha=$(sha256sum "/tmp/$zig_archive" | cut -d ' ' -f 1)
+              printf 'zig_sha256=%s\n' "$actual_zig_sha"
+              test "$actual_zig_sha" = "$zig_sha256"
               tar -xJf "/tmp/$zig_archive" --directory /tmp
               export PATH="/tmp/zig-x86_64-linux-${zig_version}:$PATH"
-              test "$(zig version)" = "$zig_version"
+              actual_zig_version=$(zig version)
+              printf 'zig_version=%s\n' "$actual_zig_version"
+              test "$actual_zig_version" = "$zig_version"
               package_repo=/workspace/dist/packages
               rm -rf "$package_repo"
               mkdir -p "$package_repo"

@@ -13,6 +13,7 @@ Os pontos de entrada são:
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
 - `.github/workflows/p0-iso.yml` — build remoto em container Artix;
 - `.github/workflows/release.yml` — publicação de pré-release por tag e montagem do pacote Windows para QEMU;
+- `distro/packages/wlroots0.20/PKGBUILD` — build fixado do wlroots 0.20.2 para o ABI atual do Mango/Scenefx;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — perfil de pacotes e serviços da fundação.
 
 ## Build remoto
@@ -22,7 +23,7 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 1. instala QEMU e ferramentas de inspeção de ISO no runner Ubuntu;
 2. executa Artix em um container privilegiado;
 3. instala `artools`, `iso-profiles` e as dependências de build fixadas do MangoWM/Scenefx;
-4. compila MangoWM e Scenefx e os serve em um repositório pacman local temporário;
+4. compila o wlroots 0.20.2 fixado, MangoWM e Scenefx, e os serve em um repositório pacman local temporário;
 5. executa o probe de pré-requisitos;
 6. constrói a ISO com `buildiso`;
 7. valida os payloads SquashFS do root e da sessão live;

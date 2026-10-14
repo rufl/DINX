@@ -18,7 +18,7 @@ fail() {
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout; do
+for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-mkconfig qemu-system-x86_64 socat timeout; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -109,6 +109,7 @@ printf 'dinx:dinx\n' | chroot "$target_dir" /usr/bin/chpasswd
 root_uuid=$(blkid -s UUID -o value "$root_device")
 printf 'UUID=%s / ext4 defaults 0 1\n' "$root_uuid" > "$target_dir/etc/fstab"
 printf 'dinx-install-smoke\n' > "$target_dir/etc/hostname"
+printf 'smoke-install: root UUID=%s\n' "$root_uuid"
 
 printf 'smoke-install: enabling dinit services and recovery TTYs\n'
 for service in NetworkManager elogind greetd getty@tty2 getty@tty3; do
@@ -136,10 +137,17 @@ printf 'smoke-install: generating the installed initramfs\n'
 chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 
 printf 'smoke-install: installing BIOS GRUB into the disposable disk\n'
-grub-install --target=i386-pc --no-floppy --recheck --boot-directory="$target_dir/boot" "$loop_device" >/dev/null
+chroot "$target_dir" /usr/bin/grub-install \
+  --target=i386-pc --no-floppy --recheck --boot-directory=/boot "$loop_device" >/dev/null
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
+printf 'smoke-install: installed initramfs storage modules\n'
+chroot "$target_dir" /usr/bin/lsinitcpio -a /boot/initramfs-linux.img \
+  | grep -E '(^|/)(virtio(_pci|_blk)?|ext4)(\.ko|/)' || true
+printf 'smoke-install: generated GRUB root/linux lines\n'
+grep -E '^[[:space:]]*(linux|linuxefi|search|set root)' "$target_dir/boot/grub/grub.cfg" || true
 
 
+[[ -s "$target_dir/boot/grub/grub.cfg" ]] || fail 'installed GRUB configuration is missing'
 # The guest must start from the installed disk, not the live ISO.
 umount -R "$target_dir/run"
 mounted_run=false

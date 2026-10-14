@@ -33,6 +33,7 @@ rootfs:
     - gvfs-mtp
     - gvfs-smb
     - greetd
+    - greetd-regreet
     - grub
     - mangowm
     - mesa

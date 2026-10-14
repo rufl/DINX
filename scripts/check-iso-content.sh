@@ -132,7 +132,8 @@ for forbidden_path in \
   usr/bin/lxqt-session \
   usr/bin/lxqt-panel \
   usr/bin/lxqt-runner; do
-  if grep -Fq "/$forbidden_path" <<<"$manifest"; then
+  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
     fail "forbidden desktop/runtime payload is present: $forbidden_path"
   fi
 done

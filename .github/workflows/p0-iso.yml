@@ -41,6 +41,28 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.1
         with:
           persist-credentials: false
+      - name: Resolve pinned NOCTTY source
+        id: noctty-source
+        run: |
+          set -euo pipefail
+          ref=$(sed -n 's/^NOCTTY_REF=//p' distro/packages/noctty/source.env)
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]]
+          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pinned NOCTTY and NoctEd source
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.1
+        with:
+          repository: rufl/NOCTTY
+          ref: ${{ steps.noctty-source.outputs.ref }}
+          path: third_party/noctty
+          token: ${{ secrets.NOCTTY_REPO_TOKEN || github.token }}
+          persist-credentials: false
+
+      - name: Prepare pinned NOCTTY and NoctEd source archive
+        run: |
+          ./scripts/check_first_party_apps.sh
+          ./scripts/prepare_first_party_apps.sh "$GITHUB_WORKSPACE/third_party/noctty"
+
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
@@ -63,12 +85,19 @@ jobs:
                 iso-profiles \
                 mkinitcpio \
                 base-devel \
+                curl \
                 cairo \
                 cjson \
+                dbus \
+                gdk-pixbuf2 \
                 glib2 \
                 glslang \
+                gtk-layer-shell \
+                gtk3 \
+                gtksourceview4 \
                 libdisplay-info \
                 libdrm \
+                libepoxy \
                 libglvnd \
                 libinput \
                 libliftoff \
@@ -79,6 +108,7 @@ jobs:
                 pango \
                 pcre2 \
                 pixman \
+                pkgconf \
                 python \
                 seatd \
                 wayland \
@@ -86,7 +116,20 @@ jobs:
                 xcb-util-errors \
                 xcb-util-renderutil \
                 xcb-util-wm \
-                xorg-xwayland
+                xorg-xwayland \
+                xz \
+                zlib
+              zig_version=0.17.0
+              zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
+              zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
+              curl --fail --silent --show-error --location --retry 3 \
+                --output "/tmp/$zig_archive" \
+                "https://ziglang.org/download/${zig_version}/${zig_archive}"
+              printf '%s  %s\n' "$zig_sha256" "/tmp/$zig_archive" \
+                | sha256sum --check --status -
+              tar -xJf "/tmp/$zig_archive" --directory /tmp
+              export PATH="/tmp/zig-x86_64-linux-${zig_version}:$PATH"
+              test "$(zig version)" = "$zig_version"
               package_repo=/workspace/dist/packages
               rm -rf "$package_repo"
               mkdir -p "$package_repo"
@@ -103,6 +146,9 @@ jobs:
                 find "$package_dir" -maxdepth 1 -type f -name "*.pkg.tar.zst" \
                   -exec cp -- {} "$package_repo/" \;
               }
+              build_package noctty
+              pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
+
 
               build_package wlroots0.20
               pacman -U --noconfirm "$package_repo"/wlroots0.20-*.pkg.tar.zst

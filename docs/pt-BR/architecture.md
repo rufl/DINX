@@ -35,6 +35,7 @@ O primeiro alvo é o Artix Linux com dinit em x86_64. A imagem base deve fornece
 - uma ISO inicializável e um caminho de instalação documentado;
 - login gráfico com TTY de recuperação;
 - rede, PipeWire, D-Bus, portais, polkit e gráficos acelerados;
+- gerenciamento de arquivos independente com Thunar, `thunar-volman`, GVFS, UDisks2 e um agente de PolicyKit para mídia removível, sem uma sessão completa do Xfce/LXQt ou systemd;
 - manifestos de pacotes que identifiquem cada entrada específica da DINX;
 - um snapshot conhecido como funcional, reproduzível em um ambiente de build limpo.
 

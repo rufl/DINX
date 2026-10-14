@@ -31,7 +31,7 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 9. keeps QEMU running for a configurable boot window and captures its VGA surface;
 10. publishes the ISO, checksum and PPM capture as a temporary workflow artifact.
 
-The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session and dinit service files reached the ISO. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
+The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, dinit service files, Noctty/NoctEd and the Thunar/GVFS/UDisks2 removable-media stack reached the ISO. It also asserts the standalone PolicyKit agent and rejects systemd plus full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking or audio inside the guest.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
 
 Tagged releases reuse the same build artifact through `.github/workflows/release.yml`. The release job publishes the ISO, its SHA-512, the Linux QEMU evidence and a small Windows launcher package. The launcher downloads the ISO only from its metadata-pinned HTTPS release URL, verifies the SHA-512 and runs `scripts/smoke-iso.ps1` with QEMU on Windows. Its ZTASH metadata targets the registered `ddjarin` receiver without embedding credentials.
@@ -46,7 +46,7 @@ For a local graphical capture, set `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QE
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 
-The profile also embeds an experimental offline Calamares path with DINX dark branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, dark defaults for ReGreet and Noctalia, disabled Noctalia animation/transparency defaults, the two-desktop Mango default and its user override, the DINX installer launcher and the partitionmanager binary; it does not replace a destructive-disk installation test.
+The profile also embeds an experimental offline Calamares path with DINX dark branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, dark defaults for ReGreet and Noctalia, disabled Noctalia animation/transparency defaults, the two-desktop Mango default and its user override, the DINX installer launcher, the partitionmanager binary and the removable-media stack; it does not replace a destructive-disk installation test.
 
 For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT`, optionally `DINX_QEMU_POST_SCREENSHOT_DELAY` and `DINX_QEMU_POST_KEYS`. This does not prove that the greeter accepted credentials.
 
@@ -76,7 +76,7 @@ Therefore the P0 build must run in the remote workflow until the local dependenc
 1. `scripts/check-iso-host.sh` exits successfully in the Artix container.
 2. `scripts/build-iso.sh -q` resolves the `dinx` profile with `dinit`.
 3. A clean build produces one ISO and its build metadata.
-4. The graphical payload check finds the compositor, shell, greeter, session and dinit files.
+4. The graphical payload check finds the compositor, shell, greeter, session, first-party apps, removable-media stack and dinit files.
 5. A SHA-512 checksum is generated beside the ISO.
 6. `scripts/smoke-iso.sh` keeps QEMU alive for the boot window.
 7. The ISO boots to the foundation session and a recovery TTY.

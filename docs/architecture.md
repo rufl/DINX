@@ -35,6 +35,7 @@ The first target is Artix Linux with dinit on x86_64. The base image must provid
 - a bootable ISO and a documented installation path;
 - graphical login with a recovery TTY;
 - networking, PipeWire, D-Bus, portals, polkit and accelerated graphics;
+- standalone Thunar file management with `thunar-volman`, GVFS, UDisks2 and a PolicyKit agent for removable media, without a full Xfce/LXQt session or systemd;
 - package manifests that identify every DINX-specific input;
 - a known-good snapshot that can be reproduced from a clean build environment.
 

@@ -48,9 +48,29 @@ required_paths=(
   etc/mango/greeter.conf
   etc/skel/.config/mango/config.conf
   etc/skel/.config/noctalia/config.toml
+  etc/xdg/mimeapps.list
+  usr/bin/lxqt-policykit-agent
+  usr/bin/thunar
+  usr/bin/thunar-volman
+  usr/bin/udisksctl
+  usr/lib/gvfs-udisks2-volume-monitor
+  usr/lib/udisks2/udisksd
+  usr/share/applications/thunar.desktop
+  usr/share/dbus-1/services/org.gtk.vfs.UDisks2VolumeMonitor.service
+  usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
   usr/bin/mango
   usr/bin/mmsg
   usr/bin/noctalia
+  usr/bin/noctty
+  usr/bin/nocted
+  usr/share/applications/com.noctty.NOCTTY.desktop
+  usr/share/applications/com.noctty.NoctEd.desktop
+  usr/share/icons/hicolor/scalable/apps/com.noctty.NOCTTY.svg
+  usr/share/icons/hicolor/scalable/apps/com.noctty.NoctEd.svg
+  usr/share/nocted/language-specs/zig.lang
+  usr/share/nocted/language-specs/svelte.lang
+  usr/share/nocted/language-specs/kof.lang
+  usr/share/nocted/styles/nocted-dark.xml
   usr/bin/calamares
   usr/bin/partitionmanager
   usr/share/wayland-sessions/mango.desktop
@@ -95,6 +115,28 @@ grep -Fq 'transparency_mode = "solid"' <<<"$noctalia_config" || fail 'Noctalia p
 mango_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/mango/dinx.conf)
 grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two virtual desktops'
 grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fail 'Mango user workspace override is not enabled'
+grep -Fq 'exec_once=lxqt-policykit-agent' <<<"$mango_config" || fail 'Mango does not start the PolicyKit authentication agent'
+grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not start the Thunar volume monitor'
+mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
+grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
+
+for forbidden_path in \
+  etc/systemd \
+  usr/lib/systemd \
+  usr/bin/systemd \
+  usr/bin/systemctl \
+  usr/bin/xfce4-session \
+  usr/bin/xfdesktop \
+  usr/bin/xfwm4 \
+  usr/bin/xfce4-panel \
+  usr/bin/lxqt-session \
+  usr/bin/lxqt-panel \
+  usr/bin/lxqt-runner; do
+  if grep -Fq "/$forbidden_path" <<<"$manifest"; then
+    fail "forbidden desktop/runtime payload is present: $forbidden_path"
+  fi
+done
+
 mango_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/mango/config.conf)
 grep -Fq 'tag_num=2' <<<"$mango_user_config" || fail 'Mango user workspace default is not two'
 
@@ -108,6 +150,14 @@ grep -Fq '#11151c' <<<"$calamares_branding" || fail 'DINX Calamares dark stylesh
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'
+noctty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NOCTTY.desktop)
+grep -Fq 'TryExec=noctty' <<<"$noctty_desktop" || fail 'NOCTTY desktop launcher is missing'
+grep -Fq 'Exec=noctty --open-uri %u' <<<"$noctty_desktop" || fail 'NOCTTY desktop command is incorrect'
+
+nocted_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NoctEd.desktop)
+grep -Fq 'Exec=nocted %F' <<<"$nocted_desktop" || fail 'NoctEd desktop launcher is missing'
+grep -Fq 'Icon=com.noctty.NoctEd' <<<"$nocted_desktop" || fail 'NoctEd desktop icon is missing'
+
 
 grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
 
@@ -133,4 +183,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Thunar/GVFS/UDisks2 removable-media support, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

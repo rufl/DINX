@@ -27,20 +27,28 @@ rootfs:
     - e2fsprogs
     - efibootmgr
     - elogind
+    - exfatprogs
+    - gvfs
     - greetd
     - greetd-regreet
     - grub
     - mangowm
     - mesa
     - networkmanager
+    - noctty
     - noctalia
     - qt6-wayland
     - partitionmanager
     - pipewire
     - pipewire-pulse
     - polkit
+    - lxqt-policykit
     - scenefx
     - seatd
+    - thunar
+    - thunar-volman
+    - udisks2
+    - udisks2-btrfs
     - squashfs-tools
     - wayland
     - wireplumber

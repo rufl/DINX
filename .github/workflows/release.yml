@@ -14,6 +14,7 @@ jobs:
     uses: rufl/DINX/.github/workflows/p0-iso.yml@0fd03c35498448eee28b851937c0777034846418 # pin reusable P0 workflow
     permissions:
       contents: read
+    secrets: inherit
 
   publish:
     name: Publish DINX alpha release

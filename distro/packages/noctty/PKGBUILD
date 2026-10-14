@@ -1,0 +1,27 @@
+pkgname=noctty
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${NOCTTY_VERSION:?missing NOCTTY_VERSION}"
+: "${NOCTTY_SOURCE_SHA256:?missing NOCTTY_SOURCE_SHA256}"
+pkgver="$NOCTTY_VERSION"
+pkgrel=1
+pkgdesc='Native Zig terminal workspace and NoctEd editor for DINX'
+arch=('x86_64')
+url='https://github.com/rufl/NOCTTY'
+license=('MIT' 'Unicode-3.0' 'Unicode-DFS-2016' 'ICU')
+depends=('gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'dbus' 'zlib')
+optdepends=('noctalia: optional shell and widget integration')
+provides=('nocted' 'terminal-emulator')
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=("$NOCTTY_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+  zig build -Doptimize=ReleaseSafe
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  zig build -Doptimize=ReleaseSafe --prefix "$pkgdir/usr"
+}

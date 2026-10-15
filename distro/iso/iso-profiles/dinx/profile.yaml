@@ -71,6 +71,12 @@ rootfs:
     - bluez-utils
     - blueman
     - btop
+    - bc250-control-center
+    - diffutils
+    - kmod
+    - python-psutil
+    - python-pyqt6
+    - qt6-svg
     - curl
     - git
     - gufw

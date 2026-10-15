@@ -29,6 +29,7 @@ on:
       - "scripts/check_package_managers.sh"
       - "scripts/check_firewall_tools.sh"
       - "scripts/check_cyan_skillfish.sh"
+      - "scripts/check_bc250_control_center.sh"
       - "LICENSE"
 
 permissions:
@@ -62,6 +63,8 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify Cyan Skillfish and BC-250 support contract
         run: ./scripts/check_cyan_skillfish.sh
+      - name: Verify BC250 Control Center package and session contract
+        run: ./scripts/check_bc250_control_center.sh
       - name: Verify firewall and process-monitoring payload contract
         run: ./scripts/check_firewall_tools.sh
 
@@ -165,6 +168,7 @@ jobs:
               build_package opensnitch-dinit
               build_package cyan-skillfish-governor-smu
               build_package cyan-skillfish-governor-smu-dinit
+              build_package bc250-control-center
               build_package topgrade
               build_package paru
               build_package shelly

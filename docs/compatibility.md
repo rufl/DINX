@@ -45,6 +45,7 @@ The standalone `nm-connection-editor`, Blueman, pwvucontrol, VLC and Strawberry 
 Gufw, Qps and the OpenSnitch UI remain available from the dock/launcher; UFW and OpenSnitch dinit services are installed but not boot-enabled, so firewall rules require deliberate configuration. Do not enable both rule managers without reviewing the resulting netfilter ruleset.
 The package-management tools `topgrade`, `paru`, and Shelly remain launcher/CLI complements: topgrade uses DINX's pinned release binary and Artix `pacman` configuration, paru is built from pinned source against Artix ALPM, and Shelly delegates to Artix's `pacman` configuration. Their packages contain no `systemd` dependencies or units, add no Arch repositories, are not started by Noctalia or the boot session, and AUR recipes require explicit user review.
 AMD Cyan Skillfish/BC-250 support is a payload contract: Artix AMDGPU firmware, Mesa RADV, Vulkan diagnostics and the pinned SMU governor are installed. The dinit service auto-starts only the governor path for PCI `1002:13fe`; it uses the 1000-1850 MHz safe range and exits on other hardware without a systemd unit.
+BC250 Control Center v1.21.1 is the BC-250 launcher/monitor contract: its pinned MIT package provides a desktop entry, CLI, polkit policy and headless daemon. The daemon starts once from the Mango user session, not through systemd or a root dinit service; DINX removes the upstream systemd unit and Cyan drop-in. dinit remains a live/read-only service-persistence boundary in the upstream app, so failure to inspect a persistent service must not block application startup or live telemetry.
 
 ## Level 3 — deeper integration
 
@@ -74,7 +75,7 @@ The test suite should cover observable contracts rather than implementation deta
 | Shell utilities | Noctalia provides screenshot/clipboard UI; `wl-clipboard` provides CLI copy/paste |
 | Media handlers | VLC owns common video MIME entries; Strawberry owns common audio MIME entries |
 | Package management | `topgrade`, `paru`, and Shelly use Artix's ALPM/pacman configuration, have no `systemd` dependency/unit, add no Arch repositories, and remain available for explicit user-invoked updates |
-| Cyan Skillfish hardware | AMDGPU firmware, Mesa RADV, Vulkan diagnostics and the dinit governor path for PCI `1002:13fe` are present; no systemd governor unit is installed |
+| BC250 Control Center | v1.21.1 GUI/CLI/daemon, Noctalia dock entry, Mango user-session autostart, pinned source, and no systemd payload; live telemetry remains available when dinit persistence inspection is unsupported |
 | Firewall/process monitoring | Gufw, Qps, and OpenSnitch are discoverable; UFW/OpenSnitch services remain disabled until explicit configuration |
 | Fallback | applications remain usable when Noctalia is absent |
 | IPC failure | unavailable or malformed optional IPC does not block startup |

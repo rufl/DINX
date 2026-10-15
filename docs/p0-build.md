@@ -12,7 +12,7 @@ The entry points are:
 - `scripts/build-iso.sh` — root-aware build wrapper;
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
-- `scripts/check_palemoon.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh` and `scripts/check_cyan_skillfish.sh` — pinned application, Artix package-management, firewall and hardware contracts;
+- `scripts/check_palemoon.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` and `scripts/check_bc250_control_center.sh` — pinned application, Artix package-management, firewall, hardware and BC250 Control Center contracts;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
@@ -31,7 +31,7 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 3. installs QEMU and ISO inspection tools on the Ubuntu runner;
 4. runs Artix in a privileged container;
 5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0 and the pinned MangoWM/Scenefx build dependencies;
-6. builds the pinned Artix package payload for topgrade, paru and Shelly, compiles the Cyan Skillfish governor and its dinit integration, then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
+6. builds the pinned Artix package payload for topgrade, paru and Shelly, the BC250 Control Center v1.21.1 source release, the Cyan Skillfish governor and its dinit integration; then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
 9. validates the root and live-session SquashFS payloads;
@@ -46,6 +46,7 @@ The payload check also proves the official Pale Moon browser, its GTK3 desktop e
 The same contract proves the expanded desktop payload: btop/nvtop/inxi, PCI/USB diagnostics, Git/curl/less/jq/rsync, Zathura with MuPDF, Swayimg, VLC with its Qt GUI/CLI split, Strawberry, pwvucontrol, BlueZ/Blueman/UPower, `nm-connection-editor` and `wl-clipboard`. It also verifies the Mango floating default, the top `main` bar, the bottom Noctalia dock, the Noctalia screenshot/clipboard widgets and the VLC/Strawberry MIME handlers. Noctalia remains the primary screenshot path; transitive Artix package dependencies may also provide `grim`/`slurp`.
 The package-management contract also proves `topgrade`, `paru`, and Shelly. Topgrade uses a pinned upstream release binary with DINX's Artix pacman configuration; paru is built from its pinned source release against Artix ALPM; Shelly delegates to Artix's `pacman` configuration. Their package metadata contains no `systemd` dependency or unit, no Arch repository is added, and all AUR recipes remain subject to explicit user review. They remain user-invoked; the ISO does not auto-run package upgrades.
 The hardware contract proves AMDGPU firmware, Mesa RADV, Vulkan diagnostics and the pinned Cyan Skillfish SMU governor. A dinit service is linked for both the live and installed profiles, detects PCI `1002:13fe` (BC-250), then starts the governor with a conservative 1000-1850 MHz range; on other hardware it exits without changing anything. Use an Artix kernel with current BC-250 fixes (6.17.11 or newer). No systemd service is installed.
+The BC250 Control Center package is pinned to the upstream v1.21.1 MIT source release. It installs the GUI, CLI, polkit policy and headless daemon with Python 3.12+ / PyQt6 runtime dependencies. DINX removes the upstream systemd user unit and Cyan systemd drop-in; Mango starts `bc250-control-centerd` in the logged-in user session through `exec_once`, so the package adds no systemd service or dinit root service. The upstream dinit detection remains read-only for service persistence, while live BC-250 telemetry and the graphical controls remain available subject to their polkit and hardware prerequisites.
 The same ISO contract proves UFW, Gufw, Qps, OpenSnitch and the `ufw`/`opensnitchd` dinit service files. It asserts the safe default (`ENABLED=no` and no boot links for either firewall service), so network policy changes require explicit user configuration.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
 

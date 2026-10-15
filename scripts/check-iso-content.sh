@@ -83,12 +83,23 @@ required_paths=(
   usr/bin/shelly-notifications
   usr/bin/shelly-flatpak-integrate
   usr/bin/cyan-skillfish-governor-smu
+  usr/bin/bc250-control-center
+  usr/bin/bc250-control-center-cli
+  usr/bin/bc250-control-centerd
   usr/bin/cyan-skillfish-performance-mode
   etc/cyan-skillfish-governor-smu/config.toml
   etc/dinit.d/cyan-skillfish-governor-smu
   usr/local/libexec/dinx-cyan-skillfish-governor
   usr/lib/firmware/amdgpu/cyan_skillfish2_pfp.bin.zst
   usr/share/vulkan/icd.d/radeon_icd.json
+  usr/libexec/bc250-control-center/bc250-package-maintenance
+  usr/share/bc250-control-center/VERSION
+  usr/share/applications/io.github.movacx.bc250-control-center.desktop
+  usr/share/metainfo/io.github.movacx.bc250-control-center.metainfo.xml
+  usr/share/polkit-1/actions/io.github.movacx.bc250-control-center.policy
+  usr/share/icons/hicolor/256x256/apps/bc250-control-center.png
+  usr/share/pixmaps/bc250-control-center.png
+  usr/share/licenses/bc250-control-center/LICENSE
   usr/bin/vulkaninfo
   etc/paru.conf
   etc/shellybuild.conf
@@ -211,6 +222,7 @@ grep -Fq 'com.shellyorg.shelly' <<<"$noctalia_config" || fail 'Noctalia dock doe
 grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured'
 grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
 grep -Fq 'pinned = ["palemoon"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
+grep -Fq 'io.github.movacx.bc250-control-center' <<<"$noctalia_config" || fail 'Noctalia dock does not pin BC250 Control Center'
 
 ufw_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/ufw/ufw.conf)
 grep -Fq 'ENABLED=no' <<<"$ufw_config" || fail 'UFW is not disabled by default for safe manual configuration'
@@ -238,6 +250,7 @@ grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two v
 grep -Fq 'env=TERMINAL,dinx-terminal' <<<"$mango_config" || fail 'Mango does not expose the DINX terminal contract'
 grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fail 'Mango user workspace override is not enabled'
 grep -Fq 'exec_once=lxqt-policykit-agent' <<<"$mango_config" || fail 'Mango does not start the PolicyKit authentication agent'
+grep -Fq 'exec_once=bc250-control-centerd' <<<"$mango_config" || fail 'Mango does not autostart the BC250 user daemon'
 grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not start the Thunar volume monitor'
 grep -Fq 'bind=SUPER,Return,spawn,foot' <<<"$mango_config" || fail 'Mango fallback terminal shortcut is missing'
 grep -Fq 'tagrule=id:*,open_as_floating:1' <<<"$mango_config" || fail 'Mango does not open new windows floating'
@@ -260,6 +273,8 @@ for forbidden_path in \
   etc/systemd \
   var/lib/pacman/local/systemd- \
   usr/lib/systemd/systemd \
+  usr/lib/systemd/user/bc250-control-centerd.service \
+  usr/lib/systemd/system/cyan-skillfish-governor-smu.service.d/91-bc250-control-center-overlay-preflight.conf \
   usr/bin/systemd \
   usr/bin/systemctl \
   usr/bin/xfce4-session \
@@ -291,6 +306,9 @@ grep -Fq '#11151c' <<<"$calamares_branding" || fail 'DINX Calamares dark stylesh
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'
+bc250_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/io.github.movacx.bc250-control-center.desktop)
+grep -Fq 'Exec=bc250-control-center' <<<"$bc250_desktop" || fail 'BC250 Control Center desktop launcher command is incorrect'
+grep -Fq 'Icon=bc250-control-center' <<<"$bc250_desktop" || fail 'BC250 Control Center desktop icon is missing'
 noctty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NOCTTY.desktop)
 grep -Fq 'TryExec=noctty' <<<"$noctty_desktop" || fail 'NOCTTY desktop launcher is missing'
 grep -Fq 'Exec=noctty --open-uri %u' <<<"$noctty_desktop" || fail 'NOCTTY desktop command is incorrect'
@@ -325,4 +343,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

@@ -45,6 +45,7 @@ Os aplicativos independentes `nm-connection-editor`, Blueman, pwvucontrol, VLC e
 Gufw, Qps e a UI do OpenSnitch continuam disponíveis no dock/launcher; os serviços dinit UFW e OpenSnitch são instalados, mas não são habilitados no boot, portanto as regras de firewall exigem configuração deliberada. Não habilite os dois gerenciadores de regras sem revisar o ruleset netfilter resultante.
 As ferramentas de gerenciamento `topgrade`, `paru` e Shelly continuam como complementos de launcher/CLI: topgrade usa o binário de release fixado e a configuração `pacman` do Artix da DINX, paru é compilado a partir de fonte fixada contra o ALPM do Artix e Shelly delega para a configuração `pacman` do Artix. Os pacotes não têm dependências ou unidades `systemd`, não adicionam repositórios Arch, não são iniciados pelo Noctalia nem pela sessão de boot e receitas AUR exigem revisão explícita do usuário.
 O suporte a AMD Cyan Skillfish/BC-250 é um contrato de payload: firmware AMDGPU do Artix, Mesa RADV, diagnóstico Vulkan e o governor SMU fixado são instalados. O serviço dinit inicia automaticamente apenas o caminho do governor para PCI `1002:13fe`, usa a faixa segura de 1000-1850 MHz e encerra em outro hardware, sem unidade systemd.
+O BC250 Control Center v1.21.1 é o contrato de launcher/monitor da BC-250: seu pacote MIT fixado fornece entrada desktop, CLI, política polkit e daemon headless. O daemon é iniciado uma vez pela sessão do usuário no Mango, não por systemd ou serviço root dinit; a DINX remove a unidade systemd e o drop-in do Cyan upstream. O dinit continua sendo um limite de persistência de serviço ao vivo/somente leitura no aplicativo upstream, portanto a falha ao inspecionar um serviço persistente não pode impedir a inicialização nem a telemetria ao vivo.
 
 ## Nível 3 — integração avançada
 
@@ -74,7 +75,7 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
 | Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |
 | Gerenciamento de pacotes | `topgrade`, `paru` e Shelly usam a configuração ALPM/pacman do Artix, não têm dependência/unidade `systemd`, não adicionam repositórios Arch e continuam disponíveis para atualizações executadas explicitamente pelo usuário |
-| Hardware Cyan Skillfish | firmware AMDGPU, Mesa RADV, diagnóstico Vulkan e o caminho de governor dinit para PCI `1002:13fe` estão presentes; nenhuma unidade governor systemd é instalada |
+| BC250 Control Center | GUI/CLI/daemon v1.21.1, entrada no dock Noctalia, autostart na sessão do usuário Mango, fonte fixada e nenhum payload systemd; a telemetria ao vivo continua disponível quando a inspeção de persistência dinit não é suportada |
 | Firewall/monitoramento de processos | Gufw, Qps e OpenSnitch são descobertos; os serviços UFW/OpenSnitch ficam desabilitados até configuração explícita |
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |

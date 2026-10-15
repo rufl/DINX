@@ -1,0 +1,34 @@
+pkgname=bc250-control-center
+pkgver=1.21.1
+pkgrel=1
+pkgdesc='BC-250 monitoring, tuning and recovery control center'
+arch=('any')
+url='https://github.com/movacx/bc250-control-center'
+license=('MIT')
+provides=('bc250-control-center')
+depends=(
+  'bash'
+  'python'
+  'python-pyqt6'
+  'python-psutil'
+  'qt6-svg'
+  'polkit'
+  'jq'
+  'diffutils'
+  'git'
+  'pciutils'
+  'kmod'
+)
+source=("https://github.com/movacx/bc250-control-center/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('41992335ca3224fae3bb1318f02cd3a381e132fc82169c5f05148706972ddc07')
+
+package() {
+  cd "$srcdir/bc250-control-center-$pkgver"
+  bash packaging/scripts/stage-package-root.sh "$pkgdir"
+
+  # DINX uses dinit. The upstream package also stages a systemd user unit and
+  # a Cyan systemd drop-in; remove both rather than shipping an inert service.
+  rm -rf "$pkgdir/usr/lib/systemd"
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

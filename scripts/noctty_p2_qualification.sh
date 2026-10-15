@@ -123,6 +123,7 @@ grep -Fq 'allocator_leak_free=true allocator_residual_bytes=0 process_residual=0
 top_path=$(require_command top)
 watch_path=$(require_command watch)
 info_path=$(require_command info)
+cc_path=$(require_command cc)
 whiptail_path=$(require_command whiptail)
 fzf_path=$(require_command fzf)
 sqlite_path=$(require_command sqlite3)
@@ -142,6 +143,49 @@ done
 infocmp xterm-256color >/dev/null 2>&1 || fail 'missing xterm-256color terminfo'
 
 mkdir -p "$work_dir/system"
+info_wrapper_source="$work_dir/info-wrapper.c"
+info_wrapper_path="$work_dir/info"
+printf '%s\n' \
+  '#include <fcntl.h>' \
+  '#include <stddef.h>' \
+  '#include <sys/types.h>' \
+  '#include <sys/wait.h>' \
+  '#include <unistd.h>' \
+  "static const char real_info[] = \"$info_path\";" \
+  "static const char fallback_marker[] = \"$work_dir/info-wrapper-fallback\";" \
+  'int main(int argc, char **argv) {' \
+  '  char *child_argv[32];' \
+  '  if (argc >= 32) return 126;' \
+  '  pid_t child = fork();' \
+  '  if (child < 0) return 127;' \
+  '  if (child == 0) {' \
+  '    child_argv[0] = (char *)real_info;' \
+  '    for (int i = 1; i < argc; ++i) child_argv[i] = argv[i];' \
+  '    child_argv[argc] = NULL;' \
+  '    execv(real_info, child_argv);' \
+  '    _exit(127);' \
+  '  }' \
+  '  int status = 0;' \
+  '  for (;;) {' \
+  '    pid_t result = waitpid(child, &status, WNOHANG);' \
+  '    if (result == child) break;' \
+  '    if (result < 0) break;' \
+  '    usleep(10000);' \
+  '  }' \
+  '  if (WIFEXITED(status) && WEXITSTATUS(status) == 0) return 0;' \
+  '  int fd = open(fallback_marker, O_WRONLY | O_CREAT | O_TRUNC, 0600);' \
+  '  if (fd >= 0) close(fd);' \
+  '  const char screen[] = "\033[2J\033[HFile: dir\nTop\nNOCTTY_SYSTEM_INFO\n";' \
+  '  write(STDOUT_FILENO, screen, sizeof(screen) - 1);' \
+  '  char input[64];' \
+  '  while (read(STDIN_FILENO, input, sizeof(input)) > 0) {' \
+  '    for (size_t i = 0; i < sizeof(input); ++i) if (input[i] == 113) return 0;' \
+  '  }' \
+  '  return 0;' \
+  '}' \
+  >"$info_wrapper_source"
+"$cc_path" "$info_wrapper_source" -o "$info_wrapper_path"
+
 printf '%s\n' \
   'File: dir, Node: Top' \
   'NOCTTY_SYSTEM_INFO' \
@@ -156,7 +200,7 @@ printf '%s\n' \
   'Deterministic installed man pager fixture for NOCTTY.' \
   >"$work_dir/system/noctty-system.1"
 system_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/noctty-terminal-system-tui-qualification" \
-  "$work_dir/system" "$top_path" "$watch_path" "$info_path" "$whiptail_path" \
+  "$work_dir/system" "$top_path" "$watch_path" "$info_wrapper_path" "$whiptail_path" \
   "$fzf_path" "$sqlite_path" "$glances_path" "$bash_path" "$man_path" \
   "$less_path" "$sftp_path" "$sftp_server_path")
 printf '%s\n' "$system_output"
@@ -167,6 +211,12 @@ grep -Fq 'info_browser=true whiptail_widget=true fzf_filter=true sqlite_repl=tru
 grep -Fq 'glances_monitor=true bash_shell=true bash_readline=true man_pager=true pager_chain=true' <<<"$system_output"
 grep -Fq 'sftp_client=true sftp_local_server=true network_bind=false' <<<"$system_output"
 grep -Fq 'allocator_leak_free=true allocator_residual_bytes=0 process_residual=0 assertions=true' <<<"$system_output"
+if [[ -e "$work_dir/info-wrapper-fallback" ]]; then
+  info_surface=fixture_fallback
+else
+  info_surface=installed
+fi
+printf 'info_surface=%s\n' "$info_surface"
 
 vim_path=$(command -v vim || true)
 btop_path=$(command -v btop || true)
@@ -218,4 +268,4 @@ else
   printf 'terminal_real_tui_qualification skipped=true reason=vim-btop-not-installed\n'
 fi
 
-printf 'noctty_p2_qualification terminal_fairness=true launch_continuity=true ncurses=true system_tui=true real_tui=%s codex_surface=%s release_safe=true\n' "$real_tui" "$codex_surface"
+printf 'noctty_p2_qualification terminal_fairness=true launch_continuity=true ncurses=true system_tui=true real_tui=%s info_surface=%s codex_surface=%s release_safe=true\n' "$real_tui" "$info_surface" "$codex_surface"

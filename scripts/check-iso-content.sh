@@ -52,6 +52,17 @@ required_paths=(
   usr/bin/foot
   usr/bin/file-roller
   usr/bin/nano
+  usr/bin/palemoon
+  usr/bin/ffmpeg
+  usr/lib/palemoon/palemoon
+  usr/share/applications/palemoon.desktop
+  usr/share/icons/hicolor/128x128/apps/palemoon.png
+  etc/skel/.config/noctalia/templates/palemoon-userChrome.css
+  etc/skel/.config/noctalia/templates/palemoon-userContent.css
+  etc/skel/.moonchild productions/pale moon/profiles.ini
+  etc/skel/.moonchild productions/pale moon/dinx.default/user.js
+  etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userChrome.css
+  etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userContent.css
   usr/local/bin/dinx-terminal
   usr/share/applications/dinx-terminal-fallback.desktop
   usr/bin/udisksctl
@@ -120,6 +131,16 @@ grep -Fq 'enabled = false' <<<"$noctalia_config" || fail 'Noctalia animations ar
 grep -Fq 'settings_window_translucent = false' <<<"$noctalia_config" || fail 'Noctalia Settings transparency is not disabled by default'
 grep -Fq '[shell.panel]' <<<"$noctalia_config" || fail 'Noctalia panel defaults are missing'
 grep -Fq 'transparency_mode = "solid"' <<<"$noctalia_config" || fail 'Noctalia panel transparency is not disabled by default'
+grep -Fq '[theme.templates.user.palemoon_chrome]' <<<"$noctalia_config" || fail 'Pale Moon Noctalia chrome template is not configured'
+grep -Fq '[theme.templates.user.palemoon_content]' <<<"$noctalia_config" || fail 'Pale Moon Noctalia content template is not configured'
+grep -Fq 'palemoon-userChrome.css' <<<"$noctalia_config" || fail 'Pale Moon Noctalia chrome output is not configured'
+grep -Fq 'palemoon-userContent.css' <<<"$noctalia_config" || fail 'Pale Moon Noctalia content output is not configured'
+
+palemoon_profiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/profiles.ini")
+grep -Fq 'Path=dinx.default' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not selected by profiles.ini'
+grep -Fq 'Default=1' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not the default profile'
+palemoon_user_js=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/dinx.default/user.js")
+grep -Fq 'toolkit.legacyUserProfileCustomizations.stylesheets' <<<"$palemoon_user_js" || fail 'Pale Moon custom stylesheet preference is missing'
 
 mango_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/mango/dinx.conf)
 grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two virtual desktops'
@@ -133,6 +154,9 @@ grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is 
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
+grep -Fq 'text/html=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTML handler'
+grep -Fq 'x-scheme-handler/http=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTP handler'
+grep -Fq 'x-scheme-handler/https=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTPS handler'
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
@@ -203,4 +227,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Thunar/GVFS MTP/SMB/GPhoto2/UDisks2 removable-media support, File Roller archive integration, Nano recovery editor, Tumbler thumbnails, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Pale Moon with a Noctalia-generated dark/light skin, Thunar/GVFS MTP/SMB/GPhoto2/UDisks2 removable-media support, File Roller archive integration, Nano recovery editor, Tumbler thumbnails, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

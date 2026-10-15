@@ -24,6 +24,7 @@ on:
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
       - "tools/dinx-qemu-launcher.c"
+      - "scripts/check_palemoon.sh"
       - "LICENSE"
 
 permissions:
@@ -48,6 +49,8 @@ jobs:
           persist-credentials: false
       - name: Verify pinned NOCTTY and NoctEd source archive
         run: ./scripts/check_first_party_apps.sh
+      - name: Verify pinned Pale Moon source and skin contract
+        run: ./scripts/check_palemoon.sh
 
       - name: Install QEMU and ISO tools
         run: |
@@ -137,6 +140,7 @@ jobs:
               }
               build_package noctty
               pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
+              build_package palemoon
 
 
               build_package wlroots0.20

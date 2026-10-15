@@ -2,6 +2,20 @@
 [theme]
 mode = "dark"
 
+[theme.templates]
+enable_builtin_templates = true
+builtin_ids = []
+enable_community_templates = false
+community_ids = []
+
+[theme.templates.user.palemoon_chrome]
+input_path = "$XDG_CONFIG_HOME/noctalia/templates/palemoon-userChrome.css"
+output_path = "~/.moonchild productions/pale moon/dinx.default/chrome/userChrome.css"
+
+[theme.templates.user.palemoon_content]
+input_path = "$XDG_CONFIG_HOME/noctalia/templates/palemoon-userContent.css"
+output_path = "~/.moonchild productions/pale moon/dinx.default/chrome/userContent.css"
+
 [shell]
 settings_window_translucent = false
 

@@ -1,0 +1,19 @@
+/* DINX fallback. Noctalia replaces this file with the active palette. */
+
+@-moz-document url("about:blank"), url("about:home"), url("about:newtab") {
+  html,
+  body {
+    background-color: #11151c !important;
+    color: #e6edf3 !important;
+  }
+
+  a,
+  a:visited {
+    color: #8bd5ff !important;
+  }
+
+  ::selection {
+    background-color: #8bd5ff !important;
+    color: #081018 !important;
+  }
+}

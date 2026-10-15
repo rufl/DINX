@@ -1,2 +1,6 @@
 [Default Applications]
 inode/directory=thunar.desktop;
+text/html=palemoon.desktop;
+application/xhtml+xml=palemoon.desktop;
+x-scheme-handler/http=palemoon.desktop;
+x-scheme-handler/https=palemoon.desktop;

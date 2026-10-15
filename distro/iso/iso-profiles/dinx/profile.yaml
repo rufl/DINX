@@ -28,6 +28,7 @@ rootfs:
     - efibootmgr
     - elogind
     - exfatprogs
+    - ffmpeg
     - file-roller
     - gvfs
     - gvfs-gphoto2
@@ -45,6 +46,7 @@ rootfs:
     - noctalia
     - qt6-wayland
     - partitionmanager
+    - palemoon
     - pipewire
     - pipewire-pulse
     - polkit

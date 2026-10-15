@@ -41,6 +41,7 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 14. publica a ISO, checksum, logs QEMU e capturas PPM como artefato temporário do workflow.
 
 A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango, os arquivos de serviço dinit, NOCTTY/NoctEd, Nano, File Roller e a stack Thunar/GVFS chegaram à ISO. O contrato de mídia removível inclui UDisks2, `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin`, File Roller e Tumbler. Ela também confirma o agente independente de PolicyKit, rejeita metadados/runtime de pacotes systemd instalados e rejeita sessões completas do Xfce/LXQt. O smoke test do QEMU ainda prova somente a aceitação do processo/caminho de boot; não prova login gráfico, rede, MTP, SMB, acesso a câmeras ou áudio dentro do guest.
+A verificação de payload também prova que o navegador oficial Pale Moon, sua entrada desktop GTK3, o runtime de mídia FFmpeg, o perfil DINX pré-criado e os templates de chrome/conteúdo do Noctalia chegaram à ISO. A skin do Pale Moon segue o contrato documentado de templates do Noctalia v5; o CSS gerado do perfil é reaplicado no próximo reinício do navegador após uma mudança de paleta ou modo.
 
 A execução também captura a superfície VGA do QEMU como artefato PPM pelo monitor. Essa captura é evidência visual para inspeção; ela não prova automaticamente a interação com o greeter, a saúde da sessão do usuário, a rede ou o áudio.
 

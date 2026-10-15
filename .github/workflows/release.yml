@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@75811b6bbaaca3840d1133987fbd3bc638df166e # pin P1 workflow with Pale Moon, Noctalia skin, FFmpeg, VLC, Strawberry, Swayimg, diagnostics, package managers, firewall tools, dinit and Thunar/GVFS removable-media extras
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@d384a0a3781960833cf0b35952387fb9b8442c93 # pin P1 workflow with Pale Moon, Noctalia skin, FFmpeg, VLC, Strawberry, Swayimg, diagnostics, package managers, firewall tools, dinit and Thunar/GVFS removable-media extras
     permissions:
       contents: read
       id-token: write

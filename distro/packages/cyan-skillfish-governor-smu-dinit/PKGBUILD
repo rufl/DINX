@@ -14,4 +14,7 @@ package() {
     "$pkgdir/etc/dinit.d/cyan-skillfish-governor-smu"
   install -Dm755 "$startdir/dinx-cyan-skillfish-governor" \
     "$pkgdir/usr/local/libexec/dinx-cyan-skillfish-governor"
+  install -d "$pkgdir/etc/dinit.d/boot.d"
+  ln -s ../cyan-skillfish-governor-smu \
+    "$pkgdir/etc/dinit.d/boot.d/cyan-skillfish-governor-smu"
 }

@@ -41,6 +41,7 @@ grep -Fq 'depends-on         = dbus' distro/packages/cyan-skillfish-governor-smu
 grep -Fq '0x1002' distro/packages/cyan-skillfish-governor-smu-dinit/dinx-cyan-skillfish-governor || fail 'AMD vendor detection is missing'
 grep -Fq '0x13fe' distro/packages/cyan-skillfish-governor-smu-dinit/dinx-cyan-skillfish-governor || fail 'BC-250 PCI ID detection is missing'
 grep -Fq '/etc/cyan-skillfish-governor-smu/config.toml' distro/packages/cyan-skillfish-governor-smu-dinit/dinx-cyan-skillfish-governor || fail 'governor config path is missing'
+grep -Fq 'ln -s ../cyan-skillfish-governor-smu' distro/packages/cyan-skillfish-governor-smu-dinit/PKGBUILD || fail 'governor package does not enable its dinit service'
 
 grep -Fq '    - linux-firmware-amdgpu' distro/iso/iso-profiles/dinx/profile.yaml || fail 'AMDGPU firmware is missing from the payload'
 grep -Fq '    - vulkan-radeon' distro/iso/iso-profiles/dinx/profile.yaml || fail 'RADV is missing from the payload'

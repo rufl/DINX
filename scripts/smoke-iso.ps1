@@ -154,40 +154,143 @@ if (-not (Test-Path -LiteralPath $metadataPath -PathType Leaf)) {
     Fail "missing ISO metadata: $metadataPath"
 }
 $metadata = Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
-if ([string]$metadata.url -notmatch '^https://') {
-    Fail 'ISO metadata URL must use HTTPS'
-}
 if ([string]$metadata.sha512 -notmatch '^[0-9a-fA-F]{128}$') {
     Fail 'ISO metadata SHA-512 is invalid'
 }
-$isoPath = Join-Path $PSScriptRoot ([string]$metadata.file)
-$downloadPath = "$isoPath.download"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-function Verify-Iso([string]$Path) {
+function Verify-File([string]$Path, [string]$ExpectedHash, [long]$ExpectedSize = -1) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         return $false
     }
+    if ($ExpectedSize -ge 0 -and (Get-Item -LiteralPath $Path).Length -ne $ExpectedSize) {
+        return $false
+    }
     $actual = (Get-FileHash -LiteralPath $Path -Algorithm SHA512).Hash.ToLowerInvariant()
-    return $actual -eq ([string]$metadata.sha512).ToLowerInvariant()
+    return $actual -eq $ExpectedHash.ToLowerInvariant()
 }
 
-if (-not (Verify-Iso $isoPath)) {
-    if (Test-Path -LiteralPath $isoPath -PathType Leaf) {
-        Remove-Item -LiteralPath $isoPath -Force
-    }
-    if (Test-Path -LiteralPath $downloadPath -PathType Leaf) {
-        Remove-Item -LiteralPath $downloadPath -Force
-    }
-    Write-Host "smoke-iso: downloading verified ISO from $($metadata.url)"
-    Invoke-WebRequest -UseBasicParsing -Uri ([string]$metadata.url) -OutFile $downloadPath
-    if (-not (Verify-Iso $downloadPath)) {
-        Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
-        Fail 'downloaded ISO failed SHA-512 verification'
-    }
-    Move-Item -LiteralPath $downloadPath -Destination $isoPath
+function Verify-Iso([string]$Path) {
+    return Verify-File $Path ([string]$metadata.sha512)
 }
-Write-Host "smoke-iso: ISO SHA-512 verified: $isoPath"
+
+$metadataFile = [string]$metadata.file
+if ([IO.Path]::GetFileName($metadataFile) -ne $metadataFile -or $metadataFile -notmatch '^[A-Za-z0-9._-]+$') {
+    Fail 'ISO metadata file name is invalid'
+}
+$isoPath = Join-Path $PSScriptRoot $metadataFile
+$downloadPath = "$isoPath.download"
+
+$parts = @()
+if ($metadata.PSObject.Properties.Name -contains 'parts') {
+    $parts = @($metadata.parts)
+}
+if ($parts.Count -eq 0) {
+    if ([string]$metadata.url -notmatch '^https://') {
+        Fail 'ISO metadata URL must use HTTPS'
+    }
+    if (-not (Verify-Iso $isoPath)) {
+        if (Test-Path -LiteralPath $isoPath -PathType Leaf) {
+            Remove-Item -LiteralPath $isoPath -Force
+        }
+        if (Test-Path -LiteralPath $downloadPath -PathType Leaf) {
+            Remove-Item -LiteralPath $downloadPath -Force
+        }
+        Write-Host "smoke-iso: downloading verified ISO from $($metadata.url)"
+        Invoke-WebRequest -UseBasicParsing -Uri ([string]$metadata.url) -OutFile $downloadPath
+        if (-not (Verify-Iso $downloadPath)) {
+            Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
+            Fail 'downloaded ISO failed SHA-512 verification'
+        }
+        Move-Item -LiteralPath $downloadPath -Destination $isoPath
+    }
+} else {
+    $partPaths = @()
+    foreach ($part in $parts) {
+        if (
+            -not ($part.PSObject.Properties.Name -contains 'file') -or
+            -not ($part.PSObject.Properties.Name -contains 'url') -or
+            -not ($part.PSObject.Properties.Name -contains 'sha512') -or
+            -not ($part.PSObject.Properties.Name -contains 'size')
+        ) {
+            Fail 'ISO part metadata is incomplete'
+        }
+        $partFile = [string]$part.file
+        $partUrl = [string]$part.url
+        $partHash = [string]$part.sha512
+        if ([IO.Path]::GetFileName($partFile) -ne $partFile -or $partFile -notmatch '^[A-Za-z0-9._-]+$') {
+            Fail "ISO part file name is invalid: $partFile"
+        }
+        if ($partUrl -notmatch '^https://') {
+            Fail "ISO part URL must use HTTPS: $partFile"
+        }
+        if ($partHash -notmatch '^[0-9a-fA-F]{128}$') {
+            Fail "ISO part SHA-512 is invalid: $partFile"
+        }
+        $partSize = 0L
+        if (
+            -not [long]::TryParse(
+                [string]$part.size,
+                [Globalization.NumberStyles]::Integer,
+                [Globalization.CultureInfo]::InvariantCulture,
+                [ref]$partSize
+            ) -or $partSize -lt 1
+        ) {
+            Fail "ISO part size is invalid: $partFile"
+        }
+        $partPath = Join-Path $PSScriptRoot $partFile
+        $partDownloadPath = "$partPath.download"
+        if (-not (Verify-File $partPath $partHash $partSize)) {
+            if (Test-Path -LiteralPath $partPath -PathType Leaf) {
+                Remove-Item -LiteralPath $partPath -Force
+            }
+            if (Test-Path -LiteralPath $partDownloadPath -PathType Leaf) {
+                Remove-Item -LiteralPath $partDownloadPath -Force
+            }
+            Write-Host "smoke-iso: downloading verified ISO part from $partUrl"
+            Invoke-WebRequest -UseBasicParsing -Uri $partUrl -OutFile $partDownloadPath
+            if (-not (Verify-File $partDownloadPath $partHash $partSize)) {
+                Remove-Item -LiteralPath $partDownloadPath -Force -ErrorAction SilentlyContinue
+                Fail "downloaded ISO part failed verification: $partFile"
+            }
+            Move-Item -LiteralPath $partDownloadPath -Destination $partPath
+        }
+        $partPaths += $partPath
+    }
+
+    if (-not (Verify-Iso $isoPath)) {
+        if (Test-Path -LiteralPath $isoPath -PathType Leaf) {
+            Remove-Item -LiteralPath $isoPath -Force
+        }
+        if (Test-Path -LiteralPath $downloadPath -PathType Leaf) {
+            Remove-Item -LiteralPath $downloadPath -Force
+        }
+        Write-Host "smoke-iso: assembling verified ISO parts"
+        $output = [IO.File]::Open(
+            $downloadPath,
+            [IO.FileMode]::Create,
+            [IO.FileAccess]::Write,
+            [IO.FileShare]::None
+        )
+        try {
+            foreach ($partPath in $partPaths) {
+                $input = [IO.File]::OpenRead($partPath)
+                try {
+                    $input.CopyTo($output)
+                } finally {
+                    $input.Dispose()
+                }
+            }
+        } finally {
+            $output.Dispose()
+        }
+        if (-not (Verify-Iso $downloadPath)) {
+            Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
+            Fail 'assembled ISO failed SHA-512 verification'
+        }
+        Move-Item -LiteralPath $downloadPath -Destination $isoPath
+    }
+}
 
 $qemuPath = Get-QemuPath
 $port = Get-FreePort

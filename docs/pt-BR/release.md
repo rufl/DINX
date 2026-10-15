@@ -22,29 +22,39 @@ O workflow P0 mais recente aprovado é a [execução 38753069331](https://github
 
 Cada release alpha contém:
 
-- `dinx-<versão>-x86_64.iso` — imagem live de validação com NOCTTY e NoctEd;
+- `dinx-<versão>-x86_64.iso` quando ela couber no limite por arquivo do GitHub, ou os arquivos ordenados `dinx-<versão>-x86_64.iso.part-*` mais `.iso.parts.json` quando não couber;
 - o arquivo `.iso.sha512` correspondente;
 - capturas PPM do menu de boot, gráficas e pós-entrada do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;
 - metadados do pacote Windows, manifesto de deploy ZTASH e `SHA256SUMS`.
 
-O pacote Windows não contém uma segunda cópia da ISO. Ele contém uma URL HTTPS fixada
-e o SHA-512 da ISO. Na primeira execução, baixa o artefato exato do release para o
-diretório privado, verifica o checksum e só então inicia o QEMU.
+Quando a ISO for dividida, concatene as partes em ordem lexicográfica e verifique a imagem completa:
+
+```bash
+cat dinx-<versão>-x86_64.iso.part-* > dinx-<versão>-x86_64.iso
+sha512sum -c dinx-<versão>-x86_64.iso.sha512
+```
+
+O pacote Windows não contém uma segunda cópia da ISO. Ele contém uma URL HTTPS fixada,
+o SHA-512 da ISO e, quando necessário, a lista ordenada de partes. Na primeira execução,
+baixa os artefatos exatos do release para o diretório privado, verifica cada parte,
+monta a ISO, verifica o checksum completo e só então inicia o QEMU.
 ## Verificar a procedência do release
 
-O workflow cria atestações de artefato do GitHub para a ISO, seus checksums, o
-launcher Windows e os metadados do release. Verifique cada arquivo baixado online
+O workflow cria atestações de artefato do GitHub para a ISO ou suas partes, seus checksums,
+o launcher Windows e os metadados do release. Verifique cada arquivo baixado online
 com o GitHub CLI:
 
 ```bash
 gh attestation verify dinx-<versão>-x86_64.iso -R rufl/DINX
+gh attestation verify dinx-<versão>-x86_64.iso.part-00 -R rufl/DINX
 gh attestation verify dinx-<versão>-dogfood.1-windows-x86_64.zip -R rufl/DINX
 ```
 
-Os arquivos `.sha512` e `SHA256SUMS` continuam úteis para verificações offline. A
-atestação prova a procedência do build no GitHub Actions; não torna o instalador
-experimental nem o suporte de hardware adequados para produção.
+Use o comando da ISO direta somente quando esse artefato existir; caso contrário, repita
+o comando da parte para cada arquivo `.iso.part-*`. Os arquivos `.sha512` e `SHA256SUMS`
+continuam úteis para verificações offline. A atestação prova a procedência do build no GitHub
+Actions; não torna o instalador experimental nem o suporte de hardware adequados para produção.
 
 
 ## Verificar o arquivo ZIP do Windows

@@ -2,17 +2,18 @@
 set -euo pipefail
 
 usage() {
-  printf 'usage: %s RELEASE_BASE_URL PACKAGE_VERSION ISO_URL ISO_SHA512 BUILD_ID [OUTPUT_DIR]\n' "$0" >&2
+  printf 'usage: %s RELEASE_BASE_URL PACKAGE_VERSION ISO_URL ISO_SHA512 BUILD_ID [OUTPUT_DIR] [ISO_SOURCE_METADATA]\n' "$0" >&2
   exit 2
 }
 
-[[ $# -ge 5 && $# -le 6 ]] || usage
+[[ $# -ge 5 && $# -le 7 ]] || usage
 release_base_url=$1
 package_version=$2
 iso_url=$3
 iso_sha512=$4
 build_id=$5
 output_dir=${6:-dist/release}
+iso_source_metadata=${7:-}
 
 [[ "$release_base_url" =~ ^https://[^/]+/[^/]+/[^/]+/releases/download/[^/]+$ ]] || {
   printf 'package-windows-qemu: invalid release base URL\n' >&2
@@ -34,6 +35,28 @@ output_dir=${6:-dist/release}
   printf 'package-windows-qemu: PACKAGE_VERSION must be a release-like version\n' >&2
   exit 1
 }
+
+if [[ -n "$iso_source_metadata" ]]; then
+  [[ -f "$iso_source_metadata" ]] || {
+    printf 'package-windows-qemu: ISO source metadata does not exist\n' >&2
+    exit 1
+  }
+  command -v jq >/dev/null 2>&1 || {
+    printf 'package-windows-qemu: jq is required for split ISO metadata\n' >&2
+    exit 1
+  }
+  jq -e --arg build_id "$build_id" --arg sha512 "$iso_sha512" '
+    .application == "dinx" and
+    .build_id == $build_id and
+    (.file | type == "string") and
+    .sha512 == $sha512 and
+    (.url | type == "string" and startswith("https://")) and
+    ((has("parts") | not) or (.parts | type == "array" and length > 0))
+  ' "$iso_source_metadata" >/dev/null || {
+    printf 'package-windows-qemu: invalid ISO source metadata\n' >&2
+    exit 1
+  }
+fi
 
 zig_bin=${ZIG:-zig}
 command -v "$zig_bin" >/dev/null 2>&1 || {
@@ -70,8 +93,12 @@ mkdir -p "$stage_root/evidence"
 cp scripts/smoke-iso.ps1 "$stage_root/dinx-visual-test.ps1"
 cp LICENSE "$stage_root/LICENSE"
 printf '%s\n' "$iso_sha512  dinx-${package_version}.iso" > "$stage_root/dinx-iso.sha512"
-printf '{\n  "application": "dinx",\n  "build_id": "%s",\n  "file": "dinx-%s.iso",\n  "sha512": "%s",\n  "url": "%s"\n}\n' \
-  "$build_id" "$package_version" "$iso_sha512" "$iso_url" > "$stage_root/dinx-iso.json"
+if [[ -n "$iso_source_metadata" ]]; then
+  cp "$iso_source_metadata" "$stage_root/dinx-iso.json"
+else
+  printf '{\n  "application": "dinx",\n  "build_id": "%s",\n  "file": "dinx-%s.iso",\n  "sha512": "%s",\n  "url": "%s"\n}\n' \
+    "$build_id" "$package_version" "$iso_sha512" "$iso_url" > "$stage_root/dinx-iso.json"
+fi
 printf '%s\n' \
   '# DINX Windows QEMU launch package' \
   '' \
@@ -87,7 +114,7 @@ printf '%s\n' \
   '- `dinx.exe --package-smoke`: run the bounded headless QEMU smoke used by deployment qualification;' \
   '- `dinx.exe --help`: print the launcher contract.' \
   '' \
-  'The ISO URL and SHA-512 are immutable release metadata in `dinx-iso.json`. The disposable DINX live-session account is documented in the release notes and must not be reused.' \
+  'The ISO URL, optional part list and SHA-512 are immutable release metadata in `dinx-iso.json`. The disposable DINX live-session account is documented in the release notes and must not be reused.' \
   > "$stage_root/README.txt"
 
 archive_path="$output_dir/$archive_name"

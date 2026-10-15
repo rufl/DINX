@@ -21,29 +21,38 @@ The latest successful P0 workflow is [run 38753069331](https://github.com/rufl/D
 
 Each alpha release contains:
 
-- `dinx-<version>-x86_64.iso` — the live validation image with NOCTTY and NoctEd;
+- `dinx-<version>-x86_64.iso` when it fits GitHub's per-asset limit, or the ordered `dinx-<version>-x86_64.iso.part-*` files plus `.iso.parts.json` when it does not;
 - the matching `.iso.sha512` file;
 - Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
 - the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`.
 
-The Windows package does not contain a second copy of the ISO. It contains a pinned
-HTTPS URL and the ISO SHA-512. On first run it downloads the exact release asset to its
-private directory, verifies the checksum, and only then starts QEMU.
-## Verify release provenance
+When the ISO is split, concatenate the parts in lexical order and verify the full image:
 
-The release workflow creates GitHub artifact attestations for the ISO, its checksums,
+```bash
+cat dinx-<version>-x86_64.iso.part-* > dinx-<version>-x86_64.iso
+sha512sum -c dinx-<version>-x86_64.iso.sha512
+```
+
+The Windows package does not contain a second copy of the ISO. It contains a pinned
+HTTPS URL and the ISO SHA-512 plus, when required, the ordered part list. On first run it
+downloads the exact release assets to its private directory, verifies each part, assembles
+the ISO, verifies the full checksum, and only then starts QEMU.
+## Verify release provenance
+The release workflow creates GitHub artifact attestations for the ISO or its parts, its checksums,
 the Windows launcher and its release metadata. Verify each downloaded file online with
 GitHub CLI:
 
 ```bash
 gh attestation verify dinx-<version>-x86_64.iso -R rufl/DINX
+gh attestation verify dinx-<version>-x86_64.iso.part-00 -R rufl/DINX
 gh attestation verify dinx-<version>-dogfood.1-windows-x86_64.zip -R rufl/DINX
 ```
 
-The `.sha512` and `SHA256SUMS` files remain useful offline integrity checks. An
-attestation proves the file's GitHub Actions build provenance; it does not make the
-experimental installer or hardware support production-ready.
+Use the direct ISO command only when that asset exists; otherwise repeat the part command
+for every `.iso.part-*` file. The `.sha512` and `SHA256SUMS` files remain useful offline
+integrity checks. An attestation proves the file's GitHub Actions build provenance; it does
+not make the experimental installer or hardware support production-ready.
 
 
 ## Verify the Windows archive

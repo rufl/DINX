@@ -26,6 +26,19 @@ A alpha atual não possui bootloader assinado, caminho Secure Boot suportado nem
 
 Ainda não existe um download estável de release. O artefato do workflow público fica retido por sete dias e é substituído por execuções posteriores.
 
+### Release alpha com tag
+
+1. Abra os [releases da DINX](https://github.com/rufl/DINX/releases).
+2. Selecione o pre-release mais recente.
+3. Baixe `dinx-<versão>-x86_64.iso` e seu `.iso.sha512` correspondente. Se a ISO direta não existir, baixe todos os arquivos `dinx-<versão>-x86_64.iso.part-*` e `.iso.parts.json`.
+4. Para uma ISO dividida, concatene as partes em ordem lexicográfica:
+
+   ```bash
+   cat dinx-<versão>-x86_64.iso.part-* > dinx-<versão>-x86_64.iso
+   ```
+
+5. Continue com a verificação de checksum abaixo.
+
 ### Navegador
 
 1. Abra o [workflow da ISO P0](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml).

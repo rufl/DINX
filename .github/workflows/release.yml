@@ -68,17 +68,69 @@ jobs:
           test -n "$input_iso"
           mkdir -p dist/release
           iso_name="dinx-${version}-x86_64.iso"
-          cp "$input_iso" "dist/release/$iso_name"
-          (cd dist/release && sha512sum "$iso_name" > "$iso_name.sha512")
-          iso_sha512=$(cut -d ' ' -f 1 "dist/release/$iso_name.sha512")
+          iso_sha512=$(sha512sum "$input_iso" | cut -d ' ' -f 1)
+          printf '%s  %s\n' "$iso_sha512" "$iso_name" > "dist/release/$iso_name.sha512"
           release_base_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}"
-          scripts/package-windows-qemu.sh \
-            "$release_base_url" \
-            "${version}-dogfood.1" \
-            "$release_base_url/$iso_name" \
-            "$iso_sha512" \
-            "$GITHUB_SHA" \
+          iso_size=$(wc -c < "$input_iso")
+          iso_parts_manifest=""
+          iso_source_metadata=""
+          if (( iso_size >= 2147483648 )); then
+            command -v jq >/dev/null 2>&1
+            iso_part_prefix="dist/release/${iso_name}.part-"
+            split --bytes=1900M --numeric-suffixes=0 --suffix-length=2 \
+              "$input_iso" "$iso_part_prefix"
+            iso_parts_manifest_name="${iso_name}.parts.json"
+            iso_parts_manifest="dist/release/$iso_parts_manifest_name"
+            parts_json='[]'
+            while IFS= read -r -d '' part; do
+              part_name=$(basename "$part")
+              part_url="$release_base_url/$part_name"
+              part_sha512=$(sha512sum "$part" | cut -d ' ' -f 1)
+              part_size=$(wc -c < "$part")
+              parts_json=$(jq -c \
+                --arg file "$part_name" \
+                --arg url "$part_url" \
+                --arg sha512 "$part_sha512" \
+                --argjson size "$part_size" \
+                '. + [{file: $file, url: $url, sha512: $sha512, size: $size}]' \
+                <<<"$parts_json")
+            done < <(find dist/release -maxdepth 1 -type f -name "${iso_name}.part-*" -print0 | sort -z)
+            jq -n \
+              --arg application "dinx" \
+              --arg build_id "$GITHUB_SHA" \
+              --arg file "dinx-${version}-dogfood.1.iso" \
+              --arg sha512 "$iso_sha512" \
+              --arg url "$release_base_url/$iso_parts_manifest_name" \
+              --argjson size "$iso_size" \
+              --argjson parts "$parts_json" \
+              '{
+                application: $application,
+                build_id: $build_id,
+                file: $file,
+                parts: $parts,
+                schema: "dinx.iso-parts/v1",
+                sha512: $sha512,
+                size: $size,
+                url: $url
+              }' > "$iso_parts_manifest"
+            iso_source_metadata="$iso_parts_manifest"
+            iso_delivery_note="The ISO exceeds GitHub's 2 GiB release-asset limit. Download all \`${iso_name}.part-*\` assets in lexical order, concatenate them, and verify \`${iso_name}.sha512\`; the Windows launcher assembles the parts automatically."
+          else
+            cp "$input_iso" "dist/release/$iso_name"
+            iso_delivery_note="The ISO is published as \`${iso_name}\` with its matching SHA-512 file."
+          fi
+          package_args=(
+            "$release_base_url"
+            "${version}-dogfood.1"
+            "$release_base_url/$iso_name"
+            "$iso_sha512"
+            "$GITHUB_SHA"
             dist/release
+          )
+          if [[ -n "$iso_source_metadata" ]]; then
+            package_args+=("$iso_source_metadata")
+          fi
+          scripts/package-windows-qemu.sh "${package_args[@]}"
           release_evidence=()
           while IFS= read -r evidence; do
             if [[ ! -s "$evidence" ]]; then
@@ -92,12 +144,21 @@ jobs:
           package_name="dinx-${version}-dogfood.1-windows-x86_64.zip"
           metadata_name="dinx-${version}-dogfood.1-windows-x86_64.json"
           manifest_name="dinx-${version}-dogfood.1-deployment-manifest.json"
-          sha256sum \
-            "dist/release/$iso_name" \
-            "dist/release/$package_name" \
-            "dist/release/$metadata_name" \
-            "dist/release/$manifest_name" \
-            > dist/release/SHA256SUMS
+          checksum_targets=(
+            "dist/release/$iso_name.sha512"
+            "dist/release/$package_name"
+            "dist/release/$metadata_name"
+            "dist/release/$manifest_name"
+          )
+          if [[ -n "$iso_parts_manifest" ]]; then
+            checksum_targets+=("$iso_parts_manifest")
+            while IFS= read -r -d '' part; do
+              checksum_targets+=("$part")
+            done < <(find dist/release -maxdepth 1 -type f -name "${iso_name}.part-*" -print0 | sort -z)
+          else
+            checksum_targets=("dist/release/$iso_name" "${checksum_targets[@]}")
+          fi
+          sha256sum "${checksum_targets[@]}" > dist/release/SHA256SUMS
           cat > dist/release/RELEASE_NOTES.md <<EOF
           # DINX ${RELEASE_TAG}
 
@@ -108,12 +169,17 @@ jobs:
           - SHA-512: \`${iso_name}.sha512\`
           - Linux QEMU boot, graphical payload, boot-menu and automated greeter/session captures passed in CI.
           - The persistent-install smoke copied the Calamares rootfs contract to an ephemeral BIOS disk, booted dinit and captured a recovery TTY frame.
-          - GitHub artifact attestations cover the ISO, checksums, Windows package and release metadata. Verify with `gh attestation verify <file> -R rufl/DINX`.
+          - GitHub artifact attestations cover the ISO or its parts, checksums, Windows package and release metadata. Verify with \`gh attestation verify <file> -R rufl/DINX\`.
+
+          ## ISO delivery
+
+          ${iso_delivery_note}
 
           ## Windows QEMU package
 
-          \`${package_name}\` is a small launcher package. It downloads only the ISO URL
-          pinned in \`dinx-iso.json\`, verifies the SHA-512, requires
+          \`${package_name}\` is a small launcher package. It downloads the URL
+          pinned in \`dinx-iso.json\`, downloads and verifies each ISO part when required,
+          assembles the ISO, verifies the full SHA-512, requires
           \`qemu-system-x86_64.exe\`, and captures the boot-menu, greeter and post-input session
           frames in a desktop Windows session. It does not install QEMU or a Windows
           service.
@@ -134,6 +200,8 @@ jobs:
           subject-path: |
             dist/release/*.iso
             dist/release/*.iso.sha512
+            dist/release/*.iso.part-*
+            dist/release/*.iso.parts.json
             dist/release/*windows-x86_64.zip
             dist/release/*windows-x86_64.json
             dist/release/*deployment-manifest.json
@@ -150,9 +218,11 @@ jobs:
             *-alpha*|*-beta*|*-rc*) prerelease=(--prerelease) ;;
             *) prerelease=() ;;
           esac
-          release_assets=(
-            "dist/release/dinx-${version}-x86_64.iso"
-            "dist/release/dinx-${version}-x86_64.iso.sha512"
+          release_assets=()
+          while IFS= read -r -d '' source_asset; do
+            release_assets+=("$source_asset")
+          done < <(find dist/release -maxdepth 1 -type f -name "dinx-${version}-x86_64.iso*" -print0 | sort -z)
+          release_assets+=(
             "dist/release/dinx-${version}-dogfood.1-windows-x86_64.zip"
             "dist/release/dinx-${version}-dogfood.1-windows-x86_64.json"
             "dist/release/dinx-${version}-dogfood.1-deployment-manifest.json"
@@ -160,10 +230,22 @@ jobs:
           )
           while IFS= read -r -d '' evidence; do
             release_assets+=("$evidence")
-          done < <(find dist/release -maxdepth 1 -type f \( -name "dinx-${version}-*.ppm" -o -name "dinx-${version}-*.qemu.log" \) -print0)
-          gh release create "$RELEASE_TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "DINX ${RELEASE_TAG}" \
-            --notes-file dist/release/RELEASE_NOTES.md \
-            "${prerelease[@]}" \
-            "${release_assets[@]}"
+          done < <(find dist/release -maxdepth 1 -type f \( -name "dinx-${version}-*.ppm" -o -name "dinx-${version}-*.qemu.log" \) -print0 | sort -z)
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "DINX ${RELEASE_TAG}" \
+              --notes-file dist/release/RELEASE_NOTES.md \
+              "${prerelease[@]}"
+            gh release upload "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber \
+              "${release_assets[@]}"
+          else
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "DINX ${RELEASE_TAG}" \
+              --notes-file dist/release/RELEASE_NOTES.md \
+              "${prerelease[@]}" \
+              "${release_assets[@]}"
+          fi

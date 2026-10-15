@@ -88,6 +88,18 @@ required_paths=(
   usr/share/applications/swayimg.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
   usr/share/applications/com.shellyorg.shelly-notifications.desktop
+  usr/bin/ufw
+  usr/bin/gufw
+  usr/bin/qps
+  usr/bin/opensnitchd
+  usr/bin/opensnitch-ui
+  etc/ufw/ufw.conf
+  etc/dinit.d/ufw
+  etc/dinit.d/opensnitchd
+  usr/share/applications/gufw.desktop
+  usr/share/applications/qps.desktop
+  usr/share/applications/opensnitch_ui.desktop
+  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/bin/wl-copy
   usr/bin/wl-paste
   usr/lib/bluetooth/bluetoothd
@@ -191,6 +203,13 @@ grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured
 grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
 grep -Fq 'pinned = ["palemoon"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
 
+ufw_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/ufw/ufw.conf)
+grep -Fq 'ENABLED=no' <<<"$ufw_config" || fail 'UFW is not disabled by default for safe manual configuration'
+for disabled_service in ufw opensnitchd; do
+  if grep -Fq "/etc/dinit.d/boot.d/$disabled_service" <<<"$manifest"; then
+    fail "firewall service is enabled by default: $disabled_service"
+  fi
+done
 palemoon_profiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/profiles.ini")
 grep -Fq 'Path=dinx.default' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not selected by profiles.ini'
 grep -Fq 'Default=1' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not the default profile'
@@ -293,4 +312,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

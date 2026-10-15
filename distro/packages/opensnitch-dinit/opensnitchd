@@ -1,0 +1,8 @@
+type               = process
+command            = /usr/bin/opensnitchd
+restart            = true
+smooth-recovery    = true
+logfile            = /var/log/dinit/opensnitchd.log
+depends-on         = dbus
+depends-on         = local.target
+before             = login.target

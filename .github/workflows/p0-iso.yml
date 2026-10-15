@@ -27,6 +27,7 @@ on:
       - "scripts/check_palemoon.sh"
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
+      - "scripts/check_firewall_tools.sh"
       - "LICENSE"
 
 permissions:
@@ -58,6 +59,8 @@ jobs:
         run: ./scripts/check_swayimg.sh
       - name: Verify pinned package-management sources and payload contract
         run: ./scripts/check_package_managers.sh
+      - name: Verify firewall and process-monitoring payload contract
+        run: ./scripts/check_firewall_tools.sh
 
       - name: Install QEMU and ISO tools
         run: |
@@ -154,6 +157,7 @@ jobs:
                 find "$package_dir" -maxdepth 1 -type f -name "*.pkg.tar.zst" \
                   -exec cp -- {} "$package_repo/" \;
               }
+              build_package opensnitch-dinit
               build_package topgrade
               build_package paru
               build_package shelly

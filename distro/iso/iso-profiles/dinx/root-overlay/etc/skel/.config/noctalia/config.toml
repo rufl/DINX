@@ -69,7 +69,7 @@ icon_size = 42
 margin_edge = 8
 margin_ends = 160
 launcher_position = "none"
-pinned = ["palemoon", "org.pwmt.zathura", "swayimg", "vlc", "org.strawberrymusicplayer.strawberry", "com.saivert.pwvucontrol", "com.shellyorg.shelly", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
+pinned = ["palemoon", "org.pwmt.zathura", "swayimg", "vlc", "org.strawberrymusicplayer.strawberry", "com.saivert.pwvucontrol", "com.shellyorg.shelly", "gufw", "qps", "opensnitch_ui", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
 
 [shell]
 settings_window_translucent = false

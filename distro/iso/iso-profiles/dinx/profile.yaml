@@ -71,21 +71,25 @@ rootfs:
     - btop
     - curl
     - git
+    - gufw
     - inxi
     - jq
     - less
     - nm-connection-editor
     - nvtop
+    - opensnitch
+    - opensnitch-dinit
+    - paru
     - pciutils
     - pwvucontrol
-    - paru
+    - qps
+    - rsync
     - shelly
     - strawberry
-    - topgrade
-    - vlc
-    - vlc-cli
-    - rsync
     - swayimg
+    - topgrade
+    - ufw
+    - ufw-dinit
     - upower
     - usbutils
     - wl-clipboard

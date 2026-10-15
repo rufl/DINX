@@ -42,6 +42,7 @@ DINX's Noctalia/Mango desktop contract is explicit:
 - Noctalia owns the screenshot and clipboard surfaces; `wl-copy`/`wl-paste` remain a CLI complement, while `grim`/`slurp` are not duplicated.
 
 The standalone `nm-connection-editor`, Blueman, pwvucontrol, VLC and Strawberry applications remain available from the Noctalia dock/launcher for full connection, Bluetooth, per-stream audio, video and music-library workflows.
+Gufw, Qps and the OpenSnitch UI remain available from the dock/launcher; UFW and OpenSnitch dinit services are installed but not boot-enabled, so firewall rules require deliberate configuration. Do not enable both rule managers without reviewing the resulting netfilter ruleset.
 The package-management tools `topgrade`, `paru`, and Shelly remain launcher/CLI complements: they are not started by Noctalia or the boot session, Shelly is pinned in the dock, and AUR recipes require explicit user review.
 
 
@@ -73,6 +74,7 @@ The test suite should cover observable contracts rather than implementation deta
 | Shell utilities | Noctalia provides screenshot/clipboard UI; `wl-clipboard` provides CLI copy/paste |
 | Media handlers | VLC owns common video MIME entries; Strawberry owns common audio MIME entries |
 | Package management | `topgrade`, `paru`, and Shelly remain available for explicit user-invoked updates; no boot-time updater runs |
+| Firewall/process monitoring | Gufw, Qps, and OpenSnitch are discoverable; UFW/OpenSnitch services remain disabled until explicit configuration |
 | Fallback | applications remain usable when Noctalia is absent |
 | IPC failure | unavailable or malformed optional IPC does not block startup |
 | Keyboard access | primary actions work without pointer input |

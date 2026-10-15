@@ -1,0 +1,13 @@
+pkgname=opensnitch-dinit
+pkgver=1.7.2
+pkgrel=1
+pkgdesc='dinit service for OpenSnitch'
+arch=('any')
+url='https://github.com/evilsocket/opensnitch'
+license=('GPL-3.0-or-later')
+source=('opensnitchd')
+sha256sums=('4385609e04680d75ba5153073791a166f3a9a359c3196c31db6c961379fcea47')
+
+package() {
+  install -Dm644 "$srcdir/opensnitchd" "$pkgdir/etc/dinit.d/opensnitchd"
+}

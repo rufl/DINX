@@ -42,6 +42,7 @@ O contrato de desktop Noctalia/Mango da DINX é explícito:
 - o Noctalia é dono das superfícies de captura de tela e clipboard; `wl-copy`/`wl-paste` continuam como complemento de CLI, enquanto `grim`/`slurp` não são duplicados.
 
 Os aplicativos independentes `nm-connection-editor`, Blueman, pwvucontrol, VLC e Strawberry continuam disponíveis no dock/launcher do Noctalia para fluxos completos de conexão, Bluetooth, áudio por stream, vídeo e biblioteca musical.
+Gufw, Qps e a UI do OpenSnitch continuam disponíveis no dock/launcher; os serviços dinit UFW e OpenSnitch são instalados, mas não são habilitados no boot, portanto as regras de firewall exigem configuração deliberada. Não habilite os dois gerenciadores de regras sem revisar o ruleset netfilter resultante.
 As ferramentas de gerenciamento `topgrade`, `paru` e Shelly continuam como complementos de launcher/CLI: não são iniciadas pelo Noctalia nem pela sessão de boot, o Shelly é fixado no dock e receitas AUR exigem revisão explícita do usuário.
 
 
@@ -73,6 +74,7 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
 | Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |
 | Gerenciamento de pacotes | `topgrade`, `paru` e Shelly continuam disponíveis para atualizações executadas explicitamente pelo usuário; nenhum updater roda no boot |
+| Firewall/monitoramento de processos | Gufw, Qps e OpenSnitch são descobertos; os serviços UFW/OpenSnitch ficam desabilitados até configuração explícita |
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |
 | Acesso por teclado | ações principais funcionam sem entrada de ponteiro |

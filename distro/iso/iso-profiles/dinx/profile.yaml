@@ -28,6 +28,7 @@ rootfs:
     - efibootmgr
     - elogind
     - exfatprogs
+    - file-roller
     - gvfs
     - gvfs-gphoto2
     - gvfs-mtp
@@ -38,6 +39,7 @@ rootfs:
     - mangowm
     - mesa
     - networkmanager
+    - nano
     - noctty
     - foot
     - noctalia

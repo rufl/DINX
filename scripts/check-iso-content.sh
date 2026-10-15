@@ -50,6 +50,8 @@ required_paths=(
   etc/skel/.bash_profile
   etc/skel/.bashrc
   usr/bin/foot
+  usr/bin/file-roller
+  usr/bin/nano
   usr/local/bin/dinx-terminal
   usr/share/applications/dinx-terminal-fallback.desktop
   usr/bin/udisksctl
@@ -59,6 +61,7 @@ required_paths=(
   usr/lib/gvfsd-smb
   usr/lib/udisks2/udisksd
   usr/lib/thunarx-3/thunar-archive-plugin.so
+  usr/lib/xfce4/thunar-archive-plugin/file-roller.tap
   usr/lib/tumbler-1/tumblerd
   usr/share/applications/thunar.desktop
   usr/share/dbus-1/services/org.gtk.vfs.UDisks2VolumeMonitor.service
@@ -84,6 +87,7 @@ required_paths=(
   usr/local/libexec/dinx-mango
   usr/share/applications/dinx-installer.desktop
   usr/share/applications/org.kde.partitionmanager.desktop
+  usr/share/applications/org.gnome.FileRoller.desktop
   usr/share/grub/themes/artix/theme.txt
   usr/share/xdg-desktop-portal/mango-portals.conf
 )
@@ -199,4 +203,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Thunar/GVFS MTP/SMB/GPhoto2/UDisks2 removable-media support, Thunar archive integration, Tumbler thumbnails, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Thunar/GVFS MTP/SMB/GPhoto2/UDisks2 removable-media support, File Roller archive integration, Nano recovery editor, Tumbler thumbnails, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

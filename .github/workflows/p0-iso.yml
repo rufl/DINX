@@ -105,6 +105,7 @@ jobs:
                 freetype2 \
                 gtk3 \
                 gtksourceview4 \
+                vte3 \
                 hicolor-icon-theme \
                 libdisplay-info \
                 libdrm \

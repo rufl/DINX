@@ -71,6 +71,17 @@ rootfs:
     - bluez-utils
     - blueman
     - btop
+    - dialog
+    - fzf
+    - glances
+    - libnewt
+    - man-db
+    - openssh
+    - procps-ng
+    - sqlite
+    - texinfo
+    - tmux
+    - vim
     - bc250-control-center
     - diffutils
     - kmod

@@ -57,6 +57,20 @@ required_paths=(
   usr/bin/firefox
   usr/bin/ffmpeg
   usr/bin/btop
+  usr/bin/dialog
+  usr/bin/fzf
+  usr/bin/glances
+  usr/bin/info
+  usr/bin/man
+  usr/bin/sftp
+  usr/bin/sqlite3
+  usr/bin/tmux
+  usr/bin/vim
+  usr/bin/watch
+  usr/bin/whiptail
+  usr/share/kio/servicemenus/nocttyhere.desktop
+  usr/lib/ssh/sftp-server
+  usr/share/noctty/noctalia/noctalia-v5-widget.toml
   usr/bin/nvtop
   usr/bin/zathura
   usr/bin/pwvucontrol

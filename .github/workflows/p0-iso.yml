@@ -16,6 +16,8 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check-iso-host.sh"
+      - "scripts/check_noctty_integration.sh"
+      - "scripts/noctty_p2_qualification.sh"
       - "scripts/prepare_first_party_apps.sh"
       - "scripts/check_first_party_apps.sh"
       - "scripts/smoke-iso.sh"
@@ -54,6 +56,8 @@ jobs:
           persist-credentials: false
       - name: Verify pinned NOCTTY and NoctEd source archive
         run: ./scripts/check_first_party_apps.sh
+      - name: Verify Noctty desktop and shell integration
+        run: ./scripts/check_noctty_integration.sh
       - name: Verify Firefox defaults and pro-user policy
         run: ./scripts/check_firefox.sh
 
@@ -91,11 +95,15 @@ jobs:
                 mkinitcpio \
                 base-devel \
                 bash-completion \
+                btop \
                 curl \
                 cairo \
                 cjson \
                 dbus \
+                dialog \
+                fzf \
                 gdk-pixbuf2 \
+                glances \
                 glib2 \
                 go-md2man \
                 gettext \
@@ -108,28 +116,38 @@ jobs:
                 vte3 \
                 ghostty \
                 hicolor-icon-theme \
+                less \
                 libdisplay-info \
                 libdrm \
                 libepoxy \
-                libjpeg-turbo \
                 libglvnd \
                 libinput \
                 libliftoff \
+                libnewt \
                 libpng \
                 libxcb \
                 libxkbcommon \
                 luajit \
+                man-db \
                 mesa \
                 meson \
+                nano \
                 ninja \
+                openssh \
                 pango \
                 pcre2 \
                 pixman \
                 pkgconf \
+                procps-ng \
                 python \
                 seatd \
+                sqlite \
+                texinfo \
+                tmux \
+                util-linux \
                 wayland \
                 wayland-protocols \
+                vim \
                 xcb-util-errors \
                 xcb-util-renderutil \
                 xcb-util-wm \

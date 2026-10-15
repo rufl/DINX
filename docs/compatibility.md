@@ -75,4 +75,10 @@ The test suite should cover observable contracts rather than implementation deta
 | IPC failure | unavailable or malformed optional IPC does not block startup |
 | Keyboard access | primary actions work without pointer input |
 
+## P2 Noctty release gate
+
+The P2 gate combines `zig build test`, allocator-accounted PTY/session qualification, deterministic protocol/Unicode qualification, GLib fairness and large-paste qualification, the ReleaseSafe installed-TUI matrix, and `scripts/check_noctty_integration.sh`. The installed matrix exercises real Vim, nano, less, dialog, top, watch, info, whiptail, fzf, SQLite, Glances, Bash, man/less and local SFTP through the production PTY/VT path; tmux/Zellij launch arguments use deterministic tool shims so the package gate remains headless.
+
+The three-application Codex/Vim/btop runner uses a local Codex surface fixture in the DINX package gate. It proves the real Vim and btop cases without authentication, network access or a Codex product dependency; it is not authenticated Codex evidence.
+
 Each supported Noctalia interface must identify the tested version and adapter version. Version changes require rerunning the compatibility matrix.

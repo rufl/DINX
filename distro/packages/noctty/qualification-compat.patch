@@ -8,3 +8,71 @@
      const terminal_session_qualification_exe = b.addExecutable(.{
          .name = "noctty-terminal-session-qualification",
          .root_module = terminal_session_qualification_mod,
+@@ -452,6 +453,7 @@
+         .strip = strip,
+     });
+     terminal_agent_fairness_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_agent_fairness_mod.addImport("compat", compat_mod);
+     terminal_agent_fairness_mod.linkSystemLibrary("glib-2.0", .{
+         .use_pkg_config = .force,
+     });
+@@ -480,6 +482,7 @@
+         .strip = strip,
+     });
+     launch_continuity_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    launch_continuity_qualification_mod.addImport("compat", compat_mod);
+     const launch_continuity_qualification_exe = b.addExecutable(.{
+         .name = "noctty-launch-continuity-qualification",
+         .root_module = launch_continuity_qualification_mod,
+@@ -505,6 +508,7 @@
+         .strip = strip,
+     });
+     terminal_real_tui_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_real_tui_qualification_mod.addImport("compat", compat_mod);
+     const terminal_real_tui_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-real-tui-qualification",
+         .root_module = terminal_real_tui_qualification_mod,
+@@ -530,6 +534,7 @@
+         .strip = strip,
+     });
+     terminal_ncurses_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_ncurses_qualification_mod.addImport("compat", compat_mod);
+     const terminal_ncurses_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-ncurses-qualification",
+         .root_module = terminal_ncurses_qualification_mod,
+@@ -555,6 +560,7 @@
+         .strip = strip,
+     });
+     terminal_system_tui_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_system_tui_qualification_mod.addImport("compat", compat_mod);
+     const terminal_system_tui_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-system-tui-qualification",
+         .root_module = terminal_system_tui_qualification_mod,
+--- a/src/terminal/RealTuiQualification.zig
++++ b/src/terminal/RealTuiQualification.zig
+@@ -339,6 +339,6 @@
+     )) |info| identity: {
+         for (case.process_names) |process_name| {
+-            if (std.ascii.indexOfIgnoreCase(info.name, process_name) != null)
++            if (containsIgnoreCase(info.name, process_name))
+                 break :identity true;
+         }
+         break :identity false;
+@@ -439,1 +439,12 @@
++fn containsIgnoreCase(haystack: []const u8, needle: []const u8) bool {
++    if (needle.len == 0) return true;
++    if (needle.len > haystack.len) return false;
++    for (0..haystack.len - needle.len + 1) |offset| {
++        if (std.ascii.eqlIgnoreCase(
++            haystack[offset .. offset + needle.len],
++            needle,
++        )) return true;
++    }
++    return false;
++}
+ fn allMarkersPresent(grid: Vt.Grid, markers: []const []const u8) bool {
+--- a/src/terminal/SystemTuiQualification.zig
++++ b/src/terminal/SystemTuiQualification.zig
+@@ -172,1 +172,1 @@
+-    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
++    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "SQLite-" };

@@ -45,9 +45,9 @@ Pacotes compatíveis com o upstream são preferidos. Pacotes e patches específi
 
 ### Noctty
 
-Noctty é responsável pela janela, preferências, atalhos, abas/painéis e integração de temas. Um adaptador de terminal isola o aplicativo do núcleo de emulação escolhido. O limite do adaptador cobre eventos de entrada, redimensionamento, clipboard, atualizações da grade do terminal e dados de renderização.
+Noctty é responsável pela janela, preferências, atalhos, abas/painéis e integração de temas. O limite de terminal da P2 é o `Vt.Grid` e o `TerminalSession` nativos em Zig: eles são responsáveis pelo parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção e paste, enquanto a superfície VT/runtime pública do Ghostty permanece um adaptador isolado.
 
-A escolha do núcleo só será finalizada depois de comparar candidatos com shells interativos, `vim`, `less`, `tmux`, SSH, Unicode, scrollback extenso e cargas com muitos redimensionamentos. Os candidatos incluem libvterm, libtsm e um componente incorporável do Ghostty, quando a API pública, os requisitos de build e a licença permitirem.
+A decisão do núcleo da P2 está fixada pelo corpus determinístico de protocolo/Unicode, pelo ciclo de vida PTY com contabilidade de alocação, pela faixa de fairness/paste grande e pela matriz de aplicativos instalados para Vim, nano, less, dialog, perfis de lançamento tmux/Zellij, SSH/SFTP e TUIs comuns. Substituir esse núcleo é uma decisão separada de compatibilidade e migração, não uma dependência implícita da P2.
 
 ### Nocted
 
@@ -95,9 +95,8 @@ Esse caminho continua experimental até qualificarmos uma instalação limpa UEF
 O caminho do instalador está selecionado, mas estas decisões continuam abertas antes de um release persistente de produção:
 
 - toolkit Wayland e backend dos aplicativos próprios;
-- núcleo final de emulação de terminal;
 - layout do repositório de pacotes e responsabilidade pela chave de assinatura;
 - matriz de GPUs e hardware suportados;
 - política de licença do repositório e dos artefatos.
 
-Os próximos incrementos devem resolver essas questões com testes concretos de compatibilidade no Artix, não por suposição.
+O núcleo de terminal da P2 está selecionado para o pacote alpha; o release de produção ainda exige os gates mais amplos de hardware, assinatura e redistribuição.

@@ -45,9 +45,9 @@ Upstream-compatible packages are preferred. DINX-specific packages and patches s
 
 ### Noctty
 
-Noctty owns the window, preferences, keybindings, tabs/panes and theme integration. A terminal adapter isolates the application from the selected terminal-emulation core. The adapter boundary covers input events, resize, clipboard, terminal-grid updates and rendering data.
+Noctty owns the window, preferences, keybindings, tabs/panes and theme integration. The P2 terminal boundary is the native Zig `Vt.Grid` and `TerminalSession`: it owns VT parsing, Unicode cells, cursor/modes, bounded scrollback, selection and paste, while Ghostty's public VT/runtime surface remains an isolated adapter.
 
-The core selection is not final until candidates have been benchmarked with interactive shells, `vim`, `less`, `tmux`, SSH, Unicode, large scrollback and resize-heavy workloads. Candidate libraries include libvterm, libtsm and an embeddable Ghostty component where the public API, build requirements and license permit it.
+The P2 core decision is fixed by the deterministic protocol/Unicode corpus, allocator-accounted PTY lifecycle, fairness/large-paste lane and installed-application matrix for Vim, nano, less, dialog, tmux/Zellij launch profiles, SSH/SFTP and common TUIs. Replacing that core is a separate compatibility and migration decision, not an implicit P2 dependency.
 
 ### Nocted
 
@@ -95,9 +95,8 @@ This path is experimental until a clean UEFI/BIOS VM installation, first boot, r
 The installer path is selected, but these decisions remain open before a persistent production release:
 
 - Wayland UI toolkit and backend for first-party applications;
-- final terminal-emulation core;
 - package repository layout and signing-key ownership;
 - supported GPU and hardware matrix;
 - repository and artifact license policy.
 
-The next implementation increments must resolve these with concrete Artix compatibility tests, not assumptions.
+The P2 terminal core is selected for the alpha package; production release still requires the broader hardware, signing and redistribution gates.

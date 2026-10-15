@@ -26,8 +26,8 @@ source distro/packages/paru/source.env
 source distro/packages/shelly/source.env
 
 [[ "$TOPGRADE_VERSION" == 17.12.3 ]] || fail "unexpected topgrade version: $TOPGRADE_VERSION"
-[[ "$TOPGRADE_SOURCE_URL" == *"topgrade/archive/refs/tags/v${TOPGRADE_VERSION}.tar.gz" ]] || fail 'topgrade source URL is not pinned to the source release'
-[[ "$TOPGRADE_SOURCE_B2" == 4a4fe41e6c030a33d44690c603838d2f95ccc09a17a1ed8679f29c6f629a1d95a689f3cafaf533b716732bfb7d2c2e8d84816df8ef65dab445ab09183a623bca ]] || fail 'topgrade source BLAKE2 checksum changed'
+[[ "$TOPGRADE_SOURCE_URL" == *"topgrade/releases/download/v${TOPGRADE_VERSION}/topgrade-v${TOPGRADE_VERSION}-x86_64-unknown-linux-musl.tar.gz" ]] || fail 'topgrade release URL is not pinned'
+[[ "$TOPGRADE_SOURCE_B2" == b1e9610c7c0f59a753888c204ffc1980ad7766f5a7c0f98d7c93e87d4ef0d3078fee5df3900a9cafdbdd1c8297b9e77523b353264b7d43583cf1c7360be3f02c ]] || fail 'topgrade release BLAKE2 checksum changed'
 grep -Fq "pkgver=${TOPGRADE_VERSION}" distro/packages/topgrade/PKGBUILD || fail 'topgrade PKGBUILD version is not pinned'
 grep -Fq "$TOPGRADE_SOURCE_B2" distro/packages/topgrade/PKGBUILD || fail 'topgrade PKGBUILD checksum is not pinned'
 
@@ -57,5 +57,5 @@ grep -Fq '    - shelly' distro/iso/iso-profiles/dinx/profile.yaml || fail 'shell
 grep -Fq 'build_package topgrade' .github/workflows/p0-iso.yml || fail 'CI does not build topgrade'
 grep -Fq 'build_package paru' .github/workflows/p0-iso.yml || fail 'CI does not build paru'
 grep -Fq 'build_package shelly' .github/workflows/p0-iso.yml || fail 'CI does not build shelly'
-printf 'package_managers_contract topgrade=%s paru=%s shelly=%s artix_native_sources=true systemd_dependencies=false\n' \
+printf 'package_managers_contract topgrade=%s paru=%s shelly=%s artix_policy=true pinned_payload=true systemd_dependencies=false\n' \
   "$TOPGRADE_VERSION" "$PARU_VERSION" "$SHELLY_VERSION"

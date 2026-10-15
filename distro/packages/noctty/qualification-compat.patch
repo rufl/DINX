@@ -58,7 +58,25 @@
                  break :identity true;
          }
          break :identity false;
-@@ -439,1 +439,12 @@
+@@ -408,7 +408,8 @@
+         buffer,
+         "HOME={s}/{s}-home;CODEX_HOME={s}/{s}-codex;" ++
+             "XDG_CONFIG_HOME={s}/{s}-config;XDG_STATE_HOME={s}/{s}-state;" ++
+-            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache",
++            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache;" ++
++            "INFOPATH={s}/system",
+         .{
+             scratch,
+             app,
+@@ -422,6 +423,7 @@
+             app,
+             scratch,
+             app,
++            scratch,
+         },
+     );
+ }
+@@ -439,1 +440,12 @@
 +fn containsIgnoreCase(haystack: []const u8, needle: []const u8) bool {
 +    if (needle.len == 0) return true;
 +    if (needle.len > haystack.len) return false;

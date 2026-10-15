@@ -5,7 +5,7 @@ source_env="$startdir/source.env"
 : "${NOCTTY_VERSION:?missing NOCTTY_VERSION}"
 : "${NOCTTY_SOURCE_SHA256:?missing NOCTTY_SOURCE_SHA256}"
 pkgver="$NOCTTY_VERSION"
-pkgrel=3
+pkgrel=4
 pkgdesc='Native Zig terminal workspace and NoctEd editor for DINX'
 arch=('x86_64')
 url='https://github.com/rufl/NOCTTY'
@@ -14,7 +14,7 @@ depends=('ghostty' 'gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 
 makedepends=('vte3' 'btop' 'dialog' 'fzf' 'glances' 'less' 'libnewt' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim')
 provides=('nocted' 'terminal-emulator')
 source=("$pkgname-$pkgver.tar.gz" "qualification-compat.patch")
-sha256sums=("$NOCTTY_SOURCE_SHA256" 'd9dfdb65bc272fd2cf247c5a3923771e5e0fe39accb1f0bcb53d0d8afd02a3b4')
+sha256sums=("$NOCTTY_SOURCE_SHA256" '921a040d72e90cbc0dec1af098032b0a1d6e7f8a05d881f12b92f8b677ea84db')
 
 prepare() {
   cd "$srcdir/$pkgname-$pkgver"

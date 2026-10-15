@@ -18,7 +18,7 @@ The entry points are:
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
 - `.github/workflows/release.yml` — tagged pre-release publication and Windows QEMU package assembly;
 - `distro/packages/noctty/PKGBUILD` — native Zig package that installs NOCTTY and NoctEd;
-- `distro/packages/noctty/source.env` — repository, commit, version and SHA-256 source contract;
+- `distro/packages/noctty/qualification-compat.patch` — small packaging patch that wires the pinned source's PTY qualification target to its existing compatibility module;
 - `distro/packages/wlroots0.20/PKGBUILD` — wlroots 0.20.2 source build pinned for the current Mango/Scenefx ABI;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — foundation package and service profile.
 
@@ -31,7 +31,7 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 3. installs QEMU and ISO inspection tools on the Ubuntu runner;
 4. runs Artix in a privileged container;
 5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, VTE 2.91 (`vte3`) for the headless Noctty smoke binary, Ghostty's `libghostty-vt.so` runtime, and the pinned MangoWM/Scenefx build dependencies;
-6. builds the pinned Artix package payload for topgrade, paru and Shelly, the BC250 Control Center v1.21.1 source release, the Cyan Skillfish governor and its dinit integration; then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository, and executes the pinned source's headless PTY/VT/terminal-session smoke markers;
+6. builds the pinned Artix package payload for topgrade, paru and Shelly, the BC250 Control Center v1.21.1 source release, the Cyan Skillfish governor and its dinit integration; then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository, and executes the pinned source's headless PTY/VT/terminal-session smoke markers plus the allocator-accounted terminal-session qualification (four normal and one forced cycle);
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
 9. validates the root and live-session SquashFS payloads;

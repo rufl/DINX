@@ -1,0 +1,10 @@
+--- a/build.zig
++++ b/build.zig
+@@ -427,6 +427,7 @@
+         .strip = strip,
+     });
+     terminal_session_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_session_qualification_mod.addImport("compat", compat_mod);
+     const terminal_session_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-session-qualification",
+         .root_module = terminal_session_qualification_mod,

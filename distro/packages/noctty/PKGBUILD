@@ -5,7 +5,7 @@ source_env="$startdir/source.env"
 : "${NOCTTY_VERSION:?missing NOCTTY_VERSION}"
 : "${NOCTTY_SOURCE_SHA256:?missing NOCTTY_SOURCE_SHA256}"
 pkgver="$NOCTTY_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Native Zig terminal workspace and NoctEd editor for DINX'
 arch=('x86_64')
 url='https://github.com/rufl/NOCTTY'
@@ -13,14 +13,31 @@ license=('MIT' 'Unicode-3.0' 'Unicode-DFS-2016' 'ICU')
 depends=('ghostty' 'gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'dbus' 'zlib')
 makedepends=('vte3')
 provides=('nocted' 'terminal-emulator')
-source=("$pkgname-$pkgver.tar.gz")
-sha256sums=("$NOCTTY_SOURCE_SHA256")
+source=("$pkgname-$pkgver.tar.gz" "qualification-compat.patch")
+sha256sums=("$NOCTTY_SOURCE_SHA256" 'a4fd3ecf2dd497e7f3c380512df84bc6f1c5bfeabfa54cb2946a73e72b17e6f4')
+
+prepare() {
+  cd "$srcdir/$pkgname-$pkgver"
+  patch --forward --strip=1 < "$srcdir/qualification-compat.patch"
+}
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
   zig build -Doptimize=ReleaseSafe
   zig build -Doptimize=ReleaseSafe noctty-smoke-binary
+  zig build -Doptimize=ReleaseSafe terminal-session-qualification-binary
   smoke_binary="$srcdir/$pkgname-$pkgver/zig-out/bin/noctty-smoke"
+  qualification_binary="$srcdir/$pkgname-$pkgver/zig-out/bin/noctty-terminal-session-qualification"
+  [[ -x "$qualification_binary" ]] || {
+    printf 'PKGBUILD: missing Noctty session qualification binary: %s\n' "$qualification_binary" >&2
+    return 1
+  }
+  qualification_output="$("$qualification_binary" 4 1)"
+  printf '%s\n' "$qualification_output"
+  grep -Fq 'terminal_session_qualification mode=' <<<"$qualification_output"
+  grep -Fq 'normal_cycles=4 forced_cycles=1 sessions=5 resizes=8' <<<"$qualification_output"
+  grep -Fq 'allocator_leak_free=true allocator_residual_bytes=0' <<<"$qualification_output"
+  grep -Fq 'forced_grace_exhausted=1 shell_reaped=1 foreground_groups_reaped=1 process_residual=0 assertions=true' <<<"$qualification_output"
   [[ -x "$smoke_binary" ]] || {
     printf 'PKGBUILD: missing Noctty smoke binary: %s\n' "$smoke_binary" >&2
     return 1

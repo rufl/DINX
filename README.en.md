@@ -66,7 +66,7 @@ The alpha does not require all first-party applications to be complete. A known-
 
 ## Current phase
 
-**P1 — Public alpha 0.1 (active).** The P0 foundation gate is implemented and CI-proven for the Artix+dinit ISO, QEMU boot, graphical payload and disposable-disk installation contract. P1 remains open for public release metadata, package signing, hardware reports and qualification beyond the VM.
+**P2 — Noctty (active).** P1 closed with the public `v0.1.0-alpha.5` release: ISO/parts, checksums, installation documentation, CI recovery evidence and release metadata are published. P2 starts with an end-to-end path that builds the pinned Noctty source, runs headless PTY/VT/session smoke checks during package creation and installs the terminal with a Foot fallback. Pacman repository signing, physical hardware reports and qualification beyond the VM remain post-alpha gates.
 
 ## Documentation
 
@@ -91,4 +91,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The latest successful P0 run, [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464) on commit `8a28eb3`, passed the BC250 Control Center v1.21.1 package contract, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain release gates.
+The public [v0.1.0-alpha.5 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.5), published from commit `1953457`, passed workflow [38767617276](https://github.com/rufl/DINX/actions/runs/38767617276), including Artix package builds, the Noctty headless smoke, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and asset publication. The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain post-alpha gates.

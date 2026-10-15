@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P1 — public alpha 0.1 (active).** The P0 foundation gate is implemented and CI-proven for the ISO, QEMU boot, graphical payload and disposable-disk installation contract. P1 is the current project phase; its remaining gates are public release metadata, package signing, hardware reports and qualification beyond the VM.
+**P2 — Noctty (active).** P1's public-alpha exit criterion is met by `v0.1.0-alpha.5`: an invited tester can obtain the release, verify it, follow the installation guide and use the documented recovery path without reconstructing the development environment. Pacman repository signing, physical hardware reports and qualification beyond the VM remain explicit post-alpha release gates.
 
 ## P0 — foundation
 
@@ -29,21 +29,33 @@ Backlog:
 
 **Goal:** distribute a known-good snapshot through the public GitHub project.
 
-**Status:** active. The current documentation and site-facing landing pages are part of this phase.
+**Status:** complete for the public alpha snapshot `v0.1.0-alpha.5`.
 
-Backlog:
+Completed:
 
-- publish the ISO, checksums, installation instructions and known issues;
-- qualify the experimental persistent installer and first-boot recovery path;
-- establish package signing and release metadata;
-- provide a minimal terminal fallback and working shell configuration;
-- collect hardware reports and prioritize installation blockers.
+- published the ISO/parts, checksums, installation instructions, known issues and release metadata;
+- qualified the experimental persistent installer and first-boot recovery path in CI on a disposable BIOS disk;
+- provided the minimal terminal fallback and working shell configuration;
+- recorded the package-signing limitation, hardware boundary and recovery limitations in the release documentation.
 
-**Exit criterion:** an invited tester can install the system from the documentation without reconstructing the development environment.
+Deferred release gates:
+
+- pacman repository signing key and signed package database;
+- physical hardware reports and qualification beyond the VM.
+
+**Exit criterion:** met. An invited tester can install the alpha snapshot from the public release and documentation without reconstructing the development environment.
 
 ## P2 — Noctty
 
 **Goal:** ship a reliable terminal before advanced presentation features.
+
+**Status:** active. The first DINX end-to-end tranche now builds the pinned Noctty source, runs headless PTY/VT/terminal-session smoke checks during package creation, installs the package into the ISO and routes `$TERMINAL` through Noctty with a Foot fallback.
+
+Current end-to-end proof:
+
+- the exact source archive is SHA-256 pinned and included in the Artix package build;
+- the package build executes PTY spawn/resize/exit, VT grid/title/paste and terminal-session exit markers;
+- the P0 ISO workflow proves the package reaches the bootable image and the release publishes the tested snapshot.
 
 Backlog:
 

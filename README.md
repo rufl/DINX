@@ -66,7 +66,7 @@ A alpha não exige que todos os aplicativos próprios estejam completos. Um sist
 
 ## Fase atual
 
-**P1 — Alpha pública 0.1 (ativa).** O gate da fundação P0 está implementado e comprovado pelo CI para a ISO Artix+dinit, boot no QEMU, payload gráfico e contrato de instalação em disco descartável. A P1 continua aberta para metadados de release público, assinatura de pacotes, relatórios de hardware e qualificação além da VM.
+**P2 — Noctty (ativa).** A P1 foi encerrada com o release público `v0.1.0-alpha.5`: ISO/partes, checksums, instalação documentada, recuperação em CI e metadados de release estão publicados. A P2 começou com um caminho end-to-end que compila a fonte fixada do Noctty, executa smoke tests headless de PTY/VT/sessão no build do pacote e instala o terminal com fallback para Foot. Assinatura do repositório pacman, relatórios de hardware físico e qualificação além da VM continuam gates pós-alpha.
 
 ## Documentação
 
@@ -91,4 +91,4 @@ Versões originais em inglês:
 
 ## Status atual
 
-A execução P0 mais recente aprovada, [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), no commit `8a28eb3`, passou o contrato do pacote BC250 Control Center v1.21.1, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. A imagem DINX continua sendo uma sessão live de validação com instalador experimental; instalação em hardware, saúde completa dos serviços, UEFI, atualizações, rollback e assinatura do repositório pacman continuam gates de release.
+A release pública [v0.1.0-alpha.5](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.5), publicada no commit `1953457`, passou o workflow [38767617276](https://github.com/rufl/DINX/actions/runs/38767617276), incluindo build dos pacotes Artix, smoke headless do Noctty, criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e publicação dos assets. A imagem DINX continua sendo uma sessão live de validação com instalador experimental; instalação em hardware, saúde completa dos serviços, UEFI, atualizações, rollback e assinatura do repositório pacman continuam gates pós-alpha.

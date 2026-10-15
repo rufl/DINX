@@ -19,6 +19,15 @@ sha256sums=("$NOCTTY_SOURCE_SHA256")
 build() {
   cd "$srcdir/$pkgname-$pkgver"
   zig build -Doptimize=ReleaseSafe
+  zig build -Doptimize=ReleaseSafe noctty-smoke-binary
+  smoke_binary="$srcdir/$pkgname-$pkgver/zig-out/bin/noctty-smoke"
+  [[ -x "$smoke_binary" ]] || {
+    printf 'PKGBUILD: missing Noctty smoke binary: %s\n' "$smoke_binary" >&2
+    return 1
+  }
+  "$smoke_binary" --pty-smoke | grep -Fqx 'pty_smoke spawned=true marker=true resized=true exited=true exit_code=0'
+  "$smoke_binary" --vt-smoke | grep -Fqx 'vt_smoke public_vt=true grid=true title=true paste=true'
+  "$smoke_binary" --terminal-session-smoke | grep -Fqx 'terminal_session_smoke pty=true vt=true grid=true title=true exited=true'
 }
 
 package() {

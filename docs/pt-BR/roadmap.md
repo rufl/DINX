@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P1 — alpha pública 0.1 (ativa).** O gate da fundação P0 está implementado e comprovado pelo CI para a ISO, boot no QEMU, payload gráfico e contrato de instalação em disco descartável. A P1 é a fase atual do projeto; os gates restantes são metadados públicos de release, assinatura de pacotes, relatórios de hardware e qualificação além da VM.
+**P2 — Noctty (ativa).** O critério de saída da P1 foi atendido por `v0.1.0-alpha.5`: uma pessoa convidada consegue obter o release, verificá-lo, seguir o guia de instalação e usar o caminho documentado de recuperação sem reconstruir o ambiente de desenvolvimento. Chave de assinatura do repositório pacman, relatórios de hardware físico e qualificação além da VM continuam gates explícitos pós-alpha.
 
 ## P0 — fundação
 
@@ -29,21 +29,33 @@ Backlog:
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
-**Status:** ativa. A documentação atual e as páginas públicas do projeto fazem parte desta fase.
+**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.5`.
 
-Backlog:
+Concluído:
 
-- publicar ISO, checksums, instruções de instalação e problemas conhecidos;
-- qualificar o instalador persistente experimental e o caminho de recuperação no primeiro boot;
-- estabelecer assinatura de pacotes e metadados de release;
-- fornecer terminal de fallback mínimo e configuração de shell funcional;
-- coletar relatórios de hardware e priorizar bloqueios de instalação.
+- publicação da ISO/partes, checksums, instruções de instalação, problemas conhecidos e metadados de release;
+- qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em um disco BIOS descartável;
+- fornecimento do terminal mínimo de fallback e da configuração funcional de shell;
+- registro explícito da limitação de assinatura de pacotes, do limite de hardware e das limitações de recuperação na documentação do release.
 
-**Critério de saída:** uma pessoa convidada consegue instalar o sistema seguindo a documentação sem reconstruir o ambiente de desenvolvimento.
+Gates de release adiados:
+
+- chave de assinatura do repositório pacman e banco de pacotes assinado;
+- relatórios de hardware físico e qualificação além da VM.
+
+**Critério de saída:** atendido. Uma pessoa convidada consegue instalar o snapshot alpha pelo release público e pela documentação sem reconstruir o ambiente de desenvolvimento.
 
 ## P2 — Noctty
 
 **Objetivo:** entregar um terminal confiável antes dos recursos avançados de apresentação.
+
+**Status:** ativa. O primeiro incremento end-to-end da DINX agora compila a fonte fixada do Noctty, executa smoke tests headless de PTY/VT/sessão de terminal durante a criação do pacote, instala o pacote na ISO e encaminha `$TERMINAL` para o Noctty com fallback para Foot.
+
+Evidência end-to-end atual:
+
+- o archive exato da fonte é fixado por SHA-256 e incluído no build do pacote Artix;
+- o build do pacote executa marcadores de criação/redimensionamento/saída de PTY, grade/título/paste de VT e saída da sessão de terminal;
+- o workflow da ISO P0 prova que o pacote chega à imagem inicializável e o release publica o snapshot testado.
 
 Backlog:
 

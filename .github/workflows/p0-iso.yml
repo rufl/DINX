@@ -26,6 +26,7 @@ on:
       - "tools/dinx-qemu-launcher.c"
       - "scripts/check_palemoon.sh"
       - "scripts/check_swayimg.sh"
+      - "scripts/check_package_managers.sh"
       - "LICENSE"
 
 permissions:
@@ -55,6 +56,8 @@ jobs:
 
       - name: Verify pinned swayimg source and package contract
         run: ./scripts/check_swayimg.sh
+      - name: Verify pinned package-management sources and payload contract
+        run: ./scripts/check_package_managers.sh
 
       - name: Install QEMU and ISO tools
         run: |
@@ -85,6 +88,7 @@ jobs:
                 dbus \
                 gdk-pixbuf2 \
                 glib2 \
+                go-md2man \
                 glslang \
                 gtk-layer-shell \
                 fontconfig \
@@ -149,7 +153,9 @@ jobs:
                 )
                 find "$package_dir" -maxdepth 1 -type f -name "*.pkg.tar.zst" \
                   -exec cp -- {} "$package_repo/" \;
-              }
+              build_package topgrade
+              build_package paru
+              build_package shelly
               build_package noctty
               pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
               build_package palemoon

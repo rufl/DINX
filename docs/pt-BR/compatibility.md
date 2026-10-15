@@ -42,6 +42,7 @@ O contrato de desktop Noctalia/Mango da DINX é explícito:
 - o Noctalia é dono das superfícies de captura de tela e clipboard; `wl-copy`/`wl-paste` continuam como complemento de CLI, enquanto `grim`/`slurp` não são duplicados.
 
 Os aplicativos independentes `nm-connection-editor`, Blueman, pwvucontrol, VLC e Strawberry continuam disponíveis no dock/launcher do Noctalia para fluxos completos de conexão, Bluetooth, áudio por stream, vídeo e biblioteca musical.
+As ferramentas de gerenciamento `topgrade`, `paru` e Shelly continuam como complementos de launcher/CLI: não são iniciadas pelo Noctalia nem pela sessão de boot, o Shelly é fixado no dock e receitas AUR exigem revisão explícita do usuário.
 
 
 ## Nível 3 — integração avançada
@@ -71,6 +72,7 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Layout do desktop | Mango abre novas janelas como flutuantes; Noctalia reserva a barra superior e o dock inferior |
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
 | Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |
+| Gerenciamento de pacotes | `topgrade`, `paru` e Shelly continuam disponíveis para atualizações executadas explicitamente pelo usuário; nenhum updater roda no boot |
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |
 | Acesso por teclado | ações principais funcionam sem entrada de ponteiro |

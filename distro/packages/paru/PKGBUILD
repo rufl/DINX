@@ -1,0 +1,28 @@
+pkgname=paru
+pkgver=2.1.0
+pkgrel=1
+pkgdesc='Feature packed AUR helper'
+arch=('x86_64')
+url='https://github.com/Morganamilo/paru'
+license=('GPL-3.0-or-later')
+provides=('paru')
+conflicts=('paru-bin')
+depends=('git' 'pacman' 'libalpm.so>=14')
+optdepends=('bat: colored PKGBUILD printing' 'devtools: build in chroot and downloading PKGBUILDs')
+source_x86_64=("paru-${pkgver}.tar.zst::https://github.com/Morganamilo/paru/releases/download/v${pkgver}/paru-v${pkgver}-x86_64.tar.zst")
+sha256sums_x86_64=('28ef88736080e7e96e569f7adf10517ef8310a68b528e7f34c795287d7271880')
+
+package() {
+  install -Dm755 paru "$pkgdir/usr/bin/paru"
+  install -Dm644 paru.conf "$pkgdir/etc/paru.conf"
+
+  install -Dm644 man/paru.8 "$pkgdir/usr/share/man/man8/paru.8"
+  install -Dm644 man/paru.conf.5 "$pkgdir/usr/share/man/man5/paru.conf.5"
+
+  install -Dm644 completions/bash "$pkgdir/usr/share/bash-completion/completions/paru.bash"
+  install -Dm644 completions/fish "$pkgdir/usr/share/fish/vendor_completions.d/paru.fish"
+  install -Dm644 completions/zsh "$pkgdir/usr/share/zsh/site-functions/_paru"
+
+  install -d "$pkgdir/usr/share/locale"
+  cp -r locale/. "$pkgdir/usr/share/locale/"
+}

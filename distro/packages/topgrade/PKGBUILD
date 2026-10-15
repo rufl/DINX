@@ -1,0 +1,25 @@
+pkgname=topgrade
+pkgver=17.12.3
+pkgrel=1
+pkgdesc='Upgrade all the things'
+arch=('x86_64')
+url='https://github.com/topgrade-rs/topgrade'
+license=('GPL-3.0-or-later')
+provides=('topgrade')
+source_x86_64=("topgrade_x86_64-${pkgver}.tar.gz::https://github.com/topgrade-rs/topgrade/releases/download/v${pkgver}/topgrade-v${pkgver}-x86_64-unknown-linux-musl.tar.gz")
+b2sums_x86_64=('b1e9610c7c0f59a753888c204ffc1980ad7766f5a7c0f98d7c93e87d4ef0d3078fee5df3900a9cafdbdd1c8297b9e77523b353264b7d43583cf1c7360be3f02c')
+
+depends=('libgcc')
+
+package() {
+  install -Dm755 topgrade "$pkgdir/usr/bin/topgrade"
+
+  ./topgrade --gen-manpage | sed 's/.TH Topgrade 1/.TH Topgrade 8/' >topgrade.8
+  install -Dm644 topgrade.8 "$pkgdir/usr/share/man/man8/topgrade.8"
+
+  ./topgrade --gen-completion bash >topgrade.bash
+  install -Dm644 topgrade.bash "$pkgdir/usr/share/bash-completion/completions/topgrade"
+
+  ./topgrade --gen-completion zsh >topgrade.zsh
+  install -Dm644 topgrade.zsh "$pkgdir/usr/share/zsh/site-functions/_topgrade"
+}

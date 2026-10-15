@@ -74,9 +74,20 @@ required_paths=(
   usr/bin/vlc
   usr/bin/qvlc
   usr/bin/strawberry
+  usr/bin/topgrade
+  usr/bin/paru
+  usr/bin/shelly
+  usr/bin/shelly-ui
+  usr/bin/shelly-key
+  usr/bin/shelly-notifications
+  usr/bin/shelly-flatpak-integrate
+  etc/paru.conf
+  etc/shellybuild.conf
   usr/share/applications/vlc.desktop
   usr/share/applications/org.strawberrymusicplayer.strawberry.desktop
   usr/share/applications/swayimg.desktop
+  usr/share/applications/com.shellyorg.shelly.desktop
+  usr/share/applications/com.shellyorg.shelly-notifications.desktop
   usr/bin/wl-copy
   usr/bin/wl-paste
   usr/lib/bluetooth/bluetoothd
@@ -175,6 +186,7 @@ grep -Fq 'screenshot' <<<"$noctalia_config" || fail 'Noctalia screenshot widget 
 grep -Fq '[shell.screenshot]' <<<"$noctalia_config" || fail 'Noctalia screenshot shell defaults are missing'
 grep -Fq 'copy_to_clipboard = true' <<<"$noctalia_config" || fail 'Noctalia screenshots are not copied to the clipboard'
 grep -Fq 'swayimg", "vlc", "org.strawberrymusicplayer.strawberry"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin the multimedia players'
+grep -Fq 'com.shellyorg.shelly' <<<"$noctalia_config" || fail 'Noctalia dock does not pin Shelly'
 grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured'
 grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
 grep -Fq 'pinned = ["palemoon"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
@@ -281,4 +293,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

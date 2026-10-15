@@ -78,7 +78,10 @@ rootfs:
     - nvtop
     - pciutils
     - pwvucontrol
+    - paru
+    - shelly
     - strawberry
+    - topgrade
     - vlc
     - vlc-cli
     - rsync

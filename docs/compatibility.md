@@ -42,6 +42,7 @@ DINX's Noctalia/Mango desktop contract is explicit:
 - Noctalia owns the screenshot and clipboard surfaces; `wl-copy`/`wl-paste` remain a CLI complement, while `grim`/`slurp` are not duplicated.
 
 The standalone `nm-connection-editor`, Blueman, pwvucontrol, VLC and Strawberry applications remain available from the Noctalia dock/launcher for full connection, Bluetooth, per-stream audio, video and music-library workflows.
+The package-management tools `topgrade`, `paru`, and Shelly remain launcher/CLI complements: they are not started by Noctalia or the boot session, Shelly is pinned in the dock, and AUR recipes require explicit user review.
 
 
 ## Level 3 — deeper integration
@@ -71,6 +72,7 @@ The test suite should cover observable contracts rather than implementation deta
 | Desktop layout | Mango opens new windows floating; Noctalia reserves the top bar and bottom dock |
 | Shell utilities | Noctalia provides screenshot/clipboard UI; `wl-clipboard` provides CLI copy/paste |
 | Media handlers | VLC owns common video MIME entries; Strawberry owns common audio MIME entries |
+| Package management | `topgrade`, `paru`, and Shelly remain available for explicit user-invoked updates; no boot-time updater runs |
 | Fallback | applications remain usable when Noctalia is absent |
 | IPC failure | unavailable or malformed optional IPC does not block startup |
 | Keyboard access | primary actions work without pointer input |

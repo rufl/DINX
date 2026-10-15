@@ -56,6 +56,16 @@
     },
     "IPProtectionAvailable": false,
     "Preferences": {
+      "browser.urlbar.suggest.quicksuggest.sponsored": {
+        "Value": false,
+        "Status": "locked",
+        "Type": "boolean"
+      },
+      "browser.urlbar.quicksuggest.dataCollection.enabled": {
+        "Value": false,
+        "Status": "locked",
+        "Type": "boolean"
+      },
       "identity.fxaccounts.toolbar": {
         "Value": false,
         "Status": "default",

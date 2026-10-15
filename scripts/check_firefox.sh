@@ -72,6 +72,8 @@ for key in ("SidebarChatbot", "LinkPreviewKeyPoints", "SmartTabGroups", "SmartWi
     assert policies["AIControls"][key] == {"Value": "blocked", "Locked": True}
 
 prefs = policies["Preferences"]
+for key in ("browser.urlbar.suggest.quicksuggest.sponsored", "browser.urlbar.quicksuggest.dataCollection.enabled"):
+    assert prefs[key] == {"Value": False, "Status": "locked", "Type": "boolean"}
 assert prefs["identity.fxaccounts.toolbar"] == {
     "Value": False,
     "Status": "default",

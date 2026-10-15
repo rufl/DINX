@@ -49,13 +49,13 @@ Gates de release adiados:
 
 **Objetivo:** entregar um terminal confiável antes dos recursos avançados de apresentação.
 
-**Status:** ativa. O primeiro incremento end-to-end da DINX agora compila a fonte fixada do Noctty, executa smoke tests headless de PTY/VT/sessão de terminal e uma qualificação de sessão com contabilização do allocator durante a criação do pacote, instala o pacote na ISO e encaminha `$TERMINAL` para o Noctty com fallback para Foot.
+**Status:** ativa. O primeiro incremento end-to-end da DINX agora compila a fonte fixada do Noctty, executa smoke tests headless de PTY/VT/sessão de terminal, qualificação de sessão com contabilização do allocator e qualificação de compatibilidade de protocolo/Unicode durante a criação do pacote, instala o pacote na ISO e encaminha `$TERMINAL` para o Noctty com fallback para Foot.
 
 Evidência end-to-end atual:
 
 - o archive exato da fonte é fixado por SHA-256 e incluído no build do pacote Artix;
-- o build do pacote executa marcadores de criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal e ciclo de vida com contabilização do allocator;
-- o workflow ISO P0 [38793156293](https://github.com/rufl/DINX/actions/runs/38793156293), no commit `f69d12f`, passou pela criação do pacote, geração da ISO, boot no QEMU, validação do payload gráfico e smoke da instalação persistente/TTY de recuperação;
+- o build do pacote executa marcadores de criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, ciclo de vida com contabilização do allocator e compatibilidade de protocolo/Unicode;
+- o workflow ISO P0 [38798566993](https://github.com/rufl/DINX/actions/runs/38798566993), no commit `fbd9bd6`, passou pela criação do pacote, geração da ISO, boot no QEMU, validação do payload gráfico e smoke da instalação persistente/TTY de recuperação;
 
 Backlog:
 
@@ -63,7 +63,7 @@ Backlog:
 - expandir a matriz de inicialização do shell, redimensionamento, sinais e limpeza além da verificação atual de recolhimento dos processos forçados;
 - entrada/renderização do terminal, Unicode, cores e comportamento do cursor;
 - scrollback, seleção, copiar e colar;
-- verificações de compatibilidade com `vim`, `less`, `tmux`, SSH e TUIs comuns;
+- ampliar a qualificação de compatibilidade para sessões reais de `vim`, `less`, `tmux`, SSH e TUIs comuns;
 - integração de `$TERMINAL`, `.desktop`, diretório de trabalho e descoberta pelo Noctalia;
 - importação/recarregamento de tema e preferências.
 

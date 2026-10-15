@@ -49,13 +49,13 @@ Deferred release gates:
 
 **Goal:** ship a reliable terminal before advanced presentation features.
 
-**Status:** active. The first DINX end-to-end tranche now builds the pinned Noctty source, runs headless PTY/VT/terminal-session smoke checks and an allocator-accounted session qualification during package creation, installs the package into the ISO and routes `$TERMINAL` through Noctty with a Foot fallback.
+**Status:** active. The first DINX end-to-end tranche now builds the pinned Noctty source, runs headless PTY/VT/terminal-session smoke checks, allocator-accounted session qualification and protocol/Unicode compatibility qualification during package creation, installs the package into the ISO and routes `$TERMINAL` through Noctty with a Foot fallback.
 
 Current end-to-end proof:
 
 - the exact source archive is SHA-256 pinned and included in the Artix package build;
-- the package build executes PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit and allocator-accounted lifecycle markers;
-- the P0 ISO workflow [38793156293](https://github.com/rufl/DINX/actions/runs/38793156293) on commit `f69d12f` passed package creation, ISO generation, QEMU boot, graphical payload validation and persistent-install/recovery-TTY smoke;
+- the package build executes PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, allocator-accounted lifecycle and protocol/Unicode compatibility markers;
+- the P0 ISO workflow [38798566993](https://github.com/rufl/DINX/actions/runs/38798566993) on commit `fbd9bd6` passed package creation, ISO generation, QEMU boot, graphical payload validation and persistent-install/recovery-TTY smoke;
 
 Backlog:
 
@@ -63,7 +63,7 @@ Backlog:
 - extend the shell launch, resize, signals and cleanup matrix beyond the current forced-process reaping check;
 - terminal input/rendering, Unicode, colors and cursor behavior;
 - scrollback, selection, copy and paste;
-- compatibility checks with `vim`, `less`, `tmux`, SSH and common TUIs;
+- extend compatibility qualification to real `vim`, `less`, `tmux`, SSH and common TUI sessions;
 - `$TERMINAL`, `.desktop`, working-directory and Noctalia discovery integration;
 - theme import/reload and preferences.
 

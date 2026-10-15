@@ -175,12 +175,9 @@ printf '%s\n' \
   '  if (WIFEXITED(status) && WEXITSTATUS(status) == 0) return 0;' \
   '  int fd = open(fallback_marker, O_WRONLY | O_CREAT | O_TRUNC, 0600);' \
   '  if (fd >= 0) close(fd);' \
-  '  const char screen[] = "\033[2J\033[HFile: dir\nTop\nNOCTTY_SYSTEM_INFO\n";' \
+  '  const char screen[] = "\033[2J\033[H\033[1;32mFile: dir\033[0m\nTop\nNOCTTY_SYSTEM_INFO\n";' \
   '  write(STDOUT_FILENO, screen, sizeof(screen) - 1);' \
-  '  char input[64];' \
-  '  while (read(STDIN_FILENO, input, sizeof(input)) > 0) {' \
-  '    for (size_t i = 0; i < sizeof(input); ++i) if (input[i] == 113) return 0;' \
-  '  }' \
+  '  usleep(5000000);' \
   '  return 0;' \
   '}' \
   >"$info_wrapper_source"

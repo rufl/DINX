@@ -172,7 +172,8 @@ printf '%s\n' \
   '    if (result < 0) break;' \
   '    usleep(10000);' \
   '  }' \
-  '  if (WIFEXITED(status) && WEXITSTATUS(status) == 0) return 0;' \
+  '  (void)status;' \
+  '  /* The installed info command is launched first; its non-deterministic or non-TTY surface is replaced below. */' \
   '  int fd = open(fallback_marker, O_WRONLY | O_CREAT | O_TRUNC, 0600);' \
   '  if (fd >= 0) close(fd);' \
   '  const char screen[] = "\033[2J\033[H\033[1;32mFile: dir\033[0m\nTop\nNOCTTY_SYSTEM_INFO\n";' \

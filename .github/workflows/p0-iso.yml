@@ -106,6 +106,7 @@ jobs:
                 gtk3 \
                 gtksourceview4 \
                 vte3 \
+                ghostty \
                 hicolor-icon-theme \
                 libdisplay-info \
                 libdrm \

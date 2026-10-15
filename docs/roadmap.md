@@ -55,7 +55,7 @@ Current end-to-end proof:
 
 - the exact source archive is SHA-256 pinned and included in the Artix package build;
 - the package build executes PTY spawn/resize/exit, VT grid/title/paste and terminal-session exit markers;
-- the P0 ISO workflow proves the package reaches the bootable image and the release publishes the tested snapshot.
+- the P0 ISO workflow [38788181437](https://github.com/rufl/DINX/actions/runs/38788181437) on commit `efe73ca` passed package creation, ISO generation, QEMU boot, graphical payload validation and persistent-install/recovery-TTY smoke;
 
 Backlog:
 

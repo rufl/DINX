@@ -55,7 +55,7 @@ Evidência end-to-end atual:
 
 - o archive exato da fonte é fixado por SHA-256 e incluído no build do pacote Artix;
 - o build do pacote executa marcadores de criação/redimensionamento/saída de PTY, grade/título/paste de VT e saída da sessão de terminal;
-- o workflow da ISO P0 prova que o pacote chega à imagem inicializável e o release publica o snapshot testado.
+- o workflow ISO P0 [38788181437](https://github.com/rufl/DINX/actions/runs/38788181437), no commit `efe73ca`, passou pela criação do pacote, geração da ISO, boot no QEMU, validação do payload gráfico e smoke da instalação persistente/TTY de recuperação;
 
 Backlog:
 

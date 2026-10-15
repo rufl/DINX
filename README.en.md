@@ -66,7 +66,7 @@ The alpha does not require all first-party applications to be complete. A known-
 
 ## Current phase
 
-**P2 — Noctty (active).** P1 closed with the public `v0.1.0-alpha.5` release: ISO/parts, checksums, installation documentation, CI recovery evidence and release metadata are published. P2 starts with an end-to-end path that builds the pinned Noctty source, runs headless PTY/VT/session smoke checks during package creation and installs the terminal with a Foot fallback. Pacman repository signing, physical hardware reports and qualification beyond the VM remain post-alpha gates.
+**P2 — Noctty (active).** P1 closed with the public `v0.1.0-alpha.5` release: ISO/parts, checksums, installation documentation, CI recovery evidence and release metadata are published. P2 starts with an end-to-end path that builds the pinned Noctty source, runs headless PTY/VT/session smoke checks during package creation and installs the terminal with a Foot fallback; workflow [38788181437](https://github.com/rufl/DINX/actions/runs/38788181437) passed that chain on commit `efe73ca`. Pacman repository signing, physical hardware reports and qualification beyond the VM remain post-alpha gates.
 
 ## Documentation
 
@@ -91,4 +91,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The public [v0.1.0-alpha.5 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.5), published from commit `1953457`, passed workflow [38767617276](https://github.com/rufl/DINX/actions/runs/38767617276), including Artix package builds, the Noctty headless smoke, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and asset publication. The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain post-alpha gates.
+The public [v0.1.0-alpha.5 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.5), published from commit `1953457`, passed workflow [38767617276](https://github.com/rufl/DINX/actions/runs/38767617276), including Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and asset publication. The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain post-alpha gates. The later P2 increment was validated separately by workflow [38788181437](https://github.com/rufl/DINX/actions/runs/38788181437).

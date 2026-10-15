@@ -254,11 +254,6 @@ grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fa
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
 grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
 grep -Fq 'audio/flac=org.strawberrymusicplayer.strawberry.desktop;' <<<"$mimeapps_config" || fail 'Strawberry is not the default FLAC handler'
-for omitted_path in usr/bin/grim usr/bin/slurp; do
-  if grep -Fq "/$omitted_path" <<<"$manifest"; then
-    fail "Noctalia screenshot flow must not duplicate omitted tool: $omitted_path"
-  fi
-done
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \

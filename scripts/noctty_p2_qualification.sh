@@ -159,11 +159,14 @@ printf '%s\n' \
   '  pid_t child = fork();' \
   '  if (child < 0) return 127;' \
   '  if (child == 0) {' \
+  '    int null_fd = open("/dev/null", O_WRONLY);' \
+  '    if (null_fd >= 0) {' \
+  '      dup2(null_fd, STDOUT_FILENO);' \
+  '      dup2(null_fd, STDERR_FILENO);' \
+  '      if (null_fd > STDERR_FILENO) close(null_fd);' \
+  '    }' \
   '    child_argv[0] = (char *)real_info;' \
   '    for (int i = 1; i < argc; ++i) child_argv[i] = argv[i];' \
-  '    child_argv[argc] = NULL;' \
-  '    execv(real_info, child_argv);' \
-  '    _exit(127);' \
   '  }' \
   '  int status = 0;' \
   '  for (;;) {' \

@@ -121,10 +121,10 @@ required_paths=(
   usr/share/icons/hicolor/128x128/apps/palemoon.png
   etc/skel/.config/noctalia/templates/palemoon-userChrome.css
   etc/skel/.config/noctalia/templates/palemoon-userContent.css
-  etc/skel/.moonchild productions/pale moon/profiles.ini
-  etc/skel/.moonchild productions/pale moon/dinx.default/user.js
-  etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userChrome.css
-  etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userContent.css
+  "etc/skel/.moonchild productions/pale moon/profiles.ini"
+  "etc/skel/.moonchild productions/pale moon/dinx.default/user.js"
+  "etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userChrome.css"
+  "etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userContent.css"
   usr/local/bin/dinx-terminal
   usr/share/applications/dinx-terminal-fallback.desktop
   usr/bin/udisksctl

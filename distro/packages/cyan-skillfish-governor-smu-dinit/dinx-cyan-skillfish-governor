@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+for device in /sys/bus/pci/devices/*; do
+  [ -r "$device/vendor" ] || continue
+  [ "$(cat "$device/vendor")" = '0x1002' ] || continue
+  [ -r "$device/device" ] || continue
+  case "$(cat "$device/device")" in
+    0x13fe)
+      exec /usr/bin/cyan-skillfish-governor-smu \
+        /etc/cyan-skillfish-governor-smu/config.toml
+      ;;
+  esac
+done
+
+printf '%s\n' 'Cyan Skillfish GPU not detected; governor service is inactive.' >&2
+exit 0

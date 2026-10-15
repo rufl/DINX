@@ -43,8 +43,8 @@ O contrato de desktop Noctalia/Mango da DINX é explícito:
 
 Os aplicativos independentes `nm-connection-editor`, Blueman, pwvucontrol, VLC e Strawberry continuam disponíveis no dock/launcher do Noctalia para fluxos completos de conexão, Bluetooth, áudio por stream, vídeo e biblioteca musical.
 Gufw, Qps e a UI do OpenSnitch continuam disponíveis no dock/launcher; os serviços dinit UFW e OpenSnitch são instalados, mas não são habilitados no boot, portanto as regras de firewall exigem configuração deliberada. Não habilite os dois gerenciadores de regras sem revisar o ruleset netfilter resultante.
-As ferramentas de gerenciamento `topgrade`, `paru` e Shelly continuam como complementos de launcher/CLI: não são iniciadas pelo Noctalia nem pela sessão de boot, o Shelly é fixado no dock e receitas AUR exigem revisão explícita do usuário.
-
+As ferramentas de gerenciamento `topgrade`, `paru` e Shelly continuam como complementos de launcher/CLI: usam a configuração ALPM/pacman do Artix, são compiladas sem dependências ou unidades `systemd`, não adicionam repositórios Arch, não são iniciadas pelo Noctalia nem pelo boot e receitas AUR exigem revisão explícita do usuário.
+O suporte a AMD Cyan Skillfish/BC-250 é um contrato de payload: firmware AMDGPU do Artix, Mesa RADV, diagnóstico Vulkan e o governor SMU fixado são instalados. O serviço dinit inicia automaticamente apenas o caminho do governor para PCI `1002:13fe`, usa a faixa segura de 1000-1850 MHz e encerra em outro hardware, sem unidade systemd.
 
 ## Nível 3 — integração avançada
 
@@ -73,7 +73,8 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Layout do desktop | Mango abre novas janelas como flutuantes; Noctalia reserva a barra superior e o dock inferior |
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
 | Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |
-| Gerenciamento de pacotes | `topgrade`, `paru` e Shelly continuam disponíveis para atualizações executadas explicitamente pelo usuário; nenhum updater roda no boot |
+| Gerenciamento de pacotes | `topgrade`, `paru` e Shelly usam a configuração ALPM/pacman do Artix, não têm dependência/unidade `systemd`, não adicionam repositórios Arch e continuam disponíveis para atualizações executadas explicitamente pelo usuário |
+| Hardware Cyan Skillfish | firmware AMDGPU, Mesa RADV, diagnóstico Vulkan e o caminho de governor dinit para PCI `1002:13fe` estão presentes; nenhuma unidade governor systemd é instalada |
 | Firewall/monitoramento de processos | Gufw, Qps e OpenSnitch são descobertos; os serviços UFW/OpenSnitch ficam desabilitados até configuração explícita |
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |

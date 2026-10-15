@@ -1,0 +1,4 @@
+# DINX/Artix policy: official system upgrades use Artix pacman repositories.
+# Use paru or Shelly explicitly after reviewing any AUR recipe.
+[linux]
+arch_package_manager = "pacman"

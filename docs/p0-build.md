@@ -12,6 +12,7 @@ The entry points are:
 - `scripts/build-iso.sh` — root-aware build wrapper;
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
+- `scripts/check_palemoon.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh` and `scripts/check_cyan_skillfish.sh` — pinned application, Artix package-management, firewall and hardware contracts;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
@@ -29,8 +30,8 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 2. verifies the committed NOCTTY/NoctEd source archive against `distro/packages/noctty/source.env` and validates the package/profile contract;
 3. installs QEMU and ISO inspection tools on the Ubuntu runner;
 4. runs Artix in a privileged container;
-5. installs `artools`, `iso-profiles`, Zig 0.17.0 and the pinned MangoWM/Scenefx build dependencies;
-6. builds the native `noctty` package, which contains both NOCTTY and NoctEd, then builds wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
+5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0 and the pinned MangoWM/Scenefx build dependencies;
+6. builds the Artix-native topgrade/paru packages, Shelly, the Cyan Skillfish governor and its dinit integration, then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository;
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
 9. validates the root and live-session SquashFS payloads;
@@ -43,7 +44,8 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, dinit service files, NOCTTY/NoctEd, Nano, File Roller and the Thunar/GVFS stack reached the ISO. The removable-media contract includes UDisks2, `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin`, File Roller and Tumbler. It also asserts the standalone PolicyKit agent, rejects installed systemd package metadata/runtime and rejects full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking, MTP, SMB, camera access or audio inside the guest.
 The payload check also proves the official Pale Moon browser, its GTK3 desktop entry, FFmpeg media runtime, seeded DINX profile and Noctalia chrome/content templates reached the ISO. The Pale Moon skin follows the documented Noctalia v5 template contract; the generated profile CSS is reapplied on the next browser restart after a palette or mode change.
 The same contract proves the expanded desktop payload: btop/nvtop/inxi, PCI/USB diagnostics, Git/curl/less/jq/rsync, Zathura with MuPDF, Swayimg, VLC with its Qt GUI/CLI split, Strawberry, pwvucontrol, BlueZ/Blueman/UPower, `nm-connection-editor` and `wl-clipboard`. It also verifies the Mango floating default, the top `main` bar, the bottom Noctalia dock, the Noctalia screenshot/clipboard widgets and the VLC/Strawberry MIME handlers. `grim`/`slurp` stay out of the image because the Noctalia v5 capture surface already implements fullscreen and region capture.
-The package-management contract also proves `topgrade`, `paru`, and Shelly. They are installed from pinned release inputs, expose both CLI tools and the Shelly desktop launcher, and remain user-invoked; the ISO does not auto-run package upgrades. AUR package recipes used through `paru` require the user's normal review.
+The package-management contract also proves `topgrade`, `paru`, and Shelly. Topgrade and paru are built from pinned source releases against the Artix ALPM stack; Shelly delegates to Artix's `pacman` configuration. Their package metadata contains no `systemd` dependency or unit, no Arch repository is added, and all AUR recipes remain subject to explicit user review. They remain user-invoked; the ISO does not auto-run package upgrades.
+The hardware contract proves AMDGPU firmware, Mesa RADV, Vulkan diagnostics and the pinned Cyan Skillfish SMU governor. A dinit service is linked for both the live and installed profiles, detects PCI `1002:13fe` (BC-250), then starts the governor with a conservative 1000-1850 MHz range; on other hardware it exits without changing anything. Use an Artix kernel with current BC-250 fixes (6.17.11 or newer). No systemd service is installed.
 The same ISO contract proves UFW, Gufw, Qps, OpenSnitch and the `ufw`/`opensnitchd` dinit service files. It asserts the safe default (`ENABLED=no` and no boot links for either firewall service), so network policy changes require explicit user configuration.
 The workflow also captures the QEMU VGA surface as a PPM artifact through the monitor. That capture is visual evidence to inspect; it does not automatically prove successful greeter interaction, user-session health, networking or audio.
 

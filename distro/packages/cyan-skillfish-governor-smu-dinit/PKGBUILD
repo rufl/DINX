@@ -1,0 +1,17 @@
+pkgname=cyan-skillfish-governor-smu-dinit
+pkgver=0.4.14
+pkgrel=1
+pkgdesc='dinit service for the Cyan Skillfish SMU governor'
+arch=('any')
+url='https://github.com/filippor/cyan-skillfish-governor'
+license=('MIT')
+depends=('dinit' 'cyan-skillfish-governor-smu')
+source=('cyan-skillfish-governor-smu')
+sha256sums=('616d8ca29695acfbdec17baa457adfb7adbf3a8bda5503f5d1e1487e1b3ff98d')
+
+package() {
+  install -Dm644 "$srcdir/cyan-skillfish-governor-smu" \
+    "$pkgdir/etc/dinit.d/cyan-skillfish-governor-smu"
+  install -Dm755 "$startdir/dinx-cyan-skillfish-governor" \
+    "$pkgdir/usr/local/libexec/dinx-cyan-skillfish-governor"
+}

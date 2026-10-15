@@ -49,6 +49,7 @@ required_paths=(
   etc/mango/greeter.conf
   etc/profile.d/dinx.sh
   etc/skel/.bash_profile
+  etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
   usr/bin/foot
   usr/bin/file-roller
@@ -81,6 +82,14 @@ required_paths=(
   usr/bin/shelly-key
   usr/bin/shelly-notifications
   usr/bin/shelly-flatpak-integrate
+  usr/bin/cyan-skillfish-governor-smu
+  usr/bin/cyan-skillfish-performance-mode
+  etc/cyan-skillfish-governor-smu/config.toml
+  etc/dinit.d/cyan-skillfish-governor-smu
+  usr/local/libexec/dinx-cyan-skillfish-governor
+  usr/lib/firmware/amdgpu/cyan_skillfish2_pfp.bin.zst
+  usr/share/vulkan/icd.d/radeon_icd.json
+  usr/bin/vulkaninfo
   etc/paru.conf
   etc/shellybuild.conf
   usr/share/applications/vlc.desktop
@@ -210,6 +219,14 @@ for disabled_service in ufw opensnitchd; do
     fail "firewall service is enabled by default: $disabled_service"
   fi
 done
+governor_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/cyan-skillfish-governor-smu/config.toml)
+grep -Fq '[gpu]' <<<"$governor_config" || fail 'Cyan Skillfish governor GPU section is missing'
+grep -Fq 'set-method = "smu"' <<<"$governor_config" || fail 'Cyan Skillfish governor is not configured for SMU control'
+grep -Fq 'min = 1000' <<<"$governor_config" || fail 'Cyan Skillfish governor minimum frequency is not configured'
+grep -Fq 'max = 1850' <<<"$governor_config" || fail 'Cyan Skillfish governor maximum frequency is not configured'
+grep -Fq '/etc/dinit.d/boot.d/cyan-skillfish-governor-smu' <<<"$manifest" || fail 'Cyan Skillfish governor is not enabled in the rootfs dinit boot set'
+topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
+grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
 palemoon_profiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/profiles.ini")
 grep -Fq 'Path=dinx.default' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not selected by profiles.ini'
 grep -Fq 'Default=1' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not the default profile'
@@ -294,6 +311,7 @@ livefs_required_paths=(
   etc/artools/live.conf
   etc/dinit.d/boot.d/NetworkManager
   etc/dinit.d/boot.d/artix-live
+  etc/dinit.d/boot.d/cyan-skillfish-governor-smu
   etc/dinit.d/boot.d/greetd
   etc/dinit.d/boot.d/logind
   etc/dinit.d/boot.d/metalog
@@ -312,4 +330,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

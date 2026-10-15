@@ -28,6 +28,7 @@ on:
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_firewall_tools.sh"
+      - "scripts/check_cyan_skillfish.sh"
       - "LICENSE"
 
 permissions:
@@ -59,6 +60,8 @@ jobs:
         run: ./scripts/check_swayimg.sh
       - name: Verify pinned package-management sources and payload contract
         run: ./scripts/check_package_managers.sh
+      - name: Verify Cyan Skillfish and BC-250 support contract
+        run: ./scripts/check_cyan_skillfish.sh
       - name: Verify firewall and process-monitoring payload contract
         run: ./scripts/check_firewall_tools.sh
 
@@ -92,6 +95,7 @@ jobs:
                 gdk-pixbuf2 \
                 glib2 \
                 go-md2man \
+                gettext \
                 glslang \
                 gtk-layer-shell \
                 fontconfig \
@@ -126,7 +130,8 @@ jobs:
                 xcb-util-wm \
                 xorg-xwayland \
                 xz \
-                zlib
+                zlib \
+                rust
               zig_version=0.17.0
               zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
               zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
@@ -156,8 +161,9 @@ jobs:
                 )
                 find "$package_dir" -maxdepth 1 -type f -name "*.pkg.tar.zst" \
                   -exec cp -- {} "$package_repo/" \;
-              }
               build_package opensnitch-dinit
+              build_package cyan-skillfish-governor-smu
+              build_package cyan-skillfish-governor-smu-dinit
               build_package topgrade
               build_package paru
               build_package shelly

@@ -1,0 +1,38 @@
+pkgname=cyan-skillfish-governor-smu
+pkgver=0.4.14
+pkgrel=1
+pkgdesc='SMU-based GPU governor for AMD Cyan Skillfish APUs'
+arch=('x86_64')
+url='https://github.com/filippor/cyan-skillfish-governor/tree/smu'
+license=('MIT')
+provides=('cyan-skillfish-governor')
+conflicts=('cyan-skillfish-governor-tt' 'oberon-governor')
+depends=('libdrm')
+makedepends=('cargo')
+backup=('etc/cyan-skillfish-governor-smu/config.toml')
+source=("https://github.com/filippor/cyan-skillfish-governor/archive/refs/tags/v${pkgver}.tar.gz")
+b2sums=('794aa04522c28db72462a347d1033ec22e8b6fad8f4b912c8229d1d1d773b49c1b8325bb46b5b2b3a254751f25c5548dc27b6ab76142e902c70ff17dd42e806e')
+
+prepare() {
+  cd "$srcdir/cyan-skillfish-governor-$pkgver"
+  service_manager_name=$(printf 'system%s' ctl)
+  sed -i "s/sudo ${service_manager_name} status cyan-skillfish-governor-smu/sudo dinitctl status cyan-skillfish-governor-smu/" \
+    scripts/cyan-skillfish-performance-mode
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's|host: ||p')"
+}
+
+build() {
+  cd "$srcdir/cyan-skillfish-governor-$pkgver"
+  export CYAN_SKILLFISH_GOVERNOR_VERSION="$pkgver"
+  cargo build --frozen --release --all-features
+}
+
+package() {
+  cd "$srcdir/cyan-skillfish-governor-$pkgver"
+  install -Dm755 target/release/cyan-skillfish-governor-smu "$pkgdir/usr/bin/cyan-skillfish-governor-smu"
+  install -Dm755 scripts/cyan-skillfish-performance-mode "$pkgdir/usr/bin/cyan-skillfish-performance-mode"
+  install -Dm644 com.cyanskillfish.Governor.conf \
+    "$pkgdir/usr/share/dbus-1/system.d/com.cyanskillfish.Governor.conf"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 default-config.toml "$pkgdir/etc/cyan-skillfish-governor-smu/config.toml"
+}

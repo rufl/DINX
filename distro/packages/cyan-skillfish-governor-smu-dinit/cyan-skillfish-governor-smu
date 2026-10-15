@@ -1,0 +1,8 @@
+type               = process
+command            = /usr/local/libexec/dinx-cyan-skillfish-governor
+restart            = false
+smooth-recovery    = true
+logfile            = /var/log/dinit/cyan-skillfish-governor-smu.log
+depends-on         = dbus
+depends-on         = local.target
+before             = login.target

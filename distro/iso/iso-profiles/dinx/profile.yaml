@@ -37,10 +37,11 @@ rootfs:
     - gvfs-smb
     - greetd
     - greetd-regreet
-    - grub
-    - mangowm
+    - linux-firmware-amdgpu
     - mesa
     - networkmanager
+    - vulkan-radeon
+    - vulkan-tools
     - nano
     - noctty
     - foot
@@ -98,6 +99,8 @@ rootfs:
     - zathura
     - zathura-pdf-mupdf
     - mkinitcpio-nfs-utils
+    - cyan-skillfish-governor-smu
+    - cyan-skillfish-governor-smu-dinit
   packages-init:
     dinit:
       - userspawn-dinit
@@ -111,6 +114,7 @@ rootfs:
       - wireplumber-dinit
       - greetd-dinit
       - artix-live-dinit
+      - cyan-skillfish-governor-smu-dinit
 livefs:
   packages:
     - artix-grub-live
@@ -126,3 +130,4 @@ livefs:
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit
+      - cyan-skillfish-governor-smu-dinit

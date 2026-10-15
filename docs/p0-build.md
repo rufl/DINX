@@ -85,7 +85,7 @@ Run [38628961983](https://github.com/rufl/DINX/actions/runs/38628961983) on comm
 
 ## Observed removable-media extension
 
-Run [38639586656](https://github.com/rufl/DINX/actions/runs/38639586656) on commit `07aad814912058e9f22c0826b9e4b0006e7d00d3` passed after pinning the release workflow to the build containing `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin` and Tumbler. The payload check confirmed the backend/plugin files and rejected installed systemd package metadata/runtime; persistent install smoke, attestation and artifact upload also passed.
+Run [38700095287](https://github.com/rufl/DINX/actions/runs/38700095287) on commit `f2acffbf77e7242fbf16848b58dff8ef8aa63bab` passed with the removable-media stack plus File Roller and Nano. The payload check confirmed File Roller through the Thunar archive plugin and the Nano recovery editor, rejected installed systemd package metadata/runtime, and the persistent install smoke, attestation and artifact upload also passed.
 
 
 ## Observed development host

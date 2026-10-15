@@ -86,7 +86,7 @@ A execução [38628961983](https://github.com/rufl/DINX/actions/runs/38628961983
 
 ## Extensão de mídia removível observada
 
-A execução [38639586656](https://github.com/rufl/DINX/actions/runs/38639586656), no commit `07aad814912058e9f22c0826b9e4b0006e7d00d3`, passou após fixar o workflow de release no build que contém `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin` e Tumbler. A verificação do payload confirmou os arquivos dos backends/plugins e rejeitou metadados/runtime de pacotes systemd instalados; o smoke da instalação persistente, a atestação e o upload do artefato também passaram.
+A execução [38700095287](https://github.com/rufl/DINX/actions/runs/38700095287), no commit `f2acffbf77e7242fbf16848b58dff8ef8aa63bab`, passou com a stack de mídia removível, File Roller e Nano. A verificação do payload confirmou o File Roller pelo plugin de arquivos compactados do Thunar e o editor de recuperação Nano, rejeitou metadados/runtime de pacotes systemd instalados; o smoke da instalação persistente, a atestação e o upload do artefato também passaram.
 
 
 ## Host de desenvolvimento observado

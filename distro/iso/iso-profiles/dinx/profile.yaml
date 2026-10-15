@@ -45,6 +45,7 @@ rootfs:
     - nano
     - noctty
     - foot
+    - mangowm
     - noctalia
     - qt6-wayland
     - partitionmanager

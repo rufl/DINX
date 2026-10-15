@@ -42,6 +42,7 @@ required_paths=(
   etc/calamares/modules/welcome.conf
   etc/calamares/settings.conf
   etc/dinit.d/greetd
+  etc/dinit.d/bluetoothd
   etc/dinit.d/root-ro
   etc/greetd/regreet.toml
   etc/mango/dinx.conf
@@ -54,6 +55,30 @@ required_paths=(
   usr/bin/nano
   usr/bin/palemoon
   usr/bin/ffmpeg
+  usr/bin/btop
+  usr/bin/nvtop
+  usr/bin/zathura
+  usr/bin/pwvucontrol
+  usr/bin/blueman-manager
+  usr/bin/upower
+  usr/bin/inxi
+  usr/bin/lspci
+  usr/bin/lsusb
+  usr/bin/git
+  usr/bin/curl
+  usr/bin/less
+  usr/bin/jq
+  usr/bin/rsync
+  usr/bin/nm-connection-editor
+  usr/bin/swayimg
+  usr/share/applications/swayimg.desktop
+  usr/bin/wl-copy
+  usr/bin/wl-paste
+  usr/lib/bluetooth/bluetoothd
+  usr/lib/zathura/libpdf-mupdf.so
+  usr/share/applications/org.pwmt.zathura.desktop
+  usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
+  usr/share/applications/com.saivert.pwvucontrol.desktop
   usr/lib/palemoon/palemoon
   usr/share/applications/palemoon.desktop
   usr/share/icons/hicolor/128x128/apps/palemoon.png
@@ -135,6 +160,18 @@ grep -Fq '[theme.templates.user.palemoon_chrome]' <<<"$noctalia_config" || fail 
 grep -Fq '[theme.templates.user.palemoon_content]' <<<"$noctalia_config" || fail 'Pale Moon Noctalia content template is not configured'
 grep -Fq 'palemoon-userChrome.css' <<<"$noctalia_config" || fail 'Pale Moon Noctalia chrome output is not configured'
 grep -Fq 'palemoon-userContent.css' <<<"$noctalia_config" || fail 'Pale Moon Noctalia content output is not configured'
+grep -Fq '[bar]' <<<"$noctalia_config" || fail 'Noctalia bar defaults are missing'
+grep -Fq 'order = ["main"]' <<<"$noctalia_config" || fail 'Noctalia main bar is not first in creation order'
+grep -Fq '[bar.main]' <<<"$noctalia_config" || fail 'Noctalia main bar is not configured'
+grep -Fq 'position = "top"' <<<"$noctalia_config" || fail 'Noctalia main bar is not at the top'
+grep -Fq 'reserve_space = true' <<<"$noctalia_config" || fail 'Noctalia main bar does not reserve space'
+grep -Fq 'start = ["launcher", "workspaces"]' <<<"$noctalia_config" || fail 'Noctalia main bar launcher/workspace widgets are missing'
+grep -Fq 'screenshot' <<<"$noctalia_config" || fail 'Noctalia screenshot widget is not configured'
+grep -Fq '[shell.screenshot]' <<<"$noctalia_config" || fail 'Noctalia screenshot shell defaults are missing'
+grep -Fq 'copy_to_clipboard = true' <<<"$noctalia_config" || fail 'Noctalia screenshots are not copied to the clipboard'
+grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured'
+grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
+grep -Fq 'pinned = ["palemoon"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
 
 palemoon_profiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/profiles.ini")
 grep -Fq 'Path=dinx.default' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not selected by profiles.ini'
@@ -149,6 +186,8 @@ grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fai
 grep -Fq 'exec_once=lxqt-policykit-agent' <<<"$mango_config" || fail 'Mango does not start the PolicyKit authentication agent'
 grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not start the Thunar volume monitor'
 grep -Fq 'bind=SUPER,Return,spawn,foot' <<<"$mango_config" || fail 'Mango fallback terminal shortcut is missing'
+grep -Fq 'tagrule=id:*,open_as_floating:1' <<<"$mango_config" || fail 'Mango does not open new windows floating'
+grep -Fq 'bind=SUPER,space,togglefloating,' <<<"$mango_config" || fail 'Mango floating toggle shortcut is missing'
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
 grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is missing'
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
@@ -157,6 +196,13 @@ grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar
 grep -Fq 'text/html=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTML handler'
 grep -Fq 'x-scheme-handler/http=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTPS handler'
+grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fail 'Zathura is not the default PDF handler'
+grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
+for omitted_path in usr/bin/grim usr/bin/slurp; do
+  if grep -Fq "/$omitted_path" <<<"$manifest"; then
+    fail "Noctalia screenshot flow must not duplicate omitted tool: $omitted_path"
+  fi
+done
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
@@ -227,4 +273,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops, static opaque Noctalia, Pale Moon with a Noctalia-generated dark/light skin, Thunar/GVFS MTP/SMB/GPhoto2/UDisks2 removable-media support, File Roller archive integration, Nano recovery editor, Tumbler thumbnails, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, pwvucontrol audio mixer, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

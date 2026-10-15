@@ -34,6 +34,16 @@ Pale Moon uses the documented Noctalia v5 app-template interface rather than par
 - a dark fallback ships in the profile, so Pale Moon remains usable when Noctalia is absent;
 - a palette or mode change is applied on the next Pale Moon restart. Noctalia does not forcibly restart the browser.
 
+DINX's Noctalia/Mango desktop contract is explicit:
+
+- Mango's tag rule opens new windows floating; `Super+Space` toggles the focused window back to tiled/floating state.
+- the Noctalia bar named `main` is reserved at the top and the application dock is reserved at the bottom;
+- NetworkManager, BlueZ, UPower and PipeWire back the Noctalia network, Bluetooth, battery and volume widgets;
+- Noctalia owns the screenshot and clipboard surfaces; `wl-copy`/`wl-paste` remain a CLI complement, while `grim`/`slurp` are not duplicated.
+
+The standalone `nm-connection-editor`, Blueman and pwvucontrol applications remain available for full connection, Bluetooth and per-stream audio configuration.
+
+
 ## Level 3 — deeper integration
 
 Optional features may use documented Noctalia interfaces:
@@ -58,6 +68,8 @@ The test suite should cover observable contracts rather than implementation deta
 | Theme change | a supported update path changes the application without data loss |
 | Pale Moon theme | Noctalia v5 renders the active semantic palette into `userChrome.css` and `userContent.css` |
 | Pale Moon reload | the generated skin is visible after the next Pale Moon restart |
+| Desktop layout | Mango opens new windows floating; Noctalia reserves the top bar and bottom dock |
+| Shell utilities | Noctalia provides screenshot/clipboard UI; `wl-clipboard` provides CLI copy/paste |
 | Fallback | applications remain usable when Noctalia is absent |
 | IPC failure | unavailable or malformed optional IPC does not block startup |
 | Keyboard access | primary actions work without pointer input |

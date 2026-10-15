@@ -8,6 +8,7 @@ live-session:
     - metalog
     - NetworkManager
     - greetd
+    - bluetoothd
   user-services:
     - dbus
     - pipewire
@@ -64,12 +65,33 @@ rootfs:
     - xdg-desktop-portal
     - xdg-desktop-portal-wlr
     - xorg-xwayland
+    - bluez
+    - bluez-utils
+    - blueman
+    - btop
+    - curl
+    - git
+    - inxi
+    - jq
+    - less
+    - nm-connection-editor
+    - nvtop
+    - pciutils
+    - pwvucontrol
+    - rsync
+    - swayimg
+    - upower
+    - usbutils
+    - wl-clipboard
+    - zathura
+    - zathura-pdf-mupdf
     - mkinitcpio-nfs-utils
   packages-init:
     dinit:
       - userspawn-dinit
       - metalog-dinit
       - networkmanager-dinit
+      - bluez-dinit
       - elogind-dinit
       - dbus-dinit
       - pipewire-dinit

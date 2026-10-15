@@ -25,6 +25,7 @@ on:
       - "scripts/deploy-ztash.sh"
       - "tools/dinx-qemu-launcher.c"
       - "scripts/check_palemoon.sh"
+      - "scripts/check_swayimg.sh"
       - "LICENSE"
 
 permissions:
@@ -52,6 +53,9 @@ jobs:
       - name: Verify pinned Pale Moon source and skin contract
         run: ./scripts/check_palemoon.sh
 
+      - name: Verify pinned swayimg source and package contract
+        run: ./scripts/check_swayimg.sh
+
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
@@ -74,6 +78,7 @@ jobs:
                 iso-profiles \
                 mkinitcpio \
                 base-devel \
+                bash-completion \
                 curl \
                 cairo \
                 cjson \
@@ -82,18 +87,25 @@ jobs:
                 glib2 \
                 glslang \
                 gtk-layer-shell \
+                fontconfig \
+                freetype2 \
                 gtk3 \
                 gtksourceview4 \
+                hicolor-icon-theme \
                 libdisplay-info \
                 libdrm \
                 libepoxy \
+                libjpeg-turbo \
                 libglvnd \
                 libinput \
                 libliftoff \
+                libpng \
                 libxcb \
                 libxkbcommon \
+                luajit \
                 mesa \
                 meson \
+                ninja \
                 pango \
                 pcre2 \
                 pixman \
@@ -141,8 +153,7 @@ jobs:
               build_package noctty
               pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
               build_package palemoon
-
-
+              build_package swayimg
               build_package wlroots0.20
               pacman -U --noconfirm "$package_repo"/wlroots0.20-*.pkg.tar.zst
               build_package scenefx

@@ -16,6 +16,61 @@ output_path = "~/.moonchild productions/pale moon/dinx.default/chrome/userChrome
 input_path = "$XDG_CONFIG_HOME/noctalia/templates/palemoon-userContent.css"
 output_path = "~/.moonchild productions/pale moon/dinx.default/chrome/userContent.css"
 
+[bar]
+order = ["main"]
+
+[bar.main]
+position = "top"
+enabled = true
+reserve_space = true
+layer = "top"
+thickness = 36
+background_opacity = 1.0
+compositor_blur = false
+border = "outline"
+border_width = 1.0
+radius = 0
+concave_edge_corners = false
+margin_ends = 0
+margin_edge = 0
+padding = 12
+widget_spacing = 6
+capsule = true
+start = ["launcher", "workspaces"]
+center = ["clock"]
+end = ["screenshot", "clipboard", "network", "bluetooth", "volume", "battery", "notifications", "control-center", "session"]
+
+[widget.screenshot.actions]
+left = "screenshot-region"
+
+[widget.network]
+show_label = false
+
+[widget.bluetooth]
+show_label = false
+
+[widget.volume]
+show_label = true
+
+[widget.battery]
+type = "battery"
+display_mode = "glyph"
+show_label = true
+
+[widget.clipboard]
+glyph = "clipboard"
+
+[dock]
+enabled = true
+position = "bottom"
+reserve_space = true
+layer = "top"
+icon_size = 42
+margin_edge = 8
+margin_ends = 160
+launcher_position = "none"
+pinned = ["palemoon", "org.pwmt.zathura", "swayimg", "com.saivert.pwvucontrol", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
+
 [shell]
 settings_window_translucent = false
 
@@ -24,3 +79,8 @@ enabled = false
 
 [shell.panel]
 transparency_mode = "solid"
+
+[shell.screenshot]
+save_to_file = true
+copy_to_clipboard = true
+freeze_screen = true

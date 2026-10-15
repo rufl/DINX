@@ -1,0 +1,66 @@
+pkgname=swayimg
+pkgver=5.6
+pkgrel=2
+pkgdesc="A lightweight image viewer for Wayland display servers"
+arch=(x86_64)
+url="https://github.com/artemsen/swayimg"
+license=(MIT)
+depends=(
+  cairo
+  fontconfig
+  freetype2
+  glib2
+  hicolor-icon-theme
+  libjpeg-turbo
+  libpng
+  libxkbcommon
+  luajit
+  wayland
+)
+makedepends=(
+  bash-completion
+  meson
+  ninja
+  wayland-protocols
+)
+source=(
+  "swayimg-${pkgver}.tar.gz::https://github.com/artemsen/swayimg/archive/v${pkgver}.tar.gz"
+)
+sha256sums=('0f70cbc665217a747e8a098e1a881239e96df270930f47c262ab2ecff290e428')
+
+build() {
+  meson setup build "${srcdir}/${pkgname}-${pkgver}" \
+    --prefix=/usr \
+    --buildtype=plain \
+    -Davif=disabled \
+    -Dbash=enabled \
+    -Dcompositor=enabled \
+    -Ddesktop=true \
+    -Ddrm=disabled \
+    -Dexif=disabled \
+    -Dexr=disabled \
+    -Dgif=disabled \
+    -Dheif=disabled \
+    -Djpeg=enabled \
+    -Djp2=disabled \
+    -Djxl=disabled \
+    -Dman=true \
+    -Dpng=enabled \
+    -Draw=disabled \
+    -Dsixel=disabled \
+    -Dsvg=disabled \
+    -Dtests=disabled \
+    -Dtiff=disabled \
+    -Dversion="${pkgver}" \
+    -Dvideo=disabled \
+    -Dwebp=disabled \
+    -Dwayland=enabled \
+    -Dzsh=disabled
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir="${pkgdir}"
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

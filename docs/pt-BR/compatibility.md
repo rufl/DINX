@@ -34,6 +34,16 @@ O Pale Moon usa a interface documentada de templates de aplicativos do Noctalia 
 - um fallback escuro acompanha o perfil, portanto o Pale Moon continua utilizável sem o Noctalia;
 - uma mudança de paleta ou modo é aplicada no próximo reinício do Pale Moon. O Noctalia não força o reinício do navegador.
 
+O contrato de desktop Noctalia/Mango da DINX é explícito:
+
+- a regra de tags do Mango abre novas janelas como flutuantes; `Super+Space` alterna a janela focada de volta entre tiled/flutuante;
+- a barra Noctalia chamada `main` reserva o topo e o dock de aplicativos reserva a parte inferior;
+- NetworkManager, BlueZ, UPower e PipeWire alimentam os widgets de rede, Bluetooth, bateria e volume do Noctalia;
+- o Noctalia é dono das superfícies de captura de tela e clipboard; `wl-copy`/`wl-paste` continuam como complemento de CLI, enquanto `grim`/`slurp` não são duplicados.
+
+Os aplicativos independentes `nm-connection-editor`, Blueman e pwvucontrol continuam disponíveis para configuração completa de conexões, Bluetooth e áudio por stream.
+
+
 ## Nível 3 — integração avançada
 
 Recursos opcionais podem usar interfaces documentadas do Noctalia:
@@ -58,6 +68,8 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Mudança de tema | um caminho suportado altera o aplicativo sem perda de dados |
 | Tema do Pale Moon | O Noctalia v5 renderiza a paleta semântica ativa em `userChrome.css` e `userContent.css` |
 | Recarregamento do Pale Moon | a skin gerada aparece após o próximo reinício do Pale Moon |
+| Layout do desktop | Mango abre novas janelas como flutuantes; Noctalia reserva a barra superior e o dock inferior |
+| Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |
 | Acesso por teclado | ações principais funcionam sem entrada de ponteiro |

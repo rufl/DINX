@@ -84,19 +84,9 @@
      );
      var whiptail_command_buffer: [1024]u8 = undefined;
      const whiptail_command = try std.fmt.bufPrint(
+@@ -72,1 +72,1 @@
+-        "exec \"{s}\" -interactive ':memory:' " ++
++        "TERM=dumb; export TERM; exec \"{s}\" -interactive ':memory:' " ++
 @@ -172,1 +172,1 @@
 -    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
 +    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "SQLite-" };
-@@ -345,1 +345,11 @@
--        return error.SystemTuiStyleAssertionsFailed;
-+        {
-+            for (cases, outcomes) |case, outcome| {
-+                std.debug.print(
-+                    "system_tui_style app={s} styled_cells={d} nonblank_cells={d} " ++
-+                        "alternate_screen={} foreground_identity={}\n",
-+                    .{ @tagName(case.app), outcome.styled_cells, outcome.nonblank_cells,
-+                        outcome.alternate_screen, outcome.foreground_identity },
-+                );
-+            }
-+            return error.SystemTuiStyleAssertionsFailed;
-+        }

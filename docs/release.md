@@ -15,7 +15,7 @@ the pinned source.
 
 ## Current validated snapshot
 
-The latest successful P0 workflow is [run 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), on commit `8a28eb3`. It passed the BC250 Control Center v1.21.1 contract, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The workflow artifact is `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`; it remains a validation artifact, not a stable hardware release.
+The latest successful P0 workflow is [run 38753069331](https://github.com/rufl/DINX/actions/runs/38753069331), on commit `b0e3040`. It passed the Firefox pro-user policy, BC250 Control Center v1.21.1 contract, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The workflow artifact is `dinx-foundation-iso-b0e3040f8294f2e7c45fc3ce3c4b5fe84e6aa1e4`; it remains a validation artifact, not a stable hardware release.
 
 ## Published assets
 
@@ -53,8 +53,8 @@ checksum from an older package or a different release:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.4'
-$zipName = 'dinx-0.1.0-alpha.4-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.5'
+$zipName = 'dinx-0.1.0-alpha.5-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -114,7 +114,7 @@ The package metadata targets the registered `ddjarin` Windows receiver. On the t
 owner machine, preview the immutable assignment first:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.1
+scripts/deploy-ztash.sh v0.1.0-alpha.5
 ```
 
 The script reads the release metadata, verifies the HTTPS URL, package SHA-256, size,
@@ -124,7 +124,7 @@ mode. It never prints the token and never creates credentials.
 After reviewing the preview, apply explicitly:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.1 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.5 --apply
 ```
 
 The operation requires the owner-private DDJARIN token in

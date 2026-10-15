@@ -16,7 +16,7 @@ fixada.
 
 ## Snapshot validado atual
 
-O workflow P0 mais recente aprovado é a [execução 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), no commit `8a28eb3`. Ele passou o contrato do BC250 Control Center v1.21.1, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. O artefato do workflow é `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`; ele continua sendo um artefato de validação, não um release estável para hardware.
+O workflow P0 mais recente aprovado é a [execução 38753069331](https://github.com/rufl/DINX/actions/runs/38753069331), no commit `b0e3040`. Ele passou a política pró-user do Firefox, o contrato do BC250 Control Center v1.21.1, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. O artefato do workflow é `dinx-foundation-iso-b0e3040f8294f2e7c45fc3ce3c4b5fe84e6aa1e4`; ele continua sendo um artefato de validação, não um release estável para hardware.
 
 ## Artefatos publicados
 
@@ -54,8 +54,8 @@ checksum de um pacote ou release anterior:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.4'
-$zipName = 'dinx-0.1.0-alpha.4-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.5'
+$zipName = 'dinx-0.1.0-alpha.5-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -116,7 +116,7 @@ Os metadados do pacote apontam para o receptor Windows registrado `ddjarin`. Na 
 do proprietário, faça primeiro o preview da atribuição imutável:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.1
+scripts/deploy-ztash.sh v0.1.0-alpha.5
 ```
 
 O script lê os metadados do release, verifica URL HTTPS, SHA-256, tamanho, target e
@@ -126,7 +126,7 @@ imprime o token e nunca cria credenciais.
 Depois de revisar o preview, aplique explicitamente:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.1 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.5 --apply
 ```
 
 A operação exige o token privado do proprietário para DDJARIN em `ZEER_TOKEN_FILE`

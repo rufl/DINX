@@ -58,25 +58,7 @@
                  break :identity true;
          }
          break :identity false;
-@@ -408,7 +408,8 @@
-         buffer,
-         "HOME={s}/{s}-home;CODEX_HOME={s}/{s}-codex;" ++
-             "XDG_CONFIG_HOME={s}/{s}-config;XDG_STATE_HOME={s}/{s}-state;" ++
--            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache",
-+            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache;" ++
-+            "INFOPATH={s}/system",
-         .{
-             scratch,
-             app,
-@@ -422,6 +423,7 @@
-             app,
-             scratch,
-             app,
-+            scratch,
-         },
-     );
- }
-@@ -439,1 +440,12 @@
+@@ -439,1 +439,12 @@
 +fn containsIgnoreCase(haystack: []const u8, needle: []const u8) bool {
 +    if (needle.len == 0) return true;
 +    if (needle.len > haystack.len) return false;
@@ -91,6 +73,17 @@
  fn allMarkersPresent(grid: Vt.Grid, markers: []const []const u8) bool {
 --- a/src/terminal/SystemTuiQualification.zig
 +++ b/src/terminal/SystemTuiQualification.zig
+@@ -49,8 +49,8 @@
+     var info_command_buffer: [1024]u8 = undefined;
+     const info_command = try std.fmt.bufPrint(
+         &info_command_buffer,
+-        "exec \"{s}\" --file=dir",
+-        .{info_path},
++        "exec \"{s}\" --file=\"{s}/dir\"",
++        .{ info_path, scratch },
+     );
+     var whiptail_command_buffer: [1024]u8 = undefined;
+     const whiptail_command = try std.fmt.bufPrint(
 @@ -172,1 +172,1 @@
 -    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
 +    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "SQLite-" };

@@ -155,7 +155,7 @@ printf '%s\n' \
   '.SH DESCRIPTION' \
   'Deterministic installed man pager fixture for NOCTTY.' \
   >"$work_dir/system/noctty-system.1"
-system_output=$(INFOPATH="$work_dir/system${INFOPATH:+:$INFOPATH}" TERM=xterm-256color "$source_dir/zig-out/bin/noctty-terminal-system-tui-qualification" \
+system_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/noctty-terminal-system-tui-qualification" \
   "$work_dir/system" "$top_path" "$watch_path" "$info_path" "$whiptail_path" \
   "$fzf_path" "$sqlite_path" "$glances_path" "$bash_path" "$man_path" \
   "$less_path" "$sftp_path" "$sftp_server_path")

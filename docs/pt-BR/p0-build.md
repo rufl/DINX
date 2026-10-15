@@ -31,7 +31,7 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 3. instala QEMU e ferramentas de inspeção de ISO no runner Ubuntu;
 4. executa Artix em um container privilegiado;
 5. instala `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, VTE 2.91 (`vte3`) para o binário de smoke headless do Noctty, o runtime `libghostty-vt.so` do Ghostty e as dependências de build fixadas do MangoWM/Scenefx;
-6. compila o payload de pacotes Artix fixado para topgrade, paru e Shelly, o release fonte BC250 Control Center v1.21.1, o governor Cyan Skillfish e sua integração dinit; então compila o pacote nativo `noctty`, que contém NOCTTY e NoctEd, wlroots 0.20.2, MangoWM e Scenefx a partir do repositório pacman local temporário, e executa os marcadores de smoke headless de PTY/VT/sessão de terminal da fonte fixada mais a qualificação de sessão com accounting de allocator (quatro ciclos normais e um forçado);
+6. compila o payload de pacotes Artix fixado para topgrade, paru e Shelly, o release fonte BC250 Control Center v1.21.1, o governor Cyan Skillfish e sua integração dinit; então compila o pacote nativo `noctty`, que contém NOCTTY e NoctEd, wlroots 0.20.2, MangoWM e Scenefx a partir do repositório pacman local temporário, e executa os marcadores de smoke headless de PTY/VT/sessão de terminal da fonte fixada, a qualificação de sessão com contabilização do allocator (quatro ciclos normais e um forçado) e a qualificação de compatibilidade de protocolo/Unicode;
 7. executa o probe de pré-requisitos;
 8. constrói a ISO com `buildiso`;
 9. valida os payloads SquashFS do root e da sessão live;

@@ -26,8 +26,20 @@ build() {
   zig build -Doptimize=ReleaseSafe
   zig build -Doptimize=ReleaseSafe noctty-smoke-binary
   zig build -Doptimize=ReleaseSafe terminal-session-qualification-binary
+  zig build -Doptimize=ReleaseSafe terminal-compatibility-binary
   smoke_binary="$srcdir/$pkgname-$pkgver/zig-out/bin/noctty-smoke"
   qualification_binary="$srcdir/$pkgname-$pkgver/zig-out/bin/noctty-terminal-session-qualification"
+  compatibility_binary="$srcdir/$pkgname-$pkgver/zig-out/bin/noctty-terminal-compatibility"
+  [[ -x "$compatibility_binary" ]] || {
+    printf 'PKGBUILD: missing Noctty compatibility binary: %s\n' "$compatibility_binary" >&2
+    return 1
+  }
+  compatibility_output="$("$compatibility_binary")"
+  printf '%s\n' "$compatibility_output"
+  grep -Fq 'terminal_compatibility mode=' <<<"$compatibility_output"
+  grep -Fq 'protocol_cases=23 schedules=6 protocol_runs=138' <<<"$compatibility_output"
+  grep -Fq 'malformed_cases=128 malformed_bytes=524288 unicode_mutations=256 grapheme_cases=766' <<<"$compatibility_output"
+  grep -Fq 'state_diff=true replies=true modes=true sgr=true osc8=true osc52_blocked=true c1=true parser_bounds=true allocator_leak_free=true allocator_residual_bytes=0 assertions=true' <<<"$compatibility_output"
   [[ -x "$qualification_binary" ]] || {
     printf 'PKGBUILD: missing Noctty session qualification binary: %s\n' "$qualification_binary" >&2
     return 1

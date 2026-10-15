@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@10f55d8452128764cd6e86c75a147f7e598cdf36 # pin P1 workflow with dinit and Thunar/GVFS removable-media extras
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@59975bb8bb6b3ae330759eb95d6476f08d62b7e3 # pin P1 workflow with File Roller, Nano, dinit and Thunar/GVFS removable-media extras
     permissions:
       contents: read
       id-token: write

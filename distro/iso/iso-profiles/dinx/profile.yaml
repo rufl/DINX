@@ -88,6 +88,8 @@ rootfs:
     - strawberry
     - swayimg
     - topgrade
+    - vlc
+    - vlc-cli
     - ufw
     - ufw-dinit
     - upower

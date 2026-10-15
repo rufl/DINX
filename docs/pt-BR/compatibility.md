@@ -77,7 +77,7 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 
 ## Gate de release da P2 — Noctty
 
-O gate da P2 combina `zig build test`, qualificação de PTY/sessão com contabilização do allocator, qualificação determinística de protocolo/Unicode, fairness do GLib e paste grande, a matriz de TUIs instaladas em ReleaseSafe e `scripts/check_noctty_integration.sh`. A matriz instalada exercita Vim, nano, less, dialog, top, watch, info, whiptail, fzf, SQLite, Glances, Bash, man/less e SFTP local reais pelo caminho de PTY/VT de produção; os argumentos de lançamento tmux/Zellij usam shims determinísticos para manter o gate do pacote headless.
+O gate da P2 combina `zig build test`, qualificação de PTY/sessão com contabilização do allocator, qualificação determinística de protocolo/Unicode, fairness do GLib e paste grande, a matriz de TUIs instaladas em ReleaseSafe e `scripts/check_noctty_integration.sh`. A matriz instalada exercita Vim, nano, less, dialog, top, watch, whiptail, fzf, SQLite, Glances, Bash, man/less e SFTP local reais pelo caminho de PTY/VT de produção. Ela inicia primeiro o `info` instalado; em ambientes mínimos ou sem TTY, usa um fixture estilizado determinístico como fallback da superfície do `info`. Os argumentos de lançamento tmux/Zellij usam shims determinísticos para manter o gate do pacote headless.
 
 O runner de três aplicativos Codex/Vim/btop usa um fixture local da superfície do Codex no gate do pacote DINX. Isso prova os casos reais de Vim e btop sem autenticação, rede ou dependência de produto Codex; não é evidência de Codex autenticado.
 

@@ -145,7 +145,7 @@ mkdir -p "$work_dir/system"
 printf '%s\n' \
   'File: dir, Node: Top' \
   'NOCTTY_SYSTEM_INFO' \
-  >"$work_dir/system/dir"
+  >"$work_dir/system/noctty-system.info"
 printf '%s\n' alpha NOCTTY_FZF_TARGET omega >"$work_dir/system/fzf-input.txt"
 printf '%s\n' "PS1='NOCTTY_BASH> '" "printf 'NOCTTY_BASH_READY\\n'" >"$work_dir/system/bashrc"
 printf '%s\n' \

@@ -14,7 +14,7 @@ depends=('ghostty' 'gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 
 makedepends=('vte3' 'btop' 'dialog' 'fzf' 'glances' 'less' 'libnewt' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim')
 provides=('nocted' 'terminal-emulator')
 source=("$pkgname-$pkgver.tar.gz" "qualification-compat.patch")
-sha256sums=("$NOCTTY_SOURCE_SHA256" '03c70e3c4156d43a0e653d4cdb31be037048495afea9135825b490dd95d4f234')
+sha256sums=("$NOCTTY_SOURCE_SHA256" 'fa72dae4e03da3794951bd75ae0cae4ed2cf12ae84d7dc1f6df8f2ac54ae35b7')
 
 prepare() {
   cd "$srcdir/$pkgname-$pkgver"

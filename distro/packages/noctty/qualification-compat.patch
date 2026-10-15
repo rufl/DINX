@@ -79,7 +79,7 @@
          &info_command_buffer,
 -        "exec \"{s}\" --file=dir",
 -        .{info_path},
-+        "exec \"{s}\" --file=\"{s}/dir\"",
++        "exec \"{s}\" --file=\"{s}/noctty-system.info\"",
 +        .{ info_path, scratch },
      );
      var whiptail_command_buffer: [1024]u8 = undefined;

@@ -54,7 +54,7 @@ required_paths=(
   usr/bin/foot
   usr/bin/file-roller
   usr/bin/nano
-  usr/bin/palemoon
+  usr/bin/firefox
   usr/bin/ffmpeg
   usr/bin/btop
   usr/bin/nvtop
@@ -127,15 +127,8 @@ required_paths=(
   usr/share/applications/org.pwmt.zathura.desktop
   usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
-  usr/lib/palemoon/palemoon
-  usr/share/applications/palemoon.desktop
-  usr/share/icons/hicolor/128x128/apps/palemoon.png
-  etc/skel/.config/noctalia/templates/palemoon-userChrome.css
-  etc/skel/.config/noctalia/templates/palemoon-userContent.css
-  "etc/skel/.moonchild productions/pale moon/profiles.ini"
-  "etc/skel/.moonchild productions/pale moon/dinx.default/user.js"
-  "etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userChrome.css"
-  "etc/skel/.moonchild productions/pale moon/dinx.default/chrome/userContent.css"
+  usr/share/applications/firefox.desktop
+  etc/firefox/policies/policies.json
   usr/local/bin/dinx-terminal
   usr/share/applications/dinx-terminal-fallback.desktop
   usr/bin/udisksctl
@@ -204,10 +197,6 @@ grep -Fq 'enabled = false' <<<"$noctalia_config" || fail 'Noctalia animations ar
 grep -Fq 'settings_window_translucent = false' <<<"$noctalia_config" || fail 'Noctalia Settings transparency is not disabled by default'
 grep -Fq '[shell.panel]' <<<"$noctalia_config" || fail 'Noctalia panel defaults are missing'
 grep -Fq 'transparency_mode = "solid"' <<<"$noctalia_config" || fail 'Noctalia panel transparency is not disabled by default'
-grep -Fq '[theme.templates.user.palemoon_chrome]' <<<"$noctalia_config" || fail 'Pale Moon Noctalia chrome template is not configured'
-grep -Fq '[theme.templates.user.palemoon_content]' <<<"$noctalia_config" || fail 'Pale Moon Noctalia content template is not configured'
-grep -Fq 'palemoon-userChrome.css' <<<"$noctalia_config" || fail 'Pale Moon Noctalia chrome output is not configured'
-grep -Fq 'palemoon-userContent.css' <<<"$noctalia_config" || fail 'Pale Moon Noctalia content output is not configured'
 grep -Fq '[bar]' <<<"$noctalia_config" || fail 'Noctalia bar defaults are missing'
 grep -Fq 'order = ["main"]' <<<"$noctalia_config" || fail 'Noctalia main bar is not first in creation order'
 grep -Fq '[bar.main]' <<<"$noctalia_config" || fail 'Noctalia main bar is not configured'
@@ -221,7 +210,7 @@ grep -Fq 'swayimg", "vlc", "org.strawberrymusicplayer.strawberry"' <<<"$noctalia
 grep -Fq 'com.shellyorg.shelly' <<<"$noctalia_config" || fail 'Noctalia dock does not pin Shelly'
 grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured'
 grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
-grep -Fq 'pinned = ["palemoon"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
+grep -Fq 'pinned = ["firefox"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
 grep -Fq 'io.github.movacx.bc250-control-center' <<<"$noctalia_config" || fail 'Noctalia dock does not pin BC250 Control Center'
 
 ufw_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/ufw/ufw.conf)
@@ -239,11 +228,6 @@ grep -Fq 'max = 1850' <<<"$governor_config" || fail 'Cyan Skillfish governor max
 grep -Fq '/etc/dinit.d/boot.d/cyan-skillfish-governor-smu' <<<"$manifest" || fail 'Cyan Skillfish governor is not enabled in the rootfs dinit boot set'
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
 grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
-palemoon_profiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/profiles.ini")
-grep -Fq 'Path=dinx.default' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not selected by profiles.ini'
-grep -Fq 'Default=1' <<<"$palemoon_profiles" || fail 'Pale Moon DINX profile is not the default profile'
-palemoon_user_js=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/.moonchild productions/pale moon/dinx.default/user.js")
-grep -Fq 'toolkit.legacyUserProfileCustomizations.stylesheets' <<<"$palemoon_user_js" || fail 'Pale Moon custom stylesheet preference is missing'
 
 mango_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/mango/dinx.conf)
 grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two virtual desktops'
@@ -252,7 +236,7 @@ grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fai
 grep -Fq 'exec_once=lxqt-policykit-agent' <<<"$mango_config" || fail 'Mango does not start the PolicyKit authentication agent'
 grep -Fq 'exec_once=bc250-control-centerd' <<<"$mango_config" || fail 'Mango does not autostart the BC250 user daemon'
 grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not start the Thunar volume monitor'
-grep -Fq 'bind=SUPER,Return,spawn,foot' <<<"$mango_config" || fail 'Mango fallback terminal shortcut is missing'
+grep -Fq 'bind=SUPER,Return,spawn,dinx-terminal' <<<"$mango_config" || fail 'Mango terminal shortcut is missing'
 grep -Fq 'tagrule=id:*,open_as_floating:1' <<<"$mango_config" || fail 'Mango does not open new windows floating'
 grep -Fq 'bind=SUPER,space,togglefloating,' <<<"$mango_config" || fail 'Mango floating toggle shortcut is missing'
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
@@ -260,9 +244,9 @@ grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is 
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
-grep -Fq 'text/html=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTML handler'
-grep -Fq 'x-scheme-handler/http=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTP handler'
-grep -Fq 'x-scheme-handler/https=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTPS handler'
+grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
+grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
+grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
 grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fail 'Zathura is not the default PDF handler'
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
 grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
@@ -343,4 +327,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano and Tumbler.\n'

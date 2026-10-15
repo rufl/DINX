@@ -49,7 +49,7 @@ rootfs:
     - noctalia
     - qt6-wayland
     - partitionmanager
-    - palemoon
+    - firefox
     - pipewire
     - pipewire-pulse
     - polkit

@@ -13,7 +13,7 @@ Obrigatório para as primeiras versões utilizáveis dos aplicativos:
 - Nocted possui uma entrada `.desktop` válida e aparece no launcher do Noctalia.
 - Nocted suporta abertura normal por arquivos `.desktop` e argumentos de arquivo/linha quando implementados.
 - Ambos seguem navegação de teclado padrão e locais XDG.
-- O Pale Moon é descoberto como manipulador padrão de HTML e HTTP/HTTPS.
+- Firefox é descoberto como o manipulador padrão de HTML, XHTML e HTTP/HTTPS.
 
 ## Nível 2 — integração visual
 
@@ -25,14 +25,8 @@ Os aplicativos consomem um formato ou adaptador documentado do Dinx Theme:
 - escolhas de fonte e ícones quando a plataforma as expuser.
 
 O formato de tema é um contrato externo. Os aplicativos não devem interpretar arquivos de configuração privados do Noctalia como se fossem APIs estáveis. O recarregamento do tema deve ser explícito: por um caminho documentado monitorado ou por uma ação visível de recarregar.
+O Firefox acompanha `/etc/firefox/policies/policies.json`. A política remove superfícies patrocinadas da Nova Aba/Suggest, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado. Firefox Accounts continua opcional e controlado pelo usuário; as atualizações normais do navegador permanecem habilitadas.
 
-O Pale Moon usa a interface documentada de templates de aplicativos do Noctalia v5, em vez de interpretar a configuração privada do shell:
-
-- `palemoon-userChrome.css` mapeia os tokens semânticos de superfície, primeiro plano, destaque, hover e contorno do Noctalia para o chrome do navegador;
-- `palemoon-userContent.css` aplica os mesmos tokens às superfícies internas de página vazia/inicial/nova aba do Pale Moon;
-- o Noctalia renderiza os dois arquivos no perfil DINX pré-criado no caminho padrão de perfil do Pale Moon;
-- um fallback escuro acompanha o perfil, portanto o Pale Moon continua utilizável sem o Noctalia;
-- uma mudança de paleta ou modo é aplicada no próximo reinício do Pale Moon. O Noctalia não força o reinício do navegador.
 
 O contrato de desktop Noctalia/Mango da DINX é explícito:
 
@@ -69,8 +63,8 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Argumentos de inicialização | comportamento de arquivo, linha e diretório de trabalho é determinístico |
 | Importação de tema | um fixture de tema documentado produz as cores semânticas esperadas |
 | Mudança de tema | um caminho suportado altera o aplicativo sem perda de dados |
-| Tema do Pale Moon | O Noctalia v5 renderiza a paleta semântica ativa em `userChrome.css` e `userContent.css` |
-| Recarregamento do Pale Moon | a skin gerada aparece após o próximo reinício do Pale Moon |
+| Firefox padrão | Firefox é o manipulador padrão de HTML/XHTML/HTTP/HTTPS |
+| Política pró-user do Firefox | `policies.json` é analisado e desativa superfícies patrocinadas, Pocket/Stories, telemetria, recomendações, superfícies de assistente de IA e IP Protection integrado sem desativar atualizações |
 | Layout do desktop | Mango abre novas janelas como flutuantes; Noctalia reserva a barra superior e o dock inferior |
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
 | Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |

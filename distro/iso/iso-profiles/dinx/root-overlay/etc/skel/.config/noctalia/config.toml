@@ -8,13 +8,6 @@ builtin_ids = []
 enable_community_templates = false
 community_ids = []
 
-[theme.templates.user.palemoon_chrome]
-input_path = "$XDG_CONFIG_HOME/noctalia/templates/palemoon-userChrome.css"
-output_path = "~/.moonchild productions/pale moon/dinx.default/chrome/userChrome.css"
-
-[theme.templates.user.palemoon_content]
-input_path = "$XDG_CONFIG_HOME/noctalia/templates/palemoon-userContent.css"
-output_path = "~/.moonchild productions/pale moon/dinx.default/chrome/userContent.css"
 
 [bar]
 order = ["main"]
@@ -69,7 +62,7 @@ icon_size = 42
 margin_edge = 8
 margin_ends = 160
 launcher_position = "none"
-pinned = ["palemoon", "io.github.movacx.bc250-control-center", "org.pwmt.zathura", "swayimg", "vlc", "org.strawberrymusicplayer.strawberry", "com.saivert.pwvucontrol", "com.shellyorg.shelly", "gufw", "qps", "opensnitch_ui", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
+pinned = ["firefox", "io.github.movacx.bc250-control-center", "org.pwmt.zathura", "swayimg", "vlc", "org.strawberrymusicplayer.strawberry", "com.saivert.pwvucontrol", "com.shellyorg.shelly", "gufw", "qps", "opensnitch_ui", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
 
 [shell]
 settings_window_translucent = false

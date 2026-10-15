@@ -1,9 +1,9 @@
 [Default Applications]
 inode/directory=thunar.desktop;
-text/html=palemoon.desktop;
-application/xhtml+xml=palemoon.desktop;
-x-scheme-handler/http=palemoon.desktop;
-x-scheme-handler/https=palemoon.desktop;
+text/html=firefox.desktop;
+application/xhtml+xml=firefox.desktop;
+x-scheme-handler/http=firefox.desktop;
+x-scheme-handler/https=firefox.desktop;
 application/pdf=org.pwmt.zathura.desktop;
 application/epub+zip=org.pwmt.zathura.desktop;
 image/png=swayimg.desktop;

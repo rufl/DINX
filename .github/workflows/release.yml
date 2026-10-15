@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     name: Build and smoke-test release ISO
-    uses: rufl/DINX/.github/workflows/p0-iso.yml@1f6b80e7820b6a8b36f1a90527fdee1956a90036 # pin P1 workflow with Artix-native package managers, Cyan Skillfish/BC-250 firmware and dinit governor, Pale Moon, Noctalia skin, FFmpeg, VLC, Strawberry, Swayimg, diagnostics, firewall tools and Thunar/GVFS removable-media extras
+    uses: rufl/DINX/.github/workflows/p0-iso.yml@188c0a2ae2bed3c7244184bee1224ef646e1189f # pin P1 workflow with Artix-native package managers, Cyan Skillfish/BC-250 firmware and dinit governor, Pale Moon, Noctalia skin, FFmpeg, VLC, Strawberry, Swayimg, diagnostics, firewall tools and Thunar/GVFS removable-media extras
     permissions:
       contents: read
       id-token: write

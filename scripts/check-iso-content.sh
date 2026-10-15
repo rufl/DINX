@@ -71,6 +71,11 @@ required_paths=(
   usr/bin/rsync
   usr/bin/nm-connection-editor
   usr/bin/swayimg
+  usr/bin/vlc
+  usr/bin/qvlc
+  usr/bin/strawberry
+  usr/share/applications/vlc.desktop
+  usr/share/applications/org.strawberrymusicplayer.strawberry.desktop
   usr/share/applications/swayimg.desktop
   usr/bin/wl-copy
   usr/bin/wl-paste
@@ -169,6 +174,7 @@ grep -Fq 'start = ["launcher", "workspaces"]' <<<"$noctalia_config" || fail 'Noc
 grep -Fq 'screenshot' <<<"$noctalia_config" || fail 'Noctalia screenshot widget is not configured'
 grep -Fq '[shell.screenshot]' <<<"$noctalia_config" || fail 'Noctalia screenshot shell defaults are missing'
 grep -Fq 'copy_to_clipboard = true' <<<"$noctalia_config" || fail 'Noctalia screenshots are not copied to the clipboard'
+grep -Fq 'swayimg", "vlc", "org.strawberrymusicplayer.strawberry"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin the multimedia players'
 grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured'
 grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
 grep -Fq 'pinned = ["palemoon"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
@@ -198,6 +204,8 @@ grep -Fq 'x-scheme-handler/http=palemoon.desktop;' <<<"$mimeapps_config" || fail
 grep -Fq 'x-scheme-handler/https=palemoon.desktop;' <<<"$mimeapps_config" || fail 'Pale Moon is not the default HTTPS handler'
 grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fail 'Zathura is not the default PDF handler'
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
+grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
+grep -Fq 'audio/flac=org.strawberrymusicplayer.strawberry.desktop;' <<<"$mimeapps_config" || fail 'Strawberry is not the default FLAC handler'
 for omitted_path in usr/bin/grim usr/bin/slurp; do
   if grep -Fq "/$omitted_path" <<<"$manifest"; then
     fail "Noctalia screenshot flow must not duplicate omitted tool: $omitted_path"
@@ -273,4 +281,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, pwvucontrol audio mixer, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctalia screenshot/clipboard controls, Pale Moon with a Noctalia-generated dark/light skin, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano, Tumbler, dark ReGreet/Calamares, KDE Partition Manager, greetd, and dinit payloads present without systemd or a full Xfce/LXQt session.\n'

@@ -78,6 +78,9 @@ rootfs:
     - nvtop
     - pciutils
     - pwvucontrol
+    - strawberry
+    - vlc
+    - vlc-cli
     - rsync
     - swayimg
     - upower

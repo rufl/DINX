@@ -41,7 +41,7 @@ O contrato de desktop Noctalia/Mango da DINX é explícito:
 - NetworkManager, BlueZ, UPower e PipeWire alimentam os widgets de rede, Bluetooth, bateria e volume do Noctalia;
 - o Noctalia é dono das superfícies de captura de tela e clipboard; `wl-copy`/`wl-paste` continuam como complemento de CLI, enquanto `grim`/`slurp` não são duplicados.
 
-Os aplicativos independentes `nm-connection-editor`, Blueman e pwvucontrol continuam disponíveis para configuração completa de conexões, Bluetooth e áudio por stream.
+Os aplicativos independentes `nm-connection-editor`, Blueman, pwvucontrol, VLC e Strawberry continuam disponíveis no dock/launcher do Noctalia para fluxos completos de conexão, Bluetooth, áudio por stream, vídeo e biblioteca musical.
 
 
 ## Nível 3 — integração avançada
@@ -70,6 +70,7 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Recarregamento do Pale Moon | a skin gerada aparece após o próximo reinício do Pale Moon |
 | Layout do desktop | Mango abre novas janelas como flutuantes; Noctalia reserva a barra superior e o dock inferior |
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
+| Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |
 | Acesso por teclado | ações principais funcionam sem entrada de ponteiro |

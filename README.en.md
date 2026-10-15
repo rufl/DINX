@@ -14,6 +14,7 @@ The initial platform target is **x86_64**, based on **Artix Linux with dinit**, 
 - **Noctty** — a terminal emulator with a Zig-owned UI and a proven terminal-emulation core.
 - **Nocted** — a lightweight code editor with syntax support, LSP and Git integration.
 - **Dinx Control** — graphical service and system management for dinit.
+- **BC250 Control Center** — upstream-based BC-250 telemetry, tuning and recovery UI packaged for DINX's Artix/dinit session.
 - **Dinx Theme** — versioned shared design tokens and application-integration contracts.
 
 The applications should integrate deeply with DINX while remaining usable on other Linux systems whenever their platform requirements are available.
@@ -63,6 +64,10 @@ scripts/
 
 The alpha does not require all first-party applications to be complete. A known-good bootable system takes priority over branding or advanced UI features.
 
+## Current phase
+
+**P1 — Public alpha 0.1 (active).** The P0 foundation gate is implemented and CI-proven for the Artix+dinit ISO, QEMU boot, graphical payload and disposable-disk installation contract. P1 remains open for public release metadata, package signing, hardware reports and qualification beyond the VM.
+
 ## Documentation
 
 - [Architecture](docs/architecture.md)
@@ -71,6 +76,7 @@ The alpha does not require all first-party applications to be complete. A known-
 - [Easy installation guide](docs/install.md)
 - [Security policy](SECURITY.md)
 - [P0 build status](docs/p0-build.md)
+- [Roadmap](docs/roadmap.md)
 - [Alpha release process](docs/release.md)
 - [ISO foundation](distro/iso/README.md)
 - [License](LICENSE)
@@ -85,4 +91,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The P0 foundation now includes pinned wlroots/MangoWM/Scenefx package builds, the Artix ISO workflow, payload/checksum validation, QEMU boot smoke and automated graphical login in a VM. The workflow also qualifies the persistent-install contract on a disposable BIOS disk with a dinit first boot and recovery TTY, and creates artifact attestations for the ISO and checksum. The image remains a validation live session; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain release gates.
+The latest successful P0 run, [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464) on commit `8a28eb3`, passed the BC250 Control Center v1.21.1 package contract, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain release gates.

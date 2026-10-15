@@ -13,6 +13,10 @@ their desktop/editor resources are in the ISO. The release path does not clone N
 or require a repository secret; update the archive and contract together when changing
 the pinned source.
 
+## Current validated snapshot
+
+The latest successful P0 workflow is [run 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), on commit `8a28eb3`. It passed the BC250 Control Center v1.21.1 contract, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The workflow artifact is `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`; it remains a validation artifact, not a stable hardware release.
+
 ## Published assets
 
 Each alpha release contains:

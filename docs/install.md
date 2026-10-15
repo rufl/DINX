@@ -5,6 +5,7 @@
 ## Current alpha status
 
 The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, upgrades, rollback or data preservation.
+The project is currently in **P1 — Public alpha 0.1**. The latest successful P0 validation is [run 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464); it includes the pinned BC250 Control Center v1.21.1 package and its DINX session integration.
 
 KDE Partition Manager is also available as a standalone graphical disk tool. Use it only to inspect or prepare a disk before opening Calamares, and verify the target device in both applications.
 
@@ -151,6 +152,10 @@ The password is intentionally public and disposable. Never reuse it on another s
 
 After login, the tested graphical state shows MangoWM with the Noctalia welcome screen. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
 Noctalia starts with animations, panel translucency and Settings-window translucency disabled. These are user preferences, not locks: change them later in Noctalia Settings. Mango starts with two virtual desktops; edit `~/.config/mango/config.conf` and change `tag_num` if more are needed.
+
+### BC250 Control Center
+
+After entering MangoWM, open **BC250 Control Center** from the Noctalia launcher or dock. DINX starts `bc250-control-centerd` once in the logged-in user session, so the daemon does not require a systemd unit or a root dinit service. It provides BC-250 telemetry and the upstream polkit-gated controls when the hardware and permissions are available. On dinit, upstream service persistence is detection-only; that limitation does not block the GUI or live readings.
 
 ## 5. Experimental persistent installation
 

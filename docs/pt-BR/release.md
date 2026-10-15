@@ -14,6 +14,10 @@ recursos desktop/editor estão na ISO. O caminho de release não clona o NOCTTY 
 segredo de repositório; atualize o archive e o contrato juntos quando alterar a origem
 fixada.
 
+## Snapshot validado atual
+
+O workflow P0 mais recente aprovado é a [execução 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), no commit `8a28eb3`. Ele passou o contrato do BC250 Control Center v1.21.1, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. O artefato do workflow é `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`; ele continua sendo um artefato de validação, não um release estável para hardware.
+
 ## Artefatos publicados
 
 Cada release alpha contém:

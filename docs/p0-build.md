@@ -69,14 +69,13 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Latest observed successful run
 
-Run [38732639377](https://github.com/rufl/DINX/actions/runs/38732639377) on commit `459ae46` passed every P0 workflow step in 24m13s:
+Run [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464) on commit `8a28eb3` passed every P0 workflow step in 25m24s:
 
-- ISO: `artix-dinx-dinit-20261015-x86_64.iso`;
+- ISO artifact: `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`;
 - Artix package-management contract: topgrade 17.12.3, paru 2.1.0 and Shelly 3.1.6, with no systemd dependencies;
 - Cyan Skillfish/BC-250 contract: AMDGPU/RADV/Vulkan payload, PCI `1002:13fe` detection and dinit governor;
-- QEMU boot smoke: 90 seconds, passed;
-- graphical payload verification, persistent-install/recovery-TTY smoke, provenance attestation and artifact upload: passed;
-- artifact: `dinx-foundation-iso-459ae46e6dcf80faceffac7d4765433349223b13`.
+- BC250 Control Center v1.21.1 contract: pinned MIT source, PyQt6/psutil runtime, GUI/CLI/daemon payload, Mango user-session autostart and no systemd payload;
+- QEMU boot smoke, graphical payload verification, persistent-install/recovery-TTY smoke, provenance attestation and artifact upload: passed.
 
 The workflow uploaded the ISO, checksum, QEMU log and VGA captures. The run proves the build and contracts; it does not prove physical BC-250 tuning or long-term hardware service health.
 

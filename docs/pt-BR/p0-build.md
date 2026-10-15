@@ -70,14 +70,13 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Última execução bem-sucedida observada
 
-A execução [38732639377](https://github.com/rufl/DINX/actions/runs/38732639377), no commit `459ae46`, concluiu todas as etapas do workflow P0 em 24m13s:
+A execução [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), no commit `8a28eb3`, concluiu todas as etapas do workflow P0 em 25m24s:
 
-- ISO: `artix-dinx-dinit-20261015-x86_64.iso`;
+- artefato ISO: `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`;
 - contrato de gerenciamento Artix: topgrade 17.12.3, paru 2.1.0 e Shelly 3.1.6, sem dependências systemd;
 - contrato Cyan Skillfish/BC-250: payload AMDGPU/RADV/Vulkan, detecção PCI `1002:13fe` e governor dinit;
-- smoke de boot no QEMU: 90 segundos, aprovado;
-- verificação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação de procedência e upload do artefato: aprovados;
-- artefato: `dinx-foundation-iso-459ae46e6dcf80faceffac7d4765433349223b13`.
+- contrato BC250 Control Center v1.21.1: fonte MIT fixada, runtime PyQt6/psutil, payload GUI/CLI/daemon, autostart na sessão do usuário Mango e nenhum payload systemd;
+- smoke de boot no QEMU, verificação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação de procedência e upload do artefato: aprovados.
 
 O workflow publicou a ISO, o checksum, o log QEMU e as capturas VGA. A execução prova o build e os contratos; não prova o ajuste físico em uma BC-250 nem a saúde do serviço em hardware por longo prazo.
 

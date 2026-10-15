@@ -4,9 +4,15 @@
 
 Milestones are capability gates, not calendar promises.
 
+## Current phase
+
+**P1 — public alpha 0.1 (active).** The P0 foundation gate is implemented and CI-proven for the ISO, QEMU boot, graphical payload and disposable-disk installation contract. P1 is the current project phase; its remaining gates are public release metadata, package signing, hardware reports and qualification beyond the VM.
+
 ## P0 — foundation
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
+
+**Status:** the ISO/VM foundation gate is complete. Hardware installation, upgrades, rollback and long-term hardware service health remain release gates.
 
 Backlog:
 
@@ -22,6 +28,8 @@ Backlog:
 ## P1 — public alpha 0.1
 
 **Goal:** distribute a known-good snapshot through the public GitHub project.
+
+**Status:** active. The current documentation and site-facing landing pages are part of this phase.
 
 Backlog:
 

@@ -4,9 +4,15 @@
 
 Os marcos são gates de capacidade, não promessas de calendário.
 
+## Fase atual
+
+**P1 — alpha pública 0.1 (ativa).** O gate da fundação P0 está implementado e comprovado pelo CI para a ISO, boot no QEMU, payload gráfico e contrato de instalação em disco descartável. A P1 é a fase atual do projeto; os gates restantes são metadados públicos de release, assinatura de pacotes, relatórios de hardware e qualificação além da VM.
+
 ## P0 — fundação
 
 **Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
+
+**Status:** o gate da fundação ISO/VM está concluído. Instalação em hardware, atualizações, rollback e saúde de serviços em hardware por longo prazo continuam gates de release.
 
 Backlog:
 
@@ -22,6 +28,8 @@ Backlog:
 ## P1 — alpha pública 0.1
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
+
+**Status:** ativa. A documentação atual e as páginas públicas do projeto fazem parte desta fase.
 
 Backlog:
 

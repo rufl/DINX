@@ -5,6 +5,7 @@
 ## Estado atual da alpha
 
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações, rollback ou preservação de dados.
+O projeto está atualmente na **P1 — alpha pública 0.1**. A última validação P0 aprovada é a [execução 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464); ela inclui o pacote BC250 Control Center v1.21.1 fixado e sua integração de sessão na DINX.
 
 O KDE Partition Manager também está disponível como particionador gráfico independente. Use-o somente para inspecionar ou preparar um disco antes de abrir o Calamares e confirme o dispositivo nas duas aplicações.
 
@@ -142,6 +143,10 @@ A senha é intencionalmente pública e descartável. Nunca a reutilize em outro 
 
 Após o login, o estado gráfico testado mostra MangoWM com a tela de boas-vindas do Noctalia. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
 O Noctalia inicia com animações, transparência dos painéis e transparência da janela de Settings desativadas. Isso são preferências do usuário, não bloqueios: altere-as depois em Settings do Noctalia. O Mango inicia com dois desktops virtuais; edite `~/.config/mango/config.conf` e altere `tag_num` se precisar de mais.
+
+### BC250 Control Center
+
+Depois de entrar no MangoWM, abra o **BC250 Control Center** pelo launcher ou dock do Noctalia. A DINX inicia `bc250-control-centerd` uma vez na sessão do usuário autenticado, portanto o daemon não exige unidade systemd nem serviço root dinit. Ele fornece telemetria da BC-250 e os controles upstream protegidos por polkit quando o hardware e as permissões estão disponíveis. No dinit, a persistência de serviços upstream é somente detecção; essa limitação não impede a GUI nem as leituras ao vivo.
 
 ## 5. Instalação persistente experimental
 

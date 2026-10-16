@@ -198,6 +198,17 @@ jobs:
               build_package topgrade
               build_package paru
               build_package shelly
+              . /workspace/distro/packages/noctty/source.env
+              icon_svg=/tmp/dinx-nocted-icon.svg
+              icon_png=/usr/share/icons/Adwaita/128x128/apps/com.noctty.NoctEd.png
+              tar -xOf \
+                "/workspace/distro/packages/noctty/noctty-${NOCTTY_VERSION}.tar.gz" \
+                "noctty-${NOCTTY_VERSION}/resources/com.noctty.NoctEd.svg" \
+                > "$icon_svg"
+              mkdir -p "$(dirname "$icon_png")"
+              rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"
+              gtk-update-icon-cache -f /usr/share/icons/Adwaita
+              rm -f "$icon_svg"
               build_package noctty
               pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
               build_package swayimg

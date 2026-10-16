@@ -14,6 +14,8 @@ recursos desktop/editor estão na ISO. O caminho de release não clona o NOCTTY 
 segredo de repositório; atualize o archive e o contrato juntos quando alterar a origem
 fixada.
 
+Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.sh`. Ele qualifica o core do editor Nocted, diagnósticos/navegação reais com `clangd`, os esquemas GTK/X11 nativos claro e escuro e marcadores limitados de status/diff do Git antes de o pacote ser elegível para o payload da ISO e o gate P0 de QEMU/instalação.
+
 ## Snapshot validado atual
 
 O workflow P0 mais recente aprovado é a [execução 38753069331](https://github.com/rufl/DINX/actions/runs/38753069331), no commit `b0e3040`. Ele passou a política pró-user do Firefox, o contrato do BC250 Control Center v1.21.1, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. O artefato do workflow é `dinx-foundation-iso-b0e3040f8294f2e7c45fc3ce3c4b5fe84e6aa1e4`; ele continua sendo um artefato de validação, não um release estável para hardware.

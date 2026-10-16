@@ -162,6 +162,7 @@ required_paths=(
   usr/bin/noctalia
   usr/bin/noctty
   usr/bin/nocted
+  usr/bin/clangd
   usr/share/applications/com.noctty.NOCTTY.desktop
   usr/share/applications/com.noctty.NoctEd.desktop
   usr/share/icons/hicolor/scalable/apps/com.noctty.NOCTTY.svg
@@ -170,6 +171,7 @@ required_paths=(
   usr/share/nocted/language-specs/svelte.lang
   usr/share/nocted/language-specs/kof.lang
   usr/share/nocted/styles/nocted-dark.xml
+  usr/share/nocted/styles/nocted-light.xml
   usr/bin/calamares
   usr/bin/partitionmanager
   usr/share/wayland-sessions/mango.desktop
@@ -314,7 +316,8 @@ grep -Fq 'Exec=noctty --open-uri %u' <<<"$noctty_desktop" || fail 'NOCTTY deskto
 nocted_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NoctEd.desktop)
 grep -Fq 'Exec=nocted %F' <<<"$nocted_desktop" || fail 'NoctEd desktop launcher is missing'
 grep -Fq 'Icon=com.noctty.NoctEd' <<<"$nocted_desktop" || fail 'NoctEd desktop icon is missing'
-
+grep -Fq '/usr/bin/clangd' <<<"$manifest" || fail 'clangd runtime is missing'
+grep -Fq '/usr/share/nocted/styles/nocted-light.xml' <<<"$manifest" || fail 'NoctEd light scheme is missing'
 
 grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
 

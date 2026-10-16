@@ -24,7 +24,9 @@ The applications consume a documented Dinx Theme format or adapter:
 - terminal ANSI palette;
 - application font and icon choices where the platform exposes them.
 
-The theme format is an external contract. Applications must not parse private Noctalia configuration files as if they were stable APIs. Theme reload behavior must be explicit: either a documented watch path or a user-visible reload action.
+Nocted's adapter contract is intentionally small: `NOCTALIA_COLOR_SCHEME=light` or `NOCTED_THEME=prefer-light` selects the packaged `nocted-light` scheme; all other values use `nocted-dark`. The editor does not parse private Noctalia files, and it remains usable when neither variable nor Noctalia is present.
+
+The P3 compatibility gate exercises both schemes through the native GTK smoke path, checks the NoctEd `.desktop` file-opening contract, and runs the real `clangd` LSP probe. A Git repository is optional; when present, the Tools action reports bounded status and unified diff output with per-file markers.
 Firefox is shipped with `/etc/firefox/policies/policies.json`. The policy removes sponsored New Tab/Suggest surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection. Firefox Accounts remains opt-in and user-controlled; normal browser updates stay enabled.
 
 
@@ -82,3 +84,9 @@ The P2 gate combines `zig build test`, allocator-accounted PTY/session qualifica
 The three-application Codex/Vim/btop runner uses a local Codex surface fixture in the DINX package gate. It proves the real Vim and btop cases without authentication, network access or a Codex product dependency; it is not authenticated Codex evidence.
 
 Each supported Noctalia interface must identify the tested version and adapter version. Version changes require rerunning the compatibility matrix.
+
+## P3 Nocted release gate
+
+The P3 gate is `scripts/nocted_p3_qualification.sh`. It runs the deterministic Nocted core/index/worker/state/task qualifications, a real `clangd` LSP probe, native GTK/X11 smoke in dark and light modes, and a real Git fixture through the production `--git-probe` binary. The package gate invokes this script after `zig build -Doptimize=ReleaseSafe test`; `check_noctty_integration.sh` and `check-iso-content.sh` verify the package and ISO contracts.
+
+The P0 workflow is the release gate for the resulting package and ISO: it must pass package build, QEMU boot, persistent installation, recovery, and attestation before P3 is considered releasable.

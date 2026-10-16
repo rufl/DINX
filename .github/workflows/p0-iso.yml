@@ -17,6 +17,7 @@ on:
       - "scripts/check-iso-content.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/check_noctty_integration.sh"
+      - "scripts/nocted_p3_qualification.sh"
       - "scripts/noctty_p2_qualification.sh"
       - "scripts/prepare_first_party_apps.sh"
       - "scripts/check_first_party_apps.sh"
@@ -97,6 +98,7 @@ jobs:
                 bash-completion \
                 btop \
                 curl \
+                clang \
                 cairo \
                 cjson \
                 dbus \
@@ -107,6 +109,7 @@ jobs:
                 glib2 \
                 go-md2man \
                 gettext \
+                git \
                 glslang \
                 gtk-layer-shell \
                 fontconfig \
@@ -152,6 +155,7 @@ jobs:
                 xcb-util-renderutil \
                 xcb-util-wm \
                 xorg-xwayland \
+                xorg-server-xvfb \
                 xz \
                 zlib \
                 rust

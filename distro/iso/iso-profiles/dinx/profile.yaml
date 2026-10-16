@@ -71,6 +71,7 @@ rootfs:
     - bluez-utils
     - blueman
     - btop
+    - clang
     - dialog
     - fzf
     - glances

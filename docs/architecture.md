@@ -57,7 +57,9 @@ Nocted is a lightweight code editor, not a full IDE. Its boundaries are:
 - an editor-engine adapter for buffers, selections, undo/redo and incremental updates;
 - a proven syntax parser such as Tree-sitter;
 - an LSP process/client layer;
-- Git status, diff and change-marker integration.
+- Git status, bounded unified diff output and per-file change markers are exposed through the editor's Tools action; Git is an optional project capability and never blocks opening or editing a file outside a repository.
+- Nocted's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses `zls` when available; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a Noctalia dependency.
+- The editor selects its documented light/dark scheme from `NOCTALIA_COLOR_SCHEME` or `NOCTED_THEME` and falls back to the DINX dark scheme. Noctalia may provide the preference, but the editor remains functional without the shell.
 
 The editor must remain useful without Noctalia. Noctalia supplies optional presentation and launcher integration, not the editor's core functionality.
 

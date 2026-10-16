@@ -13,6 +13,8 @@ their desktop/editor resources are in the ISO. The release path does not clone N
 or require a repository secret; update the archive and contract together when changing
 the pinned source.
 
+For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. It qualifies the Nocted editor core, real `clangd` diagnostics/navigation, native GTK/X11 dark and light schemes, and bounded Git status/diff markers before the package is eligible for the ISO payload and P0 QEMU/install gate.
+
 ## Current validated snapshot
 
 The latest successful P0 workflow is [run 38753069331](https://github.com/rufl/DINX/actions/runs/38753069331), on commit `b0e3040`. It passed the Firefox pro-user policy, BC250 Control Center v1.21.1 contract, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The workflow artifact is `dinx-foundation-iso-b0e3040f8294f2e7c45fc3ce3c4b5fe84e6aa1e4`; it remains a validation artifact, not a stable hardware release.

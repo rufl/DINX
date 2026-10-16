@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P3 — Nocted (ativa).** O critério de saída do Noctty na P2 foi concluído: gate da fonte/pacote fixados, verificações nativas de sessão de terminal e protocolo/Unicode, matriz ReleaseSafe de fairness/ciclo de vida/PTY/TUI, payload da ISO, integração desktop/shell/Noctalia e caminho de instalação persistente/TTY de recuperação no QEMU estão qualificados. Chave de assinatura do repositório pacman, relatórios de hardware físico e qualificação além da VM continuam gates explícitos pós-alpha.
+**P4 — Dinx Control (próxima).** A P3 Nocted está concluída no contrato de fonte/pacote; os gates pós-alpha restantes são os mesmos limites de release documentados abaixo.
 
 ## P0 — fundação
 
@@ -68,19 +68,25 @@ Abas, painéis, transparência e detecção de URLs vêm depois da semântica ce
 
 ## P3 — Nocted
 
-**Objetivo:** entregar um editor de código leve e útil.
+**Status:** concluída. A P3 fecha com a fonte Nocted fixada, o patch de compatibilidade DINX, o payload do pacote/ISO, o gate de qualificação P3 e o contrato de integração do editor.
 
-Backlog:
+Entregue:
 
-- abertura de arquivos e diretórios;
-- buffer de texto confiável, seleção e undo/redo;
-- destaque de sintaxe e navegação de projetos;
-- busca/substituição e atalhos configuráveis;
-- gerenciamento de processos LSP, diagnósticos, definições e referências;
-- status, diffs e marcadores de alterações do Git;
-- integração com paleta e modos claro/escuro do Noctalia.
+- abertura de arquivos e diretórios, árvores de projeto, abas, quick open e navegação determinística;
+- buffers de texto confiáveis, seleções, substituição multi-seleção e undo/redo do GTK;
+- destaque Tree-sitter/GtkSourceView, folding e comportamento configurável do editor;
+- busca no arquivo/no projeto, substituição por fluxos de seleção e atalhos de teclado;
+- gerenciamento limitado de processos/clientes LSP com diagnósticos, completion, hover, definições, referências, rename, símbolos e formatação;
+- status do Git, diffs unificados e marcadores de alterações no menu Tools e no `--git-probe` headless;
+- esquemas claro/escuro sensíveis ao Noctalia pelo contrato documentado de ambiente `NOCTALIA_COLOR_SCHEME`/`NOCTED_THEME`, mantendo o editor útil sem o Noctalia.
 
-**Critério de saída:** uma pessoa desenvolvedora consegue trabalhar em um projeto Zig ou C/C++, consultar diagnósticos e alterações do Git e editar sem um segundo editor.
+Gate de release P3:
+
+- `scripts/nocted_p3_qualification.sh` executa endurance do core, escala/deltas do índice, workers, recuperação de estado, tarefas, `clangd` real, smoke GTK nativo X11 nos modos claro/escuro e um fixture Git real;
+- `PKGBUILD`, o perfil ISO, `check_noctty_integration.sh` e `check-iso-content.sh` carregam o mesmo contrato Nocted/LSP/Git/tema;
+- o workflow P0 continua sendo o gate obrigatório de pacote, ISO, QEMU, instalação persistente, recuperação e atestação.
+
+**Critério de saída:** atendido. Uma pessoa desenvolvedora consegue trabalhar em um projeto Zig ou C/C++, consultar diagnósticos e alterações do Git e editar sem um segundo editor.
 
 ## P4 — Dinx Control
 

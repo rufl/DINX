@@ -24,7 +24,9 @@ Os aplicativos consomem um formato ou adaptador documentado do Dinx Theme:
 - paleta ANSI do terminal;
 - escolhas de fonte e ícones quando a plataforma as expuser.
 
-O formato de tema é um contrato externo. Os aplicativos não devem interpretar arquivos de configuração privados do Noctalia como se fossem APIs estáveis. O recarregamento do tema deve ser explícito: por um caminho documentado monitorado ou por uma ação visível de recarregar.
+O contrato do adaptador do Nocted é deliberadamente pequeno: `NOCTALIA_COLOR_SCHEME=light` ou `NOCTED_THEME=prefer-light` seleciona o esquema empacotado `nocted-light`; os demais valores usam `nocted-dark`. O editor não interpreta arquivos privados do Noctalia e continua utilizável quando nenhuma variável ou o Noctalia está presente.
+
+O gate de compatibilidade P3 exercita os dois esquemas pelo smoke GTK nativo, verifica o contrato de abertura por arquivo do `.desktop` do NoctEd e executa o probe LSP real com `clangd`. Um repositório Git é opcional; quando presente, a ação Tools informa status e diff unificado limitados, com marcadores por arquivo.
 O Firefox acompanha `/etc/firefox/policies/policies.json`. A política remove superfícies patrocinadas da Nova Aba/Suggest, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado. Firefox Accounts continua opcional e controlado pelo usuário; as atualizações normais do navegador permanecem habilitadas.
 
 
@@ -82,3 +84,9 @@ O gate da P2 combina `zig build test`, qualificação de PTY/sessão com contabi
 O runner de três aplicativos Codex/Vim/btop usa um fixture local da superfície do Codex no gate do pacote DINX. Isso prova os casos reais de Vim e btop sem autenticação, rede ou dependência de produto Codex; não é evidência de Codex autenticado.
 
 Cada interface do Noctalia suportada deve identificar a versão testada e a versão do adaptador. Mudanças de versão exigem executar novamente a matriz de compatibilidade.
+
+## Gate de release da P3 — Nocted
+
+O gate da P3 é `scripts/nocted_p3_qualification.sh`. Ele executa as qualificações determinísticas do core/índice/workers/estado/tarefas do Nocted, um probe LSP real com `clangd`, smoke GTK/X11 nativo nos modos escuro e claro e um fixture Git real pelo binário de produção `--git-probe`. O gate do pacote chama esse script após `zig build -Doptimize=ReleaseSafe test`; `check_noctty_integration.sh` e `check-iso-content.sh` verificam os contratos do pacote e da ISO.
+
+O workflow P0 é o gate de release do pacote e da ISO resultantes: ele deve passar o build do pacote, boot em QEMU, instalação persistente, recuperação e atestação antes de a P3 ser considerada liberável.

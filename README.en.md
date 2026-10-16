@@ -66,7 +66,7 @@ The alpha does not require all first-party applications to be complete. A known-
 
 ## Current phase
 
-**P3 — Nocted (active).** P1 closed with the public `v0.1.0-alpha.5` release. P2 Noctty closed in workflow [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529), commit `bc75f16`, with the pinned source/package, native Zig PTY/VT/session core, ReleaseSafe TUI matrix, ISO payload and shell/desktop/Noctalia integration qualified. Pacman repository signing, physical hardware, UEFI, upgrades, rollback and production service health remain later gates.
+**P4 — Dinx Control (next).** The P3 Nocted source/package implementation and contract are complete; release depends on the P0 gate covering the package, ISO, QEMU, persistent installation, recovery and attestation. P1 closed with the public `v0.1.0-alpha.5` release. P2 Noctty closed in workflow [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529), commit `bc75f16`. Pacman repository signing, physical hardware, UEFI, upgrades, rollback and production service health remain later gates.
 
 ## Documentation
 
@@ -91,4 +91,4 @@ Portuguese (Brazil) versions:
 
 ## Current status
 
-The public [v0.1.0-alpha.5 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.5), published from commit `1953457`, passed workflow [38767617276](https://github.com/rufl/DINX/actions/runs/38767617276), including Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and asset publication. P2 Noctty closed in workflow [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529) on commit `bc75f16`; the ReleaseSafe matrix, integration contracts and retained boundaries are recorded in [P0 build status](docs/p0-build.md) and the [roadmap](docs/roadmap.md). The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain later gates.
+The public [v0.1.0-alpha.5 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.5), published from commit `1953457`, passed workflow [38767617276](https://github.com/rufl/DINX/actions/runs/38767617276), including Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and asset publication. P2 Noctty closed in workflow [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529) on commit `bc75f16`; P3 Nocted awaits this package's P0 workflow to close release evidence. The ReleaseSafe matrix, integration contracts and retained boundaries are recorded in [P0 build status](docs/p0-build.md) and the [roadmap](docs/roadmap.md). The DINX image remains a validation live session with an experimental installer; hardware installation, complete service health, UEFI, upgrades, rollback and pacman repository signing remain later gates.

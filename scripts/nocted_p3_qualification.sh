@@ -54,6 +54,7 @@ run_native_smoke() {
     NOCTTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
     NOCTALIA_COLOR_SCHEME="$theme" \
+    GTK_ICON_THEME=Adwaita \
     WAYLAND_DISPLAY= \
     XDG_DATA_HOME="$icon_home" \
     xvfb-run -a -s '-screen 0 1440x900x24 -nolisten tcp' \

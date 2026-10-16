@@ -119,6 +119,7 @@ jobs:
                 vte3 \
                 ghostty \
                 hicolor-icon-theme \
+                adwaita-icon-theme \
                 less \
                 libdisplay-info \
                 libdrm \

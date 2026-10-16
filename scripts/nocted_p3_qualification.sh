@@ -15,7 +15,7 @@ require_command() {
   command -v "$command_name" >/dev/null 2>&1 || fail "missing executable: $command_name"
 }
 
-for command_name in git clangd dbus-run-session gtk-update-icon-cache xvfb-run; do
+for command_name in git clangd dbus-run-session gtk-update-icon-cache rsvg-convert xvfb-run; do
   require_command "$command_name"
 done
 
@@ -112,8 +112,8 @@ Size=256
 Context=Applications
 Type=Threshold
 EOF
-  # Keep the harness icon in the same SVG path used by the packaged theme; the
-  # host image provides the glycin SVG loader while XPM is not guaranteed.
+  # Render the harness icon to PNG: GTK3 recognizes it in every supported
+  # icon-theme path, independently of the container's SVG loader setup.
   cat >"$icon_home/nocted.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
   <rect width="16" height="16" rx="2" fill="#0b0d12"/>
@@ -121,11 +121,13 @@ EOF
 </svg>
 EOF
   for size in 16 22 24 32 48 64 128 256; do
-    cp "$icon_home/nocted.svg" \
-      "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/com.noctty.NoctEd.svg"
+    rsvg-convert -w "$size" -h "$size" \
+      -o "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/com.noctty.NoctEd.png" \
+      "$icon_home/nocted.svg"
   done
-  cp "$icon_home/nocted.svg" \
-    "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.svg"
+  rsvg-convert -w 16 -h 16 \
+    -o "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.png" \
+    "$icon_home/nocted.svg"
   for icon_name in \
     view-list-symbolic \
     view-list \
@@ -185,8 +187,9 @@ EOF
     drive-harddisk \
     caps-lock-symbolic; do
     for size in 16 22 24 32 48 64 128 256; do
-      cp "$icon_home/nocted.svg" \
-        "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/${icon_name}.svg"
+      rsvg-convert -w "$size" -h "$size" \
+        -o "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/${icon_name}.png" \
+        "$icon_home/nocted.svg"
     done
   done
   gtk-update-icon-cache -f "$icon_home/icons/NoctedSmoke" >/dev/null

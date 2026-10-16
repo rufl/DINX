@@ -129,6 +129,7 @@ jobs:
                 libliftoff \
                 libnewt \
                 libpng \
+                librsvg \
                 libxcb \
                 libxkbcommon \
                 luajit \

@@ -15,7 +15,7 @@ require_command() {
   command -v "$command_name" >/dev/null 2>&1 || fail "missing executable: $command_name"
 }
 
-for command_name in git clangd dbus-run-session xvfb-run; do
+for command_name in git clangd dbus-run-session rsvg-convert xvfb-run; do
   require_command "$command_name"
 done
 
@@ -47,8 +47,16 @@ run_native_smoke() {
   local icon_home
   local output
   icon_home=$(mktemp -d "${TMPDIR:-/tmp}/nocted-p3-icon.XXXXXX")
-  mkdir -p "$icon_home/icons/hicolor/scalable/apps"
-  cp resources/com.noctty.NoctEd.svg "$icon_home/icons/hicolor/scalable/apps/com.noctty.NoctEd.svg"
+  mkdir -p \
+    "$icon_home/icons/hicolor/128x128/apps" \
+    "$icon_home/icons/Adwaita/128x128/apps"
+  rsvg-convert -w 128 -h 128 \
+    -o "$icon_home/nocted.png" \
+    resources/com.noctty.NoctEd.svg
+  cp "$icon_home/nocted.png" \
+    "$icon_home/icons/hicolor/128x128/apps/com.noctty.NoctEd.png"
+  cp "$icon_home/nocted.png" \
+    "$icon_home/icons/Adwaita/128x128/apps/com.noctty.NoctEd.png"
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \
     NOCTTY_ISOLATED_DISPLAY=x11 \

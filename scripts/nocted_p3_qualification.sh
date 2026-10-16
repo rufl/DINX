@@ -44,16 +44,22 @@ smoke_binary="$source_dir/zig-out/bin/nocted-smoke"
 
 run_native_smoke() {
   local theme=$1
+  local icon_home
   local output
+  icon_home=$(mktemp -d "${TMPDIR:-/tmp}/nocted-p3-icon.XXXXXX")
+  mkdir -p "$icon_home/icons/hicolor/scalable/apps"
+  cp resources/com.noctty.NoctEd.svg "$icon_home/icons/hicolor/scalable/apps/com.noctty.NoctEd.svg"
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \
     NOCTTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
     NOCTALIA_COLOR_SCHEME="$theme" \
     WAYLAND_DISPLAY= \
+    XDG_DATA_HOME="$icon_home" \
     xvfb-run -a -s '-screen 0 1440x900x24 -nolisten tcp' \
       dbus-run-session -- ./scripts/nocted_native_smoke.sh "$smoke_binary" --qualification
   )
+  rm -rf "$icon_home"
   printf '%s\n' "$output"
   grep -Fq 'nocted_native_smoke_diagnostic pass=1' <<<"$output" ||
     fail "native editor smoke failed for theme=$theme"

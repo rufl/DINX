@@ -55,6 +55,7 @@ run_native_smoke() {
   mkdir -p \
     "$icon_home/icons/NoctedSmoke" \
     "$icon_home/icons/NoctedSmoke/16x16/apps" \
+    "$icon_home/icons/NoctedSmoke/16x16/status" \
     "$icon_home/icons/NoctedSmoke/22x22/apps" \
     "$icon_home/icons/NoctedSmoke/24x24/apps" \
     "$icon_home/icons/NoctedSmoke/32x32/apps" \
@@ -67,11 +68,16 @@ run_native_smoke() {
 Name=NoctedSmoke
 Comment=DINX smoke fallback
 Inherits=Adwaita
-Directories=16x16/apps,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,128x128/apps,256x256/apps
+Directories=16x16/apps,16x16/status,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,128x128/apps,256x256/apps
 
 [16x16/apps]
 Size=16
 Context=Applications
+Type=Threshold
+
+[16x16/status]
+Size=16
+Context=Status
 Type=Threshold
 
 [22x22/apps]
@@ -114,6 +120,9 @@ EOF
       -o "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/com.noctty.NoctEd.png" \
       resources/com.noctty.NoctEd.svg
   done
+  rsvg-convert -w 16 -h 16 \
+    -o "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.png" \
+    resources/com.noctty.NoctEd.svg
   gtk-update-icon-cache -f "$icon_home/icons/NoctedSmoke" >/dev/null
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \

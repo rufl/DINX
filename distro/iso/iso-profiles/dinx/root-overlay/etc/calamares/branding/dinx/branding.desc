@@ -23,7 +23,7 @@ strings:
     donateUrl: ""
 
 style:
-    SidebarBackground: "#11151c"
-    SidebarText: "#aebbd0"
-    SidebarTextCurrent: "#ffffff"
-    SidebarBackgroundCurrent: "#236b9e"
+    SidebarBackground: "#11151d"
+    SidebarText: "#7f8a9c"
+    SidebarTextCurrent: "#d7dde8"
+    SidebarBackgroundCurrent: "#263249"

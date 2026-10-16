@@ -10,6 +10,7 @@ greeter="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/regreet
 greeter_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-regreet"
 grub="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/theme.txt"
 calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/stylesheet.qss"
+calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
 mango="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/mango/config.conf"
@@ -24,7 +25,7 @@ fail() {
 }
 
 for path in "$profile" "$noctalia_config" "$palette" "$profile_shell" "$greeter" \
-  "$greeter_launcher" "$grub" "$calamares" "$qt" "$swayimg" "$mango" "$gtk_index" \
+  "$greeter_launcher" "$grub" "$calamares" "$calamares_branding" "$qt" "$swayimg" "$mango" "$gtk_index" \
   "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
@@ -84,6 +85,10 @@ for gtk_theme in "$gtk3" "$gtk4"; do
   grep -Fq 'background-color: #8fb8ff' "$gtk_theme" || fail "GTK theme lacks DINX primary state: $gtk_theme"
 done
 grep -Fq 'background: #0b0d12' "$calamares" || fail 'Calamares surface does not use DINX background'
+grep -Fq 'SidebarBackground: "#11151d"' "$calamares_branding" || fail 'Calamares sidebar does not use DINX panel'
+grep -Fq 'SidebarText: "#7f8a9c"' "$calamares_branding" || fail 'Calamares sidebar text does not use DINX muted text'
+grep -Fq 'SidebarTextCurrent: "#d7dde8"' "$calamares_branding" || fail 'Calamares current sidebar text does not use DINX text'
+grep -Fq 'SidebarBackgroundCurrent: "#263249"' "$calamares_branding" || fail 'Calamares current sidebar does not use DINX hover'
 grep -Fq 'Name=DINX' "$gtk_index" || fail 'GTK theme index name is missing'
 grep -Fqx '@import url("gtk.css");' "$gtk3_dark" || fail 'GTK3 dark theme bridge is missing'
 grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge is missing'

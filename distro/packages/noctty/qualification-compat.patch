@@ -84,9 +84,10 @@
      );
      var whiptail_command_buffer: [1024]u8 = undefined;
      const whiptail_command = try std.fmt.bufPrint(
-@@ -72,1 +72,1 @@
+@@ -72,1 +72,2 @@
 -        "exec \"{s}\" -interactive ':memory:' " ++
-+        "TERM=dumb; export TERM; exec \"{s}\" --no-color -interactive ':memory:' " ++
++        "TERM=dumb; export TERM; exec \"{s}\" -interactive ':memory:' " ++
++            "-cmd \".prompt --no-color\" " ++
 @@ -172,1 +172,1 @@
 -    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
 +    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "SQLite-" };

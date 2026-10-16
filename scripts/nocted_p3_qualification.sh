@@ -146,18 +146,62 @@ EOF
     "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.xpm"
   for icon_name in \
     view-list-symbolic \
+    view-list \
     go-up-symbolic \
+    go-up \
     go-previous-symbolic \
+    go-previous \
     go-down-symbolic \
+    go-down \
     edit-find-symbolic \
+    edit-find \
+    edit-clear-symbolic \
     window-close-symbolic \
     folder-symbolic \
+    folder \
+    folder-remote \
+    folder-documents-symbolic \
+    folder-download-symbolic \
+    folder-music-symbolic \
+    folder-pictures-symbolic \
+    folder-publicshare-symbolic \
+    folder-remote-symbolic \
+    folder-saved-search-symbolic \
+    folder-templates-symbolic \
+    folder-videos-symbolic \
+    user-home-symbolic \
+    user-desktop-symbolic \
     text-x-generic-symbolic \
+    text-x-generic \
     dialog-warning \
+    dialog-warning-symbolic \
     dialog-information \
+    dialog-information-symbolic \
     dialog-question \
+    dialog-question-symbolic \
     dialog-error \
-    image-missing; do
+    dialog-error-symbolic \
+    image-missing \
+    application-x-executable \
+    audio-x-generic \
+    font-x-generic \
+    image-x-generic \
+    package-x-generic \
+    text-html \
+    text-x-generic-template \
+    text-x-script \
+    video-x-generic \
+    x-office-address-book \
+    x-office-calendar \
+    x-office-document \
+    x-office-presentation \
+    x-office-spreadsheet \
+    document-open-recent-symbolic \
+    starred-symbolic \
+    bookmark-new-symbolic \
+    emblem-synchronizing-symbolic \
+    drive-harddisk \
+    caps-lock-symbolic; do
     for size in 16 22 24 32 48 64 128 256; do
       cp "$icon_home/nocted.xpm" \
         "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/${icon_name}.xpm"

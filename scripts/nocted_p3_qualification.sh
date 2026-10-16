@@ -144,6 +144,18 @@ EOF
   done
   cp "$icon_home/nocted.xpm" \
     "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.xpm"
+  for icon_name in \
+    view-list-symbolic \
+    go-up-symbolic \
+    go-previous-symbolic \
+    go-down-symbolic \
+    edit-find-symbolic \
+    window-close-symbolic \
+    folder-symbolic \
+    text-x-generic-symbolic; do
+    cp "$icon_home/nocted.xpm" \
+      "$icon_home/icons/NoctedSmoke/16x16/apps/${icon_name}.xpm"
+  done
   rm -f "$icon_home/nocted.xpm"
   gtk-update-icon-cache -f "$icon_home/icons/NoctedSmoke" >/dev/null
   output=$(

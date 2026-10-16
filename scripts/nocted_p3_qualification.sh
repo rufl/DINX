@@ -53,20 +53,20 @@ run_native_smoke() {
   data_dirs=${XDG_DATA_DIRS:-/usr/local/share:/usr/share}
   gdk-pixbuf-query-loaders >"$pixbuf_module_file"
   mkdir -p \
-    "$icon_home/icons/hicolor" \
-    "$icon_home/icons/hicolor/16x16/apps" \
-    "$icon_home/icons/hicolor/22x22/apps" \
-    "$icon_home/icons/hicolor/24x24/apps" \
-    "$icon_home/icons/hicolor/32x32/apps" \
-    "$icon_home/icons/hicolor/48x48/apps" \
-    "$icon_home/icons/hicolor/64x64/apps" \
-    "$icon_home/icons/hicolor/128x128/apps" \
-    "$icon_home/icons/hicolor/256x256/apps"
-  cat >"$icon_home/icons/hicolor/index.theme" <<'EOF'
+    "$icon_home/icons/Adwaita" \
+    "$icon_home/icons/Adwaita/16x16/apps" \
+    "$icon_home/icons/Adwaita/22x22/apps" \
+    "$icon_home/icons/Adwaita/24x24/apps" \
+    "$icon_home/icons/Adwaita/32x32/apps" \
+    "$icon_home/icons/Adwaita/48x48/apps" \
+    "$icon_home/icons/Adwaita/64x64/apps" \
+    "$icon_home/icons/Adwaita/128x128/apps" \
+    "$icon_home/icons/Adwaita/256x256/apps"
+  cat >"$icon_home/icons/Adwaita/index.theme" <<'EOF'
 [Icon Theme]
-Name=hicolor
-Comment=Fallback icon theme
-Inherits=Adwaita
+Name=Adwaita
+Comment=DINX smoke fallback
+Inherits=hicolor
 Directories=16x16/apps,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,128x128/apps,256x256/apps
 
 [16x16/apps]
@@ -111,17 +111,17 @@ Type=Threshold
 EOF
   for size in 16 22 24 32 48 64 128 256; do
     rsvg-convert -w "$size" -h "$size" \
-      -o "$icon_home/icons/hicolor/${size}x${size}/apps/com.noctty.NoctEd.png" \
+      -o "$icon_home/icons/Adwaita/${size}x${size}/apps/com.noctty.NoctEd.png" \
       resources/com.noctty.NoctEd.svg
   done
-  gtk-update-icon-cache -f "$icon_home/icons/hicolor" >/dev/null
+  gtk-update-icon-cache -f "$icon_home/icons/Adwaita" >/dev/null
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \
     NOCTTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
     NOCTALIA_COLOR_SCHEME="$theme" \
     GDK_PIXBUF_MODULE_FILE="$pixbuf_module_file" \
-    GTK_ICON_THEME=hicolor \
+    GTK_ICON_THEME=Adwaita \
     WAYLAND_DISPLAY= \
     XDG_DATA_HOME="$icon_home" \
     XDG_DATA_DIRS="$icon_home:$data_dirs" \

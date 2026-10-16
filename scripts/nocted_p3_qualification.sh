@@ -152,7 +152,12 @@ EOF
     edit-find-symbolic \
     window-close-symbolic \
     folder-symbolic \
-    text-x-generic-symbolic; do
+    text-x-generic-symbolic \
+    dialog-warning \
+    dialog-information \
+    dialog-question \
+    dialog-error \
+    image-missing; do
     cp "$icon_home/nocted.xpm" \
       "$icon_home/icons/NoctedSmoke/16x16/apps/${icon_name}.xpm"
   done

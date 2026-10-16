@@ -173,6 +173,7 @@ jobs:
                 xz \
                 zlib \
                 rust
+              mkdir -p /usr/lib/gdk-pixbuf-2.0/2.10.0
               gdk-pixbuf-query-loaders --update-cache
               zig_version=0.17.0
               zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"

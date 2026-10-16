@@ -15,7 +15,7 @@ require_command() {
   command -v "$command_name" >/dev/null 2>&1 || fail "missing executable: $command_name"
 }
 
-for command_name in git clangd dbus-run-session gdk-pixbuf-query-loaders rsvg-convert gtk-update-icon-cache xvfb-run; do
+for command_name in git clangd dbus-run-session rsvg-convert gtk-update-icon-cache xvfb-run; do
   require_command "$command_name"
 done
 
@@ -45,13 +45,10 @@ smoke_binary="$source_dir/zig-out/bin/nocted-smoke"
 run_native_smoke() {
   local theme=$1
   local icon_home
-  local pixbuf_module_file
   local data_dirs
   local output
   icon_home=$(mktemp -d "${TMPDIR:-/tmp}/nocted-p3-icon.XXXXXX")
-  pixbuf_module_file=$(mktemp "${TMPDIR:-/tmp}/nocted-p3-pixbuf.XXXXXX")
   data_dirs=${XDG_DATA_DIRS:-/usr/local/share:/usr/share}
-  gdk-pixbuf-query-loaders >"$pixbuf_module_file"
   mkdir -p \
     "$icon_home/icons/NoctedSmoke" \
     "$icon_home/icons/NoctedSmoke/16x16/apps" \
@@ -129,7 +126,6 @@ EOF
     NOCTTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
     NOCTALIA_COLOR_SCHEME="$theme" \
-    GDK_PIXBUF_MODULE_FILE="$pixbuf_module_file" \
     GTK_ICON_THEME=NoctedSmoke \
     WAYLAND_DISPLAY= \
     XDG_DATA_HOME="$icon_home" \
@@ -137,7 +133,6 @@ EOF
     xvfb-run -a -s '-screen 0 1440x900x24 -nolisten tcp' \
       dbus-run-session -- ./scripts/nocted_native_smoke.sh "$smoke_binary" --qualification
   )
-  rm -f "$pixbuf_module_file"
   rm -rf "$icon_home"
   printf '%s\n' "$output"
   grep -Fq 'nocted_native_smoke_diagnostic pass=1' <<<"$output" ||

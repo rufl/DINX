@@ -120,6 +120,7 @@ jobs:
                 gettext \
                 git \
                 glslang \
+                glycin \
                 gtk-layer-shell \
                 gamescope \
                 fontconfig \
@@ -158,6 +159,7 @@ jobs:
                 procps-ng \
                 python \
                 seatd \
+                shared-mime-info \
                 sqlite \
                 texinfo \
                 tmux \
@@ -173,6 +175,7 @@ jobs:
                 xz \
                 zlib \
                 rust
+              update-mime-database /usr/share/mime
               mkdir -p /usr/lib/gdk-pixbuf-2.0/2.10.0
               gdk-pixbuf-query-loaders --update-cache
               zig_version=0.17.0

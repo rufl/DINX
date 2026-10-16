@@ -104,6 +104,7 @@ jobs:
                 iso-profiles \
                 mkinitcpio \
                 base-devel \
+                bubblewrap \
                 bash-completion \
                 btop \
                 curl \

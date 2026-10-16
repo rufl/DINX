@@ -15,7 +15,7 @@ require_command() {
   command -v "$command_name" >/dev/null 2>&1 || fail "missing executable: $command_name"
 }
 
-for command_name in git clangd dbus-run-session gtk-update-icon-cache rsvg-convert xvfb-run; do
+for command_name in bwrap git clangd dbus-run-session gtk-update-icon-cache rsvg-convert xvfb-run; do
   require_command "$command_name"
 done
 

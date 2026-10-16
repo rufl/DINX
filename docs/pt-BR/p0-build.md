@@ -13,6 +13,8 @@ Os pontos de entrada são:
 - `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do código fixado do NOCTTY/NoctEd;
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos do Firefox, aplicativos fixados, gerenciamento Artix, firewall, hardware e BC250 Control Center;
+- `scripts/noctty_p2_qualification.sh` — matriz P2 determinística em ReleaseSafe para allocator/fairness, continuidade de PTY/sessão, ncurses e TUIs do sistema;
+- `scripts/check_noctty_integration.sh` — contrato de defaults do shell, descoberta do terminal, entrada desktop, diretório de trabalho, Noctalia e runtime do pacote;
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
 - `scripts/smoke-install.sh` — smoke de instalação persistente e TTY de recuperação em disco descartável;
 - `.github/workflows/p0-iso.yml` — build remoto em container Artix;
@@ -31,7 +33,7 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 3. instala QEMU e ferramentas de inspeção de ISO no runner Ubuntu;
 4. executa Artix em um container privilegiado;
 5. instala `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, VTE 2.91 (`vte3`) para o binário de smoke headless do Noctty, o runtime `libghostty-vt.so` do Ghostty e as dependências de build fixadas do MangoWM/Scenefx;
-6. compila o payload de pacotes Artix fixado para topgrade, paru e Shelly, o release fonte BC250 Control Center v1.21.1, o governor Cyan Skillfish e sua integração dinit; então compila o pacote nativo `noctty`, que contém NOCTTY e NoctEd, wlroots 0.20.2, MangoWM e Scenefx a partir do repositório pacman local temporário, e executa os marcadores de smoke headless de PTY/VT/sessão de terminal da fonte fixada, a qualificação de sessão com contabilização do allocator (quatro ciclos normais e um forçado) e a qualificação de compatibilidade de protocolo/Unicode;
+6. compila o payload de pacotes Artix fixado para topgrade, paru e Shelly, o release fonte BC250 Control Center v1.21.1, o governor Cyan Skillfish e sua integração dinit; então compila o pacote nativo `noctty`, que contém NOCTTY e NoctEd, wlroots 0.20.2, MangoWM e Scenefx a partir do repositório pacman local temporário, e executa os marcadores de smoke headless de PTY/VT/sessão de terminal da fonte fixada, a qualificação de sessão com contabilização do allocator (quatro ciclos normais e um forçado), a qualificação de compatibilidade de protocolo/Unicode e `scripts/noctty_p2_qualification.sh` em ReleaseSafe. Essa matriz usa tmux real e um shim determinístico de Zellij, verificações reais de Nano/Less/Dialog e top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, verificações reais de Vim/btop, o comando `info` instalado com fallback estilizado determinístico para superfícies mínimas/não-TTY e um fixture local de Codex, salvo quando `NOCTTY_QUALIFICATION_REQUIRE_REAL_TUI=1` é definido; em seguida `scripts/check_noctty_integration.sh` verifica a integração do shell, desktop, diretório de trabalho, Noctalia e runtime do pacote;
 7. executa o probe de pré-requisitos;
 8. constrói a ISO com `buildiso`;
 9. valida os payloads SquashFS do root e da sessão live;
@@ -70,15 +72,16 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Última execução bem-sucedida observada
 
-A execução [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464), no commit `8a28eb3`, concluiu todas as etapas do workflow P0 em 25m24s:
+A execução [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529), no commit `bc75f16`, concluiu todas as etapas do workflow P0 em 30m52s:
 
-- artefato ISO: `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`;
-- contrato de gerenciamento Artix: topgrade 17.12.3, paru 2.1.0 e Shelly 3.1.6, sem dependências systemd;
-- contrato Cyan Skillfish/BC-250: payload AMDGPU/RADV/Vulkan, detecção PCI `1002:13fe` e governor dinit;
-- contrato BC250 Control Center v1.21.1: fonte MIT fixada, runtime PyQt6/psutil, payload GUI/CLI/daemon, autostart na sessão do usuário Mango e nenhum payload systemd;
-- smoke de boot no QEMU, verificação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação de procedência e upload do artefato: aprovados.
+- artefato ISO: `artix-dinx-dinit-20261016-x86_64.iso`;
+- o pacote nativo executou as qualificações de PTY/VT/sessão, allocator, protocolo/Unicode, fairness, tmux real, Zellij determinístico, ncurses, TUI do sistema e Vim/btop; o resultado foi `noctty_p2_qualification ... assertions=true`;
+- o contrato de integração passou nas verificações de descoberta do terminal, defaults do shell, entrada desktop, diretório de trabalho, Noctalia e runtime do pacote;
+- a evidência de TUI do sistema cobriu top/watch/info/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local; `info_surface=fixture_fallback` e `codex_surface=fixture` continuam limites explícitos;
+- smoke de boot no QEMU, verificação do payload gráfico, smoke da instalação persistente/TTY de recuperação, geração do SHA-512, atestação de procedência e upload do artefato passaram;
+- artefato publicado: `dinx-foundation-iso-bc75f163a8d85a207e2bdab5dd70cf1d3116d1b4`, 2.341.669.977 bytes, contendo a ISO, checksum, log QEMU e capturas VGA.
 
-O workflow publicou a ISO, o checksum, o log QEMU e as capturas VGA. A execução prova o build e os contratos; não prova o ajuste físico em uma BC-250 nem a saúde do serviço em hardware por longo prazo.
+A execução prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, do caminho persistente/recuperação em BIOS descartável e da procedência. Não prova ajuste físico da BC-250, acesso de rede/Codex autenticado nem saúde de serviços em hardware por longo prazo.
 
 ## Execução bem-sucedida anterior observada
 

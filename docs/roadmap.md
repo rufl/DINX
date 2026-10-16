@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P2 — Noctty (active).** P1's public-alpha exit criterion is met by `v0.1.0-alpha.5`: an invited tester can obtain the release, verify it, follow the installation guide and use the documented recovery path without reconstructing the development environment. Pacman repository signing, physical hardware reports and qualification beyond the VM remain explicit post-alpha release gates.
+**P3 — Nocted (active).** P2's Noctty exit criterion is complete: the pinned source/package gate, native terminal-session and protocol/Unicode checks, ReleaseSafe fairness/lifecycle/PTY/TUI matrix, ISO payload, desktop/shell/Noctalia integration and QEMU persistent-install/recovery path are all qualified. Pacman repository signing, physical hardware reports and qualification beyond the VM remain explicit post-alpha release gates.
 
 ## P0 — foundation
 
@@ -47,25 +47,22 @@ Deferred release gates:
 
 ## P2 — Noctty
 
-**Goal:** ship a reliable terminal before advanced presentation features.
+**Status:** complete. P2 closed with the final green P0 workflow run recorded in [P0 build status](p0-build.md).
 
-**Status:** active. The first DINX end-to-end tranche now builds the pinned Noctty source, runs headless PTY/VT/terminal-session smoke checks, allocator-accounted session qualification and protocol/Unicode compatibility qualification during package creation, installs the package into the ISO and routes `$TERMINAL` through Noctty with a Foot fallback.
+P2 exit evidence:
 
-Current end-to-end proof:
+- the exact NOCTTY/NoctEd source archive is SHA-256 pinned, archive-verified and built into the Artix package;
+- the native Zig core qualifies PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, protocol/Unicode compatibility, allocator-accounted lifecycle and fairness under 30 panes with an 8 MiB paste;
+- the ReleaseSafe matrix qualifies actual tmux, a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP, real Vim/btop, and the installed `info` command or its deterministic styled fallback for minimal/non-TTY surfaces;
+- the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, Noctalia discovery and package-runtime contracts are verified;
+- the final P0 workflow proves package creation, ISO generation, QEMU boot, graphical payload, persistent installation, recovery TTY, attestation and artifact upload.
 
-- the exact source archive is SHA-256 pinned and included in the Artix package build;
-- the package build executes PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, allocator-accounted lifecycle and protocol/Unicode compatibility markers;
-- the P0 ISO workflow [38798566993](https://github.com/rufl/DINX/actions/runs/38798566993) on commit `fbd9bd6` passed package creation, ISO generation, QEMU boot, graphical payload validation and persistent-install/recovery-TTY smoke;
+Boundaries retained after P2:
 
-Backlog:
-
-- expand PTY and child-process lifecycle coverage beyond the current four normal and one forced qualification cycles;
-- extend the shell launch, resize, signals and cleanup matrix beyond the current forced-process reaping check;
-- terminal input/rendering, Unicode, colors and cursor behavior;
-- scrollback, selection, copy and paste;
-- extend compatibility qualification to real `vim`, `less`, `tmux`, SSH and common TUI sessions;
-- `$TERMINAL`, `.desktop`, working-directory and Noctalia discovery integration;
-- theme import/reload and preferences.
+- the Codex slot uses a local fixture by default; no authenticated Codex or network qualification is claimed;
+- Zellij uses a deterministic shim, while tmux is exercised as the installed application;
+- the installed `info` command is attempted first, but a minimal/non-TTY surface may use the styled fixture fallback;
+- pacman signing, physical hardware, UEFI, upgrades, rollback and long-term production service health remain later release gates.
 
 Tabs, panes, transparency and URL detection follow the core terminal semantics.
 

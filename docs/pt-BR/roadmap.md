@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P2 — Noctty (ativa).** O critério de saída da P1 foi atendido por `v0.1.0-alpha.5`: uma pessoa convidada consegue obter o release, verificá-lo, seguir o guia de instalação e usar o caminho documentado de recuperação sem reconstruir o ambiente de desenvolvimento. Chave de assinatura do repositório pacman, relatórios de hardware físico e qualificação além da VM continuam gates explícitos pós-alpha.
+**P3 — Nocted (ativa).** O critério de saída do Noctty na P2 foi concluído: gate da fonte/pacote fixados, verificações nativas de sessão de terminal e protocolo/Unicode, matriz ReleaseSafe de fairness/ciclo de vida/PTY/TUI, payload da ISO, integração desktop/shell/Noctalia e caminho de instalação persistente/TTY de recuperação no QEMU estão qualificados. Chave de assinatura do repositório pacman, relatórios de hardware físico e qualificação além da VM continuam gates explícitos pós-alpha.
 
 ## P0 — fundação
 
@@ -47,25 +47,22 @@ Gates de release adiados:
 
 ## P2 — Noctty
 
-**Objetivo:** entregar um terminal confiável antes dos recursos avançados de apresentação.
+**Status:** concluída. A P2 foi encerrada com a execução P0 final verde registrada em [Status do build P0](p0-build.md).
 
-**Status:** ativa. O primeiro incremento end-to-end da DINX agora compila a fonte fixada do Noctty, executa smoke tests headless de PTY/VT/sessão de terminal, qualificação de sessão com contabilização do allocator e qualificação de compatibilidade de protocolo/Unicode durante a criação do pacote, instala o pacote na ISO e encaminha `$TERMINAL` para o Noctty com fallback para Foot.
+Evidências de saída da P2:
 
-Evidência end-to-end atual:
+- o archive exato do NOCTTY/NoctEd é fixado por SHA-256, verificado e compilado no pacote Artix;
+- o core nativo Zig qualifica criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, compatibilidade de protocolo/Unicode, ciclo de vida com contabilização do allocator e fairness em 30 panes com paste de 8 MiB;
+- a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
+- o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta pelo Noctalia e runtime do pacote estão verificados;
+- a execução P0 final prova criação do pacote, geração da ISO, boot no QEMU, payload gráfico, instalação persistente, TTY de recuperação, atestação e upload do artefato.
 
-- o archive exato da fonte é fixado por SHA-256 e incluído no build do pacote Artix;
-- o build do pacote executa marcadores de criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, ciclo de vida com contabilização do allocator e compatibilidade de protocolo/Unicode;
-- o workflow ISO P0 [38798566993](https://github.com/rufl/DINX/actions/runs/38798566993), no commit `fbd9bd6`, passou pela criação do pacote, geração da ISO, boot no QEMU, validação do payload gráfico e smoke da instalação persistente/TTY de recuperação;
+Limites mantidos depois da P2:
 
-Backlog:
-
-- ampliar a cobertura do ciclo de vida do PTY e do processo filho além dos quatro ciclos normais e um forçado atuais;
-- expandir a matriz de inicialização do shell, redimensionamento, sinais e limpeza além da verificação atual de recolhimento dos processos forçados;
-- entrada/renderização do terminal, Unicode, cores e comportamento do cursor;
-- scrollback, seleção, copiar e colar;
-- ampliar a qualificação de compatibilidade para sessões reais de `vim`, `less`, `tmux`, SSH e TUIs comuns;
-- integração de `$TERMINAL`, `.desktop`, diretório de trabalho e descoberta pelo Noctalia;
-- importação/recarregamento de tema e preferências.
+- o slot do Codex usa um fixture local por default; nenhuma qualificação de Codex autenticado ou rede é alegada;
+- Zellij usa um shim determinístico, enquanto tmux é exercitado como aplicativo instalado;
+- o comando `info` instalado é tentado primeiro, mas uma superfície mínima/não-TTY pode usar o fallback estilizado;
+- assinatura pacman, hardware físico, UEFI, atualizações, rollback e saúde de serviços em produção por longo prazo continuam gates posteriores de release.
 
 Abas, painéis, transparência e detecção de URLs vêm depois da semântica central do terminal.
 

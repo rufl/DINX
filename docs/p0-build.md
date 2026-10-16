@@ -13,6 +13,8 @@ The entry points are:
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` and `scripts/check_bc250_control_center.sh` — Firefox, pinned application, Artix package-management, firewall, hardware and BC250 Control Center contracts;
+- `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
+- `scripts/check_noctty_integration.sh` — shell defaults, terminal discovery, desktop entry, working-directory, Noctalia and package-runtime contract;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
@@ -31,7 +33,7 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 3. installs QEMU and ISO inspection tools on the Ubuntu runner;
 4. runs Artix in a privileged container;
 5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, VTE 2.91 (`vte3`) for the headless Noctty smoke binary, Ghostty's `libghostty-vt.so` runtime, and the pinned MangoWM/Scenefx build dependencies;
-6. builds the pinned Artix package payload for topgrade, paru and Shelly, the BC250 Control Center v1.21.1 source release, the Cyan Skillfish governor and its dinit integration; then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository, and executes the pinned source's headless PTY/VT/terminal-session smoke markers, the allocator-accounted terminal-session qualification (four normal and one forced cycle), and the protocol/Unicode compatibility qualification;
+6. builds the pinned Artix package payload for topgrade, paru and Shelly, the BC250 Control Center v1.21.1 source release, the Cyan Skillfish governor and its dinit integration; then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository, and executes the pinned source's headless PTY/VT/terminal-session smoke markers, the allocator-accounted terminal-session qualification (four normal and one forced cycle), the protocol/Unicode compatibility qualification, and `scripts/noctty_p2_qualification.sh` in ReleaseSafe. That matrix uses actual tmux plus a deterministic Zellij shim, real Nano/Less/Dialog and top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP checks, real Vim/btop checks, the installed `info` command with a deterministic styled fallback for minimal/non-TTY surfaces, and a local Codex fixture unless `NOCTTY_QUALIFICATION_REQUIRE_REAL_TUI=1` is set; `scripts/check_noctty_integration.sh` then verifies shell, desktop, working-directory, Noctalia and package-runtime integration;
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
 9. validates the root and live-session SquashFS payloads;
@@ -69,15 +71,16 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Latest observed successful run
 
-Run [38739313464](https://github.com/rufl/DINX/actions/runs/38739313464) on commit `8a28eb3` passed every P0 workflow step in 25m24s:
+Run [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529) on commit `bc75f16` passed every P0 workflow step in 30m52s:
 
-- ISO artifact: `dinx-foundation-iso-8a28eb3b2d35781dd592e47701f0a7e614669ca7`;
-- Artix package-management contract: topgrade 17.12.3, paru 2.1.0 and Shelly 3.1.6, with no systemd dependencies;
-- Cyan Skillfish/BC-250 contract: AMDGPU/RADV/Vulkan payload, PCI `1002:13fe` detection and dinit governor;
-- BC250 Control Center v1.21.1 contract: pinned MIT source, PyQt6/psutil runtime, GUI/CLI/daemon payload, Mango user-session autostart and no systemd payload;
-- QEMU boot smoke, graphical payload verification, persistent-install/recovery-TTY smoke, provenance attestation and artifact upload: passed.
+- ISO artifact: `artix-dinx-dinit-20261016-x86_64.iso`;
+- the native package ran PTY/VT/session, allocator, protocol/Unicode, fairness, actual-tmux, deterministic-Zellij, ncurses, system-TUI and Vim/btop qualifications; the result was `noctty_p2_qualification ... assertions=true`;
+- the integration contract passed terminal discovery, shell defaults, desktop entry, working-directory, Noctalia and package-runtime checks;
+- system-TUI evidence covered top/watch/info/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP; `info_surface=fixture_fallback` and `codex_surface=fixture` remain explicit boundaries;
+- QEMU boot smoke, graphical payload verification, persistent-install/recovery-TTY smoke, SHA-512 generation, provenance attestation and artifact upload passed;
+- uploaded artifact: `dinx-foundation-iso-bc75f163a8d85a207e2bdab5dd70cf1d3116d1b4`, 2,341,669,977 bytes, containing the ISO, checksum, QEMU log and VGA captures.
 
-The workflow uploaded the ISO, checksum, QEMU log and VGA captures. The run proves the build and contracts; it does not prove physical BC-250 tuning or long-term hardware service health.
+The run proves the package, ISO, VM boot, graphical payload, disposable BIOS persistent-install/recovery path and provenance contracts. It does not prove physical BC-250 tuning, authenticated Codex/network access or long-term hardware service health.
 
 ## Earlier observed successful run
 

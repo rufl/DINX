@@ -15,7 +15,7 @@ require_command() {
   command -v "$command_name" >/dev/null 2>&1 || fail "missing executable: $command_name"
 }
 
-for command_name in git clangd dbus-run-session rsvg-convert gtk-update-icon-cache xvfb-run; do
+for command_name in git clangd dbus-run-session gtk-update-icon-cache xvfb-run; do
   require_command "$command_name"
 done
 
@@ -112,14 +112,39 @@ Size=256
 Context=Applications
 Type=Threshold
 EOF
+  # Keep the harness icon on gdk-pixbuf's built-in XPM loader; the production SVG
+  # remains covered by the package payload and rsvg-convert build step.
+  cat >"$icon_home/nocted.xpm" <<'EOF'
+/* XPM */
+static const char *nocted_xpm[] = {
+"16 16 2 1",
+". c #0b0d12",
+"+ c #8fb8ff",
+"................",
+"................",
+"....++++++......",
+"....++++++......",
+"....++....++....",
+"....++....++....",
+"....++++++++....",
+"....++++++++....",
+"....++....++....",
+"....++....++....",
+"....++....++....",
+"....++....++....",
+"................",
+"................",
+"................",
+"................"
+};
+EOF
   for size in 16 22 24 32 48 64 128 256; do
-    rsvg-convert -w "$size" -h "$size" \
-      -o "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/com.noctty.NoctEd.png" \
-      resources/com.noctty.NoctEd.svg
+    cp "$icon_home/nocted.xpm" \
+      "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/com.noctty.NoctEd.xpm"
   done
-  rsvg-convert -w 16 -h 16 \
-    -o "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.png" \
-    resources/com.noctty.NoctEd.svg
+  cp "$icon_home/nocted.xpm" \
+    "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.xpm"
+  rm -f "$icon_home/nocted.xpm"
   gtk-update-icon-cache -f "$icon_home/icons/NoctedSmoke" >/dev/null
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \

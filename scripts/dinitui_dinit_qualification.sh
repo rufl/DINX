@@ -11,8 +11,8 @@ dinit_bin=${DINIT_BIN:-dinit}
 dinitctl_bin=${DINITCTL_BIN:-dinitctl}
 dinitui_bin=${DINITUI_BIN:-$root/distro/packages/dinitui/zig-out/bin/dinitui}
 
-command -v "$dinit_bin" >/dev/null 2>&1 || fail "Dinit daemon not found: $dinit_bin"
-command -v "$dinitctl_bin" >/dev/null 2>&1 || fail "dinitctl not found: $dinitctl_bin"
+dinit_bin=$(command -v "$dinit_bin") || fail "Dinit daemon not found: ${DINIT_BIN:-dinit}"
+dinitctl_bin=$(command -v "$dinitctl_bin") || fail "dinitctl not found: ${DINITCTL_BIN:-dinitctl}"
 command -v xvfb-run >/dev/null 2>&1 || fail 'xvfb-run is not installed'
 [[ -x "$dinitui_bin" ]] || fail "DinitUI binary not found: $dinitui_bin"
 

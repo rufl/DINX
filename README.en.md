@@ -13,7 +13,7 @@ The initial platform target is **x86_64**, based on **Artix Linux with dinit**, 
 - **DINX** — the operating-system image, packages, integration contracts and release tooling.
 - **Noctty** — a terminal emulator with a Zig-owned UI and a proven terminal-emulation core.
 - **Nocted** — a lightweight code editor with syntax support, LSP and Git integration.
-- **Dinx Control** — graphical service and system management for dinit.
+- **DinitUI** — a native GTK4/libadwaita frontend focused on Dinit services, units and daemon actions.
 - **BC250 Control Center** — upstream-based BC-250 telemetry, tuning and recovery UI packaged for DINX's Artix/dinit session.
 - **Dinx Theme** — versioned shared design tokens and application-integration contracts.
 
@@ -23,6 +23,7 @@ The applications should integrate deeply with DINX while remaining usable on oth
 
 - [Noctty](https://github.com/rufl/noctty) — private alpha terminal.
 - [Nocted](https://github.com/rufl/nocted) — private alpha code editor.
+- DinitUI is currently developed in `distro/packages/dinitui` so its Dinit/ISO contract stays versioned with DINX; it can move to a dedicated repository after the package boundary stabilizes.
 
 The applications have their own repositories for independent development cycles while remaining connected to DINX shared contracts and releases.
 
@@ -47,8 +48,8 @@ docs/
 shared/
 apps/noctty/
 apps/nocted/
-apps/dinx-control/
 distro/
+  packages/dinitui/
 tests/
 scripts/
 ```
@@ -59,14 +60,14 @@ scripts/
 2. **P1 — Public alpha:** install documentation, checksums, package signing, known issues and a fallback terminal.
 3. **P2 — Noctty:** reliable PTY lifecycle, terminal semantics, rendering, Unicode, scrollback, selection and compatibility with interactive TUIs.
 4. **P3 — Nocted:** reliable editing, syntax highlighting, search, project navigation, LSP and Git status/diffs.
-5. **P4 — Dinx Control:** safe dinit service management and useful system-status views.
+5. **P4 — DinitUI:** safe dinit service management and useful system-status views.
 6. **P5 — Gaming beta:** Gamescope/Steam session, controller and graphics validation, suspend/resume and update testing.
 
 The alpha does not require all first-party applications to be complete. A known-good bootable system takes priority over branding or advanced UI features.
 
 ## Current phase
 
-**P4 — Dinx Control (next).** The P3 Nocted source/package implementation and contract are complete; release depends on the P0 gate covering the package, ISO, QEMU, persistent installation, recovery and attestation. P1 closed with the public `v0.1.0-alpha.5` release. P2 Noctty closed in workflow [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529), commit `bc75f16`. Pacman repository signing, physical hardware, UEFI, upgrades, rollback and production service health remain later gates.
+**P5 — Gaming beta (in progress).** P4 DinitUI implementation and local release qualification are complete: Zig tests/ReleaseSafe build, Arch package payload, static contracts, a real temporary Dinit user daemon and the GTK smoke path pass. P5 now has a standalone Gamescope/Steam session contract, 32-bit graphics profile entries, launcher fixtures and a real headless Gamescope launch/exit qualification. The current ISO workflow, authenticated Steam/game/controller/audio paths, greeter return, physical hardware and suspend/resume remain unclaimed gates. P1 closed with the public `v0.1.0-alpha.5` release; P2 Noctty closed in workflow [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529), commit `bc75f16`.
 
 ## Documentation
 

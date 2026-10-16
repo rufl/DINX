@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gaming"
+desktop="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-gaming.desktop"
+profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
+workflow="$root/.github/workflows/p0-iso.yml"
+iso_check="$root/scripts/check-iso-content.sh"
+
+fail() {
+  printf 'check_gaming: %s\n' "$*" >&2
+  exit 1
+}
+
+for path in "$session" "$desktop" "$profile" "$workflow" "$iso_check"; do
+  [[ -r "$path" ]] || fail "missing $path"
+done
+
+[[ -x "$session" ]] || fail 'gaming launcher is not executable'
+grep -Fq 'XDG_CURRENT_DESKTOP=DINX-Gaming' "$session" || fail 'gaming desktop identity is missing'
+grep -Fq 'SDL_VIDEODRIVER=wayland' "$session" || fail 'Wayland client contract is missing'
+grep -Fq 'exec gamescope --backend drm --steam --fullscreen -- steam -tenfoot' "$session" || fail 'Gamescope Steam command is not the standalone session contract'
+if grep -Eq 'systemctl|/bin/sh -c|dbus-daemon' "$session"; then
+  fail 'gaming launcher contains an init or shell indirection'
+fi
+
+grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' "$desktop" || fail 'gaming session desktop command is incorrect'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-gaming' "$desktop" || fail 'gaming session TryExec is missing'
+grep -Fq 'Name=DINX Gaming' "$desktop" || fail 'gaming session name is missing from desktop metadata'
+
+for package in gamescope steam steam-devices lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers; do
+  grep -Fqx "    - $package" "$profile" || fail "DINX profile is missing $package"
+done
+
+grep -Fq 'scripts/check_gaming.sh' "$workflow" || fail 'workflow does not run the gaming contract gate'
+grep -Fq 'scripts/gaming_p5_qualification.sh' "$workflow" || fail 'workflow trigger does not include gaming qualification changes'
+grep -Fq "gamescope \\" "$workflow" || fail 'ISO builder does not install Gamescope for qualification'
+grep -Fq 'usr/local/libexec/dinx-gaming' "$iso_check" || fail 'ISO payload check does not require the gaming launcher'
+grep -Fq 'usr/share/wayland-sessions/dinx-gaming.desktop' "$iso_check" || fail 'ISO payload check does not require the gaming session'
+grep -Fq 'usr/bin/gamescope' "$iso_check" || fail 'ISO payload check does not require Gamescope'
+grep -Fq 'usr/bin/steam' "$iso_check" || fail 'ISO payload check does not require Steam'
+
+printf 'gaming_contract session=true gamescope=true steam=true multilib=true wayland_session=true\n'

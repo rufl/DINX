@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P4 — Dinx Control (next).** P3 Nocted is complete in the source/package contract; the remaining post-alpha gates are the same release boundaries documented below.
+**P5 — gaming beta (in progress).** P4's DinitUI implementation and local daemon/GTK qualification are complete; the current release workflow still has to build and boot the ISO for the final P4 payload gate.
 
 ## P0 — foundation
 
@@ -88,28 +88,40 @@ P3 release gate:
 
 **Exit criterion:** met. A developer can work on a Zig or C/C++ project, inspect diagnostics and Git changes, and edit without a second editor.
 
-## P4 — Dinx Control
+## P4 — DinitUI
 
-**Goal:** make common dinit operations understandable and safe.
+**Goal:** make Dinit operations understandable, complete and safe without importing systemd concepts.
 
-Backlog:
+**Status:** implementation complete. `zig build test`, ReleaseSafe build, Arch package payload, static contract checks, a real temporary Dinit user daemon and the production GTK smoke path are qualified. The parser handles Dinit's native nested list markers, and permission fallback is covered with a deterministic `pkexec` fixture. The current Artix ISO workflow remains the final package/payload gate.
 
-- service listing and accurate status;
-- start, stop and restart with structured errors;
-- dependencies and available logs;
-- startup profile and hardware-status views;
-- constrained privilege escalation and compatibility tests.
+**Delivered:**
+
+- loaded-service discovery plus system/user description-file discovery;
+- status, buffered logs and state-aware service rows;
+- lifecycle, boot activation, dependency, environment, signal and daemon actions from Dinit's own `dinitctl` vocabulary;
+- validated argv execution, system/user scopes and explicit `pkexec` retry only after authorization failure;
+- package, desktop metadata, license and ISO payload contracts.
+
+Startup-profile and hardware-status views are explicitly deferred to a later P4.1 maintenance slice; they are not hidden prerequisites for this service-control release.
 
 ## P5 — gaming beta
 
 **Goal:** make the gaming session repeatably usable.
 
-Backlog:
+**Status:** session foundation implemented; the gaming exit criterion is not met.
 
-- Gamescope and a separate Steam session;
-- controller, audio, game launch and session exit tests;
-- return to the greeter after game exit;
-- 32-bit graphics libraries and common gaming dependencies;
-- suspend/resume, GPU recovery and update testing on real hardware.
+**Delivered:**
 
-**Exit criterion:** a game can be launched and exited repeatedly without leaving the desktop in a broken state.
+- standalone `DINX Gaming` Wayland session with `dbus-run-session`, Gamescope DRM backend and Steam `-tenfoot`;
+- Steam device package plus 32-bit Mesa/RADV/Vulkan payload entries;
+- fixed launcher argv/return fixture and real headless Gamescope child launch/exit qualification;
+- ISO payload and static contract checks for the session entry and binaries.
+
+**Remaining release gates:**
+
+- current ISO workflow, greeter selection and a real DRM display session;
+- authenticated Steam startup, commercial game launch/exit, controller input and PipeWire audio;
+- return to the greeter after an actual session exit;
+- suspend/resume, GPU recovery and update testing on physical hardware.
+
+**Exit criterion:** a game can be launched and exited repeatedly without leaving the desktop in a broken state. The current fixtures do not claim that criterion.

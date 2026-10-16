@@ -1,0 +1,26 @@
+pkgname=dinitui
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Native desktop manager for Dinit services'
+arch=(x86_64)
+url='https://github.com/rufl/DINX'
+license=(Apache)
+depends=(dinit gtk4 libadwaita polkit)
+makedepends=(zig)
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir"
+  rm -rf "$srcdir/stage"
+  zig build -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
+}
+
+package() {
+  cd "$startdir"
+  install -Dm755 "$srcdir/stage/bin/dinitui" "$pkgdir/usr/bin/dinitui"
+  install -Dm644 resources/dinitui.desktop "$pkgdir/usr/share/applications/dinitui.desktop"
+  install -Dm644 resources/dinitui.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/dinitui/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/dinitui/LICENSE"
+}

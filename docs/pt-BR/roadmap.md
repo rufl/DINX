@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P4 — Dinx Control (próxima).** A P3 Nocted está concluída no contrato de fonte/pacote; os gates pós-alpha restantes são os mesmos limites de release documentados abaixo.
+**P5 — beta de jogos (em andamento).** A implementação e a qualificação local de daemon/GTK da P4 DinitUI estão concluídas; o workflow de release atual ainda precisa compilar e inicializar a ISO para o gate final de payload da P4.
 
 ## P0 — fundação
 
@@ -88,28 +88,40 @@ Gate de release P3:
 
 **Critério de saída:** atendido. Uma pessoa desenvolvedora consegue trabalhar em um projeto Zig ou C/C++, consultar diagnósticos e alterações do Git e editar sem um segundo editor.
 
-## P4 — Dinx Control
+## P4 — DinitUI
 
-**Objetivo:** tornar operações comuns do dinit compreensíveis e seguras.
+**Objetivo:** tornar as operações do Dinit compreensíveis, completas e seguras sem importar conceitos do systemd.
 
-Backlog:
+**Status:** implementação concluída. `zig build test`, build ReleaseSafe, payload do pacote Arch, checks estáticos, um daemon Dinit de usuário temporário real e a superfície GTK de produção foram qualificados. O parser entende os marcadores aninhados nativos da listagem do Dinit, e o fallback de permissão é coberto por um fixture determinístico de `pkexec`. O workflow Artix da ISO atual continua sendo o gate final de pacote/payload.
 
-- listagem de serviços e status correto;
-- iniciar, parar e reiniciar com erros estruturados;
-- dependências e logs disponíveis;
-- visualizações de perfil de inicialização e estado do hardware;
-- elevação de privilégios restrita e testes de compatibilidade.
+**Entregue:**
+
+- descoberta de serviços carregados e de arquivos de descrição no sistema/usuário;
+- status, logs em buffer e linhas de serviço com estado;
+- ações de ciclo de vida, boot, dependência, ambiente, sinais e daemon usando o vocabulário próprio do `dinitctl`;
+- execução por argv validado, escopos system/usuário e retry explícito por `pkexec` somente após falha de autorização;
+- contratos do pacote, metadados desktop, licença e payload da ISO.
+
+As visões de perfil de inicialização e hardware foram explicitamente adiadas para uma fatia de manutenção P4.1; não são pré-requisitos ocultos deste release de controle de serviços.
 
 ## P5 — beta de jogos
 
 **Objetivo:** tornar a sessão de jogos utilizável de forma repetível.
 
-Backlog:
+**Status:** fundação da sessão implementada; o critério de saída gaming ainda não foi atendido.
 
-- Gamescope e uma sessão Steam separada;
-- testes de controles, áudio, lançamento do jogo e saída da sessão;
-- retorno ao greeter após sair do jogo;
-- bibliotecas gráficas de 32 bits e dependências comuns de jogos;
-- testes de suspensão/retomada, recuperação da GPU e atualização em hardware real.
+**Entregue:**
 
-**Critério de saída:** um jogo pode ser iniciado e encerrado repetidamente sem deixar o desktop quebrado.
+- sessão Wayland standalone `DINX Gaming` com `dbus-run-session`, backend DRM do Gamescope e Steam `-tenfoot`;
+- pacote de dispositivos Steam e entradas de payload Mesa/RADV/Vulkan de 32 bits;
+- fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
+- checks de payload da ISO e contrato estático da entrada da sessão e dos binários.
+
+**Gates de release restantes:**
+
+- workflow da ISO atual, seleção pelo greeter e uma sessão DRM real;
+- inicialização Steam autenticada, launch/exit de jogo comercial, controles e áudio PipeWire;
+- retorno ao greeter depois da saída de uma sessão real;
+- suspensão/retomada, recuperação da GPU e testes de atualização em hardware físico.
+
+**Critério de saída:** um jogo pode ser iniciado e encerrado repetidamente sem deixar o desktop quebrado. Os fixtures atuais não alegam esse critério.

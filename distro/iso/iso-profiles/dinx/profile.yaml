@@ -24,6 +24,7 @@ rootfs:
     - calamares-extensions
     - dinit
     - dinit-rc
+    - dinitui
     - dosfstools
     - e2fsprogs
     - efibootmgr
@@ -41,6 +42,12 @@ rootfs:
     - mesa
     - networkmanager
     - vulkan-radeon
+    - gamescope
+    - steam
+    - steam-devices
+    - lib32-mesa
+    - lib32-vulkan-radeon
+    - lib32-vulkan-mesa-layers
     - vulkan-tools
     - nano
     - noctty

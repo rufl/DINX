@@ -34,6 +34,11 @@ GTK applications use the installed `DINX` fallback theme until Noctalia applies 
 
 ReGreet and Calamares consume static DINX bridges because they run before or outside the shell. GRUB uses the same surface/text/primary tokens with its opaque menu textures disabled. `scripts/check_dinx_theme.sh` validates the palette, template set, package inputs and every bridge before the ISO build; `check-iso-content.sh` repeats the payload checks inside SquashFS.
 
+## DinitUI service-manager contract
+
+DinitUI is the DINX frontend for dinit, not a systemd compatibility layer. It discovers loaded services through `dinitctl list` and description files in the system/user Dinit directories, including Dinit's native nested list framing. Its control catalog covers lifecycle, boot dependencies, runtime dependencies, environment, buffered logs, signals and daemon shutdown. `scripts/check_dinitui.sh` covers the package boundary; the real-daemon qualification proves a temporary user daemon through the GTK smoke path.
+The UI passes validated argv tokens directly to `dinitctl`; it never invokes a shell. User scope uses `dinitctl --user`. System scope first tries `dinitctl --system` and uses `pkexec` only after an explicit authorization failure. The ISO payload contract checks the executable, desktop entry, icon, standalone gaming launcher, Wayland session, Gamescope and Steam.
+
 
 
 DINX's Noctalia/Mango desktop contract is explicit:
@@ -85,6 +90,8 @@ The test suite should cover observable contracts rather than implementation deta
 | Fallback | applications remain usable when Noctalia is absent |
 | IPC failure | unavailable or malformed optional IPC does not block startup |
 | Keyboard access | primary actions work without pointer input |
+| DinitUI service control | loaded/file-discovered dinit services, status, lifecycle, dependencies, environment, logs, signals and shutdown use validated `dinitctl` argv with scoped `pkexec` fallback |
+| Gaming session | standalone `dbus-run-session` Gamescope/Steam entry, 32-bit Mesa/RADV/Vulkan payload, fixture launch/exit and headless Gamescope child launch/exit |
 
 ## P2 Noctty release gate
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+export XDG_CURRENT_DESKTOP=DINX-Gaming
+export XDG_SESSION_DESKTOP=dinx-gaming
+export SDL_VIDEODRIVER=wayland
+export STEAM_RUNTIME=1
+
+exec gamescope --backend drm --steam --fullscreen -- steam -tenfoot

@@ -15,16 +15,17 @@ A imagem live inclui intencionalmente a conta de teste descartável `dinx`, com 
 
 ## Operações privilegiadas
 
-O Dinx Control e futuros componentes gráficos de manutenção DEVEM:
+DinitUI e futuros componentes gráficos de manutenção DEVEM:
 
 - expor um conjunto finito de ações, em vez de execução arbitrária de comandos;
-- validar identificadores de serviço contra a interface do gerenciador de serviços;
-- usar um helper restrito ou uma política polkit documentada para elevar privilégios;
+- validar identificadores de serviço e argumentos tipados contra a interface do Dinit;
+- invocar `dinitctl` por argv, nunca por shell;
+- usar escopo direto de usuário/sistema e tentar `pkexec` somente após falha explícita de autorização;
 - retornar status e erros estruturados;
-- evitar completamente interpolação em shell;
-- registrar a ação solicitada e seu resultado no caminho normal de journal/log do sistema.
+- expor a ação solicitada, exit status e saída do comando; usar o log próprio do Dinit para diagnóstico do serviço.
 
 A interface deve diferenciar um serviço parado, com falha, desconhecido ou inacessível. Nunca deve informar sucesso apenas porque um processo foi iniciado.
+A sessão gaming também é um limite fixo: o launcher no root overlay inicia somente o argv empacotado de Gamescope/Steam, sem interpolação de shell ou serviço systemd. As bibliotecas de compatibilidade systemd/32 bits do Steam são dependências de payload, não um runtime de init; o gate de conteúdo da ISO rejeita o daemon/runtime systemd e o systemctl. Dispositivos de controle, conteúdo dos jogos, credenciais Steam e serviços de rede continuam entradas controladas pelo usuário fora da qualificação por fixture da alpha.
 
 ## Confiança em pacotes e ISOs
 

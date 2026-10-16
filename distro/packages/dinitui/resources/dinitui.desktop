@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=DinitUI
+GenericName=Dinit service manager
+Comment=Inspect and control Dinit services
+Exec=dinitui
+Icon=org.dinx.DinitUI
+Terminal=false
+Type=Application
+Categories=System;
+Keywords=dinit;services;init;daemon;
+StartupNotify=true

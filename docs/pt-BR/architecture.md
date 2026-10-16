@@ -13,7 +13,7 @@
 
 ```text
 Aplicativos DINX
-  Noctty · Nocted · Dinx Control
+  Noctty · Nocted · DinitUI
 
 Contratos compartilhados de integração
   Dinx Theme · caminhos XDG · metadados .desktop · $TERMINAL · IPC opcional do Noctalia
@@ -63,9 +63,9 @@ Nocted é um editor de código leve, não um IDE completo. Seus limites são:
 
 O editor deve continuar útil sem o Noctalia. O Noctalia fornece apresentação e integração opcional com o launcher, não a funcionalidade principal do editor.
 
-### Dinx Control
+### DinitUI
 
-Dinx Control apresenta o status do dinit e ações seguras do sistema. Deve usar uma interface restrita de serviço/ação e um limite de privilégios documentado. Não pode interpolar nomes arbitrários de serviços ou texto do usuário em comandos de shell.
+DinitUI apresenta serviços dinit carregados e descobertos, status, logs em buffer, ciclo de vida, dependências, ambiente e ações do daemon. Usa uma interface `dinitctl` restrita por argv, valida tokens de serviço/argumentos, entende os marcadores aninhados da listagem nativa do Dinit e só tenta autorização de escopo system por `pkexec` após uma falha explícita de permissão. Não pode interpolar texto do usuário em comandos de shell. O smoke contra daemon real usa um daemon Dinit de usuário temporário e prova a descoberta pela superfície GTK de produção.
 
 ## Contratos compartilhados
 
@@ -84,7 +84,7 @@ O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânti
 
 ## Sessão de jogos
 
-A sessão de jogos é separada e baseada em Gamescope e Steam. Ela não pode presumir que o desktop completo do Noctalia esteja em execução. Entrada na sessão, lançamento do jogo, controles, áudio, saída da sessão e retorno ao greeter são caminhos de aceitação explícitos.
+A sessão de jogos é separada e baseada em Gamescope e Steam. `dinx-gaming` inicia `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` a partir de uma entrada Wayland standalone com `dbus-run-session`; ela não presume Noctalia ou Mango em execução por baixo. O perfil inclui as dependências Mesa/RADV/Vulkan de 32 bits do Steam e `steam-devices`. `scripts/gaming_p5_qualification.sh` prova argv/retorno do launcher com fixtures e prova lançamento/saída de um filho real headless do Gamescope; não afirma login Steam autenticado, jogo comercial, hardware de controle/áudio, display DRM, suspensão/retomada ou recuperação de GPU.
 
 ## Caminho de instalação selecionado
 
@@ -98,7 +98,7 @@ Esse caminho continua experimental até qualificarmos uma instalação limpa UEF
 
 O caminho do instalador está selecionado, mas estas decisões continuam abertas antes de um release persistente de produção:
 
-- toolkit Wayland e backend dos aplicativos próprios;
+- toolkit Wayland e backend dos aplicativos próprios restantes; o DinitUI seleciona GTK4/libadwaita com o backend Wayland nativo do GTK;
 - layout do repositório de pacotes e responsabilidade pela chave de assinatura;
 - matriz de GPUs e hardware suportados;
 - política de licença do repositório e dos artefatos.

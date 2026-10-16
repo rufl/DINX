@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">DinitUI</title>
+  <desc id="desc">Three connected service nodes on the DINX blue accent.</desc>
+  <rect width="128" height="128" rx="28" fill="#0b0d12"/>
+  <path d="M31 39h66M31 89h66M39 39v50M89 39v50" fill="none" stroke="#222a38" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="31" cy="39" r="14" fill="#8fb8ff"/>
+  <circle cx="97" cy="39" r="14" fill="#9ece6a"/>
+  <circle cx="31" cy="89" r="14" fill="#bb9af7"/>
+  <circle cx="97" cy="89" r="14" fill="#f7768e"/>
+  <circle cx="64" cy="64" r="17" fill="#11151d" stroke="#d7dde8" stroke-width="5"/>
+  <path d="M57 64h14M64 57v14" stroke="#8fb8ff" stroke-width="5" stroke-linecap="round"/>
+</svg>

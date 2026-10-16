@@ -34,6 +34,11 @@ Aplicativos GTK usam o tema fallback instalado `DINX` até o Noctalia aplicar se
 
 ReGreet e Calamares consomem bridges estáticas DINX porque executam antes ou fora do shell. O GRUB usa os mesmos tokens de superfície/texto/primário, com as texturas opacas do menu desativadas. `scripts/check_dinx_theme.sh` valida a paleta, os templates, os pacotes e cada bridge antes do build da ISO; `check-iso-content.sh` repete as verificações dentro do SquashFS.
 
+## Contrato do gerenciador de serviços DinitUI
+
+DinitUI é o frontend DINX do dinit, não uma camada de compatibilidade com systemd. Descobre serviços carregados por `dinitctl list` e arquivos de descrição nos diretórios Dinit do sistema/usuário, incluindo o framing aninhado nativo do Dinit. Seu catálogo cobre ciclo de vida, dependências de boot/runtime, ambiente, logs em buffer, sinais e desligamento. `scripts/check_dinitui.sh` cobre o limite do pacote; a qualificação contra daemon real prova um daemon de usuário temporário pela superfície GTK.
+A UI passa tokens validados diretamente ao `dinitctl`; nunca inicia um shell. O escopo de usuário usa `dinitctl --user`. O escopo system tenta primeiro `dinitctl --system` e usa `pkexec` somente após falha explícita de autorização. O contrato do payload da ISO verifica executável, desktop, ícone, launcher gaming standalone, sessão Wayland, Gamescope e Steam.
+
 
 
 O contrato de desktop Noctalia/Mango da DINX é explícito:
@@ -85,6 +90,8 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Fallback | aplicativos continuam utilizáveis sem o Noctalia |
 | Falha de IPC | IPC indisponível ou malformado não impede a inicialização |
 | Acesso por teclado | ações principais funcionam sem entrada de ponteiro |
+| Controle de serviços DinitUI | serviços dinit carregados/descobertos por arquivo, status, ciclo de vida, dependências, ambiente, logs, sinais e shutdown usam argv validado do `dinitctl` com fallback `pkexec` restrito |
+| Sessão gaming | entrada standalone `dbus-run-session` Gamescope/Steam, payload Mesa/RADV/Vulkan de 32 bits, launch/exit por fixture e launch/exit de filho headless do Gamescope |
 
 ## Gate de release da P2 — Noctty
 

@@ -42,6 +42,14 @@ required_paths=(
   etc/calamares/modules/welcome.conf
   etc/calamares/settings.conf
   etc/dinit.d/greetd
+  usr/bin/dinitui
+  usr/share/applications/dinitui.desktop
+  usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg
+  usr/share/licenses/dinitui/LICENSE
+  usr/local/libexec/dinx-gaming
+  usr/share/wayland-sessions/dinx-gaming.desktop
+  usr/bin/gamescope
+  usr/bin/steam
   etc/dinit.d/bluetoothd
   etc/dinit.d/root-ro
   etc/greetd/regreet.toml
@@ -186,6 +194,14 @@ required_paths=(
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
+gaming_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-gaming)
+grep -Fq 'exec gamescope --backend drm --steam --fullscreen -- steam -tenfoot' <<<"$gaming_launcher" || fail 'DINX gaming launcher command is incorrect'
+if grep -Eq 'systemctl|/bin/sh -c|dbus-daemon' <<<"$gaming_launcher"; then
+  fail 'DINX gaming launcher contains a forbidden init or shell indirection'
+fi
+gaming_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-gaming.desktop)
+grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session command is incorrect'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session TryExec is missing'
 
 plasma_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/xsessions/plasmax11.desktop)
 grep -Fq 'Hidden=true' <<<"$plasma_session" || fail 'Plasma X11 session is not hidden from the DINX greeter'
@@ -294,7 +310,6 @@ grep -Fq 'audio/flac=org.strawberrymusicplayer.strawberry.desktop;' <<<"$mimeapp
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
   etc/systemd \
-  var/lib/pacman/local/systemd- \
   usr/lib/systemd/systemd \
   usr/lib/systemd/user/bc250-control-centerd.service \
   usr/lib/systemd/system/cyan-skillfish-governor-smu.service.d/91-bc250-control-center-overlay-preflight.conf \
@@ -312,6 +327,10 @@ for forbidden_path in \
     fail "forbidden desktop/runtime payload is present: $forbidden_path"
   fi
 done
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/systemd-[0-9][^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'systemd init package metadata is present; compatibility libraries are allowed'
+fi
 
 mango_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/mango/config.conf)
 grep -Fq 'tag_num=2' <<<"$mango_user_config" || fail 'Mango user workspace default is not two'
@@ -345,6 +364,11 @@ grep -Fq 'Exec=noctty --open-uri %u' <<<"$noctty_desktop" || fail 'NOCTTY deskto
 nocted_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NoctEd.desktop)
 grep -Fq 'Exec=nocted %F' <<<"$nocted_desktop" || fail 'NoctEd desktop launcher is missing'
 grep -Fq 'Icon=com.noctty.NoctEd' <<<"$nocted_desktop" || fail 'NoctEd desktop icon is missing'
+dinitui_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinitui.desktop)
+grep -Fq 'Exec=dinitui' <<<"$dinitui_desktop" || fail 'DinitUI desktop launcher is missing'
+grep -Fq 'Icon=org.dinx.DinitUI' <<<"$dinitui_desktop" || fail 'DinitUI desktop icon contract is missing'
+grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missing'
+grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/bin/clangd' <<<"$manifest" || fail 'clangd runtime is missing'
 grep -Fq '/usr/share/nocted/styles/nocted-light.xml' <<<"$manifest" || fail 'NoctEd light scheme is missing'
 

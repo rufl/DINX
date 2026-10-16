@@ -13,7 +13,7 @@
 
 ```text
 DINX applications
-  Noctty · Nocted · Dinx Control
+  Noctty · Nocted · DinitUI
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · optional Noctalia IPC
@@ -63,9 +63,9 @@ Nocted is a lightweight code editor, not a full IDE. Its boundaries are:
 
 The editor must remain useful without Noctalia. Noctalia supplies optional presentation and launcher integration, not the editor's core functionality.
 
-### Dinx Control
+### DinitUI
 
-Dinx Control presents dinit status and safe system actions. It must use a constrained service/action interface and a documented privilege boundary. It must not interpolate arbitrary service names or user text into shell commands.
+DinitUI presents loaded and discoverable dinit services, status, buffered logs, service lifecycle, dependencies, environment and daemon actions. It uses a constrained `dinitctl` argv interface, validates service/argument tokens, handles Dinit's native nested list markers, and retries system-scope authorization only through `pkexec` after an explicit permission failure. It must not interpolate user text into shell commands. The real-daemon smoke uses a temporary Dinit user daemon and proves service discovery through the production GTK surface.
 
 ## Shared contracts
 
@@ -84,7 +84,7 @@ The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/p
 
 ## Gaming session
 
-Gaming is a separate session built around Gamescope and Steam. It must not assume that the full Noctalia desktop is running underneath. Session entry, game launch, controller input, audio, session exit and return to the greeter are explicit acceptance paths.
+Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry; it does not assume that Noctalia or Mango is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures and proves a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware, DRM display, suspend/resume or GPU recovery.
 
 ## Installation path selected
 
@@ -98,7 +98,7 @@ This path is experimental until a clean UEFI/BIOS VM installation, first boot, r
 
 The installer path is selected, but these decisions remain open before a persistent production release:
 
-- Wayland UI toolkit and backend for first-party applications;
+- Wayland UI toolkit and backend for remaining first-party applications; DinitUI selects GTK4/libadwaita with the native GTK Wayland backend;
 - package repository layout and signing-key ownership;
 - supported GPU and hardware matrix;
 - repository and artifact license policy.

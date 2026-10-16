@@ -158,8 +158,10 @@ EOF
     dialog-question \
     dialog-error \
     image-missing; do
-    cp "$icon_home/nocted.xpm" \
-      "$icon_home/icons/NoctedSmoke/16x16/apps/${icon_name}.xpm"
+    for size in 16 22 24 32 48 64 128 256; do
+      cp "$icon_home/nocted.xpm" \
+        "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/${icon_name}.xpm"
+    done
   done
   rm -f "$icon_home/nocted.xpm"
   gtk-update-icon-cache -f "$icon_home/icons/NoctedSmoke" >/dev/null

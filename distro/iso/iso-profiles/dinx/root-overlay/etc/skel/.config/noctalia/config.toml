@@ -1,13 +1,16 @@
-# DINX defaults to a dark, static, opaque Noctalia palette.
+# DINX uses one palette for Noctalia, terminals, GTK and Qt consumers.
 [theme]
 mode = "dark"
+shell_mode = "follow"
+source = "custom"
+custom_palette = "DINX"
+sync_color_scheme = true
 
 [theme.templates]
 enable_builtin_templates = true
-builtin_ids = []
+builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "mango", "qt"]
 enable_community_templates = false
 community_ids = []
-
 
 [bar]
 order = ["main"]
@@ -65,6 +68,7 @@ launcher_position = "none"
 pinned = ["firefox", "io.github.movacx.bc250-control-center", "org.pwmt.zathura", "swayimg", "vlc", "org.strawberrymusicplayer.strawberry", "com.saivert.pwvucontrol", "com.shellyorg.shelly", "gufw", "qps", "opensnitch_ui", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
 
 [shell]
+font_family = "Cantarell"
 settings_window_translucent = false
 
 [shell.animation]

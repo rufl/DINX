@@ -13,6 +13,7 @@ The entry points are:
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` and `scripts/check_bc250_control_center.sh` — Firefox, pinned application, Artix package-management, firewall, hardware and BC250 Control Center contracts;
+- `scripts/check_dinx_theme.sh` — DINX palette, application-template and greeter/installer/GRUB bridge contract;
 - `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
 - `scripts/nocted_p3_qualification.sh` — deterministic P3 matrix for Nocted core/index/workers/state/tasks, real `clangd`, native GTK/X11 dark/light smoke and Git status/diff;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
@@ -58,13 +59,13 @@ The live overlay also replaces the generic `root-ro` dinit service with a no-op:
 
 The Mango wrapper enables `WLR_RENDERER_ALLOW_SOFTWARE=1` only when `/dev/dri/renderD*` is absent, so the headless QEMU path does not mask a real DRM render node.
 
-The profile now owns the Artix GRUB theme configuration at `root-overlay/usr/share/grub/themes/artix/theme.txt`. It keeps the upstream background, logo, icons and font assets but omits the opaque `menu_pixmap_style` and `selected_item_pixmap_style` textures that produced a black panel on the graphical kernel-selection screen. `scripts/check-iso-content.sh` verifies that this DINX override reaches the root SquashFS image.
-
+The profile owns the DINX visual contract at `root-overlay/etc/skel/.config/noctalia/palettes/DINX.json`. `scripts/check_dinx_theme.sh` validates both palette variants, Noctalia templates, GTK/Qt/Mango adapters, ReGreet, Calamares and GRUB before `buildiso`; `scripts/check-iso-content.sh` verifies the same files inside the root SquashFS image.
+The profile also owns the Artix GRUB theme configuration at `root-overlay/usr/share/grub/themes/artix/theme.txt`. It keeps the upstream logo, icons and font assets, uses the DINX surface/text/primary colors, and omits the opaque `menu_pixmap_style` and `selected_item_pixmap_style` textures that produced a black panel on the graphical kernel-selection screen.
 For a local graphical capture, set `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` and optionally `DINX_QEMU_SCREENSHOT_DELAY` before running `scripts/smoke-iso.sh`; the workflow uses the same boot keys, a 60-second delay and uploads the PPM with the ISO artifact.
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 
-The profile also embeds an experimental offline Calamares path with DINX dark branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, dark defaults for ReGreet and Noctalia, disabled Noctalia animation/transparency defaults, the two-desktop Mango default and its user override, the DINX installer launcher, the fallback `foot` terminal, the `nano` recovery editor, File Roller through the Thunar archive plugin and the removable-media stack. `scripts/smoke-install.sh` qualifies the destructive operations on an ephemeral BIOS disk: it copies the ISO rootfs, removes live-only packages, creates a user/fstab, enables dinit plus `getty@tty2`/`tty3`, generates initramfs/GRUB, boots the disk and captures the recovery-TTY transition. It is a CI contract smoke, not arbitrary…
+The profile also embeds an experimental offline Calamares path with DINX branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, DINX palette/template defaults, ReGreet, Noctalia, Mango and recovery payloads. `scripts/smoke-install.sh` verifies the offline BIOS install, initramfs/GRUB generation, first boot and recovery TTY on an ephemeral disk; it is a CI contract smoke, not arbitrary hardware qualification.
 
 For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT`, optionally `DINX_QEMU_POST_SCREENSHOT_DELAY` and `DINX_QEMU_POST_KEYS`. This does not prove that the greeter accepted credentials.
 

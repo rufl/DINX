@@ -16,6 +16,7 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check-iso-host.sh"
+      - "scripts/check_dinx_theme.sh"
       - "scripts/check_noctty_integration.sh"
       - "scripts/nocted_p3_qualification.sh"
       - "scripts/noctty_p2_qualification.sh"
@@ -161,6 +162,7 @@ jobs:
                 xz \
                 zlib \
                 rust
+              gdk-pixbuf-query-loaders --update-cache
               zig_version=0.17.0
               zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
               zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
@@ -232,6 +234,7 @@ jobs:
               trap "kill $repo_pid 2>/dev/null || true" EXIT
 
               scripts/check-iso-host.sh
+              scripts/check_dinx_theme.sh
               scripts/build-iso.sh
             '
           sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/dist/iso"

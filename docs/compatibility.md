@@ -28,6 +28,12 @@ Nocted's adapter contract is intentionally small: `NOCTALIA_COLOR_SCHEME=light` 
 
 The P3 compatibility gate exercises both schemes through the native GTK smoke path, checks the NoctEd `.desktop` file-opening contract, and runs the real `clangd` LSP probe. A Git repository is optional; when present, the Tools action reports bounded status and unified diff output with per-file markers.
 Firefox is shipped with `/etc/firefox/policies/policies.json`. The policy removes sponsored New Tab/Suggest surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection. Firefox Accounts remains opt-in and user-controlled; normal browser updates stay enabled.
+The shipped session contract is the `DINX` Noctalia palette at `~/.config/noctalia/palettes/DINX.json`. It defines dark/light semantic roles and the complete terminal ANSI palette; Noctalia is configured with `source = "custom"`, `sync_color_scheme = true`, and the built-in `btop`, `foot`, `ghostty`, GTK 3/4, KDE, Mango and Qt templates.
+
+GTK applications use the installed `DINX` fallback theme until Noctalia applies its generated CSS. Qt applications use `qt6ct` with Noctalia's generated `~/.config/qt6ct/colors/noctalia.conf`; Mango consumes the generated `~/.config/mango/noctalia.conf`. Swayimg receives a DINX overlay/gallery fallback in `~/.config/swayimg/init.lua`. The session exports the documented `NOCTALIA_COLOR_SCHEME`, `NOCTED_THEME`, `QT_QPA_PLATFORMTHEME`, `XCURSOR_THEME` and `XCURSOR_SIZE` defaults.
+
+ReGreet and Calamares consume static DINX bridges because they run before or outside the shell. GRUB uses the same surface/text/primary tokens with its opaque menu textures disabled. `scripts/check_dinx_theme.sh` validates the palette, template set, package inputs and every bridge before the ISO build; `check-iso-content.sh` repeats the payload checks inside SquashFS.
+
 
 
 DINX's Noctalia/Mango desktop contract is explicit:
@@ -65,6 +71,9 @@ The test suite should cover observable contracts rather than implementation deta
 | Launch arguments | file, line and working-directory behavior is deterministic |
 | Theme import | a documented theme fixture produces the expected semantic colors |
 | Theme change | a supported update path changes the application without data loss |
+| DINX palette | both Noctalia palette variants contain all semantic roles and ANSI terminal colors |
+| Application templates | btop, Foot, Ghostty, GTK 3/4, KDE, Mango and Qt consume the generated Noctalia outputs; Swayimg uses the DINX overlay fallback |
+| Greeter/installer/boot | ReGreet, Calamares and GRUB expose DINX surface, text, selection and focus states |
 | Firefox default | Firefox is the default HTML/XHTML/HTTP/HTTPS handler |
 | Firefox pro-user policy | `policies.json` parses and disables sponsored surfaces, Pocket/Stories, telemetry, recommendations, AI assistant surfaces and built-in IP Protection while keeping updates enabled |
 | Desktop layout | Mango opens new windows floating; Noctalia reserves the top bar and bottom dock |

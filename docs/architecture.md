@@ -80,6 +80,8 @@ Shared contracts are versioned independently from application internals:
 
 A contract must have a documented version and a compatibility test before applications rely on it.
 
+The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/primary/error roles, light/dark variants, and a complete ANSI terminal palette. GTK/Qt/Mango consume the documented Noctalia template outputs; ReGreet, Calamares and GRUB use static bridges with the same tokens. `scripts/check_dinx_theme.sh` is the contract qualification.
+
 ## Gaming session
 
 Gaming is a separate session built around Gamescope and Steam. It must not assume that the full Noctalia desktop is running underneath. Session entry, game launch, controller input, audio, session exit and return to the greeter are explicit acceptance paths.

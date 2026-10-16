@@ -13,6 +13,7 @@ Os pontos de entrada são:
 - `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do código fixado do NOCTTY/NoctEd;
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos do Firefox, aplicativos fixados, gerenciamento Artix, firewall, hardware e BC250 Control Center;
+- `scripts/check_dinx_theme.sh` — contrato da paleta DINX, dos templates de aplicativos e das bridges do greeter/instalador/GRUB;
 - `scripts/noctty_p2_qualification.sh` — matriz P2 determinística em ReleaseSafe para allocator/fairness, continuidade de PTY/sessão, ncurses e TUIs do sistema;
 - `scripts/nocted_p3_qualification.sh` — matriz P3 determinística para core/índice/workers/estado/tarefas do Nocted, `clangd` real, smoke GTK/X11 nativo claro/escuro e status/diff do Git;
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
@@ -59,13 +60,14 @@ A sobreposição live também substitui o serviço dinit genérico `root-ro` por
 
 O wrapper do Mango habilita `WLR_RENDERER_ALLOW_SOFTWARE=1` somente quando `/dev/dri/renderD*` está ausente; portanto, o caminho QEMU headless não mascara um render node DRM real.
 
-O perfil agora controla a configuração do tema GRUB do Artix em `root-overlay/usr/share/grub/themes/artix/theme.txt`. Ele mantém os assets upstream de fundo, logo, ícones e fonte, mas omite as texturas opacas `menu_pixmap_style` e `selected_item_pixmap_style` que produziam um painel preto na tela gráfica de seleção do kernel. `scripts/check-iso-content.sh` verifica que esse override da DINX chega à imagem SquashFS do root.
+O perfil controla o contrato visual DINX em `root-overlay/etc/skel/.config/noctalia/palettes/DINX.json`. `scripts/check_dinx_theme.sh` valida as duas variantes da paleta, os templates do Noctalia, os adaptadores GTK/Qt/Mango, ReGreet, Calamares e GRUB antes do `buildiso`; `scripts/check-iso-content.sh` verifica os mesmos arquivos dentro da imagem SquashFS do root.
 
 Para uma captura gráfica local, defina `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` e, opcionalmente, `DINX_QEMU_SCREENSHOT_DELAY` antes de executar `scripts/smoke-iso.sh`; o workflow usa as mesmas teclas, atraso de 60 segundos e publica o PPM junto com o artefato da ISO.
 
 O workflow também captura `dinx-boot-screen.ppm` três segundos depois que o QEMU abre e antes do envio das teclas do menu de boot. Isso fornece evidência visual direta de regressão para a tela GRUB de seleção do kernel.
+O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, mantendo os assets de logo/fonte do Artix. As texturas opacas do menu ficam desativadas, então o menu de boot, o greeter, o instalador e o desktop compartilham a mesma hierarquia visual plana.
 
-O perfil também incorpora um caminho experimental offline do Calamares com branding DINX escuro, módulos de serviço dinit e um KDE Partition Manager independente. A verificação de conteúdo confirma a configuração do instalador, os defaults escuros do ReGreet e do Noctalia, os defaults de animação/transparência desativados do Noctalia, o default de dois desktops do Mango e seu override editável pelo usuário, o launcher do instalador DINX, o terminal fallback `foot`, o editor de recuperação `nano`, o File Roller pelo plugin de arquivos compactados do Thunar e a stack de mídia removível. `scripts/smoke-install.sh` qualifica as operações destrutivas em um disco BIOS efêmero: copia o rootfs da ISO, remove os pacotes exclusivos da sessão live, cria usuário/fstab, habilita dinit e `getty@tty2`/`tty3`, gera initramfs/GRUB, inicializa o disco e captura a transição para a TTY de recuperação. É um smoke de contrato do CI, não…
+O perfil também incorpora um caminho experimental offline do Calamares com branding DINX, módulos de serviço dinit e um KDE Partition Manager independente. A verificação de conteúdo confirma a paleta/templates DINX, ReGreet, Noctalia, Mango e os payloads de recuperação. `scripts/smoke-install.sh` verifica a instalação BIOS offline, a geração de initramfs/GRUB, o primeiro boot e a TTY de recuperação em um disco efêmero; é um smoke de contrato do CI, não uma qualificação arbitrária de hardware.
 
 Para uma segunda captura diagnóstica após entrada de teclas, defina também `DINX_QEMU_POST_SCREENSHOT` e, opcionalmente, `DINX_QEMU_POST_SCREENSHOT_DELAY` e `DINX_QEMU_POST_KEYS`. Isso não prova que o greeter aceitou as credenciais.
 

@@ -80,6 +80,8 @@ Os contratos compartilhados são versionados independentemente dos detalhes inte
 
 Um contrato deve ter uma versão documentada e um teste de compatibilidade antes de ser usado pelos aplicativos.
 
+O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânticos de superfície/texto/primário/erro, variantes claro/escuro e paleta ANSI completa do terminal. GTK/Qt/Mango consomem as saídas documentadas dos templates do Noctalia; ReGreet, Calamares e GRUB usam bridges estáticas com os mesmos tokens. `scripts/check_dinx_theme.sh` é a qualificação do contrato.
+
 ## Sessão de jogos
 
 A sessão de jogos é separada e baseada em Gamescope e Steam. Ela não pode presumir que o desktop completo do Noctalia esteja em execução. Entrada na sessão, lançamento do jogo, controles, áudio, saída da sessão e retorno ao greeter são caminhos de aceitação explícitos.

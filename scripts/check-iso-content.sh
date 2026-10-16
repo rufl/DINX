@@ -49,8 +49,23 @@ required_paths=(
   etc/mango/greeter.conf
   etc/profile.d/dinx.sh
   etc/skel/.bash_profile
+  etc/skel/.config/gtk-3.0/settings.ini
+  etc/skel/.config/gtk-4.0/settings.ini
+  etc/skel/.config/mango/config.conf
+  etc/skel/.config/noctalia/config.toml
+  etc/skel/.config/noctalia/palettes/DINX.json
+  etc/skel/.config/qt6ct/qt6ct.conf
+  etc/skel/.config/swayimg/init.lua
   etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
+  usr/share/themes/DINX/gtk-3.0/gtk.css
+  usr/share/themes/DINX/gtk-4.0/gtk.css
+  usr/share/themes/DINX/index.theme
+  usr/share/themes/DINX/gtk-3.0/gtk-dark.css
+  usr/share/themes/DINX/gtk-4.0/gtk-dark.css
+  usr/bin/qt6ct
+  usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
+  usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
   usr/bin/foot
   usr/bin/file-roller
   usr/bin/nano
@@ -100,7 +115,6 @@ required_paths=(
   usr/bin/bc250-control-center
   usr/bin/bc250-control-center-cli
   usr/bin/bc250-control-centerd
-  usr/bin/cyan-skillfish-performance-mode
   etc/cyan-skillfish-governor-smu/config.toml
   etc/dinit.d/cyan-skillfish-governor-smu
   usr/local/libexec/dinx-cyan-skillfish-governor
@@ -141,22 +155,6 @@ required_paths=(
   usr/share/applications/org.pwmt.zathura.desktop
   usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
-  usr/share/applications/firefox.desktop
-  etc/firefox/policies/policies.json
-  usr/local/bin/dinx-terminal
-  usr/share/applications/dinx-terminal-fallback.desktop
-  usr/bin/udisksctl
-  usr/lib/gvfs-udisks2-volume-monitor
-  usr/lib/gvfsd-gphoto2
-  usr/lib/gvfsd-mtp
-  usr/lib/gvfsd-smb
-  usr/lib/udisks2/udisksd
-  usr/lib/thunarx-3/thunar-archive-plugin.so
-  usr/lib/xfce4/thunar-archive-plugin/file-roller.tap
-  usr/lib/tumbler-1/tumblerd
-  usr/share/applications/thunar.desktop
-  usr/share/dbus-1/services/org.gtk.vfs.UDisks2VolumeMonitor.service
-  usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service
   usr/bin/mango
   usr/bin/mmsg
   usr/bin/noctalia
@@ -202,9 +200,12 @@ grep -Fq 'DINX GRUB theme override.' <<<"$grub_theme" || fail 'DINX GRUB theme o
 if grep -Eq '^[[:space:]]*(menu_pixmap_style|selected_item_pixmap_style)[[:space:]]*=' <<<"$grub_theme"; then
   fail 'DINX GRUB theme still enables opaque menu textures'
 fi
+grep -Fq 'desktop-color: "#0b0d12"' <<<"$grub_theme" || fail 'DINX GRUB background color is missing'
+grep -Fq 'selected_item_color = "#8fb8ff"' <<<"$grub_theme" || fail 'DINX GRUB accent color is missing'
 
 regreet_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/regreet.toml)
 grep -Fq 'application_prefer_dark_theme = true' <<<"$regreet_config" || fail 'ReGreet dark mode is not enabled'
+grep -Fq 'theme_name = "DINX"' <<<"$regreet_config" || fail 'ReGreet DINX theme is not enabled'
 
 noctalia_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/config.toml)
 grep -Fq 'mode = "dark"' <<<"$noctalia_config" || fail 'Noctalia dark mode is not enabled'
@@ -228,6 +229,26 @@ grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured
 grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
 grep -Fq 'pinned = ["firefox"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
 grep -Fq 'io.github.movacx.bc250-control-center' <<<"$noctalia_config" || fail 'Noctalia dock does not pin BC250 Control Center'
+noctalia_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/palettes/DINX.json)
+grep -Fq '"mSurface": "#0b0d12"' <<<"$noctalia_palette" || fail 'DINX Noctalia surface palette is missing'
+grep -Fq '"mPrimary": "#8fb8ff"' <<<"$noctalia_palette" || fail 'DINX Noctalia primary palette is missing'
+grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "mango", "qt"]' <<<"$noctalia_config" || fail 'Noctalia application templates are missing'
+gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
+grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
+grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
+gtk4_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk.css)
+grep -Fq 'background-color: #0b0d12' <<<"$gtk4_theme" || fail 'DINX GTK4 surface is missing'
+grep -Fq 'background-color: #8fb8ff' <<<"$gtk4_theme" || fail 'DINX GTK4 accent is missing'
+qt6ct_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/qt6ct.conf)
+grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/noctalia.conf' <<<"$qt6ct_config" || fail 'Qt6ct Noctalia color path is missing'
+swayimg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/swayimg/init.lua)
+grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' <<<"$swayimg_config" || fail 'DINX Swayimg surface is missing'
+gtk_index=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/index.theme)
+grep -Fq 'Name=DINX' <<<"$gtk_index" || fail 'DINX GTK theme index is missing'
+gtk3_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk-dark.css)
+grep -Fqx '@import url("gtk.css");' <<<"$gtk3_dark_theme" || fail 'DINX GTK3 dark bridge is missing'
+gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk-dark.css)
+grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dark bridge is missing'
 
 ufw_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/ufw/ufw.conf)
 grep -Fq 'ENABLED=no' <<<"$ufw_config" || fail 'UFW is not disabled by default for safe manual configuration'
@@ -258,6 +279,8 @@ grep -Fq 'bind=SUPER,space,togglefloating,' <<<"$mango_config" || fail 'Mango fl
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
 grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is missing'
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
+grep -Fq 'QT_QPA_PLATFORMTHEME=' <<<"$shell_config" || fail 'Qt6ct session integration is missing'
+grep -Fq 'NOCTALIA_COLOR_SCHEME=' <<<"$shell_config" || fail 'Noctalia color scheme session integration is missing'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
 grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
@@ -292,6 +315,7 @@ done
 
 mango_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/mango/config.conf)
 grep -Fq 'tag_num=2' <<<"$mango_user_config" || fail 'Mango user workspace default is not two'
+grep -Fq 'source_optional=~/.config/mango/noctalia.conf' <<<"$mango_user_config" || fail 'Mango Noctalia color path is missing'
 
 calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/settings.conf)
 grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares branding is not selected'
@@ -302,7 +326,8 @@ grep -Fq 'getty@tty2' <<<"$calamares_services" || fail 'Calamares recovery TTY s
 grep -Fq 'getty@tty3' <<<"$calamares_services" || fail 'Calamares second recovery TTY service is not selected'
 
 calamares_branding=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/branding/dinx/stylesheet.qss)
-grep -Fq '#11151c' <<<"$calamares_branding" || fail 'DINX Calamares dark stylesheet is missing'
+grep -Fq '#0b0d12' <<<"$calamares_branding" || fail 'DINX Calamares surface is missing'
+grep -Fq '#8fb8ff' <<<"$calamares_branding" || fail 'DINX Calamares accent is missing'
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'

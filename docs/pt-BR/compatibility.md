@@ -28,6 +28,12 @@ O contrato do adaptador do Nocted é deliberadamente pequeno: `NOCTALIA_COLOR_SC
 
 O gate de compatibilidade P3 exercita os dois esquemas pelo smoke GTK nativo, verifica o contrato de abertura por arquivo do `.desktop` do NoctEd e executa o probe LSP real com `clangd`. Um repositório Git é opcional; quando presente, a ação Tools informa status e diff unificado limitados, com marcadores por arquivo.
 O Firefox acompanha `/etc/firefox/policies/policies.json`. A política remove superfícies patrocinadas da Nova Aba/Suggest, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado. Firefox Accounts continua opcional e controlado pelo usuário; as atualizações normais do navegador permanecem habilitadas.
+O contrato visual entregue é a paleta Noctalia `DINX` em `~/.config/noctalia/palettes/DINX.json`. Ela define os papéis semânticos claro/escuro e a paleta ANSI completa do terminal; o Noctalia usa `source = "custom"`, `sync_color_scheme = true` e os templates nativos de btop, Foot, Ghostty, GTK 3/4, KDE, Mango e Qt.
+
+Aplicativos GTK usam o tema fallback instalado `DINX` até o Noctalia aplicar seu CSS gerado. Aplicativos Qt usam `qt6ct` com `~/.config/qt6ct/colors/noctalia.conf` gerado pelo Noctalia; o Mango consome `~/.config/mango/noctalia.conf`. O Swayimg recebe um fallback DINX de overlay/galeria em `~/.config/swayimg/init.lua`. A sessão exporta defaults documentados para `NOCTALIA_COLOR_SCHEME`, `NOCTED_THEME`, `QT_QPA_PLATFORMTHEME`, `XCURSOR_THEME` e `XCURSOR_SIZE`.
+
+ReGreet e Calamares consomem bridges estáticas DINX porque executam antes ou fora do shell. O GRUB usa os mesmos tokens de superfície/texto/primário, com as texturas opacas do menu desativadas. `scripts/check_dinx_theme.sh` valida a paleta, os templates, os pacotes e cada bridge antes do build da ISO; `check-iso-content.sh` repete as verificações dentro do SquashFS.
+
 
 
 O contrato de desktop Noctalia/Mango da DINX é explícito:
@@ -65,6 +71,9 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Argumentos de inicialização | comportamento de arquivo, linha e diretório de trabalho é determinístico |
 | Importação de tema | um fixture de tema documentado produz as cores semânticas esperadas |
 | Mudança de tema | um caminho suportado altera o aplicativo sem perda de dados |
+| Paleta DINX | as duas variantes da paleta Noctalia contêm todos os papéis semânticos e cores ANSI do terminal |
+| Templates de aplicativos | btop, Foot, Ghostty, GTK 3/4, KDE, Mango e Qt consomem as saídas geradas pelo Noctalia; Swayimg usa o fallback de overlay DINX |
+| Greeter/instalador/boot | ReGreet, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
 | Firefox padrão | Firefox é o manipulador padrão de HTML/XHTML/HTTP/HTTPS |
 | Política pró-user do Firefox | `policies.json` é analisado e desativa superfícies patrocinadas, Pocket/Stories, telemetria, recomendações, superfícies de assistente de IA e IP Protection integrado sem desativar atualizações |
 | Layout do desktop | Mango abre novas janelas como flutuantes; Noctalia reserva a barra superior e o dock inferior |

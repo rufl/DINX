@@ -1,10 +1,10 @@
 [GTK]
-# DINX keeps the login surface dark on the first boot.
+# DINX uses the same dark palette and Cantarell typography as the session.
 application_prefer_dark_theme = true
-theme_name = "Adwaita"
+theme_name = "DINX"
 icon_theme_name = "Adwaita"
 cursor_theme_name = "Adwaita"
-font_name = "Cantarell 16"
+font_name = "Cantarell 11"
 cursor_blink = true
 
 [commands]

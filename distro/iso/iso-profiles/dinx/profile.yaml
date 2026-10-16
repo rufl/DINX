@@ -48,6 +48,9 @@ rootfs:
     - mangowm
     - noctalia
     - qt6-wayland
+    - qt6ct
+    - adw-gtk-theme
+    - cantarell-fonts
     - partitionmanager
     - firefox
     - pipewire

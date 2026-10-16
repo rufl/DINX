@@ -1,0 +1,82 @@
+/* DINX fallback theme; Noctalia templates refine this palette at session start. */
+* {
+    font-family: Cantarell;
+    color: #d7dde8;
+}
+
+window,
+.background {
+    background-color: #0b0d12;
+    color: #d7dde8;
+}
+
+headerbar,
+.titlebar,
+.navigation-sidebar,
+.sidebar {
+    background-color: #11151d;
+    color: #d7dde8;
+    border-color: #222a38;
+}
+
+entry,
+textview,
+view,
+list,
+row,
+popover,
+menu,
+tooltip {
+    background-color: #11151d;
+    color: #d7dde8;
+    border-color: #222a38;
+}
+
+button,
+checkbutton,
+radiobutton,
+switch {
+    background-color: #263249;
+    color: #d7dde8;
+    border: 1px solid #222a38;
+}
+
+button:hover,
+checkbutton:hover,
+radiobutton:hover,
+switch:hover,
+row:hover {
+    background-color: #31415d;
+}
+
+button.suggested-action,
+button.default {
+    background-color: #8fb8ff;
+    color: #0b0d12;
+}
+
+button:focus,
+entry:focus,
+textview:focus {
+    outline: 2px solid #8fb8ff;
+    outline-offset: 1px;
+}
+
+selection,
+*:selected {
+    background-color: #263249;
+    color: #d7dde8;
+}
+
+scale highlight,
+progressbar progress {
+    background-color: #8fb8ff;
+}
+
+scrollbar trough {
+    background-color: #11151d;
+}
+
+scrollbar slider {
+    background-color: #7f8a9c;
+}

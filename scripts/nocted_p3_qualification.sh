@@ -15,7 +15,7 @@ require_command() {
   command -v "$command_name" >/dev/null 2>&1 || fail "missing executable: $command_name"
 }
 
-for command_name in git clangd dbus-run-session rsvg-convert xvfb-run; do
+for command_name in git clangd dbus-run-session rsvg-convert gtk-update-icon-cache xvfb-run; do
   require_command "$command_name"
 done
 
@@ -48,15 +48,68 @@ run_native_smoke() {
   local output
   icon_home=$(mktemp -d "${TMPDIR:-/tmp}/nocted-p3-icon.XXXXXX")
   mkdir -p \
+    "$icon_home/icons/hicolor" \
+    "$icon_home/icons/hicolor/16x16/apps" \
+    "$icon_home/icons/hicolor/22x22/apps" \
+    "$icon_home/icons/hicolor/24x24/apps" \
+    "$icon_home/icons/hicolor/32x32/apps" \
+    "$icon_home/icons/hicolor/48x48/apps" \
+    "$icon_home/icons/hicolor/64x64/apps" \
     "$icon_home/icons/hicolor/128x128/apps" \
-    "$icon_home/icons/Adwaita/128x128/apps"
-  rsvg-convert -w 128 -h 128 \
-    -o "$icon_home/nocted.png" \
-    resources/com.noctty.NoctEd.svg
-  cp "$icon_home/nocted.png" \
-    "$icon_home/icons/hicolor/128x128/apps/com.noctty.NoctEd.png"
-  cp "$icon_home/nocted.png" \
-    "$icon_home/icons/Adwaita/128x128/apps/com.noctty.NoctEd.png"
+    "$icon_home/icons/hicolor/256x256/apps"
+  cat >"$icon_home/icons/hicolor/index.theme" <<'EOF'
+[Icon Theme]
+Name=hicolor
+Comment=Fallback icon theme
+Inherits=Adwaita
+Directories=16x16/apps,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,128x128/apps,256x256/apps
+
+[16x16/apps]
+Size=16
+Context=Applications
+Type=Threshold
+
+[22x22/apps]
+Size=22
+Context=Applications
+Type=Threshold
+
+[24x24/apps]
+Size=24
+Context=Applications
+Type=Threshold
+
+[32x32/apps]
+Size=32
+Context=Applications
+Type=Threshold
+
+[48x48/apps]
+Size=48
+Context=Applications
+Type=Threshold
+
+[64x64/apps]
+Size=64
+Context=Applications
+Type=Threshold
+
+[128x128/apps]
+Size=128
+Context=Applications
+Type=Threshold
+
+[256x256/apps]
+Size=256
+Context=Applications
+Type=Threshold
+EOF
+  for size in 16 22 24 32 48 64 128 256; do
+    rsvg-convert -w "$size" -h "$size" \
+      -o "$icon_home/icons/hicolor/${size}x${size}/apps/com.noctty.NoctEd.png" \
+      resources/com.noctty.NoctEd.svg
+  done
+  gtk-update-icon-cache -f "$icon_home/icons/hicolor" >/dev/null
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \
     NOCTTY_ISOLATED_DISPLAY=x11 \

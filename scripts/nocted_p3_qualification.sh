@@ -64,7 +64,7 @@ run_native_smoke() {
 [Icon Theme]
 Name=NoctedSmoke
 Comment=DINX smoke fallback
-Inherits=Adwaita
+Inherits=hicolor
 Directories=16x16/apps,16x16/status,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,128x128/apps,256x256/apps
 
 [16x16/apps]

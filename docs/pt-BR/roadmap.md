@@ -92,7 +92,7 @@ Gate de release P3:
 
 **Objetivo:** tornar as operações do Dinit compreensíveis, completas e seguras sem importar conceitos do systemd.
 
-**Status:** qualificada para o gate alpha. `zig build test`, build ReleaseSafe, payload do pacote Arch, checks estáticos, um daemon Dinit de usuário temporário real e a superfície GTK de produção foram qualificados. A execução [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/TTY de recuperação em disco descartável, a atestação de procedência e o upload do artefato. As visões de perfil de inicialização e hardware continuam explicitamente adiadas para uma fatia de manutenção P4.1; não são pré-requisitos ocultos deste release de controle de serviços.
+**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/TTY de recuperação em disco descartável, a atestação de procedência e o upload do artefato. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
 
 **Entregue:**
 
@@ -100,9 +100,10 @@ Gate de release P3:
 - status, logs em buffer e linhas de serviço com estado;
 - ações de ciclo de vida, boot, dependência, ambiente, sinais e daemon usando o vocabulário próprio do `dinitctl`;
 - execução por argv validado, escopos system/usuário e retry explícito por `pkexec` somente após falha de autorização;
+- perfis de serviços de sistema `normal`, `lite`, `gaming` e customizados, com editor GTK, persistência e integração CLI;
+- plugin local `dinx/performance` do Noctalia com atalho Gaming no Control Center e painel de perfis;
+- DINXPanel com atalhos fixos de hardware/painéis de controle, ponte para o backend de GPU do DinitUI e catálogo de kernels Artix sem remoção;
 - contratos do pacote, metadados desktop, licença e payload da ISO.
-
-As visões de perfil de inicialização e hardware foram explicitamente adiadas para uma fatia de manutenção P4.1; não são pré-requisitos ocultos deste release de controle de serviços.
 
 ## P5 — beta de jogos
 
@@ -114,6 +115,7 @@ As visões de perfil de inicialização e hardware foram explicitamente adiadas 
 
 - sessão Wayland standalone `DINX Gaming` com `dbus-run-session`, backend DRM do Gamescope e Steam `-tenfoot`;
 - pacote de dispositivos Steam e entradas de payload Mesa/RADV/Vulkan de 32 bits;
+- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração transacional do perfil no launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel inspirada no YaST, com atalhos fixos para painéis de controle, ações de upgrade Shelly/Topgrade, descoberta opcional de fwupd e instalador de kernels Artix sem remoção;
 - fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
 - checks de payload da ISO e contrato estático da entrada da sessão e dos binários.
 

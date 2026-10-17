@@ -13,7 +13,7 @@
 
 ```text
 Aplicativos DINX
-  Noctty · Nocted · DinitUI
+  Noctty · Nocted · DinitUI · DINXPanel
 
 Contratos compartilhados de integração
   Dinx Theme · caminhos XDG · metadados .desktop · $TERMINAL · IPC opcional do Noctalia
@@ -66,6 +66,14 @@ O editor deve continuar útil sem o Noctalia. O Noctalia fornece apresentação 
 ### DinitUI
 
 DinitUI apresenta serviços dinit carregados e descobertos, status, logs em buffer, ciclo de vida, dependências, ambiente e ações do daemon. Usa uma interface `dinitctl` restrita por argv, valida tokens de serviço/argumentos, entende os marcadores aninhados da listagem nativa do Dinit e só tenta autorização de escopo system por `pkexec` após uma falha explícita de permissão. Não pode interpolar texto do usuário em comandos de shell. O smoke contra daemon real usa um daemon Dinit de usuário temporário e prova a descoberta pela superfície GTK de produção.
+
+O DinitUI também é dono de perfis explícitos `normal`, `lite`, `gaming` e perfis de sistema definidos pelo usuário. `lite` desabilita somente o daemon opcional de Bluetooth; `gaming` habilita explicitamente `bluetoothd` para controles e mantém disponíveis Bluetooth, UFW e os serviços de política do OpenSnitch. NetworkManager, D-Bus, PipeWire, WirePlumber, elogind, greetd, seatd, metalog e os serviços de display ficam fora da política padrão. O editor salva a política do usuário em `~/.config/dinx/dinitui/profiles.conf` e expõe `--profile-status`, `--apply-profile`, `--toggle-profile`, `--gaming-enter`, `--gaming-leave`, `--gpu-status` e `--install-gpu-drivers` para integração com o shell.
+
+### DINXPanel
+
+A DINXPanel é o centro de controle inspirado no YaST. Ela é dona das ações visíveis de hardware e drivers, agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, MangoWC, serviços Dinit, upgrades de pacotes e firmware e expõe um catálogo fixo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Seu relatório de upgrades sem instalação usa Shelly e os metadados opcionais do fwupd; o preview do Topgrade usa `--dry-run --show-skipped`; upgrades explícitos continuam sendo fluxos confirmados pelo usuário no terminal. As ações de kernel apenas instalam pacotes e headers; nunca removem o kernel em execução, exigem reinicialização e usam o bootloader para selecionar uma alternativa já instalada em caso de rollback.
+
+A DINX inclui o plugin local `dinx/performance` do Noctalia. Seu atalho no Control Center aplica o perfil Gaming e sincroniza o perfil de energia documentado `performance`/`balanced` do Noctalia. A sessão Gamescope standalone não inicia o Noctalia e continua independente dessa integração.
 
 ## Contratos compartilhados
 

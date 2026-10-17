@@ -151,6 +151,14 @@ O receptor já deve ter o QEMU instalado. O deploy não instala serviço Windows
 concede acesso a shell. Se o QEMU estiver ausente, a qualificação falha explicitamente
 em vez de substituir silenciosamente o renderer.
 
+## Gate da próxima alpha
+
+Antes de criar a próxima tag alpha, o commit da tag deve passar pelo workflow P0 local atual, incluindo os contratos de lock/idle/brilho e os checks de orçamento. A ISO resultante deve passar a validação de conteúdo SquashFS, o caminho de boot/captura QEMU de 90 segundos, o smoke de instalação Calamares/TTY de recuperação em disco descartável, geração de checksum, atestação do artefato e montagem dos assets do release.
+
+O responsável pelo release deve registrar manualmente uma qualificação real de sessão Wayland: `Super+L`, lock após 600 segundos de idle, lock antes da suspensão, desbloqueio após resume e brilho físico para cima/baixo. Uma VM pode qualificar a ordem da sessão; hardware físico é necessário para afirmar suporte a brilho e suspensão.
+
+Atualize o run ID, commit, tamanho/digest do artefato e os links dos releases nos documentos de status em inglês e português somente depois que o novo workflow passar. As afirmações de P5 gaming continuam separadas até passarem os testes de DRM, Steam/jogo, controle/áudio, retorno ao greeter e suspend/GPU físico.
+
 ## Limites do release
 
 - A conta live é `dinx` / `dinx`; é pública, descartável e nunca deve ser reutilizada.

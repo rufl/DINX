@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DINXPanel
+Comment=DINX system control center
+Exec=dinxpanel
+TryExec=dinxpanel
+Icon=org.dinx.DinxPanel
+Terminal=false
+Categories=Settings;System;
+StartupNotify=true

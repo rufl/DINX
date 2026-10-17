@@ -1,4 +1,22 @@
 # DINX uses one palette for Noctalia, terminals, GTK and Qt consumers.
+[plugins]
+enabled = ["dinx/performance"]
+
+[[control_center.shortcuts]]
+type = "wifi"
+
+[[control_center.shortcuts]]
+type = "bluetooth"
+
+[[control_center.shortcuts]]
+type = "power_profile"
+
+[[control_center.shortcuts]]
+type = "dinx/performance:gaming"
+
+[[control_center.shortcuts]]
+type = "notification"
+
 [theme]
 mode = "dark"
 shell_mode = "follow"
@@ -65,7 +83,7 @@ icon_size = 42
 margin_edge = 8
 margin_ends = 160
 launcher_position = "none"
-pinned = ["firefox", "io.github.movacx.bc250-control-center", "org.pwmt.zathura", "swayimg", "vlc", "org.strawberrymusicplayer.strawberry", "com.saivert.pwvucontrol", "com.shellyorg.shelly", "gufw", "qps", "opensnitch_ui", "nm-connection-editor", "blueman-manager", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
+pinned = ["firefox", "dinxpanel", "dinitui", "io.github.movacx.bc250-control-center", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
 
 [shell]
 font_family = "Cantarell"

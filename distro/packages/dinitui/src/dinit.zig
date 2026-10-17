@@ -421,6 +421,7 @@ fn normalizeListMarker(line: []const u8) []const u8 {
 
 fn serviceNameFromListLine(line: []const u8) ?[]const u8 {
     var rest = normalizeListMarker(line);
+    if (rest.len == 0) return null;
     if (rest[0] == '[') {
         const close = std.mem.lastIndexOfScalar(u8, rest, ']') orelse return null;
         rest = std.mem.trim(u8, rest[close + 1 ..], " \t");
@@ -449,7 +450,10 @@ fn containsService(services: []const Service, name: []const u8) bool {
 }
 
 fn appendDirectory(allocator: Allocator, io: std.Io, services: *std.ArrayList(Service), path: []const u8) !void {
-    var dir = std.Io.Dir.openDirAbsolute(io, path, .{ .iterate = true }) catch return;
+    var dir = std.Io.Dir.openDirAbsolute(io, path, .{ .iterate = true }) catch |err| switch (err) {
+        error.FileNotFound => return,
+        else => return err,
+    };
     defer dir.close(io);
     var iterator = dir.iterate();
     while (try iterator.next(io)) |entry| {
@@ -477,6 +481,12 @@ test "parses native dinit list framing" {
 
 test "parses dinit list state markers" {
     try expectState(.started, "[+] dbus\n[  <<] pipewire\n[   -] stopped");
+}
+
+test "ignores empty normalized list markers" {
+    var services = try parseList(std.testing.allocator, "[[\n");
+    defer deinitServices(std.testing.allocator, &services);
+    try std.testing.expectEqual(@as(usize, 0), services.items.len);
 }
 
 test "rejects unsafe service names" {

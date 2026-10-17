@@ -35,6 +35,11 @@ on:
       - "scripts/check_cyan_skillfish.sh"
       - "scripts/check_bc250_control_center.sh"
       - "scripts/check_dinitui.sh"
+      - "scripts/check_dinxpanel.sh"
+      - "scripts/check_dinx_session.sh"
+      - "scripts/check_dinx_budget.sh"
+      - "scripts/measure_dinx_session.sh"
+      - "scripts/smoke_dinx_session.sh"
       - "scripts/check_gaming.sh"
       - "scripts/dinitui_dinit_qualification.sh"
       - "scripts/gaming_p5_qualification.sh"
@@ -79,6 +84,16 @@ jobs:
         run: ./scripts/check_firewall_tools.sh
       - name: Verify DinitUI package and privilege contract
         run: ./scripts/check_dinitui.sh
+      - name: Verify DINXPanel control-center and kernel contract
+        run: ./scripts/check_dinxpanel.sh
+      - name: Verify DINX lock, idle, brightness and launcher hierarchy contract
+        run: ./scripts/check_dinx_session.sh
+      - name: Verify DINX payload and startup budgets
+        run: ./scripts/check_dinx_budget.sh
+      - name: Capture host session measurement context
+        run: ./scripts/measure_dinx_session.sh
+      - name: Smoke-test DINX lock and idle argv
+        run: ./scripts/smoke_dinx_session.sh
       - name: Verify gaming session and 32-bit graphics contract
         run: ./scripts/check_gaming.sh
 
@@ -222,7 +237,7 @@ jobs:
               build_package paru
               build_package shelly
               build_package dinitui
-              . /workspace/distro/packages/noctty/source.env
+              build_package dinxpanel
               icon_svg=/tmp/dinx-nocted-icon.svg
               icon_png=/usr/share/icons/hicolor/128x128/apps/com.noctty.NoctEd.png
               tar -xOf \
@@ -275,6 +290,11 @@ jobs:
           (cd "$iso_dir" && sha512sum "$iso_name" > "$iso_name.sha512")
           printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
+      - name: Verify built ISO and boot-window budgets
+        env:
+          DINX_ISO_PATH: ${{ env.DINX_ISO }}
+          DINX_QEMU_TIMEOUT: 90
+        run: ./scripts/check_dinx_budget.sh
 
       - name: Boot smoke test and graphical capture
         env:

@@ -6,4 +6,24 @@ export XDG_SESSION_DESKTOP=dinx-gaming
 export SDL_VIDEODRIVER=wayland
 export STEAM_RUNTIME=1
 
-exec gamescope --backend drm --steam --fullscreen -- steam -tenfoot
+entered=0
+if dinitui --gaming-enter >/dev/null 2>&1; then
+    entered=1
+fi
+
+restore_profile() {
+    if [ "$entered" -eq 1 ]; then
+        dinitui --gaming-leave >/dev/null 2>&1 || true
+        entered=0
+    fi
+}
+
+trap restore_profile EXIT INT TERM
+if gamescope --backend drm --steam --fullscreen -- steam -tenfoot; then
+    status=0
+else
+    status=$?
+fi
+restore_profile
+trap - EXIT INT TERM
+exit "$status"

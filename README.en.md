@@ -13,7 +13,7 @@ The initial platform target is **x86_64**, based on **Artix Linux with dinit**, 
 - **DINX** — the operating-system image, packages, integration contracts and release tooling.
 - **Noctty** — a terminal emulator with a Zig-owned UI and a proven terminal-emulation core.
 - **Nocted** — a lightweight code editor with syntax support, LSP and Git integration.
-- **DinitUI** — a native GTK4/libadwaita frontend focused on Dinit services, units and daemon actions.
+- **DINXPanel** — a YaST-inspired control center for system-panel shortcuts, fixed driver detection/installation, Shelly/Topgrade upgrades, optional firmware discovery and safe Artix kernel installation.
 - **BC250 Control Center** — upstream-based BC-250 telemetry, tuning and recovery UI packaged for DINX's Artix/dinit session.
 - **Dinx Theme** — versioned shared design tokens and application-integration contracts.
 
@@ -50,6 +50,7 @@ apps/noctty/
 apps/nocted/
 distro/
   packages/dinitui/
+  packages/dinxpanel/
 tests/
 scripts/
 ```
@@ -60,7 +61,7 @@ scripts/
 2. **P1 — Public alpha:** install documentation, checksums, package signing, known issues and a fallback terminal.
 3. **P2 — Noctty:** reliable PTY lifecycle, terminal semantics, rendering, Unicode, scrollback, selection and compatibility with interactive TUIs.
 4. **P3 — Nocted:** reliable editing, syntax highlighting, search, project navigation, LSP and Git status/diffs.
-5. **P4 — DinitUI:** safe dinit service management and useful system-status views.
+5. **P4 — DinitUI + DINXPanel:** safe dinit service management, customizable Normal/Lite/Gaming profiles, system-panel shortcuts, fixed GPU workflow and safe Artix kernel installation.
 6. **P5 — Gaming beta:** Gamescope/Steam session, controller and graphics validation, suspend/resume and update testing.
 
 The alpha does not require all first-party applications to be complete. A known-good bootable system takes priority over branding or advanced UI features.

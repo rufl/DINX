@@ -13,9 +13,11 @@ The entry points are:
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` and `scripts/check_bc250_control_center.sh` — Firefox, pinned application, Artix package-management, firewall, hardware and BC250 Control Center contracts;
-- `scripts/check_dinx_theme.sh` — DINX palette, application-template and greeter/installer/GRUB bridge contract;
-- `scripts/check_dinitui.sh` — DinitUI package, action and privilege-boundary contract;
+- `scripts/check_dinitui.sh` — DinitUI package, action, privilege-boundary, service-profile and Noctalia Gaming integration contract;
+- `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;
 - `scripts/check_gaming.sh` — standalone Gamescope/Steam session, 32-bit graphics and ISO payload contract;
+- `scripts/check_dinx_session.sh` and `scripts/smoke_dinx_session.sh` — lock, idle, suspend-order, brightness, Noctalia power-surface and launcher hierarchy contracts;
+- `scripts/check_dinx_budget.sh` and `scripts/measure_dinx_session.sh` — payload/startup/native-binary/boot-window/ISO ceilings and runtime RSS/CPU observation;
 - `scripts/gaming_p5_qualification.sh` — fixture session return and real headless Gamescope launch/exit qualification;
 - `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
 - `scripts/nocted_p3_qualification.sh` — deterministic P3 matrix for Nocted core/index/workers/state/tasks, real `clangd`, native GTK/X11 dark/light smoke and Git status/diff;
@@ -27,6 +29,7 @@ The entry points are:
 - `distro/packages/noctty/qualification-compat.patch` — packaging patch that wires the pinned source's PTY qualification target to its existing compatibility module and adds the Nocted P3 Git/theme/package contract;
 - `distro/packages/wlroots0.20/PKGBUILD` — wlroots 0.20.2 source build pinned for the current Mango/Scenefx ABI;
 - `distro/packages/dinitui/PKGBUILD` — native Zig 0.17 GTK4/libadwaita Dinit frontend;
+- `distro/packages/dinxpanel/PKGBUILD` — native Zig 0.17 GTK4/libadwaita YaST-inspired control center;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — foundation package and service profile.
 
 ## Remote build
@@ -48,9 +51,10 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 13. creates GitHub artifact attestations for the ISO and checksum;
 14. publishes the ISO, checksum, QEMU logs and PPM captures as a temporary workflow artifact.
 
-DinitUI is built from `distro/packages/dinitui` with Zig 0.17.0 against GTK4/libadwaita, added to the temporary pacman repository, and installed through the DINX profile. `scripts/check_dinitui.sh` validates the package metadata, desktop entry, complete dinitctl action catalog, argv-only execution and restricted `pkexec` fallback before the container build.
-`scripts/dinitui_dinit_qualification.sh` drives a temporary real Dinit user daemon, validates `list`/`status`/`stop`, and runs the production DinitUI GTK smoke against that socket. It requires Dinit binaries and `xvfb-run`; it is intentionally separate from the privileged ISO container gate.
-The gaming profile adds `gamescope`, `steam`, `steam-devices`, `lib32-mesa`, `lib32-vulkan-radeon` and `lib32-vulkan-mesa-layers`. The standalone `dinx-gaming` launcher is exposed as a Wayland session and uses the native Gamescope DRM backend; Steam's 32-bit dependencies are pulled from Artix's official `lib32` repository, enabled by the ISO builder. `scripts/check_gaming.sh` runs before the container build, while `scripts/gaming_p5_qualification.sh` is the local/runtime gate. Its fixture path does not authenticate Steam or claim a commercial game, controller/audio hardware, DRM output or suspend/resume.
+DinitUI is built from `distro/packages/dinitui` with Zig 0.17.0 against GTK4/libadwaita, while DINXPanel is built from `distro/packages/dinxpanel` and both packages are added to the temporary pacman repository and installed through the DINX profile. `scripts/check_dinitui.sh` validates the DinitUI backend contract; `scripts/check_dinxpanel.sh` validates the YaST-inspired control center, fixed shortcuts, direct-argv launches, fixed GPU bridge and safe kernel catalog before the container build.
+The DINXPanel upgrade report uses Shelly's read-only `sync`/`list-updates all` path plus optional `fwupdmgr refresh`/`get-updates`; Topgrade preview is `topgrade --dry-run --show-skipped --no-self-update --no-tmux`, and applying Topgrade or Shelly remains an explicit terminal action.
+`scripts/dinitui_dinit_qualification.sh` drives a temporary real Dinit user daemon, validates `list`/`status`/`stop`, and runs the production DinitUI GTK smoke against that socket. It requires Dinit binaries and `xvfb-run`; it is intentionally separate from the privileged ISO container gate. The Noctalia plugin is linted with `noctalia plugins lint`, and the shipped Noctalia config is checked with `noctalia config validate`.
+The gaming profile preserves Bluetooth/controller and firewall/process-policy services by default; it does not trade security for an unmeasured benchmark gain. The standalone `dinx-gaming` launcher is exposed as a Wayland session and uses the native Gamescope DRM backend. Its Steam 32-bit dependencies are pulled from Artix's official `lib32` repository, enabled by the ISO builder. DINXPanel owns the visible GPU actions and delegates to DinitUI's fixed `lspci -nnk` detection and vendor plans; its kernel installer offers only `linux`, `linux-lts`, `linux-zen` and `linux-hardened` with matching headers, never removes packages, protects the running kernel and requires a reboot. `scripts/check_gaming.sh` runs before the container build, while `scripts/gaming_p5_qualification.sh` remains the local/runtime gate. Its fixture path does not authenticate Steam or claim a commercial game, controller/audio hardware, DRM output or suspend/resume.
 The isolated NoctEd GTK smoke renders its fallback icons to PNG with `rsvg-convert` and uses a self-contained `NoctedSmoke` theme with only the standard `hicolor` fallback: GTK3 does not need the container's inherited Adwaita SVG assets, legacy XPM loaders or external theme loader setup. The Artix container explicitly installs Glycin, bubblewrap and shared-mime-info, rebuilds the MIME database, and refreshes the GdkPixbuf cache before the package build. The build-only Noctty qualification disables Glycin's nested sandbox because it already runs inside the privileged build container; the packaged runtime keeps the bubblewrap dependency and does not inherit that setting. The fixture therefore does not turn that packaging difference into a false release failure.
 
 ### Local P4/P5 qualification

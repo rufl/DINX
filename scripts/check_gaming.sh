@@ -20,7 +20,9 @@ done
 [[ -x "$session" ]] || fail 'gaming launcher is not executable'
 grep -Fq 'XDG_CURRENT_DESKTOP=DINX-Gaming' "$session" || fail 'gaming desktop identity is missing'
 grep -Fq 'SDL_VIDEODRIVER=wayland' "$session" || fail 'Wayland client contract is missing'
-grep -Fq 'exec gamescope --backend drm --steam --fullscreen -- steam -tenfoot' "$session" || fail 'Gamescope Steam command is not the standalone session contract'
+grep -Fq 'dinitui --gaming-enter' "$session" || fail 'Gaming launcher does not enter the transactional profile'
+grep -Fq 'dinitui --gaming-leave' "$session" || fail 'Gaming launcher does not restore the previous profile'
+grep -Fq 'gamescope --backend drm --steam --fullscreen -- steam -tenfoot' "$session" || fail 'Gamescope Steam command is not the standalone session contract'
 if grep -Eq 'systemctl|/bin/sh -c|dbus-daemon' "$session"; then
   fail 'gaming launcher contains an init or shell indirection'
 fi
@@ -42,4 +44,4 @@ grep -Fq 'usr/share/wayland-sessions/dinx-gaming.desktop' "$iso_check" || fail '
 grep -Fq 'usr/bin/gamescope' "$iso_check" || fail 'ISO payload check does not require Gamescope'
 grep -Fq 'usr/bin/steam' "$iso_check" || fail 'ISO payload check does not require Steam'
 
-printf 'gaming_contract session=true gamescope=true steam=true multilib=true wayland_session=true\n'
+printf 'gaming_contract session=true gamescope=true steam=true multilib=true wayland_session=true profile_transaction=true\n'

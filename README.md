@@ -13,7 +13,7 @@ O alvo inicial da plataforma é **x86_64**, baseada no **Artix Linux com dinit**
 - **DINX** — imagem do sistema operacional, pacotes, contratos de integração e ferramentas de release.
 - **Noctty** — emulador de terminal com interface própria em Zig e um núcleo comprovado de emulação de terminal.
 - **Nocted** — editor de código leve com suporte a sintaxe, LSP e integração com Git.
-- **DinitUI** — frontend nativo em GTK4/libadwaita focado em serviços, unidades e ações do daemon dinit.
+- **DINXPanel** — centro de controle inspirado no YaST para atalhos dos painéis do sistema, detecção/instalação fixa de drivers, upgrades Shelly/Topgrade, descoberta opcional de firmware e instalação segura de kernels Artix.
 - **BC250 Control Center** — interface upstream para telemetria, ajustes e recuperação da BC-250, empacotada para a sessão Artix/dinit da DINX.
 - **Dinx Theme** — tokens de design compartilhados e contratos de integração de aplicativos, versionados.
 
@@ -50,6 +50,7 @@ apps/noctty/
 apps/nocted/
 distro/
   packages/dinitui/
+  packages/dinxpanel/
 tests/
 scripts/
 ```
@@ -60,7 +61,7 @@ scripts/
 2. **P1 — Alpha pública:** documentação de instalação, checksums, assinatura de pacotes, problemas conhecidos e terminal de fallback.
 3. **P2 — Noctty:** ciclo de vida confiável de PTY, semântica de terminal, renderização, Unicode, scrollback, seleção e compatibilidade com TUIs interativas.
 4. **P3 — Nocted:** edição confiável, destaque de sintaxe, busca, navegação de projetos, LSP e status/diffs do Git.
-5. **P4 — DinitUI:** gerenciamento seguro de serviços dinit e visualizações úteis do estado do sistema.
+5. **P4 — DinitUI + DINXPanel:** gerenciamento seguro de serviços dinit, perfis customizáveis Normal/Lite/Gaming, atalhos dos painéis do sistema, fluxo fixo de GPU e instalação segura de kernels Artix.
 6. **P5 — Beta de jogos:** sessão Gamescope/Steam, validação de controles e gráficos, suspensão/retomada e testes de atualização.
 
 A alpha não exige que todos os aplicativos próprios estejam completos. Um sistema inicializável conhecido como funcional tem prioridade sobre branding ou recursos avançados de interface.

@@ -15,7 +15,7 @@ A imagem live inclui intencionalmente a conta de teste descartável `dinx`, com 
 
 ## Operações privilegiadas
 
-DinitUI e futuros componentes gráficos de manutenção DEVEM:
+DinitUI e DINXPanel DEVEM:
 
 - expor um conjunto finito de ações, em vez de execução arbitrária de comandos;
 - validar identificadores de serviço e argumentos tipados contra a interface do Dinit;
@@ -24,8 +24,12 @@ DinitUI e futuros componentes gráficos de manutenção DEVEM:
 - retornar status e erros estruturados;
 - expor a ação solicitada, exit status e saída do comando; usar o log próprio do Dinit para diagnóstico do serviço.
 
+A ponte de GPU e o instalador de kernels da DINXPanel DEVEM usar planos fixos por argv. As ações de kernel PODEM instalar pacotes e headers correspondentes, NÃO DEVEM remover nenhum pacote ou o kernel em execução e DEVEM informar a necessidade de reinicialização após mudanças de kernel ou driver.
+
 A interface deve diferenciar um serviço parado, com falha, desconhecido ou inacessível. Nunca deve informar sucesso apenas porque um processo foi iniciado.
 A sessão gaming também é um limite fixo: o launcher no root overlay inicia somente o argv empacotado de Gamescope/Steam, sem interpolação de shell ou serviço systemd. As bibliotecas de compatibilidade systemd/32 bits do Steam são dependências de payload, não um runtime de init; o gate de conteúdo da ISO rejeita o daemon/runtime systemd e o systemctl. Dispositivos de controle, conteúdo dos jogos, credenciais Steam e serviços de rede continuam entradas controladas pelo usuário fora da qualificação por fixture da alpha.
+
+Perfis de performance são um limite de política explícito, não um classificador automático de serviços. As listas embutidas `normal`, `lite` e `gaming` atuam apenas sobre daemons opcionais; perfis customizados aceitam somente identificadores de perfil/serviço validados, persistem na configuração XDG do usuário e aplicam ações de sistema pelo mesmo caminho `dinitctl`/`pkexec`. O plugin Noctalia passa nomes de perfil como argv direto e não executa texto de shell.
 
 ## Confiança em pacotes e ISOs
 

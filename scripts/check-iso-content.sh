@@ -43,9 +43,14 @@ required_paths=(
   etc/calamares/settings.conf
   etc/dinit.d/greetd
   usr/bin/dinitui
+  usr/bin/dinxpanel
   usr/share/applications/dinitui.desktop
+  usr/share/applications/dinxpanel.desktop
   usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg
+  usr/share/applications/dinx-lock.desktop
+  usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg
   usr/share/licenses/dinitui/LICENSE
+  usr/share/licenses/dinxpanel/LICENSE
   usr/local/libexec/dinx-gaming
   usr/share/wayland-sessions/dinx-gaming.desktop
   usr/bin/gamescope
@@ -183,8 +188,13 @@ required_paths=(
   usr/share/wayland-sessions/mango.desktop
   usr/bin/regreet
   usr/local/libexec/dinx-regreet
+  usr/local/libexec/dinx-idle
+  usr/local/libexec/dinx-lock
   usr/local/libexec/dinx-mango
   usr/share/applications/dinx-installer.desktop
+  usr/bin/brightnessctl
+  usr/bin/swayidle
+  usr/bin/swaylock
   usr/share/applications/org.kde.partitionmanager.desktop
   usr/share/applications/org.gnome.FileRoller.desktop
   usr/share/grub/themes/artix/theme.txt
@@ -195,7 +205,9 @@ for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
 gaming_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-gaming)
-grep -Fq 'exec gamescope --backend drm --steam --fullscreen -- steam -tenfoot' <<<"$gaming_launcher" || fail 'DINX gaming launcher command is incorrect'
+grep -Fq 'dinitui --gaming-enter' <<<"$gaming_launcher" || fail 'DINX gaming launcher does not enter the Gaming profile'
+grep -Fq 'gamescope --backend drm --steam --fullscreen -- steam -tenfoot' <<<"$gaming_launcher" || fail 'DINX gaming launcher command is incorrect'
+grep -Fq 'dinitui --gaming-leave' <<<"$gaming_launcher" || fail 'DINX gaming launcher does not restore the previous profile'
 if grep -Eq 'systemctl|/bin/sh -c|dbus-daemon' <<<"$gaming_launcher"; then
   fail 'DINX gaming launcher contains a forbidden init or shell indirection'
 fi
@@ -239,12 +251,16 @@ grep -Fq 'start = ["launcher", "workspaces"]' <<<"$noctalia_config" || fail 'Noc
 grep -Fq 'screenshot' <<<"$noctalia_config" || fail 'Noctalia screenshot widget is not configured'
 grep -Fq '[shell.screenshot]' <<<"$noctalia_config" || fail 'Noctalia screenshot shell defaults are missing'
 grep -Fq 'copy_to_clipboard = true' <<<"$noctalia_config" || fail 'Noctalia screenshots are not copied to the clipboard'
-grep -Fq 'swayimg", "vlc", "org.strawberrymusicplayer.strawberry"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin the multimedia players'
-grep -Fq 'com.shellyorg.shelly' <<<"$noctalia_config" || fail 'Noctalia dock does not pin Shelly'
-grep -Fq '[dock]' <<<"$noctalia_config" || fail 'Noctalia dock is not configured'
-grep -Fq 'position = "bottom"' <<<"$noctalia_config" || fail 'Noctalia dock is not below the bar'
-grep -Fq 'pinned = ["firefox"' <<<"$noctalia_config" || fail 'Noctalia dock does not pin DINX applications'
-grep -Fq 'io.github.movacx.bc250-control-center' <<<"$noctalia_config" || fail 'Noctalia dock does not pin BC250 Control Center'
+grep -Fq '/usr/share/applications/swayimg.desktop' <<<"$manifest" || fail 'Swayimg desktop entry is not in the ISO payload'
+grep -Fq 'vlc.desktop' <<<"$manifest" || fail 'VLC desktop entry is not in the ISO payload'
+grep -Fq 'org.strawberrymusicplayer.strawberry.desktop' <<<"$manifest" || fail 'Strawberry desktop entry is not in the ISO payload'
+grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
+grep -Fq 'pinned = ["firefox", "dinxpanel", "dinitui"' <<<"$noctalia_config" || fail 'Noctalia dock does not establish the DINX primary hierarchy'
+for specialist in gufw qps opensnitch_ui nm-connection-editor blueman-manager com.shellyorg.shelly; do
+  if grep -Fq "\"$specialist\"" <<<"$noctalia_config"; then
+    fail "specialist launcher remains pinned in the Noctalia dock: $specialist"
+  fi
+done
 noctalia_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/palettes/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$noctalia_palette" || fail 'DINX Noctalia surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$noctalia_palette" || fail 'DINX Noctalia primary palette is missing'
@@ -292,6 +308,15 @@ grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not 
 grep -Fq 'bind=SUPER,Return,spawn,dinx-terminal' <<<"$mango_config" || fail 'Mango terminal shortcut is missing'
 grep -Fq 'tagrule=id:*,open_as_floating:1' <<<"$mango_config" || fail 'Mango does not open new windows floating'
 grep -Fq 'bind=SUPER,space,togglefloating,' <<<"$mango_config" || fail 'Mango floating toggle shortcut is missing'
+grep -Fq 'exec_once=/usr/local/libexec/dinx-idle' <<<"$mango_config" || fail 'Mango does not start the DINX idle manager'
+grep -Fq 'bind=SUPER,l,spawn,/usr/local/libexec/dinx-lock' <<<"$mango_config" || fail 'Mango lock shortcut is missing'
+grep -Fq 'bind=XF86MonBrightnessDown,spawn,brightnessctl set 5%-' <<<"$mango_config" || fail 'Mango brightness-down shortcut is missing'
+grep -Fq 'bind=XF86MonBrightnessUp,spawn,brightnessctl set 5%+' <<<"$mango_config" || fail 'Mango brightness-up shortcut is missing'
+idle_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-idle)
+grep -Fq 'timeout 600 /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock timeout is missing'
+grep -Fq 'before-sleep /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock-before-suspend hook is missing'
+lock_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-lock.desktop)
+grep -Fq 'Exec=/usr/local/libexec/dinx-lock' <<<"$lock_desktop" || fail 'DINX lock launcher is missing'
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
 grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is missing'
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
@@ -367,8 +392,13 @@ grep -Fq 'Icon=com.noctty.NoctEd' <<<"$nocted_desktop" || fail 'NoctEd desktop i
 dinitui_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinitui.desktop)
 grep -Fq 'Exec=dinitui' <<<"$dinitui_desktop" || fail 'DinitUI desktop launcher is missing'
 grep -Fq 'Icon=org.dinx.DinitUI' <<<"$dinitui_desktop" || fail 'DinitUI desktop icon contract is missing'
+dinxpanel_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinxpanel.desktop)
+grep -Fq 'Exec=dinxpanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop launcher is missing'
+grep -Fq 'Icon=org.dinx.DinxPanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop icon contract is missing'
 grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missing'
+grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
+grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
 grep -Fq '/usr/bin/clangd' <<<"$manifest" || fail 'clangd runtime is missing'
 grep -Fq '/usr/share/nocted/styles/nocted-light.xml' <<<"$manifest" || fail 'NoctEd light scheme is missing'
 

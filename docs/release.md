@@ -148,6 +148,14 @@ The receiver must already have QEMU installed. The deployment is intentionally n
 Windows service installation and does not grant shell access. If QEMU is absent, the
 qualification fails explicitly instead of silently substituting another renderer.
 
+## Next alpha gate
+
+Before tagging the next alpha, the tag commit must pass the current local P0 workflow, including the lock/idle/brightness contracts and budget checks. The resulting ISO must pass SquashFS content validation, the 90-second QEMU boot/capture path, the disposable Calamares installation and recovery-TTY smoke, checksum generation, artifact attestation and release-asset assembly.
+
+The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
+
+Update the run ID, commit, artifact size/digest and release links in the English and Portuguese status documents only after the new workflow is green. P5 gaming claims remain separate until DRM display, Steam/game, controller/audio, return-to-greeter and physical suspend/GPU tests pass.
+
 ## Release limits
 
 - The live account is `dinx` / `dinx`; it is public, disposable and must never be

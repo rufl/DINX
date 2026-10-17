@@ -92,7 +92,7 @@ P3 release gate:
 
 **Goal:** make Dinit operations understandable, complete and safe without importing systemd concepts.
 
-**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe build, Arch package payload, static contract checks, a real temporary Dinit user daemon and the production GTK smoke path are qualified. Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) also passed the Artix package build, ISO payload, QEMU boot, disposable persistent-install/recovery-TTY smoke, provenance attestation and artifact upload. Startup-profile and hardware-status views remain explicitly deferred to a later P4.1 maintenance slice; they are not hidden prerequisites for this service-control release.
+**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe builds, Arch package payloads, static contract checks, a real temporary Dinit user daemon and the production GTK smoke paths are qualified. Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) also passed the Artix package build, ISO payload, QEMU boot, disposable persistent-install/recovery-TTY smoke, provenance attestation and artifact upload. DINXPanel now owns the visible hardware/driver controls and fixed kernel installer; the broader hardware matrix remains a production-release gate.
 
 **Delivered:**
 
@@ -100,9 +100,10 @@ P3 release gate:
 - status, buffered logs and state-aware service rows;
 - lifecycle, boot activation, dependency, environment, signal and daemon actions from Dinit's own `dinitctl` vocabulary;
 - validated argv execution, system/user scopes and explicit `pkexec` retry only after authorization failure;
+- `normal`, `lite`, `gaming` and custom system-service profiles, with a GTK editor, persistence and CLI integration;
+- the local Noctalia `dinx/performance` plugin with a Control Center Gaming shortcut and profile panel;
+- DINXPanel with fixed hardware/control-panel shortcuts, the DinitUI GPU backend bridge and a non-removing Artix kernel catalog;
 - package, desktop metadata, license and ISO payload contracts.
-
-Startup-profile and hardware-status views are explicitly deferred to a later P4.1 maintenance slice; they are not hidden prerequisites for this service-control release.
 
 ## P5 — gaming beta
 
@@ -114,6 +115,7 @@ Startup-profile and hardware-status views are explicitly deferred to a later P4.
 
 - standalone `DINX Gaming` Wayland session with `dbus-run-session`, Gamescope DRM backend and Steam `-tenfoot`;
 - Steam device package plus 32-bit Mesa/RADV/Vulkan payload entries;
+- safe Normal/Lite/Gaming service semantics, transactional profile enter/restore around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the YaST-inspired DINXPanel with fixed control-panel shortcuts, Shelly/Topgrade upgrade actions, optional fwupd discovery and a non-removing Artix kernel installer;
 - fixed launcher argv/return fixture and real headless Gamescope child launch/exit qualification;
 - ISO payload and static contract checks for the session entry and binaries.
 

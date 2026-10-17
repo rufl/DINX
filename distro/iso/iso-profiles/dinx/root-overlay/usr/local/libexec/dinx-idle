@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+exec swayidle -w \
+    timeout 600 /usr/local/libexec/dinx-lock \
+    before-sleep /usr/local/libexec/dinx-lock

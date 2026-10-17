@@ -13,7 +13,7 @@
 
 ```text
 DINX applications
-  Noctty · Nocted · DinitUI
+  Noctty · Nocted · DinitUI · DINXPanel
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · optional Noctalia IPC
@@ -66,6 +66,19 @@ The editor must remain useful without Noctalia. Noctalia supplies optional prese
 ### DinitUI
 
 DinitUI presents loaded and discoverable dinit services, status, buffered logs, service lifecycle, dependencies, environment and daemon actions. It uses a constrained `dinitctl` argv interface, validates service/argument tokens, handles Dinit's native nested list markers, and retries system-scope authorization only through `pkexec` after an explicit permission failure. It must not interpolate user text into shell commands. The real-daemon smoke uses a temporary Dinit user daemon and proves service discovery through the production GTK surface.
+
+DinitUI also owns explicit `normal`, `lite`, `gaming` and user-defined system-service profiles. `lite` disables only the optional Bluetooth daemon; `gaming` explicitly enables `bluetoothd` for controllers and leaves Bluetooth, UFW, and OpenSnitch policy services available. NetworkManager, D-Bus, PipeWire, WirePlumber, elogind, greetd, seatd, metalog and display services remain outside the default policy. The profile editor persists user policy at `~/.config/dinx/dinitui/profiles.conf` and exposes `--profile-status`, `--apply-profile`, `--toggle-profile`, `--gaming-enter`, `--gaming-leave`, `--gpu-status` and `--install-gpu-drivers` for shell integration.
+
+### DINXPanel
+
+DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, MangoWC, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its read-only upgrade report uses Shelly and optional fwupd metadata; Topgrade preview uses `--dry-run --show-skipped`; explicit upgrades remain user-confirmed terminal workflows. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
+
+DINX ships a local Noctalia `dinx/performance` plugin. Its Control Center shortcut applies the Gaming profile and synchronizes Noctalia's documented `performance`/`balanced` power profile. The standalone Gamescope session does not start Noctalia and therefore remains independent of this integration.
+### Session safety and payload budgets
+
+The Mango session starts the fixed `dinx-idle` wrapper. It uses `swayidle` to lock after 600 seconds and on `before-sleep`; `dinx-lock`, `Super+L`, the Noctalia launcher and DINXPanel use the same `swaylock` path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
+
+The profile has one combined Artix package payload because `buildiso` consumes one YAML profile. DinitUI separates Normal/Lite/Gaming service policy at runtime, while `scripts/check_dinx_budget.sh` prevents package/startup/binary growth. `scripts/measure_dinx_session.sh` is a runtime observation tool; it reports RSS/CPU only when a real session exists and does not substitute for hardware qualification.
 
 ## Shared contracts
 

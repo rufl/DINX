@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Lock screen
+Comment=Lock the DINX session now
+Exec=/usr/local/libexec/dinx-lock
+TryExec=/usr/local/libexec/dinx-lock
+Icon=system-lock-screen
+Terminal=false
+Categories=System;Security;
+StartupNotify=false

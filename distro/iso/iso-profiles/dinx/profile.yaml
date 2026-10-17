@@ -25,7 +25,7 @@ rootfs:
     - dinit
     - dinit-rc
     - dinitui
-    - dosfstools
+    - dinxpanel
     - e2fsprogs
     - efibootmgr
     - elogind
@@ -81,6 +81,7 @@ rootfs:
     - bluez-utils
     - blueman
     - btop
+    - brightnessctl
     - clang
     - dialog
     - fzf
@@ -118,6 +119,8 @@ rootfs:
     - strawberry
     - swayimg
     - topgrade
+    - swayidle
+    - swaylock
     - vlc
     - vlc-cli
     - ufw

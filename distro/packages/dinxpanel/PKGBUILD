@@ -1,0 +1,27 @@
+pkgname=dinxpanel
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='DINX YaST-inspired native system control center'
+arch=(x86_64)
+url='https://github.com/rufl/DINX'
+license=(Apache)
+depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock)
+optdepends=('fwupd: firmware metadata and update checks' 'wdisplays: Wayland display control panel')
+makedepends=(zig)
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir"
+  rm -rf "$srcdir/stage"
+  zig build -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
+}
+
+package() {
+  cd "$startdir"
+  install -Dm755 "$srcdir/stage/bin/dinxpanel" "$pkgdir/usr/bin/dinxpanel"
+  install -Dm644 resources/dinxpanel.desktop "$pkgdir/usr/share/applications/dinxpanel.desktop"
+  install -Dm644 resources/dinxpanel.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/dinxpanel/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/dinxpanel/LICENSE"
+}

@@ -27,7 +27,9 @@ grep -Fq 'type               = process' distro/packages/opensnitch-dinit/opensni
 grep -Fq 'command            = /usr/bin/opensnitchd' distro/packages/opensnitch-dinit/opensnitchd || fail 'OpenSnitch dinit command is incorrect'
 grep -Fq 'depends-on         = dbus' distro/packages/opensnitch-dinit/opensnitchd || fail 'OpenSnitch dinit service does not wait for D-Bus'
 
-grep -Fq '"gufw", "qps", "opensnitch_ui"' distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml || fail 'Noctalia dock is missing firewall/process launchers'
+for launcher in gufw qps opensnitch_ui; do
+  grep -Fq "usr/share/applications/$launcher.desktop" scripts/check-iso-content.sh || fail "ISO checker does not require the $launcher launcher"
+done
 grep -Fq 'usr/bin/ufw' scripts/check-iso-content.sh || fail 'ISO checker does not require ufw'
 grep -Fq 'usr/bin/gufw' scripts/check-iso-content.sh || fail 'ISO checker does not require gufw'
 grep -Fq 'usr/bin/qps' scripts/check-iso-content.sh || fail 'ISO checker does not require qps'

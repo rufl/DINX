@@ -5,7 +5,7 @@
 ## Current alpha status
 
 The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, upgrades, rollback or data preservation.
-The project is currently in **P1 — Public alpha 0.1**. The latest successful P0 validation is [run 38739313464](https://github.com/rufl/DINX/actions/runs/38739313464); it includes the pinned BC250 Control Center v1.21.1 package and its DINX session integration.
+The project is currently in **P5 — Gaming beta**. The latest successful P0 validation is [run 38989297207](https://github.com/rufl/DINX/actions/runs/38989297207), on commit `86edd35`; it built and booted the ISO, validated the graphical payload, completed the disposable persistent-install/recovery-TTY smoke and published an attested workflow artifact. P4 DinitUI is release-qualified for the alpha gate; P5 still has real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries.
 
 KDE Partition Manager is also available as a standalone graphical disk tool. Use it only to inspect or prepare a disk before opening Calamares, and verify the target device in both applications.
 

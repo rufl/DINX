@@ -55,7 +55,7 @@ The isolated NoctEd GTK smoke renders its fallback icons to PNG with `rsvg-conve
 
 ### Local P4/P5 qualification
 
-The local gates currently pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. These results do not replace the remote ISO workflow: ISO generation, QEMU boot, ISO payload inspection and persistent-install evidence remain release-gate outputs.
+The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) supplies the matching remote package, ISO, QEMU, payload, disposable persistent-install/recovery-TTY, attestation and artifact evidence; together these close P4's alpha end-to-end gate. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
 
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, the standalone gaming launcher/session, Gamescope, Steam, the 32-bit graphics payload, dinit service files, NOCTTY/NoctEd, `clangd`, both Nocted editor schemes, Nano, File Roller and the Thunar/GVFS stack reached the ISO. The removable-media contract includes UDisks2, `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin`, File Roller and Tumbler. It also asserts the standalone PolicyKit agent, rejects the systemd init package metadata/runtime while allowing compatibility libraries required by Gamescope/Steam, and rejects full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking, MTP, SMB, camera access or audio inside the guest.
 The payload check also proves Firefox, its desktop entry, the default HTML/XHTML/HTTP/HTTPS handlers and `/etc/firefox/policies/policies.json`. That policy removes sponsored browser surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection without disabling normal browser updates or user-initiated Firefox Accounts.
@@ -85,16 +85,17 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Latest observed successful run
 
-Run [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529) on commit `bc75f16` passed every P0 workflow step in 30m52s:
+Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) on commit `86edd35` completed every workflow step successfully:
 
-- ISO artifact: `artix-dinx-dinit-20261016-x86_64.iso`;
-- the native package ran PTY/VT/session, allocator, protocol/Unicode, fairness, actual-tmux, deterministic-Zellij, ncurses, system-TUI and Vim/btop qualifications; the result was `noctty_p2_qualification ... assertions=true`;
-- the integration contract passed terminal discovery, shell defaults, desktop entry, working-directory, Noctalia and package-runtime checks;
-- system-TUI evidence covered top/watch/info/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP; `info_surface=fixture_fallback` and `codex_surface=fixture` remain explicit boundaries;
-- QEMU boot smoke, graphical payload verification, persistent-install/recovery-TTY smoke, SHA-512 generation, provenance attestation and artifact upload passed;
-- uploaded artifact: `dinx-foundation-iso-bc75f163a8d85a207e2bdab5dd70cf1d3116d1b4`, 2,341,669,977 bytes, containing the ISO, checksum, QEMU log and VGA captures.
+- the static contracts for first-party packages, DinitUI, gaming and the ISO payload passed before the container build;
+- Artix package builds and `buildiso` completed, including the Steam/32-bit graphics packages resolved from the enabled Artix `lib32` repository;
+- QEMU boot and graphical capture passed;
+- graphical ISO payload validation passed, including DinitUI, the standalone gaming session, Steam and the 32-bit graphics payload;
+- disposable persistent-install and recovery-TTY smoke passed;
+- SHA-512 generation, GitHub provenance attestation and artifact upload passed;
+- uploaded artifact: `dinx-foundation-iso-86edd3562a0b734a3e4fcf44e34638573145af3a`, 2,710,227,069 bytes, digest `sha256:343e10f0aae3e55d1cfd643513cf13793db5ef4fd31f4ca852fab6de63f7ae35`.
 
-The run proves the package, ISO, VM boot, graphical payload, disposable BIOS persistent-install/recovery path and provenance contracts. It does not prove physical BC-250 tuning, authenticated Codex/network access or long-term hardware service health.
+This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, disposable BIOS persistent-install/recovery path and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical BC-250 tuning, UEFI, upgrades, rollback or long-term hardware service health.
 
 ## Earlier observed successful run
 

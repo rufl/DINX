@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P5 — gaming beta (in progress).** P4's DinitUI implementation and local daemon/GTK qualification are complete; the current release workflow still has to build and boot the ISO for the final P4 payload gate.
+**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) on commit `86edd35` is the current P0 evidence. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
 
 ## P0 — foundation
 
@@ -92,7 +92,7 @@ P3 release gate:
 
 **Goal:** make Dinit operations understandable, complete and safe without importing systemd concepts.
 
-**Status:** implementation complete. `zig build test`, ReleaseSafe build, Arch package payload, static contract checks, a real temporary Dinit user daemon and the production GTK smoke path are qualified. The parser handles Dinit's native nested list markers, and permission fallback is covered with a deterministic `pkexec` fixture. The current Artix ISO workflow remains the final package/payload gate.
+**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe build, Arch package payload, static contract checks, a real temporary Dinit user daemon and the production GTK smoke path are qualified. Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) also passed the Artix package build, ISO payload, QEMU boot, disposable persistent-install/recovery-TTY smoke, provenance attestation and artifact upload. Startup-profile and hardware-status views remain explicitly deferred to a later P4.1 maintenance slice; they are not hidden prerequisites for this service-control release.
 
 **Delivered:**
 
@@ -119,7 +119,7 @@ Startup-profile and hardware-status views are explicitly deferred to a later P4.
 
 **Remaining release gates:**
 
-- current ISO workflow, greeter selection and a real DRM display session;
+- a real DRM display session and gaming-session selection from the greeter;
 - authenticated Steam startup, commercial game launch/exit, controller input and PipeWire audio;
 - return to the greeter after an actual session exit;
 - suspend/resume, GPU recovery and update testing on physical hardware.

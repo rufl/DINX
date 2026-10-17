@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P5 — beta de jogos (em andamento).** A implementação e a qualificação local de daemon/GTK da P4 DinitUI estão concluídas; o workflow de release atual ainda precisa compilar e inicializar a ISO para o gate final de payload da P4.
+**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end para release: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/TTY em disco descartável passaram. A execução [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207), no commit `86edd35`, é a evidência P0 atual. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
 
 ## P0 — fundação
 
@@ -92,7 +92,7 @@ Gate de release P3:
 
 **Objetivo:** tornar as operações do Dinit compreensíveis, completas e seguras sem importar conceitos do systemd.
 
-**Status:** implementação concluída. `zig build test`, build ReleaseSafe, payload do pacote Arch, checks estáticos, um daemon Dinit de usuário temporário real e a superfície GTK de produção foram qualificados. O parser entende os marcadores aninhados nativos da listagem do Dinit, e o fallback de permissão é coberto por um fixture determinístico de `pkexec`. O workflow Artix da ISO atual continua sendo o gate final de pacote/payload.
+**Status:** qualificada para o gate alpha. `zig build test`, build ReleaseSafe, payload do pacote Arch, checks estáticos, um daemon Dinit de usuário temporário real e a superfície GTK de produção foram qualificados. A execução [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/TTY de recuperação em disco descartável, a atestação de procedência e o upload do artefato. As visões de perfil de inicialização e hardware continuam explicitamente adiadas para uma fatia de manutenção P4.1; não são pré-requisitos ocultos deste release de controle de serviços.
 
 **Entregue:**
 
@@ -119,7 +119,7 @@ As visões de perfil de inicialização e hardware foram explicitamente adiadas 
 
 **Gates de release restantes:**
 
-- workflow da ISO atual, seleção pelo greeter e uma sessão DRM real;
+- uma sessão DRM real e a seleção da sessão gaming pelo greeter;
 - inicialização Steam autenticada, launch/exit de jogo comercial, controles e áudio PipeWire;
 - retorno ao greeter depois da saída de uma sessão real;
 - suspensão/retomada, recuperação da GPU e testes de atualização em hardware físico.

@@ -55,7 +55,7 @@ O smoke GTK isolado do Nocted renderiza os fallbacks de ícone para PNG com `rsv
 
 ### Qualificação local P4/P5
 
-Os gates locais passam o contrato do pacote DinitUI, um daemon Dinit de usuário temporário real com o smoke GTK e o fixture da sessão gaming com lançamento/saída headless do Gamescope. Esses resultados não substituem o workflow remoto da ISO: geração da ISO, boot no QEMU, inspeção do payload e evidência da instalação persistente continuam sendo saídas do gate de release.
+Os gates locais passam o contrato do pacote DinitUI, um daemon Dinit de usuário temporário real com o smoke GTK e o fixture da sessão gaming com lançamento/saída headless do Gamescope. A execução [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) fornece a evidência remota correspondente de pacote, ISO, QEMU, payload, instalação persistente/TTY de recuperação em disco descartável, atestação e artefato; juntos, esses resultados encerram o gate end-to-end alpha da P4. Os limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico da P5 continuam abertos.
 
 A verificação de payload prova que MangoWM, Scenefx, Noctalia, ReGreet, greetd, a sessão Mango, o launcher/sessão gaming standalone, Gamescope, Steam, o payload gráfico de 32 bits, os arquivos de serviço dinit, NOCTTY/NoctEd, `clangd`, os dois esquemas do editor Nocted, Nano, File Roller e a stack Thunar/GVFS chegaram à ISO. O contrato de mídia removível inclui UDisks2, `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin`, File Roller e Tumbler. Ela também confirma o agente independente de PolicyKit, rejeita metadados/runtime do pacote init systemd enquanto permite bibliotecas de compatibilidade exigidas por Gamescope/Steam e rejeita sessões completas do Xfce/LXQt. O smoke test do QEMU ainda prova somente aceitação de boot em nível de processo; não prova login gráfico, rede, MTP, SMB, acesso à câmera ou áudio dentro do guest.
 A verificação de payload também prova Firefox, sua entrada desktop, os manipuladores padrão de HTML/XHTML/HTTP/HTTPS e `/etc/firefox/policies/policies.json`. Essa política remove superfícies patrocinadas do navegador, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado sem desabilitar atualizações normais ou Firefox Accounts iniciado pelo usuário.
@@ -87,16 +87,17 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Última execução bem-sucedida observada
 
-A execução [38830745529](https://github.com/rufl/DINX/actions/runs/38830745529), no commit `bc75f16`, concluiu todas as etapas do workflow P0 em 30m52s:
+A execução [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207), no commit `86edd35`, concluiu com sucesso todas as etapas do workflow:
 
-- artefato ISO: `artix-dinx-dinit-20261016-x86_64.iso`;
-- o pacote nativo executou as qualificações de PTY/VT/sessão, allocator, protocolo/Unicode, fairness, tmux real, Zellij determinístico, ncurses, TUI do sistema e Vim/btop; o resultado foi `noctty_p2_qualification ... assertions=true`;
-- o contrato de integração passou nas verificações de descoberta do terminal, defaults do shell, entrada desktop, diretório de trabalho, Noctalia e runtime do pacote;
-- a evidência de TUI do sistema cobriu top/watch/info/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local; `info_surface=fixture_fallback` e `codex_surface=fixture` continuam limites explícitos;
-- smoke de boot no QEMU, verificação do payload gráfico, smoke da instalação persistente/TTY de recuperação, geração do SHA-512, atestação de procedência e upload do artefato passaram;
-- artefato publicado: `dinx-foundation-iso-bc75f163a8d85a207e2bdab5dd70cf1d3116d1b4`, 2.341.669.977 bytes, contendo a ISO, checksum, log QEMU e capturas VGA.
+- os contratos estáticos dos pacotes próprios, DinitUI, gaming e payload da ISO passaram antes do build do container;
+- os builds de pacotes Artix e o `buildiso` concluíram, incluindo os pacotes Steam/gráficos de 32 bits resolvidos pelo repositório Artix `lib32` habilitado;
+- o boot no QEMU e a captura gráfica passaram;
+- a validação do payload gráfico da ISO passou, incluindo DinitUI, a sessão gaming standalone, Steam e o payload gráfico de 32 bits;
+- o smoke de instalação persistente e TTY de recuperação em disco descartável passou;
+- geração do SHA-512, atestação de procedência no GitHub e upload do artefato passaram;
+- artefato publicado: `dinx-foundation-iso-86edd3562a0b734a3e4fcf44e34638573145af3a`, 2.710.227.069 bytes, digest `sha256:343e10f0aae3e55d1cfd643513cf13793db5ef4fd31f4ca852fab6de63f7ae35`.
 
-A execução prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, do caminho persistente/recuperação em BIOS descartável e da procedência. Não prova ajuste físico da BC-250, acesso de rede/Codex autenticado nem saúde de serviços em hardware por longo prazo.
+Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, do caminho persistente/recuperação em BIOS descartável e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, ajuste físico da BC-250, UEFI, atualizações, rollback ou saúde de serviços em hardware por longo prazo.
 
 ## Execução bem-sucedida anterior observada
 

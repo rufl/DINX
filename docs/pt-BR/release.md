@@ -18,7 +18,7 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-O workflow P0 mais recente aprovado é a [execução 38753069331](https://github.com/rufl/DINX/actions/runs/38753069331), no commit `b0e3040`. Ele passou a política pró-user do Firefox, o contrato do BC250 Control Center v1.21.1, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. O artefato do workflow é `dinx-foundation-iso-b0e3040f8294f2e7c45fc3ce3c4b5fe84e6aa1e4`; ele continua sendo um artefato de validação, não um release estável para hardware.
+O workflow P0 mais recente aprovado é a [execução 38989297207](https://github.com/rufl/DINX/actions/runs/38989297207), no commit `86edd35`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-86edd3562a0b734a3e4fcf44e34638573145af3a`, com 2.710.227.069 bytes e digest `sha256:343e10f0aae3e55d1cfd643513cf13793db5ef4fd31f4ca852fab6de63f7ae35`; ele continua sendo um artefato de validação, não um release estável para hardware.
 
 ## Artefatos publicados
 

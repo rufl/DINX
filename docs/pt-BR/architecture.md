@@ -84,7 +84,7 @@ O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânti
 
 ## Sessão de jogos
 
-A sessão de jogos é separada e baseada em Gamescope e Steam. `dinx-gaming` inicia `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` a partir de uma entrada Wayland standalone com `dbus-run-session`; ela não presume Noctalia ou Mango em execução por baixo. O perfil inclui as dependências Mesa/RADV/Vulkan de 32 bits do Steam e `steam-devices`. `scripts/gaming_p5_qualification.sh` prova argv/retorno do launcher com fixtures e prova lançamento/saída de um filho real headless do Gamescope; não afirma login Steam autenticado, jogo comercial, hardware de controle/áudio, display DRM, suspensão/retomada ou recuperação de GPU.
+A sessão de jogos é separada e baseada em Gamescope e Steam. `dinx-gaming` inicia `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` a partir de uma entrada Wayland standalone com `dbus-run-session`; ela não presume Noctalia ou Mango em execução por baixo. O perfil inclui as dependências Mesa/RADV/Vulkan de 32 bits do Steam e `steam-devices`; o builder P0 habilita explicitamente o repositório oficial `lib32` do Artix e não adiciona repositórios Arch. `scripts/gaming_p5_qualification.sh` prova argv/retorno do launcher com fixtures e prova lançamento/saída de um filho real headless do Gamescope; não afirma login Steam autenticado, jogo comercial, hardware de controle/áudio, display DRM, suspensão/retomada ou recuperação de GPU.
 
 ## Caminho de instalação selecionado
 
@@ -92,7 +92,7 @@ O caminho de instalação persistente é o **Calamares** em modo offline: ele co
 
 O **KDE Partition Manager** é o particionador gráfico independente oferecido ao lado do Calamares. Ele compartilha a stack Qt/kpmcore já usada pelo Calamares e executa como aplicação Wayland nativa na sessão DINX. Serve para inspecionar e preparar discos antes da instalação, não para substituir a seleção final de pontos de montagem do instalador.
 
-Esse caminho continua experimental até qualificarmos uma instalação limpa UEFI/BIOS em VM, o primeiro boot, a TTY de recuperação e as proteções contra seleção destrutiva de dispositivo.
+O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil. O CI agora qualifica a instalação BIOS descartável, o primeiro boot e a TTY de recuperação; o caminho continua experimental até qualificar UEFI, proteções contra seleção destrutiva de dispositivo, instalação em hardware e comportamento de atualização/rollback.
 
 ## Decisões ainda necessárias antes de um release de produção
 

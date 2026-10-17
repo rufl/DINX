@@ -84,7 +84,7 @@ The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/p
 
 ## Gaming session
 
-Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry; it does not assume that Noctalia or Mango is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures and proves a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware, DRM display, suspend/resume or GPU recovery.
+Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry; it does not assume that Noctalia or Mango is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`; the P0 builder explicitly enables Artix's official `lib32` repository and does not add Arch repositories. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures and proves a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware, DRM display, suspend/resume or GPU recovery.
 
 ## Installation path selected
 
@@ -92,7 +92,7 @@ The persistent installation path is **Calamares** in offline mode: it copies the
 
 **KDE Partition Manager** is the standalone graphical disk tool offered beside Calamares. It shares the Qt/kpmcore stack already used by Calamares and runs as a native Wayland application in the DINX session. It is intended for disk inspection and preparation before installation, not as a replacement for the installer's final mount-point selection.
 
-This path is experimental until a clean UEFI/BIOS VM installation, first boot, recovery TTY and destructive-device safeguards are qualified.
+The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. CI now qualifies the disposable BIOS install, first boot and recovery TTY; the path remains experimental until UEFI, destructive-device safeguards, hardware installation and upgrade/rollback behavior are qualified.
 
 ## Decisions still required before a production release
 

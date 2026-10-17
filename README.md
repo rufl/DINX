@@ -2,7 +2,7 @@
 
 [Português (Brasil)](README.md) · [English](README.en.md)
 
-DINX é uma plataforma Linux alpha pública para jogos e desenvolvimento.
+Distro Linux alpha pública, Spin Customizada do Artix - pouco footprint, máximo desempenho.
 
 O alvo inicial da plataforma é **x86_64**, baseada no **Artix Linux com dinit**, com um desktop Wayland usando **MangoWC** e **Noctalia Shell**.
 

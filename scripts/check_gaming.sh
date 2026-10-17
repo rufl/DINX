@@ -36,6 +36,7 @@ done
 grep -Fq 'scripts/check_gaming.sh' "$workflow" || fail 'workflow does not run the gaming contract gate'
 grep -Fq 'scripts/gaming_p5_qualification.sh' "$workflow" || fail 'workflow trigger does not include gaming qualification changes'
 grep -Fq "gamescope \\" "$workflow" || fail 'ISO builder does not install Gamescope for qualification'
+grep -Fq '[lib32]' "$workflow" || fail 'ISO builder does not enable the Artix lib32 repository'
 grep -Fq 'usr/local/libexec/dinx-gaming' "$iso_check" || fail 'ISO payload check does not require the gaming launcher'
 grep -Fq 'usr/share/wayland-sessions/dinx-gaming.desktop' "$iso_check" || fail 'ISO payload check does not require the gaming session'
 grep -Fq 'usr/bin/gamescope' "$iso_check" || fail 'ISO payload check does not require Gamescope'

@@ -238,6 +238,8 @@ jobs:
               build_package shelly
               build_package dinitui
               build_package dinxpanel
+              source /workspace/distro/packages/noctty/source.env
+              [[ -n "$NOCTTY_VERSION" ]]
               icon_svg=/tmp/dinx-nocted-icon.svg
               icon_png=/usr/share/icons/hicolor/128x128/apps/com.noctty.NoctEd.png
               tar -xOf \

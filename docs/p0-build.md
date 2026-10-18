@@ -12,6 +12,7 @@ The entry points are:
 - `scripts/build-iso.sh` — root-aware build wrapper;
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
+- `scripts/check_build_metadata.sh` — validates the builder provenance, package snapshot, source checksums and ISO digest emitted by the remote build;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` and `scripts/check_bc250_control_center.sh` — Firefox, pinned application, Artix package-management, firewall, hardware and BC250 Control Center contracts;
 - `scripts/check_dinitui.sh` — DinitUI package, action, privilege-boundary, service-profile and Noctalia Gaming integration contract;
 - `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;

@@ -5,6 +5,7 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source_env="$repo_root/distro/packages/noctty/source.env"
 pkgbuild="$repo_root/distro/packages/noctty/PKGBUILD"
 profile="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
+workflow="$repo_root/.github/workflows/p0-iso.yml"
 
 fail() {
   printf 'check_first_party_apps: %s\n' "$*" >&2
@@ -14,6 +15,7 @@ fail() {
 [[ -r "$source_env" ]] || fail "missing $source_env"
 [[ -r "$pkgbuild" ]] || fail "missing $pkgbuild"
 [[ -r "$profile" ]] || fail "missing $profile"
+[[ -r "$workflow" ]] || fail "missing $workflow"
 
 read_value() {
   local key=$1
@@ -45,6 +47,8 @@ grep -Fqx 'pkgname=noctty' "$pkgbuild" || fail 'PKGBUILD package name is not noc
 grep -Fq "provides=('nocted' 'terminal-emulator')" "$pkgbuild" || fail 'PKGBUILD does not provide nocted'
 grep -Fq "'gtksourceview4'" "$pkgbuild" || fail 'NoctEd runtime dependency is missing'
 grep -Fq '  - noctty' "$profile" || fail 'DINX profile does not install noctty'
+grep -Fq 'source /workspace/distro/packages/noctty/source.env' "$workflow" || fail 'P0 build does not load the pinned Noctty version before asset extraction'
+grep -Fq 'build-metadata.txt' "$workflow" || fail 'P0 build does not emit build metadata'
 
 printf 'first_party_apps_contract repository=%s ref=%s version=%s noctty=true nocted=true source_pinned=true archive_verified=true profile_entry=true\n' \
   "$repository" "$ref" "$version"

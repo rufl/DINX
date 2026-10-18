@@ -65,6 +65,8 @@ jobs:
           version="${RELEASE_TAG#v}"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9._-]+$ ]]
           input_iso=$(find dist/release-input -type f -name '*.iso' -print -quit)
+          input_metadata=$(find dist/release-input -type f -name 'build-metadata.txt' -print -quit)
+          test -n "$input_metadata"
           test -n "$input_iso"
           mkdir -p dist/release
           iso_name="dinx-${version}-x86_64.iso"
@@ -142,12 +144,15 @@ jobs:
             release_evidence+=("$evidence_asset")
           done < <(find dist/release-input -type f \( -name '*.ppm' -o -name '*.qemu.log' \) -print)
           package_name="dinx-${version}-dogfood.1-windows-x86_64.zip"
-          metadata_name="dinx-${version}-dogfood.1-windows-x86_64.json"
+          windows_metadata_name="dinx-${version}-dogfood.1-windows-x86_64.json"
           manifest_name="dinx-${version}-dogfood.1-deployment-manifest.json"
+          build_metadata_name="dinx-${version}-build-metadata.txt"
+          cp "$input_metadata" "dist/release/$build_metadata_name"
           checksum_targets=(
             "dist/release/$iso_name.sha512"
             "dist/release/$package_name"
-            "dist/release/$metadata_name"
+            "dist/release/$windows_metadata_name"
+            "dist/release/$build_metadata_name"
             "dist/release/$manifest_name"
           )
           if [[ -n "$iso_parts_manifest" ]]; then
@@ -170,6 +175,7 @@ jobs:
           - Linux QEMU boot, graphical payload, boot-menu and automated greeter/session captures passed in CI.
           - The persistent-install smoke copied the Calamares rootfs contract to an ephemeral BIOS disk, booted dinit and captured a recovery TTY frame.
           - GitHub artifact attestations cover the ISO or its parts, checksums, Windows package and release metadata. Verify with \`gh attestation verify <file> -R rufl/DINX\`.
+          - \`${build_metadata_name}\` records the source commit, builder image, package snapshot and ISO digest.
 
           ## ISO delivery
 
@@ -206,6 +212,7 @@ jobs:
             dist/release/*windows-x86_64.json
             dist/release/*deployment-manifest.json
             dist/release/SHA256SUMS
+            dist/release/*-build-metadata.txt
 
       - name: Publish GitHub release
         env:
@@ -227,6 +234,7 @@ jobs:
             "dist/release/dinx-${version}-dogfood.1-windows-x86_64.json"
             "dist/release/dinx-${version}-dogfood.1-deployment-manifest.json"
             dist/release/SHA256SUMS
+            "dist/release/dinx-${version}-build-metadata.txt"
           )
           while IFS= read -r -d '' evidence; do
             release_assets+=("$evidence")

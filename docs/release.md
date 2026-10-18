@@ -28,6 +28,7 @@ Each alpha release contains:
 - Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
 - the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`.
+- `dinx-<version>-build-metadata.txt` — builder image, source commit, package snapshot, source checksums and ISO digest;
 
 When the ISO is split, concatenate the parts in lexical order and verify the full image:
 
@@ -49,6 +50,7 @@ GitHub CLI:
 gh attestation verify dinx-<version>-x86_64.iso -R rufl/DINX
 gh attestation verify dinx-<version>-x86_64.iso.part-00 -R rufl/DINX
 gh attestation verify dinx-<version>-dogfood.1-windows-x86_64.zip -R rufl/DINX
+gh attestation verify dinx-<version>-build-metadata.txt -R rufl/DINX
 ```
 
 Use the direct ISO command only when that asset exists; otherwise repeat the part command

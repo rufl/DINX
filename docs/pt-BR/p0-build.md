@@ -48,7 +48,7 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 9. valida os payloads SquashFS do root e da sessão live;
 10. gera checksum SHA-512;
 11. mantém QEMU executando por uma janela de boot configurável e captura sua superfície VGA;
-12. inicializa um disco BIOS descartável produzido a partir do mesmo contrato offline de rootfs/remoção do Calamares, gera initramfs e GRUB e verifica um marcador de primeiro boot dinit e o serviço de TTY de recuperação;
+12. tenta inicializar discos BIOS e UEFI descartáveis produzidos a partir do mesmo contrato offline de rootfs/remoção do Calamares, gera initramfs e o caminho GRUB BIOS ou UEFI correspondente e verifica um marcador de primeiro boot dinit e o serviço de TTY de recuperação;
 13. cria atestações de artefato do GitHub para a ISO e o checksum;
 14. publica a ISO, checksum, logs QEMU e capturas PPM como artefato temporário do workflow.
 
@@ -85,7 +85,7 @@ Para uma captura gráfica local, defina `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DI
 O workflow também captura `dinx-boot-screen.ppm` três segundos depois que o QEMU abre e antes do envio das teclas do menu de boot. Isso fornece evidência visual direta de regressão para a tela GRUB de seleção do kernel.
 O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, mantendo os assets de logo/fonte do Artix. As texturas opacas do menu ficam desativadas, então o menu de boot, o greeter, o instalador e o desktop compartilham a mesma hierarquia visual plana.
 
-O perfil também incorpora um caminho experimental offline do Calamares com branding DINX, módulos de serviço dinit e um KDE Partition Manager independente. A verificação de conteúdo confirma a paleta/templates DINX, ReGreet, Noctalia, Mango e os payloads de recuperação. `scripts/smoke-install.sh` verifica a instalação BIOS offline, a geração de initramfs/GRUB, o primeiro boot e a TTY de recuperação em um disco efêmero; é um smoke de contrato do CI, não uma qualificação arbitrária de hardware.
+O perfil também incorpora um caminho experimental offline do Calamares com branding DINX, módulos de serviço dinit e um KDE Partition Manager independente. A verificação de conteúdo confirma a paleta/templates DINX, ReGreet, Noctalia, Mango e os payloads de recuperação. `scripts/smoke-install.sh` verifica instalações BIOS e UEFI offline, a geração de initramfs/GRUB, o primeiro boot e a TTY de recuperação em discos efêmeros; é um smoke de contrato do CI, não uma qualificação arbitrária de hardware.
 
 Para uma segunda captura diagnóstica após entrada de teclas, defina também `DINX_QEMU_POST_SCREENSHOT` e, opcionalmente, `DINX_QEMU_POST_SCREENSHOT_DELAY` e `DINX_QEMU_POST_KEYS`. Isso não prova que o greeter aceitou as credenciais.
 
@@ -102,7 +102,7 @@ A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629
 - geração do SHA-512, atestação de procedência no GitHub, verificação dos metadados de build e upload do artefato passaram;
 - artefato publicado: `dinx-foundation-iso-f7bf0448f52dc333f8792cb98ff019d7d57e532b`, 2.703.487.030 bytes, digest `sha256:d1ffb2a5c0ad787f45cbb59cf06adc85c494e6512c4a89860c383026d053ee29`.
 
-Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, do caminho persistente/recuperação em BIOS descartável e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, ajuste físico da BC-250, UEFI, atualizações, rollback ou saúde de serviços em hardware por longo prazo.
+Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, do caminho persistente/recuperação em BIOS descartável e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, ajuste físico da BC-250, UEFI, instalação em hardware, atualizações, rollback ou saúde de serviços em hardware por longo prazo.
 
 ## Execução bem-sucedida anterior observada
 

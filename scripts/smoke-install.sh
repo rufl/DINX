@@ -182,6 +182,7 @@ else
   printf 'smoke-install: installing UEFI GRUB into the disposable disk\n'
   chroot "$target_dir" /usr/bin/grub-install \
     --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=DINX \
+    --modules="part_gpt ext2 search search_fs_uuid normal configfile linux" \
     --no-nvram --removable --recheck >/dev/null
 fi
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
@@ -215,6 +216,11 @@ EOF
     --skip-fs-probe "$loop_device" >/dev/null
 fi
 if [[ "$firmware_mode" == uefi ]]; then
+  cat > "$target_dir/boot/efi/EFI/BOOT/grub.cfg" <<EOF
+search --no-floppy --fs-uuid --set=root $root_uuid
+set prefix=(\$root)/boot/grub
+configfile \$prefix/grub.cfg
+EOF
   [[ -s "$target_dir/boot/efi/EFI/BOOT/BOOTX64.EFI" ]] || fail 'UEFI fallback bootloader is missing'
 fi
 printf 'smoke-install: target mkinitcpio configuration\n'

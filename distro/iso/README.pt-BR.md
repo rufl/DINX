@@ -35,18 +35,21 @@ Teste o boot de uma ISO já construída:
 ```bash
 scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
-Teste o contrato de instalação persistente em um disco BIOS descartável:
+Teste o contrato de instalação persistente em discos BIOS e UEFI descartáveis:
 
 ```bash
 DINX_INSTALL_OUTPUT_DIR=dist/iso/dinx \
-scripts/smoke-install.sh dist/iso/<arquivo>.iso
+DINX_INSTALL_FIRMWARE=bios scripts/smoke-install.sh dist/iso/<arquivo>.iso
+DINX_INSTALL_OUTPUT_DIR=dist/iso/dinx \
+DINX_INSTALL_FIRMWARE=uefi scripts/smoke-install.sh dist/iso/<arquivo>.iso
 ```
 
 O script extrai o rootfs da ISO, remove os pacotes exclusivos da sessão live, cria
-um disco ext4 temporário, gera initramfs e GRUB BIOS, inicializa o disco no QEMU e
-captura a transição para a TTY de recuperação. Ele exige root ou `sudo` sem senha,
-loop devices, `grub-pc-bin`, QEMU e ferramentas SquashFS. O disco é apagado ao fim
-do smoke; isso não substitui a qualificação em hardware.
+discos ext4 temporários, gera initramfs e o caminho GRUB BIOS ou UEFI correspondente,
+inicializa cada disco no QEMU e captura a transição para a TTY de recuperação. Ele
+exige root ou `sudo` sem senha, loop devices, `grub-pc-bin`, `grub-efi-amd64-bin`,
+OVMF, QEMU e ferramentas SquashFS. Os discos são apagados ao fim do smoke; isso não
+substitui a qualificação em hardware.
 
 
 A execução remota também captura a superfície VGA do QEMU pelo monitor. Para solicitar a mesma evidência localmente:
@@ -102,7 +105,7 @@ A sessão instala `swaylock`, `swayidle` e `brightnessctl`. `/usr/local/libexec/
 
 O perfil Artix atual continua sendo uma ISO única combinada de desktop/gaming/hardware porque o `buildiso` consome um `profile.yaml`; as políticas Normal/Lite/Gaming do DinitUI fornecem a separação de serviços em runtime. O conjunto de pacotes é documentado intencionalmente como um payload único até o builder suportar grupos de pacotes composáveis sem duplicar o root overlay.
 
-A verificação de conteúdo prova que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão, terminal fallback, editor de recuperação Nano, integração de arquivos compactados File Roller/Thunar e dinit. `scripts/smoke-install.sh` também executa o contrato offline em um disco BIOS efêmero, verifica o primeiro boot dinit e habilita as TTYs de recuperação. A captura PPM do workflow é evidência visual para inspeção, não uma qualificação de hardware arbitrário.
+O conteúdo verifica que as imagens SquashFS do root e da sessão live contêm os payloads esperados do compositor, shell, greeter, sessão, terminal fallback, editor de recuperação Nano, integração de arquivos compactados File Roller/Thunar e dinit. `scripts/smoke-install.sh` também executa o contrato offline em discos BIOS e UEFI efêmeros, verifica o primeiro boot dinit e habilita as TTYs de recuperação. A captura PPM do workflow é evidência visual para inspeção, não uma qualificação de hardware arbitrário.
 
 O workflow armazena uma captura separada `dinx-boot-screen.ppm`, feita antes do envio das teclas do menu de boot. Esse quadro deve ser revisado ao qualificar a superfície GRUB de seleção do kernel; ele é a evidência de regressão do painel opaco removido.
 
@@ -111,7 +114,7 @@ O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, m
 ## Limite do perfil
 
 O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-profiles` instalado e adiciona localmente as entradas específicas da DINX. `WORKSPACE_DIR` em `scripts/build-iso.sh` torna determinística a seleção do perfil.
-A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`, passou a sequência de validação automatizada atual: geração do checksum, validação do payload SquashFS, boot no QEMU, instalação/TTY de recuperação BIOS descartável, verificação dos metadados de build, atestação de procedência e upload do artefato. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
+A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`, passou a sequência de validação bem-sucedida atual: geração do checksum, validação do payload SquashFS, boot no QEMU, instalação/TTY de recuperação BIOS descartável, verificação dos metadados de build, atestação de procedência e upload do artefato. O caminho de smoke UEFI está ligado no workflow, mas continua em qualificação. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
 
 ## Validação do build
 

@@ -176,9 +176,7 @@ After logging into MangoWM:
 Both Calamares and KDE Partition Manager can erase or format data. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
 ### First boot and recovery TTY
 
-The CI installation contract boots the copied root filesystem from a disposable BIOS
-disk and enables `getty@tty2` and `getty@tty3` for recovery. On a real installation,
-press `Ctrl+Alt+F2` or `Ctrl+Alt+F3` at the greeter to reach a TTY and log in with
+The CI installation contract boots the copied root filesystem from a disposable BIOS disk and enables `getty@tty2` and `getty@tty3` for recovery. The workflow also exercises a UEFI disk path, but that smoke remains a qualification gate. On a real installation,
 the user created during installation. Useful recovery commands:
 
 ```bash
@@ -211,7 +209,7 @@ installed.
 
 ### Not production-supported yet
 
-- The persistent installer is experimental. CI qualifies an ephemeral BIOS disk; real UEFI/BIOS hardware still requires a hardware report.
+- The persistent installer is experimental. CI qualifies an ephemeral BIOS disk; the UEFI path and real UEFI/BIOS hardware still require a successful qualification and hardware report.
 - There is no upgrade or rollback procedure.
 - The current image is not a production desktop or gaming release.
 - Do not repartition or format an internal disk based only on this guide.

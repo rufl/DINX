@@ -12,7 +12,7 @@ Milestones are capability gates, not calendar promises.
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
 
-**Status:** the ISO/VM foundation gate is complete. Hardware installation, upgrades, rollback and long-term hardware service health remain release gates.
+**Status:** the ISO/VM foundation gate is complete. Hardware installation, UEFI hardware, upgrades, rollback and long-term hardware service health remain release gates; CI's disposable BIOS path is green and the UEFI path remains under qualification.
 
 Backlog:
 
@@ -23,7 +23,7 @@ Backlog:
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
 
-**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI now exercises the persistent-install contract on a disposable BIOS disk; hardware installation, upgrades and rollback remain release gates.
+**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on a disposable BIOS disk and is qualifying the UEFI path; hardware installation, upgrades and rollback remain release gates.
 
 ## P1 — public alpha 0.1
 
@@ -34,7 +34,7 @@ Backlog:
 Completed:
 
 - published the ISO/parts, checksums, installation instructions, known issues and release metadata;
-- qualified the experimental persistent installer and first-boot recovery path in CI on a disposable BIOS disk;
+- qualified the experimental persistent installer and first-boot recovery path in CI on a disposable BIOS disk; the UEFI path remains under qualification;
 - provided the minimal terminal fallback and working shell configuration;
 - recorded the package-signing limitation, hardware boundary and recovery limitations in the release documentation.
 

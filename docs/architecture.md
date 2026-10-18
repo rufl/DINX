@@ -105,7 +105,7 @@ The persistent installation path is **Calamares** in offline mode: it copies the
 
 **KDE Partition Manager** is the standalone graphical disk tool offered beside Calamares. It shares the Qt/kpmcore stack already used by Calamares and runs as a native Wayland application in the DINX session. It is intended for disk inspection and preparation before installation, not as a replacement for the installer's final mount-point selection.
 
-The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. CI now qualifies the disposable BIOS install, first boot and recovery TTY; the path remains experimental until UEFI, destructive-device safeguards, hardware installation and upgrade/rollback behavior are qualified.
+The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. CI qualifies the disposable BIOS install, first boot and recovery TTY; the UEFI path remains under qualification, and the overall path remains experimental until destructive-device safeguards, hardware installation and upgrade/rollback behavior are qualified.
 
 ## Decisions still required before a production release
 

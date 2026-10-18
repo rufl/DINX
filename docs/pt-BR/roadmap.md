@@ -12,7 +12,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 **Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
 
-**Status:** o gate da fundação ISO/VM está concluído. Instalação em hardware, atualizações, rollback e saúde de serviços em hardware por longo prazo continuam gates de release.
+**Status:** o gate da fundação ISO/VM está concluído. Instalação em hardware, UEFI físico, atualizações, rollback e saúde de serviços em hardware por longo prazo continuam gates de release; o caminho BIOS descartável do CI está verde e o caminho UEFI continua em qualificação.
 
 Backlog:
 
@@ -23,7 +23,7 @@ Backlog:
 - manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
 - adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
 
-**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI agora executa o contrato de instalação persistente em um disco BIOS descartável; instalação em hardware, atualizações e rollback continuam sendo gates de release.
+**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em um disco BIOS descartável e está qualificando o caminho UEFI; instalação em hardware, atualizações e rollback continuam sendo gates de release.
 
 ## P1 — alpha pública 0.1
 
@@ -34,7 +34,7 @@ Backlog:
 Concluído:
 
 - publicação da ISO/partes, checksums, instruções de instalação, problemas conhecidos e metadados de release;
-- qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em um disco BIOS descartável;
+- qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em um disco BIOS descartável; o caminho UEFI continua em qualificação;
 - fornecimento do terminal mínimo de fallback e da configuração funcional de shell;
 - registro explícito da limitação de assinatura de pacotes, do limite de hardware e das limitações de recuperação na documentação do release.
 

@@ -35,18 +35,21 @@ Smoke-test an already-built ISO:
 ```bash
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
-Smoke-test the persistent install contract on a disposable BIOS disk:
+Smoke-test the persistent install contract on disposable BIOS and UEFI disks:
 
 ```bash
 DINX_INSTALL_OUTPUT_DIR=dist/iso/dinx \
-scripts/smoke-install.sh dist/iso/<file>.iso
+DINX_INSTALL_FIRMWARE=bios scripts/smoke-install.sh dist/iso/<file>.iso
+DINX_INSTALL_OUTPUT_DIR=dist/iso/dinx \
+DINX_INSTALL_FIRMWARE=uefi scripts/smoke-install.sh dist/iso/<file>.iso
 ```
 
-This extracts the ISO rootfs, removes live-only packages, creates a temporary ext4
-disk, generates initramfs and BIOS GRUB, boots the disk in QEMU and captures the
-recovery-TTY transition. It requires root or passwordless `sudo`, loop devices,
-`grub-pc-bin`, QEMU and SquashFS tools. The disk is temporary and deleted after the
-smoke; it is not a substitute for hardware qualification.
+This extracts the ISO rootfs, removes live-only packages, creates temporary ext4
+disks, generates initramfs and the matching BIOS or UEFI GRUB path, boots each disk
+in QEMU and captures the recovery-TTY transition. It requires root or passwordless
+`sudo`, loop devices, `grub-pc-bin`, `grub-efi-amd64-bin`, OVMF, QEMU and SquashFS
+tools. The disks are temporary and deleted after the smoke; this is not a substitute
+for hardware qualification.
 
 
 The workflow also captures the QEMU VGA surface through its monitor. To request the same evidence locally:
@@ -102,7 +105,7 @@ The session installs `swaylock`, `swayidle` and `brightnessctl`. `/usr/local/lib
 
 The current Artix profile remains one combined desktop/gaming/hardware ISO because `buildiso` consumes one `profile.yaml`; DinitUI's Normal/Lite/Gaming policies provide runtime service separation. The package set is intentionally documented as one payload until the builder supports composable package groups without duplicating the root overlay.
 
-The content check proves that the root and live-session SquashFS images contain the expected compositor, shell, greeter, session, fallback terminal, Nano recovery editor, File Roller/Thunar archive integration and dinit payloads. `scripts/smoke-install.sh` also executes the offline contract on an ephemeral BIOS disk, checks the dinit first boot and enables recovery TTYs. The workflow's PPM capture is visual evidence to inspect, not arbitrary hardware qualification.
+The content check proves that the root and live-session SquashFS images contain the expected compositor, shell, greeter, session, fallback terminal, Nano recovery editor, File Roller/Thunar archive integration and dinit payloads. `scripts/smoke-install.sh` also executes the offline contract on ephemeral BIOS and UEFI disks, checks the dinit first boot and enables recovery TTYs. The workflow's PPM capture is visual evidence to inspect, not arbitrary hardware qualification.
 
 The workflow stores a separate `dinx-boot-screen.ppm` capture taken before the boot-menu keys are sent. Review this frame when qualifying the GRUB kernel-selection surface; it is the regression evidence for the removed opaque menu panel.
 
@@ -111,7 +114,7 @@ GRUB uses the DINX surface, foreground and primary selection colors while retain
 ## Profile boundary
 
 The profile uses the Artix common package manifest supplied by the installed `iso-profiles` package and adds DINX-specific inputs locally. `WORKSPACE_DIR` in `scripts/build-iso.sh` makes profile selection deterministic.
-Run [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) on commit `f7bf044` passed the current automated validation sequence: checksum generation, SquashFS payload validation, QEMU boot, disposable BIOS installation/recovery TTY, build-metadata verification, provenance attestation and artifact upload. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
+Run [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) on commit `f7bf044` passed the current successful validation sequence: checksum generation, SquashFS payload validation, QEMU boot, disposable BIOS installation/recovery TTY, build-metadata verification, provenance attestation and artifact upload. The UEFI smoke path is wired in the workflow but remains under qualification. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
 
 ## Build validation
 

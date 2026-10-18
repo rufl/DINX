@@ -48,7 +48,7 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 9. validates the root and live-session SquashFS payloads;
 10. generates a SHA-512 checksum;
 11. keeps QEMU running for a configurable boot window and captures its VGA surface;
-12. boots a disposable BIOS disk produced from the same offline rootfs/Calamares package-removal contract, generates initramfs and GRUB, then checks a dinit first-boot marker and recovery-TTY service;
+12. attempts disposable BIOS and UEFI disks produced from the same offline rootfs/Calamares package-removal contract, generates initramfs and the matching BIOS or UEFI GRUB path, then checks a dinit first-boot marker and recovery-TTY service;
 13. creates GitHub artifact attestations for the ISO and checksum;
 14. publishes the ISO, checksum, QEMU logs and PPM captures as a temporary workflow artifact.
 
@@ -83,7 +83,7 @@ For a local graphical capture, set `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QE
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 
-The profile also embeds an experimental offline Calamares path with DINX branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, DINX palette/template defaults, ReGreet, Noctalia, Mango and recovery payloads. `scripts/smoke-install.sh` verifies the offline BIOS install, initramfs/GRUB generation, first boot and recovery TTY on an ephemeral disk; it is a CI contract smoke, not arbitrary hardware qualification.
+The profile also embeds an experimental offline Calamares path with DINX branding, dinit service modules and a standalone KDE Partition Manager. The content check asserts the installer configuration, DINX palette/template defaults, ReGreet, Noctalia, Mango and recovery payloads. `scripts/smoke-install.sh` verifies offline BIOS and UEFI installs, initramfs/GRUB generation, first boot and recovery TTY on ephemeral disks; it is a CI contract smoke, not arbitrary hardware qualification.
 
 For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT`, optionally `DINX_QEMU_POST_SCREENSHOT_DELAY` and `DINX_QEMU_POST_KEYS`. This does not prove that the greeter accepted credentials.
 
@@ -100,7 +100,7 @@ Run [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) on comm
 - GitHub provenance attestation, build-metadata verification and artifact upload passed;
 - uploaded artifact: `dinx-foundation-iso-f7bf0448f52dc333f8792cb98ff019d7d57e532b`, 2,703,487,030 bytes, digest `sha256:d1ffb2a5c0ad787f45cbb59cf06adc85c494e6512c4a89860c383026d053ee29`.
 
-This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, disposable BIOS persistent-install/recovery path and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical BC-250 tuning, UEFI, upgrades, rollback or long-term hardware service health.
+This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, disposable BIOS persistent-install/recovery path and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical BC-250 tuning, UEFI, hardware installation, upgrades, rollback or long-term hardware service health.
 
 ## Earlier observed successful run
 

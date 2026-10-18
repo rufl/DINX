@@ -188,7 +188,7 @@ fi
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
 if [[ "$firmware_mode" == uefi ]]; then
   cat > "$target_dir/tmp/dinx-grub-uefi.cfg" <<EOF
-search.fs_uuid $root_uuid root
+set root=(hd0,gpt2)
 set prefix=(\$root)/boot/grub
 EOF
   chroot "$target_dir" /usr/bin/grub-mkimage \

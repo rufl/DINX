@@ -17,7 +17,7 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest successful P0 workflow is [run 39089770110](https://github.com/rufl/DINX/actions/runs/39089770110), on commit `7d13667`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-7d136670503a034d2e602eb631db06c89cd52853`, 2,703,494,796 bytes, digest `sha256:4059bb5073cecfb98feb477c0801fa2a16b34bee591752ca41568fa44032b447`; it remains a validation artifact, not a stable hardware release.
+The latest successful P0 workflow is [run 39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), on commit `f7bf044`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-f7bf0448f52dc333f8792cb98ff019d7d57e532b`, 2,703,487,030 bytes, digest `sha256:d1ffb2a5c0ad787f45cbb59cf06adc85c494e6512c4a89860c383026d053ee29`; it remains a validation artifact, not a stable hardware release.
 
 ## Published assets
 
@@ -66,8 +66,8 @@ checksum from an older package or a different release:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.5'
-$zipName = 'dinx-0.1.0-alpha.5-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.6'
+$zipName = 'dinx-0.1.0-alpha.6-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -127,7 +127,7 @@ The package metadata targets the registered `ddjarin` Windows receiver. On the t
 owner machine, preview the immutable assignment first:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.5
+scripts/deploy-ztash.sh v0.1.0-alpha.6
 ```
 
 The script reads the release metadata, verifies the HTTPS URL, package SHA-256, size,
@@ -137,7 +137,7 @@ mode. It never prints the token and never creates credentials.
 After reviewing the preview, apply explicitly:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.5 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.6 --apply
 ```
 
 The operation requires the owner-private DDJARIN token in

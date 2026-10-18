@@ -111,7 +111,7 @@ O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, m
 ## Limite do perfil
 
 O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-profiles` instalado e adiciona localmente as entradas específicas da DINX. `WORKSPACE_DIR` em `scripts/build-iso.sh` torna determinística a seleção do perfil.
-A execução [39089770110](https://github.com/rufl/DINX/actions/runs/39089770110), no commit `7d13667`, passou a sequência de validação automatizada atual: geração do checksum, validação do payload SquashFS, boot no QEMU, instalação/TTY de recuperação BIOS descartável, verificação dos metadados de build, atestação de procedência e upload do artefato. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
+A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`, passou a sequência de validação automatizada atual: geração do checksum, validação do payload SquashFS, boot no QEMU, instalação/TTY de recuperação BIOS descartável, verificação dos metadados de build, atestação de procedência e upload do artefato. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
 
 ## Validação do build
 

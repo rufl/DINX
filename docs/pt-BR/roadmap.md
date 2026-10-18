@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end para release: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/TTY em disco descartável passaram. A execução [39089770110](https://github.com/rufl/DINX/actions/runs/39089770110), no commit `7d13667`, é a evidência P0 atual e inclui a verificação dos metadados de build. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
+**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end para release: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/TTY em disco descartável passaram. A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`, é a evidência P0 atual e inclui a verificação dos metadados de build. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
 
 ## P0 — fundação
 
@@ -29,7 +29,7 @@ Backlog:
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
-**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.5`.
+**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.6`.
 
 Concluído:
 
@@ -92,7 +92,7 @@ Gate de release P3:
 
 **Objetivo:** tornar as operações do Dinit compreensíveis, completas e seguras sem importar conceitos do systemd.
 
-**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução [39089770110](https://github.com/rufl/DINX/actions/runs/39089770110) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/TTY de recuperação em disco descartável, a verificação dos metadados de build, a atestação de procedência e o upload do artefato. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
+**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/TTY de recuperação em disco descartável, a verificação dos metadados de build, a atestação de procedência e o upload do artefato. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
 
 **Entregue:**
 

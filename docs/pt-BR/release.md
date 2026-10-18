@@ -18,7 +18,7 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-O workflow P0 mais recente aprovado é a [execução 39089770110](https://github.com/rufl/DINX/actions/runs/39089770110), no commit `7d13667`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-7d136670503a034d2e602eb631db06c89cd52853`, com 2.703.494.796 bytes e digest `sha256:4059bb5073cecfb98feb477c0801fa2a16b34bee591752ca41568fa44032b447`; ele continua sendo um artefato de validação, não um release estável para hardware.
+O workflow P0 mais recente aprovado é a [execução 39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-f7bf0448f52dc333f8792cb98ff019d7d57e532b`, com 2.703.487.030 bytes e digest `sha256:d1ffb2a5c0ad787f45cbb59cf06adc85c494e6512c4a89860c383026d053ee29`; ele continua sendo um artefato de validação, não um release estável para hardware.
 
 ## Artefatos publicados
 
@@ -68,8 +68,8 @@ checksum de um pacote ou release anterior:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.5'
-$zipName = 'dinx-0.1.0-alpha.5-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.6'
+$zipName = 'dinx-0.1.0-alpha.6-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -130,7 +130,7 @@ Os metadados do pacote apontam para o receptor Windows registrado `ddjarin`. Na 
 do proprietário, faça primeiro o preview da atribuição imutável:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.5
+scripts/deploy-ztash.sh v0.1.0-alpha.6
 ```
 
 O script lê os metadados do release, verifica URL HTTPS, SHA-256, tamanho, target e
@@ -140,7 +140,7 @@ imprime o token e nunca cria credenciais.
 Depois de revisar o preview, aplique explicitamente:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.5 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.6 --apply
 ```
 
 A operação exige o token privado do proprietário para DDJARIN em `ZEER_TOKEN_FILE`

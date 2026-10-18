@@ -192,10 +192,11 @@ search.fs_uuid $root_uuid root
 set prefix=(\$root)/boot/grub
 configfile \$prefix/grub.cfg
 EOF
-  chroot "$target_dir" /usr/bin/grub-mkimage \
-    -O x86_64-efi -d /usr/lib/grub/x86_64-efi -p '(hd0,gpt2)/boot/grub' \
-    -c /tmp/dinx-grub-uefi.cfg -o /boot/efi/EFI/BOOT/BOOTX64.EFI \
-    part_gpt ext2 search search_fs_uuid normal configfile linux
+  chroot "$target_dir" /usr/bin/grub-mkstandalone \
+    -O x86_64-efi -d /usr/lib/grub/x86_64-efi \
+    --modules='part_gpt ext2 search search_fs_uuid normal configfile linux' \
+    -o /boot/efi/EFI/BOOT/BOOTX64.EFI \
+    "boot/grub/grub.cfg=/tmp/dinx-grub-uefi.cfg"
 fi
 if [[ "$firmware_mode" == bios ]] && ! grep -Eq '^[[:space:]]*linux[[:space:]]' "$target_dir/boot/grub/grub.cfg"; then
   printf 'smoke-install: generated GRUB config has no Linux entry; writing deterministic smoke entry\n'

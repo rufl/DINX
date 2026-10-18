@@ -31,7 +31,8 @@ require_value repository '^[^[:space:]]+$'
 require_value commit '^[0-9a-f]{40}$'
 require_value workflow_run '^[0-9]+$'
 require_value artix_image '^artixlinux/artixlinux@sha256:[0-9a-f]{64}$'
-require_value buildiso_owner '^.+$'
+require_value builder_pacman_conf_sha256 '^[0-9a-f]{64}$'
+require_value builder_mirrorlist_sha256 '^[0-9a-f]{64}$'
 require_value zig_version '^0\.17\.0$'
 require_value profile_sha256 '^[0-9a-f]{64}$'
 require_value noctty_source_env_sha256 '^[0-9a-f]{64}$'
@@ -52,5 +53,5 @@ if [[ -n "${GITHUB_SHA:-}" && "$(read_value commit)" != "$GITHUB_SHA" ]]; then
   fail "metadata commit does not match GITHUB_SHA: $(read_value commit) != $GITHUB_SHA"
 fi
 
-printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true source_checksums=true\n' \
+printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true repository_inputs=true source_checksums=true\n' \
   "$(read_value commit)" "$(read_value iso_name)"

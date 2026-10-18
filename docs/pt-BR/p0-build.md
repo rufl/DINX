@@ -12,7 +12,7 @@ Os pontos de entrada são:
 - `scripts/build-iso.sh` — wrapper de build com suporte a root;
 - `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do código fixado do NOCTTY/NoctEd;
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
-- `scripts/check_build_metadata.sh` — valida a procedência do builder, o snapshot de pacotes, os checksums das fontes e o digest da ISO emitidos pelo build remoto;
+- `scripts/check_build_metadata.sh` — valida a procedência do builder, o snapshot de pacotes, os hashes da configuração pacman do builder, os checksums das fontes e o digest da ISO emitidos pelo build remoto;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos do Firefox, aplicativos fixados, gerenciamento Artix, firewall, hardware e BC250 Control Center;
 - `scripts/check_dinitui.sh` — contrato do pacote DinitUI, ações, limite de privilégios, perfis de serviços e integração Noctalia Gaming;
 - `scripts/check_dinxpanel.sh` — contrato do centro de controle DINXPanel, ponte fixa de GPU e instalador seguro de kernels;

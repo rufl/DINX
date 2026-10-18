@@ -274,6 +274,10 @@ jobs:
               fi
               printf "\n[dinx]\nSigLevel = Never\nServer = http://127.0.0.1:8765\n" \
                 >> "$pacman_conf"
+              builder_pacman_conf_sha256=$(sha256sum "$pacman_conf" | cut -d " " -f 1)
+              builder_mirrorlist=/etc/pacman.d/mirrorlist
+              test -r "$builder_mirrorlist"
+              builder_mirrorlist_sha256=$(sha256sum "$builder_mirrorlist" | cut -d " " -f 1)
               python -m http.server 8765 \
                 --bind 127.0.0.1 \
                 --directory "$package_repo" \
@@ -298,6 +302,8 @@ jobs:
                 printf "commit=%s\n" "$DINX_COMMIT"
                 printf "workflow_run=%s\n" "$DINX_RUN_ID"
                 printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
+                printf "builder_pacman_conf_sha256=%s\n" "$builder_pacman_conf_sha256"
+                printf "builder_mirrorlist_sha256=%s\n" "$builder_mirrorlist_sha256"
                 printf "buildiso_owner=%s\n" "$buildiso_owner"
                 printf "zig_version=%s\n" "$(zig version)"
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"

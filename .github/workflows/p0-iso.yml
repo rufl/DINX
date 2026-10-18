@@ -101,7 +101,7 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
+          sudo apt-get install --yes dosfstools grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
 
       - name: Build with Artix artools
         run: |
@@ -357,11 +357,13 @@ jobs:
 
       - name: Verify graphical ISO payload
         run: scripts/check-iso-content.sh "$DINX_ISO"
-      - name: Smoke-test persistent install and recovery TTY
+      - name: Smoke-test persistent BIOS and UEFI installs and recovery TTY
         env:
           DINX_INSTALL_OUTPUT_DIR: dist/iso/dinx
           DINX_INSTALL_TIMEOUT: 180
-        run: scripts/smoke-install.sh "$DINX_ISO"
+        run: |
+          DINX_INSTALL_FIRMWARE=bios scripts/smoke-install.sh "$DINX_ISO"
+          DINX_INSTALL_FIRMWARE=uefi scripts/smoke-install.sh "$DINX_ISO"
 
       - name: Attest ISO and checksum provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4

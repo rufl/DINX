@@ -120,8 +120,20 @@ jobs:
             artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
             bash -ceu '
               set -euxo pipefail
-              pacman -Syu --noconfirm
-              pacman -S --needed --noconfirm \
+              pacman_retry() {
+                local attempt
+                for attempt in 1 2 3; do
+                  if pacman "$@"; then
+                    return 0
+                  fi
+                  if [[ "$attempt" -lt 3 ]]; then
+                    sleep 15
+                  fi
+                done
+                return 1
+              }
+              pacman_retry -Syu --noconfirm
+              pacman_retry -S --needed --noconfirm \
                 artools \
                 iso-profiles \
                 mkinitcpio \

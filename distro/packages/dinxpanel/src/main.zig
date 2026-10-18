@@ -15,7 +15,10 @@ const App = struct {
     spinner: *c.GtkSpinner = undefined,
     window_ready: bool = false,
     kernel_status_loaded: bool = false,
+    kernel_status_completed: bool = false,
     smoke: bool = false,
+    busy: bool = false,
+    active_tasks: usize = 0,
 
     fn init(application: *c.AdwApplication, io: std.Io, home: []const u8, smoke: bool) App {
         return .{ .application = application, .io = io, .home = home, .smoke = smoke };
@@ -148,42 +151,54 @@ const App = struct {
         if (self.smoke) _ = c.g_timeout_add(900, @ptrCast(&onSmokeTimeout), self);
     }
 
+    fn beginAsync(self: *App, text: []const u8) bool {
+        if (self.busy) return false;
+        self.setBusy(text);
+        return true;
+    }
+
+    fn startAsync(self: *App, task: *AsyncTask) void {
+        self.active_tasks += 1;
+        c.g_application_hold(@ptrCast(self.application));
+        const thread = std.Thread.spawn(.{}, asyncWorker, .{task}) catch |err| {
+            self.active_tasks -= 1;
+            c.g_application_release(@ptrCast(self.application));
+            if (task.kind == .kernel_status) self.kernel_status_completed = true;
+            task.deinit();
+            self.setStatusError(@errorName(err));
+            return;
+        };
+        thread.detach();
+    }
+
     fn refreshKernelStatus(self: *App) void {
+        if (!self.beginAsync("Reading kernel status…")) return;
         self.kernel_status_loaded = false;
-        self.setBusy("Reading kernel status…");
-        var report = kernels.detect(allocator, self.io) catch |err| {
-            self.setStatusError(@errorName(err));
+        const task = allocator.create(AsyncTask) catch {
+            self.setStatusError("Unable to allocate kernel status operation");
             return;
         };
-        defer report.deinit(allocator);
-        const text = kernels.formatReport(allocator, &report) catch |err| {
-            self.setStatusError(@errorName(err));
-            return;
-        };
-        defer allocator.free(text);
-        self.setTextView(text);
-        self.setTextFmt(self.kernel_status, "Running: {s} · installed alternatives: {d}", .{ report.running, report.installed.items.len });
-        self.kernel_status_loaded = true;
-        self.setStatus("Kernel status loaded");
+        task.* = .{ .app = self, .kind = .kernel_status };
+        self.startAsync(task);
     }
 
     fn installKernel(self: *App) void {
+        if (!self.beginAsync("Installing kernel and headers…")) return;
         const index = c.gtk_drop_down_get_selected(self.kernel_dropdown);
-        if (index >= kernels.catalog.len) return;
-        const kernel = kernels.catalog[index];
-        self.setBusy("Installing kernel and headers…");
-        var result = kernels.install(allocator, self.io, kernel.id) catch |err| {
-            self.setStatusError(@errorName(err));
+        if (index >= kernels.catalog.len) {
+            self.setStatusError("Select a supported kernel");
+            return;
+        }
+        const task = allocator.create(AsyncTask) catch {
+            self.setStatusError("Unable to allocate kernel installation operation");
             return;
         };
-        defer result.deinit(allocator);
-        self.setTextView(if (result.output.len > 0) result.output else result.error_output);
-        if (result.success) {
-            self.setStatusFmt("{s} installed · reboot required", .{kernel.label});
-            self.refreshKernelStatus();
-        } else {
-            self.setStatusError(if (result.error_output.len > 0) result.error_output else "Kernel installation failed");
-        }
+        task.* = .{
+            .app = self,
+            .kind = .kernel_install,
+            .kernel = &kernels.catalog[index],
+        };
+        self.startAsync(task);
     }
 
     fn runDinitUi(self: *App, command: []const u8) void {
@@ -191,87 +206,23 @@ const App = struct {
     }
 
     fn runCommand(self: *App, argv: []const []const u8) void {
-        self.setBusy("Running control-panel action…");
-        const result = std.process.run(allocator, self.io, .{
-            .argv = argv,
-            .stdout_limit = std.Io.Limit.limited(512 * 1024),
-            .stderr_limit = std.Io.Limit.limited(512 * 1024),
-        }) catch |err| {
-            self.setStatusError(@errorName(err));
+        if (!self.beginAsync("Running control-panel action…")) return;
+        const task = allocator.create(AsyncTask) catch {
+            self.setStatusError("Unable to allocate control-panel operation");
             return;
         };
-        defer allocator.free(result.stdout);
-        defer allocator.free(result.stderr);
-        const output = if (result.stdout.len > 0) result.stdout else result.stderr;
-        self.setTextView(if (output.len > 0) output else "Command completed without output");
-        if (result.term.success()) self.setStatus("Action completed") else self.setStatusError(if (output.len > 0) output else "Action failed");
-    }
-
-    fn upgradeCommandSucceeded(result: *const std.process.RunResult, no_action_ok: bool) bool {
-        if (result.term.success()) return true;
-        if (!no_action_ok) return false;
-        return switch (result.term) {
-            .exited => |code| code == 2,
-            else => false,
-        };
+        task.* = .{ .app = self, .kind = .command, .command_argv = argv };
+        self.startAsync(task);
     }
 
     fn runUpgradeCheck(self: *App) void {
-        self.setBusy("Checking package and firmware upgrades…");
-        var report: std.Io.Writer.Allocating = .init(allocator);
-        defer report.deinit();
-        const commands = [_]struct { argv: []const []const u8, label: []const u8, no_action_ok: bool }{
-            .{ .argv = &.{ "shelly", "sync" }, .label = "shelly sync", .no_action_ok = false },
-            .{ .argv = &.{ "shelly", "list-updates", "all" }, .label = "shelly list-updates all", .no_action_ok = false },
-            .{ .argv = &.{ "fwupdmgr", "refresh" }, .label = "fwupdmgr refresh", .no_action_ok = false },
-            .{ .argv = &.{ "fwupdmgr", "get-updates" }, .label = "fwupdmgr get-updates", .no_action_ok = true },
-        };
-        var all_succeeded = true;
-        for (commands) |command| {
-            report.writer.print("$ {s}\n", .{command.label}) catch {
-                self.setStatusError("Unable to build upgrade report");
-                return;
-            };
-            const result = std.process.run(allocator, self.io, .{
-                .argv = command.argv,
-                .stdout_limit = std.Io.Limit.limited(512 * 1024),
-                .stderr_limit = std.Io.Limit.limited(512 * 1024),
-            }) catch |err| {
-                all_succeeded = false;
-                report.writer.print("unavailable: {s}\n\n", .{@errorName(err)}) catch {
-                    self.setStatusError("Unable to build upgrade report");
-                    return;
-                };
-                continue;
-            };
-            const output = if (result.stdout.len > 0) result.stdout else result.stderr;
-            if (output.len > 0) report.writer.writeAll(output) catch {
-                allocator.free(result.stdout);
-                allocator.free(result.stderr);
-                self.setStatusError("Unable to build upgrade report");
-                return;
-            };
-            report.writer.writeByte('\n') catch {
-                allocator.free(result.stdout);
-                allocator.free(result.stderr);
-                self.setStatusError("Unable to build upgrade report");
-                return;
-            };
-            if (!upgradeCommandSucceeded(&result, command.no_action_ok)) all_succeeded = false;
-            allocator.free(result.stdout);
-            allocator.free(result.stderr);
-        }
-        const text = report.toOwnedSlice() catch {
-            self.setStatusError("Unable to build upgrade report");
+        if (!self.beginAsync("Checking package and firmware upgrades…")) return;
+        const task = allocator.create(AsyncTask) catch {
+            self.setStatusError("Unable to allocate upgrade operation");
             return;
         };
-        defer allocator.free(text);
-        self.setTextView(text);
-        if (all_succeeded) {
-            self.setStatus("Upgrade check complete");
-        } else {
-            self.setStatus("Upgrade check complete; review output");
-        }
+        task.* = .{ .app = self, .kind = .upgrade_check };
+        self.startAsync(task);
     }
 
     fn launch(self: *App, argv: []const []const u8) void {
@@ -322,18 +273,21 @@ const App = struct {
     }
 
     fn setBusy(self: *App, text: []const u8) void {
+        self.busy = true;
         self.setText(self.status_label, text);
         c.gtk_widget_remove_css_class(@ptrCast(@alignCast(self.status_label)), "error");
         c.gtk_spinner_start(self.spinner);
     }
 
     fn setStatus(self: *App, text: []const u8) void {
+        self.busy = false;
         self.setText(self.status_label, text);
         c.gtk_widget_remove_css_class(@ptrCast(@alignCast(self.status_label)), "error");
         c.gtk_spinner_stop(self.spinner);
     }
 
     fn setStatusError(self: *App, text: []const u8) void {
+        self.busy = false;
         const visible = if (text.len > 180) "Action failed; see output for details" else text;
         self.setText(self.status_label, visible);
         c.gtk_widget_add_css_class(@ptrCast(@alignCast(self.status_label)), "error");
@@ -366,6 +320,197 @@ const App = struct {
         c.gtk_text_buffer_set_text(buffer, value, @intCast(text.len));
     }
 };
+
+const AsyncKind = enum {
+    kernel_status,
+    kernel_install,
+    command,
+    upgrade_check,
+};
+
+const AsyncTask = struct {
+    app: *App,
+    kind: AsyncKind,
+    kernel: ?*const kernels.Kernel = null,
+    command_argv: []const []const u8 = &.{},
+    process_result: ?std.process.RunResult = null,
+    kernel_report: ?kernels.Report = null,
+    kernel_result: ?kernels.CommandResult = null,
+    upgrade_output: ?[]u8 = null,
+    upgrade_all_succeeded: bool = true,
+    error_value: ?anyerror = null,
+
+    fn deinit(self: *AsyncTask) void {
+        if (self.process_result) |result| {
+            allocator.free(result.stdout);
+            allocator.free(result.stderr);
+        }
+        if (self.kernel_report) |*report| report.deinit(allocator);
+        if (self.kernel_result) |*result| result.deinit(allocator);
+        if (self.upgrade_output) |output| allocator.free(output);
+        allocator.destroy(self);
+    }
+};
+
+fn asyncWorker(task: *AsyncTask) void {
+    defer _ = c.g_idle_add(@ptrCast(&onAsyncTaskReady), task);
+    switch (task.kind) {
+        .kernel_status => task.kernel_report = kernels.detect(allocator, task.app.io) catch |err| {
+            task.error_value = err;
+            return;
+        },
+        .kernel_install => {
+            const kernel = task.kernel orelse {
+                task.error_value = error.UnsupportedKernel;
+                return;
+            };
+            task.kernel_result = kernels.install(allocator, task.app.io, kernel.id) catch |err| {
+                task.error_value = err;
+                return;
+            };
+        },
+        .command => task.process_result = std.process.run(allocator, task.app.io, .{
+            .argv = task.command_argv,
+            .stdout_limit = std.Io.Limit.limited(512 * 1024),
+            .stderr_limit = std.Io.Limit.limited(512 * 1024),
+        }) catch |err| {
+            task.error_value = err;
+            return;
+        },
+        .upgrade_check => task.upgrade_output = collectUpgradeReport(task) catch |err| {
+            task.error_value = err;
+            return;
+        },
+    }
+}
+
+fn upgradeCommandSucceeded(result: *const std.process.RunResult, no_action_ok: bool) bool {
+    if (result.term.success()) return true;
+    if (!no_action_ok) return false;
+    return switch (result.term) {
+        .exited => |code| code == 2,
+        else => false,
+    };
+}
+
+fn collectUpgradeReport(task: *AsyncTask) ![]u8 {
+    var report: std.Io.Writer.Allocating = .init(allocator);
+    errdefer report.deinit();
+    const commands = [_]struct { argv: []const []const u8, label: []const u8, no_action_ok: bool }{
+        .{ .argv = &.{ "shelly", "sync" }, .label = "shelly sync", .no_action_ok = false },
+        .{ .argv = &.{ "shelly", "list-updates", "all" }, .label = "shelly list-updates all", .no_action_ok = false },
+        .{ .argv = &.{ "fwupdmgr", "refresh" }, .label = "fwupdmgr refresh", .no_action_ok = false },
+        .{ .argv = &.{ "fwupdmgr", "get-updates" }, .label = "fwupdmgr get-updates", .no_action_ok = true },
+    };
+    for (commands) |command| {
+        try report.writer.print("$ {s}\n", .{command.label});
+        const result = std.process.run(allocator, task.app.io, .{
+            .argv = command.argv,
+            .stdout_limit = std.Io.Limit.limited(512 * 1024),
+            .stderr_limit = std.Io.Limit.limited(512 * 1024),
+        }) catch |err| {
+            task.upgrade_all_succeeded = false;
+            try report.writer.print("unavailable: {s}\n\n", .{@errorName(err)});
+            continue;
+        };
+        const output = if (result.stdout.len > 0) result.stdout else result.stderr;
+        defer allocator.free(result.stdout);
+        defer allocator.free(result.stderr);
+        if (output.len > 0) try report.writer.writeAll(output);
+        try report.writer.writeByte('\n');
+        if (!upgradeCommandSucceeded(&result, command.no_action_ok)) task.upgrade_all_succeeded = false;
+    }
+    return report.toOwnedSlice();
+}
+
+fn completeAsyncTask(task: *AsyncTask) void {
+    const app = task.app;
+    if (task.error_value) |err| {
+        if (task.kind == .kernel_status) app.kernel_status_completed = true;
+        app.setStatusError(@errorName(err));
+        return;
+    }
+    switch (task.kind) {
+        .kernel_status => {
+            var report = task.kernel_report orelse {
+                app.kernel_status_completed = true;
+                app.setStatusError("Kernel status operation returned no report");
+                return;
+            };
+            task.kernel_report = null;
+            defer report.deinit(allocator);
+            const text = kernels.formatReport(allocator, &report) catch |err| {
+                app.kernel_status_completed = true;
+                app.setStatusError(@errorName(err));
+                return;
+            };
+            defer allocator.free(text);
+            app.setTextView(text);
+            app.setTextFmt(app.kernel_status, "Running: {s} · installed alternatives: {d}", .{ report.running, report.installed.items.len });
+            app.kernel_status_loaded = true;
+            app.kernel_status_completed = true;
+            app.setStatus("Kernel status loaded");
+        },
+        .kernel_install => {
+            var result = task.kernel_result orelse {
+                app.setStatusError("Kernel installation returned no result");
+                return;
+            };
+            task.kernel_result = null;
+            defer result.deinit(allocator);
+            const output = if (result.output.len > 0) result.output else result.error_output;
+            app.setTextView(if (output.len > 0) output else "Kernel installation completed without output");
+            const kernel = task.kernel orelse {
+                app.setStatusError("Kernel installation returned no kernel");
+                return;
+            };
+            if (result.success) {
+                app.setStatusFmt("{s} installed · reboot required", .{kernel.label});
+                app.refreshKernelStatus();
+            } else {
+                app.setStatusError(if (result.error_output.len > 0) result.error_output else "Kernel installation failed");
+            }
+        },
+        .command => {
+            var result = task.process_result orelse {
+                app.setStatusError("Control-panel action returned no result");
+                return;
+            };
+            task.process_result = null;
+            defer {
+                allocator.free(result.stdout);
+                allocator.free(result.stderr);
+            }
+            const output = if (result.stdout.len > 0) result.stdout else result.stderr;
+            app.setTextView(if (output.len > 0) output else "Command completed without output");
+            if (result.term.success()) app.setStatus("Action completed") else app.setStatusError(if (output.len > 0) output else "Action failed");
+        },
+        .upgrade_check => {
+            const text = task.upgrade_output orelse {
+                app.setStatusError("Upgrade check returned no report");
+                return;
+            };
+            task.upgrade_output = null;
+            defer allocator.free(text);
+            app.setTextView(text);
+            if (task.upgrade_all_succeeded) {
+                app.setStatus("Upgrade check complete");
+            } else {
+                app.setStatus("Upgrade check complete; review output");
+            }
+        },
+    }
+}
+
+fn onAsyncTaskReady(data: ?*anyopaque) callconv(.c) c.gboolean {
+    const task: *AsyncTask = @ptrCast(@alignCast(data.?));
+    const app = task.app;
+    completeAsyncTask(task);
+    if (app.active_tasks > 0) app.active_tasks -= 1;
+    c.g_application_release(@ptrCast(app.application));
+    task.deinit();
+    return 0;
+}
 
 const kernel_strings = [_:null]?[*:0]const u8{
     "Linux (default)",
@@ -474,6 +619,7 @@ fn onKernelInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void 
 }
 fn onSmokeTimeout(data: ?*anyopaque) callconv(.c) c.gboolean {
     const app = asApp(data);
+    if (app.active_tasks != 0 or !app.kernel_status_completed) return 1;
     std.debug.print("dinxpanel_smoke surface=true kernel_status={s}\n", .{if (app.kernel_status_loaded) "true" else "false"});
     c.g_application_quit(@ptrCast(app.application));
     return 0;

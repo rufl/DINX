@@ -89,6 +89,8 @@ jobs:
         run: ./scripts/check_dinxpanel.sh
       - name: Verify DINX lock, idle, brightness and launcher hierarchy contract
         run: ./scripts/check_dinx_session.sh
+      - name: Verify installer lifecycle boundary
+        run: ./scripts/check_install_lifecycle.sh
       - name: Verify DINX payload and startup budgets
         run: ./scripts/check_dinx_budget.sh
       - name: Capture host session measurement context

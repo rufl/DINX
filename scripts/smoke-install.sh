@@ -188,9 +188,18 @@ fi
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
 if [[ "$firmware_mode" == uefi ]]; then
   cat > "$target_dir/tmp/dinx-grub-uefi.cfg" <<EOF
-set root=(hd0,gpt2)
-set prefix=(\$root)/boot/grub
-configfile \$prefix/grub.cfg
+insmod part_gpt
+insmod ext2
+insmod search
+insmod search_fs_uuid
+insmod linux
+search --no-floppy --fs-uuid --set=root $root_uuid
+set timeout_style=hidden
+set timeout=1
+menuentry 'DINX installed smoke' {
+    linux /boot/vmlinuz-linux root=UUID=$root_uuid rw console=tty0 console=ttyS0 loglevel=3
+    initrd /boot/intel-ucode.img /boot/amd-ucode.img /boot/initramfs-linux.img
+}
 EOF
   chroot "$target_dir" /usr/bin/grub-mkstandalone \
     -O x86_64-efi -d /usr/lib/grub/x86_64-efi \

@@ -286,26 +286,26 @@ jobs:
               scripts/build-iso.sh
               metadata_path="$DINX_ISO_OUTPUT/dinx/build-metadata.txt"
               mkdir -p "$(dirname "$metadata_path")"
-              iso_path=$(find "$DINX_ISO_OUTPUT" -type f -name '*.iso' -print -quit)
+              iso_path=$(find "$DINX_ISO_OUTPUT" -type f -name "*.iso" -print -quit)
               test -n "$iso_path"
-              iso_size=$(stat -c '%s' "$iso_path")
-              iso_sha512=$(sha512sum "$iso_path" | cut -d ' ' -f 1)
+              iso_size=$(stat -c "%s" "$iso_path")
+              iso_sha512=$(sha512sum "$iso_path" | cut -d " " -f 1)
               package_snapshot=$(pacman -Q artools iso-profiles mkinitcpio)
               {
-                printf 'schema=dinx-build-metadata/v1\n'
-                printf 'repository=%s\n' "$DINX_REPOSITORY"
-                printf 'commit=%s\n' "$DINX_COMMIT"
-                printf 'workflow_run=%s\n' "$DINX_RUN_ID"
-                printf 'artix_image=%s\n' "$DINX_ARTIX_IMAGE"
-                printf 'zig_version=%s\n' "$(zig version)"
-                printf 'profile_sha256=%s\n' "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d ' ' -f 1)"
-                printf 'noctty_source_env_sha256=%s\n' "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d ' ' -f 1)"
-                printf 'iso_name=%s\n' "$(basename "$iso_path")"
-                printf 'iso_bytes=%s\n' "$iso_size"
-                printf 'iso_sha512=%s\n' "$iso_sha512"
-                printf '[builder-packages]\n'
-                printf '%s\n' "$package_snapshot"
-                printf '[all-artix-packages]\n'
+                printf "schema=dinx-build-metadata/v1\n"
+                printf "repository=%s\n" "$DINX_REPOSITORY"
+                printf "commit=%s\n" "$DINX_COMMIT"
+                printf "workflow_run=%s\n" "$DINX_RUN_ID"
+                printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
+                printf "zig_version=%s\n" "$(zig version)"
+                printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
+                printf "noctty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d " " -f 1)"
+                printf "iso_name=%s\n" "$(basename "$iso_path")"
+                printf "iso_bytes=%s\n" "$iso_size"
+                printf "iso_sha512=%s\n" "$iso_sha512"
+                printf "[builder-packages]\n"
+                printf "%s\n" "$package_snapshot"
+                printf "[all-artix-packages]\n"
                 pacman -Q
               } > "$metadata_path"
             '

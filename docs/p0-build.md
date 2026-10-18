@@ -60,7 +60,7 @@ The isolated NoctEd GTK smoke renders its fallback icons to PNG with `rsvg-conve
 
 ### Local P4/P5 qualification
 
-The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) supplies the matching remote package, ISO, QEMU, payload, disposable persistent-install/recovery-TTY, attestation and artifact evidence; together these close P4's alpha end-to-end gate. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
+The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Run [39089770110](https://github.com/rufl/DINX/actions/runs/39089770110) supplies the matching remote package, ISO, QEMU, payload, disposable persistent-install/recovery-TTY, build-metadata verification, attestation and artifact evidence; together these close P4's alpha end-to-end gate. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
 
 The payload check proves that MangoWM, Scenefx, Noctalia, ReGreet, greetd, the Mango session, the standalone gaming launcher/session, Gamescope, Steam, the 32-bit graphics payload, dinit service files, NOCTTY/NoctEd, `clangd`, both Nocted editor schemes, Nano, File Roller and the Thunar/GVFS stack reached the ISO. The removable-media contract includes UDisks2, `gvfs-mtp`, `gvfs-smb`, `gvfs-gphoto2`, `thunar-archive-plugin`, File Roller and Tumbler. It also asserts the standalone PolicyKit agent, rejects the systemd init package metadata/runtime while allowing compatibility libraries required by Gamescope/Steam, and rejects full Xfce/LXQt sessions. The QEMU smoke test still proves only process-level boot acceptance; it does not prove graphical login, networking, MTP, SMB, camera access or audio inside the guest.
 The payload check also proves Firefox, its desktop entry, the default HTML/XHTML/HTTP/HTTPS handlers and `/etc/firefox/policies/policies.json`. That policy removes sponsored browser surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection without disabling normal browser updates or user-initiated Firefox Accounts.
@@ -90,15 +90,15 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Latest observed successful run
 
-Run [38989297207](https://github.com/rufl/DINX/actions/runs/38989297207) on commit `86edd35` completed every workflow step successfully:
+Run [39089770110](https://github.com/rufl/DINX/actions/runs/39089770110) on commit `7d13667` completed every workflow step successfully, including build-metadata verification:
 
 - the static contracts for first-party packages, DinitUI, gaming and the ISO payload passed before the container build;
 - Artix package builds and `buildiso` completed, including the Steam/32-bit graphics packages resolved from the enabled Artix `lib32` repository;
 - QEMU boot and graphical capture passed;
 - graphical ISO payload validation passed, including DinitUI, the standalone gaming session, Steam and the 32-bit graphics payload;
 - disposable persistent-install and recovery-TTY smoke passed;
-- SHA-512 generation, GitHub provenance attestation and artifact upload passed;
-- uploaded artifact: `dinx-foundation-iso-86edd3562a0b734a3e4fcf44e34638573145af3a`, 2,710,227,069 bytes, digest `sha256:343e10f0aae3e55d1cfd643513cf13793db5ef4fd31f4ca852fab6de63f7ae35`.
+- GitHub provenance attestation, build-metadata verification and artifact upload passed;
+- uploaded artifact: `dinx-foundation-iso-7d136670503a034d2e602eb631db06c89cd52853`, 2,703,494,796 bytes, digest `sha256:4059bb5073cecfb98feb477c0801fa2a16b34bee591752ca41568fa44032b447`.
 
 This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, disposable BIOS persistent-install/recovery path and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical BC-250 tuning, UEFI, upgrades, rollback or long-term hardware service health.
 

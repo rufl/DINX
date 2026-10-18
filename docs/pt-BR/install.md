@@ -5,7 +5,7 @@
 ## Estado atual da alpha
 
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações, rollback ou preservação de dados.
-O projeto está atualmente na **P5 — Beta de jogos**. A última validação P0 aprovada é a [execução 38989297207](https://github.com/rufl/DINX/actions/runs/38989297207), no commit `86edd35`; ela compilou e inicializou a ISO, validou o payload gráfico, concluiu o smoke de instalação persistente/TTY de recuperação em disco descartável e publicou um artefato do workflow com atestação. A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
+O projeto está atualmente na **P5 — Beta de jogos**. A última validação P0 aprovada é a [execução 39089770110](https://github.com/rufl/DINX/actions/runs/39089770110), no commit `7d13667`; ela compilou e inicializou a ISO, validou o payload gráfico, concluiu o smoke de instalação persistente/TTY de recuperação em disco descartável, verificou os metadados de build e publicou um artefato do workflow com atestação. A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
 
 O KDE Partition Manager também está disponível como particionador gráfico independente. Use-o somente para inspecionar ou preparar um disco antes de abrir o Calamares e confirme o dispositivo nas duas aplicações.
 

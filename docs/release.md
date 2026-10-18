@@ -17,7 +17,7 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest successful P0 workflow is [run 38989297207](https://github.com/rufl/DINX/actions/runs/38989297207), on commit `86edd35`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-86edd3562a0b734a3e4fcf44e34638573145af3a`, 2,710,227,069 bytes, digest `sha256:343e10f0aae3e55d1cfd643513cf13793db5ef4fd31f4ca852fab6de63f7ae35`; it remains a validation artifact, not a stable hardware release.
+The latest successful P0 workflow is [run 39089770110](https://github.com/rufl/DINX/actions/runs/39089770110), on commit `7d13667`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-7d136670503a034d2e602eb631db06c89cd52853`, 2,703,494,796 bytes, digest `sha256:4059bb5073cecfb98feb477c0801fa2a16b34bee591752ca41568fa44032b447`; it remains a validation artifact, not a stable hardware release.
 
 ## Published assets
 
@@ -27,8 +27,8 @@ Each alpha release contains:
 - the matching `.iso.sha512` file;
 - Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
-- the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`.
-- `dinx-<version>-build-metadata.txt` — builder image, source commit, package snapshot, source checksums and ISO digest;
+- the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`;
+- `dinx-<version>-build-metadata.txt` — builder image, source commit, package snapshot, source checksums and ISO digest.
 
 When the ISO is split, concatenate the parts in lexical order and verify the full image:
 

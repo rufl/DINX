@@ -14,7 +14,7 @@ fail() {
   exit 1
 }
 
-for command in losetup sfdisk blkid mkfs.ext4 mkfs.fat mkntfs ntfsresize mount umount grub-install udevadm; do
+for command in losetup sfdisk partx blkid mkfs.ext4 mkfs.fat mkntfs ntfsresize mount umount grub-install udevadm; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -43,10 +43,31 @@ wait_for_block_device() {
   fail "partition device did not appear: $device"
 }
 
+refresh_partition_devices() {
+  local device=$1
+  partx --update "$device" >/dev/null 2>&1 || partx --add "$device" >/dev/null 2>&1 || true
+  udevadm settle 2>/dev/null || true
+}
+
+mount_partition() {
+  local device=$1
+  local mount_point=$2
+  for _ in {1..20}; do
+    if [[ -b "$device" ]] && mount "$device" "$mount_point" 2>/dev/null; then
+      return 0
+    fi
+    refresh_partition_devices "${device%p[0-9]*}"
+    sleep 1
+  done
+  fail "could not mount partition: $device"
+}
+
+
 attach_image() {
   local image=$1
   attached_device=$(losetup --find --show --partscan "$image")
   loop_devices+=("$attached_device")
+  refresh_partition_devices "$attached_device"
 }
 
 detach_image() {
@@ -87,7 +108,7 @@ seed_windows_layout() {
   ntfsresize --info "$windows_device" >/dev/null
   efi_mount="$work_dir/seed-efi"
   mkdir -p "$efi_mount"
-  mount "$efi_device" "$efi_mount"
+  mount_partition "$efi_device" "$efi_mount"
   mount_points+=("$efi_mount")
   mkdir -p "$efi_mount/EFI/Microsoft/Boot"
   printf 'dinx-windows-boot-manager\n' > "$efi_mount/EFI/Microsoft/Boot/bootmgfw.efi"
@@ -135,10 +156,10 @@ assert_windows_preserved() {
   efi_mount="$work_dir/${mode}-efi"
   boot_dir="$work_dir/${mode}-boot"
   mkdir -p "$root_mount" "$efi_mount" "$boot_dir"
-  mount "$root_device" "$root_mount"
+  mount_partition "$root_device" "$root_mount"
   mount_points+=("$root_mount")
   root_uuid=$(blkid -s UUID -o value "$root_device")
-  mount "$efi_device" "$efi_mount"
+  mount_partition "$efi_device" "$efi_mount"
   mount_points+=("$efi_mount")
   efi_uuid=$(blkid -s UUID -o value "$efi_device")
   printf 'UUID=%s / ext4 defaults 0 1\nUUID=%s /boot/efi vfat umask=0077 0 2\n' \
@@ -168,13 +189,13 @@ assert_windows_preserved() {
   efi_device="${loop_device}p1"
   windows_device="${loop_device}p2"
   wait_for_block_device "$root_device"
-  mount "$root_device" "$root_mount"
+  mount_partition "$root_device" "$root_mount"
   mount_points+=("$root_mount")
   grep -Fq "dinx-windows-${mode}-root" "$root_mount/partition-smoke.marker" || fail "$mode root transaction did not survive remount"
   grep -Fq "$root_uuid / ext4" "$root_mount/fstab" || fail "$mode fstab transaction did not survive remount"
   umount "$root_mount"
   unset 'mount_points[${#mount_points[@]}-1]'
-  mount "$efi_device" "$efi_mount"
+  mount_partition "$efi_device" "$efi_mount"
   mount_points+=("$efi_mount")
   grep -Fq 'dinx-windows-boot-manager' "$efi_mount/EFI/Microsoft/Boot/bootmgfw.efi" || fail "$mode lost Windows EFI content after remount"
   umount "$efi_mount"

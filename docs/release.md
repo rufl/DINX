@@ -17,7 +17,7 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest successful P0 workflow is [run 39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), on commit `b66db2e`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-b66db2e4429d8a2b311141e8cfbfbff8df3ad68b`, 2,703,505,384 bytes, digest `sha256:842ee9a1dfc29c93415622f1ec8dd03561c72e727878bdb4c496a4167758c944`; it remains a validation artifact, not a stable hardware release.
+The latest successful P0 workflow is [run 39244756515](https://github.com/rufl/DINX/actions/runs/39244756515), on commit `49c8a74`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, the Calamares partition contract and BIOS/UEFI/Btrfs transaction smoke, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-49c8a74735a5c55eb7078f15c6c0825ceaf326f3`, 2,704,049,911 bytes, digest `sha256:bc226ab7067918c9f8612f1f4f6b4ef96cb70618585877e07906932de39abe67`; it remains a validation artifact, not a stable hardware release.
 
 ## Published assets
 

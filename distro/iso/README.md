@@ -114,7 +114,7 @@ GRUB uses the DINX surface, foreground and primary selection colors while retain
 ## Profile boundary
 
 The profile uses the Artix common package manifest supplied by the installed `iso-profiles` package and adds DINX-specific inputs locally. `WORKSPACE_DIR` in `scripts/build-iso.sh` makes profile selection deterministic.
-Run [39191042611](https://github.com/rufl/DINX/actions/runs/39191042611) on commit `b66db2e` passed the current successful validation sequence: checksum generation, SquashFS payload validation, QEMU boot, disposable BIOS and UEFI installation/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and artifact upload. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
+Run [39244756515](https://github.com/rufl/DINX/actions/runs/39244756515) on commit `49c8a74` passed the current successful validation sequence: checksum generation, SquashFS payload validation, QEMU boot, Calamares BIOS/UEFI/Btrfs partition transaction smoke, disposable BIOS and UEFI installation/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and artifact upload. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
 
 ## Build validation
 

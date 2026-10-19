@@ -18,7 +18,7 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-O workflow P0 mais recente aprovado é a [execução 39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), no commit `b66db2e`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-b66db2e4429d8a2b311141e8cfbfbff8df3ad68b`, com 2.703.505.384 bytes e digest `sha256:842ee9a1dfc29c93415622f1ec8dd03561c72e727878bdb4c496a4167758c944`; ele continua sendo um artefato de validação, não um release estável para hardware.
+O workflow P0 mais recente aprovado é a [execução 39244756515](https://github.com/rufl/DINX/actions/runs/39244756515), no commit `49c8a74`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, o contrato de particionamento e o smoke transacional BIOS/UEFI/Btrfs do Calamares, o smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-49c8a74735a5c55eb7078f15c6c0825ceaf326f3`, com 2.704.049.911 bytes e digest `sha256:bc226ab7067918c9f8612f1f4f6b4ef96cb70618585877e07906932de39abe67`; ele continua sendo um artefato de validação, não um release estável para hardware.
 
 ## Artefatos publicados
 

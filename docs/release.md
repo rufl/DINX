@@ -66,8 +66,8 @@ checksum from an older package or a different release:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.6'
-$zipName = 'dinx-0.1.0-alpha.6-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.7'
+$zipName = 'dinx-0.1.0-alpha.7-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -127,7 +127,7 @@ The package metadata targets the registered `ddjarin` Windows receiver. On the t
 owner machine, preview the immutable assignment first:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.6
+scripts/deploy-ztash.sh v0.1.0-alpha.7
 ```
 
 The script reads the release metadata, verifies the HTTPS URL, package SHA-256, size,
@@ -137,7 +137,7 @@ mode. It never prints the token and never creates credentials.
 After reviewing the preview, apply explicitly:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.6 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.7 --apply
 ```
 
 The operation requires the owner-private DDJARIN token in

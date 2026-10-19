@@ -29,7 +29,7 @@ Backlog:
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
-**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.6`.
+**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.7`.
 
 Concluído:
 

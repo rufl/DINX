@@ -68,8 +68,8 @@ checksum de um pacote ou release anterior:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.6'
-$zipName = 'dinx-0.1.0-alpha.6-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.7'
+$zipName = 'dinx-0.1.0-alpha.7-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -130,7 +130,7 @@ Os metadados do pacote apontam para o receptor Windows registrado `ddjarin`. Na 
 do proprietário, faça primeiro o preview da atribuição imutável:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.6
+scripts/deploy-ztash.sh v0.1.0-alpha.7
 ```
 
 O script lê os metadados do release, verifica URL HTTPS, SHA-256, tamanho, target e
@@ -140,7 +140,7 @@ imprime o token e nunca cria credenciais.
 Depois de revisar o preview, aplique explicitamente:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.6 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.7 --apply
 ```
 
 A operação exige o token privado do proprietário para DDJARIN em `ZEER_TOKEN_FILE`

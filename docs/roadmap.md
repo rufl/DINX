@@ -29,7 +29,7 @@ Backlog:
 
 **Goal:** distribute a known-good snapshot through the public GitHub project.
 
-**Status:** complete for the public alpha snapshot `v0.1.0-alpha.6`.
+**Status:** complete for the public alpha snapshot `v0.1.0-alpha.7`.
 
 Completed:
 

@@ -151,7 +151,8 @@ assert_windows_preserved() {
     --bootloader-id=DINX \
     --no-nvram \
     --removable \
-    --recheck >/dev/null
+    --recheck \
+    --skip-fs-probe >/dev/null
   grep -Fq 'dinx-windows-boot-manager' "$efi_mount/EFI/Microsoft/Boot/bootmgfw.efi" ||
     fail "$mode overwrote the existing Windows Boot Manager path"
   [[ -f "$efi_mount/EFI/BOOT/BOOTX64.EFI" ]] || fail "$mode did not install the DINX EFI fallback"

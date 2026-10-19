@@ -274,8 +274,10 @@ done
 noctalia_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/palettes/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$noctalia_palette" || fail 'DINX Noctalia surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$noctalia_palette" || fail 'DINX Noctalia primary palette is missing'
-grep -Fq 'gtk-font-name=Cantarell 11' "$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)" || fail 'GTK3 Cantarell font contract is missing'
-grep -Fq 'gtk-font-name=Cantarell 11' "$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)" || fail 'GTK4 Cantarell font contract is missing'
+gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
+grep -Fq 'gtk-font-name=Cantarell 11' <<<"$gtk3_settings" || fail 'GTK3 Cantarell font contract is missing'
+gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
+grep -Fq 'gtk-font-name=Cantarell 11' <<<"$gtk4_settings" || fail 'GTK4 Cantarell font contract is missing'
 grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "mango", "qt"]' <<<"$noctalia_config" || fail 'Noctalia application templates are missing'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'

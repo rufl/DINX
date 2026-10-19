@@ -80,6 +80,7 @@ A alpha não exige que todos os aplicativos próprios estejam completos. Um sist
 - [Status do build P0](docs/pt-BR/p0-build.md)
 - [Roadmap](docs/pt-BR/roadmap.md)
 - [Processo de release alpha](docs/pt-BR/release.md)
+- [Qualificação da Alpha 7](docs/pt-BR/alpha7-qualification.md)
 - [Build da ISO](distro/iso/README.pt-BR.md)
 - [Licença](LICENSE)
 
@@ -90,6 +91,7 @@ Versões originais em inglês:
 - [Security model](docs/security-model.md)
 - [P0 build status](docs/p0-build.md)
 - [ISO foundation](distro/iso/README.md)
+- [Alpha 7 qualification](docs/alpha7-qualification.md)
 
 ## Status atual
 

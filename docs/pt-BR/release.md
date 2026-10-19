@@ -161,6 +161,11 @@ O responsável pelo release deve registrar manualmente uma qualificação real d
 
 Atualize o run ID, commit, tamanho/digest do artefato e os links dos releases nos documentos de status em inglês e português somente depois que o novo workflow passar. As afirmações de P5 gaming continuam separadas até passarem os testes de DRM, Steam/jogo, controle/áudio, retorno ao greeter e suspend/GPU físico.
 
+Use a [qualificação da Alpha 7](alpha7-qualification.md) para a matriz de
+desktop/laptop/BC-250. A ISO gerada inclui `dinx-alpha7-hardware-report`, um
+utilitário somente de leitura para anexar evidências de hardware e sessão sem
+alterar o estado do sistema.
+
 ## Limites do release
 
 - A conta live é `dinx` / `dinx`; é pública, descartável e nunca deve ser reutilizada.

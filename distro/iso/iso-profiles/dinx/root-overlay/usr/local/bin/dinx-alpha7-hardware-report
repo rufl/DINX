@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+umask 077
+report_dir="${DINX_ALPHA7_REPORT_DIR:-${XDG_STATE_HOME:-${HOME:-/tmp/.dinx}/.local/state}/dinx/alpha7}"
+mkdir -p "$report_dir"
+report_path="$report_dir/alpha7-hardware-$(date -u +%Y%m%dT%H%M%SZ).txt"
+exec > >(tee "$report_path") 2>&1
+
+printf 'schema=dinx-alpha7-hardware-report/v1\n'
+printf 'generated_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+printf 'report_path=%s\n' "$report_path"
+printf 'hostname=%s\n' "$(hostname 2>/dev/null || printf unknown)"
+printf 'user=%s\n' "${USER:-unknown}"
+printf 'session_type=%s\n' "${XDG_SESSION_TYPE:-unknown}"
+printf 'desktop=%s\n' "${XDG_CURRENT_DESKTOP:-unknown}"
+printf 'session_desktop=%s\n' "${XDG_SESSION_DESKTOP:-unknown}"
+printf 'wayland_display=%s\n' "${WAYLAND_DISPLAY:-absent}"
+printf 'display=%s\n' "${DISPLAY:-absent}"
+printf 'kernel='; uname -srvm 2>/dev/null || printf 'unknown\n'
+
+run_optional() {
+    local label="$1"
+    shift
+    printf '\n[%s]\n' "$label"
+    if ! command -v "$1" >/dev/null 2>&1; then
+        printf 'state=unavailable command=%s\n' "$1"
+        return 0
+    fi
+    printf 'command='; printf '%q ' "$@"; printf '\n'
+    timeout 30s "$@" || printf 'state=command_failed_or_timed_out status=%s\n' "$?"
+}
+
+printf '\n[os-release]\n'
+if [[ -r /etc/os-release ]]; then
+    cat /etc/os-release
+else
+    printf 'state=unavailable\n'
+fi
+
+printf '\n[display-devices]\n'
+if [[ -d /dev/dri ]]; then
+    find /dev/dri -maxdepth 1 -type c -printf '%f\n' | sort
+else
+    printf 'state=unavailable path=/dev/dri\n'
+fi
+
+printf '\n[bc250-detection]\n'
+if command -v lspci >/dev/null 2>&1; then
+    if pci_listing=$(lspci -nn 2>/dev/null); then
+        if grep -Fq '1002:13fe' <<<"$pci_listing"; then
+            printf 'bc250=detected pci=1002:13fe\n'
+        else
+            printf 'bc250=not-detected pci=1002:13fe\n'
+        fi
+    else
+        printf 'state=command_failed command=lspci\n'
+    fi
+else
+    printf 'state=unavailable command=lspci\n'
+fi
+
+run_optional 'machine' inxi -M
+run_optional 'graphics' inxi -Gxxa
+run_optional 'audio' inxi -A
+run_optional 'network' inxi -N
+run_optional 'pci' lspci -nnk
+run_optional 'usb' lsusb
+run_optional 'vulkan' vulkaninfo --summary
+run_optional 'pipewire' wpctl status
+run_optional 'pulse-compatibility' pactl info
+run_optional 'dinit' dinitctl list
+run_optional 'brightness' brightnessctl info
+run_optional 'gamescope-version' gamescope --version
+printf '\n[gamemode]\n'
+if command -v gamemoderun >/dev/null 2>&1; then
+    printf 'gamemoderun=%s\n' "$(command -v gamemoderun)"
+else
+    printf 'state=unavailable command=gamemoderun\n'
+fi
+run_optional 'mangohud-version' mangohud --version
+printf '\n[steam]\n'
+if command -v steam >/dev/null 2>&1; then
+    printf 'steam=%s\n' "$(command -v steam)"
+else
+    printf 'state=unavailable command=steam\n'
+fi
+run_optional 'bc250-cli' bc250-control-center-cli --help
+
+printf '\n[manual-boundary]\n'
+printf 'real_drm_session=manual\n'
+printf 'steam_authentication=manual\n'
+printf 'commercial_game_launch=manual\n'
+printf 'controller_input=manual\n'
+printf 'pipewire_game_audio=manual\n'
+printf 'suspend_resume=manual\n'
+printf 'physical_brightness=manual\n'
+printf 'gpu_recovery=manual\n'
+printf 'update_path=manual\n'
+printf 'report_complete=true\n'

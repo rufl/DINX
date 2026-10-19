@@ -1,6 +1,7 @@
 /* DINX fallback theme; Noctalia templates refine this palette at session start. */
 * {
     font-family: Cantarell;
+    font-size: 11pt;
     color: #d7dde8;
 }
 
@@ -36,7 +37,7 @@ button,
 checkbutton,
 radiobutton,
 switch {
-    background-color: #263249;
+    background-color: #11151d;
     color: #d7dde8;
     border: 1px solid #222a38;
 }
@@ -46,7 +47,7 @@ checkbutton:hover,
 radiobutton:hover,
 switch:hover,
 row:hover {
-    background-color: #31415d;
+    background-color: #263249;
 }
 
 button.suggested-action,

@@ -17,7 +17,8 @@ The entry points are:
 - `scripts/check_dinitui.sh` — DinitUI package, action, privilege-boundary, service-profile and Noctalia Gaming integration contract;
 - `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;
 - `scripts/check_gaming.sh` — standalone Gamescope/Steam session, 32-bit graphics and ISO payload contract;
-- `scripts/check_dinx_session.sh` and `scripts/smoke_dinx_session.sh` — lock, idle, suspend-order, brightness, Noctalia power-surface and launcher hierarchy contracts;
+- `scripts/check_alpha7_hardware_report.sh` — Alpha 7 hardware-report schema, BC250 detection and manual-boundary contract;
+- `docs/alpha7-qualification.md` — three-machine Alpha 7 evidence matrix and manual qualification boundary;
 - `scripts/check_dinx_budget.sh` and `scripts/measure_dinx_session.sh` — payload/startup/native-binary/boot-window/ISO ceilings and runtime RSS/CPU observation;
 - `scripts/gaming_p5_qualification.sh` — fixture session return and real headless Gamescope launch/exit qualification;
 - `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;

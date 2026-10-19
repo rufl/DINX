@@ -18,10 +18,16 @@ mkdir -p "$tmp/bin"
 cat >"$tmp/bin/gamescope" <<'EOF'
 #!/bin/sh
 set -eu
-printf '%s\n' "$*" > "$DINX_GAMESCOPE_ARGS"
+printf '%s\n' "$*" >> "$DINX_GAMESCOPE_ARGS"
 while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done
 [ "$#" -gt 0 ] || exit 64
 shift
+exec "$@"
+EOF
+cat >"$tmp/bin/gamemoderun" <<'EOF'
+#!/bin/sh
+set -eu
+printf '%s\n' "$*" > "$DINX_GAMEMODE_ARGS"
 exec "$@"
 EOF
 cat >"$tmp/bin/steam" <<'EOF'
@@ -31,13 +37,17 @@ printf '%s\n' "$*" > "$DINX_STEAM_ARGS"
 printf 'steam-fixture-started' > "$DINX_STEAM_MARKER"
 printf 'steam-fixture-exited' >> "$DINX_STEAM_MARKER"
 EOF
-chmod +x "$tmp/bin/gamescope" "$tmp/bin/steam"
+chmod +x "$tmp/bin/gamescope" "$tmp/bin/gamemoderun" "$tmp/bin/steam"
 PATH="$tmp/bin:$PATH" \
+  DINX_GAMEMODE=auto \
   DINX_GAMESCOPE_ARGS="$tmp/gamescope-args" \
+  DINX_GAMEMODE_ARGS="$tmp/gamemode-args" \
   DINX_STEAM_ARGS="$tmp/steam-args" \
   DINX_STEAM_MARKER="$tmp/steam-marker" \
   "$launcher"
 grep -Fqx -- '--backend drm --steam --fullscreen -- steam -tenfoot' "$tmp/gamescope-args" || fail 'launcher Gamescope argv is incorrect'
+test "$(wc -l < "$tmp/gamescope-args")" -eq 1 || fail 'launcher dispatched Gamescope more than once'
+grep -Fqx -- 'gamescope --backend drm --steam --fullscreen -- steam -tenfoot' "$tmp/gamemode-args" || fail 'launcher did not dispatch through GameMode'
 grep -Fqx -- '-tenfoot' "$tmp/steam-args" || fail 'launcher Steam argv is incorrect'
 grep -Fqx 'steam-fixture-startedsteam-fixture-exited' "$tmp/steam-marker" || fail 'launcher did not return after Steam exit'
 printf 'gaming_session_fixture launcher=start-exit gamescope_argv=true steam_argv=true\n'

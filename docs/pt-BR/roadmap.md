@@ -118,6 +118,11 @@ Gate de release P3:
 - semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração transacional do perfil no launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel inspirada no YaST, com atalhos fixos para painéis de controle, ações de upgrade Shelly/Topgrade, descoberta opcional de fwupd e instalador de kernels Artix sem remoção;
 - fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
 - checks de payload da ISO e contrato estático da entrada da sessão e dos binários.
+- GameMode e MangoHud estão no payload gaming; `dinx-gaming` suporta
+  `DINX_GAMEMODE=auto|on|off` e `DINX_MANGOHUD=on|off` opcional sem remover o
+  fallback do launcher normal.
+- A ISO inclui `dinx-alpha7-hardware-report` para evidências somente de leitura
+  no desktop, laptop e BC-250; as afirmações de hardware continuam manuais.
 
 **Gates de release restantes:**
 

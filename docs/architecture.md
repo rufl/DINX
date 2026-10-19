@@ -93,7 +93,7 @@ Shared contracts are versioned independently from application internals:
 
 A contract must have a documented version and a compatibility test before applications rely on it.
 
-The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/primary/error roles, light/dark variants, and a complete ANSI terminal palette. GTK/Qt/Mango consume the documented Noctalia template outputs; ReGreet, Calamares and GRUB use static bridges with the same tokens. `scripts/check_dinx_theme.sh` is the contract qualification.
+The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Cantarell 11 for GUI-facing bridges, square control geometry and Adwaita icon bridging. GTK/Qt/Mango consume the documented Noctalia template outputs; ReGreet, Calamares, Swayimg and GRUB use static bridges with the same tokens. Qt's Fusion backend, fixed-width Monospace 10 fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
 
 ## Gaming session
 

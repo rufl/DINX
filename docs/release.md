@@ -158,6 +158,11 @@ The release operator must manually record one real Wayland session qualification
 
 Update the run ID, commit, artifact size/digest and release links in the English and Portuguese status documents only after the new workflow is green. P5 gaming claims remain separate until DRM display, Steam/game, controller/audio, return-to-greeter and physical suspend/GPU tests pass.
 
+Use [Alpha 7 qualification](alpha7-qualification.md) for the three-machine
+desktop/laptop/BC-250 matrix. The generated ISO includes
+`dinx-alpha7-hardware-report`, a read-only report utility for attaching
+hardware/session evidence without changing system state.
+
 ## Release limits
 
 - The live account is `dinx` / `dinx`; it is public, disposable and must never be

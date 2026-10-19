@@ -88,7 +88,7 @@ Os contratos compartilhados são versionados independentemente dos detalhes inte
 
 Um contrato deve ter uma versão documentada e um teste de compatibilidade antes de ser usado pelos aplicativos.
 
-O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânticos de superfície/texto/primário/erro, variantes claro/escuro e paleta ANSI completa do terminal. GTK/Qt/Mango consomem as saídas documentadas dos templates do Noctalia; ReGreet, Calamares e GRUB usam bridges estáticas com os mesmos tokens. `scripts/check_dinx_theme.sh` é a qualificação do contrato.
+O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânticos de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa do terminal, Cantarell 11 para bridges voltadas à interface, geometria quadrada nos controles e bridge de ícones Adwaita. GTK/Qt/Mango consomem as saídas documentadas dos templates do Noctalia; ReGreet, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. O backend Fusion do Qt, os campos de largura fixa Monospace 10, os logs monoespaçados de DinitUI/DINXPanel e o `u_vga16 16` do GRUB permanecem limites de plataforma intencionais. `scripts/check_dinx_theme.sh` é a qualificação do contrato.
 
 ## Sessão de jogos
 

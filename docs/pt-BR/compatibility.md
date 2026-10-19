@@ -32,7 +32,9 @@ O contrato visual entregue é a paleta Noctalia `DINX` em `~/.config/noctalia/pa
 
 Aplicativos GTK usam o tema fallback instalado `DINX` até o Noctalia aplicar seu CSS gerado. Aplicativos Qt usam `qt6ct` com `~/.config/qt6ct/colors/noctalia.conf` gerado pelo Noctalia; o Mango consome `~/.config/mango/noctalia.conf`. O Swayimg recebe um fallback DINX de overlay/galeria em `~/.config/swayimg/init.lua`. A sessão exporta defaults documentados para `NOCTALIA_COLOR_SCHEME`, `NOCTED_THEME`, `QT_QPA_PLATFORMTHEME`, `XCURSOR_THEME` e `XCURSOR_SIZE`.
 
-ReGreet e Calamares consomem bridges estáticas DINX porque executam antes ou fora do shell. O GRUB usa os mesmos tokens de superfície/texto/primário, com as texturas opacas do menu desativadas. `scripts/check_dinx_theme.sh` valida a paleta, os templates, os pacotes e cada bridge antes do build da ISO; `check-iso-content.sh` repete as verificações dentro do SquashFS.
+As bridges voltadas à interface usam Cantarell 11, geometria quadrada nos controles, os estados semânticos DINX de superfície/controle/hover/primário e ícones Adwaita quando a plataforma os expõe. ReGreet e Calamares consomem bridges estáticas DINX porque executam antes ou fora do shell. O GRUB usa os mesmos tokens de superfície/texto/primário, com as texturas opacas do menu desativadas. `scripts/check_dinx_theme.sh` valida a paleta, os templates, os pacotes, a tipografia, os estados e cada bridge antes do build da ISO; `check-iso-content.sh` repete as verificações dentro do SquashFS.
+
+As diferenças restantes são limites de plataforma intencionais: o Qt mantém Fusion como backend de estilo e Monospace 10 para campos de largura fixa; DinitUI e DINXPanel mantêm visual monoespaçado nos logs; o GRUB mantém `u_vga16 16` por compatibilidade com assets do boot inicial. Essas exceções não substituem as cores DINX nem o contrato de interface Cantarell 11.
 
 ## Contrato do gerenciador de serviços DinitUI
 

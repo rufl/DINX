@@ -45,6 +45,7 @@ on:
       - "scripts/measure_dinx_session.sh"
       - "scripts/smoke_dinx_session.sh"
       - "scripts/check_gaming.sh"
+      - "scripts/check_alpha7_hardware_report.sh"
       - "scripts/dinitui_dinit_qualification.sh"
       - "scripts/gaming_p5_qualification.sh"
       - "LICENSE"
@@ -104,6 +105,8 @@ jobs:
         run: ./scripts/smoke_dinx_session.sh
       - name: Verify gaming session and 32-bit graphics contract
         run: ./scripts/check_gaming.sh
+      - name: Verify Alpha 7 hardware-report contract
+        run: ./scripts/check_alpha7_hardware_report.sh
 
       - name: Install QEMU and ISO tools
         run: |

@@ -1,6 +1,6 @@
 -- DINX fallback colors for Swayimg overlays and gallery mode.
 swayimg.text.font = "Cantarell"
-swayimg.text.size = 14
+swayimg.text.size = 11
 swayimg.text.color = 0xffd7dde8
 swayimg.text.background = 0xff11151d
 swayimg.text.shadow = 0xff05070b

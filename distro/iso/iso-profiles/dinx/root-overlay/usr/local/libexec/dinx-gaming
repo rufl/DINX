@@ -6,6 +6,51 @@ export XDG_SESSION_DESKTOP=dinx-gaming
 export SDL_VIDEODRIVER=wayland
 export STEAM_RUNTIME=1
 
+mode="${DINX_GAMEMODE:-auto}"
+mangohud_mode="${DINX_MANGOHUD:-off}"
+
+case "$mangohud_mode" in
+    0|off|false|no)
+        ;;
+    1|on|true|yes)
+        command -v mangohud >/dev/null 2>&1 || {
+            printf 'dinx-gaming: DINX_MANGOHUD=%s but mangohud is not installed\n' "$mangohud_mode" >&2
+            exit 2
+        }
+        export MANGOHUD=1
+        ;;
+    *)
+        printf 'dinx-gaming: invalid DINX_MANGOHUD=%s; use on or off\n' "$mangohud_mode" >&2
+        exit 2
+        ;;
+esac
+
+run_gamescope() {
+    case "$mode" in
+        0|off|false|no)
+            gamescope --backend drm --steam --fullscreen -- steam -tenfoot
+            ;;
+        1|on|true|yes)
+            command -v gamemoderun >/dev/null 2>&1 || {
+                printf 'dinx-gaming: DINX_GAMEMODE=%s but gamemoderun is not installed\n' "$mode" >&2
+                exit 2
+            }
+            gamemoderun gamescope --backend drm --steam --fullscreen -- steam -tenfoot
+            ;;
+        auto)
+            if command -v gamemoderun >/dev/null 2>&1; then
+                gamemoderun gamescope --backend drm --steam --fullscreen -- steam -tenfoot
+            else
+                gamescope --backend drm --steam --fullscreen -- steam -tenfoot
+            fi
+            ;;
+        *)
+            printf 'dinx-gaming: invalid DINX_GAMEMODE=%s; use auto, on, or off\n' "$mode" >&2
+            exit 2
+            ;;
+    esac
+}
+
 entered=0
 if dinitui --gaming-enter >/dev/null 2>&1; then
     entered=1
@@ -19,7 +64,7 @@ restore_profile() {
 }
 
 trap restore_profile EXIT INT TERM
-if gamescope --backend drm --steam --fullscreen -- steam -tenfoot; then
+if run_gamescope; then
     status=0
 else
     status=$?

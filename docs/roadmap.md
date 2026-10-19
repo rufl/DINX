@@ -117,7 +117,12 @@ P3 release gate:
 - Steam device package plus 32-bit Mesa/RADV/Vulkan payload entries;
 - safe Normal/Lite/Gaming service semantics, transactional profile enter/restore around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the YaST-inspired DINXPanel with fixed control-panel shortcuts, Shelly/Topgrade upgrade actions, optional fwupd discovery and a non-removing Artix kernel installer;
 - fixed launcher argv/return fixture and real headless Gamescope child launch/exit qualification;
-- ISO payload and static contract checks for the session entry and binaries.
+- ISO payload and static contract checks for the session entry and binaries;
+- GameMode and MangoHud are included in the gaming payload; `dinx-gaming`
+  supports `DINX_GAMEMODE=auto|on|off` and optional `DINX_MANGOHUD=on|off`
+  without weakening the normal launcher fallback.
+- The ISO includes `dinx-alpha7-hardware-report` for read-only desktop, laptop,
+  and BC-250 qualification evidence; real hardware claims remain manual.
 
 **Remaining release gates:**
 

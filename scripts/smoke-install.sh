@@ -216,11 +216,14 @@ EOF
     --skip-fs-probe "$loop_device" >/dev/null
 fi
 if [[ "$firmware_mode" == uefi ]]; then
+  mkdir -p "$target_dir/boot/efi/EFI/BOOT" "$target_dir/boot/efi/EFI/DINX"
   cat > "$target_dir/boot/efi/EFI/BOOT/grub.cfg" <<EOF
-set root=(hd0,gpt2)
+search.fs_uuid $root_uuid root
 set prefix=(\$root)/boot/grub
 configfile \$prefix/grub.cfg
 EOF
+  cp "$target_dir/boot/efi/EFI/BOOT/grub.cfg" \
+    "$target_dir/boot/efi/EFI/DINX/grub.cfg"
   [[ -s "$target_dir/boot/efi/EFI/BOOT/BOOTX64.EFI" ]] || fail 'UEFI fallback bootloader is missing'
 fi
 printf 'smoke-install: target mkinitcpio configuration\n'
@@ -236,6 +239,7 @@ if [[ "$firmware_mode" == bios ]]; then
     -printf '%f\n' | sort
 else
   printf 'smoke-install: target UEFI bootloader\n'
+  find "$target_dir/boot/efi/EFI" -type f -printf '%P\n' | sort
   [[ -s "$target_dir/boot/efi/EFI/BOOT/BOOTX64.EFI" ]] || fail 'UEFI fallback bootloader is missing'
 fi
 printf 'smoke-install: generated GRUB configuration\n'

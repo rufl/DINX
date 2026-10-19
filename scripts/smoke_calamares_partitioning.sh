@@ -164,8 +164,8 @@ assert_existing_btrfs_subvolumes() {
   # recreating @ or @home. This is the safe path for an existing Btrfs layout.
   mount -t btrfs -o subvolid=5 "$loop_device" "$mount_point"
   mount_points+=("$mount_point")
-  btrfs subvolume list "$mount_point" | grep -Eq '[[:space:]]/@$' || fail 'existing Btrfs @ subvolume disappeared'
-  btrfs subvolume list "$mount_point" | grep -Eq '[[:space:]]/@home$' || fail 'existing Btrfs @home subvolume disappeared'
+  btrfs subvolume list "$mount_point" | grep -Eq '[[:space:]]path @([[:space:]]|$)' || fail 'existing Btrfs @ subvolume disappeared'
+  btrfs subvolume list "$mount_point" | grep -Eq '[[:space:]]path @home([[:space:]]|$)' || fail 'existing Btrfs @home subvolume disappeared'
   printf 'dinx-calamares-btrfs-existing\n' > "$mount_point/partition-smoke.marker"
   grep -Fq 'dinx-calamares-btrfs-existing' "$mount_point/partition-smoke.marker" || fail 'Btrfs top-level transaction failed'
   umount "$mount_point"

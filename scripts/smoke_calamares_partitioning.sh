@@ -79,9 +79,8 @@ assert_layout_roundtrip() {
     grep -Fq 'label: dos' "$table_dump" || fail 'BIOS partition table was not persisted'
   else
     grep -Fq 'label: gpt' "$table_dump" || fail 'UEFI partition table was not persisted'
-    grep -Fq 'type=U' "$table_dump" || fail 'UEFI ESP type was not persisted'
+    grep -Fq 'type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B' "$table_dump" || fail 'UEFI ESP type was not persisted'
   fi
-
   attach_image "$image"
   loop_device=$attached_device
   if [[ "$firmware" == bios ]]; then

@@ -31,6 +31,8 @@ rootfs:
     - elogind
     - exfatprogs
     - ffmpeg
+    - libva
+    - libva-utils
     - file-roller
     - gvfs
     - gvfs-gphoto2

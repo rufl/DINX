@@ -66,7 +66,7 @@ run_optional 'audio' inxi -A
 run_optional 'network' inxi -N
 run_optional 'pci' lspci -nnk
 run_optional 'usb' lsusb
-run_optional 'vulkan' vulkaninfo --summary
+run_optional 'va-api' vainfo
 run_optional 'pipewire' wpctl status
 run_optional 'pulse-compatibility' pactl info
 run_optional 'dinit' dinitctl list

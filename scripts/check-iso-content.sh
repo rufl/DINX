@@ -60,6 +60,7 @@ required_paths=(
   usr/bin/gamescope
   usr/bin/gamemoderun
   usr/bin/mangohud
+  usr/bin/vainfo
   usr/lib/libayatana-appindicator3.so.1
   usr/bin/steam
   etc/dinit.d/bluetoothd

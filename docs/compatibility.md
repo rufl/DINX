@@ -92,7 +92,7 @@ The test suite should cover observable contracts rather than implementation deta
 | Session safety | `swayidle` locks after 600 seconds, `before-sleep` invokes the lock wrapper, `Super+L` and the launcher entry invoke `swaylock`, and hardware brightness keys use `brightnessctl` |
 | Payload budget | `scripts/check_dinx_budget.sh` enforces the committed rootfs package and dinit startup ceilings, the 120-second QEMU boot window, native binary size, and a 4 GiB ISO ceiling when an ISO path is supplied; `scripts/measure_dinx_session.sh` reports process RSS/CPU snapshots without treating an absent host session as proof |
 | Shell utilities | Noctalia provides screenshot/clipboard UI; `wl-clipboard` provides CLI copy/paste |
-| Media handlers | VLC owns common video MIME entries; Strawberry owns common audio MIME entries |
+| Media path | `ffmpeg`, VLC, VA-API (`libva`/`vainfo`) and common video/audio MIME handlers are shipped; actual hardware decode remains a physical qualification claim |
 | Package management | `topgrade`, `paru`, and Shelly use Artix's ALPM/pacman configuration, have no `systemd` dependency/unit, add no Arch repositories, and remain available for explicit user-invoked updates |
 | BC250 Control Center | v1.21.1 GUI/CLI/daemon, Noctalia dock entry, Mango user-session autostart, pinned source, and no systemd payload; live telemetry remains available when dinit persistence inspection is unsupported |
 | Firewall/process monitoring | Gufw, Qps, and OpenSnitch are discoverable; UFW/OpenSnitch services remain disabled until explicit configuration |

@@ -92,7 +92,7 @@ A suíte deve testar contratos observáveis, não detalhes de implementação:
 | Segurança da sessão | `swayidle` bloqueia após 600 segundos, `before-sleep` invoca o wrapper de bloqueio, `Super+L` e o launcher invocam `swaylock`, e as teclas de brilho usam `brightnessctl` |
 | Orçamento do payload | `scripts/check_dinx_budget.sh` impõe os tetos versionados de pacotes rootfs e inicialização dinit, a janela de boot QEMU de 120 segundos, o tamanho dos binários nativos e o teto de ISO de 4 GiB quando um caminho de ISO é fornecido; `scripts/measure_dinx_session.sh` relata snapshots de RSS/CPU sem tratar a ausência da sessão no host como prova |
 | Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
-| Handlers de mídia | VLC assume entradas MIME comuns de vídeo; Strawberry assume entradas MIME comuns de áudio |
+| Caminho de mídia | `ffmpeg`, VLC, VA-API (`libva`/`vainfo`) e handlers MIME comuns de vídeo/áudio são fornecidos; decode por hardware continua sendo uma afirmação de qualificação física |
 | Gerenciamento de pacotes | `topgrade`, `paru` e Shelly usam a configuração ALPM/pacman do Artix, não têm dependência/unidade `systemd`, não adicionam repositórios Arch e continuam disponíveis para atualizações executadas explicitamente pelo usuário |
 | BC250 Control Center | GUI/CLI/daemon v1.21.1, entrada no dock Noctalia, autostart na sessão do usuário Mango, fonte fixada e nenhum payload systemd; a telemetria ao vivo continua disponível quando a inspeção de persistência dinit não é suportada |
 | Firewall/monitoramento de processos | Gufw, Qps e OpenSnitch são descobertos; os serviços UFW/OpenSnitch ficam desabilitados até configuração explícita |

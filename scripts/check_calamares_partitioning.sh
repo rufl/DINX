@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+calamares_root="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares"
+partition_conf="$calamares_root/modules/partition.conf"
+mount_conf="$calamares_root/modules/mount.conf"
+settings_conf="$calamares_root/settings.conf"
+packages_conf="$calamares_root/modules/packages.conf"
+unpackfs_conf="$calamares_root/modules/unpackfs.conf"
+
+fail() {
+  printf 'calamares_partition_contract: %s\n' "$*" >&2
+  exit 1
+}
+
+require_file() {
+  [[ -r "$1" ]] || fail "missing Calamares file: ${1#$repo_root/}"
+}
+
+require_text() {
+  local needle=$1
+  local path=$2
+  grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
+}
+
+for path in "$partition_conf" "$mount_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf"; do
+  require_file "$path"
+done
+
+require_text 'recommendedSize: 1GiB' "$partition_conf"
+require_text 'minimumSize: 512MiB' "$partition_conf"
+require_text 'availableFileSystemTypes: ["ext4", "btrfs"]' "$partition_conf"
+require_text 'directory: "/"' "$partition_conf"
+require_text 'allowedFilesystemTypes: ["ext4", "btrfs"]' "$partition_conf"
+require_text 'mountpoint: "efi"' "$partition_conf"
+require_text 'allowedFilesystemTypes: ["fat32"]' "$partition_conf"
+require_text 'essentialMounts: ["live-*", "control", "ventoy"]' "$partition_conf"
+require_text 'lvm:' "$partition_conf"
+require_text '    enable: false' "$partition_conf"
+
+require_text 'mountPoint: /' "$mount_conf"
+require_text 'subvolume: ""' "$mount_conf"
+if grep -Eq '^[[:space:]]+subvolume: /@' "$mount_conf"; then
+  fail 'Btrfs config recreates pre-existing @ subvolumes'
+fi
+require_text 'filesystem: efi' "$mount_conf"
+require_text 'umask=0077' "$mount_conf"
+
+mapfile -t partition_lines < <(grep -nE '^[[:space:]]+- partition$' "$settings_conf")
+[[ "${#partition_lines[@]}" -eq 2 ]] || fail 'partition module must be shown and executed exactly once'
+partition_show_line=${partition_lines[0]%%:*}
+partition_exec_line=${partition_lines[1]%%:*}
+mount_line=$(grep -nE '^[[:space:]]+- mount$' "$settings_conf" | cut -d: -f1)
+unpackfs_line=$(grep -nE '^[[:space:]]+- unpackfs$' "$settings_conf" | cut -d: -f1)
+fstab_line=$(grep -nE '^[[:space:]]+- fstab$' "$settings_conf" | cut -d: -f1)
+bootloader_line=$(grep -nE '^[[:space:]]+- bootloader$' "$settings_conf" | cut -d: -f1)
+[[ "$partition_show_line" -lt "$partition_exec_line" ]] || fail 'partition page is not before the execution module'
+[[ "$partition_exec_line" -lt "$mount_line" ]] || fail 'mount runs before partition changes are committed'
+[[ "$mount_line" -lt "$unpackfs_line" ]] || fail 'unpackfs runs before target mounts are ready'
+[[ "$mount_line" -lt "$fstab_line" ]] || fail 'fstab runs before target mounts are ready'
+[[ "$fstab_line" -lt "$bootloader_line" ]] || fail 'bootloader runs before fstab is generated'
+require_text 'disable-cancel-during-exec: true' "$settings_conf"
+require_text 'hide-back-and-next-during-exec: true' "$settings_conf"
+
+require_text 'update_db: false' "$packages_conf"
+require_text 'update_system: false' "$packages_conf"
+require_text '  - remove:' "$packages_conf"
+if grep -R -nF 'update-mirrorlist' "$calamares_root" >/dev/null; then
+  fail 'Calamares configuration invokes a network mirror update'
+fi
+require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
+
+printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true offline_packages=true\n'

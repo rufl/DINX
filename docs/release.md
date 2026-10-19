@@ -152,7 +152,7 @@ qualification fails explicitly instead of silently substituting another renderer
 
 ## Next alpha gate
 
-Before tagging the next alpha, the tag commit must pass the current local P0 workflow, including the lock/idle/brightness contracts and budget checks. The resulting ISO must pass SquashFS content validation, the 90-second QEMU boot/capture path, the disposable Calamares installation and recovery-TTY smoke, checksum generation, artifact attestation and release-asset assembly.
+Before tagging the next alpha, the tag commit must pass the current local P0 workflow, including the lock/idle/brightness contracts, budget checks and the Calamares partitioning contract. The resulting ISO must pass SquashFS content validation, the 90-second QEMU boot/capture path, the disposable Calamares installation and recovery-TTY smoke, the BIOS/UEFI partition transaction smoke with pre-existing Btrfs subvolumes, checksum generation, artifact attestation and release-asset assembly.
 
 The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
 

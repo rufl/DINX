@@ -25,6 +25,8 @@ on:
       - "scripts/check_first_party_apps.sh"
       - "scripts/smoke-iso.sh"
       - "scripts/smoke-install.sh"
+      - "scripts/check_calamares_partitioning.sh"
+      - "scripts/smoke_calamares_partitioning.sh"
       - "scripts/smoke-iso.ps1"
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
@@ -91,6 +93,8 @@ jobs:
         run: ./scripts/check_dinx_session.sh
       - name: Verify installer lifecycle boundary
         run: ./scripts/check_install_lifecycle.sh
+      - name: Verify Calamares partitioning contract
+        run: ./scripts/check_calamares_partitioning.sh
       - name: Verify DINX payload and startup budgets
         run: ./scripts/check_dinx_budget.sh
       - name: Capture host session measurement context
@@ -103,7 +107,9 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes dosfstools grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
+          sudo apt-get install --yes btrfs-progs dosfstools grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
+      - name: Smoke-test Calamares partition transaction
+        run: sudo ./scripts/smoke_calamares_partitioning.sh
 
       - name: Build with Artix artools
         run: |

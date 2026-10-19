@@ -35,6 +35,7 @@ required_paths=(
   etc/calamares/branding/dinx/stylesheet.qss
   etc/calamares/modules/packages.conf
   etc/calamares/modules/partition.conf
+  etc/calamares/modules/mount.conf
   etc/calamares/modules/postcfg.conf
   etc/calamares/modules/services-artix.conf
   etc/calamares/modules/unpackfs.conf
@@ -366,6 +367,9 @@ grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares brand
 grep -Fq 'services-artix' <<<"$calamares_settings" || fail 'Calamares dinit service module is not selected'
 grep -Fq 'postcfg' <<<"$calamares_settings" || fail 'Calamares dinit user-service module is not selected'
 calamares_services=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/services-artix.conf)
+calamares_mount=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/mount.conf)
+grep -Fq 'subvolume: ""' <<<"$calamares_mount" || fail 'Calamares Btrfs existing-subvolume guard is missing'
+grep -Fq 'umask=0077' <<<"$calamares_mount" || fail 'Calamares EFI mount options are missing'
 grep -Fq 'getty@tty2' <<<"$calamares_services" || fail 'Calamares recovery TTY service is not selected'
 grep -Fq 'getty@tty3' <<<"$calamares_services" || fail 'Calamares second recovery TTY service is not selected'
 

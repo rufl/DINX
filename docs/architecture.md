@@ -8,6 +8,9 @@
 2. **Use proven low-level components.** Terminal emulation, text editing, parsing and language tooling are integration points, not reasons to reimplement mature subsystems.
 3. **Make the bootable system the first product.** Applications are added only after installation, login, recovery and updates are testable.
 4. **Keep privileged operations narrow.** User interfaces must not turn arbitrary input into privileged shell commands.
+5. **Make common tasks work on first boot.** Media playback, hardware diagnostics, default handlers, tray applications, recovery and package-source boundaries must have a working default or an explicit unavailable state.
+6. **Prefer standards over ecosystem lock-in.** DINX uses XDG metadata, Wayland protocols, PipeWire, desktop entries and documented package interfaces so applications do not need DINX-only behavior to remain usable.
+7. **Require evidence before claims.** Every shipped feature has a static, fixture, CI, QEMU or physical-hardware gate; experimental paths remain visibly labeled instead of being presented as finished.
 
 ## System layers
 

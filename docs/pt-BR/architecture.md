@@ -8,6 +8,9 @@
 2. **Uso de componentes de baixo nível comprovados.** Emulação de terminal, edição de texto, parsing e ferramentas de linguagem são pontos de integração, não motivos para reimplementar subsistemas maduros.
 3. **O sistema inicializável é o primeiro produto.** Os aplicativos só entram depois que instalação, login, recuperação e atualizações puderem ser testados.
 4. **Operações privilegiadas devem ser restritas.** Interfaces de usuário não podem transformar entrada arbitrária em comandos privilegiados.
+5. **As tarefas comuns devem funcionar no primeiro boot.** Reprodução de mídia, diagnóstico de hardware, handlers padrão, aplicativos de tray, recuperação e limites das fontes de pacotes devem ter um default funcional ou um estado indisponível explícito.
+6. **Prefira padrões a lock-in de ecossistema.** A DINX usa metadados XDG, protocolos Wayland, PipeWire, entradas desktop e interfaces de pacotes documentadas para que os aplicativos continuem utilizáveis sem comportamento exclusivo da DINX.
+7. **Exija evidência antes de fazer afirmações.** Cada recurso enviado tem um gate estático, fixture, CI, QEMU ou hardware físico; caminhos experimentais permanecem identificados em vez de serem apresentados como concluídos.
 
 ## Camadas do sistema
 

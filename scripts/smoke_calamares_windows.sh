@@ -97,6 +97,19 @@ seed_windows_layout() {
   detach_image "$loop_device"
 }
 
+simulate_side_by_side_shrink() {
+  local image=$1
+  local loop_device windows_device
+  attach_image "$image"
+  loop_device=$attached_device
+  windows_device="${loop_device}p2"
+  wait_for_block_device "$windows_device"
+  ntfsresize --size 1G "$windows_device" >/dev/null
+  detach_image "$loop_device"
+  printf 'label: gpt\n, 512M, U\n, 1G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n, 2G, L\n' |
+    sfdisk --wipe never "$image" >/dev/null
+}
+
 assert_windows_preserved() {
   local image=$1
   local mode=$2
@@ -174,7 +187,7 @@ side_by_side_image="$work_dir/dinx-windows-side-by-side.img"
 manual_image="$work_dir/dinx-windows-manual.img"
 create_windows_table "$side_by_side_image" false
 seed_windows_layout "$side_by_side_image"
-printf ', 2G, L\n' | sfdisk --append "$side_by_side_image" >/dev/null
+simulate_side_by_side_shrink "$side_by_side_image"
 assert_windows_preserved "$side_by_side_image" side-by-side
 create_windows_table "$manual_image" true
 seed_windows_layout "$manual_image"

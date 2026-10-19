@@ -11,6 +11,7 @@ settings_conf="$calamares_root/settings.conf"
 packages_conf="$calamares_root/modules/packages.conf"
 unpackfs_conf="$calamares_root/modules/unpackfs.conf"
 profile_yaml="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
+workflow="$repo_root/.github/workflows/p0-iso.yml"
 
 fail() {
   printf 'calamares_partition_contract: %s\n' "$*" >&2
@@ -27,7 +28,7 @@ require_text() {
   grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
 }
 
-for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml"; do
+for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$workflow"; do
   require_file "$path"
 done
 
@@ -50,6 +51,8 @@ require_text 'installHybridGRUB: false' "$bootloader_conf"
 require_text 'GRUB_DISABLE_OS_PROBER=false' "$grub_windows_conf"
 require_text '    - ntfs-3g' "$profile_yaml"
 require_text '    - os-prober' "$profile_yaml"
+require_text 'Smoke-test Windows side-by-side and manual partition transactions' "$workflow"
+require_text 'scripts/smoke_calamares_windows.sh' "$workflow"
 
 require_text 'mountPoint: /' "$mount_conf"
 require_text 'subvolume: ""' "$mount_conf"

@@ -237,9 +237,16 @@ nem afirma que hardware não suportado está funcionando. Anexe a saída de
 `dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou
 falha ao iniciar um jogo.
 
-A superfície de atualização informa explicitamente quando backends opcionais
-Flatpak/AppImage não estão instalados; ela não apresenta uma fonte de aplicativos
-indisponível como bem-sucedida nem adiciona silenciosamente um remote sem revisão.
+A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
+`fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,
+Flatpak para fontes de aplicativos escolhidas pelo usuário e o KolourPaint como
+editor de imagens Qt simples. O Swayimg continua sendo o visualizador padrão;
+o KolourPaint fica disponível no launcher e não substitui esse default de
+visualização.
+
+O Flatpak é instalado sem aplicativos Flatpak pré-instalados. Adicionar um
+remote e instalar um aplicativo continuam sendo ações explícitas do usuário; a
+DINX não instala remotes ou aplicativos silenciosamente.
 
 ### O login falha
 

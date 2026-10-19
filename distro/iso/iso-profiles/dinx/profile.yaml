@@ -31,6 +31,8 @@ rootfs:
     - elogind
     - exfatprogs
     - ffmpeg
+    - flatpak
+    - fwupd
     - libva
     - libva-utils
     - file-roller
@@ -61,6 +63,7 @@ rootfs:
     - noctalia
     - qt6-wayland
     - qt6ct
+    - kolourpaint
     - adw-gtk-theme
     - cantarell-fonts
     - partitionmanager
@@ -121,6 +124,7 @@ rootfs:
     - pwvucontrol
     - qps
     - rsync
+    - sane
     - shelly
     - strawberry
     - swayimg

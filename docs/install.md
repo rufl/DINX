@@ -238,9 +238,15 @@ it. DINX does not silently install proprietary drivers or claim unsupported
 hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting
 blank video, rendering fallback or game-launch failures.
 
-The update surface reports optional Flatpak/AppImage backends explicitly when
-they are not installed; it does not present an unavailable application source as
-successful or silently add an unreviewed remote.
+DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
+for explicit firmware metadata and update discovery, Flatpak for user-selected
+application sources, and KolourPaint as the simple Qt image editor. Swayimg
+remains the default image viewer; KolourPaint is available from the launcher
+and does not replace that viewer default.
+
+Flatpak is installed without preinstalled Flatpak applications. Adding a remote
+and installing an app remain explicit user actions; DINX does not silently
+install application remotes or apps.
 
 ### Login fails
 

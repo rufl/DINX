@@ -35,6 +35,7 @@ on:
       - "scripts/check_firefox.sh"
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
+      - "scripts/check_desktop_packages.sh"
       - "scripts/check_firewall_tools.sh"
       - "scripts/check_cyan_skillfish.sh"
       - "scripts/check_bc250_control_center.sh"
@@ -81,6 +82,8 @@ jobs:
         run: ./scripts/check_swayimg.sh
       - name: Verify pinned package-management sources and payload contract
         run: ./scripts/check_package_managers.sh
+      - name: Verify scanner, firmware, Flatpak and image-editor payload
+        run: ./scripts/check_desktop_packages.sh
       - name: Verify Cyan Skillfish and BC-250 support contract
         run: ./scripts/check_cyan_skillfish.sh
       - name: Verify BC250 Control Center package and session contract

@@ -60,8 +60,12 @@ required_paths=(
   usr/bin/gamescope
   usr/bin/gamemoderun
   usr/bin/mangohud
+  usr/bin/flatpak
+  usr/bin/fwupdmgr
   usr/bin/vainfo
+  usr/bin/scanimage
   usr/lib/libayatana-appindicator3.so.1
+  usr/bin/kolourpaint
   usr/bin/steam
   etc/dinit.d/bluetoothd
   etc/dinit.d/root-ro
@@ -152,9 +156,11 @@ required_paths=(
   usr/bin/vulkaninfo
   etc/paru.conf
   etc/shellybuild.conf
+  usr/share/flatpak/remotes.d/flathub.flatpakrepo
   usr/share/applications/vlc.desktop
   usr/share/applications/org.strawberrymusicplayer.strawberry.desktop
   usr/share/applications/swayimg.desktop
+  usr/share/applications/org.kde.kolourpaint.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
   usr/share/applications/com.shellyorg.shelly-notifications.desktop
   usr/bin/ufw
@@ -476,4 +482,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano and Tumbler.\n'
+printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, KolourPaint image editing, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano and Tumbler.\n'

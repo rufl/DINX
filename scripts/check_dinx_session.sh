@@ -41,7 +41,7 @@ grep -Fq 'drawer = true' "$noctalia" || fail 'Noctalia tray drawer is not enable
 grep -Fq '    - libayatana-appindicator' "$profile" || fail 'profile is missing AppIndicator compatibility'
 
 dock_line=$(grep -F 'pinned =' "$noctalia")
-for specialist in swayimg vlc org.strawberrymusicplayer.strawberry gufw qps opensnitch_ui nm-connection-editor blueman-manager com.shellyorg.shelly; do
+for specialist in swayimg vlc org.strawberrymusicplayer.strawberry org.kde.kolourpaint gufw qps opensnitch_ui nm-connection-editor blueman-manager com.shellyorg.shelly; do
   if grep -Fq "\"$specialist\"" <<<"$dock_line"; then
     fail "specialist launcher remains pinned in the dock: $specialist"
   fi

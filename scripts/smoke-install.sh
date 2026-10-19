@@ -181,24 +181,11 @@ if [[ "$firmware_mode" == bios ]]; then
 else
   printf 'smoke-install: installing UEFI GRUB into the disposable disk\n'
   chroot "$target_dir" /usr/bin/grub-install \
-    --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=DINX \
+    --target=x86_64-efi --efi-directory=/boot/efi --boot-directory=/boot --bootloader-id=DINX \
     --modules="part_gpt ext2 search search_fs_uuid normal configfile linux" \
     --no-nvram --removable --recheck >/dev/null
 fi
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
-if [[ "$firmware_mode" == uefi ]]; then
-  cat > "$target_dir/tmp/dinx-grub-uefi.cfg" <<EOF
-set root=(hd0,gpt2)
-set prefix=(\$root)/boot/grub
-configfile \$prefix/grub.cfg
-EOF
-  chroot "$target_dir" /usr/bin/grub-mkimage \
-    -O x86_64-efi -d /usr/lib/grub/x86_64-efi \
-    -p '(hd0,gpt2)/boot/grub' \
-    -c /tmp/dinx-grub-uefi.cfg \
-    -o /boot/efi/EFI/BOOT/BOOTX64.EFI \
-    part_gpt ext2 search search_fs_uuid normal configfile linux
-fi
 if [[ "$firmware_mode" == bios ]] && ! grep -Eq '^[[:space:]]*linux[[:space:]]' "$target_dir/boot/grub/grub.cfg"; then
   printf 'smoke-install: generated GRUB config has no Linux entry; writing deterministic smoke entry\n'
   cat > "$target_dir/boot/grub/grub.cfg" <<EOF

@@ -21,6 +21,8 @@ grep -Fq 'DINX_INSTALL_FIRMWARE' "$smoke" || fail 'firmware-mode selector is mis
 grep -Fq -- '--target=x86_64-efi' "$smoke" || fail 'UEFI GRUB path is missing'
 grep -Fq -- '--no-nvram --removable' "$smoke" || fail 'UEFI fallback installation mode is missing'
 grep -Fq 'EFI/BOOT/grub.cfg' "$smoke" || fail 'UEFI fallback GRUB config is missing'
+grep -Fq -- "-p '(hd0,gpt1)/EFI/BOOT'" "$smoke" || fail 'UEFI GRUB prefix image is missing'
+grep -Fq 'part_gpt fat ext2 normal configfile linux' "$smoke" || fail 'UEFI GRUB modules are incomplete'
 grep -Fq 'OVMF_CODE' "$smoke" || fail 'UEFI QEMU firmware path is missing'
 grep -Fq 'DINX_INSTALL_FIRMWARE=bios' "$workflow" || fail 'BIOS install smoke is not wired'
 grep -Fq 'DINX_INSTALL_FIRMWARE=uefi' "$workflow" || fail 'UEFI install smoke is not wired'

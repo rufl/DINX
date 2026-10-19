@@ -185,6 +185,27 @@ else
     --no-nvram --removable --recheck >/dev/null
 fi
 chroot "$target_dir" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg >/dev/null
+if [[ "$firmware_mode" == uefi ]]; then
+  mkdir -p "$target_dir/boot/efi/EFI/BOOT" "$target_dir/boot/efi/EFI/DINX"
+  cat > "$target_dir/boot/efi/EFI/BOOT/grub.cfg" <<EOF
+set timeout_style=hidden
+set timeout=1
+set root=(hd0,gpt2)
+insmod ext2
+insmod linux
+menuentry 'DINX installed smoke' {
+    linux /boot/vmlinuz-linux root=UUID=$root_uuid rw console=tty0 console=ttyS0 loglevel=3
+    initrd /boot/intel-ucode.img /boot/amd-ucode.img /boot/initramfs-linux.img
+}
+EOF
+  cp "$target_dir/boot/efi/EFI/BOOT/grub.cfg" \
+    "$target_dir/boot/efi/EFI/DINX/grub.cfg"
+  chroot "$target_dir" /usr/bin/grub-mkimage \
+    -O x86_64-efi -d /usr/lib/grub/x86_64-efi \
+    -p '(hd0,gpt1)/EFI/BOOT' \
+    -o /boot/efi/EFI/BOOT/BOOTX64.EFI \
+    part_gpt fat ext2 normal configfile linux
+fi
 if [[ "$firmware_mode" == bios ]] && ! grep -Eq '^[[:space:]]*linux[[:space:]]' "$target_dir/boot/grub/grub.cfg"; then
   printf 'smoke-install: generated GRUB config has no Linux entry; writing deterministic smoke entry\n'
   cat > "$target_dir/boot/grub/grub.cfg" <<EOF
@@ -215,14 +236,6 @@ EOF
     --skip-fs-probe "$loop_device" >/dev/null
 fi
 if [[ "$firmware_mode" == uefi ]]; then
-  mkdir -p "$target_dir/boot/efi/EFI/BOOT" "$target_dir/boot/efi/EFI/DINX"
-  cat > "$target_dir/boot/efi/EFI/BOOT/grub.cfg" <<EOF
-search.fs_uuid $root_uuid root
-set prefix=(\$root)/boot/grub
-configfile \$prefix/grub.cfg
-EOF
-  cp "$target_dir/boot/efi/EFI/BOOT/grub.cfg" \
-    "$target_dir/boot/efi/EFI/DINX/grub.cfg"
   [[ -s "$target_dir/boot/efi/EFI/BOOT/BOOTX64.EFI" ]] || fail 'UEFI fallback bootloader is missing'
 fi
 printf 'smoke-install: target mkinitcpio configuration\n'

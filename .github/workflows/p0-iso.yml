@@ -239,6 +239,8 @@ jobs:
               actual_zig_version=$(zig version)
               printf "zig_version=%s\n" "$actual_zig_version"
               test "$actual_zig_version" = "$zig_version"
+              # Run before makepkg --clean removes source trees used by the static theme contract.
+              scripts/check_dinx_theme.sh
               package_repo=/workspace/dist/packages
               rm -rf "$package_repo"
               mkdir -p "$package_repo"
@@ -312,7 +314,6 @@ jobs:
               trap "kill $repo_pid 2>/dev/null || true" EXIT
 
               scripts/check-iso-host.sh
-              scripts/check_dinx_theme.sh
               scripts/build-iso.sh
               metadata_path="$DINX_ISO_OUTPUT/dinx/build-metadata.txt"
               mkdir -p "$(dirname "$metadata_path")"

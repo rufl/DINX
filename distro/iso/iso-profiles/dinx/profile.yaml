@@ -131,6 +131,8 @@ rootfs:
     - zathura
     - zathura-pdf-mupdf
     - mkinitcpio-nfs-utils
+    - ntfs-3g
+    - os-prober
     - cyan-skillfish-governor-smu
     - cyan-skillfish-governor-smu-dinit
   packages-init:

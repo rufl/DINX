@@ -36,12 +36,14 @@ required_paths=(
   etc/calamares/modules/packages.conf
   etc/calamares/modules/partition.conf
   etc/calamares/modules/mount.conf
+  etc/calamares/modules/bootloader.conf
   etc/calamares/modules/postcfg.conf
   etc/calamares/modules/services-artix.conf
   etc/calamares/modules/unpackfs.conf
   etc/calamares/modules/users.conf
   etc/calamares/modules/welcome.conf
   etc/calamares/settings.conf
+  etc/default/grub.d/40-dinx-windows.cfg
   etc/dinit.d/greetd
   usr/bin/dinitui
   usr/bin/dinxpanel
@@ -357,6 +359,8 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/systemd-[0-9][^/]*/' <<<"$
   printf '%s\n' "$forbidden_matches" >&2
   fail 'systemd init package metadata is present; compatibility libraries are allowed'
 fi
+grep -Fq '/usr/bin/os-prober' <<<"$manifest" || fail 'os-prober is missing from the ISO payload'
+grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest" || fail 'ntfs-3g is missing from the ISO payload'
 
 mango_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/mango/config.conf)
 grep -Fq 'tag_num=2' <<<"$mango_user_config" || fail 'Mango user workspace default is not two'
@@ -368,8 +372,13 @@ grep -Fq 'services-artix' <<<"$calamares_settings" || fail 'Calamares dinit serv
 grep -Fq 'postcfg' <<<"$calamares_settings" || fail 'Calamares dinit user-service module is not selected'
 calamares_services=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/services-artix.conf)
 calamares_mount=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/mount.conf)
+calamares_bootloader=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/bootloader.conf)
+grub_windows=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/default/grub.d/40-dinx-windows.cfg)
 grep -Fq 'subvolume: ""' <<<"$calamares_mount" || fail 'Calamares Btrfs existing-subvolume guard is missing'
 grep -Fq 'umask=0077' <<<"$calamares_mount" || fail 'Calamares EFI mount options are missing'
+grep -Fq 'efiBootloaderId: "DINX"' <<<"$calamares_bootloader" || fail 'Calamares DINX EFI bootloader ID is missing'
+grep -Fq 'installEFIFallback: true' <<<"$calamares_bootloader" || fail 'Calamares EFI fallback is not enabled'
+grep -Fq 'GRUB_DISABLE_OS_PROBER=false' <<<"$grub_windows" || fail 'GRUB Windows detection is not enabled'
 grep -Fq 'getty@tty2' <<<"$calamares_services" || fail 'Calamares recovery TTY service is not selected'
 grep -Fq 'getty@tty3' <<<"$calamares_services" || fail 'Calamares second recovery TTY service is not selected'
 

@@ -27,6 +27,7 @@ on:
       - "scripts/smoke-install.sh"
       - "scripts/check_calamares_partitioning.sh"
       - "scripts/smoke_calamares_partitioning.sh"
+      - "scripts/smoke_calamares_windows.sh"
       - "scripts/smoke-iso.ps1"
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
@@ -107,9 +108,11 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes btrfs-progs dosfstools grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
+          sudo apt-get install --yes btrfs-progs dosfstools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin
       - name: Smoke-test Calamares partition transaction
         run: sudo ./scripts/smoke_calamares_partitioning.sh
+      - name: Smoke-test Windows side-by-side and manual partition transactions
+        run: sudo ./scripts/smoke_calamares_windows.sh
 
       - name: Build with Artix artools
         run: |

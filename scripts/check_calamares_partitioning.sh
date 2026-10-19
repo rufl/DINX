@@ -5,9 +5,12 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 calamares_root="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares"
 partition_conf="$calamares_root/modules/partition.conf"
 mount_conf="$calamares_root/modules/mount.conf"
+bootloader_conf="$calamares_root/modules/bootloader.conf"
+grub_windows_conf="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/grub.d/40-dinx-windows.cfg"
 settings_conf="$calamares_root/settings.conf"
 packages_conf="$calamares_root/modules/packages.conf"
 unpackfs_conf="$calamares_root/modules/unpackfs.conf"
+profile_yaml="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
 
 fail() {
   printf 'calamares_partition_contract: %s\n' "$*" >&2
@@ -24,12 +27,15 @@ require_text() {
   grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
 }
 
-for path in "$partition_conf" "$mount_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf"; do
+for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml"; do
   require_file "$path"
 done
 
 require_text 'recommendedSize: 1GiB' "$partition_conf"
 require_text 'minimumSize: 512MiB' "$partition_conf"
+require_text 'allowManualPartitioning: true' "$partition_conf"
+require_text 'initialPartitioningChoice: none' "$partition_conf"
+require_text 'defaultPartitionTableType: gpt' "$partition_conf"
 require_text 'availableFileSystemTypes: ["ext4", "btrfs"]' "$partition_conf"
 require_text 'directory: "/"' "$partition_conf"
 require_text 'allowedFilesystemTypes: ["ext4", "btrfs"]' "$partition_conf"
@@ -38,6 +44,13 @@ require_text 'allowedFilesystemTypes: ["fat32"]' "$partition_conf"
 require_text 'essentialMounts: ["live-*", "control", "ventoy"]' "$partition_conf"
 require_text 'lvm:' "$partition_conf"
 require_text '    enable: false' "$partition_conf"
+require_text 'efiBootLoader: "grub"' "$bootloader_conf"
+require_text 'efiBootloaderId: "DINX"' "$bootloader_conf"
+require_text 'installEFIFallback: true' "$bootloader_conf"
+require_text 'installHybridGRUB: false' "$bootloader_conf"
+require_text 'GRUB_DISABLE_OS_PROBER=false' "$grub_windows_conf"
+require_text '    - ntfs-3g' "$profile_yaml"
+require_text '    - os-prober' "$profile_yaml"
 
 require_text 'mountPoint: /' "$mount_conf"
 require_text 'subvolume: ""' "$mount_conf"
@@ -71,4 +84,4 @@ if grep -R -nF 'update-mirrorlist' "$calamares_root" >/dev/null; then
 fi
 require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
 
-printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true offline_packages=true\n'
+printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true\n'

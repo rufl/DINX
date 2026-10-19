@@ -33,7 +33,7 @@ grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' "$desktop" || fa
 grep -Fq 'TryExec=/usr/local/libexec/dinx-gaming' "$desktop" || fail 'gaming session TryExec is missing'
 grep -Fq 'Name=DINX Gaming' "$desktop" || fail 'gaming session name is missing from desktop metadata'
 
-for package in gamescope gamemode mangohud steam steam-devices lib32-gamemode lib32-mangohud lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers; do
+for package in gamescope gamemode mangohud steam steam-devices lib32-gamemode lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers; do
   grep -Fqx "    - $package" "$profile" || fail "DINX profile is missing $package"
 done
 

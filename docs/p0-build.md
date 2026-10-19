@@ -102,7 +102,7 @@ Run [39244756515](https://github.com/rufl/DINX/actions/runs/39244756515) on comm
 - GitHub provenance attestation, build-metadata verification and artifact upload passed;
 - uploaded artifact: `dinx-foundation-iso-49c8a74735a5c55eb7078f15c6c0825ceaf326f3`, 2,704,049,911 bytes, digest `sha256:bc226ab7067918c9f8612f1f4f6b4ef96cb70618585877e07906932de39abe67`.
 
-The Windows-specific step in follow-up run [39251056032](https://github.com/rufl/DINX/actions/runs/39251056032) passed the existing-ESP/NTFS side-by-side and manual-layout smoke. The full P0 workflow was still in progress while this document was updated, so no new ISO artifact is claimed here.
+The Windows-specific step in follow-up run [39251056032](https://github.com/rufl/DINX/actions/runs/39251056032) passed the existing-ESP/NTFS side-by-side and manual-layout smoke. The full P0 result and a new ISO artifact are intentionally not claimed from that follow-up here; refresh release evidence only after the run is green.
 
 This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, Calamares supported-layout transaction smokes, disposable BIOS and UEFI persistent-install/recovery paths and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical firmware or hardware installation, upgrades, rollback, BitLocker/hibernated Windows resizing or long-term hardware service health.
 

@@ -103,7 +103,7 @@ A execução [39244756515](https://github.com/rufl/DINX/actions/runs/39244756515
 - geração do SHA-512, atestação de procedência no GitHub, verificação dos metadados de build e upload do artefato passaram;
 - artefato publicado: `dinx-foundation-iso-49c8a74735a5c55eb7078f15c6c0825ceaf326f3`, 2.704.049.911 bytes, digest `sha256:bc226ab7067918c9f8612f1f4f6b4ef96cb70618585877e07906932de39abe67`.
 
-A etapa específica do Windows na execução seguinte [39251056032](https://github.com/rufl/DINX/actions/runs/39251056032) passou o smoke de layout side-by-side e manual com ESP/NTFS existentes preservados. O workflow P0 completo ainda estava em andamento quando este documento foi atualizado; por isso, nenhum artefato novo da ISO é reivindicado aqui.
+A etapa específica do Windows na execução seguinte [39251056032](https://github.com/rufl/DINX/actions/runs/39251056032) passou o smoke de layout side-by-side e manual com ESP/NTFS existentes preservados. O resultado completo do P0 e um artefato novo da ISO não são reivindicados aqui; atualize a evidência de release somente depois que a execução passar.
 
 Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, dos smokes transacionais dos layouts suportados pelo Calamares, dos caminhos persistentes/recuperação em BIOS e UEFI descartáveis e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, firmware ou instalação em hardware físico, atualizações, rollback, redimensionamento de Windows com BitLocker/hibernação ou saúde de serviços em hardware por longo prazo.
 

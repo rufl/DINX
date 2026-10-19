@@ -33,7 +33,7 @@ for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_co
 done
 
 require_text 'recommendedSize: 1GiB' "$partition_conf"
-require_text 'minimumSize: 512MiB' "$partition_conf"
+require_text 'minimumSize: 64MiB' "$partition_conf"
 require_text 'allowManualPartitioning: true' "$partition_conf"
 require_text 'initialPartitioningChoice: none' "$partition_conf"
 require_text 'availableFileSystemTypes: ["ext4", "btrfs"]' "$partition_conf"

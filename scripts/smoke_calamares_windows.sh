@@ -65,10 +65,10 @@ create_windows_table() {
   local include_root=$2
   truncate -s 6G "$image"
   if [[ "$include_root" == true ]]; then
-    printf 'label: gpt\n, 512M, U\n, 2G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n, 2G, L\n' |
+    printf 'label: gpt\n, 96M, U\n, 2G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n, 2G, L\n' |
       sfdisk --wipe always "$image" >/dev/null
   else
-    printf 'label: gpt\n, 512M, U\n, 2G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n' |
+    printf 'label: gpt\n, 96M, U\n, 2G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n' |
       sfdisk --wipe always "$image" >/dev/null
   fi
 }
@@ -106,7 +106,7 @@ simulate_side_by_side_shrink() {
   wait_for_block_device "$windows_device"
   ntfsresize --size 1G "$windows_device" >/dev/null
   detach_image "$loop_device"
-  printf 'label: gpt\n, 512M, U\n, 1G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n, 2G, L\n' |
+  printf 'label: gpt\n, 96M, U\n, 1G, EBD0A0A2-B9E5-4433-87C0-68B6B72699C7\n, 2G, L\n' |
     sfdisk --wipe never "$image" >/dev/null
 }
 

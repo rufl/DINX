@@ -84,6 +84,7 @@ rootfs:
     - bluez
     - bluez-utils
     - blueman
+    - libayatana-appindicator
     - btop
     - brightnessctl
     - clang

@@ -35,6 +35,10 @@ grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher loc
 grep -Fq 'type = "power_profile"' "$noctalia" || fail 'Noctalia power-profile shortcut is missing'
 grep -Fq 'control-center", "session"]' "$noctalia" || fail 'Noctalia session power widget is missing'
 grep -Fq 'pinned = ["firefox", "dinxpanel", "dinitui"' "$noctalia" || fail 'primary DINX hierarchy is not pinned in the dock'
+grep -Fq 'end = ["screenshot", "clipboard", "tray", "network"' "$noctalia" || fail 'Noctalia status tray widget is missing from the main bar'
+grep -Fq '[widget.tray]' "$noctalia" || fail 'Noctalia tray widget settings are missing'
+grep -Fq 'drawer = true' "$noctalia" || fail 'Noctalia tray drawer is not enabled'
+grep -Fq '    - libayatana-appindicator' "$profile" || fail 'profile is missing AppIndicator compatibility'
 
 dock_line=$(grep -F 'pinned =' "$noctalia")
 for specialist in swayimg vlc org.strawberrymusicplayer.strawberry gufw qps opensnitch_ui nm-connection-editor blueman-manager com.shellyorg.shelly; do

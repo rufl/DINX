@@ -52,7 +52,7 @@ widget_spacing = 6
 capsule = true
 start = ["launcher", "workspaces"]
 center = ["clock"]
-end = ["screenshot", "clipboard", "network", "bluetooth", "volume", "battery", "notifications", "control-center", "session"]
+end = ["screenshot", "clipboard", "tray", "network", "bluetooth", "volume", "battery", "notifications", "control-center", "session"]
 
 [widget.screenshot.actions]
 left = "screenshot-region"
@@ -73,6 +73,13 @@ show_label = true
 
 [widget.clipboard]
 glyph = "clipboard"
+
+
+[widget.tray]
+drawer = true
+drawer_columns = 3
+drawer_item_size = 20
+hide_passive = true
 
 [dock]
 enabled = true

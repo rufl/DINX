@@ -60,6 +60,7 @@ required_paths=(
   usr/bin/gamescope
   usr/bin/gamemoderun
   usr/bin/mangohud
+  usr/lib/libayatana-appindicator3.so.1
   usr/bin/steam
   etc/dinit.d/bluetoothd
   etc/dinit.d/root-ro
@@ -255,7 +256,8 @@ grep -Fq '[bar.main]' <<<"$noctalia_config" || fail 'Noctalia main bar is not co
 grep -Fq 'position = "top"' <<<"$noctalia_config" || fail 'Noctalia main bar is not at the top'
 grep -Fq 'reserve_space = true' <<<"$noctalia_config" || fail 'Noctalia main bar does not reserve space'
 grep -Fq 'start = ["launcher", "workspaces"]' <<<"$noctalia_config" || fail 'Noctalia main bar launcher/workspace widgets are missing'
-grep -Fq 'screenshot' <<<"$noctalia_config" || fail 'Noctalia screenshot widget is not configured'
+grep -Fq 'end = ["screenshot", "clipboard", "tray", "network"' <<<"$noctalia_config" || fail 'Noctalia status tray widget is missing'
+grep -Fq '[widget.tray]' <<<"$noctalia_config" || fail 'Noctalia tray widget settings are missing'
 grep -Fq '[shell.screenshot]' <<<"$noctalia_config" || fail 'Noctalia screenshot shell defaults are missing'
 grep -Fq 'copy_to_clipboard = true' <<<"$noctalia_config" || fail 'Noctalia screenshots are not copied to the clipboard'
 grep -Fq '/usr/share/applications/swayimg.desktop' <<<"$manifest" || fail 'Swayimg desktop entry is not in the ISO payload'

@@ -228,6 +228,20 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 The software-rendering fallback is designed for the headless QEMU path. Hardware graphics support is not yet fully qualified. Record the GPU model, firmware mode and kernel/guest behavior before filing a report.
 
+### Graphics, drivers and media
+
+DINX ships Mesa/RADV, Vulkan diagnostics, FFmpeg and VLC for the supported
+open-source media path. If hardware acceleration or a proprietary GPU driver is
+missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix
+package plan, and reboot when it reports that a kernel or driver change requires
+it. DINX does not silently install proprietary drivers or claim unsupported
+hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting
+blank video, rendering fallback or game-launch failures.
+
+The update surface reports optional Flatpak/AppImage backends explicitly when
+they are not installed; it does not present an unavailable application source as
+successful or silently add an unreviewed remote.
+
 ### Login fails
 
 Select user `dinx`, session `MangoWM (DINX)`, and enter the exact disposable password `dinx`. If the greeter still fails, retain the workflow commit and hardware details; do not try random credentials.

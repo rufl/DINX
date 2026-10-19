@@ -86,7 +86,7 @@ O workflow também captura `dinx-boot-screen.ppm` três segundos depois que o QE
 O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, mantendo os assets de logo/fonte do Artix. As texturas opacas do menu ficam desativadas, então o menu de boot, o greeter, o instalador e o desktop compartilham a mesma hierarquia visual plana.
 
 O perfil também incorpora um caminho experimental offline do Calamares com branding DINX, módulos de serviço dinit e um KDE Partition Manager independente. A verificação de conteúdo confirma a paleta/templates DINX, ReGreet, Noctalia, Mango e os payloads de recuperação. `scripts/smoke-install.sh` verifica instalações BIOS e UEFI offline, a geração de initramfs/GRUB, o primeiro boot e a TTY de recuperação em discos efêmeros; é um smoke de contrato do CI, não uma qualificação arbitrária de hardware.
-O contrato de particionamento do Calamares é verificado antes do build do container: ESP recomendada de 1 GiB/mínima de 512 MiB, EFI FAT32 e root ext4/btrfs, LVM desabilitado, exceções de montagens live, remoção de pacotes offline e um plano Btrfs explícito de nível superior que não recria `@`/`@home` existentes. `scripts/smoke_calamares_partitioning.sh` faz round-trip das tabelas BIOS e UEFI, filesystems e fstab em discos descartáveis e reabre um volume Btrfs com subvolumes existentes. Isso é um smoke transacional dos layouts suportados, não uma alegação de que todos os caminhos de filesystem, criptografia, RAID ou firmware físico do Calamares estejam livres de bugs.
+O contrato de particionamento do Calamares é verificado antes do build do container: ESP recomendada de 1 GiB/mínima de 64 MiB, EFI FAT32 e root ext4/btrfs, particionamento manual explícito, LVM desabilitado, exceções de montagens live, remoção de pacotes offline, suporte a NTFS/os-prober e um plano Btrfs explícito de nível superior que não recria `@`/`@home` existentes. `scripts/smoke_calamares_partitioning.sh` faz round-trip das tabelas BIOS e UEFI, filesystems e fstab em discos descartáveis e reabre um volume Btrfs com subvolumes existentes. `scripts/smoke_calamares_windows.sh` preserva uma ESP FAT32/caminho Microsoft e partição NTFS de Windows existentes enquanto conclui transações DINX de root/GRUB em layouts side-by-side e manuais. São smokes transacionais dos layouts suportados, não uma alegação de que todos os caminhos de filesystem, criptografia, RAID, BitLocker, hibernação, firmware Windows ou firmware físico do Calamares estejam livres de bugs.
 
 Para uma segunda captura diagnóstica após entrada de teclas, defina também `DINX_QEMU_POST_SCREENSHOT` e, opcionalmente, `DINX_QEMU_POST_SCREENSHOT_DELAY` e `DINX_QEMU_POST_KEYS`. Isso não prova que o greeter aceitou as credenciais.
 
@@ -97,13 +97,15 @@ A execução [39244756515](https://github.com/rufl/DINX/actions/runs/39244756515
 
 - os contratos estáticos dos pacotes próprios, DinitUI, gaming e payload da ISO passaram antes do build do container;
 - os builds de pacotes Artix e o `buildiso` concluíram, incluindo os pacotes Steam/gráficos de 32 bits resolvidos pelo repositório Artix `lib32` habilitado;
-- o boot no QEMU e a captura gráfica passaram;
+- o contrato de particionamento do Calamares passou, incluindo round-trips de tabela/filesystem BIOS/UEFI e um volume Btrfs existente com `@` e `@home`;
 - a validação do payload gráfico da ISO passou, incluindo DinitUI, a sessão gaming standalone, Steam e o payload gráfico de 32 bits;
 - os smokes de instalação persistente, primeiro boot e TTY de recuperação em discos descartáveis BIOS e UEFI passaram;
 - geração do SHA-512, atestação de procedência no GitHub, verificação dos metadados de build e upload do artefato passaram;
 - artefato publicado: `dinx-foundation-iso-49c8a74735a5c55eb7078f15c6c0825ceaf326f3`, 2.704.049.911 bytes, digest `sha256:bc226ab7067918c9f8612f1f4f6b4ef96cb70618585877e07906932de39abe67`.
 
-Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, dos caminhos persistentes/recuperação em BIOS e UEFI descartáveis e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, firmware ou instalação em hardware físico, atualizações, rollback ou saúde de serviços em hardware por longo prazo.
+A etapa específica do Windows na execução seguinte [39251056032](https://github.com/rufl/DINX/actions/runs/39251056032) passou o smoke de layout side-by-side e manual com ESP/NTFS existentes preservados. O workflow P0 completo ainda estava em andamento quando este documento foi atualizado; por isso, nenhum artefato novo da ISO é reivindicado aqui.
+
+Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, dos smokes transacionais dos layouts suportados pelo Calamares, dos caminhos persistentes/recuperação em BIOS e UEFI descartáveis e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, firmware ou instalação em hardware físico, atualizações, rollback, redimensionamento de Windows com BitLocker/hibernação ou saúde de serviços em hardware por longo prazo.
 
 ## Execução bem-sucedida anterior observada
 

@@ -172,7 +172,7 @@ Após entrar no MangoWM:
 5. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O Calamares e o KDE Partition Manager podem apagar ou formatar dados. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
-A qualificação do Calamares da alpha.7 cobre os layouts de root suportados, não todos os recursos upstream do instalador. A configuração exige uma partição EFI FAT32, recomenda 1 GiB e rejeita ESPs menores que 512 MiB, restringe o root a ext4 ou btrfs, desabilita LVM, limpa montagens live não essenciais antes do particionamento e não executa atualização de mirrors. O plano de montagem Btrfs usa o volume de nível superior em vez de recriar `@` ou `@home`, portanto um layout Btrfs existente não é sobrescrito por uma criação implícita de subvolumes. `scripts/smoke_calamares_partitioning.sh` faz round-trip das tabelas de partição, filesystems e fstab em layouts BIOS e UEFI e reabre um volume Btrfs que já contém `@` e `@home`. Isso cobre as classes relevantes de falhas reportadas no CachyOS, mas não todos os filesystems do Calamares, layouts criptografados/RAID/LVM ou firmware físico.
+A qualificação do Calamares da alpha.7 também cobre um layout GPT típico de Windows: uma ESP FAT32 existente contendo `EFI/Microsoft`, uma partição Windows NTFS e espaço para a raiz DINX criado depois dela. O smoke preserva a partição Windows e o caminho de boot da Microsoft enquanto grava fstab e dados GRUB da DINX tanto no resultado side-by-side quanto em um layout manual explícito. A ISO inclui `ntfs-3g` e `os-prober`, habilita a detecção do Windows pelo GRUB e usa um diretório EFI separado para `DINX`. Uma ESP existente de pelo menos 64 MiB é aceita porque a DINX mantém `/boot` no root filesystem; uma ESP nova é recomendada com 1 GiB. Se a ESP existente for menor ou estiver cheia, crie uma nova ESP FAT32 no espaço livre pelo layout manual em vez de formatar a ESP da Microsoft. Não formate a ESP existente nem as partições Windows/MSR/Recovery. Inicialize a DINX no mesmo modo UEFI do Windows, desligue o Windows completamente, desabilite Fast Startup/hibernação, suspenda o BitLocker mantendo a chave de recuperação disponível e faça backup verificado antes de tentar redimensionar.
 ### Primeiro boot e TTY de recuperação
 
 O contrato de instalação do CI inicializa o root filesystem copiado em discos BIOS e UEFI descartáveis e habilita `getty@tty2` e `getty@tty3` para recuperação. Esses são smokes em discos QEMU, não uma qualificação de hardware físico. Em uma instalação real, pressione `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` no greeter para abrir uma TTY e faça login com o usuário criado durante a instalação. Comandos úteis:
@@ -202,7 +202,7 @@ instalado.
 - login gráfico na sessão MangoWM;
 - inicialização do Noctalia;
 - presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO;
-- contrato de particionamento e smoke transacional do Calamares para layouts BIOS/UEFI descartáveis, incluindo um volume Btrfs existente com `@` e `@home`;
+- smoke transacional de layout GPT Windows side-by-side e manual: a ESP FAT32/caminho Microsoft e a partição NTFS existentes permanecem intactos enquanto a raiz DINX, o fstab e os dados GRUB são adicionados;
 - contrato de instalação do rootfs persistente em discos BIOS e UEFI descartáveis, primeiro boot dinit e captura da TTY de recuperação no CI.
 
 ### Ainda não suportado para produção

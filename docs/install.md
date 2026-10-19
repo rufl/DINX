@@ -174,7 +174,7 @@ After logging into MangoWM:
 5. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
 Both Calamares and KDE Partition Manager can erase or format data. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
-The alpha.7 Calamares qualification covers the supported root layouts rather than every upstream filesystem feature. The configuration requires a FAT32 EFI partition, recommends 1 GiB and rejects ESPs smaller than 512 MiB, restricts root to ext4 or btrfs, disables LVM, clears non-essential live mounts before partitioning and does not run a mirror-update step. Its Btrfs mount plan uses the top-level volume instead of recreating `@` or `@home`, so an existing Btrfs layout is not overwritten by an implicit subvolume creation job. `scripts/smoke_calamares_partitioning.sh` round-trips BIOS and UEFI partition tables, filesystems and fstab data, then reopens a Btrfs volume containing pre-existing `@` and `@home` subvolumes. This covers the relevant CachyOS-reported failure classes, but not arbitrary Calamares filesystems, encrypted/RAID/LVM layouts or physical firmware.
+The alpha.7 Calamares qualification also covers a Windows-style GPT layout: an existing FAT32 ESP containing `EFI/Microsoft`, an NTFS Windows partition and DINX root space created after it. The smoke preserves the Windows partition and Microsoft boot path while writing DINX fstab and GRUB data for both a side-by-side outcome and an explicit manual layout. The ISO includes `ntfs-3g` and `os-prober`, enables GRUB's Windows detection and uses a separate `DINX` EFI directory. An existing ESP of at least 64 MiB is accepted because DINX keeps `/boot` on the root filesystem; a new ESP is recommended at 1 GiB. If the existing ESP is smaller or full, create a new FAT32 ESP in free space through the manual layout instead of formatting the Microsoft ESP. Do not format the existing ESP or Windows/MSR/recovery partitions. Boot DINX in the same UEFI mode as Windows, fully shut Windows down, disable Fast Startup/hibernation, suspend BitLocker with its recovery key available, and leave a verified backup before attempting a resize.
 ### First boot and recovery TTY
 
 The CI installation contract boots the copied root filesystem from disposable BIOS and UEFI disks and enables `getty@tty2` and `getty@tty3` for recovery. These are QEMU disk smokes, not physical hardware qualification. On a real installation, press `Ctrl+Alt+F2` or `Ctrl+Alt+F3` at the greeter to open a TTY and log in with the user created during installation. Useful recovery commands:
@@ -204,7 +204,7 @@ installed.
 - graphical login into the MangoWM session;
 - Noctalia startup;
 - presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
-- Calamares partitioning contract and transaction smoke for disposable BIOS/UEFI layouts, including an existing Btrfs volume with `@` and `@home`;
+- Windows-style GPT side-by-side and manual-layout transaction smoke: existing FAT32 ESP/Microsoft boot files and NTFS partition remain intact while DINX root, fstab and GRUB data are added;
 - presence of the Calamares offline-install configuration and standalone KDE Partition Manager.
 
 ### Not production-supported yet

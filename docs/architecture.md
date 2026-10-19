@@ -101,11 +101,10 @@ Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` sta
 
 ## Installation path selected
 
-The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile.
 
 **KDE Partition Manager** is the standalone graphical disk tool offered beside Calamares. It shares the Qt/kpmcore stack already used by Calamares and runs as a native Wayland application in the DINX session. It is intended for disk inspection and preparation before installation, not as a replacement for the installer's final mount-point selection.
 
-The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. CI qualifies disposable BIOS and UEFI installs, first boot and recovery TTY; the overall path remains experimental until destructive-device safeguards, physical hardware installation and upgrade/rollback behavior are qualified.
+The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. The profile also ships `ntfs-3g`/`os-prober`, preserves an existing Windows ESP/NTFS layout, and enables a separate DINX EFI boot directory. CI qualifies disposable BIOS/UEFI, Btrfs-existing-subvolume and Windows side-by-side/manual transaction smokes; the overall path remains experimental until destructive-device safeguards, physical hardware installation and upgrade/rollback behavior are qualified.
 
 ## Decisions still required before a production release
 

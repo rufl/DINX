@@ -17,7 +17,7 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest successful P0 workflow is [run 39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), on commit `f7bf044`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, persistent-install/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-f7bf0448f52dc333f8792cb98ff019d7d57e532b`, 2,703,487,030 bytes, digest `sha256:d1ffb2a5c0ad787f45cbb59cf06adc85c494e6512c4a89860c383026d053ee29`; it remains a validation artifact, not a stable hardware release.
+The latest successful P0 workflow is [run 39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), on commit `b66db2e`. It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-b66db2e4429d8a2b311141e8cfbfbff8df3ad68b`, 2,703,505,384 bytes, digest `sha256:842ee9a1dfc29c93415622f1ec8dd03561c72e727878bdb4c496a4167758c944`; it remains a validation artifact, not a stable hardware release.
 
 ## Published assets
 
@@ -163,8 +163,8 @@ Update the run ID, commit, artifact size/digest and release links in the English
 - The live account is `dinx` / `dinx`; it is public, disposable and must never be
   reused.
 - The image is still an experimental disk installer with no upgrade, rollback or
-  signed Secure Boot path. CI qualifies the offline rootfs contract on a disposable
-  BIOS disk and captures a recovery-TTY frame; it does not qualify arbitrary hardware.
+  signed Secure Boot path. CI qualifies the offline rootfs contract on disposable
+  BIOS and UEFI disks and captures a recovery-TTY frame; it does not qualify arbitrary hardware.
 - Release files have GitHub artifact attestations, but the image does not yet ship a
   pacman repository signing key or signed package database for installed-system updates.
 - The Windows QEMU test is an external receiver qualification. Its success does not

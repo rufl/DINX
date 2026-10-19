@@ -5,7 +5,7 @@
 ## Current alpha status
 
 The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, upgrades, rollback or data preservation.
-The project is currently in **P5 — Gaming beta**. The latest successful P0 validation is [run 39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), on commit `f7bf044`; it built and booted the ISO, validated the graphical payload, completed the disposable persistent-install/recovery-TTY smoke, verified build metadata and published an attested workflow artifact. The public prerelease is [v0.1.0-alpha.6](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.6). P4 DinitUI is release-qualified for the alpha gate; P5 still has real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries.
+The project is currently in **P5 — Gaming beta**. The latest successful P0 validation is [run 39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), on commit `b66db2e`; it built and booted the ISO, validated the graphical payload, completed the disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, verified build metadata and published an attested workflow artifact. The public prerelease is [v0.1.0-alpha.6](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.6). P4 DinitUI is release-qualified for the alpha gate; P5 still has real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries.
 
 KDE Partition Manager is also available as a standalone graphical disk tool. Use it only to inspect or prepare a disk before opening Calamares, and verify the target device in both applications.
 
@@ -176,8 +176,7 @@ After logging into MangoWM:
 Both Calamares and KDE Partition Manager can erase or format data. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
 ### First boot and recovery TTY
 
-The CI installation contract boots the copied root filesystem from a disposable BIOS disk and enables `getty@tty2` and `getty@tty3` for recovery. The workflow also exercises a UEFI disk path, but that smoke remains a qualification gate. On a real installation,
-the user created during installation. Useful recovery commands:
+The CI installation contract boots the copied root filesystem from disposable BIOS and UEFI disks and enables `getty@tty2` and `getty@tty3` for recovery. These are QEMU disk smokes, not physical hardware qualification. On a real installation, press `Ctrl+Alt+F2` or `Ctrl+Alt+F3` at the greeter to open a TTY and log in with the user created during installation. Useful recovery commands:
 
 ```bash
 dinitctl status greetd
@@ -204,12 +203,12 @@ installed.
 - graphical login into the MangoWM session;
 - Noctalia startup;
 - presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
-- persistent rootfs install contract on a disposable BIOS disk, dinit first boot and recovery-TTY capture in CI;
+- persistent rootfs install contract on disposable BIOS and UEFI disks, dinit first boot and recovery-TTY capture in CI;
 - presence of the Calamares offline-install configuration and standalone KDE Partition Manager.
 
 ### Not production-supported yet
 
-- The persistent installer is experimental. CI qualifies an ephemeral BIOS disk; the UEFI path and real UEFI/BIOS hardware still require a successful qualification and hardware report.
+- The persistent installer is experimental. CI qualifies ephemeral BIOS and UEFI disks; real UEFI/BIOS hardware still requires a hardware report and destructive-device review.
 - There is no upgrade or rollback procedure.
 - The current image is not a production desktop or gaming release.
 - Do not repartition or format an internal disk based only on this guide.

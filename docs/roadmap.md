@@ -6,13 +6,13 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Run [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) on commit `f7bf044` is the current P0 evidence, including build-metadata verification. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
+**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Run [39191042611](https://github.com/rufl/DINX/actions/runs/39191042611) on commit `b66db2e` is the current P0 evidence, including BIOS and UEFI disposable disks and build-metadata verification. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
 
 ## P0 — foundation
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
 
-**Status:** the ISO/VM foundation gate is complete. Hardware installation, UEFI hardware, upgrades, rollback and long-term hardware service health remain release gates; CI's disposable BIOS path is green and the UEFI path remains under qualification.
+**Status:** the ISO/VM foundation gate is complete. Hardware installation, physical UEFI/BIOS behavior, upgrades, rollback and long-term hardware service health remain release gates; CI's disposable BIOS and UEFI paths are green.
 
 Backlog:
 
@@ -23,7 +23,7 @@ Backlog:
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
 
-**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on a disposable BIOS disk and is qualifying the UEFI path; hardware installation, upgrades and rollback remain release gates.
+**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks; hardware installation, upgrades and rollback remain release gates.
 
 ## P1 — public alpha 0.1
 
@@ -34,7 +34,7 @@ Backlog:
 Completed:
 
 - published the ISO/parts, checksums, installation instructions, known issues and release metadata;
-- qualified the experimental persistent installer and first-boot recovery path in CI on a disposable BIOS disk; the UEFI path remains under qualification;
+- qualified the experimental persistent installer and first-boot recovery path in CI on disposable BIOS and UEFI disks;
 - provided the minimal terminal fallback and working shell configuration;
 - recorded the package-signing limitation, hardware boundary and recovery limitations in the release documentation.
 
@@ -92,7 +92,7 @@ P3 release gate:
 
 **Goal:** make Dinit operations understandable, complete and safe without importing systemd concepts.
 
-**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe builds, Arch package payloads, static contract checks, a real temporary Dinit user daemon and the production GTK smoke paths are qualified. Run [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) also passed the Artix package build, ISO payload, QEMU boot, disposable persistent-install/recovery-TTY smoke, build-metadata verification, provenance attestation and artifact upload. DINXPanel now owns the visible hardware/driver controls and fixed kernel installer; the broader hardware matrix remains a production-release gate.
+**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe builds, Arch package payloads, static contract checks, a real temporary Dinit user daemon and the production GTK smoke paths are qualified. Run [39191042611](https://github.com/rufl/DINX/actions/runs/39191042611) also passed the Artix package build, ISO payload, QEMU boot, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and artifact upload. DINXPanel now owns the visible hardware/driver controls and fixed kernel installer; the broader hardware matrix remains a production-release gate.
 
 **Delivered:**
 

@@ -5,7 +5,7 @@
 ## Estado atual da alpha
 
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações, rollback ou preservação de dados.
-O projeto está atualmente na **P5 — Beta de jogos**. A última validação P0 aprovada é a [execução 39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`; ela compilou e inicializou a ISO, validou o payload gráfico, concluiu o smoke de instalação persistente/TTY de recuperação em disco descartável, verificou os metadados de build e publicou um artefato do workflow com atestação. O prerelease público é a [v0.1.0-alpha.6](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.6). A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
+O projeto está atualmente na **P5 — Beta de jogos**. A última validação P0 aprovada é a [execução 39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), no commit `b66db2e`; ela compilou e inicializou a ISO, validou o payload gráfico, concluiu o smoke de instalação persistente/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificou os metadados de build e publicou um artefato do workflow com atestação. O prerelease público é a [v0.1.0-alpha.6](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.6). A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
 
 O KDE Partition Manager também está disponível como particionador gráfico independente. Use-o somente para inspecionar ou preparar um disco antes de abrir o Calamares e confirme o dispositivo nas duas aplicações.
 
@@ -174,10 +174,7 @@ Após entrar no MangoWM:
 O Calamares e o KDE Partition Manager podem apagar ou formatar dados. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
 ### Primeiro boot e TTY de recuperação
 
-O contrato de instalação do CI inicializa o root filesystem copiado em um disco BIOS
-descartável e habilita `getty@tty2` e `getty@tty3` para recuperação. Em uma instalação
-real, pressione `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` no greeter para abrir uma TTY e faça
-login com o usuário criado durante a instalação. Comandos úteis:
+O contrato de instalação do CI inicializa o root filesystem copiado em discos BIOS e UEFI descartáveis e habilita `getty@tty2` e `getty@tty3` para recuperação. Esses são smokes em discos QEMU, não uma qualificação de hardware físico. Em uma instalação real, pressione `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` no greeter para abrir uma TTY e faça login com o usuário criado durante a instalação. Comandos úteis:
 
 ```bash
 dinitctl status greetd
@@ -205,11 +202,11 @@ instalado.
 - inicialização do Noctalia;
 - presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO;
 - presença da configuração de instalação offline do Calamares e do KDE Partition Manager independente.
-- contrato de instalação do rootfs persistente em disco BIOS descartável, primeiro boot dinit e captura da TTY de recuperação no CI.
+- contrato de instalação do rootfs persistente em discos BIOS e UEFI descartáveis, primeiro boot dinit e captura da TTY de recuperação no CI.
 
 ### Ainda não suportado para produção
 
-- o instalador persistente é experimental. O CI qualifica um disco BIOS efêmero; hardware UEFI/BIOS real ainda exige relatório de hardware;
+- o instalador persistente é experimental. O CI qualifica discos BIOS e UEFI efêmeros; hardware UEFI/BIOS real ainda exige relatório de hardware e revisão do risco de apagar o dispositivo.
 - não existe procedimento de atualização ou rollback;
 - a imagem atual não é um release de desktop ou jogos para produção;
 - não particione nem formate um disco interno baseando-se apenas neste guia.

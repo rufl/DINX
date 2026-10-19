@@ -6,13 +6,13 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end para release: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/TTY em disco descartável passaram. A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`, é a evidência P0 atual e inclui a verificação dos metadados de build. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
+**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/recuperação em discos descartáveis passaram. A execução [39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), no commit `b66db2e`, é a evidência P0 atual e inclui discos BIOS e UEFI descartáveis e a verificação dos metadados de build. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
 
 ## P0 — fundação
 
 **Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
 
-**Status:** o gate da fundação ISO/VM está concluído. Instalação em hardware, UEFI físico, atualizações, rollback e saúde de serviços em hardware por longo prazo continuam gates de release; o caminho BIOS descartável do CI está verde e o caminho UEFI continua em qualificação.
+**Status:** o gate da fundação ISO/VM está concluído. Instalação em hardware, comportamento UEFI/BIOS físico, atualizações, rollback e saúde de serviços em hardware por longo prazo continuam gates de release; os caminhos BIOS e UEFI descartáveis do CI estão verdes.
 
 Backlog:
 
@@ -23,7 +23,7 @@ Backlog:
 - manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
 - adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
 
-**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em um disco BIOS descartável e está qualificando o caminho UEFI; instalação em hardware, atualizações e rollback continuam sendo gates de release.
+**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis; instalação em hardware, atualizações e rollback continuam sendo gates de release.
 
 ## P1 — alpha pública 0.1
 
@@ -34,7 +34,7 @@ Backlog:
 Concluído:
 
 - publicação da ISO/partes, checksums, instruções de instalação, problemas conhecidos e metadados de release;
-- qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em um disco BIOS descartável; o caminho UEFI continua em qualificação;
+- qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em discos BIOS e UEFI descartáveis;
 - fornecimento do terminal mínimo de fallback e da configuração funcional de shell;
 - registro explícito da limitação de assinatura de pacotes, do limite de hardware e das limitações de recuperação na documentação do release.
 
@@ -92,7 +92,7 @@ Gate de release P3:
 
 **Objetivo:** tornar as operações do Dinit compreensíveis, completas e seguras sem importar conceitos do systemd.
 
-**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução [39094147629](https://github.com/rufl/DINX/actions/runs/39094147629) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/TTY de recuperação em disco descartável, a verificação dos metadados de build, a atestação de procedência e o upload do artefato. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
+**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução [39191042611](https://github.com/rufl/DINX/actions/runs/39191042611) também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke de instalação persistente/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a atestação de procedência e o upload do artefato. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
 
 **Entregue:**
 

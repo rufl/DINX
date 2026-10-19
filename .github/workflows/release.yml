@@ -173,7 +173,7 @@ jobs:
 
           - SHA-512: \`${iso_name}.sha512\`
           - Linux QEMU boot, graphical payload, boot-menu and automated greeter/session captures passed in CI.
-          - The persistent-install smoke copied the Calamares rootfs contract to an ephemeral BIOS disk, booted dinit and captured a recovery TTY frame.
+          - The persistent-install smoke copied the Calamares rootfs contract to disposable BIOS and UEFI disks, booted dinit and captured a recovery TTY frame.
           - GitHub artifact attestations cover the ISO or its parts, checksums, Windows package and release metadata. Verify with \`gh attestation verify <file> -R rufl/DINX\`.
           - \`${build_metadata_name}\` records the source commit, builder image, package snapshot and ISO digest.
 
@@ -195,9 +195,9 @@ jobs:
           trusted owner machine for a preview; add \`--apply\` only after review.
 
           This release includes the experimental offline Calamares installer and KDE Partition Manager.
-          The installer contract is qualified in CI on a disposable BIOS disk, but hardware installation,
-          UEFI, upgrades, rollback and data preservation remain unsupported; verify the target device and
-          read the installation guide before using either destructive tool.
+          The installer contract is qualified in CI on disposable BIOS and UEFI disks, but physical hardware
+          installation, upgrades, rollback and data preservation remain unsupported; verify the target device
+          and read the installation guide before using either destructive tool.
           The live account is \`dinx\` / \`dinx\`; it is disposable and must never be reused.
           EOF
       - name: Attest release provenance

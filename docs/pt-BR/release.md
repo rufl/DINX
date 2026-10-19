@@ -18,7 +18,7 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-O workflow P0 mais recente aprovado é a [execução 39094147629](https://github.com/rufl/DINX/actions/runs/39094147629), no commit `f7bf044`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke da instalação persistente/TTY de recuperação, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-f7bf0448f52dc333f8792cb98ff019d7d57e532b`, com 2.703.487.030 bytes e digest `sha256:d1ffb2a5c0ad787f45cbb59cf06adc85c494e6512c4a89860c383026d053ee29`; ele continua sendo um artefato de validação, não um release estável para hardware.
+O workflow P0 mais recente aprovado é a [execução 39191042611](https://github.com/rufl/DINX/actions/runs/39191042611), no commit `b66db2e`. Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-b66db2e4429d8a2b311141e8cfbfbff8df3ad68b`, com 2.703.505.384 bytes e digest `sha256:842ee9a1dfc29c93415622f1ec8dd03561c72e727878bdb4c496a4167758c944`; ele continua sendo um artefato de validação, não um release estável para hardware.
 
 ## Artefatos publicados
 
@@ -165,9 +165,9 @@ Atualize o run ID, commit, tamanho/digest do artefato e os links dos releases no
 
 - A conta live é `dinx` / `dinx`; é pública, descartável e nunca deve ser reutilizada.
 - A imagem ainda é um instalador de disco experimental, sem atualização, rollback ou
-  caminho Secure Boot assinado. O CI qualifica o contrato offline do rootfs em um disco
-  BIOS descartável e captura um quadro da TTY de recuperação; isso não qualifica hardware
-  arbitrário.
+  caminho Secure Boot assinado. O CI qualifica o contrato offline do rootfs em discos
+  BIOS e UEFI descartáveis e captura um quadro da TTY de recuperação; isso não qualifica
+  hardware arbitrário.
 - Os arquivos do release têm atestações de artefato do GitHub, mas a imagem ainda não
   fornece uma chave de assinatura de repositório pacman nem um banco de pacotes assinado
   para atualizações do sistema instalado.

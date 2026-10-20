@@ -80,6 +80,7 @@ for required in \
   'DINX_PACKAGE_SIGNING_FINGERPRINT' \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
+  'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'makepkg --clean --nodeps --nocheck --noconfirm' \
   '--sign --key' \
   'pacman-key --init' \

@@ -408,6 +408,7 @@ jobs:
               {
                 printf "schema=dinx-package-repository/v1\n"
                 printf "channel=%s\n" "$package_repository_channel"
+                printf "snapshot=%s\n" "$package_repository_snapshot"
                 printf "signing_fingerprint=%s\n" "$signing_key"
                 printf "package_count=%s\n" "$package_count"
                 printf "publication=github-release-assets/v1\n"

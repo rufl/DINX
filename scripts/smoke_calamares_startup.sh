@@ -12,6 +12,9 @@ fail() {
 
 [[ "$timeout_seconds" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_CALAMARES_STARTUP_TIMEOUT must be a positive integer'
 [[ -r "$config_dir/settings.conf" ]] || fail "Calamares settings are missing: $config_dir/settings.conf"
+branding_dir="$config_dir/branding/dinx"
+[[ -r "$branding_dir/branding.desc" ]] ||
+  fail "Calamares branding descriptor is missing: $branding_dir/branding.desc"
 command -v calamares >/dev/null 2>&1 || fail 'calamares is not installed'
 command -v timeout >/dev/null 2>&1 || fail 'timeout is not installed'
 command -v xvfb-run >/dev/null 2>&1 || fail 'xvfb-run is not installed'
@@ -28,10 +31,8 @@ ln -s "$config_dir/modules" "$app_data/modules"
 ln -s "$qml_dir" "$app_data/qml"
 
 set +e
-HOME="$work_dir/home" \
-  XDG_CACHE_HOME="$work_dir/cache" \
   timeout --kill-after=5s "${timeout_seconds}s" \
-  xvfb-run -a calamares --debug --config "$app_data" \
+xvfb-run -a calamares --debug --config "$app_data" \
   >"$work_dir/calamares.log" 2>&1
 status=$?
 set -e

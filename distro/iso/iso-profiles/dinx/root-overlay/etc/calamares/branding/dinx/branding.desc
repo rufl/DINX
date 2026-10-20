@@ -7,6 +7,8 @@ windowSize: 960px,640px
 windowPlacement: center
 sidebar: widget
 navigation: widget
+slideshow: "show.qml"
+slideshowAPI: 2
 
 strings:
     productName: "DINX"

@@ -75,8 +75,14 @@ for required in \
   'scripts/check_dinx_package_provenance.sh' \
   'scripts/check_dinx_feature_groups.sh' \
   'scripts/check_dinx_package_repository.sh' \
+  'scripts/smoke_dinx_update.sh' \
+  'DINX_PACKAGE_SIGNING_KEY' \
+  'DINX_PACKAGE_SIGNING_FINGERPRINT' \
+  'set +x' \
+  'package_repository_publication=github-release-assets/v1' \
   'makepkg --clean --nodeps --nocheck --noconfirm' \
   '--sign --key' \
+  'pacman-key --init' \
   'SigLevel = Required'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
 done

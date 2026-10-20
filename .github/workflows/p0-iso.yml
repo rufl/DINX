@@ -332,8 +332,7 @@ jobs:
                 > "$package_repo/dinx-package-signing-key.gpg"
               chown -R dinxbuild:dinxbuild "$signing_home"
               pacman-key --add "$package_repo/dinx-package-signing-key.gpg"
-              gpg --batch --homedir "$signing_home" --export-secret-keys "$signing_key" \
-                | gpg --batch --homedir /etc/pacman.d/gnupg --import
+              pacman-key --init
               pacman-key --lsign-key "$signing_key"
 
               build_package() {

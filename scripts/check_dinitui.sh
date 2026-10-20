@@ -32,6 +32,8 @@ grep -Fq 'Exec=dinitui' "$desktop" || fail 'desktop launcher does not execute di
 grep -Fq 'Icon=org.dinx.DinitUI' "$desktop" || fail 'desktop launcher icon is missing'
 grep -Fq '    - dinitui' "$profile" || fail 'DINX profile does not install dinitui'
 grep -Fq 'build_package dinitui' "$workflow" || fail 'ISO workflow does not build dinitui'
+grep -Fq 'pacman -U --noconfirm "$package_repo"/dinitui-*.pkg.tar.zst' "$workflow" || fail 'workflow does not install the packaged DinitUI before qualification'
+grep -Fq 'DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh' "$workflow" || fail 'workflow does not qualify the packaged DinitUI binary'
 grep -Fq 'std.process.run' "$backend" || fail 'DinitUI does not use argv-safe process execution'
 grep -Fq 'service-file discovery failed' "$frontend" || fail 'service-file discovery errors are not surfaced'
 grep -Fq 'gtk_button_new_with_label("Refresh")' "$frontend" || fail 'refresh control lacks a visible accessible label'

@@ -362,7 +362,8 @@ jobs:
               build_package paru
               build_package shelly
               build_package dinitui
-              scripts/dinitui_dinit_qualification.sh
+              pacman -U --noconfirm "$package_repo"/dinitui-*.pkg.tar.zst
+              DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
               scripts/smoke_calamares_startup.sh
               build_package dinxpanel
               source /workspace/distro/packages/noctty/source.env

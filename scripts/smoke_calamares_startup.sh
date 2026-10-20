@@ -18,13 +18,20 @@ command -v xvfb-run >/dev/null 2>&1 || fail 'xvfb-run is not installed'
 
 work_dir=$(mktemp -d)
 trap 'rm -rf "$work_dir"' EXIT
-mkdir -p "$work_dir/home" "$work_dir/cache"
+qml_dir=$(find /usr -type d -path '*/calamares/qml' -print -quit 2>/dev/null)
+[[ -n "$qml_dir" ]] || fail 'Calamares QML directory is not installed'
+app_data="$work_dir/appdata"
+mkdir -p "$work_dir/home" "$work_dir/cache" "$app_data"
+ln -s "$config_dir/settings.conf" "$app_data/settings.conf"
+ln -s "$config_dir/branding" "$app_data/branding"
+ln -s "$config_dir/modules" "$app_data/modules"
+ln -s "$qml_dir" "$app_data/qml"
 
 set +e
 HOME="$work_dir/home" \
   XDG_CACHE_HOME="$work_dir/cache" \
   timeout --kill-after=5s "${timeout_seconds}s" \
-  xvfb-run -a calamares --debug --config "$config_dir" \
+  xvfb-run -a calamares --debug --config "$app_data" \
   >"$work_dir/calamares.log" 2>&1
 status=$?
 set -e

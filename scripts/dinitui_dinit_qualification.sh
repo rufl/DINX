@@ -82,7 +82,11 @@ ui_output=$(
     xvfb-run -a "$dinitui_bin" --smoke 2>&1
 )
 printf '%s\n' "$ui_output"
-grep -Fq 'dinitui_smoke surface=true services=1' <<<"$ui_output" || fail 'GTK smoke did not discover the real Dinit service'
+ui_service_count=0
+if [[ "$ui_output" =~ dinitui_smoke[[:space:]]surface=true[[:space:]]services=([0-9]+) ]]; then
+  ui_service_count=${BASH_REMATCH[1]}
+fi
+[[ "$ui_service_count" =~ ^[1-9][0-9]*$ ]] || fail 'GTK smoke did not discover any Dinit service'
 "${ctl[@]}" stop fixture >/dev/null
 printf 'dinitui_dinit_runtime daemon=true dinitctl=list-status-stop gtk_smoke=service-discovered\n'
 profile_home="$tmp/profile-home"

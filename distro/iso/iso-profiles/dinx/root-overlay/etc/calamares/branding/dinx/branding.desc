@@ -23,6 +23,10 @@ strings:
     knownIssuesUrl: "https://github.com/rufl/DINX/issues"
     releaseNotesUrl: ""
     donateUrl: ""
+images:
+    productIcon: "dinx.svg"
+    productLogo: "dinx.svg"
+    productWelcome: "dinx.svg"
 
 style:
     SidebarBackground: "#11151d"

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0b0d12"/>
+  <rect x="56" y="56" width="400" height="400" fill="none" stroke="#263249" stroke-width="8"/>
+  <text x="256" y="286" fill="#d7dde8" font-family="Cantarell, sans-serif" font-size="76" font-weight="600" letter-spacing="5" text-anchor="middle">DINX</text>
+  <rect x="112" y="336" width="288" height="8" fill="#8fb8ff"/>
+</svg>

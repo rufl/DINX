@@ -54,21 +54,39 @@ run_gamescope() {
 entered=0
 if dinitui --gaming-enter >/dev/null 2>&1; then
     entered=1
+else
+    status=$?
+    printf 'dinx-gaming: failed to enter Gaming profile\n' >&2
+    if dinitui --gaming-leave >/dev/null 2>&1; then
+        :
+    else
+        restore_status=$?
+        printf 'dinx-gaming: failed to restore the previous profile after Gaming entry failed (status %s)\n' "$restore_status" >&2
+    fi
+    exit "$status"
 fi
 
 restore_profile() {
     if [ "$entered" -eq 1 ]; then
-        dinitui --gaming-leave >/dev/null 2>&1 || true
-        entered=0
+        if dinitui --gaming-leave >/dev/null 2>&1; then
+            entered=0
+            return 0
+        else
+            restore_status=$?
+            printf 'dinx-gaming: failed to restore the previous profile (status %s)\n' "$restore_status" >&2
+            return "$restore_status"
+        fi
     fi
+    return 0
 }
 
-trap restore_profile EXIT INT TERM
-if run_gamescope; then
-    status=0
-else
-    status=$?
-fi
-restore_profile
+trap 'restore_profile' EXIT INT TERM
+run_status=0
+run_gamescope || run_status=$?
+restore_status=0
+restore_profile || restore_status=$?
 trap - EXIT INT TERM
-exit "$status"
+if [ "$restore_status" -ne 0 ]; then
+    exit "$restore_status"
+fi
+exit "$run_status"

@@ -24,6 +24,11 @@ grep -Fq 'DINX_GAMEMODE' "$session" || fail 'GameMode control is missing'
 grep -Fq 'DINX_MANGOHUD' "$session" || fail 'MangoHud control is missing'
 grep -Fq 'dinitui --gaming-enter' "$session" || fail 'Gaming launcher does not enter the transactional profile'
 grep -Fq 'dinitui --gaming-leave' "$session" || fail 'Gaming launcher does not restore the transactional profile'
+grep -Fq 'failed to enter Gaming profile' "$session" || fail 'Gaming entry failures are not surfaced'
+grep -Fq 'failed to restore the previous profile' "$session" || fail 'Gaming restoration failures are not surfaced'
+if grep -Fq 'dinitui --gaming-leave >/dev/null 2>&1 || true' "$session"; then
+  fail 'Gaming restoration failures are ignored'
+fi
 grep -Fq 'gamescope --backend drm --steam --fullscreen -- steam -tenfoot' "$session" || fail 'Gamescope Steam command is not the standalone session contract'
 if grep -Eq 'systemctl|/bin/sh -c|dbus-daemon' "$session"; then
   fail 'gaming launcher contains an init or shell indirection'

@@ -38,8 +38,28 @@ printf 'steam-fixture-started' > "$DINX_STEAM_MARKER"
 printf 'steam-fixture-exited' >> "$DINX_STEAM_MARKER"
 EOF
 chmod +x "$tmp/bin/gamescope" "$tmp/bin/gamemoderun" "$tmp/bin/steam"
+cat >"$tmp/bin/dinitui" <<'EOF'
+#!/bin/sh
+set -eu
+printf '%s\n' "$1" >> "$DINX_DINITUI_ARGS"
+case "$1" in
+  --gaming-enter)
+    [ "${DINX_DINITUI_FAIL_ENTER:-0}" = 0 ]
+    ;;
+  --gaming-leave)
+    [ "${DINX_DINITUI_FAIL_LEAVE:-0}" = 0 ]
+    ;;
+  *)
+    exit 64
+    ;;
+esac
+EOF
+chmod +x "$tmp/bin/dinitui"
 PATH="$tmp/bin:$PATH" \
   DINX_GAMEMODE=auto \
+  DINX_DINITUI_ARGS="$tmp/dinitui-args" \
+  DINX_DINITUI_FAIL_ENTER=0 \
+  DINX_DINITUI_FAIL_LEAVE=0 \
   DINX_GAMESCOPE_ARGS="$tmp/gamescope-args" \
   DINX_GAMEMODE_ARGS="$tmp/gamemode-args" \
   DINX_STEAM_ARGS="$tmp/steam-args" \
@@ -51,6 +71,45 @@ grep -Fqx -- 'gamescope --backend drm --steam --fullscreen -- steam -tenfoot' "$
 grep -Fqx -- '-tenfoot' "$tmp/steam-args" || fail 'launcher Steam argv is incorrect'
 grep -Fqx 'steam-fixture-startedsteam-fixture-exited' "$tmp/steam-marker" || fail 'launcher did not return after Steam exit'
 printf 'gaming_session_fixture launcher=start-exit gamescope_argv=true steam_argv=true\n'
+grep -Fqx -- '--gaming-enter' "$tmp/dinitui-args" || fail 'launcher did not enter the Gaming profile'
+grep -Fqx -- '--gaming-leave' "$tmp/dinitui-args" || fail 'launcher did not restore the previous profile'
+test "$(wc -l < "$tmp/dinitui-args")" -eq 2 || fail 'launcher dispatched DinitUI more than once per transition'
+printf 'gaming_profile_fixture enter=true leave=true\n'
+
+set +e
+PATH="$tmp/bin:$PATH" \
+  DINX_DINITUI_ARGS="$tmp/entry-failure-dinitui" \
+  DINX_DINITUI_FAIL_ENTER=1 \
+  DINX_DINITUI_FAIL_LEAVE=0 \
+  DINX_GAMESCOPE_ARGS="$tmp/entry-failure-gamescope" \
+  DINX_GAMEMODE_ARGS="$tmp/entry-failure-gamemode" \
+  DINX_STEAM_ARGS="$tmp/entry-failure-steam" \
+  DINX_STEAM_MARKER="$tmp/entry-failure-steam-marker" \
+  "$launcher" >"$tmp/entry-failure.log" 2>&1
+entry_status=$?
+set -e
+[[ "$entry_status" -ne 0 ]] || fail 'launcher continued after Gaming profile entry failed'
+[[ ! -e "$tmp/entry-failure-gamescope" ]] || fail 'launcher started Gamescope after Gaming profile entry failed'
+grep -Fq 'failed to enter Gaming profile' "$tmp/entry-failure.log" || fail 'entry failure was not reported'
+printf 'gaming_profile_failure entry=fail_closed=true gamescope=not_started=true\n'
+
+set +e
+PATH="$tmp/bin:$PATH" \
+  DINX_DINITUI_ARGS="$tmp/leave-failure-dinitui" \
+  DINX_DINITUI_FAIL_ENTER=0 \
+  DINX_DINITUI_FAIL_LEAVE=1 \
+  DINX_GAMESCOPE_ARGS="$tmp/leave-failure-gamescope" \
+  DINX_GAMEMODE_ARGS="$tmp/leave-failure-gamemode" \
+  DINX_STEAM_ARGS="$tmp/leave-failure-steam" \
+  DINX_STEAM_MARKER="$tmp/leave-failure-steam-marker" \
+  "$launcher" >"$tmp/leave-failure.log" 2>&1
+leave_status=$?
+set -e
+[[ "$leave_status" -ne 0 ]] || fail 'launcher hid Gaming profile restoration failure'
+grep -Fq -- '--gaming-enter' "$tmp/leave-failure-dinitui" || fail 'launcher did not enter Gaming profile before restoration test'
+grep -Fq -- '--gaming-leave' "$tmp/leave-failure-dinitui" || fail 'launcher did not attempt Gaming profile restoration'
+grep -Fq 'failed to restore the previous profile' "$tmp/leave-failure.log" || fail 'restoration failure was not reported'
+printf 'gaming_profile_failure leave=reported=true nonzero=true\n'
 
 rm -rf "$tmp"
 trap - EXIT

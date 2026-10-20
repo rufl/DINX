@@ -58,6 +58,8 @@ for action in start stop restart reload enable disable wake release unpin unload
   grep -Fq "\"$action\"" "$backend" || fail "Dinit action is missing: $action"
 done
 grep -Fq 'CONFIRM' "$backend" || fail 'shutdown confirmation guard is missing'
+grep -Fq 'stop", service, &.{ "stop", service })) failures += 1' "$profiles" || fail 'profile stop failures are not fatal'
+grep -Fq 'return self.apply("gaming");' "$profiles" || fail 'gaming recovery state is not preserved on apply failure'
 grep -Fq 'active-state=unchanged' "$profiles" || fail 'profile failure does not preserve active-state semantics'
 grep -Fq 'result=skipped reason=service-not-discovered' "$profiles" || fail 'profile skips are not reported'
 if grep -Eq 'catch \\{\\}' "$frontend" "$profiles"; then
@@ -70,5 +72,5 @@ grep -Fq 'GTK4 and libadwaita' "$readme" || fail 'toolkit decision is not docume
 grep -Fq 'argv-safe' "$readme" || fail 'privilege/input boundary is not documented'
 grep -Fq 'Performance profiles' "$readme" || fail 'profile behavior is not documented'
 grep -Fq 'dinitui_dinit_runtime' "$qualification" || fail 'real Dinit qualification script is missing its result marker'
-
+grep -Fq 'dinitui_profile_failure' "$qualification" || fail 'profile failure qualification is missing'
 printf 'dinitui_contract package=true profile_entry=true workflow_build=true argv_safe=true pkexec_fallback=true dinit_actions=true performance_profiles=true errors_surface=true profile_report=true ui_labels=true gpu_drivers=true noctalia_gaming=true\n'

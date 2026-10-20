@@ -85,3 +85,52 @@ printf '%s\n' "$ui_output"
 grep -Fq 'dinitui_smoke surface=true services=1' <<<"$ui_output" || fail 'GTK smoke did not discover the real Dinit service'
 "${ctl[@]}" stop fixture >/dev/null
 printf 'dinitui_dinit_runtime daemon=true dinitctl=list-status-stop gtk_smoke=service-discovered\n'
+profile_home="$tmp/profile-home"
+profile_bin="$tmp/profile-bin"
+profile_state="$tmp/profile-state"
+mkdir -p "$profile_home" "$profile_bin" "$profile_state"
+cat >"$profile_bin/dinitctl" <<'EOF'
+#!/bin/sh
+set -eu
+case "${2:-}" in
+  list)
+    printf '[+] bluetoothd\n'
+    ;;
+  stop)
+    printf 'stop failed\n' >&2
+    exit 1
+    ;;
+  start)
+    printf 'start failed\n' >&2
+    exit 1
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+EOF
+chmod +x "$profile_bin/dinitctl"
+
+set +e
+PATH="$profile_bin:$PATH" \
+  HOME="$profile_home" \
+  XDG_CONFIG_HOME="$tmp/profile-config" \
+  XDG_STATE_HOME="$profile_state" \
+  "$dinitui_bin" --apply-profile lite >"$tmp/profile-stop-output" 2>&1
+profile_stop_status=$?
+set -e
+[[ "$profile_stop_status" -ne 0 ]] || fail 'profile apply succeeded after a failed stop'
+[[ ! -e "$profile_state/dinx/dinitui/active-profile" ]] || fail 'profile apply persisted state after a failed stop'
+grep -Fq 'stop=bluetoothd result=failed' "$tmp/profile-stop-output" || fail 'profile stop failure was not reported'
+
+set +e
+PATH="$profile_bin:$PATH" \
+  HOME="$profile_home" \
+  XDG_CONFIG_HOME="$tmp/profile-config" \
+  XDG_STATE_HOME="$profile_state" \
+  "$dinitui_bin" --gaming-enter >"$tmp/profile-gaming-output" 2>&1
+profile_gaming_status=$?
+set -e
+[[ "$profile_gaming_status" -ne 0 ]] || fail 'gaming profile entry succeeded after a failed start'
+grep -Fqx 'normal' "$profile_state/dinx/dinitui/gaming-previous-profile" || fail 'gaming recovery profile was discarded after partial apply'
+printf 'dinitui_profile_failure stop=fatal=true active_state=unchanged=true gaming_recovery=retained=true\n'

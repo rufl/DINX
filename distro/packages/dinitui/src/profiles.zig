@@ -214,12 +214,7 @@ pub const Store = struct {
             return .{ .success = true, .output = try self.allocator.dupe(u8, "profile=gaming\nprevious=unchanged\n") };
         }
         try self.writeGamingPrevious(active);
-        const report = self.apply("gaming") catch |err| {
-            self.writeGamingPrevious("") catch return error.GamingStateCleanupFailed;
-            return err;
-        };
-        if (!report.success) self.writeGamingPrevious("") catch return error.GamingStateCleanupFailed;
-        return report;
+        return self.apply("gaming");
     }
 
     pub fn leaveGaming(self: *Store) !ApplyReport {
@@ -303,7 +298,6 @@ pub const Store = struct {
         var output: std.Io.Writer.Allocating = .init(self.allocator);
         errdefer output.deinit();
         var failures: usize = 0;
-        var warnings: usize = 0;
         try output.writer.print("profile={s}\n", .{name});
 
         var listed: ?dinit.CommandResult = null;
@@ -342,7 +336,7 @@ pub const Store = struct {
                 try output.writer.print("disable={s} result=skipped reason=service-not-discovered\n", .{service});
                 continue;
             }
-            if (!try self.runProfileCommand(&output.writer, "stop", service, &.{ "stop", service })) warnings += 1;
+            if (!try self.runProfileCommand(&output.writer, "stop", service, &.{ "stop", service })) failures += 1;
             if (!try self.runProfileCommand(&output.writer, "disable", service, &.{ "disable", service })) failures += 1;
         }
         for (profile.enable.items) |service| {
@@ -353,7 +347,6 @@ pub const Store = struct {
             if (!try self.runProfileCommand(&output.writer, "enable", service, &.{ "enable", service })) failures += 1;
             if (!try self.runProfileCommand(&output.writer, "start", service, &.{ "start", service })) failures += 1;
         }
-        if (warnings > 0) try output.writer.print("warnings={d}\n", .{warnings});
         if (failures == 0) {
             try self.writeActive(name);
         } else {

@@ -115,7 +115,7 @@ Gate de release P3:
 
 - sessão Wayland standalone `DINX Gaming` com `dbus-run-session`, backend DRM do Gamescope e Steam `-tenfoot`;
 - pacote de dispositivos Steam e entradas de payload Mesa/RADV/Vulkan de 32 bits;
-- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração transacional do perfil no launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel inspirada no YaST, com atalhos fixos para painéis de controle, ações de upgrade Shelly/Topgrade, descoberta opcional de fwupd e instalador de kernels Artix sem remoção;
+- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração do perfil com propagação de falhas ao redor do launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel inspirada no YaST, com atalhos fixos para painéis de controle, ações de upgrade Shelly/Topgrade, descoberta opcional de fwupd e instalador de kernels Artix sem remoção;
 - fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
 - checks de payload da ISO e contrato estático da entrada da sessão e dos binários.
 - GameMode e MangoHud estão no payload gaming; `dinx-gaming` suporta

@@ -164,7 +164,7 @@ jobs:
             --env DINX_PACKAGE_SIGNING_FINGERPRINT \
             --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING \
             artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
-            bash -ceu '
+            bash -ceu "$(cat <<'DINX_CONTAINER_SCRIPT'
               set -euxo pipefail
               pacman_retry() {
                 local attempt
@@ -473,7 +473,8 @@ jobs:
                 printf "[all-artix-packages]\n"
                 pacman -Q
               } > "$metadata_path"
-            '
+          DINX_CONTAINER_SCRIPT
+            )"
           sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/dist/iso" "$GITHUB_WORKSPACE/dist/packages"
 
       - name: Generate checksum and locate ISO

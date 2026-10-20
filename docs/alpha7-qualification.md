@@ -72,6 +72,35 @@ Reports default to `$XDG_STATE_HOME/dinx/alpha7/` or
 local directory. The utility does not install packages, change profiles, change
 GPU settings, or contact the network.
 
+For a release-qualified report, provide the immutable build context and record
+each manual result only after running the corresponding test:
+
+```bash
+export DINX_ALPHA7_MACHINE_ROLE=desktop   # desktop, laptop or bc250
+export DINX_ALPHA7_FIRMWARE_MODE=uefi    # bios or uefi
+export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.8
+export DINX_ALPHA7_BUILD_COMMIT=0123456789012345678901234567890123456789
+export DINX_ALPHA7_PACKAGE_REPOSITORY_SNAPSHOT=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+for result in \
+  REAL_DRM_SESSION STEAM_AUTHENTICATION COMMERCIAL_GAME_LAUNCH \
+  CONTROLLER_INPUT PIPEWIRE_GAME_AUDIO SUSPEND_RESUME \
+  PHYSICAL_BRIGHTNESS GPU_RECOVERY UPDATE_PATH; do
+  export "DINX_ALPHA7_RESULT_${result}=pass"
+done
+dinx-alpha7-hardware-report
+report_path=$(find "${DINX_ALPHA7_REPORT_DIR:-$HOME/.local/state/dinx/alpha7}" \
+  -type f -name 'alpha7-hardware-*.txt' -print | sort | awk 'END { print }')
+build_metadata_path="$HOME/Downloads/dinx-build-metadata.txt"
+scripts/check_dinx_hardware_evidence.sh "$report_path" "$build_metadata_path"
+```
+
+The validator requires the role, firmware mode, release tag, build commit,
+package snapshot and every result to be present and `pass`. When the downloaded
+release build metadata is supplied, it also verifies the report commit and package
+snapshot against that file. Use `fail` or `blocked` for unsuccessful tests; do not
+mark an observation manually as passed. `filesystem_rollback=unsupported` is
+retained in every report.
+
 ## Evidence boundary
 
 CI and QEMU do not prove real DRM ownership, authenticated Steam, commercial

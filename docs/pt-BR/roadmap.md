@@ -12,7 +12,11 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 **Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
 
-**Status:** o gate da fundação ISO/VM está concluído. Instalação em hardware, comportamento UEFI/BIOS físico, atualizações, rollback e saúde de serviços em hardware por longo prazo continuam gates de release; os caminhos BIOS e UEFI descartáveis do CI estão verdes.
+**Status:** o gate da fundação ISO/VM está concluído. A publicação do repositório
+pacman customizado assinado e a qualificação de instalação/atualização/downgrade de
+pacotes estão implementadas no CI; configuração da chave de produção, hardware físico,
+atualizações da ISO instalada, rollback do filesystem e saúde de serviços em hardware
+por longo prazo continuam gates de release.
 
 Backlog:
 
@@ -23,7 +27,7 @@ Backlog:
 - manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
 - adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
 
-**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis; instalação em hardware, atualizações e rollback continuam sendo gates de release.
+**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis e o caminho transacional de pacotes assinados; atualizações da ISO instalada, rollback do filesystem e preservação de dados continuam gates de release.
 
 ## P1 — alpha pública 0.1
 
@@ -36,12 +40,12 @@ Concluído:
 - publicação da ISO/partes, checksums, instruções de instalação, problemas conhecidos e metadados de release;
 - qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em discos BIOS e UEFI descartáveis;
 - fornecimento do terminal mínimo de fallback e da configuração funcional de shell;
-- registro explícito da limitação de assinatura de pacotes, do limite de hardware e das limitações de recuperação na documentação do release.
+- registro explícito do pré-requisito da chave de produção, do limite de hardware e das limitações de recuperação na documentação do release;
 
 Gates de release adiados:
 
-- chave de assinatura do repositório pacman e banco de pacotes assinado;
-- relatórios de hardware físico e qualificação além da VM.
+- configurar os segredos de produção `DINX_PACKAGE_SIGNING_KEY` e `DINX_PACKAGE_SIGNING_FINGERPRINT` e publicar o primeiro repositório estável de pacotes;
+- relatórios de hardware físico e qualificação além da VM;
 
 **Critério de saída:** atendido. Uma pessoa convidada consegue instalar o snapshot alpha pelo release público e pela documentação sem reconstruir o ambiente de desenvolvimento.
 
@@ -62,7 +66,7 @@ Limites mantidos depois da P2:
 - o slot do Codex usa um fixture local por default; nenhuma qualificação de Codex autenticado ou rede é alegada;
 - Zellij usa um shim determinístico, enquanto tmux é exercitado como aplicativo instalado;
 - o comando `info` instalado é tentado primeiro, mas uma superfície mínima/não-TTY pode usar o fallback estilizado;
-- assinatura pacman, hardware físico, UEFI, atualizações, rollback e saúde de serviços em produção por longo prazo continuam gates posteriores de release.
+- configuração da chave de produção, atualizações da ISO instalada, rollback do filesystem, hardware físico e saúde de serviços em produção por longo prazo continuam gates posteriores de release.
 
 Abas, painéis, transparência e detecção de URLs vêm depois da semântica central do terminal.
 

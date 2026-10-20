@@ -4,7 +4,7 @@
 
 ## Estado atual da alpha
 
-A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações, rollback ou preservação de dados.
+A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações da ISO instalada, rollback do filesystem ou preservação de dados.
 O projeto está atualmente na **P5 — Beta de jogos**. A última validação P0 aprovada é a [execução 39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), no commit `5def1fa`; ela compilou e inicializou a ISO, validou o payload gráfico, passou o smoke transacional dos layouts suportados pelo Calamares para BIOS, UEFI e subvolumes Btrfs existentes, concluiu o smoke de instalação persistente/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificou os metadados de build e publicou um artefato do workflow com atestação. O prerelease público é a [v0.1.0-alpha.7](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.7), publicado a partir do commit da tag `2d75c88`. A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
 
 O KDE Partition Manager também está disponível como particionador gráfico independente. Use-o somente para inspecionar ou preparar um disco antes de abrir o Calamares e confirme o dispositivo nas duas aplicações.
@@ -208,13 +208,15 @@ instalado.
 ### Ainda não suportado para produção
 
 - o instalador persistente é experimental. O CI qualifica discos BIOS e UEFI efêmeros; hardware UEFI/BIOS real ainda exige relatório de hardware e revisão do risco de apagar o dispositivo.
-- não existe procedimento de atualização ou rollback;
+- não existe procedimento de atualização da ISO instalada ou rollback do filesystem;
 - a imagem atual não é um release de desktop ou jogos para produção;
 - não particione nem formate um disco interno baseando-se apenas neste guia.
 
-Para instalação de produção, aguarde um release com chave de assinatura do repositório
-pacman, suporte de hardware, recuperação e atualização. O caminho selecionado e os gates
-restantes estão registrados na [decisão de arquitetura](architecture.md).
+Para instalação de produção, aguarde um release com suporte de hardware físico,
+recuperação do filesystem e procedimento de atualização da ISO instalada. Releases alpha
+publicados podem fornecer um repositório pacman DINX assinado e um caminho de transação
+de pacotes, mas isso não torna o instalador ou a recuperação do filesystem prontos para
+produção. O caminho selecionado e os gates restantes estão registrados na [decisão de arquitetura](architecture.md).
 
 ## Solução de problemas
 

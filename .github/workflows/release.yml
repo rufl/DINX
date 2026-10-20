@@ -18,6 +18,9 @@ jobs:
       contents: read
       id-token: write
       attestations: write
+    with:
+      require_persistent_package_signing: true
+    secrets: inherit
 
   publish:
     name: Publish DINX alpha release
@@ -55,6 +58,10 @@ jobs:
             | sha256sum --check --status -
           tar -xJf "$RUNNER_TEMP/$zig_archive" --directory "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
+      - name: Install repository preflight tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gnupg libarchive-tools
 
       - name: Assemble release assets
         env:
@@ -73,6 +80,30 @@ jobs:
           iso_sha512=$(sha512sum "$input_iso" | cut -d ' ' -f 1)
           printf '%s  %s\n' "$iso_sha512" "$iso_name" > "dist/release/$iso_name.sha512"
           release_base_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}"
+          input_repository_db=$(find dist/release-input -type f -name 'dinx.db.tar.gz' -print -quit)
+          test -n "$input_repository_db"
+          input_repository_dir=$(dirname "$input_repository_db")
+          repository_dir=dist/release/repository
+          repository_asset_manifest=dist/release/repository-assets.list
+          mkdir -p "$repository_dir"
+          repository_assets=()
+          : > "$repository_asset_manifest"
+          while IFS= read -r -d '' source_asset; do
+            asset_name=$(basename "$source_asset")
+            cp -- "$source_asset" "$repository_dir/$asset_name"
+            release_asset="dist/release/$asset_name"
+            cp -- "$source_asset" "$release_asset"
+            repository_assets+=("$release_asset")
+            printf '%s\n' "$release_asset" >> "$repository_asset_manifest"
+          done < <(find "$input_repository_dir" -maxdepth 1 -type f -print0 | sort -z)
+          (( ${#repository_assets[@]} > 0 ))
+          scripts/check_dinx_release_preflight.sh \
+            "$input_metadata" "$repository_dir" "$RELEASE_TAG" "$release_base_url"
+          repository_snapshot=$(awk -F= '$1 == "snapshot" { print $2; exit }' \
+            "$repository_dir/dinx-repository-metadata.txt")
+          repository_fingerprint=$(awk -F= '$1 == "signing_fingerprint" { print $2; exit }' \
+            "$repository_dir/dinx-repository-metadata.txt")
+          rm -rf "$repository_dir"
           iso_size=$(wc -c < "$input_iso")
           iso_parts_manifest=""
           iso_source_metadata=""
@@ -155,6 +186,9 @@ jobs:
             "dist/release/$build_metadata_name"
             "dist/release/$manifest_name"
           )
+          for repository_asset in "${repository_assets[@]}"; do
+            checksum_targets+=("$repository_asset")
+          done
           if [[ -n "$iso_parts_manifest" ]]; then
             checksum_targets+=("$iso_parts_manifest")
             while IFS= read -r -d '' part; do
@@ -176,6 +210,35 @@ jobs:
           - The persistent-install smoke copied the Calamares rootfs contract to disposable BIOS and UEFI disks, booted dinit and captured a recovery TTY frame.
           - GitHub artifact attestations cover the ISO or its parts, checksums, Windows package and release metadata. Verify with \`gh attestation verify <file> -R rufl/DINX\`.
           - \`${build_metadata_name}\` records the source commit, builder image, package snapshot and ISO digest.
+          ## Signed DINX pacman repository
+
+          The release publishes the custom DINX packages at \`${release_base_url}\`.
+          Artix repositories remain configured separately. The repository snapshot is
+          \`${repository_snapshot}\`; its signing fingerprint is
+          \`${repository_fingerprint}\`.
+
+          Install the public key before enabling the repository:
+
+          \`\`\`bash
+          curl --fail --location \
+            '${release_base_url}/dinx-package-signing-key.gpg' \
+            --output /tmp/dinx-package-signing-key.gpg
+          pacman-key --add /tmp/dinx-package-signing-key.gpg
+          pacman-key --lsign-key ${repository_fingerprint}
+          \`\`\`
+
+          Add this block to \`/etc/pacman.conf\`:
+
+          \`\`\`ini
+          [dinx]
+          SigLevel = Required
+          Server = ${release_base_url}
+          \`\`\`
+
+          Refresh and update with \`pacman -Syu\`. CI verifies a signed install,
+          update and package downgrade transaction using the same pacman signature
+          requirements. A full installed-ISO upgrade, filesystem rollback and
+          physical recovery procedure remain unsupported.
 
           ## ISO delivery
 
@@ -196,8 +259,8 @@ jobs:
 
           This release includes the experimental offline Calamares installer and KDE Partition Manager.
           The installer contract is qualified in CI on disposable BIOS and UEFI disks, but physical hardware
-          installation, upgrades, rollback and data preservation remain unsupported; verify the target device
-          and read the installation guide before using either destructive tool.
+          installation, installed-ISO upgrades, filesystem rollback and data preservation remain unsupported;
+          verify the target device and read the installation guide before using either destructive tool.
           The live account is \`dinx\` / \`dinx\`; it is disposable and must never be reused.
           EOF
       - name: Attest release provenance
@@ -213,6 +276,11 @@ jobs:
             dist/release/*deployment-manifest.json
             dist/release/SHA256SUMS
             dist/release/*-build-metadata.txt
+            dist/release/*.pkg.tar.*
+            dist/release/dinx.db*
+            dist/release/dinx.files*
+            dist/release/dinx-package-signing-key.gpg
+            dist/release/dinx-repository-metadata.txt
 
       - name: Publish GitHub release
         env:
@@ -229,6 +297,10 @@ jobs:
           while IFS= read -r -d '' source_asset; do
             release_assets+=("$source_asset")
           done < <(find dist/release -maxdepth 1 -type f -name "dinx-${version}-x86_64.iso*" -print0 | sort -z)
+          while IFS= read -r source_asset; do
+            [[ -n "$source_asset" ]] || continue
+            release_assets+=("$source_asset")
+          done < dist/release/repository-assets.list
           release_assets+=(
             "dist/release/dinx-${version}-dogfood.1-windows-x86_64.zip"
             "dist/release/dinx-${version}-dogfood.1-windows-x86_64.json"

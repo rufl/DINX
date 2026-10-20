@@ -14,13 +14,15 @@ Os pontos de entrada são:
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
 - `scripts/check_build_metadata.sh` — valida a procedência do builder, o snapshot de pacotes, os hashes da configuração pacman do builder, os checksums das fontes e o digest da ISO emitidos pelo build remoto;
 - `scripts/check_dinx_package_repository.sh` — verifica metadados do snapshot do repositório, assinaturas dos pacotes/banco, fingerprint da chave e caminhos duplicados nos archives;
+- `scripts/smoke_dinx_update.sh` — transação real assinada de instalação/atualização/downgrade pacman contra raízes descartáveis;
+- `scripts/check_dinx_release_preflight.sh` — preflight do canal stable, da chave persistente e dos assets do release GitHub;
 - `scripts/check_dinx_package_provenance.sh` — exige checksums fixados ou contratos locais/staged explícitos para cada PKGBUILD DINX;
 - `scripts/check_dinx_feature_groups.sh` — valida o manifesto de grupos inspirado no Mocaccino contra o perfil Artix;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_desktop_packages.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos do Firefox, aplicativo fixado, gerenciamento de pacotes, scanner/firmware/Flatpak/editor de imagens, firewall, hardware e BC250 Control Center;
 - `scripts/check_dinitui.sh` — contrato do pacote DinitUI, ações, limite de privilégios, perfis de serviços e integração Noctalia Gaming;
 - `scripts/check_dinxpanel.sh` — contrato do centro de controle DINXPanel, ponte fixa de GPU e instalador seguro de kernels;
 - `scripts/check_gaming.sh` — contrato da sessão standalone Gamescope/Steam, gráficos de 32 bits e payload da ISO;
-- `scripts/check_alpha7_hardware_report.sh` — contrato do schema do relatório de hardware Alpha 7, detecção do BC250 e limites manuais;
+- `scripts/check_alpha7_hardware_report.sh` e `scripts/check_dinx_hardware_evidence.sh` — schema do relatório Alpha 7, detecção BC250, limites manuais e validação da evidência de release;
 - `docs/pt-BR/alpha7-qualification.md` — matriz de evidências Alpha 7 para três máquinas e limite da qualificação manual;
 - `scripts/check_dinx_budget.sh` e `scripts/measure_dinx_session.sh` — tetos de payload/inicialização/binários nativos/janela de boot/ISO e observação de RSS/CPU em runtime;
 - `scripts/gaming_p5_qualification.sh` — qualificação do retorno da sessão por fixture, limpeza do grupo de processos/restauração do perfil durante sinais e launch/exit real headless do Gamescope;

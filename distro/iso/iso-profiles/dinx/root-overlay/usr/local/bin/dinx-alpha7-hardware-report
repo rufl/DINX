@@ -18,6 +18,12 @@ printf 'session_desktop=%s\n' "${XDG_SESSION_DESKTOP:-unknown}"
 printf 'wayland_display=%s\n' "${WAYLAND_DISPLAY:-absent}"
 printf 'display=%s\n' "${DISPLAY:-absent}"
 printf 'kernel='; uname -srvm 2>/dev/null || printf 'unknown\n'
+printf '\n[qualification-context]\n'
+printf 'machine_role=%s\n' "${DINX_ALPHA7_MACHINE_ROLE:-unspecified}"
+printf 'firmware_mode=%s\n' "${DINX_ALPHA7_FIRMWARE_MODE:-unknown}"
+printf 'release_tag=%s\n' "${DINX_ALPHA7_RELEASE_TAG:-unknown}"
+printf 'build_commit=%s\n' "${DINX_ALPHA7_BUILD_COMMIT:-unknown}"
+printf 'package_repository_snapshot=%s\n' "${DINX_ALPHA7_PACKAGE_REPOSITORY_SNAPSHOT:-unknown}"
 
 run_optional() {
     local label="$1"
@@ -97,4 +103,24 @@ printf 'suspend_resume=manual\n'
 printf 'physical_brightness=manual\n'
 printf 'gpu_recovery=manual\n'
 printf 'update_path=manual\n'
+manual_result() {
+    local field="$1"
+    local variable="$2"
+    local value="${!variable:-unrecorded}"
+    case "$value" in
+        pass|fail|blocked|unrecorded) ;;
+        *) value=invalid ;;
+    esac
+    printf '%s=%s\n' "$field" "$value"
+}
+manual_result result_real_drm_session DINX_ALPHA7_RESULT_REAL_DRM_SESSION
+manual_result result_steam_authentication DINX_ALPHA7_RESULT_STEAM_AUTHENTICATION
+manual_result result_commercial_game_launch DINX_ALPHA7_RESULT_COMMERCIAL_GAME_LAUNCH
+manual_result result_controller_input DINX_ALPHA7_RESULT_CONTROLLER_INPUT
+manual_result result_pipewire_game_audio DINX_ALPHA7_RESULT_PIPEWIRE_GAME_AUDIO
+manual_result result_suspend_resume DINX_ALPHA7_RESULT_SUSPEND_RESUME
+manual_result result_physical_brightness DINX_ALPHA7_RESULT_PHYSICAL_BRIGHTNESS
+manual_result result_gpu_recovery DINX_ALPHA7_RESULT_GPU_RECOVERY
+manual_result result_update_path DINX_ALPHA7_RESULT_UPDATE_PATH
+printf 'filesystem_rollback=unsupported\n'
 printf 'report_complete=true\n'

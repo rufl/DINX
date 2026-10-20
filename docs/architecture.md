@@ -112,17 +112,17 @@ Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` sta
 
 **KDE Partition Manager** is the standalone graphical disk tool offered beside Calamares. It shares the Qt/kpmcore stack already used by Calamares and runs as a native Wayland application in the DINX session. It is intended for disk inspection and preparation before installation, not as a replacement for the installer's final mount-point selection.
 
-The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. The profile also ships `ntfs-3g`/`os-prober`, preserves an existing Windows ESP/NTFS layout, and enables a separate DINX EFI boot directory. CI qualifies disposable BIOS/UEFI, Btrfs-existing-subvolume and Windows side-by-side/manual transaction smokes; the overall path remains experimental until destructive-device safeguards, physical hardware installation and upgrade/rollback behavior are qualified.
+The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. The profile also ships `ntfs-3g`/`os-prober`, preserves an existing Windows ESP/NTFS layout, and enables a separate DINX EFI boot directory. CI qualifies disposable BIOS/UEFI, Btrfs-existing-subvolume and Windows side-by-side/manual transaction smokes; the overall path remains experimental until destructive-device safeguards, physical hardware installation, installed-ISO upgrades and filesystem recovery are qualified.
 
 ## Decisions still required before a production release
 
-The installer path is selected, but these decisions remain open before a persistent production release:
+The installer path and package-repository layout are selected, but these decisions
+remain open before a persistent production release:
 
-- Wayland UI toolkit and backend for remaining first-party applications; DinitUI selects GTK4/libadwaita with the native GTK Wayland backend;
-- package repository layout and signing-key ownership;
+- production package-signing-key ownership and GitHub secret provisioning;
 - supported GPU and hardware matrix;
 - repository and artifact license policy.
 
-The ISO profile now has a checked-in feature-group manifest for foundation, desktop, gaming, hardware and optional packages. CI signs the temporary custom pacman repository with an ephemeral qualification key and records its content snapshot; production key ownership, signed repository publication and installed-system update/recovery remain separate release gates.
+The ISO profile now has a checked-in feature-group manifest for foundation, desktop, gaming, hardware and optional packages. CI signs the custom pacman repository, records its content snapshot and qualifies signed install/update/downgrade transactions. Tagged publication still requires the production key secret; installed-system upgrades, filesystem recovery and physical hardware remain separate release gates.
 
-The P2 terminal core is selected for the alpha package; production release still requires the broader hardware, signing and redistribution gates.
+The P2 terminal core is selected for the alpha package; production release still requires the broader hardware, key-provisioning and redistribution gates.

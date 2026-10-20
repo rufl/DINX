@@ -18,6 +18,9 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 ## Current validated snapshot
 
 The latest successful P0 workflow is [run 39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), on commit `5def1fa` (`5def1fac50bea5380cbdb49e78506edf45525726`). It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, the Calamares partition contract and BIOS/UEFI/Btrfs transaction smoke, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-5def1fac50bea5380cbdb49e78506edf45525726`, 2,751,063,420 bytes, digest `sha256:9aaced5d96f3a650c35d1d001c928ad585addc3f3eaecf513fef722ab5ff8641`; it remains a validation artifact, not a stable hardware release.
+That run predates the persistent release-repository and hardware-evidence changes
+below. Do not use it as evidence that a tagged release repository or physical
+hardware matrix has passed; refresh this section after a new remote workflow run.
 
 ## Published assets
 
@@ -28,7 +31,55 @@ Each alpha release contains:
 - Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
 - the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`;
-- `dinx-<version>-build-metadata.txt` — builder image, source commit, package snapshot, source checksums and ISO digest.
+- `dinx-<version>-build-metadata.txt` — builder image, source commit, package snapshot, source checksums and ISO digest;
+- signed DINX pacman repository assets: `dinx.db`, `dinx.db.tar.gz`, their
+  signatures, `dinx-package-signing-key.gpg`, `dinx-repository-metadata.txt` and
+  the custom `*.pkg.tar.zst` archives with detached signatures;
+
+## Signed package repository
+
+Tagged releases require the GitHub Actions secret `DINX_PACKAGE_SIGNING_KEY`
+containing the unencrypted armored production private key. The workflow fails
+before package publication when the secret is absent; the non-tag P0 workflow
+continues to use an ephemeral CI key and a `ci` channel.
+
+Provision the secrets from a trusted release operator machine; never commit the
+private key or place it in an artifact:
+
+```bash
+fingerprint='<40-hex production fingerprint>'
+gpg --armor --export-secret-keys "$fingerprint" > /tmp/dinx-package-signing-key.asc
+gh secret set DINX_PACKAGE_SIGNING_KEY --repo rufl/DINX < /tmp/dinx-package-signing-key.asc
+gh secret set DINX_PACKAGE_SIGNING_FINGERPRINT --repo rufl/DINX --body "$fingerprint"
+shred -u /tmp/dinx-package-signing-key.asc
+```
+
+The key must be usable non-interactively by `makepkg --sign`; keep the offline
+master-key backup separately and rotate deliberately because the fingerprint is
+recorded in every repository snapshot and release metadata.
+
+The release repository is a static pacman repository hosted by GitHub release
+assets. It contains DINX custom packages only; Artix repositories remain
+separate. Install the public key and configure the release URL:
+
+```bash
+release_url='https://github.com/rufl/DINX/releases/download/v<version>'
+curl --fail --location "$release_url/dinx-package-signing-key.gpg" \
+  --output /tmp/dinx-package-signing-key.gpg
+pacman-key --add /tmp/dinx-package-signing-key.gpg
+pacman-key --lsign-key <signing-fingerprint>
+```
+
+```ini
+[dinx]
+SigLevel = Required
+Server = https://github.com/rufl/DINX/releases/download/v<version>
+```
+
+Run `pacman -Syu` after refreshing the databases. The P0 workflow performs a
+real signed install, update and package downgrade transaction with the pacman
+repository contract. That qualifies package transactions, not a full installed
+ISO upgrade, filesystem rollback or physical recovery procedure.
 
 When the ISO is split, concatenate the parts in lexical order and verify the full image:
 
@@ -155,12 +206,18 @@ qualification fails explicitly instead of silently substituting another renderer
 Before tagging the next alpha, the tag commit must pass the current local P0 workflow, including the lock/idle/brightness contracts, budget checks and the Calamares partitioning contract. The resulting ISO must pass SquashFS content validation, the 90-second QEMU boot/capture path, the disposable Calamares installation and recovery-TTY smoke, the BIOS/UEFI/Btrfs transaction smoke with pre-existing subvolumes, the Windows side-by-side NTFS-shrink and manual-layout smoke with preserved ESP/Microsoft boot data, checksum generation, artifact attestation and release-asset assembly.
 The automated gate also runs real DinitUI daemon/GTK qualification and a bounded Calamares startup smoke under Xvfb. These complement the partition and offline-rootfs transaction smokes; `scripts/smoke-install.sh` remains a rootfs/install-contract test and does not claim a complete Calamares UI installation.
 
-The P0 builder now signs the temporary custom pacman repository and records its content snapshot, database checksum and signing fingerprint in build metadata. This is CI qualification evidence only; it does not satisfy the production repository-key, update or recovery gate below.
+The P0 builder signs the custom pacman repository and records its content snapshot,
+database checksum, public-key checksum and signing fingerprint in build metadata.
+Non-tag builds use the ephemeral `ci` key. Tagged release builds require the
+production key secret and publish the `stable` repository assets described above.
 
 The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
 
 Update the run ID, commit, artifact size/digest and release links in the English and Portuguese status documents only after the new workflow is green. P5 gaming claims remain separate until DRM display, Steam/game, controller/audio, return-to-greeter and physical suspend/GPU tests pass.
-Before publishing, either provide a signed pacman repository/database with a documented update and recovery path, or keep the validation-only no-upgrade/no-rollback limit explicit. WIZP and optional CUPS remain outside ISO payload claims until their external artifact or live package transaction is qualified end to end.
+The tagged release path now has a documented signed package update and package
+downgrade path. It does not claim an installed-ISO upgrade, filesystem rollback or
+physical recovery procedure. WIZP and optional CUPS remain outside ISO payload claims
+until their external artifact or live package transaction is qualified end to end.
 
 Use [Alpha 7 qualification](alpha7-qualification.md) for the three-machine
 desktop/laptop/BC-250 matrix. The generated ISO includes
@@ -171,10 +228,12 @@ hardware/session evidence without changing system state.
 
 - The live account is `dinx` / `dinx`; it is public, disposable and must never be
   reused.
-- The image is still an experimental disk installer with no upgrade, rollback or
-  signed Secure Boot path. CI qualifies the offline rootfs contract on disposable
-  BIOS and UEFI disks and captures a recovery-TTY frame; it does not qualify arbitrary hardware.
-- Release files have GitHub artifact attestations, but the image does not yet ship a
-  pacman repository signing key or signed package database for installed-system updates.
+- The image is still an experimental disk installer without an installed-ISO upgrade,
+  filesystem rollback or signed Secure Boot path. CI qualifies the offline rootfs
+  contract on disposable BIOS and UEFI disks and captures a recovery-TTY frame; it
+  does not qualify arbitrary hardware.
+- Release files include GitHub artifact attestations and, after the production key
+  secret is configured, a signed DINX pacman database and public signing key. This
+  qualifies package transactions, not the installed system's full lifecycle.
 - The Windows QEMU test is an external receiver qualification. Its success does not
   turn the alpha image into a supported hardware release.

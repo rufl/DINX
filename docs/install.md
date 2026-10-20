@@ -4,7 +4,7 @@
 
 ## Current alpha status
 
-The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, upgrades, rollback or data preservation.
+The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, installed-ISO upgrades, filesystem rollback or data preservation.
 The project is currently in **P5 — Gaming beta**. The latest successful P0 validation is [run 39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), on commit `5def1fa`; it built and booted the ISO, validated the graphical payload, passed the Calamares supported-layout transaction smoke for BIOS, UEFI and existing Btrfs subvolumes, completed the disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, verified build metadata and published an attested workflow artifact. The public prerelease is [v0.1.0-alpha.7](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.7), published from tag commit `2d75c88`. P4 DinitUI is release-qualified for the alpha gate; P5 still has real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries.
 
 KDE Partition Manager is also available as a standalone graphical disk tool. Use it only to inspect or prepare a disk before opening Calamares, and verify the target device in both applications.
@@ -210,13 +210,15 @@ installed.
 ### Not production-supported yet
 
 - The persistent installer is experimental. CI qualifies ephemeral BIOS and UEFI disks; real UEFI/BIOS hardware still requires a hardware report and destructive-device review.
-- There is no upgrade or rollback procedure.
+- There is no installed-ISO upgrade or filesystem rollback procedure.
 - The current image is not a production desktop or gaming release.
 - Do not repartition or format an internal disk based only on this guide.
 
-For production installation, wait for a release with a pacman repository signing key,
-hardware support, recovery and upgrade procedures. The selected installer path and
-remaining gates are tracked in the [architecture decision](architecture.md).
+For production installation, wait for a release with physical hardware support,
+filesystem recovery and an installed-ISO upgrade procedure. Published alpha releases
+may expose a signed DINX pacman repository and package transaction path, but that
+does not make the installer or filesystem recovery production-ready. The selected
+installer path and remaining gates are tracked in the [architecture decision](architecture.md).
 
 ## Troubleshooting
 

@@ -40,6 +40,9 @@ require_value channel '^(ci|testing|stable)$'
 require_value snapshot '^[0-9a-f]{64}$'
 require_value signing_fingerprint '^[A-Fa-f0-9]{40}$'
 require_value package_count '^[1-9][0-9]*$'
+require_value publication '^github-release-assets/v1$'
+require_value database_sha256 '^[0-9a-f]{64}$'
+require_value key_sha256 '^[0-9a-f]{64}$'
 
 mapfile -d '' packages < <(
   find "$repo_dir" -maxdepth 1 -type f -name '*.pkg.tar.*' ! -name '*.sig' -print0 | sort -z
@@ -57,6 +60,12 @@ package_snapshot=$(
   done | LC_ALL=C sort | sha256sum | cut -d ' ' -f 1
 )
 [[ "$package_snapshot" == "$(read_value snapshot)" ]] || fail 'repository package snapshot does not match metadata'
+actual_database_sha256=$(sha256sum "$database" | cut -d ' ' -f 1)
+actual_key_sha256=$(sha256sum "$key_file" | cut -d ' ' -f 1)
+[[ "$actual_database_sha256" == "$(read_value database_sha256)" ]] \
+  || fail 'repository database checksum does not match metadata'
+[[ "$actual_key_sha256" == "$(read_value key_sha256)" ]] \
+  || fail 'repository key checksum does not match metadata'
 
 fingerprint=$(tr '[:lower:]' '[:upper:]' <<<"$(read_value signing_fingerprint)")
 gpg_home=$(mktemp -d)
@@ -132,5 +141,6 @@ else
   ownership_state=archive_verified
 fi
 
-printf 'package_repository_contract schema=dinx-package-repository/v1 channel=%s packages=%s signed=true conflicts=false snapshot=%s ownership=%s\n' \
-  "$(read_value channel)" "$actual_count" "$package_snapshot" "$ownership_state"
+printf 'package_repository_contract schema=dinx-package-repository/v1 channel=%s publication=%s packages=%s signed=true conflicts=false snapshot=%s database_sha256=%s key_sha256=%s ownership=%s\n' \
+  "$(read_value channel)" "$(read_value publication)" "$actual_count" "$package_snapshot" \
+  "$actual_database_sha256" "$actual_key_sha256" "$ownership_state"

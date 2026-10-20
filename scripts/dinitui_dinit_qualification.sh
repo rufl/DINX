@@ -69,7 +69,6 @@ list_output=$("${ctl[@]}" list)
 grep -Fq 'fixture' <<<"$list_output" || fail 'real dinitctl list omitted fixture'
 status_output=$("${ctl[@]}" status fixture)
 grep -Fq 'STARTED' <<<"$status_output" || fail 'real dinitctl status did not report STARTED'
-
 ui_output=$(
   PATH="$tmp/bin:$PATH" \
     DINIT_REAL="$dinitctl_bin" \

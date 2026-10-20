@@ -19,6 +19,9 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 ## Snapshot validado atual
 
 O workflow P0 mais recente aprovado é a [execução 39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), no commit `5def1fa` (`5def1fac50bea5380cbdb49e78506edf45525726`). Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, o contrato de particionamento e o smoke transacional BIOS/UEFI/Btrfs do Calamares, o smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-5def1fac50bea5380cbdb49e78506edf45525726`, com 2.751.063.420 bytes e digest `sha256:9aaced5d96f3a650c35d1d001c928ad585addc3f3eaecf513fef722ab5ff8641`; ele continua sendo um artefato de validação, não um release estável de hardware.
+Essa execução é anterior às mudanças de repositório persistente e evidência de
+hardware abaixo. Não a use como prova de que o repositório de uma tag ou a matriz
+de hardware físico passou; atualize esta seção depois de uma nova execução remota.
 
 ## Artefatos publicados
 
@@ -29,7 +32,55 @@ Cada release alpha contém:
 - capturas PPM do menu de boot, gráficas e pós-entrada do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;
 - metadados do pacote Windows, manifesto de deploy ZTASH e `SHA256SUMS`;
-- `dinx-<versão>-build-metadata.txt` — imagem do builder, commit da fonte, snapshot de pacotes, checksums das fontes e digest da ISO.
+- `dinx-<versão>-build-metadata.txt` — imagem do builder, commit da fonte, snapshot de pacotes, checksums das fontes e digest da ISO;
+- assets do repositório pacman DINX assinado: `dinx.db`, `dinx.db.tar.gz`, suas
+  assinaturas, `dinx-package-signing-key.gpg`, `dinx-repository-metadata.txt` e
+  os arquivos customizados `*.pkg.tar.zst` com assinaturas destacadas;
+
+## Repositório de pacotes assinado
+
+Releases com tag exigem o segredo do GitHub Actions `DINX_PACKAGE_SIGNING_KEY`,
+contendo a chave privada de produção em formato armored sem senha. O workflow falha
+antes da publicação dos pacotes quando o segredo não existe; o workflow P0 sem tag
+continua usando uma chave CI efêmera e o canal `ci`.
+
+Provisione os segredos a partir de uma máquina confiável do responsável pelo
+release; nunca faça commit da chave privada nem a coloque em um artefato:
+
+```bash
+fingerprint='<fingerprint de 40 hex da produção>'
+gpg --armor --export-secret-keys "$fingerprint" > /tmp/dinx-package-signing-key.asc
+gh secret set DINX_PACKAGE_SIGNING_KEY --repo rufl/DINX < /tmp/dinx-package-signing-key.asc
+gh secret set DINX_PACKAGE_SIGNING_FINGERPRINT --repo rufl/DINX --body "$fingerprint"
+shred -u /tmp/dinx-package-signing-key.asc
+```
+
+A chave deve poder ser usada sem interação pelo `makepkg --sign`; mantenha o
+backup da master key offline e faça rotações deliberadas, pois o fingerprint é
+registrado em cada snapshot do repositório e metadado do release.
+
+O repositório de release é um repositório pacman estático hospedado nos assets do
+release do GitHub. Ele contém somente os pacotes customizados da DINX; os
+repositórios Artix continuam separados. Instale a chave pública e configure a URL:
+
+```bash
+release_url='https://github.com/rufl/DINX/releases/download/v<versão>'
+curl --fail --location "$release_url/dinx-package-signing-key.gpg" \
+  --output /tmp/dinx-package-signing-key.gpg
+pacman-key --add /tmp/dinx-package-signing-key.gpg
+pacman-key --lsign-key <fingerprint-da-assinatura>
+```
+
+```ini
+[dinx]
+SigLevel = Required
+Server = https://github.com/rufl/DINX/releases/download/v<versão>
+```
+
+Execute `pacman -Syu` após atualizar os bancos. O workflow P0 executa uma
+transação real assinada de instalação, atualização e downgrade com os mesmos
+requisitos de assinatura. Isso qualifica transações de pacotes, não uma atualização
+completa da ISO instalada, rollback do filesystem ou recuperação física.
 
 Quando a ISO for dividida, concatene as partes em ordem lexicográfica e verifique a imagem completa:
 
@@ -158,12 +209,19 @@ em vez de substituir silenciosamente o renderer.
 Antes de criar a próxima tag alpha, o commit da tag deve passar pelo workflow P0 local atual, incluindo os contratos de lock/idle/brilho, os checks de orçamento e o contrato de particionamento do Calamares. A ISO resultante deve passar a validação de conteúdo SquashFS, o caminho de boot/captura QEMU de 90 segundos, o smoke de instalação Calamares/TTY de recuperação em disco descartável, o smoke transacional BIOS/UEFI/Btrfs com subvolumes preexistentes, o smoke Windows side-by-side com encolhimento NTFS e layout manual preservando ESP/dados de boot Microsoft, geração de checksum, atestação do artefato e montagem dos assets de release.
 O gate automatizado também executa a qualificação real do daemon/GTK do DinitUI e um smoke limitado de inicialização do Calamares com Xvfb. Eles complementam os smokes transacionais de particionamento e rootfs offline; `scripts/smoke-install.sh` continua sendo um teste de contrato de rootfs/instalação e não afirma uma instalação completa pela interface do Calamares.
 
-O builder P0 agora assina o repositório pacman customizado temporário e registra seu snapshot de conteúdo, checksum do banco e fingerprint da assinatura nos metadados do build. Isso é evidência de qualificação do CI; não substitui os gates de chave do repositório de produção, atualização e recuperação abaixo.
+O builder P0 assina o repositório pacman customizado e registra seu snapshot de
+conteúdo, checksum do banco, checksum da chave pública e fingerprint da assinatura
+nos metadados do build. Builds sem tag usam a chave CI efêmera. Builds de release
+com tag exigem o segredo da chave de produção e publicam os assets do canal `stable`.
 
 O responsável pelo release deve registrar manualmente uma qualificação real de sessão Wayland: `Super+L`, lock após 600 segundos de idle, lock antes da suspensão, desbloqueio após resume e brilho físico para cima/baixo. Uma VM pode qualificar a ordem da sessão; hardware físico é necessário para afirmar suporte a brilho e suspensão.
 
 Atualize o run ID, commit, tamanho/digest do artefato e os links dos releases nos documentos de status em inglês e português somente depois que o novo workflow passar. As afirmações de P5 gaming continuam separadas até passarem os testes de DRM, Steam/jogo, controle/áudio, retorno ao greeter e suspend/GPU físico.
-Antes de publicar, forneça um repositório/banco pacman assinado com caminho documentado de atualização e recuperação, ou mantenha explícito o limite de validação sem upgrade/rollback. WIZP e o CUPS opcional continuam fora das afirmações de payload da ISO até que o artefato externo ou a transação real do pacote seja qualificada de ponta a ponta.
+O caminho de release com tag agora possui atualização assinada e downgrade de pacote
+documentados. Ele não afirma atualização da ISO instalada, rollback do filesystem ou
+recuperação física. WIZP e o CUPS opcional continuam fora das afirmações de payload
+da ISO até que o artefato externo ou a transação real do pacote seja qualificada de
+ponta a ponta.
 
 Use a [qualificação da Alpha 7](alpha7-qualification.md) para a matriz de
 desktop/laptop/BC-250. A ISO gerada inclui `dinx-alpha7-hardware-report`, um
@@ -173,12 +231,12 @@ alterar o estado do sistema.
 ## Limites do release
 
 - A conta live é `dinx` / `dinx`; é pública, descartável e nunca deve ser reutilizada.
-- A imagem ainda é um instalador de disco experimental, sem atualização, rollback ou
-  caminho Secure Boot assinado. O CI qualifica o contrato offline do rootfs em discos
-  BIOS e UEFI descartáveis e captura um quadro da TTY de recuperação; isso não qualifica
-  hardware arbitrário.
-- Os arquivos do release têm atestações de artefato do GitHub, mas a imagem ainda não
-  fornece uma chave de assinatura de repositório pacman nem um banco de pacotes assinado
-  para atualizações do sistema instalado.
+- A imagem ainda é um instalador de disco experimental, sem atualização da ISO instalada,
+  rollback do filesystem ou caminho Secure Boot assinado. O CI qualifica o contrato
+  offline do rootfs em discos BIOS e UEFI descartáveis e captura um quadro da TTY de
+  recuperação; isso não qualifica hardware arbitrário.
+- Os arquivos do release têm atestação de artefato do GitHub e, depois da configuração
+  do segredo da chave de produção, um banco pacman DINX assinado e chave pública. Isso
+  qualifica transações de pacotes, não o ciclo de vida completo do sistema instalado.
 - O teste Windows com QEMU é uma qualificação externa do receptor. Sucesso nele não
   transforma a imagem alpha em release de hardware suportado.

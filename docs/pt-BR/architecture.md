@@ -108,17 +108,17 @@ O caminho de instalação persistente é o **Calamares** em modo offline: ele co
 
 O **KDE Partition Manager** é o particionador gráfico independente oferecido ao lado do Calamares. Ele compartilha a stack Qt/kpmcore já usada pelo Calamares e executa como aplicação Wayland nativa na sessão DINX. Serve para inspecionar e preparar discos antes da instalação, não para substituir a seleção final de pontos de montagem do instalador.
 
-O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil. O perfil também inclui `ntfs-3g`/`os-prober`, preserva um layout Windows existente de ESP/NTFS e habilita um diretório EFI DINX separado. O CI qualifica smokes transacionais BIOS/UEFI descartáveis, Btrfs com subvolumes existentes e Windows side-by-side/manual; o caminho continua experimental até qualificar proteções contra seleção destrutiva de dispositivo, instalação em hardware e comportamento de atualização/rollback.
+O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil. O perfil também inclui `ntfs-3g`/`os-prober`, preserva um layout Windows existente de ESP/NTFS e habilita um diretório EFI DINX separado. O CI qualifica smokes transacionais BIOS/UEFI descartáveis, Btrfs com subvolumes existentes e Windows side-by-side/manual; o caminho continua experimental até qualificar proteções contra seleção destrutiva de dispositivo, instalação em hardware, atualizações da ISO instalada e recuperação do filesystem.
 
 ## Decisões ainda necessárias antes de um release de produção
 
-O caminho do instalador está selecionado, mas estas decisões continuam abertas antes de um release persistente de produção:
+O caminho do instalador e o layout do repositório de pacotes estão selecionados,
+mas estas decisões continuam abertas antes de um release persistente de produção:
 
-- toolkit Wayland e backend dos aplicativos próprios restantes; o DinitUI seleciona GTK4/libadwaita com o backend Wayland nativo do GTK;
-- layout do repositório de pacotes e responsabilidade pela chave de assinatura;
+- responsabilidade pela chave de assinatura de produção e provisionamento do segredo no GitHub;
 - matriz de GPUs e hardware suportados;
 - política de licença do repositório e dos artefatos.
 
-O perfil da ISO agora possui um manifesto versionado e validado de grupos foundation, desktop, gaming, hardware e opcionais. O CI assina o repositório pacman customizado temporário com uma chave efêmera de qualificação e registra seu snapshot de conteúdo; responsabilidade pela chave de produção, publicação do repositório assinado e atualização/recuperação do sistema instalado continuam sendo gates separados do release.
+O perfil da ISO agora possui um manifesto versionado e validado de grupos foundation, desktop, gaming, hardware e opcionais. O CI assina o repositório pacman customizado, registra seu snapshot e qualifica transações assinadas de instalação/atualização/downgrade. A publicação com tag ainda exige o segredo da chave de produção; atualizações do sistema instalado, recuperação do filesystem e hardware físico continuam gates separados do release.
 
-O núcleo de terminal da P2 está selecionado para o pacote alpha; o release de produção ainda exige os gates mais amplos de hardware, assinatura e redistribuição.
+O núcleo de terminal da P2 está selecionado para o pacote alpha; o release de produção ainda exige os gates mais amplos de hardware, provisionamento da chave e redistribuição.

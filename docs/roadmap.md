@@ -12,7 +12,10 @@ Milestones are capability gates, not calendar promises.
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
 
-**Status:** the ISO/VM foundation gate is complete. Hardware installation, physical UEFI/BIOS behavior, upgrades, rollback and long-term hardware service health remain release gates; CI's disposable BIOS and UEFI paths are green.
+**Status:** the ISO/VM foundation gate is complete. Signed custom pacman repository
+publication plus package install/update/downgrade qualification is implemented in CI;
+production key configuration, physical hardware, installed-ISO upgrades, filesystem
+rollback and long-term hardware service health remain release gates.
 
 Backlog:
 
@@ -23,7 +26,7 @@ Backlog:
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
 
-**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks; hardware installation, upgrades and rollback remain release gates.
+**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks and the signed package transaction path; installed-ISO upgrades, filesystem rollback and data preservation remain release gates.
 
 ## P1 — public alpha 0.1
 
@@ -36,12 +39,12 @@ Completed:
 - published the ISO/parts, checksums, installation instructions, known issues and release metadata;
 - qualified the experimental persistent installer and first-boot recovery path in CI on disposable BIOS and UEFI disks;
 - provided the minimal terminal fallback and working shell configuration;
-- recorded the package-signing limitation, hardware boundary and recovery limitations in the release documentation.
+- recorded the production-key prerequisite, hardware boundary and recovery limitations in the release documentation;
 
 Deferred release gates:
 
-- pacman repository signing key and signed package database;
-- physical hardware reports and qualification beyond the VM.
+- configure the production `DINX_PACKAGE_SIGNING_KEY` and `DINX_PACKAGE_SIGNING_FINGERPRINT` secrets and publish the first stable package repository;
+- physical hardware reports and qualification beyond the VM;
 
 **Exit criterion:** met. An invited tester can install the alpha snapshot from the public release and documentation without reconstructing the development environment.
 
@@ -62,7 +65,7 @@ Boundaries retained after P2:
 - the Codex slot uses a local fixture by default; no authenticated Codex or network qualification is claimed;
 - Zellij uses a deterministic shim, while tmux is exercised as the installed application;
 - the installed `info` command is attempted first, but a minimal/non-TTY surface may use the styled fixture fallback;
-- pacman signing, physical hardware, UEFI, upgrades, rollback and long-term production service health remain later release gates.
+- production key configuration, installed-ISO upgrades, filesystem rollback, physical hardware and long-term production service health remain later release gates.
 
 Tabs, panes, transparency and URL detection follow the core terminal semantics.
 

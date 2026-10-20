@@ -13,6 +13,9 @@ The entry points are:
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/check_build_metadata.sh` — validates the builder provenance, package snapshot, builder pacman configuration hashes, source checksums and ISO digest emitted by the remote build;
+- `scripts/check_dinx_package_repository.sh` — verifies repository snapshot metadata, package/database signatures, key fingerprint and duplicate archive paths;
+- `scripts/check_dinx_package_provenance.sh` — requires pinned source checksums or explicit local/staged package contracts for every DINX PKGBUILD;
+- `scripts/check_dinx_feature_groups.sh` — validates the Mocaccino-inspired feature-group manifest against the Artix profile;
 - `scripts/check_wizp_package.sh` — staged self-contained WIZP/CEF package, desktop entry, icon and text-file argument contract;
 - `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;
 - `scripts/check_gaming.sh` — standalone Gamescope/Steam session, 32-bit graphics and ISO payload contract;
@@ -33,6 +36,7 @@ The entry points are:
 - `distro/packages/wlroots0.20/PKGBUILD` — wlroots 0.20.2 source build pinned for the current Mango/Scenefx ABI;
 - `distro/packages/dinitui/PKGBUILD` — native Zig 0.17 GTK4/libadwaita Dinit frontend;
 - `distro/packages/wizp/PKGBUILD` — package boundary for the exact self-contained WIZP Linux directory; it requires `WIZP_PACKAGE_DIR` instead of rebuilding an unpinned source tree.
+- `distro/iso/iso-profiles/dinx/feature-groups.json` — foundation, desktop, gaming, hardware and optional package-group metadata; optional groups are outside the base ISO.
 
 ## Remote build
 
@@ -44,14 +48,19 @@ The `P0 ISO foundation` workflow runs manually or when profile/build files chang
 4. runs Artix in a privileged container;
 5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb, VTE 2.91 (`vte3`) for the headless Noctty smoke binary, Ghostty's `libghostty-vt.so` runtime, and the pinned MangoWM/Scenefx build dependencies;
 6. builds the pinned Artix package payload for topgrade, paru and Shelly, the BC250 Control Center v1.21.1 source release, the Cyan Skillfish governor and its dinit integration; then builds the native `noctty` package, which contains both NOCTTY and NoctEd, wlroots 0.20.2, MangoWM and Scenefx from the temporary local pacman repository, and executes the pinned source's headless PTY/VT/terminal-session smoke markers, the allocator-accounted terminal-session qualification (four normal and one forced cycle), the protocol/Unicode compatibility qualification, `scripts/noctty_p2_qualification.sh` and `scripts/nocted_p3_qualification.sh` in ReleaseSafe. The P3 matrix proves the native editor path in both packaged schemes, a real `clangd` symbol response, and bounded Git status/diff markers. That matrix uses actual tmux plus a deterministic Zellij shim, real Nano/Less/Dialog and top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP checks, and the Nocted project/editor qualification;
+
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
 9. validates the root and live-session SquashFS payloads;
 10. generates a SHA-512 checksum;
 11. keeps QEMU running for a configurable boot window and captures its VGA surface;
 12. attempts disposable BIOS and UEFI disks produced from the same offline rootfs/Calamares package-removal contract, generates initramfs and the matching BIOS or UEFI GRUB path, then checks a dinit first-boot marker and recovery-TTY service;
+
 13. creates GitHub artifact attestations for the ISO and checksum;
 14. publishes the ISO, checksum, QEMU logs and PPM captures as a temporary workflow artifact.
+
+The temporary pacman repository is signed inside the builder with an ephemeral CI key. The workflow records the package-content snapshot, repository database/key checksums and signing fingerprint in `build-metadata.txt`, then verifies all package/database signatures and archive path ownership before `buildiso` consumes the repository. This qualifies the build contract; it is not the production repository key or an installed-system update channel.
+The installed first-boot marker now checks that the pacman database survived the offline install, DINX core packages are installed, NetworkManager and elogind are available through dinit, DinitUI/DINXPanel have no unresolved dynamic libraries, and WIZP/CUPS remain outside the base image.
 
 DinitUI is built from `distro/packages/dinitui` with Zig 0.17.0 against GTK4/libadwaita, while DINXPanel is built from `distro/packages/dinxpanel` and both packages are added to the temporary pacman repository and installed through the DINX profile. `scripts/check_dinitui.sh` validates the DinitUI backend contract; `scripts/check_dinxpanel.sh` validates the YaST-inspired control center, fixed shortcuts, direct-argv launches, fixed GPU bridge and safe kernel catalog before the container build.
 The DINXPanel upgrade report uses Shelly's read-only `sync`/`list-updates all` path plus optional `fwupdmgr refresh`/`get-updates`; Topgrade preview is `topgrade --dry-run --show-skipped --no-self-update --no-tmux`, and applying Topgrade or Shelly remains an explicit terminal action.

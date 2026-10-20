@@ -119,4 +119,6 @@ O caminho do instalador está selecionado, mas estas decisões continuam abertas
 - matriz de GPUs e hardware suportados;
 - política de licença do repositório e dos artefatos.
 
+O perfil da ISO agora possui um manifesto versionado e validado de grupos foundation, desktop, gaming, hardware e opcionais. O CI assina o repositório pacman customizado temporário com uma chave efêmera de qualificação e registra seu snapshot de conteúdo; responsabilidade pela chave de produção, publicação do repositório assinado e atualização/recuperação do sistema instalado continuam sendo gates separados do release.
+
 O núcleo de terminal da P2 está selecionado para o pacote alpha; o release de produção ainda exige os gates mais amplos de hardware, assinatura e redistribuição.

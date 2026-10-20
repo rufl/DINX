@@ -158,7 +158,48 @@ cat > "$target_dir/usr/local/libexec/dinx-install-smoke-marker" <<'EOF'
 #!/bin/sh
 set -eu
 install -d -m 0755 /var/lib/dinx
-printf 'dinit-first-boot=%s\n' "$(date -u +%FT%TZ)" > /var/lib/dinx/install-smoke.booted
+fail() {
+  printf 'install_smoke_failure=%s\n' "$1" > /var/lib/dinx/install-smoke.failed
+  exit 1
+}
+tmp=/var/lib/dinx/install-smoke.booted.tmp
+{
+  printf 'dinit-first-boot=%s\n' "$(date -u +%FT%TZ)"
+  [ -d /var/lib/pacman/local ] || fail pacman_database_missing
+  printf 'pacman_database=true\n'
+  /usr/bin/pacman -Q dinit dinitui dinxpanel >/dev/null 2>&1 \
+    || fail core_packages_missing
+  printf 'core_packages=true\n'
+  for service in NetworkManager elogind; do
+    ready=false
+    attempt=0
+    while [ "$attempt" -lt 30 ]; do
+      if /usr/bin/dinitctl status "$service" >/dev/null 2>&1; then
+        ready=true
+        break
+      fi
+      attempt=$((attempt + 1))
+      sleep 1
+    done
+    [ "$ready" = true ] || fail "service_${service}_unavailable"
+  done
+  printf 'dinit_services=true\n'
+  [ -x /usr/bin/ldd ] || fail ldd_missing
+  for binary in /usr/bin/dinitui /usr/bin/dinxpanel; do
+    [ -x "$binary" ] || fail "binary_missing_${binary##*/}"
+    if /usr/bin/ldd "$binary" 2>&1 | grep -Fq 'not found'; then
+      fail "library_missing_${binary##*/}"
+    fi
+  done
+  printf 'dynamic_libraries=true\n'
+  if /usr/bin/pacman -Q wizp >/dev/null 2>&1 \
+    || /usr/bin/pacman -Q cups-dinit >/dev/null 2>&1; then
+    fail optional_packages_in_base_iso
+  fi
+  printf 'optional_base_absent=true\n'
+  printf 'lifecycle_checks=true\n'
+} > "$tmp"
+mv -f "$tmp" /var/lib/dinx/install-smoke.booted
 EOF
 chmod 0755 "$target_dir/usr/local/libexec/dinx-install-smoke-marker"
 cat > "$target_dir/etc/dinit.d/dinx-install-smoke-marker" <<'EOF'
@@ -375,9 +416,26 @@ done
 mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
+if [[ -s "$target_dir/var/lib/dinx/install-smoke.failed" ]]; then
+  cat "$target_dir/var/lib/dinx/install-smoke.failed" >&2
+  fail 'installed runtime lifecycle checks failed'
+fi
 [[ -s "$target_dir/var/lib/dinx/install-smoke.booted" ]] || {
   [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
   fail 'dinit first-boot marker was not created'
 }
 [[ -L "$target_dir/etc/dinit.d/boot.d/getty@tty2" ]] || fail 'recovery TTY service is not enabled'
+grep -Fqx 'pacman_database=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
+  || fail 'installed pacman database check did not pass'
+grep -Fqx 'core_packages=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
+  || fail 'installed core package check did not pass'
+grep -Fqx 'dinit_services=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
+  || fail 'installed dinit service check did not pass'
+grep -Fqx 'dynamic_libraries=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
+  || fail 'installed dynamic library check did not pass'
+grep -Fqx 'optional_base_absent=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
+  || fail 'optional package leaked into the base ISO'
+grep -Fqx 'lifecycle_checks=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
+  || fail 'installed lifecycle checks did not complete'
+printf 'smoke-install: installed pacman, dinit service, library and optional-package contracts passed\n'
 printf 'smoke-install: persistent install and first-boot recovery contract passed\n'

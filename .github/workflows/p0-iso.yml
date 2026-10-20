@@ -16,6 +16,9 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"
+      - "scripts/check_dinx_package_repository.sh"
+      - "scripts/check_dinx_package_provenance.sh"
+      - "scripts/check_dinx_feature_groups.sh"
       - "scripts/check_build_metadata.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/check_dinx_theme.sh"
@@ -88,6 +91,10 @@ jobs:
         run: ./scripts/check_desktop_packages.sh
       - name: Verify WIZP package staging and desktop contract
         run: ./scripts/check_wizp_package.sh
+      - name: Verify DINX package provenance policy
+        run: scripts/check_dinx_package_provenance.sh
+      - name: Verify DINX feature-group coverage
+        run: scripts/check_dinx_feature_groups.sh
       - name: Verify Cyan Skillfish and BC-250 support contract
         run: ./scripts/check_cyan_skillfish.sh
       - name: Verify BC250 Control Center package and session contract
@@ -176,6 +183,7 @@ jobs:
                 go-md2man \
                 gettext \
                 git \
+                gnupg \
                 glslang \
                 glycin \
                 gtk-layer-shell \
@@ -185,6 +193,7 @@ jobs:
                 gtk3 \
                 gtk4 \
                 libadwaita \
+                libarchive \
                 gtksourceview4 \
                 vte3 \
                 ghostty \
@@ -256,6 +265,27 @@ jobs:
               mkdir -p "$package_repo"
               useradd --create-home --user-group dinxbuild
               chown -R dinxbuild:dinxbuild /workspace/distro/packages "$package_repo"
+              signing_home=/tmp/dinx-package-signing
+              rm -rf "$signing_home"
+              install -d -m 700 "$signing_home"
+              cat > "$signing_home/keyparams" <<'EOF'
+              %no-protection
+              Key-Type: RSA
+              Key-Length: 3072
+              Name-Real: DINX CI package repository
+              Name-Email: ci@dinx.invalid
+              Expire-Date: 0
+              %commit
+              EOF
+              gpg --batch --homedir "$signing_home" --generate-key "$signing_home/keyparams" >/dev/null
+              signing_key=$(gpg --batch --homedir "$signing_home" --with-colons --list-secret-keys \
+                | awk -F: '$1 == "fpr" { print $10; exit }')
+              [[ "$signing_key" =~ ^[A-Fa-f0-9]{40}$ ]]
+              gpg --batch --homedir "$signing_home" --export "$signing_key" \
+                > "$package_repo/dinx-package-signing-key.gpg"
+              chown -R dinxbuild:dinxbuild "$signing_home"
+              pacman-key --add "$package_repo/dinx-package-signing-key.gpg"
+              pacman-key --lsign-key "$signing_key"
 
               build_package() {
                 local package_name="$1"
@@ -267,9 +297,12 @@ jobs:
                 (
                   cd "$package_dir"
                   runuser -u dinxbuild -- env "${extra_env[@]}" \
-                    makepkg --clean --nodeps --nocheck --noconfirm
+                    GNUPGHOME="$signing_home" \
+                    makepkg --clean --nodeps --nocheck --noconfirm \
+                    --sign --key "$signing_key"
                 )
-                find "$package_dir" -maxdepth 1 -type f -name "*.pkg.tar.zst" \
+                find "$package_dir" -maxdepth 1 -type f \
+                  \( -name "*.pkg.tar.zst" -o -name "*.pkg.tar.zst.sig" \) \
                   -exec cp -- {} "$package_repo/" \;
               }
               build_package opensnitch-dinit
@@ -303,7 +336,31 @@ jobs:
               build_package scenefx
               pacman -U --noconfirm "$package_repo"/scenefx-*.pkg.tar.zst
               build_package mangowm
-              repo-add "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
+              GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
+                "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
+              package_count=$(find "$package_repo" -maxdepth 1 -type f \
+                -name "*.pkg.tar.zst" | awk 'END { print NR }')
+              package_repository_snapshot=$(
+                find "$package_repo" -maxdepth 1 -type f -name "*.pkg.tar.zst" -printf "%f\n" \
+                  | LC_ALL=C sort \
+                  | while IFS= read -r package_name; do
+                      digest=$(sha256sum "$package_repo/$package_name" | cut -d " " -f 1)
+                      printf "%s  %s\n" "$digest" "$package_name"
+                    done \
+                  | LC_ALL=C sort \
+                  | sha256sum \
+                  | cut -d " " -f 1
+              )
+              package_repository_db_sha256=$(sha256sum "$package_repo/dinx.db.tar.gz" | cut -d " " -f 1)
+              package_repository_key_sha256=$(sha256sum "$package_repo/dinx-package-signing-key.gpg" | cut -d " " -f 1)
+              {
+                printf "schema=dinx-package-repository/v1\n"
+                printf "channel=ci\n"
+                printf "snapshot=%s\n" "$package_repository_snapshot"
+                printf "signing_fingerprint=%s\n" "$signing_key"
+                printf "package_count=%s\n" "$package_count"
+              } > "$package_repo/dinx-repository-metadata.txt"
+              scripts/check_dinx_package_repository.sh "$package_repo"
 
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
@@ -312,7 +369,7 @@ jobs:
                 printf "\n[lib32]\nInclude = /etc/pacman.d/mirrorlist\n" \
                   >> "$pacman_conf"
               fi
-              printf "\n[dinx]\nSigLevel = Never\nServer = http://127.0.0.1:8765\n" \
+              printf "\n[dinx]\nSigLevel = Required\nServer = http://127.0.0.1:8765\n" \
                 >> "$pacman_conf"
               builder_pacman_conf_sha256=$(sha256sum "$pacman_conf" | cut -d " " -f 1)
               builder_mirrorlist=/etc/pacman.d/mirrorlist
@@ -346,7 +403,14 @@ jobs:
                 printf "buildiso_owner=%s\n" "$buildiso_owner"
                 printf "zig_version=%s\n" "$(zig version)"
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
-                printf "noctty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d " " -f 1)"
+                printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
+                printf "package_repository_schema=dinx-package-repository/v1\n"
+                printf "package_repository_channel=ci\n"
+                printf "package_repository_snapshot=%s\n" "$package_repository_snapshot"
+                printf "package_repository_signing_fingerprint=%s\n" "$signing_key"
+                printf "package_repository_db_sha256=%s\n" "$package_repository_db_sha256"
+                printf "package_repository_key_sha256=%s\n" "$package_repository_key_sha256"
+                printf "package_signing_mode=ephemeral-ci\n"
                 printf "iso_name=%s\n" "$(basename "$iso_path")"
                 printf "iso_bytes=%s\n" "$iso_size"
                 printf "iso_sha512=%s\n" "$iso_sha512"

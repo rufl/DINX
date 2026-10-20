@@ -28,5 +28,10 @@ grep -Fq 'DINX_INSTALL_FIRMWARE=bios' "$workflow" || fail 'BIOS install smoke is
 grep -Fq 'DINX_INSTALL_FIRMWARE=uefi' "$workflow" || fail 'UEFI install smoke is not wired'
 grep -Fq 'There is no upgrade or rollback procedure.' "$install_doc" || fail 'unsupported upgrade/rollback boundary is not documented'
 grep -Fq 'hardware installation, upgrades and rollback remain release gates.' "$roadmap" || fail 'upgrade/rollback release gate is not documented'
+grep -Fq 'pacman_database=true' "$smoke" || fail 'installed pacman database check is missing'
+grep -Fq 'dinit_services=true' "$smoke" || fail 'installed dinit service check is missing'
+grep -Fq 'dynamic_libraries=true' "$smoke" || fail 'installed dynamic library check is missing'
+grep -Fq 'optional_base_absent=true' "$smoke" || fail 'base ISO optional-package boundary check is missing'
+grep -Fq 'lifecycle_checks=true' "$smoke" || fail 'installed lifecycle marker is missing'
 
-printf 'install_lifecycle_contract=bios=true uefi=true upgrade=unsupported rollback=unsupported\n'
+printf 'install_lifecycle_contract=bios=true uefi=true installed_runtime=true upgrade=unsupported rollback=unsupported\n'

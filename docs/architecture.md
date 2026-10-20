@@ -123,4 +123,6 @@ The installer path is selected, but these decisions remain open before a persist
 - supported GPU and hardware matrix;
 - repository and artifact license policy.
 
+The ISO profile now has a checked-in feature-group manifest for foundation, desktop, gaming, hardware and optional packages. CI signs the temporary custom pacman repository with an ephemeral qualification key and records its content snapshot; production key ownership, signed repository publication and installed-system update/recovery remain separate release gates.
+
 The P2 terminal core is selected for the alpha package; production release still requires the broader hardware, signing and redistribution gates.

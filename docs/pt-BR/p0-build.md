@@ -13,6 +13,9 @@ Os pontos de entrada são:
 - `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do código fixado do NOCTTY/NoctEd;
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
 - `scripts/check_build_metadata.sh` — valida a procedência do builder, o snapshot de pacotes, os hashes da configuração pacman do builder, os checksums das fontes e o digest da ISO emitidos pelo build remoto;
+- `scripts/check_dinx_package_repository.sh` — verifica metadados do snapshot do repositório, assinaturas dos pacotes/banco, fingerprint da chave e caminhos duplicados nos archives;
+- `scripts/check_dinx_package_provenance.sh` — exige checksums fixados ou contratos locais/staged explícitos para cada PKGBUILD DINX;
+- `scripts/check_dinx_feature_groups.sh` — valida o manifesto de grupos inspirado no Mocaccino contra o perfil Artix;
 - `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_desktop_packages.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos do Firefox, aplicativo fixado, gerenciamento de pacotes, scanner/firmware/Flatpak/editor de imagens, firewall, hardware e BC250 Control Center;
 - `scripts/check_dinitui.sh` — contrato do pacote DinitUI, ações, limite de privilégios, perfis de serviços e integração Noctalia Gaming;
 - `scripts/check_dinxpanel.sh` — contrato do centro de controle DINXPanel, ponte fixa de GPU e instalador seguro de kernels;
@@ -35,6 +38,7 @@ Os pontos de entrada são:
 - `distro/packages/dinitui/PKGBUILD` — frontend dinit nativo em Zig 0.17 com GTK4/libadwaita;
 - `distro/packages/dinxpanel/PKGBUILD` — centro de controle inspirado no YaST, nativo em Zig 0.17 com GTK4/libadwaita;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — perfil de pacotes e serviços da fundação.
+- `distro/iso/iso-profiles/dinx/feature-groups.json` — metadados dos grupos foundation, desktop, gaming, hardware e opcional; os grupos opcionais ficam fora da ISO base.
 
 ## Build remoto
 
@@ -54,6 +58,10 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 12. tenta inicializar discos BIOS e UEFI descartáveis produzidos a partir do mesmo contrato offline de rootfs/remoção do Calamares, gera initramfs e o caminho GRUB BIOS ou UEFI correspondente e verifica um marcador de primeiro boot dinit e o serviço de TTY de recuperação;
 13. cria atestações de artefato do GitHub para a ISO e o checksum;
 14. publica a ISO, checksum, logs QEMU e capturas PPM como artefato temporário do workflow.
+
+O repositório pacman temporário é assinado dentro do builder com uma chave CI efêmera. O workflow registra o snapshot do conteúdo dos pacotes, os checksums do banco/chave do repositório e o fingerprint da assinatura em `build-metadata.txt`, depois verifica todas as assinaturas e os caminhos duplicados dos archives antes de o `buildiso` consumir o repositório. Isso qualifica o contrato do build; não é a chave do repositório de produção nem um canal de atualização do sistema instalado.
+
+O marcador do primeiro boot instalado verifica que o banco pacman sobreviveu à instalação offline, que os pacotes centrais DINX estão instalados, que NetworkManager e elogind estão disponíveis pelo dinit, que DinitUI/DINXPanel não têm bibliotecas dinâmicas ausentes e que WIZP/CUPS continuam fora da imagem base.
 
 DinitUI é compilado de `distro/packages/dinitui` com Zig 0.17.0 contra GTK4/libadwaita, enquanto a DINXPanel é compilada de `distro/packages/dinxpanel`; os dois pacotes são adicionados ao repositório pacman temporário e instalados pelo perfil DINX. `scripts/check_dinitui.sh` valida o contrato de backend do DinitUI; `scripts/check_dinxpanel.sh` valida o centro de controle inspirado no YaST, os atalhos fixos, os lançamentos por argv direto, a ponte fixa de GPU e o catálogo seguro de kernels antes do build do container.
 O relatório de upgrades da DINXPanel usa o caminho somente-leitura `sync`/`list-updates all` do Shelly e, opcionalmente, `fwupdmgr refresh`/`get-updates`; o preview do Topgrade é `topgrade --dry-run --show-skipped --no-self-update --no-tmux`, e aplicar Topgrade ou Shelly continua sendo uma ação explícita no terminal.

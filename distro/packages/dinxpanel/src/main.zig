@@ -1,6 +1,7 @@
 const std = @import("std");
 const kernels = @import("kernels.zig");
 const c = @import("c");
+const optional_packages = @import("optional_packages.zig");
 
 const allocator = std.heap.c_allocator;
 
@@ -99,6 +100,11 @@ const App = struct {
         c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade", "Run the complete Topgrade update workflow in a terminal", &onTopgradeClicked, self));
         c.gtk_box_append(@ptrCast(updates), makeButton("Shelly upgrade", "Run Shelly's all-backend upgrade workflow in a terminal", &onShellyClicked, self));
         c.gtk_box_append(@ptrCast(content), updates);
+
+        appendSectionTitle(content, "Optional packages");
+        const optional = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
+        c.gtk_box_append(@ptrCast(optional), makeButton("Install CUPS", "Download and install optional CUPS printing support from the configured Artix repository", &onCupsInstallClicked, self));
+        c.gtk_box_append(@ptrCast(content), optional);
 
         appendSectionTitle(content, "Kernel installer");
         const kernel_row = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
@@ -200,18 +206,27 @@ const App = struct {
         };
         self.startAsync(task);
     }
-
-    fn runDinitUi(self: *App, command: []const u8) void {
-        self.runCommand(&.{ "dinitui", command });
+    fn installCups(self: *App) void {
+        if (!self.beginAsync("Downloading CUPS printing support…")) return;
+        const task = allocator.create(AsyncTask) catch {
+            self.setStatusError("Unable to allocate CUPS installation operation");
+            return;
+        };
+        task.* = .{ .app = self, .kind = .optional_package_install };
+        self.startAsync(task);
     }
 
-    fn runCommand(self: *App, argv: []const []const u8) void {
+    fn runDinitUi(self: *App, command: []const u8) void {
+        self.runCommand(command);
+    }
+
+    fn runCommand(self: *App, command: []const u8) void {
         if (!self.beginAsync("Running control-panel action…")) return;
         const task = allocator.create(AsyncTask) catch {
             self.setStatusError("Unable to allocate control-panel operation");
             return;
         };
-        task.* = .{ .app = self, .kind = .command, .command_argv = argv };
+        task.* = .{ .app = self, .kind = .command, .dinitui_command = command };
         self.startAsync(task);
     }
 
@@ -324,6 +339,7 @@ const App = struct {
 const AsyncKind = enum {
     kernel_status,
     kernel_install,
+    optional_package_install,
     command,
     upgrade_check,
 };
@@ -332,10 +348,11 @@ const AsyncTask = struct {
     app: *App,
     kind: AsyncKind,
     kernel: ?*const kernels.Kernel = null,
-    command_argv: []const []const u8 = &.{},
+    dinitui_command: []const u8 = "",
     process_result: ?std.process.RunResult = null,
     kernel_report: ?kernels.Report = null,
     kernel_result: ?kernels.CommandResult = null,
+    optional_package_result: ?optional_packages.CommandResult = null,
     upgrade_output: ?[]u8 = null,
     upgrade_all_succeeded: bool = true,
     error_value: ?anyerror = null,
@@ -347,6 +364,7 @@ const AsyncTask = struct {
         }
         if (self.kernel_report) |*report| report.deinit(allocator);
         if (self.kernel_result) |*result| result.deinit(allocator);
+        if (self.optional_package_result) |*result| result.deinit(allocator);
         if (self.upgrade_output) |output| allocator.free(output);
         allocator.destroy(self);
     }
@@ -369,13 +387,20 @@ fn asyncWorker(task: *AsyncTask) void {
                 return;
             };
         },
-        .command => task.process_result = std.process.run(allocator, task.app.io, .{
-            .argv = task.command_argv,
-            .stdout_limit = std.Io.Limit.limited(512 * 1024),
-            .stderr_limit = std.Io.Limit.limited(512 * 1024),
-        }) catch |err| {
+        .optional_package_install => task.optional_package_result = optional_packages.install(allocator, task.app.io) catch |err| {
             task.error_value = err;
             return;
+        },
+        .command => {
+            const argv = [_][]const u8{ "dinitui", task.dinitui_command };
+            task.process_result = std.process.run(allocator, task.app.io, .{
+                .argv = argv[0..],
+                .stdout_limit = std.Io.Limit.limited(512 * 1024),
+                .stderr_limit = std.Io.Limit.limited(512 * 1024),
+            }) catch |err| {
+                task.error_value = err;
+                return;
+            };
         },
         .upgrade_check => task.upgrade_output = collectUpgradeReport(task) catch |err| {
             task.error_value = err;
@@ -469,6 +494,21 @@ fn completeAsyncTask(task: *AsyncTask) void {
                 app.refreshKernelStatus();
             } else {
                 app.setStatusError(if (result.error_output.len > 0) result.error_output else "Kernel installation failed");
+            }
+        },
+        .optional_package_install => {
+            var result = task.optional_package_result orelse {
+                app.setStatusError("CUPS installation returned no result");
+                return;
+            };
+            task.optional_package_result = null;
+            defer result.deinit(allocator);
+            const output = if (result.output.len > 0) result.output else result.error_output;
+            app.setTextView(if (output.len > 0) output else "CUPS installation completed without output");
+            if (result.success) {
+                app.setStatus("CUPS installed; enable cupsd in DinitUI");
+            } else {
+                app.setStatusError(if (result.error_output.len > 0) result.error_output else "CUPS installation failed");
             }
         },
         .command => {
@@ -600,6 +640,9 @@ fn onTopgradePreviewClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) voi
 
 fn onTopgradeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{ "foot", "--app-id=dinx-topgrade", "-e", "topgrade" });
+}
+fn onCupsInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).installCups();
 }
 
 fn onShellyClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

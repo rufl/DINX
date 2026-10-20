@@ -18,6 +18,8 @@ contratos cobrem:
 - layouts Windows side-by-side com NTFS e manual;
 - checks de pacotes, tema, DinitUI, DINXPanel, gaming, BC250 e aplicativos
   first-party.
+- qualificação real do daemon de usuário e GTK do DinitUI;
+- smoke limitado de inicialização do Calamares com a configuração enviada, além dos smokes transacionais;
 
 ## Matriz manual de três máquinas
 
@@ -28,6 +30,7 @@ relatório para cada alvo.
 
 - inicializar a sessão live e selecionar a sessão DINX normal no ReGreet;
 - verificar Wayland, MangoWC, Noctalia, áudio, rede e aceleração GPU;
+- se o suporte a NVIDIA for alegado, instalar `nvidia-open-dkms` com headers correspondentes, reiniciar e verificar render node, Vulkan e saída do Gamescope;
 - bloquear com `Super+L`;
 - verificar bloqueio após 600 segundos de idle;
 - suspender, retomar, desbloquear e confirmar que a sessão continua utilizável;

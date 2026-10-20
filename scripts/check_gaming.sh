@@ -26,6 +26,9 @@ grep -Fq 'dinitui --gaming-enter' "$session" || fail 'Gaming launcher does not e
 grep -Fq 'dinitui --gaming-leave' "$session" || fail 'Gaming launcher does not restore the transactional profile'
 grep -Fq 'failed to enter Gaming profile' "$session" || fail 'Gaming entry failures are not surfaced'
 grep -Fq 'failed to restore the previous profile' "$session" || fail 'Gaming restoration failures are not surfaced'
+grep -Fq 'DINX_GAMING_CHILD_MODE=1 setsid "$0"' "$session" || fail 'Gamescope is not isolated in a signal-safe process group'
+grep -Fq 'kill -TERM "-$game_pid"' "$session" || fail 'Gaming shutdown does not terminate the Gamescope process group'
+
 if grep -Fq 'dinitui --gaming-leave >/dev/null 2>&1 || true' "$session"; then
   fail 'Gaming restoration failures are ignored'
 fi
@@ -53,4 +56,4 @@ grep -Fq 'usr/bin/gamemoderun' "$iso_check" || fail 'ISO payload check does not 
 grep -Fq 'usr/bin/mangohud' "$iso_check" || fail 'ISO payload check does not require MangoHud'
 grep -Fq 'usr/bin/steam' "$iso_check" || fail 'ISO payload check does not require Steam'
 
-printf 'gaming_contract session=true gamescope=true steam=true multilib=true wayland_session=true profile_transaction=true\n'
+printf 'gaming_contract session=true gamescope=true steam=true multilib=true wayland_session=true profile_transaction=true signal_cleanup=true\n'

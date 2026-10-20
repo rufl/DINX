@@ -76,6 +76,11 @@ DinitUI also owns explicit `normal`, `lite`, `gaming` and user-defined system-se
 
 DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, MangoWC, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its read-only upgrade report uses Shelly and optional fwupd metadata; Topgrade preview uses `--dry-run --show-skipped`; explicit upgrades remain user-confirmed terminal workflows. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
 
+Printing is an explicit post-install option rather than an ISO dependency:
+DINXPanel downloads the fixed `cups-dinit` package from the configured Artix
+repository, which pulls CUPS and provides the `cupsd` dinit service. The user
+enables or starts that service through DinitUI when printing is required.
+
 DINX ships a local Noctalia `dinx/performance` plugin. Its Control Center shortcut applies the Gaming profile and synchronizes Noctalia's documented `performance`/`balanced` power profile. The standalone Gamescope session does not start Noctalia and therefore remains independent of this integration.
 ### Session safety and payload budgets
 
@@ -100,7 +105,7 @@ The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/p
 
 ## Gaming session
 
-Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry; it does not assume that Noctalia or Mango is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`; the P0 builder explicitly enables Artix's official `lib32` repository and does not add Arch repositories. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures and proves a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware, DRM display, suspend/resume or GPU recovery.
+Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry; it does not assume that Noctalia or Mango is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`; the P0 builder explicitly enables Artix's official `lib32` repository and does not add Arch repositories. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures, signal-time process-group cleanup and profile restoration, and a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware, DRM display, suspend/resume or GPU recovery.
 
 ## Installation path selected
 

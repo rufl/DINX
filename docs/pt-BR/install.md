@@ -248,6 +248,12 @@ O Flatpak é instalado sem aplicativos Flatpak pré-instalados. Adicionar um
 remote e instalar um aplicativo continuam sendo ações explícitas do usuário; a
 DINX não instala remotes ou aplicativos silenciosamente.
 
+Para impressão opcional após a instalação, abra **DINXPanel → Pacotes opcionais
+→ Instalar CUPS**. A ação baixa o pacote assinado `cups-dinit` do repositório
+Artix configurado; a dependência baixa o CUPS e o pacote fornece o serviço
+`cupsd` do dinit. Use o DinitUI para habilitar ou iniciar `cupsd` quando
+precisar imprimir. O CUPS fica intencionalmente fora da ISO offline.
+
 ### O login falha
 
 Selecione o usuário `dinx`, a sessão `MangoWM (DINX)` e digite exatamente a senha descartável `dinx`. Se o greeter continuar falhando, guarde o commit do workflow e os detalhes do hardware; não tente credenciais aleatórias.

@@ -19,11 +19,20 @@ cat >"$tmp/bin/gamescope" <<'EOF'
 #!/bin/sh
 set -eu
 printf '%s\n' "$*" >> "$DINX_GAMESCOPE_ARGS"
+if [ "${DINX_GAMESCOPE_HOLD:-0}" = 1 ]; then
+  printf 'gamescope-started' > "$DINX_GAMESCOPE_HOLD_MARKER"
+  trap 'exit 143' TERM INT
+  sleep 5 &
+  wait "$!"
+  exit 0
+fi
 while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done
 [ "$#" -gt 0 ] || exit 64
 shift
 exec "$@"
 EOF
+
+
 cat >"$tmp/bin/gamemoderun" <<'EOF'
 #!/bin/sh
 set -eu
@@ -110,6 +119,34 @@ grep -Fq -- '--gaming-enter' "$tmp/leave-failure-dinitui" || fail 'launcher did 
 grep -Fq -- '--gaming-leave' "$tmp/leave-failure-dinitui" || fail 'launcher did not attempt Gaming profile restoration'
 grep -Fq 'failed to restore the previous profile' "$tmp/leave-failure.log" || fail 'restoration failure was not reported'
 printf 'gaming_profile_failure leave=reported=true nonzero=true\n'
+set +e
+PATH="$tmp/bin:$PATH" \
+  DINX_GAMEMODE=off \
+  DINX_GAMESCOPE_HOLD=1 \
+  DINX_DINITUI_ARGS="$tmp/signal-dinitui" \
+  DINX_DINITUI_FAIL_ENTER=0 \
+  DINX_DINITUI_FAIL_LEAVE=0 \
+  DINX_GAMESCOPE_ARGS="$tmp/signal-gamescope-args" \
+  DINX_GAMESCOPE_HOLD_MARKER="$tmp/signal-gamescope-marker" \
+  "$launcher" >"$tmp/signal.log" 2>&1 &
+signal_launcher_pid=$!
+for attempt in {1..20}; do
+  [[ -f "$tmp/signal-gamescope-marker" ]] && break
+  sleep 0.1
+done
+[[ -f "$tmp/signal-gamescope-marker" ]] || {
+  kill -KILL "$signal_launcher_pid" 2>/dev/null || :
+  wait "$signal_launcher_pid" 2>/dev/null || :
+  fail 'signal fixture Gamescope did not start'
+}
+kill -TERM "$signal_launcher_pid"
+wait "$signal_launcher_pid"
+signal_status=$?
+set -e
+[[ "$signal_status" -eq 143 ]] || fail "SIGTERM was not preserved: status $signal_status"
+grep -Fqx -- '--gaming-leave' "$tmp/signal-dinitui" || fail 'SIGTERM did not restore the Gaming profile'
+printf 'gaming_signal_fixture launcher=prompt-exit status=143 profile=restored\n'
+
 
 rm -rf "$tmp"
 trap - EXIT

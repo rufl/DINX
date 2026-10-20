@@ -55,6 +55,7 @@ required_paths=(
   usr/share/licenses/dinitui/LICENSE
   usr/share/licenses/dinxpanel/LICENSE
   usr/local/libexec/dinx-gaming
+  usr/bin/setsid
   usr/local/bin/dinx-alpha7-hardware-report
   usr/share/wayland-sessions/dinx-gaming.desktop
   usr/bin/gamescope

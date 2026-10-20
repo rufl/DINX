@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=WIZP
+GenericName=Code Editor
+Comment=Zig-native code editor with a bundled CEF runtime
+Exec=wizp %F
+TryExec=wizp
+Icon=dev.wizp.WIZP
+Terminal=false
+Categories=Development;IDE;TextEditor;
+MimeType=text/plain;text/markdown;application/json;application/javascript;text/javascript;text/css;text/html;application/xml;text/yaml;application/x-yaml;application/toml;text/x-zig;text/x-rust;text/x-python;text/x-shellscript;
+StartupNotify=true
+StartupWMClass=WIZP

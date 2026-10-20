@@ -13,26 +13,26 @@ The entry points are:
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/check_build_metadata.sh` — validates the builder provenance, package snapshot, builder pacman configuration hashes, source checksums and ISO digest emitted by the remote build;
-- `scripts/check_firefox.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_desktop_packages.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` and `scripts/check_bc250_control_center.sh` — Firefox, pinned application, package-management, scanner/firmware/Flatpak/image-editor, firewall, hardware and BC250 Control Center contracts;
-- `scripts/check_dinitui.sh` — DinitUI package, action, privilege-boundary, service-profile and Noctalia Gaming integration contract;
+- `scripts/check_wizp_package.sh` — staged self-contained WIZP/CEF package, desktop entry, icon and text-file argument contract;
 - `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;
 - `scripts/check_gaming.sh` — standalone Gamescope/Steam session, 32-bit graphics and ISO payload contract;
 - `scripts/check_alpha7_hardware_report.sh` — Alpha 7 hardware-report schema, BC250 detection and manual-boundary contract;
 - `docs/alpha7-qualification.md` — three-machine Alpha 7 evidence matrix and manual qualification boundary;
 - `scripts/check_dinx_budget.sh` and `scripts/measure_dinx_session.sh` — payload/startup/native-binary/boot-window/ISO ceilings and runtime RSS/CPU observation;
-- `scripts/gaming_p5_qualification.sh` — fixture session return and real headless Gamescope launch/exit qualification;
+- `scripts/gaming_p5_qualification.sh` — fixture session return, signal-time process-group cleanup/profile restoration and real headless Gamescope launch/exit qualification;
 - `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
 - `scripts/nocted_p3_qualification.sh` — deterministic P3 matrix for Nocted core/index/workers/state/tasks, real `clangd`, native GTK/X11 dark/light smoke and Git status/diff;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
+- `scripts/dinitui_dinit_qualification.sh` — real temporary Dinit daemon, service lifecycle and GTK smoke;
+- `scripts/smoke_calamares_startup.sh` — bounded Calamares startup smoke against the shipped configuration;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
 - `.github/workflows/release.yml` — tagged pre-release publication and Windows QEMU package assembly;
 - `distro/packages/noctty/PKGBUILD` — native Zig package that installs NOCTTY and NoctEd;
 - `distro/packages/noctty/qualification-compat.patch` — packaging patch that wires the pinned source's PTY qualification target to its existing compatibility module and adds the Nocted P3 Git/theme/package contract;
 - `distro/packages/wlroots0.20/PKGBUILD` — wlroots 0.20.2 source build pinned for the current Mango/Scenefx ABI;
 - `distro/packages/dinitui/PKGBUILD` — native Zig 0.17 GTK4/libadwaita Dinit frontend;
-- `distro/packages/dinxpanel/PKGBUILD` — native Zig 0.17 GTK4/libadwaita YaST-inspired control center;
-- `distro/iso/iso-profiles/dinx/profile.yaml` — foundation package and service profile.
+- `distro/packages/wizp/PKGBUILD` — package boundary for the exact self-contained WIZP Linux directory; it requires `WIZP_PACKAGE_DIR` instead of rebuilding an unpinned source tree.
 
 ## Remote build
 

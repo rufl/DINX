@@ -20,11 +20,13 @@ Os pontos de entrada são:
 - `scripts/check_alpha7_hardware_report.sh` — contrato do schema do relatório de hardware Alpha 7, detecção do BC250 e limites manuais;
 - `docs/pt-BR/alpha7-qualification.md` — matriz de evidências Alpha 7 para três máquinas e limite da qualificação manual;
 - `scripts/check_dinx_budget.sh` e `scripts/measure_dinx_session.sh` — tetos de payload/inicialização/binários nativos/janela de boot/ISO e observação de RSS/CPU em runtime;
-- `scripts/gaming_p5_qualification.sh` — qualificação de retorno da sessão por fixture e launch/exit real headless do Gamescope;
+- `scripts/gaming_p5_qualification.sh` — qualificação do retorno da sessão por fixture, limpeza do grupo de processos/restauração do perfil durante sinais e launch/exit real headless do Gamescope;
 - `scripts/noctty_p2_qualification.sh` — matriz P2 determinística em ReleaseSafe para allocator/fairness, continuidade de PTY/sessão, ncurses e TUIs do sistema;
 - `scripts/nocted_p3_qualification.sh` — matriz P3 determinística para core/índice/workers/estado/tarefas do Nocted, `clangd` real, smoke GTK/X11 nativo claro/escuro e status/diff do Git;
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
 - `scripts/smoke-install.sh` — smoke de instalação persistente e TTY de recuperação em disco descartável;
+- `scripts/dinitui_dinit_qualification.sh` — daemon Dinit temporário real, ciclo de vida do serviço e smoke GTK;
+- `scripts/smoke_calamares_startup.sh` — smoke limitado de inicialização do Calamares contra a configuração enviada;
 - `.github/workflows/p0-iso.yml` — build remoto em container Artix;
 - `.github/workflows/release.yml` — publicação de pré-release por tag e montagem do pacote Windows para QEMU;
 - `distro/packages/noctty/PKGBUILD` — pacote Zig nativo que instala NOCTTY e NoctEd;

@@ -5,6 +5,7 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 pkg_dir="$root/distro/packages/dinxpanel"
 pkgbuild="$pkg_dir/PKGBUILD"
 frontend="$pkg_dir/src/main.zig"
+optional_packages="$pkg_dir/src/optional_packages.zig"
 kernels="$pkg_dir/src/kernels.zig"
 desktop="$pkg_dir/resources/dinxpanel.desktop"
 readme="$pkg_dir/README.md"
@@ -15,22 +16,23 @@ fail() {
   exit 1
 }
 
-for path in "$pkgbuild" "$frontend" "$kernels" "$desktop" "$readme" "$profile" "$workflow"; do
+for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "$readme" "$profile" "$workflow"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
 grep -Fq 'depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
-grep -Fq "fwupd: firmware metadata and update checks" "$pkgbuild" || fail 'optional firmware integration is missing'
+grep -Fq "cups-dinit: optional CUPS printing support; downloads cups and dinit service files after installation" "$pkgbuild" || fail 'optional CUPS package metadata is missing'
 grep -Fq 'makedepends=(zig)' "$pkgbuild" || fail 'Zig build dependency is missing'
 grep -Fq 'Exec=dinxpanel' "$desktop" || fail 'desktop launcher is incorrect'
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
 grep -Fq 'build_package dinxpanel' "$workflow" || fail 'ISO workflow does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Display' 'MangoWC options' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Display' 'MangoWC options' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
-grep -Fq 'dinitui", command' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
+grep -Fq 'dinitui_command = command' "$frontend" || fail 'GPU command is not retained for the asynchronous task'
+grep -Fq 'const argv = [_][]const u8{ "dinitui", task.dinitui_command }' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
 grep -Fq -- '--gpu-status' "$frontend" || fail 'GPU detection action is missing'
 grep -Fq -- '--install-gpu-drivers' "$frontend" || fail 'GPU installation action is missing'
 grep -Fq '"shelly", "sync"' "$frontend" || fail 'Shelly metadata refresh is missing'
@@ -39,6 +41,10 @@ grep -Fq '"shelly", "upgrade", "all"' "$frontend" || fail 'Shelly upgrade action
 grep -Fq '"fwupdmgr", "refresh"' "$frontend" || fail 'fwupd metadata refresh is missing'
 grep -Fq '"fwupdmgr", "get-updates"' "$frontend" || fail 'firmware update discovery is missing'
 grep -Fq '"topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux"' "$frontend" || fail 'Topgrade preview is missing'
+grep -Fq 'optional_packages.install' "$frontend" || fail 'CUPS download is not wired to the optional package installer'
+grep -Fq 'optional_package_install' "$frontend" || fail 'CUPS installation is not isolated in the asynchronous package task'
+grep -Fq 'pub const cups_user_install_argv' "$optional_packages" || fail 'CUPS non-root package argv is missing'
+grep -Fq 'pub const cups_install_argv' "$optional_packages" || fail 'CUPS pkexec package argv is missing'
 grep -Fq '"topgrade" });' "$frontend" || fail 'Topgrade action is missing'
 for kernel in linux linux-lts linux-zen linux-hardened; do
   grep -Fq ".id = \"$kernel\"" "$kernels" || fail "kernel catalog is missing $kernel"
@@ -56,4 +62,4 @@ if grep -Eq '/bin/sh|systemctl|g_spawn_command_line' "$frontend" "$kernels"; the
   fail 'DINXPanel contains shell/systemd or command-line-string execution'
 fi
 
-printf 'dinxpanel_contract package=true shortcuts=true upgrades=true firmware=true gpu_bridge=true kernels=true argv_safe=true no_removal=true\n'
+printf 'dinxpanel_contract package=true shortcuts=true upgrades=true firmware=true optional_cups=true privilege_fallback=true gpu_bridge=true kernels=true argv_safe=true no_removal=true\n'

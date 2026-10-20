@@ -53,6 +53,7 @@ require_text '    - ntfs-3g' "$profile_yaml"
 require_text '    - os-prober' "$profile_yaml"
 require_text 'Smoke-test Windows side-by-side and manual partition transactions' "$workflow"
 require_text 'scripts/smoke_calamares_windows.sh' "$workflow"
+require_text 'scripts/smoke_calamares_startup.sh' "$workflow"
 
 require_text 'mountPoint: /' "$mount_conf"
 require_text 'subvolume: ""' "$mount_conf"
@@ -86,4 +87,4 @@ if grep -R -nF 'update-mirrorlist' "$calamares_root" >/dev/null; then
 fi
 require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
 
-printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true\n'
+printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true startup_smoke=true\n'

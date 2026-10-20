@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">WIZP</title>
+  <desc id="desc">Blue WIZP editor mark on a dark rounded square</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#162a46"/>
+      <stop offset="1" stop-color="#0b1324"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#72d7ff"/>
+      <stop offset="1" stop-color="#4e83ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="url(#background)"/>
+  <path d="M25 34h15l8 43 10-28h12l10 28 8-43h15L91 96H78L64 58 50 96H37z" fill="url(#mark)"/>
+  <path d="M32 105h64" stroke="#b9eaff" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+</svg>

@@ -17,6 +17,8 @@ contracts cover:
 - Btrfs transaction with existing `@` and `@home` subvolumes;
 - Windows side-by-side NTFS and manual partition layouts;
 - package, theme, DinitUI, DINXPanel, gaming, BC250, and first-party app checks.
+- real DinitUI user-daemon and GTK qualification;
+- bounded Calamares startup smoke with the shipped configuration, in addition to transaction smokes;
 
 ## Three-machine manual matrix
 
@@ -27,6 +29,7 @@ resulting report path for each target.
 
 - boot live session and select the normal DINX session in ReGreet;
 - verify Wayland, MangoWC, Noctalia, audio, network and GPU acceleration;
+- if NVIDIA support is claimed, install `nvidia-open-dkms` with matching headers, reboot, and verify render-node, Vulkan and Gamescope output;
 - lock with `Super+L`;
 - verify idle lock at 600 seconds;
 - suspend, resume, unlock and verify the session remains usable;

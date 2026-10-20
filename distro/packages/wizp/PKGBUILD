@@ -1,0 +1,60 @@
+pkgname=wizp
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='WIZP Zig-native code editor with a bundled CEF runtime'
+arch=(x86_64)
+url='https://github.com/rufl/DINX'
+license=(MIT)
+depends=(glibc libx11 libxcb libxkbcommon mesa)
+optdepends=('git: SCM integration' 'clang: clangd language server' 'xdg-utils: opening external links')
+makedepends=()
+source=()
+sha256sums=()
+
+build() {
+  : "${WIZP_PACKAGE_DIR:?Set WIZP_PACKAGE_DIR to the exact self-contained WIZP package directory}"
+  package_root=$(realpath -- "$WIZP_PACKAGE_DIR")
+  [[ -x "$package_root/bin/launcher" ]] || {
+    printf 'wizp: missing executable bundled launcher: %s\n' "$package_root/bin/launcher" >&2
+    return 1
+  }
+  [[ -x "$package_root/bin/bun" ]] || {
+    printf 'wizp: missing bundled Bun runtime: %s\n' "$package_root/bin/bun" >&2
+    return 1
+  }
+  [[ -f "$package_root/bin/cef/libcef.so" ]] || {
+    printf 'wizp: missing bundled CEF runtime: %s\n' "$package_root/bin/cef/libcef.so" >&2
+    return 1
+  }
+  [[ -f "$package_root/Resources/main.js" ]] || {
+    printf 'wizp: missing Electrobun main bundle: %s\n' "$package_root/Resources/main.js" >&2
+    return 1
+  }
+  [[ -f "$package_root/Resources/app/frontend-dist/index.html" ]] || {
+    printf 'wizp: missing bundled frontend: %s\n' "$package_root/Resources/app/frontend-dist/index.html" >&2
+    return 1
+  }
+  installed_bytes=$(du -sb -- "$package_root" | awk '{print $1}')
+  max_bytes=${WIZP_MAX_INSTALLED_BYTES:-900000000}
+  (( installed_bytes <= max_bytes )) || {
+    printf 'wizp: installed package budget exceeded: %s > %s bytes\n' "$installed_bytes" "$max_bytes" >&2
+    return 1
+  }
+}
+
+package() {
+  package_root=$(realpath -- "$WIZP_PACKAGE_DIR")
+  install -d "$pkgdir/opt/wizp"
+  cp -a "$package_root"/. "$pkgdir/opt/wizp/"
+  install -d "$pkgdir/usr/bin"
+  cat > "$pkgdir/usr/bin/wizp" <<'EOF'
+#!/bin/sh
+exec /opt/wizp/bin/launcher "$@"
+EOF
+  chmod 0755 "$pkgdir/usr/bin/wizp"
+  install -Dm644 "$startdir/resources/wizp.desktop" "$pkgdir/usr/share/applications/wizp.desktop"
+  install -Dm644 "$startdir/resources/dev.wizp.WIZP.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.wizp.WIZP.svg"
+  install -Dm644 "$startdir/README.md" "$pkgdir/usr/share/doc/wizp/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/wizp/LICENSE"
+}

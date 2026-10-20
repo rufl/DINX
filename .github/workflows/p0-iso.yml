@@ -14,6 +14,7 @@ on:
       - "distro/iso/**"
       - "distro/packages/**"
       - "scripts/build-iso.sh"
+      - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check_build_metadata.sh"
       - "scripts/check-iso-host.sh"
@@ -27,6 +28,7 @@ on:
       - "scripts/smoke-install.sh"
       - "scripts/check_calamares_partitioning.sh"
       - "scripts/smoke_calamares_partitioning.sh"
+      - "scripts/smoke_calamares_startup.sh"
       - "scripts/smoke_calamares_windows.sh"
       - "scripts/smoke-iso.ps1"
       - "scripts/package-windows-qemu.sh"
@@ -84,6 +86,8 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
+      - name: Verify WIZP package staging and desktop contract
+        run: ./scripts/check_wizp_package.sh
       - name: Verify Cyan Skillfish and BC-250 support contract
         run: ./scripts/check_cyan_skillfish.sh
       - name: Verify BC250 Control Center package and session contract
@@ -160,8 +164,11 @@ jobs:
                 clang \
                 cairo \
                 cjson \
+                calamares \
+                calamares-extensions \
                 dbus \
                 dialog \
+                dinit \
                 fzf \
                 gdk-pixbuf2 \
                 glances \
@@ -273,6 +280,8 @@ jobs:
               build_package paru
               build_package shelly
               build_package dinitui
+              scripts/dinitui_dinit_qualification.sh
+              scripts/smoke_calamares_startup.sh
               build_package dinxpanel
               source /workspace/distro/packages/noctty/source.env
               [[ -n "$NOCTTY_VERSION" ]]

@@ -310,15 +310,15 @@ jobs:
                 rm -f "$signing_key_file"
                 set -x
               else
-                cat > "$signing_home/keyparams" <<'EOF'
-              %no-protection
-              Key-Type: RSA
-              Key-Length: 3072
-              Name-Real: DINX CI package repository
-              Name-Email: ci@dinx.invalid
-              Expire-Date: 0
-              %commit
-              EOF
+                printf '%s\n' \
+                  '%no-protection' \
+                  'Key-Type: RSA' \
+                  'Key-Length: 3072' \
+                  'Name-Real: DINX CI package repository' \
+                  'Name-Email: ci@dinx.invalid' \
+                  'Expire-Date: 0' \
+                  '%commit' \
+                  > "$signing_home/keyparams"
                 gpg --batch --homedir "$signing_home" --generate-key "$signing_home/keyparams" >/dev/null
               fi
               signing_key=$(gpg --batch --homedir "$signing_home" --with-colons --list-secret-keys \

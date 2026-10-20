@@ -5,6 +5,17 @@ on:
 # Add an isolated validation workflow before enabling any pull-request trigger.
   workflow_dispatch:
   workflow_call:
+    inputs:
+      require_persistent_package_signing:
+        description: Require the production package-signing secret for a published release
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      DINX_PACKAGE_SIGNING_KEY:
+        required: false
+      DINX_PACKAGE_SIGNING_FINGERPRINT:
+        required: false
   push:
     branches:
       - main
@@ -18,6 +29,8 @@ on:
       - "scripts/check-iso-content.sh"
       - "scripts/check_dinx_package_repository.sh"
       - "scripts/check_dinx_package_provenance.sh"
+      - "scripts/check_dinx_release_preflight.sh"
+      - "scripts/smoke_dinx_update.sh"
       - "scripts/check_dinx_feature_groups.sh"
       - "scripts/check_build_metadata.sh"
       - "scripts/check-iso-host.sh"
@@ -52,6 +65,7 @@ on:
       - "scripts/smoke_dinx_session.sh"
       - "scripts/check_gaming.sh"
       - "scripts/check_alpha7_hardware_report.sh"
+      - "scripts/check_dinx_hardware_evidence.sh"
       - "scripts/dinitui_dinit_qualification.sh"
       - "scripts/gaming_p5_qualification.sh"
       - "LICENSE"
@@ -132,6 +146,10 @@ jobs:
         run: sudo ./scripts/smoke_calamares_windows.sh
 
       - name: Build with Artix artools
+        env:
+          DINX_PACKAGE_SIGNING_KEY: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_KEY || '' }}
+          DINX_PACKAGE_SIGNING_FINGERPRINT: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_FINGERPRINT || '' }}
+          DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING: ${{ inputs.require_persistent_package_signing }}
         run: |
           mkdir -p "$RUNNER_TEMP/dinx-artools" "$GITHUB_WORKSPACE/dist/iso"
           docker run --rm --privileged \
@@ -142,7 +160,9 @@ jobs:
             --env DINX_COMMIT="$GITHUB_SHA" \
             --env DINX_RUN_ID="$GITHUB_RUN_ID" \
             --env DINX_REPOSITORY="$GITHUB_REPOSITORY" \
-            --env DINX_ARTIX_IMAGE="artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507" \
+            --env DINX_PACKAGE_SIGNING_KEY \
+            --env DINX_PACKAGE_SIGNING_FINGERPRINT \
+            --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING \
             artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
             bash -ceu '
               set -euxo pipefail
@@ -268,7 +288,29 @@ jobs:
               signing_home=/tmp/dinx-package-signing
               rm -rf "$signing_home"
               install -d -m 700 "$signing_home"
-              cat > "$signing_home/keyparams" <<'EOF'
+              package_repository_channel=ci
+              package_signing_mode=ephemeral-ci
+              if [[ "${DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING:-false}" == true ]]; then
+                set +x
+                package_key_present=false
+                if [[ -n "${DINX_PACKAGE_SIGNING_KEY:-}" ]]; then
+                  package_key_present=true
+                fi
+                set -x
+                if [[ "$package_key_present" != true ]]; then
+                  printf 'A persistent DINX_PACKAGE_SIGNING_KEY is required for this release build.\n' >&2
+                  exit 1
+                fi
+                package_repository_channel=stable
+                package_signing_mode=persistent
+                signing_key_file="$signing_home/private.asc"
+                set +x
+                printf '%s\n' "$DINX_PACKAGE_SIGNING_KEY" > "$signing_key_file"
+                gpg --batch --homedir "$signing_home" --import "$signing_key_file" >/dev/null
+                rm -f "$signing_key_file"
+                set -x
+              else
+                cat > "$signing_home/keyparams" <<'EOF'
               %no-protection
               Key-Type: RSA
               Key-Length: 3072
@@ -277,10 +319,15 @@ jobs:
               Expire-Date: 0
               %commit
               EOF
-              gpg --batch --homedir "$signing_home" --generate-key "$signing_home/keyparams" >/dev/null
+                gpg --batch --homedir "$signing_home" --generate-key "$signing_home/keyparams" >/dev/null
+              fi
               signing_key=$(gpg --batch --homedir "$signing_home" --with-colons --list-secret-keys \
                 | awk -F: '$1 == "fpr" { print $10; exit }')
               [[ "$signing_key" =~ ^[A-Fa-f0-9]{40}$ ]]
+              if [[ -n "${DINX_PACKAGE_SIGNING_FINGERPRINT:-}" ]]; then
+                [[ "${signing_key,,}" == "${DINX_PACKAGE_SIGNING_FINGERPRINT,,}" ]] \
+                  || { printf 'DINX_PACKAGE_SIGNING_FINGERPRINT does not match the imported key.\n' >&2; exit 1; }
+              fi
               gpg --batch --homedir "$signing_home" --export "$signing_key" \
                 > "$package_repo/dinx-package-signing-key.gpg"
               chown -R dinxbuild:dinxbuild "$signing_home"
@@ -338,6 +385,9 @@ jobs:
               build_package mangowm
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
+              rm -f "$package_repo/dinx.db" "$package_repo/dinx.db.sig"
+              cp -- "$package_repo/dinx.db.tar.gz" "$package_repo/dinx.db"
+              cp -- "$package_repo/dinx.db.tar.gz.sig" "$package_repo/dinx.db.sig"
               package_count=$(find "$package_repo" -maxdepth 1 -type f \
                 -name "*.pkg.tar.zst" | awk 'END { print NR }')
               package_repository_snapshot=$(
@@ -355,12 +405,15 @@ jobs:
               package_repository_key_sha256=$(sha256sum "$package_repo/dinx-package-signing-key.gpg" | cut -d " " -f 1)
               {
                 printf "schema=dinx-package-repository/v1\n"
-                printf "channel=ci\n"
-                printf "snapshot=%s\n" "$package_repository_snapshot"
+                printf "channel=%s\n" "$package_repository_channel"
                 printf "signing_fingerprint=%s\n" "$signing_key"
                 printf "package_count=%s\n" "$package_count"
+                printf "publication=github-release-assets/v1\n"
+                printf "database_sha256=%s\n" "$package_repository_db_sha256"
+                printf "key_sha256=%s\n" "$package_repository_key_sha256"
               } > "$package_repo/dinx-repository-metadata.txt"
               scripts/check_dinx_package_repository.sh "$package_repo"
+              scripts/smoke_dinx_update.sh "$package_repo"
 
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
@@ -405,12 +458,13 @@ jobs:
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
-                printf "package_repository_channel=ci\n"
+                printf "package_repository_channel=%s\n" "$package_repository_channel"
+                printf "package_repository_publication=github-release-assets/v1\n"
                 printf "package_repository_snapshot=%s\n" "$package_repository_snapshot"
                 printf "package_repository_signing_fingerprint=%s\n" "$signing_key"
                 printf "package_repository_db_sha256=%s\n" "$package_repository_db_sha256"
                 printf "package_repository_key_sha256=%s\n" "$package_repository_key_sha256"
-                printf "package_signing_mode=ephemeral-ci\n"
+                printf "package_signing_mode=%s\n" "$package_signing_mode"
                 printf "iso_name=%s\n" "$(basename "$iso_path")"
                 printf "iso_bytes=%s\n" "$iso_size"
                 printf "iso_sha512=%s\n" "$iso_sha512"
@@ -420,7 +474,7 @@ jobs:
                 pacman -Q
               } > "$metadata_path"
             '
-          sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/dist/iso"
+          sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/dist/iso" "$GITHUB_WORKSPACE/dist/packages"
 
       - name: Generate checksum and locate ISO
         id: artifact
@@ -468,14 +522,14 @@ jobs:
           DINX_INSTALL_FIRMWARE=bios scripts/smoke-install.sh "$DINX_ISO"
           DINX_INSTALL_FIRMWARE=uefi scripts/smoke-install.sh "$DINX_ISO"
 
-      - name: Attest ISO and checksum provenance
+      - name: Attest ISO, package repository and checksum provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: |
             ${{ steps.artifact.outputs.iso_path }}
             ${{ steps.artifact.outputs.iso_path }}.sha512
             ${{ steps.artifact.outputs.metadata_path }}
-
+            dist/packages/**/*
       - name: Upload alpha workflow artifact
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -488,4 +542,5 @@ jobs:
             dist/iso/**/*.sha512
             dist/iso/**/*.qemu.log
             dist/iso/**/*.ppm
+            dist/packages/**/*
             dist/iso/**/build-metadata.txt

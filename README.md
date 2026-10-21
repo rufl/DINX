@@ -1,98 +1,105 @@
-# DINX
+<p align="center">
+  <img src="distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx.svg" alt="Logotipo DINX" width="180">
+</p>
 
-[Português (Brasil)](README.md) · [English](README.en.md)
+<h1 align="center">DINX</h1>
 
-Distro Linux alpha pública, Spin Customizada do Artix - pouco footprint, máximo desempenho.
+<p align="center">
+  <strong>Uma alpha prática do Artix Linux com dinit, desktop Wayland rápido e um caminho claro para gaming.</strong><br>
+  Pouco footprint. Limites explícitos. Nenhuma mudança silenciosa no sistema.
+</p>
 
-O alvo inicial da plataforma é **x86_64**, baseada no **Artix Linux com dinit**, com um desktop Wayland usando **MangoWC** e **Noctalia Shell**.
+<p align="center">
+  <a href="README.md">Português (Brasil)</a> ·
+  <a href="README.en.md">English</a>
+</p>
 
-> Software alpha. Não instale em sistemas que contenham dados que você não consiga restaurar.
+<p align="center">
+  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="Status da validação P0" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
+  <img alt="Estágio: beta de jogos P5" src="https://img.shields.io/badge/estágio-P5%20beta%20de%20jogos-f59e0b">
+  <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
+</p>
 
-## Família de produtos
+> **Software alpha público.** Faça backup antes de testar. O instalador é experimental; hardware físico e as afirmações de gaming ainda têm limites claros.
 
-- **DINX** — imagem do sistema operacional, pacotes, contratos de integração e ferramentas de release.
-- **Noctty** — emulador de terminal com interface própria em Zig e um núcleo comprovado de emulação de terminal.
-- **Nocted** — editor de código leve com suporte a sintaxe, LSP e integração com Git.
-- **DINXPanel** — centro de controle inspirado no YaST para atalhos dos painéis do sistema, detecção/instalação fixa de drivers, upgrades Shelly/Topgrade, descoberta opcional de firmware e instalação segura de kernels Artix.
-- **BC250 Control Center** — interface upstream para telemetria, ajustes e recuperação da BC-250, empacotada para a sessão Artix/dinit da DINX.
-- **Dinx Theme** — tokens de design compartilhados e contratos de integração de aplicativos, versionados.
+## Comece aqui
 
-Os aplicativos devem integrar-se profundamente à DINX, mas continuar utilizáveis em outros sistemas Linux sempre que os requisitos da plataforma estiverem disponíveis.
+| Se você quer… | Vá para |
+|---|---|
+| Baixar a imagem atual | [DINX v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8) |
+| Instalar e inicializar com segurança | [Guia de instalação](docs/pt-BR/install.md) |
+| Ver o que foi realmente qualificado | [Evidência P0](docs/pt-BR/p0-build.md) |
+| Entender os limites do alpha | [Roadmap](docs/pt-BR/roadmap.md) e [compatibilidade](docs/pt-BR/compatibility.md) |
+| Ver as mudanças da release | [Changelog](CHANGELOG.pt-BR.md) |
+| Ler em inglês | [README em English](README.en.md) |
 
-## Repositórios dos aplicativos
+## Alpha 8 em um minuto
 
-- [Noctty](https://github.com/rufl/noctty) — terminal privado alpha.
-- [Nocted](https://github.com/rufl/nocted) — editor de código privado alpha.
-- O DinitUI é desenvolvido atualmente em `distro/packages/dinitui` para manter seu contrato de Dinit/ISO versionado com a DINX; pode migrar para um repositório dedicado depois que o limite do pacote estabilizar.
+A [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8) é o snapshot público atual. A execução de release [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), no commit `eea66ac`, passou os contratos estáticos, builds de pacotes Artix, criação e boot da ISO, validação do payload gráfico, smokes do Calamares em BIOS/UEFI/Btrfs, instalação persistente e TTY de recuperação em discos descartáveis BIOS/UEFI, verificação de metadados, assinatura persistente de pacotes, atestação e publicação.
 
-Os aplicativos têm repositórios próprios para ciclos de desenvolvimento independentes, mas continuam ligados aos contratos compartilhados e ao release da DINX.
+| Item | Evidência |
+|---|---|
+| ISO | 2.803.349.504 bytes, com partes e checksum SHA-512 publicados |
+| Repositório DINX | Snapshot assinado `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9` |
+| Imagem | Artix Linux x86_64 com dinit |
+| Estágio | P5 — Beta de jogos; P4 DinitUI qualificada para o gate alpha |
 
+## O que é a DINX
 
-## Arquitetura inicial
+A DINX é uma distribuição Artix focada em uma sessão desktop enxuta, legível e controlável:
 
-- Artix Linux + dinit
-- Wayland + MangoWC + Noctalia Shell
-- PipeWire, D-Bus, portais, polkit e aceleração de GPU
-- Zig como linguagem primária dos aplicativos, usando bibliotecas e bindings maduros quando reduzirem o risco
-- Contratos versionados para temas, caminhos XDG, metadados `.desktop`, invocação por `$TERMINAL` e IPC opcional do Noctalia
-- Sessão de jogos separada, baseada em Gamescope e Steam; ela não deve depender de uma sessão completa do Noctalia em segundo plano
+- **Artix Linux + dinit** como base;
+- **Wayland, MangoWC e Noctalia Shell** para a sessão gráfica;
+- **PipeWire, D-Bus, portais, polkit e aceleração GPU** no payload da ISO;
+- **DinitUI e DINXPanel** para serviços, perfis Normal/Lite/Gaming, atalhos de sistema, drivers e kernels Artix;
+- **sessão DINX Gaming** separada, com Gamescope/Steam e payload gráfico de 32 bits;
+- **Calamares e KDE Partition Manager** para o caminho de instalação experimental.
 
-## Política de entrega
+Noctty, Nocted e os demais contratos de integração ficam versionados junto com a distribuição quando isso reduz risco e mantém a ISO reproduzível.
 
-O monorepo é público no GitHub durante a alpha. ISOs e pacotes alpha continuam sendo artefatos de pré-release até que cada release seja deliberadamente publicado. Cada artefato deve conter sua versão exata, o commit de origem, checksum e limitações conhecidas.
+## Instalação rápida
 
-O projeto usa um monorepo para manter contratos compartilhados e ferramentas de release versionados junto com os aplicativos:
+1. Baixe a release [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8). A ISO excede 2 GiB, então use todas as partes `*.iso.part-*`, o manifesto e o checksum.
+2. Concatene e verifique antes de gravar:
 
-```text
-docs/
-shared/
-apps/noctty/
-apps/nocted/
-distro/
-  packages/dinitui/
-  packages/dinxpanel/
-tests/
-scripts/
-```
+   ```bash
+   cat dinx-0.1.0-alpha.8-x86_64.iso.part-* > dinx-0.1.0-alpha.8-x86_64.iso
+   sha512sum -c dinx-0.1.0-alpha.8-x86_64.iso.sha512
+   ```
 
-## Marcos
+3. Grave a ISO verificada no USB inteiro, inicialize em UEFI e selecione `MangoWM (DINX)` no greeter. O login live de teste é `dinx` / `dinx`.
 
-1. **P0 — Fundação:** base Artix+dinit reproduzível, ISO inicializável, login gráfico, rede, áudio, aceleração de GPU e TTY de recuperação.
-2. **P1 — Alpha pública:** documentação de instalação, checksums, assinatura de pacotes, problemas conhecidos e terminal de fallback.
-3. **P2 — Noctty:** ciclo de vida confiável de PTY, semântica de terminal, renderização, Unicode, scrollback, seleção e compatibilidade com TUIs interativas.
-4. **P3 — Nocted:** edição confiável, destaque de sintaxe, busca, navegação de projetos, LSP e status/diffs do Git.
-5. **P4 — DinitUI + DINXPanel:** gerenciamento seguro de serviços dinit, perfis customizáveis Normal/Lite/Gaming, atalhos dos painéis do sistema, fluxo fixo de GPU e instalação segura de kernels Artix.
-6. **P5 — Beta de jogos:** sessão Gamescope/Steam, validação de controles e gráficos, suspensão/retomada e testes de atualização.
+Leia o [guia de instalação](docs/pt-BR/install.md) antes de particionar. Ele cobre Windows side-by-side, recuperação por TTY, verificação de dispositivo e os limites do instalador.
 
-A alpha não exige que todos os aplicativos próprios estejam completos. Um sistema inicializável conhecido como funcional tem prioridade sobre branding ou recursos avançados de interface.
+## O que já foi provado
 
-## Fase atual
-
-**P5 — Beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end para release: testes Zig/build ReleaseSafe, payload do pacote Arch, contratos estáticos, a qualificação com daemon Dinit de usuário temporário real/smoke GTK e o gate P0 da ISO passaram. A execução [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), no commit `eea66ac`, passou o workflow de release completo e publicou a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8) com ISO, checksums, atestação e repositório DINX estável assinado. A P5 mantém abertos os limites de Steam/jogo/controle/áudio autenticados, sessão DRM real, hardware físico, suspensão/retomada e recuperação de GPU.
+| Qualificado no release | Ainda não alegado |
+|---|---|
+| Boot x86_64 em QEMU e payload gráfico esperado | Matriz de hardware físico |
+| Transação de particionamento Calamares BIOS/UEFI/Btrfs | Sessão DRM real e seleção gaming pelo greeter |
+| Instalação descartável BIOS/UEFI, primeiro boot dinit e TTY de recuperação | Steam autenticado, jogo comercial, controle e áudio PipeWire |
+| Checksums, metadados, atestação e repositório de pacotes DINX assinado | Suspensão/retomada, recuperação de GPU e upgrades/rollback da ISO instalada |
 
 ## Documentação
 
 - [Arquitetura](docs/pt-BR/architecture.md)
+- [Guia de instalação](docs/pt-BR/install.md)
 - [Compatibilidade com Noctalia](docs/pt-BR/compatibility.md)
-- [Modelo de segurança](docs/pt-BR/security-model.md)
-- [Guia de instalação fácil](docs/pt-BR/install.md)
-- [Política de segurança](SECURITY.pt-BR.md)
 - [Status do build P0](docs/pt-BR/p0-build.md)
 - [Roadmap](docs/pt-BR/roadmap.md)
-- [Processo de release alpha](docs/pt-BR/release.md)
-- [Qualificação da Alpha 7](docs/pt-BR/alpha7-qualification.md)
-- [Build da ISO](distro/iso/README.pt-BR.md)
-- [Licença](LICENSE)
+- [Processo de release](docs/pt-BR/release.md)
+- [Qualificação de hardware](docs/pt-BR/alpha7-qualification.md) — o utilitário mantém o nome `dinx-alpha7-hardware-report` por compatibilidade
+- [Fundação da ISO](distro/iso/README.pt-BR.md)
+- [Modelo de segurança](docs/pt-BR/security-model.md)
+- [Changelog](CHANGELOG.pt-BR.md)
+- [Licença Apache 2.0](LICENSE)
 
-Versões originais em inglês:
+## Código e contratos
 
-- [Architecture](docs/architecture.md)
-- [Noctalia compatibility](docs/compatibility.md)
-- [Security model](docs/security-model.md)
-- [P0 build status](docs/p0-build.md)
-- [ISO foundation](distro/iso/README.md)
-- [Alpha 7 qualification](docs/alpha7-qualification.md)
+A DINX é um monorepo público para manter juntos os contratos do desktop, pacotes, perfil da ISO, testes de qualificação e ferramentas de release. Os aplicativos devem integrar-se profundamente à plataforma, mas continuar utilizáveis em outros sistemas Linux quando seus requisitos estiverem disponíveis.
 
-## Status atual
-
-A release pública [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), publicada a partir do commit da tag `eea66ac`, é o snapshot público atual de validação. O workflow de release [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) passou os builds de pacotes Artix, a criação da ISO, o boot no QEMU, a validação do payload gráfico, os smokes transacionais e persistentes do Calamares, a atestação, a verificação dos metadados de build e a publicação dos assets. A ISO tem 2.803.349.504 bytes e SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`; o repositório DINX estável usa o snapshot `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
+- [Código no GitHub](https://github.com/rufl/DINX)
+- [Issues](https://github.com/rufl/DINX/issues)
+- [Releases](https://github.com/rufl/DINX/releases)
+- [Workflow de validação](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml)

@@ -220,10 +220,10 @@ recuperação física. WIZP e o CUPS opcional continuam fora das afirmações de
 da ISO até que o artefato externo ou a transação real do pacote seja qualificada de
 ponta a ponta.
 
-Use a [qualificação da Alpha 7](alpha7-qualification.md) para a matriz de
-desktop/laptop/BC-250. A ISO gerada inclui `dinx-alpha7-hardware-report`, um
-utilitário somente de leitura para anexar evidências de hardware e sessão sem
-alterar o estado do sistema.
+Use a [matriz de qualificação de hardware](alpha7-qualification.md); seu
+utilitário mantém o nome Alpha 7 por compatibilidade. A ISO gerada inclui
+`dinx-alpha7-hardware-report`, um utilitário somente de leitura para anexar
+evidências de hardware e sessão sem alterar o estado do sistema.
 
 ## Limites do release
 

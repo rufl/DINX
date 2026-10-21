@@ -116,7 +116,7 @@ O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, m
 ## Limite do perfil
 
 O perfil usa o manifesto comum de pacotes do Artix fornecido pelo pacote `iso-profiles` instalado e adiciona localmente as entradas específicas da DINX. `WORKSPACE_DIR` em `scripts/build-iso.sh` torna determinística a seleção do perfil.
-A execução [39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), no commit `5def1fa`, passou a sequência de validação bem-sucedida atual: geração do checksum, validação do payload SquashFS, boot no QEMU, smoke transacional de particionamento BIOS/UEFI/Btrfs do Calamares, smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação de procedência e upload do artefato. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
+A evidência de release com tag atual é o [workflow 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) para a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), no commit `eea66ac`. Ele passou a geração do checksum, a validação do payload SquashFS, o boot no QEMU, o smoke transacional de particionamento BIOS/UEFI/Btrfs do Calamares, o smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a atestação de procedência e a publicação do release. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
 
 ## Validação do build
 

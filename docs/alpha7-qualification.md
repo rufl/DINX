@@ -1,8 +1,8 @@
-# DINX Alpha 7 qualification
+# DINX hardware qualification (Alpha 7 report contract)
 
-Alpha 7 is the next DINX OS validation snapshot after `v0.1.0-alpha.6`.
-This document separates what the repository can prove from what requires manual
-hardware testing after the ISO is generated.
+The Alpha 7 report utility and environment names are retained for compatibility.
+This matrix is the manual hardware boundary for the current `v0.1.0-alpha.8`
+release; it separates repository evidence from manual hardware testing after the ISO is generated.
 
 ## Build gate
 
@@ -108,5 +108,6 @@ game launch, controller input, PipeWire game audio, suspend/resume, physical
 brightness, GPU recovery, firmware behavior, or long-running hardware health.
 Those claims remain open until the three-machine manual matrix passes.
 
-P5 gaming remains a separate beta gate. Alpha 7 may ship as a system alpha
-without claiming that the gaming beta exit criterion has passed.
+P5 gaming remains a separate beta gate. The `v0.1.0-alpha.8` release is a
+system alpha; this document does not claim that the gaming beta exit criterion
+has passed.

@@ -216,8 +216,8 @@ downgrade path. It does not claim an installed-ISO upgrade, filesystem rollback 
 physical recovery procedure. WIZP and optional CUPS remain outside ISO payload claims
 until their external artifact or live package transaction is qualified end to end.
 
-Use [Alpha 7 qualification](alpha7-qualification.md) for the three-machine
-desktop/laptop/BC-250 matrix. The generated ISO includes
+Use the [hardware qualification matrix](alpha7-qualification.md); its report
+utility retains the Alpha 7 name for compatibility. The generated ISO includes
 `dinx-alpha7-hardware-report`, a read-only report utility for attaching
 hardware/session evidence without changing system state.
 

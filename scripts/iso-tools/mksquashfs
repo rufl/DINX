@@ -10,12 +10,15 @@ real_mksquashfs=${DINX_MKSQUASHFS_REAL:-/usr/bin/mksquashfs}
 filtered=()
 while (($#)); do
   case "$1" in
-    -comp|-b|-Xbcj)
+    -comp|-b|-Xbcj|-Xcompression-level|-Xdict-size)
       (($# >= 2)) || {
         printf 'dinx mksquashfs wrapper: option %s needs a value\n' "$1" >&2
         exit 2
       }
       shift 2
+      ;;
+    -comp=*|-b=*|-Xbcj=*|-Xcompression-level=*|-Xdict-size=*)
+      shift
       ;;
     *)
       filtered+=("$1")

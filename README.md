@@ -5,7 +5,7 @@
 <h1 align="center">DINX</h1>
 
 <p align="center">
-  <strong>Uma alpha prática do Artix Linux com dinit, desktop Wayland rápido e um caminho claro para gaming.</strong><br>
+  <strong>Uma versão alpha prática do Artix Linux com dinit, desktop Wayland rápido e um caminho claro para gaming.</strong><br>
   Pouco footprint. Limites explícitos. Nenhuma mudança silenciosa no sistema.
 </p>
 
@@ -32,7 +32,7 @@
 | Ver o que foi realmente qualificado | [Evidência P0](docs/pt-BR/p0-build.md) |
 | Entender os limites do alpha | [Roadmap](docs/pt-BR/roadmap.md) e [compatibilidade](docs/pt-BR/compatibility.md) |
 | Ver as mudanças da release | [Changelog](CHANGELOG.pt-BR.md) |
-| Ler em inglês | [README em English](README.en.md) |
+| Ler em inglês | [README em inglês](README.en.md) |
 
 ## Alpha 8 em um minuto
 

@@ -461,7 +461,7 @@ jobs:
                 printf "buildiso_owner=%s\n" "$buildiso_owner"
                 printf "zig_version=%s\n" "$(zig version)"
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
-                printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
+                printf "noctty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"
                 printf "package_repository_publication=github-release-assets/v1\n"

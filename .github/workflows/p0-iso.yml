@@ -150,6 +150,7 @@ jobs:
           DINX_PACKAGE_SIGNING_KEY: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_KEY || '' }}
           DINX_PACKAGE_SIGNING_FINGERPRINT: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_FINGERPRINT || '' }}
           DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING: ${{ inputs.require_persistent_package_signing }}
+          DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
         run: |
           mkdir -p "$RUNNER_TEMP/dinx-artools" "$GITHUB_WORKSPACE/dist/iso"
           docker run --rm --privileged \
@@ -163,7 +164,8 @@ jobs:
             --env DINX_PACKAGE_SIGNING_KEY \
             --env DINX_PACKAGE_SIGNING_FINGERPRINT \
             --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING \
-            artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
+            --env DINX_ARTIX_IMAGE \
+            "$DINX_ARTIX_IMAGE" \
             bash -ceu "$(cat <<'DINX_CONTAINER_SCRIPT'
               set -euxo pipefail
               pacman_retry() {

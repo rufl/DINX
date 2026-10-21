@@ -85,7 +85,9 @@ for required in \
   'makepkg --clean --nodeps --nocheck --noconfirm' \
   '--sign --key' \
   'pacman-key --init' \
-  'SigLevel = Required'; do
+  'SigLevel = Required' \
+  'DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507' \
+  '--env DINX_ARTIX_IMAGE'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
 done
 for required in \

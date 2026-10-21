@@ -162,12 +162,12 @@ assert_version() {
 }
 
 write_pacman_conf "$repo_v1"
-pacman_run -Sy --noconfirm >/dev/null
+pacman_run -Syy --noconfirm >/dev/null
 pacman_run -S --noconfirm dinx-update-fixture >/dev/null
 assert_version 1.0.0
 
 write_pacman_conf "$repo_v2"
-pacman_run -Sy --noconfirm >/dev/null
+pacman_run -Syy --noconfirm >/dev/null
 pacman_run -Su --noconfirm >/dev/null
 assert_version 2.0.0
 

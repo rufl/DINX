@@ -71,6 +71,7 @@ for source_env in distro/packages/*/source.env; do
 done
 
 workflow=.github/workflows/p0-iso.yml
+update_smoke=scripts/smoke_dinx_update.sh
 for required in \
   'scripts/check_dinx_package_provenance.sh' \
   'scripts/check_dinx_feature_groups.sh' \
@@ -86,6 +87,12 @@ for required in \
   'pacman-key --init' \
   'SigLevel = Required'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
+done
+for required in \
+  'pacman_run -Syy --noconfirm' \
+  'local expected_pacman_version="${expected}-1"'; do
+  grep -Fq -- "$required" "$update_smoke" \
+    || fail "update smoke is missing pacman contract: $required"
 done
 
 printf 'package_provenance_contract packages=%s source_env=%s checksums=true local_contracts=true skip_sources=false workflow=true signed_repository=true\n' \

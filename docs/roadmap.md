@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Run [39292450368](https://github.com/rufl/DINX/actions/runs/39292450368) on commit `5def1fa` is the current P0 evidence, including BIOS and UEFI disposable disks, the Calamares BIOS/UEFI/Btrfs transaction smoke and build-metadata verification. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
+**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Tagged release run [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) on commit `eea66ac` is the current P0 evidence, including BIOS and UEFI disposable disks, the Calamares BIOS/UEFI/Btrfs transaction smoke, build-metadata verification, persistent package signing and release publication. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
 
 ## P0 — foundation
 
@@ -32,7 +32,7 @@ Backlog:
 
 **Goal:** distribute a known-good snapshot through the public GitHub project.
 
-**Status:** complete for the public alpha snapshot `v0.1.0-alpha.7`.
+**Status:** complete for the public alpha snapshot `v0.1.0-alpha.8`.
 
 Completed:
 
@@ -43,7 +43,6 @@ Completed:
 
 Deferred release gates:
 
-- configure the production `DINX_PACKAGE_SIGNING_KEY` and `DINX_PACKAGE_SIGNING_FINGERPRINT` secrets and publish the first stable package repository;
 - physical hardware reports and qualification beyond the VM;
 
 **Exit criterion:** met. An invited tester can install the alpha snapshot from the public release and documentation without reconstructing the development environment.
@@ -95,7 +94,7 @@ P3 release gate:
 
 **Goal:** make Dinit operations understandable, complete and safe without importing systemd concepts.
 
-**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe builds, Arch package payloads, static contract checks, a real temporary Dinit user daemon and the production GTK smoke paths are qualified. Run [39292450368](https://github.com/rufl/DINX/actions/runs/39292450368) also passed the Artix package build, ISO payload, QEMU boot, Calamares BIOS/UEFI/Btrfs partition transaction smoke, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and artifact upload. DINXPanel now owns the visible hardware/driver controls and fixed kernel installer; the broader hardware matrix remains a production-release gate.
+**Status:** release-qualified for the alpha gate. `zig build test`, ReleaseSafe builds, Arch package payloads, static contract checks, a real temporary Dinit user daemon and the production GTK smoke paths are qualified. Tagged release run [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) on commit `eea66ac` also passed the Artix package build, ISO payload, QEMU boot, Calamares BIOS/UEFI/Btrfs partition transaction smoke, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, persistent package signing, provenance attestation and release publication. DINXPanel now owns the visible hardware/driver controls and fixed kernel installer; the broader hardware matrix remains a production-release gate.
 
 **Delivered:**
 

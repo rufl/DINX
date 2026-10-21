@@ -18,10 +18,7 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-O workflow P0 mais recente aprovado é a [execução 39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), no commit `5def1fa` (`5def1fac50bea5380cbdb49e78506edf45525726`). Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, o contrato de particionamento e o smoke transacional BIOS/UEFI/Btrfs do Calamares, o smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e upload do artefato. O artefato temporário do workflow é `dinx-foundation-iso-5def1fac50bea5380cbdb49e78506edf45525726`, com 2.751.063.420 bytes e digest `sha256:9aaced5d96f3a650c35d1d001c928ad585addc3f3eaecf513fef722ab5ff8641`; ele continua sendo um artefato de validação, não um release estável de hardware.
-Essa execução é anterior às mudanças de repositório persistente e evidência de
-hardware abaixo. Não a use como prova de que o repositório de uma tag ou a matriz
-de hardware físico passou; atualize esta seção depois de uma nova execução remota.
+O workflow de release com tag mais recente é a [execução 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) para a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), no commit `eea66ac` (`eea66acc83ca26c971ad5407d26dbd32f67d567f`). Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, assinatura persistente de pacotes, atestação e publicação dos assets do release. A ISO publicada tem 2.803.349.504 bytes e SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`; o snapshot do repositório estável de pacotes é `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
 
 ## Artefatos publicados
 
@@ -119,8 +116,8 @@ checksum de um pacote ou release anterior:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.7'
-$zipName = 'dinx-0.1.0-alpha.7-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.8'
+$zipName = 'dinx-0.1.0-alpha.8-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -181,7 +178,7 @@ Os metadados do pacote apontam para o receptor Windows registrado `ddjarin`. Na 
 do proprietário, faça primeiro o preview da atribuição imutável:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.7
+scripts/deploy-ztash.sh v0.1.0-alpha.8
 ```
 
 O script lê os metadados do release, verifica URL HTTPS, SHA-256, tamanho, target e
@@ -191,7 +188,7 @@ imprime o token e nunca cria credenciais.
 Depois de revisar o preview, aplique explicitamente:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.7 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.8 --apply
 ```
 
 A operação exige o token privado do proprietário para DDJARIN em `ZEER_TOKEN_FILE`

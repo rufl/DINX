@@ -17,10 +17,7 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest successful P0 workflow is [run 39292450368](https://github.com/rufl/DINX/actions/runs/39292450368), on commit `5def1fa` (`5def1fac50bea5380cbdb49e78506edf45525726`). It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, the Calamares partition contract and BIOS/UEFI/Btrfs transaction smoke, disposable BIOS and UEFI persistent-install/first-boot/recovery-TTY smoke, build-metadata verification, attestation and artifact upload. The temporary workflow artifact is `dinx-foundation-iso-5def1fac50bea5380cbdb49e78506edf45525726`, 2,751,063,420 bytes, digest `sha256:9aaced5d96f3a650c35d1d001c928ad585addc3f3eaecf513fef722ab5ff8641`; it remains a validation artifact, not a stable hardware release.
-That run predates the persistent release-repository and hardware-evidence changes
-below. Do not use it as evidence that a tagged release repository or physical
-hardware matrix has passed; refresh this section after a new remote workflow run.
+The latest tagged release workflow is [run 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) for [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), on commit `eea66ac` (`eea66acc83ca26c971ad5407d26dbd32f67d567f`). It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, persistent package signing, attestation and release-asset publication. The published ISO totals 2,803,349,504 bytes and has SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`; the stable package repository snapshot is `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
 
 ## Published assets
 
@@ -117,8 +114,8 @@ checksum from an older package or a different release:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.7'
-$zipName = 'dinx-0.1.0-alpha.7-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.8'
+$zipName = 'dinx-0.1.0-alpha.8-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -178,7 +175,7 @@ The package metadata targets the registered `ddjarin` Windows receiver. On the t
 owner machine, preview the immutable assignment first:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.7
+scripts/deploy-ztash.sh v0.1.0-alpha.8
 ```
 
 The script reads the release metadata, verifies the HTTPS URL, package SHA-256, size,
@@ -188,7 +185,7 @@ mode. It never prints the token and never creates credentials.
 After reviewing the preview, apply explicitly:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.7 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.8 --apply
 ```
 
 The operation requires the owner-private DDJARIN token in

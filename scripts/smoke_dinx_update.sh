@@ -153,11 +153,12 @@ pacman_run() {
 
 assert_version() {
   local expected=$1
+  local expected_pacman_version="${expected}-1"
   local actual
   actual=$(cat "$pacman_root/usr/share/dinx-update-fixture/version")
   [[ "$actual" == "$expected" ]] || fail "fixture payload version mismatch: expected=$expected actual=$actual"
-  pacman_run -Q dinx-update-fixture | awk '{ print $2 }' | grep -Fqx "$expected" \
-    || fail "pacman database version mismatch: expected=$expected"
+  pacman_run -Q dinx-update-fixture | awk '{ print $2 }' | grep -Fqx "$expected_pacman_version" \
+    || fail "pacman database version mismatch: expected=$expected_pacman_version"
 }
 
 write_pacman_conf "$repo_v1"

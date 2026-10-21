@@ -75,6 +75,14 @@ scripts/build-iso.sh -q
 ```
 
 O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_ISO_OUTPUT`. O cache de chroots padrão é `/var/lib/artools/buildiso`; altere-o com `DINX_ISO_CHROOTS` quando o builder usar outro volume persistente.
+## Meta de tamanho da ISO
+
+O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
+do builder. Ele força imagens SquashFS comprimidas com xz, filtro BCJ x86 e
+blocos de 256 KiB, mantendo o fluxo `buildiso` do Artix. O orçamento P0 rejeita
+uma ISO construída com tamanho igual ou maior que o limite de 2 GiB por asset
+do GitHub; a imagem publicada da Alpha 8 é anterior a essa meta e continua
+dividida entre os assets do release.
 
 ## Perfil gráfico
 
@@ -103,7 +111,7 @@ O Mango abre novos aplicativos como janelas flutuantes por padrão, com `Super+S
 
 A sessão instala `swaylock`, `swayidle` e `brightnessctl`. `/usr/local/libexec/dinx-idle` bloqueia após 600 segundos e bloqueia novamente em `before-sleep`; `/usr/local/libexec/dinx-lock`, `Super+L`, a entrada do launcher Noctalia e a DINXPanel fornecem o caminho explícito de bloqueio. As teclas padrão de brilho e a DINXPanel usam passos fixos de 5% com `brightnessctl`. O dock do Noctalia fica reservado às superfícies DINX principais; ferramentas especializadas permanecem no launcher.
 
-`scripts/check_dinx_budget.sh` mantém o perfil atual em no máximo 128 entradas de pacotes rootfs e 24 entradas de inicialização dinit, limita os binários compilados da DINXPanel/DinitUI a 6 MiB cada, limita a janela de qualificação de boot QEMU a 120 segundos e verifica uma ISO construída contra um teto de 4 GiB quando `DINX_ISO_PATH` é fornecido. Esses limites evitam regressões; não são medições de desempenho em hardware. `scripts/measure_dinx_session.sh` registra snapshots de RSS/CPU via `/proc` quando uma sessão DINX está realmente em execução.
+`scripts/check_dinx_budget.sh` mantém o perfil atual em no máximo 128 entradas de pacotes rootfs e 24 entradas de inicialização dinit, limita os binários compilados da DINXPanel/DinitUI a 6 MiB cada, limita a janela de qualificação de boot QEMU a 120 segundos e exige que uma ISO construída fique abaixo de 2 GiB (`2147483647` bytes) quando `DINX_ISO_PATH` é fornecido. Esses limites evitam regressões; não são medições de desempenho em hardware. `scripts/measure_dinx_session.sh` registra snapshots de RSS/CPU via `/proc` quando uma sessão DINX está realmente em execução.
 
 O perfil Artix atual continua sendo uma ISO única combinada de desktop/gaming/hardware porque o `buildiso` consome um `profile.yaml`; as políticas Normal/Lite/Gaming do DinitUI fornecem a separação de serviços em runtime. O conjunto de pacotes é documentado intencionalmente como um payload único até o builder suportar grupos de pacotes composáveis sem duplicar o root overlay.
 

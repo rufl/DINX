@@ -75,6 +75,13 @@ scripts/build-iso.sh -q
 ```
 
 The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. The chroot cache defaults to `/var/lib/artools/buildiso`; override it with `DINX_ISO_CHROOTS` when the builder uses another persistent volume.
+## ISO size target
+
+The build wrapper prepends `scripts/iso-tools/mksquashfs` to the builder `PATH`.
+It forces xz-compressed SquashFS images with x86 BCJ filtering and 256 KiB
+blocks, while keeping the Artix `buildiso` flow unchanged. The P0 budget rejects
+a built ISO at or above GitHub's 2 GiB per-asset limit; the published Alpha 8
+image predates this target and remains split across release assets.
 
 ## Graphical profile
 
@@ -107,7 +114,7 @@ Mango opens new applications as floating windows by default, with `Super+Space` 
 
 The session installs `swaylock`, `swayidle` and `brightnessctl`. `/usr/local/libexec/dinx-idle` locks after 600 seconds and locks again on `before-sleep`; `/usr/local/libexec/dinx-lock`, `Super+L`, the Noctalia launcher entry and DINXPanel provide the explicit lock path. Standard brightness keys and DINXPanel use fixed 5-percent `brightnessctl` steps. The Noctalia dock is reserved for primary DINX surfaces; specialist tools remain in the launcher.
 
-`scripts/check_dinx_budget.sh` keeps the current profile at or below 128 rootfs package entries and 24 dinit startup entries, caps built DINXPanel/DinitUI binaries at 6 MiB each, limits the QEMU boot qualification window to 120 seconds, and checks a built ISO against a 4 GiB ceiling when `DINX_ISO_PATH` is supplied. These are regression ceilings, not measured hardware performance claims. `scripts/measure_dinx_session.sh` records RSS/CPU snapshots from `/proc` when a DINX session is actually running.
+`scripts/check_dinx_budget.sh` keeps the current profile at or below 128 rootfs package entries and 24 dinit startup entries, caps built DINXPanel/DinitUI binaries at 6 MiB each, limits the QEMU boot qualification window to 120 seconds, and enforces a built ISO below 2 GiB (`2147483647` bytes) when `DINX_ISO_PATH` is supplied. These are regression ceilings, not measured hardware performance claims. `scripts/measure_dinx_session.sh` records RSS/CPU snapshots from `/proc` when a DINX session is actually running.
 
 The current Artix profile remains one combined desktop/gaming/hardware ISO because `buildiso` consumes one `profile.yaml`; DinitUI's Normal/Lite/Gaming policies provide runtime service separation. The package set is intentionally documented as one payload until the builder supports composable package groups without duplicating the root overlay.
 

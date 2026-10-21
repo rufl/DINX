@@ -4,7 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
-No user-facing changes are recorded after `v0.1.0-alpha.8` yet.
+- Added deterministic xz SquashFS compression with x86 BCJ filtering and a strict P0 budget below GitHub's 2 GiB per-asset limit for future full-ISO releases. Alpha 8 remains split because it predates this change.
 
 ## v0.1.0-alpha.8 — 2026-10-21
 

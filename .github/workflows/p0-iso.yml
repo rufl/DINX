@@ -25,6 +25,7 @@ on:
       - "distro/iso/**"
       - "distro/packages/**"
       - "scripts/build-iso.sh"
+      - "scripts/iso-tools/mksquashfs"
       - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check_dinx_package_repository.sh"

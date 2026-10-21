@@ -40,15 +40,19 @@ require_command xorriso
 require_command buildiso
 
 profile_dir="$workspace_dir/iso-profiles/dinx"
+iso_tools_dir="$repo_root/scripts/iso-tools"
 [[ -f "$profile_dir/profile.yaml" ]] || fail "missing DINX profile: $profile_dir/profile.yaml"
+[[ -x "$iso_tools_dir/mksquashfs" ]] || fail "missing executable ISO compression wrapper: $iso_tools_dir/mksquashfs"
+iso_tools_path="$iso_tools_dir:$PATH"
+buildiso_path=$(command -v buildiso)
 
 mkdir -p "$output_dir"
-buildiso_path=$(command -v buildiso)
 
 if [[ $EUID -ne 0 ]]; then
   require_command sudo
   ensure_loop_support_with_sudo
   exec sudo env \
+    PATH="$iso_tools_path" \
     WORKSPACE_DIR="$workspace_dir" \
     "$buildiso_path" \
     -p dinx \
@@ -59,7 +63,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 ensure_loop_support
-exec env WORKSPACE_DIR="$workspace_dir" "$buildiso_path" \
+exec env \
+  PATH="$iso_tools_path" \
+  WORKSPACE_DIR="$workspace_dir" \
+  "$buildiso_path" \
   -p dinx \
   -i dinit \
   -r "$chroots_dir" \

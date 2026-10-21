@@ -18,6 +18,10 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 ## Current validated snapshot
 
 The latest tagged release workflow is [run 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) for [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), on commit `eea66ac` (`eea66acc83ca26c971ad5407d26dbd32f67d567f`). It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, persistent package signing, attestation and release-asset publication. The published ISO totals 2,803,349,504 bytes and has SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`; the stable package repository snapshot is `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
+Future tagged builds use the deterministic compact-ISO path from
+`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering and a
+strict ISO budget below GitHub's 2 GiB per-asset limit. Alpha 8 was built before
+this change and remains distributed as split ISO parts.
 
 ## Published assets
 

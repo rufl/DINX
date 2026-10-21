@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+real_mksquashfs=${DINX_MKSQUASHFS_REAL:-/usr/bin/mksquashfs}
+[[ -x "$real_mksquashfs" ]] || {
+  printf 'dinx mksquashfs wrapper: missing %s\n' "$real_mksquashfs" >&2
+  exit 127
+}
+
+filtered=()
+while (($#)); do
+  case "$1" in
+    -comp|-b|-Xbcj)
+      (($# >= 2)) || {
+        printf 'dinx mksquashfs wrapper: option %s needs a value\n' "$1" >&2
+        exit 2
+      }
+      shift 2
+      ;;
+    *)
+      filtered+=("$1")
+      shift
+      ;;
+  esac
+done
+
+exec "$real_mksquashfs" "${filtered[@]}" -comp xz -b 256K -Xbcj x86

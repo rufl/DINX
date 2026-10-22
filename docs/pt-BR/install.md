@@ -30,7 +30,7 @@ Ainda não existe um download estável de release. O artefato do workflow públi
 
 1. Abra os [releases da DINX](https://github.com/rufl/DINX/releases).
 2. Selecione o pre-release mais recente.
-3. Baixe `dinx-<versão>-x86_64.iso` e seu `.iso.sha512` correspondente. Se a ISO direta não existir, baixe todos os arquivos `dinx-<versão>-x86_64.iso.part-*` e `.iso.parts.json`.
+3. Baixe `dinx-<versão>-x86_64.iso` e seu `.iso.sha512` correspondente. Releases antigos sem ISO direta exigem todos os arquivos `dinx-<versão>-x86_64.iso.part-*` e `.iso.parts.json`.
 4. Para uma ISO dividida, concatene as partes em ordem lexicográfica:
 
    ```bash

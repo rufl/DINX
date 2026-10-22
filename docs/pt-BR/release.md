@@ -18,18 +18,18 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-O workflow de release com tag mais recente é a [execução 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) para a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), no commit `eea66ac` (`eea66acc83ca26c971ad5407d26dbd32f67d567f`). Ele passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO, boot no QEMU, validação do payload gráfico, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, assinatura persistente de pacotes, atestação e publicação dos assets do release. A ISO publicada tem 2.803.349.504 bytes e SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`; o snapshot do repositório estável de pacotes é `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
-Os releases futuros usam o caminho determinístico de ISO compacta de
+A compilação compacta atual da Alpha 8 é a [execução CI 39710941142](https://github.com/rufl/DINX/actions/runs/39710941142) para a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), no commit `c072866777f1d591a25af6cf16ffffd2976ac204`. Ela passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO compacta, boot no QEMU, validação do payload gráfico, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, limite de boot e checks dos assets do release. A ISO publicada tem 2.056.595.456 bytes e SHA-512 `2fa4a17e9e72f46cc074300f485fd5456f49ffd92e7864af048c8785559b4dbf0a3d060c5d5e6623fefe98ce3f89a174cafeabe1126106ae774d458754829cd3`; o snapshot do repositório estável de pacotes é `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
+O release agora usa o caminho determinístico de ISO compacta de
 `scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86 e um limite
-estrito abaixo do limite de 2 GiB por asset do GitHub. A Alpha 8 foi construída
-antes desta mudança e continua distribuída como partes da ISO.
+estrito abaixo do limite de 2 GiB por asset do GitHub. A Alpha 8 agora publica
+uma ISO direta; releases antigos ainda podem usar partes da ISO.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.
 
 ## Artefatos publicados
 
 Cada release alpha contém:
 
-- `dinx-<versão>-x86_64.iso` quando ela couber no limite por arquivo do GitHub, ou os arquivos ordenados `dinx-<versão>-x86_64.iso.part-*` mais `.iso.parts.json` quando não couber;
+- `dinx-<versão>-x86_64.iso` quando ela couber no limite por arquivo do GitHub; releases antigos que excedam o limite usam arquivos ordenados `.iso.part-*` mais `.iso.parts.json`;
 - o arquivo `.iso.sha512` correspondente;
 - capturas PPM do menu de boot, gráficas e pós-entrada do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;
@@ -84,17 +84,25 @@ transação real assinada de instalação, atualização e downgrade com os mesm
 requisitos de assinatura. Isso qualifica transações de pacotes, não uma atualização
 completa da ISO instalada, rollback do filesystem ou recuperação física.
 
-Quando a ISO for dividida, concatene as partes em ordem lexicográfica e verifique a imagem completa:
+Para uma ISO direta, verifique o checksum correspondente:
+
+```bash
+sha512sum -c dinx-<versão>-x86_64.iso.sha512
+```
+
+Quando um release publicar partes, concatene-as em ordem lexicográfica e
+depois verifique a imagem completa:
 
 ```bash
 cat dinx-<versão>-x86_64.iso.part-* > dinx-<versão>-x86_64.iso
 sha512sum -c dinx-<versão>-x86_64.iso.sha512
 ```
 
-O pacote Windows não contém uma segunda cópia da ISO. Ele contém uma URL HTTPS fixada,
-o SHA-512 da ISO e, quando necessário, a lista ordenada de partes. Na primeira execução,
-baixa os artefatos exatos do release para o diretório privado, verifica cada parte,
-monta a ISO, verifica o checksum completo e só então inicia o QEMU.
+O pacote Windows não contém uma segunda cópia da ISO. Ele contém uma URL HTTPS
+fixada e o SHA-512 da ISO, além da lista ordenada de partes quando necessário. Na
+primeira execução, baixa os assets exatos do release para o diretório privado,
+verifica cada parte quando presente, monta a ISO quando necessário, verifica o
+checksum completo e só então inicia o QEMU.
 ## Verificar a procedência do release
 
 O workflow cria atestações de artefato do GitHub para a ISO ou suas partes, seus checksums,

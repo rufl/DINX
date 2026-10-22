@@ -17,18 +17,18 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest tagged release workflow is [run 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) for [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), on commit `eea66ac` (`eea66acc83ca26c971ad5407d26dbd32f67d567f`). It passed the first-party/static contracts, Artix package builds, ISO creation, QEMU boot, graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, persistent package signing, attestation and release-asset publication. The published ISO totals 2,803,349,504 bytes and has SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`; the stable package repository snapshot is `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
-Future tagged builds use the deterministic compact-ISO path from
+The latest compact Alpha 8 build is [CI run 39710941142](https://github.com/rufl/DINX/actions/runs/39710941142) for [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), on commit `c072866777f1d591a25af6cf16ffffd2976ac204`. It passed the first-party/static contracts, Artix package builds, compact ISO creation, QEMU boot, graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, boot-window budget and release-asset checks. The published ISO totals 2,056,595,456 bytes and has SHA-512 `2fa4a17e9e72f46cc074300f485fd5456f49ffd92e7864af048c8785559b4dbf0a3d060c5d5e6623fefe98ce3f89a174cafeabe1126106ae774d458754829cd3`; the stable package repository snapshot is `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
+The release now uses the deterministic compact-ISO path from
 `scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering and a
-strict ISO budget below GitHub's 2 GiB per-asset limit. Alpha 8 was built before
-this change and remains distributed as split ISO parts.
+strict ISO budget below GitHub's 2 GiB per-asset limit. Alpha 8 now publishes
+one direct ISO asset; older releases may still use split ISO parts.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
 ## Published assets
 
 Each alpha release contains:
 
-- `dinx-<version>-x86_64.iso` when it fits GitHub's per-asset limit, or the ordered `dinx-<version>-x86_64.iso.part-*` files plus `.iso.parts.json` when it does not;
+- `dinx-<version>-x86_64.iso` when it fits GitHub's per-asset limit; older releases that exceed it use ordered `.iso.part-*` files plus `.iso.parts.json`;
 - the matching `.iso.sha512` file;
 - Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
@@ -83,7 +83,14 @@ real signed install, update and package downgrade transaction with the pacman
 repository contract. That qualifies package transactions, not a full installed
 ISO upgrade, filesystem rollback or physical recovery procedure.
 
-When the ISO is split, concatenate the parts in lexical order and verify the full image:
+For a direct ISO, verify the matching checksum:
+
+```bash
+sha512sum -c dinx-<version>-x86_64.iso.sha512
+```
+
+When a release publishes split parts, concatenate them in lexical order and
+then verify the full image:
 
 ```bash
 cat dinx-<version>-x86_64.iso.part-* > dinx-<version>-x86_64.iso
@@ -92,8 +99,9 @@ sha512sum -c dinx-<version>-x86_64.iso.sha512
 
 The Windows package does not contain a second copy of the ISO. It contains a pinned
 HTTPS URL and the ISO SHA-512 plus, when required, the ordered part list. On first run it
-downloads the exact release assets to its private directory, verifies each part, assembles
-the ISO, verifies the full checksum, and only then starts QEMU.
+downloads the exact release assets to its private directory, verifies each part when
+present, assembles the ISO when necessary, verifies the full checksum, and only then
+starts QEMU.
 ## Verify release provenance
 The release workflow creates GitHub artifact attestations for the ISO or its parts, its checksums,
 the Windows launcher and its release metadata. Verify each downloaded file online with

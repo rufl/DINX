@@ -30,7 +30,7 @@ There is no supported stable release yet. Tagged alpha releases publish a verifi
 
 1. Open the [DINX releases](https://github.com/rufl/DINX/releases).
 2. Select the latest pre-release.
-3. Download `dinx-<version>-x86_64.iso` and its matching `.iso.sha512`. If the direct ISO is absent, download every `dinx-<version>-x86_64.iso.part-*` file and `.iso.parts.json`.
+3. Download `dinx-<version>-x86_64.iso` and its matching `.iso.sha512`. Older releases without a direct ISO require every `dinx-<version>-x86_64.iso.part-*` file and `.iso.parts.json`.
 4. For a split ISO, concatenate the parts in lexical order:
 
    ```bash

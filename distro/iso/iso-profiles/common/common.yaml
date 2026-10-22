@@ -2,6 +2,8 @@
 # DINX compact common manifest.
 # Keep the runtime base, boot tooling and Wayland/Xwayland compatibility here;
 # DINX adds AMDGPU firmware explicitly in the profile-specific package list.
+# linux-headers is retained for Artix initramfs generation; the local
+# mksquashfs wrapper excludes its source tree from final SquashFS images.
 
 packages-base:
   - base
@@ -26,7 +28,7 @@ packages-base:
   - inetutils
   - iptables
   - jfsutils
-  - linux
+  - linux-headers
   - lsb-release
   - logrotate
   - man-db

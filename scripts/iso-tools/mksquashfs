@@ -27,4 +27,5 @@ while (($#)); do
   esac
 done
 
-exec "$real_mksquashfs" "${filtered[@]}" -comp xz -b 256K -Xbcj x86
+# Keep linux-headers available for Artix initramfs generation, but omit its source tree from the final SquashFS payload.
+exec "$real_mksquashfs" "${filtered[@]}" -comp xz -b 256K -Xbcj x86 -e 'usr/src/linux*'

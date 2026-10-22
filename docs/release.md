@@ -22,7 +22,7 @@ Future tagged builds use the deterministic compact-ISO path from
 `scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering and a
 strict ISO budget below GitHub's 2 GiB per-asset limit. Alpha 8 was built before
 this change and remains distributed as split ISO parts.
-The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware, kernel headers and build-only packages to post-install provisioning.
+The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
 ## Published assets
 

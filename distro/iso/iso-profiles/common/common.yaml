@@ -28,6 +28,7 @@ packages-base:
   - inetutils
   - iptables
   - jfsutils
+  - linux
   - linux-headers
   - lsb-release
   - logrotate

@@ -40,8 +40,10 @@ require_command xorriso
 require_command buildiso
 
 profile_dir="$workspace_dir/iso-profiles/dinx"
+common_profile="$workspace_dir/iso-profiles/common/common.yaml"
 iso_tools_dir="$repo_root/scripts/iso-tools"
 [[ -f "$profile_dir/profile.yaml" ]] || fail "missing DINX profile: $profile_dir/profile.yaml"
+[[ -f "$common_profile" ]] || fail "missing compact common profile: $common_profile"
 [[ -x "$iso_tools_dir/mksquashfs" ]] || fail "missing executable ISO compression wrapper: $iso_tools_dir/mksquashfs"
 iso_tools_path="$iso_tools_dir:$PATH"
 buildiso_path=$(command -v buildiso)

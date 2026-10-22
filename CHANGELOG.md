@@ -5,6 +5,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Added deterministic xz SquashFS compression with x86 BCJ filtering and a strict P0 budget below GitHub's 2 GiB per-asset limit for future full-ISO releases. Alpha 8 remains split because it predates this change.
+- Reduced the full-image payload with a repository-owned compact common manifest: the documented AMDGPU path remains included while generic firmware, kernel headers and `powertop` move to post-install package installation.
 
 ## v0.1.0-alpha.8 — 2026-10-21
 

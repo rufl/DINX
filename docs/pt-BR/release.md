@@ -23,6 +23,7 @@ Os releases futuros usam o caminho determinístico de ISO compacta de
 `scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86 e um limite
 estrito abaixo do limite de 2 GiB por asset do GitHub. A Alpha 8 foi construída
 antes desta mudança e continua distribuída como partes da ISO.
+O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU e deixa firmware genérico, headers do kernel e pacotes de build para provisionamento posterior.
 
 ## Artefatos publicados
 

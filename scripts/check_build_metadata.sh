@@ -35,6 +35,7 @@ require_value builder_pacman_conf_sha256 '^[0-9a-f]{64}$'
 require_value builder_mirrorlist_sha256 '^[0-9a-f]{64}$'
 require_value zig_version '^0\.17\.0$'
 require_value profile_sha256 '^[0-9a-f]{64}$'
+require_value common_profile_sha256 '^[0-9a-f]{64}$'
 require_value feature_groups_sha256 '^[0-9a-f]{64}$'
 require_value noctty_source_env_sha256 '^[0-9a-f]{64}$'
 require_value iso_name '^[^/[:space:]]+\.iso$'
@@ -55,6 +56,8 @@ grep -Fqx '[all-artix-packages]' "$metadata" || fail 'full package section is mi
 
 profile_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/dinx/profile.yaml" | cut -d ' ' -f 1)
 [[ "$(read_value profile_sha256)" == "$profile_sha" ]] || fail 'profile checksum does not match the checked-out source'
+common_profile_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/common/common.yaml" | cut -d ' ' -f 1)
+[[ "$(read_value common_profile_sha256)" == "$common_profile_sha" ]] || fail 'common profile checksum does not match the checked-out source'
 feature_groups_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json" | cut -d ' ' -f 1)
 [[ "$(read_value feature_groups_sha256)" == "$feature_groups_sha" ]] || fail 'feature-group checksum does not match the checked-out source'
 source_env_sha=$(sha256sum "$repo_root/distro/packages/noctty/source.env" | cut -d ' ' -f 1)

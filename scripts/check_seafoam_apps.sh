@@ -73,6 +73,7 @@ for required in \
   '  usr/share/licenses/zls/zig-LICENSE' \
   '  usr/share/doc/seafoam-settings/README.md' \
   '  usr/share/doc/zls/README.md' \
+  '  etc/zls.json' \
   '  etc/xdg/zls.json' \
   '  usr/lib/zls/zig-env' \
   '  usr/lib/zls/zig-env.zon' \

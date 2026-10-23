@@ -52,12 +52,14 @@ printf 'Zig compiler is not installed; install the optional zig package for this
 exit 127
 EOF
   sed -i "s/@ZIG_VERSION@/$ZIG_VERSION/" "$pkgdir/usr/lib/zls/zig-env"
-  install -Dm644 /dev/stdin "$pkgdir/etc/xdg/zls.json" <<'EOF'
+  install -Dm644 /dev/stdin "$pkgdir/etc/zls.json" <<'EOF'
 {
   "zig_exe_path": "/usr/lib/zls/zig-env",
   "zig_lib_path": "/usr/lib/zls/zig"
 }
 EOF
+  install -d "$pkgdir/etc/xdg"
+  ln "$pkgdir/etc/zls.json" "$pkgdir/etc/xdg/zls.json"
   install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/zls/LICENSE"
   install -Dm644 "$zig_root/LICENSE" "$pkgdir/usr/share/licenses/zls/zig-LICENSE"
   install -Dm644 "$srcdir/README.md" "$pkgdir/usr/share/doc/zls/README.md"

@@ -169,12 +169,12 @@ tmp=/var/lib/dinx/install-smoke.booted.tmp
   printf 'pacman_database=true\n'
   /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls >/dev/null 2>&1 \
     || fail core_packages_missing
-  [ -f /etc/xdg/zls.json ] || fail zls_config_missing
+  { [ -f /etc/zls.json ] || [ -f /etc/xdg/zls.json ]; } || fail zls_config_missing
   [ -x /usr/lib/zls/zig-env ] || fail zls_shim_missing
   [ -f /usr/lib/zls/zig/std/std.zig ] || fail zls_stdlib_missing
   [ "$(/usr/bin/zls --version)" = 0.16.0 ] || fail zls_version_mismatch
   [ "$(/usr/lib/zls/zig-env version)" = 0.16.0 ] || fail zls_shim_version_mismatch
-  /usr/bin/zls env | grep -Fq '/etc/xdg/zls.json' || fail zls_config_not_selected
+  /usr/bin/zls env | grep -Eq '/etc/(zls|xdg/zls)\.json' || fail zls_config_not_selected
   printf 'zls_runtime=true\n'
   printf 'core_packages=true\n'
   for service in NetworkManager elogind; do

@@ -18,7 +18,7 @@ version=$($zls_bin --version)
   exit 1
 }
 config=$($zls_bin env)
-grep -Fqx ' "config_file": "/etc/xdg/zls.json",' <<<"$config" \
+grep -Fq '"config_file": "/etc/xdg/zls.json"' <<<"$config" \
   || { printf 'smoke_zls: global ZLS config was not selected\n' >&2; exit 1; }
 zig_env=$($zig_shim env)
 grep -Fq '.std_dir = "/usr/lib/zls/zig/std"' <<<"$zig_env" \

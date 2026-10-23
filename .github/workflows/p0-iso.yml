@@ -95,7 +95,7 @@ jobs:
   build-and-smoke:
     name: Build and smoke-test DINX foundation ISO
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout DINX

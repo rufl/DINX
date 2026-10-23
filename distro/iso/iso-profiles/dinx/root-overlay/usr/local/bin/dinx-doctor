@@ -1,0 +1,116 @@
+#!/bin/sh
+set -u
+
+print_value() {
+  key=$1
+  value=${2:-unknown}
+  [ -n "$value" ] || value=unknown
+  value=$(printf '%s' "$value" | tr '\r\n' '  ')
+  printf '%s=%s\n' "$key" "$value"
+}
+
+command_state() {
+  key=$1
+  command_name=$2
+  if command -v "$command_name" >/dev/null 2>&1; then
+    print_value "$key" present
+  else
+    print_value "$key" missing
+  fi
+}
+
+path_state() {
+  key=$1
+  path=$2
+  if [ -e "$path" ]; then
+    print_value "$key" present
+  else
+    print_value "$key" missing
+  fi
+}
+
+package_state() {
+  package=$1
+  if ! command -v pacman >/dev/null 2>&1; then
+    print_value "package.$package" unknown
+  elif pacman -Q "$package" >/dev/null 2>&1; then
+    print_value "package.$package" installed
+  else
+    print_value "package.$package" missing
+  fi
+}
+
+home=${HOME:-}
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+  config_home=$XDG_CONFIG_HOME
+elif [ -n "$home" ]; then
+  config_home=$home/.config
+else
+  config_home=
+fi
+
+print_value schema dinx-doctor/v1
+print_value mode read-only
+
+print_value session.type "${XDG_SESSION_TYPE:-unknown}"
+print_value session.desktop "${XDG_CURRENT_DESKTOP:-unknown}"
+print_value session.session_desktop "${XDG_SESSION_DESKTOP:-unknown}"
+print_value session.wayland_display "${WAYLAND_DISPLAY:-unknown}"
+print_value session.default labwc+noctalia
+print_value session.alternate_boundary deferred-dinit-adaptation
+command_state session.command.labwc labwc
+command_state session.command.noctalia noctalia
+command_state session.command.dinitctl dinitctl
+command_state session.command.dinitui dinitui
+command_state session.command.dinxpanel dinxpanel
+command_state session.command.aqueous aqueous-wm
+command_state session.command.pearl pearl
+
+if [ "${DINX_DOCTOR_QUERY_DINIT:-0}" = 1 ]; then
+  if command -v dinitctl >/dev/null 2>&1 && dinitctl --user list >/dev/null 2>&1; then
+    print_value dinit.user_services available
+  else
+    print_value dinit.user_services unavailable
+  fi
+else
+  print_value dinit.user_services not-queried
+fi
+path_state dinit.system_directory /etc/dinit.d
+path_state dinit.user_directory "${XDG_CONFIG_HOME:-${home:-/nonexistent}/.config}/dinit.d"
+
+command_state storage.command.phyto phyto
+command_state storage.command.pori pori
+command_state storage.command.udisksctl udisksctl
+path_state storage.udisks2_socket /run/udisks2
+path_state storage.dinit_directory /etc/dinit.d
+if [ -d /sys/module/ntfs3 ]; then
+  print_value storage.ntfs3 loaded
+else
+  print_value storage.ntfs3 not-loaded
+fi
+print_value storage.ntfs3_write kernel-driver
+print_value storage.mount_actions not-run
+
+command_state display.command.wdisplays wdisplays
+command_state display.command.shikane shikane
+command_state display.command.shikanectl shikanectl
+path_state display.shikane_config "$config_home/shikane/config.toml"
+if [ -z "$config_home" ]; then
+  print_value display.dinx_wdisplays_profile unknown
+elif [ ! -f "$config_home/shikane/config.toml" ]; then
+  print_value display.dinx_wdisplays_profile missing
+elif command -v grep >/dev/null 2>&1 && grep -Fq 'DINX wdisplays' "$config_home/shikane/config.toml"; then
+  print_value display.dinx_wdisplays_profile present
+else
+  print_value display.dinx_wdisplays_profile missing
+fi
+print_value display.actions not-run
+
+for package in \
+  dinit labwc noctalia phyto pori wdisplays shikane file-roller gparted \
+  dinitui dinxpanel dome seafoam-settings zls aqueous-core aqueous-session pearl; do
+  package_state "$package"
+done
+
+print_value package.transactions not-run
+print_value network.access not-run

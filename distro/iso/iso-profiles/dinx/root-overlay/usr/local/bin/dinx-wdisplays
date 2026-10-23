@@ -1,0 +1,10 @@
+#!/bin/sh
+set -u
+
+wdisplays "$@"
+status=$?
+if [ "$status" -ne 0 ]; then
+    exit "$status"
+fi
+
+exec dinx-save-shikane-profile

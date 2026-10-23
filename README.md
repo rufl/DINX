@@ -50,13 +50,21 @@ A [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8) é 
 A DINX é uma distribuição Artix focada em uma sessão desktop enxuta, legível e controlável:
 
 - **Artix Linux + dinit** como base;
-- **Wayland, MangoWC e Noctalia Shell** para a sessão gráfica;
+- **Wayland, labwc e Noctalia Shell** para a sessão gráfica;
 - **PipeWire, D-Bus, portais, polkit e aceleração GPU** no payload da ISO;
 - **DinitUI e DINXPanel** para serviços, perfis Normal/Lite/Gaming, atalhos de sistema, drivers e kernels Artix;
 - **sessão DINX Gaming** separada, com Gamescope/Steam e payload gráfico de 32 bits;
-- **Calamares e KDE Partition Manager** para o caminho de instalação experimental.
+- **Calamares, GParted, File Roller, Pori e Phyto** para instalação, particionamento, arquivos compactados, armazenamento e gerenciamento de arquivos; **wdisplays** e **shikane** cuidam da configuração de displays Wayland, e o kernel `ntfs3` cobre leitura e escrita NTFS;
+
+O monitor de sistema **Dome** é opcional e entregue pelo grupo de pacotes Seafoam assinado, não pela ISO base. Suas telas de recursos/processos continuam úteis no dinit; seu provedor opcional de serviços systemd fica indisponível por design.
+
+O mesmo grupo Seafoam opcional fornece o **Seafoam Settings**, um launcher nativo compacto em Zig/GTK4 para pontos de entrada de display, labwc, DinitUI, DINXPanel, Qt e Dome, além do **ZLS 0.16.0** para suporte de language server Zig no Nocted. Nenhum dos dois pacotes faz parte da ISO base; instale-os pelo repositório opcional assinado quando necessário.
 
 Noctty, Nocted e os demais contratos de integração ficam versionados junto com a distribuição quando isso reduz risco e mantém a ISO reproduzível.
+Aqueous e Pearl estão planejados como uma opção alternativa de compositor/shell em Zig, não como uma sessão incluída na Alpha 8. A sessão upstream atualmente depende de `uwsm` e unidades systemd de usuário; a DINX não exporá uma entrada de sessão até que um pacote nativo de dinit seja qualificado. Labwc + Noctalia continua sendo a sessão suportada, sem fallback silencioso para outro compositor.
+
+Execute `dinx-doctor` para obter um snapshot somente leitura da sessão atual, do limite do dinit, dos caminhos de armazenamento/display e dos pacotes DINX instalados. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente se também quiser consultar o socket do dinit de usuário; o comando nunca inicia, para, monta ou atualiza nada.
+
 
 ## Instalação rápida
 
@@ -68,7 +76,7 @@ Noctty, Nocted e os demais contratos de integração ficam versionados junto com
    sha512sum -c dinx-0.1.0-alpha.8-x86_64.iso.sha512
    ```
 
-3. Grave a ISO verificada no USB inteiro, inicialize em UEFI e selecione `MangoWM (DINX)` no greeter. O login live de teste é `dinx` / `dinx`.
+3. Grave a ISO verificada no USB inteiro, inicialize em UEFI e selecione `Labwc (DINX)` no greeter. O login live de teste é `dinx` / `dinx`.
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de particionar. Ele cobre Windows side-by-side, recuperação por TTY, verificação de dispositivo e os limites do instalador.
 

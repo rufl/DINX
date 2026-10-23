@@ -20,6 +20,34 @@ contracts cover:
 - real DinitUI user-daemon and GTK qualification;
 - bounded Calamares startup smoke with the shipped configuration, in addition to transaction smokes;
 
+## Installed-system operator checklist
+
+Run this checklist against the exact ISO and record the release tag, build
+metadata filename, machine role, firmware mode and GPU before marking a result
+as `pass`.
+
+1. Verify the ISO SHA-512 and build metadata, then boot the normal DINX session.
+2. After a Calamares install, confirm the first boot reaches ReGreet, labwc and
+   Noctalia, and that `dinitctl status greetd NetworkManager` reports the
+   expected services.
+3. Open **DINX Display Setup**, arrange the outputs, close it, and confirm the
+   `DINX wdisplays` profile exists in
+   `~/.config/shikane/config.toml`; log out and back in to confirm it reapplies.
+4. On a disposable NTFS volume, mount it through Pori or UDisks2, create and
+   remove a test file, unmount it, and mount it again. Do not use a Windows
+   volume left hibernated or with Fast Startup enabled.
+5. Use Phyto to browse the mounted volume, File Roller to create and extract an
+   archive, and GParted only against a disposable disk.
+6. Verify `Ctrl+Alt+F2` or `Ctrl+Alt+F3` opens the recovery TTY, then return to
+   the graphical session.
+7. Exercise lock, idle lock, suspend/resume, physical brightness, audio,
+   networking and Bluetooth on the target hardware.
+8. For gaming claims, authenticate Steam, launch and exit one commercial game,
+   test a controller and verify PipeWire game audio.
+
+CI/QEMU evidence does not replace steps 3–8 on physical hardware. Record
+`fail` or `blocked` instead of inferring success from package presence.
+
 ## Three-machine manual matrix
 
 Use the same ISO and record the exact machine, firmware mode, GPU, kernel, and
@@ -28,7 +56,7 @@ resulting report path for each target.
 ### Desktop
 
 - boot live session and select the normal DINX session in ReGreet;
-- verify Wayland, MangoWC, Noctalia, audio, network and GPU acceleration;
+- verify Wayland, labwc, Noctalia, audio, network and GPU acceleration;
 - if NVIDIA support is claimed, install `nvidia-open-dkms` with matching headers, reboot, and verify render-node, Vulkan and Gamescope output;
 - lock with `Super+L`;
 - verify idle lock at 600 seconds;

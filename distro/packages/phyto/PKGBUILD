@@ -1,0 +1,39 @@
+pkgname=phyto
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${PHYTO_VERSION:?missing PHYTO_VERSION}"
+: "${PHYTO_SOURCE_VERSION:?missing PHYTO_SOURCE_VERSION}"
+: "${PHYTO_REPOSITORY:?missing PHYTO_REPOSITORY}"
+: "${PHYTO_SOURCE_SHA256:?missing PHYTO_SOURCE_SHA256}"
+pkgver="$PHYTO_VERSION"
+pkgrel=1
+pkgdesc='Native Zig GTK4 file manager for DINX'
+arch=('x86_64')
+url="$PHYTO_REPOSITORY"
+license=('LicenseRef-Pearl-Unlicensed')
+provides=('file-manager')
+depends=('gtk4' 'glib2' 'gdk-pixbuf2' 'hicolor-icon-theme' 'glibc' 'pango' 'cairo')
+optdepends=(
+  'poppler: optional PDF first-page previews'
+  'ffmpeg: optional video still previews'
+  'bubblewrap: sandbox required for optional PDF and video previews'
+)
+makedepends=('zig>=0.16')
+source=("pearl-$PHYTO_SOURCE_VERSION.tar.gz::${PHYTO_REPOSITORY}/archive/refs/tags/v${PHYTO_SOURCE_VERSION}.tar.gz")
+sha256sums=("$PHYTO_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/pearl-$PHYTO_SOURCE_VERSION/subprojects/phyto"
+  export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
+  "${ZIG:-zig}" build -Doptimize=ReleaseSafe -Dcpu=baseline
+}
+
+package() {
+  cd "$srcdir/pearl-$PHYTO_SOURCE_VERSION/subprojects/phyto"
+  install -Dm755 zig-out/bin/phyto "$pkgdir/usr/bin/phyto"
+  install -Dm644 packaging/org.aqueous.Phyto.desktop \
+    "$pkgdir/usr/share/applications/org.aqueous.Phyto.desktop"
+  install -Dm644 resources/org.aqueous.Phyto.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.aqueous.Phyto.svg"
+}

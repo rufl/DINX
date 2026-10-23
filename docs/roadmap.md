@@ -21,7 +21,7 @@ Backlog:
 
 - qualify the selected Calamares offline installer, dinit target and standalone partitioner;
 - define the base package manifest and DINX-specific package boundary;
-- configure Wayland, MangoWC, Noctalia Shell and the greeter;
+- configure Wayland, labwc, Noctalia Shell and the greeter;
 - validate networking, PipeWire, D-Bus, portals, polkit and GPU acceleration;
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
@@ -80,6 +80,7 @@ Delivered:
 - in-file/project search, replacement through selection workflows and keyboard shortcuts;
 - bounded LSP process/client management with diagnostics, completion, hover, definitions, references, rename, symbols and formatting;
 - Git status, unified diffs and change markers exposed from the editor's Tools menu and the headless `--git-probe`;
+
 - Noctalia-aware light/dark editor schemes through the documented `NOCTALIA_COLOR_SCHEME`/`NOCTED_THEME` environment contract, with useful operation independent of Noctalia.
 
 P3 release gate:
@@ -134,3 +135,23 @@ P3 release gate:
 - suspend/resume, GPU recovery and update testing on physical hardware.
 
 **Exit criterion:** a game can be launched and exited repeatedly without leaving the desktop in a broken state. The current fixtures do not claim that criterion.
+
+## P6 — release hardening
+
+**Goal:** make every published ISO measurable, auditable and testable after installation.
+
+**Status:** in progress.
+
+**Delivered:**
+
+- build metadata now binds the recorded ISO byte count and SHA-512 to the exact artifact checked by CI and the tagged release preflight;
+- metadata records the largest installed packages so size regressions have an actionable diagnostic;
+- the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, Phyto, File Roller, GParted, recovery TTY and hardware behavior.
+- documented the Aqueous/Pearl alternate-session boundary: upstream `uwsm`/systemd user-unit requirements keep both components out of the shipped dinit session until a native adaptation is qualified;
+
+**Remaining release gates:**
+
+- run and retain a fresh full ISO measurement after package changes;
+- complete the physical desktop, laptop and BC-250 matrix;
+- qualify installed-ISO upgrades, filesystem recovery and rollback;
+- close the real DRM, Steam, controller, PipeWire, suspend/resume and GPU-recovery gates.

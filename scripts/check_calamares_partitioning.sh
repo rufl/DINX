@@ -11,6 +11,8 @@ settings_conf="$calamares_root/settings.conf"
 packages_conf="$calamares_root/modules/packages.conf"
 unpackfs_conf="$calamares_root/modules/unpackfs.conf"
 profile_yaml="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
+common_profile="$repo_root/distro/iso/iso-profiles/common/common.yaml"
+feature_groups="$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$repo_root/.github/workflows/p0-iso.yml"
 startup_smoke="$repo_root/scripts/smoke_calamares_startup.sh"
 branding_conf="$calamares_root/branding/dinx/branding.desc"
@@ -32,7 +34,7 @@ require_text() {
   grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
 }
 
-for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset"; do
+for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset"; do
   require_file "$path"
 done
 
@@ -53,8 +55,13 @@ require_text 'efiBootloaderId: "DINX"' "$bootloader_conf"
 require_text 'installEFIFallback: true' "$bootloader_conf"
 require_text 'installHybridGRUB: false' "$bootloader_conf"
 require_text 'GRUB_DISABLE_OS_PROBER=false' "$grub_windows_conf"
-require_text '    - ntfs-3g' "$profile_yaml"
 require_text '    - os-prober' "$profile_yaml"
+require_text '  - linux' "$common_profile"
+jq -e '.groups.optional.packages | index("ntfs-3g") != null' "$feature_groups" >/dev/null \
+  || fail 'optional NTFS write package is missing from the feature manifest'
+if grep -Fqx '    - ntfs-3g' "$profile_yaml"; then
+  fail 'optional ntfs-3g write package is present in the base ISO profile'
+fi
 require_text 'Smoke-test Windows side-by-side and manual partition transactions' "$workflow"
 require_text 'scripts/smoke_calamares_windows.sh' "$workflow"
 require_text 'scripts/smoke_calamares_startup.sh' "$workflow"
@@ -101,4 +108,4 @@ if grep -R -nF 'update-mirrorlist' "$calamares_root" >/dev/null; then
 fi
 require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
 
-printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true startup_smoke=true\n'
+printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true ntfs3_base_rw=true ntfs3_legacy_optional=true startup_smoke=true\n'

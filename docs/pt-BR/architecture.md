@@ -16,13 +16,13 @@
 
 ```text
 Aplicativos DINX
-  Noctty · Nocted · DinitUI · DINXPanel
+  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings (pacote Seafoam opcional) · Dome (pacote Seafoam opcional) · ZLS (ferramenta de desenvolvimento opcional)
 
 Contratos compartilhados de integração
   Dinx Theme · caminhos XDG · metadados .desktop · $TERMINAL · IPC opcional do Noctalia
 
 Sessão do desktop
-  Wayland · MangoWC · Noctalia Shell · greeter
+  Wayland · labwc · Noctalia Shell · greeter
 
 Fundação do sistema operacional
   Artix Linux · dinit · kernel · Mesa/Vulkan · PipeWire · D-Bus · portais · polkit
@@ -38,7 +38,8 @@ O primeiro alvo é o Artix Linux com dinit em x86_64. A imagem base deve fornece
 - uma ISO inicializável e um caminho de instalação documentado;
 - login gráfico com TTY de recuperação;
 - rede, PipeWire, D-Bus, portais, polkit e gráficos acelerados;
-- gerenciamento de arquivos independente com Thunar, `thunar-volman`, GVFS, UDisks2 e um agente de PolicyKit para mídia removível, sem uma sessão completa do Xfce/LXQt ou systemd;
+- o Pori gerencia discos e montagens sobre UDisks2, com serviços dinit persistentes em `/etc/dinit.d`;
+- o Phyto fornece gerenciamento nativo de arquivos e é o manipulador padrão de diretórios; a DINX inclui o File Roller para ações com arquivos compactados e o GParted para particionamento gráfico independente, enquanto `wdisplays` e `shikane` cuidam da configuração de displays Wayland; Thunar, GVFS, Tumbler e KDE Partition Manager continuam omitidos;
 - manifestos de pacotes que identifiquem cada entrada específica da DINX;
 - um snapshot conhecido como funcional, reproduzível em um ambiente de build limpo.
 
@@ -74,7 +75,7 @@ O DinitUI também é dono de perfis explícitos `normal`, `lite`, `gaming` e per
 
 ### DINXPanel
 
-A DINXPanel é o centro de controle inspirado no YaST. Ela é dona das ações visíveis de hardware e drivers, agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, MangoWC, serviços Dinit, upgrades de pacotes e firmware e expõe um catálogo fixo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Seu relatório de upgrades sem instalação usa Shelly e os metadados opcionais do fwupd; o preview do Topgrade usa `--dry-run --show-skipped`; upgrades explícitos continuam sendo fluxos confirmados pelo usuário no terminal. As ações de kernel apenas instalam pacotes e headers; nunca removem o kernel em execução, exigem reinicialização e usam o bootloader para selecionar uma alternativa já instalada em caso de rollback.
+A DINXPanel é o centro de controle inspirado no YaST. Ela é dona das ações visíveis de hardware e drivers, agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, opções do labwc, serviços Dinit, upgrades de pacotes e firmware e expõe um catálogo fixo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Seu relatório de upgrades sem instalação usa Shelly e os metadados opcionais do fwupd; o preview do Topgrade usa `--dry-run --show-skipped`; upgrades explícitos continuam sendo fluxos confirmados pelo usuário no terminal. As ações de kernel apenas instalam pacotes e headers; nunca removem o kernel em execução, exigem reinicialização e usam o bootloader para selecionar uma alternativa já instalada em caso de rollback.
 
 A impressão é uma opção explícita após a instalação, não uma dependência da
 ISO: a DINXPanel baixa o pacote fixo `cups-dinit` do repositório Artix
@@ -82,6 +83,23 @@ configurado; ele puxa o CUPS e fornece o serviço `cupsd` do dinit. O usuário
 habilita ou inicia esse serviço pelo DinitUI quando precisar de impressão.
 
 A DINX inclui o plugin local `dinx/performance` do Noctalia. Seu atalho no Control Center aplica o perfil Gaming e sincroniza o perfil de energia documentado `performance`/`balanced` do Noctalia. A sessão Gamescope standalone não inicia o Noctalia e continua independente dessa integração.
+
+### Dome
+
+O `Dome` é um monitor de sistema nativo em Zig/GTK4, opcional e entregue pelo grupo de pacotes Seafoam assinado, não pela ISO base. Suas telas de recursos e processos funcionam sem systemd; o provedor opcional de serviços systemd fica indisponível no sistema DINX com dinit e não pode impedir a inicialização nem o monitoramento.
+
+### Seafoam Settings e ZLS
+
+O `Seafoam Settings` é um launcher nativo opcional em Zig/GTK4 para as superfícies DINX de display/sessão: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct e Dome. Ele inicia vetores de argumentos fixos e abre somente os arquivos de configuração documentados do usuário no Foot/Nano; não interpreta comandos shell arbitrários nem substitui os aplicativos especializados.
+
+O `zls` é um pacote oficial opcional do Zig Language Server 0.16.0 com fonte fixada. O Nocted o inicia para projetos Zig quando presente; o pacote é independente da ISO base e não é uma dependência de serviço ou compositor.
+### Aqueous, Pearl e o limite da sessão dinit
+
+Aqueous e Pearl continuam sendo componentes opcionais planejados de compositor/shell em Zig, não sessões distribuídas pela DINX. O empacotamento upstream da sessão usa `uwsm` e unidades systemd de usuário, e o core do Aqueous liga APIs de libsystemd. Por isso, a DINX mantém `Labwc (DINX)` com Noctalia como a única sessão gráfica suportada até existir um pacote nativo de dinit, um contrato de ciclo de vida e uma qualificação física da sessão. Não há fallback silencioso quando uma sessão alternativa não está disponível.
+
+O `dinx-doctor` é a superfície de evidência somente leitura para os caminhos da sessão atual, dinit, armazenamento, display e pacotes. Ele não inicia serviços, monta dispositivos, modifica o Shikane, executa transações de pacotes nem acessa a rede. `DINX_DOCTOR_QUERY_DINIT=1` opta por uma consulta somente leitura à lista do dinit de usuário.
+
+
 
 ## Contratos compartilhados
 
@@ -96,19 +114,25 @@ Os contratos compartilhados são versionados independentemente dos detalhes inte
 
 Um contrato deve ter uma versão documentada e um teste de compatibilidade antes de ser usado pelos aplicativos.
 
-O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânticos de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa do terminal, Cantarell 11 para bridges voltadas à interface, geometria quadrada nos controles e bridge de ícones Adwaita. GTK/Qt/Mango consomem as saídas documentadas dos templates do Noctalia; ReGreet, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. O backend Fusion do Qt, os campos de largura fixa Monospace 10, os logs monoespaçados de DinitUI/DINXPanel e o `u_vga16 16` do GRUB permanecem limites de plataforma intencionais. `scripts/check_dinx_theme.sh` é a qualificação do contrato.
+O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânticos de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa do terminal, Cantarell 11 para bridges voltadas à interface, geometria quadrada nos controles e bridge de ícones Adwaita. GTK/Qt consomem as saídas documentadas dos templates do Noctalia; o labwc usa a configuração versionada em `/etc/xdg/labwc` e mescla overrides do usuário em `~/.config/labwc/rc.xml`. ReGreet, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. O backend Fusion do Qt, os campos de largura fixa Monospace 10, os logs monoespaçados de DinitUI/DINXPanel e o `u_vga16 16` do GRUB permanecem limites de plataforma intencionais. `scripts/check_dinx_theme.sh` é a qualificação do contrato.
 
 ## Sessão de jogos
 
-A sessão de jogos é separada e baseada em Gamescope e Steam. `dinx-gaming` inicia `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` a partir de uma entrada Wayland standalone com `dbus-run-session`; ela não presume Noctalia ou Mango em execução por baixo. O perfil inclui as dependências Mesa/RADV/Vulkan de 32 bits do Steam e `steam-devices`; o builder P0 habilita explicitamente o repositório oficial `lib32` do Artix e não adiciona repositórios Arch. `scripts/gaming_p5_qualification.sh` prova argv/retorno do launcher com fixtures, limpeza do grupo de processos e restauração do perfil durante sinais, e lançamento/saída de um filho real headless do Gamescope; não afirma login Steam autenticado, jogo comercial, hardware de controle/áudio, display DRM, suspensão/retomada ou recuperação de GPU.
+A sessão de jogos é separada e baseada em Gamescope e Steam. `dinx-gaming` inicia `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` a partir de uma entrada Wayland standalone com `dbus-run-session`; ela não presume Noctalia ou labwc em execução por baixo. O perfil inclui as dependências Mesa/RADV/Vulkan de 32 bits do Steam e `steam-devices`; o builder P0 habilita explicitamente o repositório oficial `lib32` do Artix e não adiciona repositórios Arch. `scripts/gaming_p5_qualification.sh` prova argv/retorno do launcher com fixtures, limpeza do grupo de processos e restauração do perfil durante sinais, e lançamento/saída de um filho real headless do Gamescope; não afirma login Steam autenticado, jogo comercial, hardware de controle/áudio, display DRM, suspensão/retomada ou recuperação de GPU.
+
+## Limite de armazenamento e filesystem
+
+O Pori é a única interface gráfica de armazenamento da DINX. Ele usa UDisks2 para descobrir dispositivos de bloco, mas seu ciclo de vida de montagem persistente é nativo do dinit: o Pori grava serviços scriptados em `/etc/dinit.d` e os controla com `dinitctl --system`. Nenhuma unidade de montagem systemd é gerada. O Phyto é o único gerenciador de arquivos base e o manipulador padrão de `inode/directory`. O File Roller fornece ações para abrir, criar e extrair arquivos compactados; o GParted fornece particionamento gráfico independente. O wrapper `dinx-wdisplays` fornece configuração interativa de displays Wayland, substitui atomicamente o perfil DINX `DINX wdisplays` em `~/.config/shikane/config.toml` e recarrega o daemon do usuário. O Shikane inicia com o labwc e reaplica perfis correspondentes quando as saídas mudam. A imagem omite gerenciadores de arquivos concorrentes e monitores de volume.
+
+O módulo de kernel `ntfs3` fornece suporte NTFS de leitura e escrita tanto na ISO live quanto no sistema instalado. O Pori mapeia o tipo de filesystem `ntfs` do UDisks2 para `ntfs3`. O pacote legado `ntfs-3g` não fica na ISO nem na instalação base; continua opcional após a instalação para compatibilidade e ferramentas de reparo. O Fast Startup e a hibernação do Windows devem ser desativados antes de montar um volume NTFS compartilhado.
 
 ## Caminho de instalação selecionado
 
-O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil.
+A imagem base inclui o Phyto como gerenciador de arquivos padrão, o File Roller para ações com arquivos compactados, o Pori como gerenciador de armazenamento dinit, o GParted para particionamento gráfico independente, o `dinx-wdisplays` para configuração interativa com exportação persistente para o Shikane e o daemon de usuário Shikane. O perfil omite deliberadamente Thunar, GVFS, Tumbler e KDE Partition Manager em vez de enviar stacks concorrentes de gerenciador de arquivos, monitoramento de volumes e particionamento.
 
-O **KDE Partition Manager** é o particionador gráfico independente oferecido ao lado do Calamares. Ele compartilha a stack Qt/kpmcore já usada pelo Calamares e executa como aplicação Wayland nativa na sessão DINX. Serve para inspecionar e preparar discos antes da instalação, não para substituir a seleção final de pontos de montagem do instalador.
+O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil. O perfil preserva layouts existentes de ESP/NTFS do Windows, habilita um diretório EFI separado para a DINX e mantém `os-prober` para a descoberta do Windows. O CI qualifica smokes transacionais BIOS/UEFI descartáveis, Btrfs com subvolumes existentes e Windows side-by-side/manual; o caminho continua experimental até qualificar proteções contra seleção destrutiva de dispositivo, instalação em hardware, atualizações da ISO instalada e recuperação de filesystem.
 
-O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil. O perfil também inclui `ntfs-3g`/`os-prober`, preserva um layout Windows existente de ESP/NTFS e habilita um diretório EFI DINX separado. O CI qualifica smokes transacionais BIOS/UEFI descartáveis, Btrfs com subvolumes existentes e Windows side-by-side/manual; o caminho continua experimental até qualificar proteções contra seleção destrutiva de dispositivo, instalação em hardware, atualizações da ISO instalada e recuperação do filesystem.
+A imagem base não inclui o KDE Partition Manager; o GParted fornece particionamento gráfico independente fora do Calamares, enquanto o Calamares continua sendo a transação de instalação.
 
 ## Decisões ainda necessárias antes de um release de produção
 

@@ -13,4 +13,9 @@ if [ "$has_render_node" = false ]; then
   export WLR_RENDERER_ALLOW_SOFTWARE=1
 fi
 
-exec mango "$@"
+if [ "${1:-}" = "--greeter" ]; then
+  shift
+  exec labwc -C /etc/xdg/labwc-greeter "$@"
+fi
+
+exec labwc --merge-config "$@"

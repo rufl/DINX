@@ -22,7 +22,7 @@ Backlog:
 
 - qualificar o instalador offline Calamares selecionado, o alvo dinit e o particionador independente;
 - definir o manifesto de pacotes base e o limite dos pacotes específicos da DINX;
-- configurar Wayland, MangoWC, Noctalia Shell e o greeter;
+- configurar Wayland, labwc, Noctalia Shell e o greeter;
 - validar rede, PipeWire, D-Bus, portais, polkit e aceleração de GPU;
 - manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
 - adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
@@ -135,3 +135,23 @@ Gate de release P3:
 - suspensão/retomada, recuperação da GPU e testes de atualização em hardware físico.
 
 **Critério de saída:** um jogo pode ser iniciado e encerrado repetidamente sem deixar o desktop quebrado. Os fixtures atuais não alegam esse critério.
+
+## P6 — endurecimento do release
+
+**Objetivo:** tornar cada ISO publicada mensurável, auditável e testável após a instalação.
+
+**Status:** em andamento.
+
+**Entregue:**
+
+- o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
+- o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
+- os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, Phyto, File Roller, GParted, TTY de recuperação e comportamento de hardware.
+- documentado o limite da sessão alternativa Aqueous/Pearl: os requisitos upstream de `uwsm`/unidades systemd de usuário mantêm os dois componentes fora da sessão dinit distribuída até que uma adaptação nativa seja qualificada;
+
+**Gates de release restantes:**
+
+- executar e guardar uma medição completa da ISO após mudanças de pacotes;
+- completar a matriz física de desktop, laptop e BC-250;
+- qualificar upgrades da ISO instalada, recuperação do filesystem e rollback;
+- fechar os gates reais de DRM, Steam, controle, PipeWire, suspensão/retomada e recuperação da GPU.

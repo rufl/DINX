@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Seafoam Settings
+Comment=DINX desktop settings and tools
+Exec=seafoam-settings
+TryExec=seafoam-settings
+Icon=org.seafoam.Settings
+Terminal=false
+Categories=Settings;System;
+StartupNotify=true

@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<labwc_config>
+  <!-- DINX merges user overrides with /etc/xdg/labwc/rc.xml. -->
+</labwc_config>

@@ -1,0 +1,92 @@
+#!/bin/sh
+set -eu
+
+profile_name='DINX wdisplays'
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+    config_home=$XDG_CONFIG_HOME
+else
+    config_home=$HOME/.config
+fi
+config_dir=$config_home/shikane
+config_path=$config_dir/config.toml
+
+mkdir -p "$config_dir"
+umask 077
+export_file=$(mktemp "$config_dir/.dinx-wdisplays-export.XXXXXX")
+merged_file=$(mktemp "$config_dir/.dinx-wdisplays-config.XXXXXX")
+cleanup() {
+    rm -f "$export_file" "$merged_file"
+}
+trap cleanup EXIT HUP INT TERM
+exported=0
+for attempt in 1 2 3 4 5; do
+    : >"$export_file"
+    if shikanectl export "$profile_name" >"$export_file" 2>/dev/null; then
+        exported=1
+        break
+    fi
+    sleep 1
+done
+if [ "$exported" -ne 1 ]; then
+    printf 'dinx-save-shikane-profile: shikanectl export failed after 5 attempts\n' >&2
+    exit 1
+fi
+if ! grep -Fq '[[profile]]' "$export_file" || ! grep -Fq 'name = "DINX wdisplays"' "$export_file"; then
+    printf 'dinx-save-shikane-profile: export did not return the expected profile\n' >&2
+    exit 1
+fi
+
+if [ -f "$config_path" ]; then
+    awk -v generated="$export_file" '
+function emit_generated(line) {
+    while ((getline line < generated) > 0) print line
+    close(generated)
+}
+function flush_profile(i) {
+    if (!in_profile) return
+    if (is_target) {
+        if (!emitted) {
+            emit_generated()
+            emitted = 1
+        }
+    } else {
+        for (i = 1; i <= buffer_count; i++) print buffer[i]
+    }
+    buffer_count = 0
+    in_profile = 0
+    is_target = 0
+}
+BEGIN {
+    in_profile = 0
+    is_target = 0
+    emitted = 0
+    buffer_count = 0
+}
+/^[[:space:]]*\[\[profile\]\][[:space:]]*$/ {
+    flush_profile()
+    in_profile = 1
+    buffer[++buffer_count] = $0
+    next
+}
+in_profile {
+    buffer[++buffer_count] = $0
+    if ($0 ~ /^[[:space:]]*name[[:space:]]*=[[:space:]]*"DINX wdisplays"[[:space:]]*$/) is_target = 1
+    next
+}
+{ print }
+END {
+    flush_profile()
+    if (!emitted) emit_generated()
+}
+' "$config_path" >"$merged_file"
+else
+    cat "$export_file" >"$merged_file"
+fi
+
+mv -f "$merged_file" "$config_path"
+if shikanectl reload >/dev/null 2>&1; then
+    reload_status=reloaded
+else
+    reload_status=deferred
+fi
+printf 'dinx_display_profile profile="%s" path="%s" reload=%s\n' "$profile_name" "$config_path" "$reload_status"

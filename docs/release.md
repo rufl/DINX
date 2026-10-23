@@ -5,6 +5,8 @@
 DINX releases are pre-release validation snapshots, not supported disk-installer releases.
 The release workflow is triggered by a `v*` tag and reuses the P0 Artix build, payload
 check, SHA-512 generation and QEMU smoke path before publishing assets.
+Build metadata is bound to the exact ISO artifact in both the P0 and tagged release paths: CI recomputes the ISO byte count and SHA-512 and rejects metadata that does not match the downloaded file.
+
 
 The P0 build verifies the committed NOCTTY/NoctEd source archive against the exact
 repository commit and SHA-256 contract in `distro/packages/noctty/source.env`, builds

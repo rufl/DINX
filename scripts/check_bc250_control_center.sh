@@ -13,7 +13,7 @@ for path in \
   distro/packages/bc250-control-center/PKGBUILD \
   distro/packages/bc250-control-center/source.env \
   distro/iso/iso-profiles/dinx/profile.yaml \
-  distro/iso/iso-profiles/dinx/root-overlay/etc/mango/dinx.conf \
+  distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/autostart \
   distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml; do
   [[ -f "$path" ]] || fail "missing contract file: $path"
 done
@@ -40,7 +40,7 @@ grep -Fq '    - python-pyqt6' distro/iso/iso-profiles/dinx/profile.yaml || fail 
 grep -Fq '    - python-psutil' distro/iso/iso-profiles/dinx/profile.yaml || fail 'psutil runtime is missing from the DINX rootfs'
 grep -Fq '    - qt6-svg' distro/iso/iso-profiles/dinx/profile.yaml || fail 'Qt SVG runtime is missing from the DINX rootfs'
 grep -Fq 'build_package bc250-control-center' .github/workflows/p0-iso.yml || fail 'CI does not build BC250 Control Center'
-grep -Fq 'exec_once=bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/etc/mango/dinx.conf || fail 'session daemon autostart is missing'
+grep -Fq 'bc250-control-centerd >/dev/null 2>&1 &' distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/autostart || fail 'session daemon autostart is missing'
 grep -Fq 'io.github.movacx.bc250-control-center' distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml || fail 'Noctalia dock launcher is missing'
 
 printf 'bc250_control_center_contract version=%s python=>=3.12 pyqt6=true daemon=session_autostart systemd=false source_sha256=%s\n' \

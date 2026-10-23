@@ -26,6 +26,7 @@ on:
       - "distro/packages/**"
       - "scripts/build-iso.sh"
       - "scripts/iso-tools/mksquashfs"
+      - "scripts/check_dinx_compression.sh"
       - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"
       - "scripts/check_dinx_package_repository.sh"
@@ -34,6 +35,7 @@ on:
       - "scripts/smoke_dinx_update.sh"
       - "scripts/check_dinx_feature_groups.sh"
       - "scripts/check_build_metadata.sh"
+      - "scripts/smoke_build_metadata.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/check_dinx_theme.sh"
       - "scripts/check_noctty_integration.sh"
@@ -55,12 +57,20 @@ on:
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
+      - "scripts/check_pori_phyto.sh"
+      - "scripts/check_seafoam_apps.sh"
+      - "scripts/check_seafoam_settings.sh"
+      - "scripts/seafoam_settings_smoke.sh"
+      - "scripts/check_dinx_display_persistence.sh"
+      - "scripts/smoke_dinx_display_persistence.sh"
       - "scripts/check_firewall_tools.sh"
       - "scripts/check_cyan_skillfish.sh"
       - "scripts/check_bc250_control_center.sh"
       - "scripts/check_dinitui.sh"
       - "scripts/check_dinxpanel.sh"
       - "scripts/check_dinx_session.sh"
+      - "scripts/check_dinx_doctor.sh"
+      - "scripts/smoke_dinx_doctor.sh"
       - "scripts/check_dinx_budget.sh"
       - "scripts/measure_dinx_session.sh"
       - "scripts/smoke_dinx_session.sh"
@@ -104,6 +114,16 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
+      - name: Verify Pori, Phyto, dinit storage and NTFS contracts
+        run: ./scripts/check_pori_phyto.sh
+      - name: Verify Seafoam app selection and Dome package contract
+        run: ./scripts/check_seafoam_apps.sh
+      - name: Verify Seafoam Settings package and argv contract
+        run: ./scripts/check_seafoam_settings.sh
+      - name: Verify wdisplays to Shikane persistence contract
+        run: ./scripts/check_dinx_display_persistence.sh
+      - name: Smoke-test wdisplays to Shikane persistence
+        run: ./scripts/smoke_dinx_display_persistence.sh
       - name: Verify WIZP package staging and desktop contract
         run: ./scripts/check_wizp_package.sh
       - name: Verify DINX package provenance policy
@@ -122,10 +142,16 @@ jobs:
         run: ./scripts/check_dinxpanel.sh
       - name: Verify DINX lock, idle, brightness and launcher hierarchy contract
         run: ./scripts/check_dinx_session.sh
+      - name: Verify read-only DINX doctor contract
+        run: ./scripts/check_dinx_doctor.sh
+      - name: Smoke-test read-only DINX doctor
+        run: ./scripts/smoke_dinx_doctor.sh
       - name: Verify installer lifecycle boundary
         run: ./scripts/check_install_lifecycle.sh
       - name: Verify Calamares partitioning contract
         run: ./scripts/check_calamares_partitioning.sh
+      - name: Verify deterministic ISO compression contract
+        run: ./scripts/check_dinx_compression.sh
       - name: Verify DINX payload and startup budgets
         run: ./scripts/check_dinx_budget.sh
       - name: Capture host session measurement context
@@ -153,6 +179,7 @@ jobs:
           DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING: ${{ inputs.require_persistent_package_signing }}
           DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
         run: |
+          : "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE must be set before the builder starts}"
           mkdir -p "$RUNNER_TEMP/dinx-artools" "$GITHUB_WORKSPACE/dist/iso"
           docker run --rm --privileged \
             --volume "$GITHUB_WORKSPACE:/workspace" \
@@ -165,10 +192,11 @@ jobs:
             --env DINX_PACKAGE_SIGNING_KEY \
             --env DINX_PACKAGE_SIGNING_FINGERPRINT \
             --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING \
-            --env DINX_ARTIX_IMAGE \
+            --env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE" \
             "$DINX_ARTIX_IMAGE" \
             bash -ceu "$(cat <<'DINX_CONTAINER_SCRIPT'
               set -euxo pipefail
+              : "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"
               pacman_retry() {
                 local attempt
                 for attempt in 1 2 3; do
@@ -281,6 +309,20 @@ jobs:
               actual_zig_version=$(zig version)
               printf "zig_version=%s\n" "$actual_zig_version"
               test "$actual_zig_version" = "$zig_version"
+              zig_16_version=0.16.0
+              zig_16_archive="zig-x86_64-linux-${zig_16_version}.tar.xz"
+              zig_16_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00
+              curl --fail --silent --show-error --location --retry 3 \
+                --output "/tmp/$zig_16_archive" \
+                "https://ziglang.org/download/${zig_16_version}/${zig_16_archive}"
+              actual_zig_16_sha=$(sha256sum "/tmp/$zig_16_archive" | cut -d " " -f 1)
+              printf "zig_16_sha256=%s\n" "$actual_zig_16_sha"
+              test "$actual_zig_16_sha" = "$zig_16_sha256"
+              tar -xJf "/tmp/$zig_16_archive" --directory /tmp
+              actual_zig_16_version=$("/tmp/zig-x86_64-linux-${zig_16_version}/zig" version)
+              printf "zig_16_version=%s\n" "$actual_zig_16_version"
+              test "$actual_zig_16_version" = "$zig_16_version"
+
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_dinx_theme.sh
               package_repo=/workspace/dist/packages
@@ -345,6 +387,9 @@ jobs:
                 if [[ "$package_name" == noctty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                 fi
+                if [[ "$package_name" == pori || "$package_name" == phyto || "$package_name" == dome ]]; then
+                  extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_16_version}/zig")
+                fi
                 (
                   cd "$package_dir"
                   runuser -u dinxbuild -- env "${extra_env[@]}" \
@@ -368,6 +413,13 @@ jobs:
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
               scripts/smoke_calamares_startup.sh
               build_package dinxpanel
+              build_package pori
+              build_package phyto
+              build_package dome
+              build_package zls
+              build_package seafoam-settings
+              pacman -U --nodeps --noconfirm "$package_repo"/seafoam-settings-*.pkg.tar.zst
+              SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
               source /workspace/distro/packages/noctty/source.env
               [[ -n "$NOCTTY_VERSION" ]]
               icon_svg=/tmp/dinx-nocted-icon.svg
@@ -383,11 +435,6 @@ jobs:
               build_package noctty
               pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
               build_package swayimg
-              build_package wlroots0.20
-              pacman -U --noconfirm "$package_repo"/wlroots0.20-*.pkg.tar.zst
-              build_package scenefx
-              pacman -U --noconfirm "$package_repo"/scenefx-*.pkg.tar.zst
-              build_package mangowm
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
               rm -f "$package_repo/dinx.db" "$package_repo/dinx.db.sig"
@@ -465,6 +512,14 @@ jobs:
                 printf "common_profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/common/common.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
                 printf "noctty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d " " -f 1)"
+                printf "compression_schema=dinx-squashfs/v1\n"
+                printf "compression_algorithm=xz\n"
+                printf "compression_level=9\n"
+                printf "compression_block=1M\n"
+                printf "compression_dictionary=1M\n"
+                printf "compression_bcj=x86\n"
+                printf "compression_excludes=kernel-source,pacman-cache,logs\n"
+                printf "compression_wrapper_sha256=%s\n" "$(sha256sum /workspace/scripts/iso-tools/mksquashfs | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"
                 printf "package_repository_publication=github-release-assets/v1\n"
@@ -478,6 +533,19 @@ jobs:
                 printf "iso_sha512=%s\n" "$iso_sha512"
                 printf "[builder-packages]\n"
                 printf "%s\n" "$package_snapshot"
+                printf "[largest-packages]\n"
+                LC_ALL=C pacman -Qi \
+                  | awk '
+                    /^Name[[:space:]]*:/ { name = $3 }
+                    /^Installed Size[[:space:]]*:/ {
+                      value = $4 + 0
+                      unit = $5
+                      factor = unit == "KiB" ? 1 : unit == "MiB" ? 1024 : unit == "GiB" ? 1048576 : 0
+                      if (name != "" && factor > 0) printf "%d KiB\t%s\n", value * factor, name
+                    }
+                  ' \
+                  | sort -nrk1,1 \
+                  | awk 'NR <= 20'
                 printf "[all-artix-packages]\n"
                 pacman -Q
               } > "$metadata_path"
@@ -498,10 +566,12 @@ jobs:
           printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
           printf 'metadata_path=%s\n' "$metadata_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
+      - name: Smoke-test build metadata artifact binding
+        run: ./scripts/smoke_build_metadata.sh
       - name: Verify build metadata
         env:
           GITHUB_SHA: ${{ github.sha }}
-        run: ./scripts/check_build_metadata.sh "${{ steps.artifact.outputs.metadata_path }}"
+        run: ./scripts/check_build_metadata.sh "${{ steps.artifact.outputs.metadata_path }}" "${{ steps.artifact.outputs.iso_path }}"
       - name: Verify built ISO and boot-window budgets
         env:
           DINX_ISO_PATH: ${{ env.DINX_ISO }}

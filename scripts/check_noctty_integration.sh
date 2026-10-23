@@ -63,7 +63,7 @@ grep -Fq 'selected=foot argc=2 argv=--working-directory /tmp' <<<"$fallback_outp
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
-grep -Fqx 'TERMINAL=dinx-terminal EDITOR=nocted VISUAL=nocted XDG_CURRENT_DESKTOP=Mango' <<<"$shell_output" || fail 'shell defaults are not deterministic'
+grep -Fqx 'TERMINAL=dinx-terminal EDITOR=nocted VISUAL=nocted XDG_CURRENT_DESKTOP=Labwc' <<<"$shell_output" || fail 'shell defaults are not deterministic'
 
 tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/com.noctty.NOCTTY.desktop' >/dev/null || fail 'Noctty desktop entry is not packaged'
 tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/nocttyhere.desktop' >/dev/null || fail 'Open Here service menu is not packaged'

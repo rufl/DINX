@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=DINX Display Setup
+Name[pt_BR]=Configuração de display DINX
+Comment=Arrange Wayland outputs and save the layout as a Shikane profile
+Comment[pt_BR]=Organize as saídas Wayland e salve o layout como perfil Shikane
+Exec=dinx-wdisplays
+TryExec=dinx-wdisplays
+Icon=video-display
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=display;monitor;wayland;shikane;wdisplays;

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Labwc (DINX)
+Comment=Labwc with Noctalia Shell
+Exec=dbus-run-session /usr/local/libexec/dinx-labwc
+TryExec=/usr/local/libexec/dinx-labwc
+Type=Application
+DesktopNames=Labwc;wlroots

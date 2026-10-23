@@ -13,9 +13,10 @@ calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/br
 calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
-mango="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/mango/config.conf"
+labwc="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/rc.xml"
 dinitui_source="$repo_root/distro/packages/dinitui/src/main.zig"
 dinxpanel_source="$repo_root/distro/packages/dinxpanel/src/main.zig"
+seafoam_settings_source="$repo_root/distro/packages/seafoam-settings/src/main.zig"
 gtk_index="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/themes/DINX/index.theme"
 gtk3="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/themes/DINX/gtk-3.0/gtk.css"
 gtk3_dark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/themes/DINX/gtk-3.0/gtk-dark.css"
@@ -29,8 +30,8 @@ fail() {
 }
 
 for path in "$profile" "$noctalia_config" "$palette" "$profile_shell" "$greeter" \
-  "$greeter_launcher" "$grub" "$calamares" "$calamares_branding" "$qt" "$swayimg" "$mango" \
-  "$dinitui_source" "$dinxpanel_source" "$gtk_index" \
+  "$greeter_launcher" "$grub" "$calamares" "$calamares_branding" "$qt" "$swayimg" "$labwc" \
+  "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source" "$gtk_index" \
   "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" "$gtk3_settings" "$gtk4_settings"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
@@ -90,9 +91,9 @@ grep -Fqx '    - adw-gtk-theme' "$profile" || fail 'profile does not install adw
 grep -Fqx '    - cantarell-fonts' "$profile" || fail 'profile does not install Cantarell fonts'
 grep -Fq 'source = "custom"' "$noctalia_config" || fail 'Noctalia custom palette source is missing'
 grep -Fq 'custom_palette = "DINX"' "$noctalia_config" || fail 'Noctalia DINX palette selection is missing'
-grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "mango", "qt"]' "$noctalia_config" || fail 'Noctalia application template set is incomplete'
+grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "qt"]' "$noctalia_config" || fail 'Noctalia application template set is incomplete'
 grep -Fq 'font_family = "Cantarell"' "$noctalia_config" || fail 'Noctalia font contract is missing'
-grep -Fq 'source_optional=~/.config/mango/noctalia.conf' "$mango" || fail 'Mango does not consume the Noctalia template output'
+grep -Fq '<font name="Cantarell" size="11" />' "$labwc" || fail 'labwc font contract is missing'
 grep -Fq 'theme_name = "DINX"' "$greeter" || fail 'ReGreet does not use DINX theme'
 grep -Fq 'font_name = "Cantarell 11"' "$greeter" || fail 'ReGreet font contract is missing'
 grep -Fq 'GTK_THEME="${GTK_THEME:-DINX:dark}"' "$greeter_launcher" || fail 'ReGreet launcher does not force DINX fallback theme'
@@ -150,6 +151,9 @@ grep -Fq "background: ${dark_token[mSurface]}" "$dinxpanel_source" || fail 'DINX
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinxpanel_source" || fail 'DINXPanel output text does not use DINX foreground'
 grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action does not use DINX primary'
 grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action text does not use DINX on-primary'
+grep -Fq "background: ${dark_token[mSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings surface does not use DINX background'
+grep -Fq "color: ${dark_token[mOnSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings text does not use DINX foreground'
+grep -Fq "background-color: ${dark_token[mPrimary]}" "$seafoam_settings_source" || fail 'Seafoam Settings action does not use DINX primary'
 grep -Fq 'Name=DINX' "$gtk_index" || fail 'GTK theme index name is missing'
 grep -Fq 'IconTheme=Adwaita' "$gtk_index" || fail 'DINX icon theme bridge is missing'
 grep -Fqx '@import url("gtk.css");' "$gtk3_dark" || fail 'GTK3 dark theme bridge is missing'
@@ -158,4 +162,4 @@ grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' "$swayimg" || fail 'Swayimg
 grep -Fq 'swayimg.text.font = "Cantarell"' "$swayimg" || fail 'Swayimg font contract is missing'
 grep -Fq 'swayimg.text.size = 11' "$swayimg" || fail 'Swayimg text size does not match Cantarell 11'
 
-printf 'dinx_theme_contract palette=true templates=true typography=true states=true gtk=true qt=true mango=true swayimg=true greeter=true grub=true calamares=true\n'
+printf 'dinx_theme_contract palette=true templates=true typography=true states=true gtk=true qt=true labwc=true swayimg=true greeter=true grub=true calamares=true\n'

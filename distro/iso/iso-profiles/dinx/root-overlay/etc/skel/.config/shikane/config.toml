@@ -1,0 +1,3 @@
+# DINX saves the current wdisplays layout as the `DINX wdisplays` profile.
+# Use `dinx-wdisplays` from the launcher; it exports and reloads this file.
+timeout = 0

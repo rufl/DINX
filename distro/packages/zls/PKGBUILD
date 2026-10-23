@@ -1,0 +1,23 @@
+pkgname=zls
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${ZLS_VERSION:?missing ZLS_VERSION}"
+: "${ZLS_REPOSITORY:?missing ZLS_REPOSITORY}"
+: "${ZLS_SOURCE_URL:?missing ZLS_SOURCE_URL}"
+: "${ZLS_SOURCE_SHA256:?missing ZLS_SOURCE_SHA256}"
+pkgver="$ZLS_VERSION"
+pkgrel=1
+pkgdesc='Zig language server'
+arch=('x86_64')
+url="$ZLS_REPOSITORY"
+license=('MIT')
+depends=('glibc' 'zig>=0.16')
+source=("$ZLS_SOURCE_URL")
+sha256sums=("$ZLS_SOURCE_SHA256")
+
+package() {
+  install -Dm755 "$srcdir/zls" "$pkgdir/usr/bin/zls"
+  install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/zls/LICENSE"
+  install -Dm644 "$srcdir/README.md" "$pkgdir/usr/share/doc/zls/README.md"
+}

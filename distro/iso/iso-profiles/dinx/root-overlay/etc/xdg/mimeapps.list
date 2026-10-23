@@ -1,5 +1,5 @@
 [Default Applications]
-inode/directory=thunar.desktop;
+inode/directory=org.aqueous.Phyto.desktop;
 text/html=firefox.desktop;
 application/xhtml+xml=firefox.desktop;
 x-scheme-handler/http=firefox.desktop;

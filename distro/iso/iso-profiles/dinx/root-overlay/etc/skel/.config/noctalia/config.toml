@@ -26,7 +26,7 @@ sync_color_scheme = true
 
 [theme.templates]
 enable_builtin_templates = true
-builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "mango", "qt"]
+builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "qt"]
 enable_community_templates = false
 community_ids = []
 
@@ -90,7 +90,7 @@ icon_size = 42
 margin_edge = 8
 margin_ends = 160
 launcher_position = "none"
-pinned = ["firefox", "dinxpanel", "dinitui", "io.github.movacx.bc250-control-center", "thunar", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
+pinned = ["firefox", "dinxpanel", "dinitui", "io.github.movacx.bc250-control-center", "org.aqueous.Phyto", "com.pori.app", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
 
 [shell]
 font_family = "Cantarell"

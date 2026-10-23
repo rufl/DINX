@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-local_packages=(dinitui dinxpanel wizp)
+local_packages=(dinitui dinxpanel seafoam-settings wizp)
 contains_local_package() {
   local candidate=$1
   local package
@@ -36,6 +36,7 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
     case "$package" in
       dinitui) contract=scripts/check_dinitui.sh ;;
       dinxpanel) contract=scripts/check_dinxpanel.sh ;;
+      seafoam-settings) contract=scripts/check_seafoam_settings.sh ;;
       wizp) contract=scripts/check_wizp_package.sh ;;
     esac
     [[ -x "$contract" ]] || fail "$package is missing its executable qualification contract: $contract"
@@ -87,8 +88,10 @@ for required in \
   'pacman-key --init' \
   'SigLevel = Required' \
   'DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507' \
+  ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE must be set before the builder starts}"' \
+  ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"' \
   'printf "noctty_source_env_sha256=%s\n"' \
-  '--env DINX_ARTIX_IMAGE'; do
+  '--env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE"'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
 done
 for required in \

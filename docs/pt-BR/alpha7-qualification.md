@@ -21,6 +21,36 @@ contratos cobrem:
 - qualificação real do daemon de usuário e GTK do DinitUI;
 - smoke limitado de inicialização do Calamares com a configuração enviada, além dos smokes transacionais;
 
+## Checklist do operador para o sistema instalado
+
+Execute esta checklist contra a mesma ISO e registre a tag da release, o nome
+do metadata de build, o papel da máquina, o modo de firmware e a GPU antes de
+marcar um resultado como `pass`.
+
+1. Verifique o SHA-512 da ISO e o metadata do build; depois inicialize a sessão
+   DINX normal.
+2. Após uma instalação pelo Calamares, confirme o primeiro boot no ReGreet,
+   labwc e Noctalia; `dinitctl status greetd NetworkManager` deve mostrar os
+   serviços esperados.
+3. Abra a **Configuração de display DINX**, organize as saídas, feche-a e
+   confirme que o perfil `DINX wdisplays` existe em
+   `~/.config/shikane/config.toml`; saia e entre novamente para confirmar a
+   reaplicação.
+4. Em um volume NTFS descartável, monte pelo Pori ou UDisks2, crie e remova um
+   arquivo de teste, desmonte e monte novamente. Não use um volume Windows
+   hibernado ou com Fast Startup habilitado.
+5. Use o Phyto para navegar no volume montado, o File Roller para criar e
+   extrair um archive e o GParted somente contra um disco descartável.
+6. Confirme que `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` abre a TTY de recuperação e
+   depois retorne à sessão gráfica.
+7. Exercite bloqueio, bloqueio por idle, suspensão/retorno, brilho físico,
+   áudio, rede e Bluetooth no hardware-alvo.
+8. Para alegações de gaming, autentique o Steam, abra e feche um jogo comercial,
+   teste um controle e verifique o áudio PipeWire do jogo.
+
+Evidências de CI/QEMU não substituem os passos 3–8 em hardware físico. Registre
+`fail` ou `blocked`; não infira sucesso apenas pela presença dos pacotes.
+
 ## Matriz manual de três máquinas
 
 Use a mesma ISO e registre máquina, modo de firmware, GPU, kernel e caminho do
@@ -29,7 +59,7 @@ relatório para cada alvo.
 ### Desktop
 
 - inicializar a sessão live e selecionar a sessão DINX normal no ReGreet;
-- verificar Wayland, MangoWC, Noctalia, áudio, rede e aceleração GPU;
+- verificar Wayland, labwc, Noctalia, áudio, rede e aceleração GPU;
 - se o suporte a NVIDIA for alegado, instalar `nvidia-open-dkms` com headers correspondentes, reiniciar e verificar render node, Vulkan e saída do Gamescope;
 - bloquear com `Super+L`;
 - verificar bloqueio após 600 segundos de idle;

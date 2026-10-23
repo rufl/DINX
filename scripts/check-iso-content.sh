@@ -57,6 +57,7 @@ required_paths=(
   usr/local/libexec/dinx-gaming
   usr/bin/setsid
   usr/local/bin/dinx-alpha7-hardware-report
+  usr/local/bin/dinx-doctor
   usr/share/wayland-sessions/dinx-gaming.desktop
   usr/bin/gamescope
   usr/bin/gamemoderun
@@ -71,19 +72,23 @@ required_paths=(
   etc/dinit.d/bluetoothd
   etc/dinit.d/root-ro
   etc/greetd/regreet.toml
-  etc/mango/dinx.conf
-  etc/mango/greeter.conf
+  etc/xdg/labwc/rc.xml
+  etc/xdg/labwc/autostart
+  etc/xdg/labwc/environment
+  etc/xdg/labwc-greeter/rc.xml
+  etc/xdg/labwc-greeter/autostart
   etc/profile.d/dinx.sh
   etc/skel/.bash_profile
   etc/skel/.config/gtk-3.0/settings.ini
   etc/skel/.config/gtk-4.0/settings.ini
-  etc/skel/.config/mango/config.conf
+  etc/skel/.config/labwc/rc.xml
   etc/skel/.config/noctalia/config.toml
   etc/skel/.config/noctalia/palettes/DINX.json
   etc/skel/.config/qt6ct/qt6ct.conf
   etc/skel/.config/swayimg/init.lua
   etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
+  etc/skel/.config/shikane/config.toml
   usr/share/themes/DINX/gtk-3.0/gtk.css
   usr/share/themes/DINX/gtk-4.0/gtk.css
   usr/share/themes/DINX/index.theme
@@ -93,9 +98,14 @@ required_paths=(
   usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
   usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
   usr/bin/foot
+  usr/bin/phyto
+  usr/bin/pori
   usr/bin/file-roller
+  usr/bin/gparted
+  usr/bin/shikane
+  usr/bin/shikanectl
+  usr/bin/wdisplays
   usr/bin/nano
-  usr/bin/firefox
   usr/bin/ffmpeg
   usr/bin/btop
   usr/bin/dialog
@@ -183,7 +193,7 @@ required_paths=(
   usr/share/applications/org.pwmt.zathura.desktop
   usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
-  usr/bin/mango
+  usr/bin/labwc
   usr/bin/mmsg
   usr/bin/noctalia
   usr/bin/noctty
@@ -199,26 +209,37 @@ required_paths=(
   usr/share/nocted/styles/nocted-dark.xml
   usr/share/nocted/styles/nocted-light.xml
   usr/bin/calamares
-  usr/bin/partitionmanager
-  usr/share/wayland-sessions/mango.desktop
+  usr/share/wayland-sessions/dinx-labwc.desktop
+  usr/share/wayland-sessions/labwc.desktop
   usr/bin/regreet
   usr/local/libexec/dinx-regreet
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
-  usr/local/libexec/dinx-mango
+  usr/local/libexec/dinx-labwc
   usr/share/applications/dinx-installer.desktop
+  usr/local/bin/dinx-save-shikane-profile
+  usr/local/bin/dinx-wdisplays
   usr/bin/brightnessctl
   usr/bin/swayidle
   usr/bin/swaylock
-  usr/share/applications/org.kde.partitionmanager.desktop
+  usr/share/applications/com.pori.app.desktop
+  usr/share/applications/org.aqueous.Phyto.desktop
   usr/share/applications/org.gnome.FileRoller.desktop
+  usr/share/applications/gparted.desktop
+  usr/share/applications/network.cycles.wdisplays.desktop
   usr/share/grub/themes/artix/theme.txt
-  usr/share/xdg-desktop-portal/mango-portals.conf
+  usr/share/xdg-desktop-portal/labwc-portals.conf
 )
 
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
+doctor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/dinx-doctor)
+grep -Fq 'schema dinx-doctor/v1' <<<"$doctor" || fail 'DINX doctor schema is missing'
+grep -Fq 'mode read-only' <<<"$doctor" || fail 'DINX doctor is not read-only'
+if grep -Eq '(^|[[:space:]])(systemctl|sudo|pkexec|curl|wget)([[:space:]]|$)|pacman[[:space:]]+-S([[:space:]]|$)|dinitctl[[:space:]]+(start|stop|restart)([[:space:]]|$)' <<<"$doctor"; then
+  fail 'DINX doctor contains a mutating, privileged or network command'
+fi
 gaming_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-gaming)
 grep -Fq 'dinitui --gaming-enter' <<<"$gaming_launcher" || fail 'DINX gaming launcher does not enter the Gaming profile'
 grep -Fq 'gamescope --backend drm --steam --fullscreen -- steam -tenfoot' <<<"$gaming_launcher" || fail 'DINX gaming launcher command is incorrect'
@@ -285,7 +306,7 @@ gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" et
 grep -Fq 'gtk-font-name=Cantarell 11' <<<"$gtk3_settings" || fail 'GTK3 Cantarell font contract is missing'
 gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
 grep -Fq 'gtk-font-name=Cantarell 11' <<<"$gtk4_settings" || fail 'GTK4 Cantarell font contract is missing'
-grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "mango", "qt"]' <<<"$noctalia_config" || fail 'Noctalia application templates are missing'
+grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "qt"]' <<<"$noctalia_config" || fail 'Noctalia application templates are missing'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
 grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
@@ -344,20 +365,28 @@ grep -Fq '/etc/dinit.d/boot.d/cyan-skillfish-governor-smu' <<<"$manifest" || fai
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
 grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
 
-mango_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/mango/dinx.conf)
-grep -Fq 'tag_num=2' <<<"$mango_config" || fail 'Mango does not start with two virtual desktops'
-grep -Fq 'env=TERMINAL,dinx-terminal' <<<"$mango_config" || fail 'Mango does not expose the DINX terminal contract'
-grep -Fq 'source_optional=~/.config/mango/config.conf' <<<"$mango_config" || fail 'Mango user workspace override is not enabled'
-grep -Fq 'exec_once=lxqt-policykit-agent' <<<"$mango_config" || fail 'Mango does not start the PolicyKit authentication agent'
-grep -Fq 'exec_once=bc250-control-centerd' <<<"$mango_config" || fail 'Mango does not autostart the BC250 user daemon'
-grep -Fq 'exec_once=thunar --daemon' <<<"$mango_config" || fail 'Mango does not start the Thunar volume monitor'
-grep -Fq 'bind=SUPER,Return,spawn,dinx-terminal' <<<"$mango_config" || fail 'Mango terminal shortcut is missing'
-grep -Fq 'tagrule=id:*,open_as_floating:1' <<<"$mango_config" || fail 'Mango does not open new windows floating'
-grep -Fq 'bind=SUPER,space,togglefloating,' <<<"$mango_config" || fail 'Mango floating toggle shortcut is missing'
-grep -Fq 'exec_once=/usr/local/libexec/dinx-idle' <<<"$mango_config" || fail 'Mango does not start the DINX idle manager'
-grep -Fq 'bind=SUPER,l,spawn,/usr/local/libexec/dinx-lock' <<<"$mango_config" || fail 'Mango lock shortcut is missing'
-grep -Fq 'bind=XF86MonBrightnessDown,spawn,brightnessctl set 5%-' <<<"$mango_config" || fail 'Mango brightness-down shortcut is missing'
-grep -Fq 'bind=XF86MonBrightnessUp,spawn,brightnessctl set 5%+' <<<"$mango_config" || fail 'Mango brightness-up shortcut is missing'
+labwc_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/labwc/rc.xml)
+grep -Fq '<desktops number="2" />' <<<"$labwc_config" || fail 'labwc does not start with two virtual desktops'
+grep -Fq '<keybind key="W-l">' <<<"$labwc_config" || fail 'labwc lock shortcut is missing'
+grep -Fq 'command="/usr/local/libexec/dinx-lock"' <<<"$labwc_config" || fail 'labwc lock command is missing'
+grep -Fq 'command="brightnessctl set 5%-"' <<<"$labwc_config" || fail 'labwc brightness-down shortcut is missing'
+grep -Fq 'command="brightnessctl set 5%+"' <<<"$labwc_config" || fail 'labwc brightness-up shortcut is missing'
+labwc_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/labwc/autostart)
+grep -Fq 'noctalia >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not start Noctalia'
+grep -Fq 'bc250-control-centerd >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not autostart the BC250 user daemon'
+grep -Fq 'lxqt-policykit-agent >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not start the PolicyKit authentication agent'
+if grep -Fq 'thunar --daemon >/dev/null 2>&1 &' <<<"$labwc_autostart"; then
+  fail 'labwc still starts the removed Thunar volume monitor'
+fi
+grep -Fq '/usr/local/libexec/dinx-idle >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not start the DINX idle manager'
+labwc_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-labwc.desktop)
+grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-labwc' <<<"$labwc_session" || fail 'DINX labwc session command is incorrect'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-labwc' <<<"$labwc_session" || fail 'DINX labwc session TryExec is missing'
+generic_labwc_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/labwc.desktop)
+grep -Fq 'Hidden=true' <<<"$generic_labwc_session" || fail 'generic labwc session is not hidden'
+grep -Fq 'NoDisplay=true' <<<"$generic_labwc_session" || fail 'generic labwc session remains visible'
+greeter_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/labwc-greeter/autostart)
+grep -Fq '/usr/local/libexec/dinx-regreet' <<<"$greeter_autostart" || fail 'labwc greeter does not start ReGreet'
 idle_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-idle)
 grep -Fq 'timeout 600 /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock timeout is missing'
 grep -Fq 'before-sleep /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock-before-suspend hook is missing'
@@ -369,7 +398,7 @@ grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is miss
 grep -Fq 'QT_QPA_PLATFORMTHEME=' <<<"$shell_config" || fail 'Qt6ct session integration is missing'
 grep -Fq 'NOCTALIA_COLOR_SCHEME=' <<<"$shell_config" || fail 'Noctalia color scheme session integration is missing'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
-grep -Fq 'inode/directory=thunar.desktop;' <<<"$mimeapps_config" || fail 'Thunar is not the default directory handler'
+grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || fail 'Phyto is not the default directory handler'
 grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
@@ -392,22 +421,35 @@ for forbidden_path in \
   usr/bin/xfce4-panel \
   usr/bin/lxqt-session \
   usr/bin/lxqt-panel \
-  usr/bin/lxqt-runner; do
+  usr/bin/lxqt-runner \
+  usr/bin/thunar \
+  usr/bin/partitionmanager \
+  usr/share/applications/thunar.desktop \
+  usr/share/applications/org.kde.partitionmanager.desktop \
+  usr/lib/gvfs \
+  usr/lib/tumbler; do
   if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
     fail "forbidden desktop/runtime payload is present: $forbidden_path"
   fi
 done
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gvfs|gvfs-gphoto2|gvfs-mtp|gvfs-smb|partitionmanager|thunar|thunar-archive-plugin|thunar-volman|tumbler)-[^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'removed file-manager, volume-mounter or partition-manager package metadata is present'
+fi
 if forbidden_matches=$(grep -E '/var/lib/pacman/local/systemd-[0-9][^/]*/' <<<"$manifest"); then
   printf '%s\n' "$forbidden_matches" >&2
   fail 'systemd init package metadata is present; compatibility libraries are allowed'
 fi
 grep -Fq '/usr/bin/os-prober' <<<"$manifest" || fail 'os-prober is missing from the ISO payload'
-grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest" || fail 'ntfs-3g is missing from the ISO payload'
+grep -Fq '/usr/bin/mount' <<<"$manifest" || fail 'util-linux mount is missing from the ISO payload'
+if grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest"; then
+  fail 'optional ntfs-3g write package is present in the live ISO'
+fi
+grep -Eq '/usr/lib/modules/[^/]+/kernel/fs/ntfs3/ntfs3\.ko' <<<"$manifest" || fail 'kernel ntfs3 read/write support is missing from the ISO payload'
 
-mango_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/mango/config.conf)
-grep -Fq 'tag_num=2' <<<"$mango_user_config" || fail 'Mango user workspace default is not two'
-grep -Fq 'source_optional=~/.config/mango/noctalia.conf' <<<"$mango_user_config" || fail 'Mango Noctalia color path is missing'
+labwc_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/labwc/rc.xml)
+grep -Fq 'DINX merges user overrides with /etc/xdg/labwc/rc.xml.' <<<"$labwc_user_config" || fail 'labwc user override contract is missing'
 
 calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/settings.conf)
 grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares branding is not selected'
@@ -458,7 +500,6 @@ grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$ma
 grep -Fq '/usr/bin/clangd' <<<"$manifest" || fail 'clangd runtime is missing'
 grep -Fq '/usr/share/nocted/styles/nocted-light.xml' <<<"$manifest" || fail 'NoctEd light scheme is missing'
 
-grep -Fq '/usr/lib/libscenefx' <<<"$manifest" || fail 'missing Scenefx library'
 
 livefs_required_paths=(
   etc/artools/live.conf
@@ -483,4 +524,4 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: MangoWM with two editable desktops and floating defaults, top Noctalia bar, bottom Noctalia dock, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, KolourPaint image editing, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, CLI recovery and transfer tools, Thunar/GVFS removable-media support, File Roller, Nano and Tumbler.\n'
+printf 'ISO content check passed: labwc with two editable workspaces, top Noctalia bar, bottom Noctalia dock, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, KolourPaint image editing, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, File Roller archive actions, GParted partition editing, wdisplays display configuration, shikane deterministic output profiles, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, Pori dinit storage management, Phyto file management, kernel ntfs3 live read/write support, optional legacy ntfs-3g post-install support, CLI recovery and transfer tools, Nano and dinit payloads.\n'

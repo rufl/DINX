@@ -1,0 +1,78 @@
+pkgname=pori
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${PORI_VERSION:?missing PORI_VERSION}"
+: "${PORI_REPOSITORY:?missing PORI_REPOSITORY}"
+: "${PORI_SOURCE_SHA256:?missing PORI_SOURCE_SHA256}"
+pkgver="$PORI_VERSION"
+pkgrel=1
+pkgdesc='Pori dinit mount and disk manager'
+arch=('x86_64')
+url="$PORI_REPOSITORY"
+license=('GPL-3.0-only')
+provides=('pori')
+depends=('dinit' 'gtk4' 'glib2' 'hicolor-icon-theme' 'glibc' 'polkit' 'udisks2' 'util-linux')
+optdepends=('ntfs-3g: optional legacy userspace NTFS driver and repair tools')
+makedepends=('zig>=0.16')
+source=(
+  "$pkgname-$pkgver.tar.gz::${PORI_REPOSITORY}/archive/refs/tags/v${pkgver}.tar.gz"
+  'units-dinit.zig'
+  'privops-dinit.zig'
+  'watch-dinit.zig'
+  'pori-dinit.patch'
+)
+sha256sums=(
+  "$PORI_SOURCE_SHA256"
+  'a997c9f902baf7dd0eebfb4ec10c7d7afd1867fb9af682307163285f18ae7855'
+  '2ff035ded115777d8e1015a9ed36f4315b3d9c3373f7c6ad8093fa86e7f99ad1'
+  '3cdb23f243c02efcba94f2aa6c81fcbd58c538d256e270cee6b93e06e14e8e9c'
+  '69a2da05e42d1392f4271518613236be0315a75d654a0da4de746fff9053a7ec'
+)
+
+prepare() {
+  cd "$srcdir/Pori-$pkgver"
+  cp -- "$srcdir/units-dinit.zig" Pori.Ui/src/services/units.zig
+  cp -- "$srcdir/privops-dinit.zig" Pori.Ui/src/services/privops.zig
+  cp -- "$srcdir/watch-dinit.zig" Pori.Ui/src/services/watch.zig
+  patch --forward --strip=1 < "$srcdir/pori-dinit.patch"
+}
+
+build() {
+  cd "$srcdir/Pori-$pkgver/Pori.Ui"
+  local pkg_config_wrapper="$srcdir/pori-pkg-config"
+  cat > "$pkg_config_wrapper" <<'EOF'
+#!/bin/sh
+set -eu
+/usr/bin/pkg-config "$@" | /usr/bin/sed \
+    -e 's/-Wl,--export-dynamic//g' \
+    -e 's/-mfpmath=sse//g' \
+    -e 's/-msse2//g' \
+    -e 's/-msse//g'
+EOF
+  chmod 755 "$pkg_config_wrapper"
+  export PKG_CONFIG="$pkg_config_wrapper"
+  export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
+  "${ZIG:-zig}" build --verbose \
+    --prefix "$srcdir/Pori-$pkgver/out" \
+    --cache-dir "$srcdir/zig-cache" \
+    -Dcpu=baseline \
+    -Doptimize=ReleaseSafe
+}
+
+package() {
+  cd "$srcdir/Pori-$pkgver"
+  install -Dm755 out/bin/pori "$pkgdir/usr/bin/pori"
+  install -Dm644 Pori.Ui/assets/pori.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/pori.png"
+  cat <<'EOF' | install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/com.pori.app.desktop"
+[Desktop Entry]
+Name=Pori
+Comment=Dinit mount and disk manager
+Exec=/usr/bin/pori
+Icon=pori
+Type=Application
+Categories=System;Utility;
+Terminal=false
+EOF
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/pori/LICENSE"
+}

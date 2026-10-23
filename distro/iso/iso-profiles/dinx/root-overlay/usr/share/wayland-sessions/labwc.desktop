@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=labwc
+Comment=A wayland stacking compositor
+Hidden=true
+NoDisplay=true

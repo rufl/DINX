@@ -41,7 +41,6 @@ packages-base:
   - nano
   - nbd
   - net-tools
-  - ntfs-3g
   - os-prober
   - s-nail
   - sudo

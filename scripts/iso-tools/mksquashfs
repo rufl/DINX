@@ -27,5 +27,13 @@ while (($#)); do
   esac
 done
 
-# Keep linux-headers available for Artix initramfs generation, but omit its source tree from the final SquashFS payload.
-exec "$real_mksquashfs" "${filtered[@]}" -comp xz -b 256K -Xbcj x86 -wildcards -e 'usr/src/linux*'
+# Keep linux-headers available for Artix initramfs generation, but omit build-only
+# source/cache/log payloads from the final SquashFS image.
+exec "$real_mksquashfs" "${filtered[@]}" \
+  -comp xz \
+  -b 1M \
+  -Xbcj x86 \
+  -Xcompression-level 9 \
+  -Xdict-size 1M \
+  -wildcards \
+  -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

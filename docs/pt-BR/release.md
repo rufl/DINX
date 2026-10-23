@@ -7,6 +7,10 @@ instalação persistente suportados. O workflow de release é acionado por uma t
 e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e o
 smoke test no QEMU antes de publicar os artefatos.
 
+A metadata do build fica vinculada ao artefato exato da ISO nos caminhos P0 e de
+release com tag: o CI recalcula o tamanho em bytes e o SHA-512 da ISO e rejeita
+metadados que não correspondam ao arquivo baixado.
+
 O build P0 verifica o archive versionado do código NOCTTY/NoctEd contra o commit exato
 do repositório e o contrato SHA-256 em `distro/packages/noctty/source.env`, compila o
 pacote nativo `noctty` com Zig 0.17.0 e verifica que os dois aplicativos e seus

@@ -6,15 +6,17 @@ metadata=${1:-}
 repository_dir=${2:-}
 release_tag=${3:-}
 release_base_url=${4:-}
+iso_path=${5:-}
 
 fail() {
   printf 'check_dinx_release_preflight: %s\n' "$*" >&2
   exit 1
 }
 
-[[ -n "$metadata" && -n "$repository_dir" && -n "$release_tag" ]] \
-  || fail "usage: $0 BUILD_METADATA REPOSITORY_DIR RELEASE_TAG [RELEASE_BASE_URL]"
+[[ -n "$metadata" && -n "$repository_dir" && -n "$release_tag" && -n "$iso_path" ]] \
+  || fail "usage: $0 BUILD_METADATA REPOSITORY_DIR RELEASE_TAG [RELEASE_BASE_URL] ISO"
 [[ -r "$metadata" ]] || fail "build metadata is not readable: $metadata"
+[[ -f "$iso_path" ]] || fail "ISO is not a regular file: $iso_path"
 [[ -d "$repository_dir" ]] || fail "repository directory does not exist: $repository_dir"
 [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9._-]+$ ]] \
   || fail "release tag is not alpha/beta/rc shaped: $release_tag"
@@ -39,7 +41,7 @@ require_value() {
   [[ "$value" =~ $pattern ]] || fail "invalid metadata field $key: $value"
 }
 
-"$repo_root/scripts/check_build_metadata.sh" "$metadata" >/dev/null
+"$repo_root/scripts/check_build_metadata.sh" "$metadata" "$iso_path" >/dev/null
 "$repo_root/scripts/check_dinx_package_repository.sh" "$repository_dir" >/dev/null
 
 require_value "$metadata" package_repository_channel '^stable$'

@@ -4,8 +4,19 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
-- Added deterministic xz SquashFS compression with x86 BCJ filtering and a strict P0 budget below GitHub's 2 GiB per-asset limit for future full-ISO releases. Alpha 8 remains split because it predates this change.
+- Strengthened deterministic ISO compaction: the SquashFS wrapper now uses xz level 9, x86 BCJ, 1 MiB blocks and a 1 MiB dictionary, while excluding kernel sources, pacman package caches and build logs. The base runtime no longer carries build-only `squashfs-tools`; the builder keeps it in its host toolchain.
+- Hardened the Artix builder contract: the pinned image digest is asserted before package/build work, forwarded explicitly into the container, and recorded safely in build metadata.
 - Reduced the full-image payload with a repository-owned compact common manifest: the documented AMDGPU path remains included, generic firmware and `powertop` are omitted from final images, and kernel headers remain only for ISO initramfs generation while their source tree is excluded from final SquashFS.
+- Switched the compositor session to labwc while retaining the Noctalia shell and user-session integration.
+- Added Phyto as the default native file manager and Pori as the only graphical disk/mount manager. Pori discovers devices through UDisks2 and persists mounts as dinit services under `/etc/dinit.d`.
+- Restored File Roller for graphical archive open/create/extract actions and GParted for standalone partition editing, while retaining the removal of Thunar, GVFS, Tumbler and KDE Partition Manager. The kernel `ntfs3` driver supplies NTFS read/write support in the live ISO and installed system; legacy `ntfs-3g` is optional after installation.
+
+- Added `wdisplays` and `shikane` to the base desktop payload for interactive and deterministic Wayland display setup. Added Dome 0.1.1 as a source-pinned optional Seafoam package from Pearl v0.3.0; its resource/process views remain dinit-safe while its optional systemd service provider is unavailable on DINX. Coral is intentionally not included.
+- Added the optional Seafoam Settings native Zig/GTK4 launcher for wdisplays, Shikane, labwc, DinitUI, DINXPanel, Qt6ct and Dome entry points. Added the source-pinned official ZLS 0.16.0 package for Nocted's Zig LSP path; both remain outside the base ISO.
+- Added the DINX display persistence bridge: the wdisplays desktop entry, DINXPanel and Seafoam Settings use `dinx-wdisplays`; closing the editor atomically replaces the `DINX wdisplays` profile, reloads Shikane and keeps the layout across sessions.
+- Added the read-only `dinx-doctor` report for session, dinit, storage, display and package evidence; it never performs service, mount, package or network mutations.
+- Documented the Aqueous/Pearl boundary: their current `uwsm`/systemd user-session packaging is not exposed as a DINX session until a dinit-native adaptation is qualified.
+
 
 ## v0.1.0-alpha.8 — 2026-10-21
 

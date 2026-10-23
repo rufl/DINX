@@ -98,7 +98,7 @@ jobs:
           done < <(find "$input_repository_dir" -maxdepth 1 -type f -print0 | sort -z)
           (( ${#repository_assets[@]} > 0 ))
           scripts/check_dinx_release_preflight.sh \
-            "$input_metadata" "$repository_dir" "$RELEASE_TAG" "$release_base_url"
+            "$input_metadata" "$repository_dir" "$RELEASE_TAG" "$release_base_url" "$input_iso"
           repository_snapshot=$(awk -F= '$1 == "snapshot" { print $2; exit }' \
             "$repository_dir/dinx-repository-metadata.txt")
           repository_fingerprint=$(awk -F= '$1 == "signing_fingerprint" { print $2; exit }' \
@@ -257,7 +257,7 @@ jobs:
           receiver \`ddjarin\`. Run \`scripts/deploy-ztash.sh ${RELEASE_TAG}\` from a
           trusted owner machine for a preview; add \`--apply\` only after review.
 
-          This release includes the experimental offline Calamares installer and KDE Partition Manager.
+          This release includes the experimental offline Calamares installer and GParted.
           The installer contract is qualified in CI on disposable BIOS and UEFI disks, but physical hardware
           installation, installed-ISO upgrades, filesystem rollback and data preservation remain unsupported;
           verify the target device and read the installation guide before using either destructive tool.

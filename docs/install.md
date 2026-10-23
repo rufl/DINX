@@ -7,7 +7,7 @@
 The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, installed-ISO upgrades, filesystem rollback or data preservation.
 The project is currently in **P5 — Gaming beta**. The tagged validation workflow [run 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), on commit `eea66ac`, passed the ISO build, QEMU boot, graphical payload, Calamares supported-layout and persistent-install/recovery smokes, build-metadata verification and release attestation. The public prerelease is [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), with checksummed ISO parts and a signed stable DINX package repository. P4 DinitUI is release-qualified for the alpha gate; P5 still has real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries.
 
-KDE Partition Manager is also available as a standalone graphical disk tool. Use it only to inspect or prepare a disk before opening Calamares, and verify the target device in both applications.
+Pori is the dinit storage tool. Use it to inspect disks and create persistent mount services under `/etc/dinit.d`; use File Roller to open, create and extract archives, GParted to edit partitions outside the installer, and Calamares for the final partitioning and installation transaction.
 
 Do not use the ISO on a machine containing data that you cannot restore. The live session and the installer are alpha software.
 
@@ -152,29 +152,30 @@ The tested live login is:
 
 - **User:** `dinx`
 - **Password:** `dinx`
-- **Session:** `MangoWM (DINX)`
+- **Session:** `Labwc (DINX)`
 
 The password is intentionally public and disposable. Never reuse it on another system or network.
 
-After login, the tested graphical state shows MangoWM with the Noctalia welcome screen. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
-Noctalia starts with animations, panel translucency and Settings-window translucency disabled. These are user preferences, not locks: change them later in Noctalia Settings. Mango starts with two virtual desktops; edit `~/.config/mango/config.conf` and change `tag_num` if more are needed.
+After login, the tested graphical state shows labwc with the Noctalia welcome screen. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
+Noctalia starts with animations, panel translucency and Settings-window translucency disabled. These are user preferences, not locks: change them later in Noctalia Settings. labwc starts with two workspaces; edit `~/.config/labwc/rc.xml` for user overrides.
+Phyto is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts with labwc and reapplies matching profiles. `Dome`, `Seafoam Settings` and `zls` are signed optional Seafoam packages, not part of the base ISO. Seafoam Settings groups the documented display/session configuration entry points; Nocted uses ZLS for Zig projects when installed.
 
 ### BC250 Control Center
 
-After entering MangoWM, open **BC250 Control Center** from the Noctalia launcher or dock. DINX starts `bc250-control-centerd` once in the logged-in user session, so the daemon does not require a systemd unit or a root dinit service. It provides BC-250 telemetry and the upstream polkit-gated controls when the hardware and permissions are available. On dinit, upstream service persistence is detection-only; that limitation does not block the GUI or live readings.
+After entering labwc, open **BC250 Control Center** from the Noctalia launcher or dock. DINX starts `bc250-control-centerd` once in the logged-in user session through the labwc autostart, so the daemon does not require a systemd unit or a root dinit service. It provides BC-250 telemetry and the upstream polkit-gated controls when the hardware and permissions are available. On dinit, upstream service persistence is detection-only; that limitation does not block the GUI or live readings.
 
 ## 5. Experimental persistent installation
 
-After logging into MangoWM:
+After logging into labwc:
 
 1. Open the application launcher and choose **Instalar DINX**.
 2. If the launcher entry is unavailable, run `pkexec calamares` from a terminal.
 3. Choose automatic or manual partitioning and verify the target disk, firmware mode and mount points before continuing.
-4. For advanced preparation, close Calamares, open **KDE Partition Manager**, make and apply the required changes, close it, then reopen Calamares.
+4. For advanced storage operations, open **Pori** from the Noctalia launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
 5. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
-Both Calamares and KDE Partition Manager can erase or format data. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
-The Alpha 8 Calamares qualification also covers a Windows-style GPT layout: an existing FAT32 ESP containing `EFI/Microsoft`, an NTFS Windows partition and DINX root space created after it. The smoke preserves the Windows partition and Microsoft boot path while writing DINX fstab and GRUB data for both a side-by-side outcome and an explicit manual layout. The ISO includes `ntfs-3g` and `os-prober`, enables GRUB's Windows detection and uses a separate `DINX` EFI directory. An existing ESP of at least 64 MiB is accepted because DINX keeps `/boot` on the root filesystem; a new ESP is recommended at 1 GiB. If the existing ESP is smaller or full, create a new FAT32 ESP in free space through the manual layout instead of formatting the Microsoft ESP. Do not format the existing ESP or Windows/MSR/recovery partitions. Boot DINX in the same UEFI mode as Windows, fully shut Windows down, disable Fast Startup/hibernation, suspend BitLocker with its recovery key available, and leave a verified backup before attempting a resize.
+Calamares and GParted can erase, format or resize data. Pori mount actions do not format disks, but verify the device, filesystem and mount target before confirming any privileged action. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
+The Alpha 8 Calamares qualification also covers a Windows-style GPT layout: an existing FAT32 ESP containing `EFI/Microsoft`, an NTFS Windows partition and DINX root space created after it. The smoke preserves the Windows partition and Microsoft boot path while writing DINX fstab and GRUB data for both a side-by-side outcome and an explicit manual layout. The live ISO and installed base use the kernel `ntfs3` driver for NTFS read/write; legacy `ntfs-3g` is optional after installation for compatibility and repair tools. The profile includes `os-prober`, enables GRUB's Windows detection and uses a separate `DINX` EFI directory. An existing ESP of at least 64 MiB is accepted because DINX keeps `/boot` on the root filesystem; a new ESP is recommended at 1 GiB. If the existing ESP is smaller or full, create a new FAT32 ESP in free space through the manual layout instead of formatting the Microsoft ESP. Do not format the existing ESP or Windows/MSR/recovery partitions. Boot DINX in the same UEFI mode as Windows, fully shut Windows down, disable Fast Startup/hibernation, suspend BitLocker with its recovery key available, and leave a verified backup before attempting a resize.
 ### First boot and recovery TTY
 
 The CI installation contract boots the copied root filesystem from disposable BIOS and UEFI disks and enables `getty@tty2` and `getty@tty3` for recovery. These are QEMU disk smokes, not physical hardware qualification. On a real installation, press `Ctrl+Alt+F2` or `Ctrl+Alt+F3` at the greeter to open a TTY and log in with the user created during installation. Useful recovery commands:
@@ -190,9 +191,17 @@ If the graphical session is unavailable, use the independent Wayland fallback:
 DINX_TERMINAL_FALLBACK=1 dinx-terminal
 ```
 
-`Super+Enter` also launches `foot` directly in the Mango session. `$TERMINAL` points
+`Super+Enter` launches `dinx-terminal` in the labwc session. `$TERMINAL` points
 to `dinx-terminal`, which prefers NOCTTY and falls back to `foot` when NOCTTY is not
 installed.
+Para registrar o estado sem alterar o sistema, execute:
+
+```bash
+dinx-doctor
+```
+
+O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `missing` ou `unknown`. Para incluir a lista somente leitura dos serviços do dinit de usuário, use `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`. Não use o relatório como prova de compatibilidade de hardware: brilho físico, suspensão, GPU, áudio, NTFS compartilhado e montagem de volumes ainda exigem teste no equipamento.
+
 
 
 ## 6. What this alpha can and cannot do
@@ -201,11 +210,11 @@ installed.
 
 - x86_64 boot path in QEMU;
 - ReGreet rendering;
-- graphical login into the MangoWM session;
+- graphical login into the labwc session;
 - Noctalia startup;
 - presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
 - Windows-style GPT side-by-side and manual-layout transaction smoke: existing FAT32 ESP/Microsoft boot files and NTFS partition remain intact while DINX root, fstab and GRUB data are added;
-- presence of the Calamares offline-install configuration and standalone KDE Partition Manager.
+- presence of the Calamares offline-install configuration, Pori, Phyto and the kernel `ntfs3` storage path;
 
 ### Not production-supported yet
 
@@ -259,7 +268,7 @@ offline ISO payload.
 
 ### Login fails
 
-Select user `dinx`, session `MangoWM (DINX)`, and enter the exact disposable password `dinx`. If the greeter still fails, retain the workflow commit and hardware details; do not try random credentials.
+Select user `dinx`, session `Labwc (DINX)`, and enter the exact disposable password `dinx`. If the greeter still fails, retain the workflow commit and hardware details; do not try random credentials.
 
 ### The checksum fails
 

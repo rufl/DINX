@@ -21,16 +21,22 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
-grep -Fq 'depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq "cups-dinit: optional CUPS printing support; downloads cups and dinit service files after installation" "$pkgbuild" || fail 'optional CUPS package metadata is missing'
-grep -Fq 'makedepends=(zig)' "$pkgbuild" || fail 'Zig build dependency is missing'
+if grep -Fq 'wdisplays: Wayland display control panel' "$pkgbuild"; then
+  fail 'wdisplays must be a runtime dependency now that the display control is in the base ISO'
+fi
 grep -Fq 'Exec=dinxpanel' "$desktop" || fail 'desktop launcher is incorrect'
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
 grep -Fq 'build_package dinxpanel' "$workflow" || fail 'ISO workflow does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Display' 'MangoWC options' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Display' 'Labwc options' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
+grep -Fq 'dinx-wdisplays' "$frontend" || fail 'display action does not use the DINX persistence wrapper'
+if grep -Fq 'launch(&.{"wdisplays"})' "$frontend"; then
+  fail 'display action bypasses the DINX persistence wrapper'
+fi
 grep -Fq 'dinitui_command = command' "$frontend" || fail 'GPU command is not retained for the asynchronous task'
 grep -Fq 'const argv = [_][]const u8{ "dinitui", task.dinitui_command }' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
 grep -Fq -- '--gpu-status' "$frontend" || fail 'GPU detection action is missing'

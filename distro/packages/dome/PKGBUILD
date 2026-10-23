@@ -1,0 +1,35 @@
+pkgname=dome
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${DOME_VERSION:?missing DOME_VERSION}"
+: "${DOME_SOURCE_VERSION:?missing DOME_SOURCE_VERSION}"
+: "${DOME_REPOSITORY:?missing DOME_REPOSITORY}"
+: "${DOME_SOURCE_SHA256:?missing DOME_SOURCE_SHA256}"
+pkgver="$DOME_VERSION"
+pkgrel=1
+pkgdesc='Native Zig GTK4 system monitor for DINX'
+arch=('x86_64')
+url="$DOME_REPOSITORY"
+license=('LicenseRef-Pearl-Unlicensed')
+depends=('gtk4' 'glib2' 'glibc' 'hicolor-icon-theme' 'libpng' 'wayland')
+makedepends=('zig>=0.16')
+source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz")
+sha256sums=("$DOME_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/pearl-$DOME_SOURCE_VERSION/subprojects/dome"
+  export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
+  "${ZIG:-zig}" build -Doptimize=ReleaseSafe -Dcpu=baseline
+}
+
+package() {
+  cd "$srcdir/pearl-$DOME_SOURCE_VERSION/subprojects/dome"
+  install -Dm755 zig-out/bin/dome "$pkgdir/usr/bin/dome"
+  install -Dm644 zig-out/share/applications/org.aqueous.Dome.desktop \
+    "$pkgdir/usr/share/applications/org.aqueous.Dome.desktop"
+  install -Dm644 zig-out/share/metainfo/org.aqueous.Dome.metainfo.xml \
+    "$pkgdir/usr/share/metainfo/org.aqueous.Dome.metainfo.xml"
+  install -Dm644 zig-out/share/icons/hicolor/scalable/apps/org.aqueous.Dome.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.aqueous.Dome.svg"
+}

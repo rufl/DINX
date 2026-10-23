@@ -1,0 +1,27 @@
+pkgname=seafoam-settings
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Native DINX settings launcher for Seafoam desktop tools'
+arch=(x86_64)
+url='https://github.com/rufl/DINX'
+license=(Apache)
+depends=(gtk4 libadwaita glibc foot nano dinitui dinxpanel qt6ct wdisplays shikane)
+optdepends=('dome: optional Seafoam system monitor' 'zls: optional Zig language server for Nocted')
+makedepends=(zig)
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir"
+  rm -rf "$srcdir/stage"
+  zig build -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
+}
+
+package() {
+  cd "$startdir"
+  install -Dm755 "$srcdir/stage/bin/seafoam-settings" "$pkgdir/usr/bin/seafoam-settings"
+  install -Dm644 resources/seafoam-settings.desktop "$pkgdir/usr/share/applications/seafoam-settings.desktop"
+  install -Dm644 resources/seafoam-settings.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.seafoam.Settings.svg"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/seafoam-settings/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/seafoam-settings/LICENSE"
+}

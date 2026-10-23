@@ -1,0 +1,44 @@
+diff --git a/Pori.Ui/src/actions.zig b/Pori.Ui/src/actions.zig
+--- a/Pori.Ui/src/actions.zig
++++ b/Pori.Ui/src/actions.zig
+@@ -61,7 +61,7 @@ pub fn remove(parent: *gtk.Window, unit_name: []const u8, reporter: Reporter) void {
+     dialogs.showConfirm(parent, .{
+         .title = "Remove mount unit",
+         .body = ui.zFmt(
+-            "{s} will be stopped and deleted from /etc/systemd/system/.\n\n" ++
++            "{s} will be stopped and deleted from /etc/dinit.d/.\n\n" ++
+                 "The drive itself is not modified and can be mounted again at any time.",
+             .{unit_name},
+         ),
+diff --git a/Pori.Ui/src/dialogs.zig b/Pori.Ui/src/dialogs.zig
+--- a/Pori.Ui/src/dialogs.zig
++++ b/Pori.Ui/src/dialogs.zig
+@@ -90,10 +90,8 @@ pub fn showNtfsWarning(parent: *gtk.Window, cb: *const fn (?*anyopaque, bool) void, ud: ?*anyopaque) void {
+     showConfirm(parent, .{
+-        .title = "⚠ NTFS Compatibility Warning",
+-        .body = "Linux does not have full native support for NTFS. " ++
+-            "While mounting is possible you may experience issues.\n\n" ++
+-            "Especially if trying to mount an NTFS drive and play games off Steam " ++
+-            "it is recommended to back up important data and reformat the drive to a format like ext4.",
+-        .confirm_label = "Proceed Anyway",
+-        .danger = true,
++        .title = "NTFS Compatibility Note",
++        .body = "DINX uses the Linux ntfs3 driver for NTFS volumes with read/write support. " ++
++            "Keep Windows Fast Startup and hibernation disabled before mounting a shared volume.",
++        .confirm_label = "Continue",
++        .danger = false,
+     }, cb, ud);
+ }
+ 
+diff --git a/Pori.Ui/src/pages/drives.zig b/Pori.Ui/src/pages/drives.zig
+--- a/Pori.Ui/src/pages/drives.zig
++++ b/Pori.Ui/src/pages/drives.zig
+@@ -538,7 +538,7 @@ pub const DrivesPage = struct {
+ 
+         if (state == .unmanaged) {
+             const mount_button = ui.button("Mount", "suggested-action");
+-            ui.widget(mount_button).setTooltipText(ui.z("Create a systemd mount unit for this drive"));
++            ui.widget(mount_button).setTooltipText(ui.z("Create a dinit mount service for this drive"));
+             _ = gtk.Button.signals.clicked.connect(mount_button, *DrivesPage, &onMountClicked, self, .{});
+             gtk.Box.append(bar, ui.widget(mount_button));
+             self.trackAction(mount_button);

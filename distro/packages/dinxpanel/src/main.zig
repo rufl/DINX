@@ -71,7 +71,7 @@ const App = struct {
         const hardware = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(hardware), makeButton("GPU drivers", "Detect and install fixed AMD, Intel, or NVIDIA Artix driver plans", &onGpuDetectClicked, self));
         c.gtk_box_append(@ptrCast(hardware), makeButton("Install GPU plan", "Install the detected fixed GPU driver plan", &onGpuInstallClicked, self));
-        c.gtk_box_append(@ptrCast(hardware), makeButton("Display", "Open the optional wdisplays Wayland display panel", &onDisplayClicked, self));
+        c.gtk_box_append(@ptrCast(hardware), makeButton("Display", "Open DINX display setup; closing it saves the Shikane profile", &onDisplayClicked, self));
         c.gtk_box_append(@ptrCast(hardware), makeButton("Hardware info", "Open the read-only inxi hardware report", &onHardwareClicked, self));
         c.gtk_box_append(@ptrCast(content), hardware);
 
@@ -89,7 +89,7 @@ const App = struct {
         appendSectionTitle(content, "DINX services and compositor");
         const services = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(services), makeButton("Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self));
-        c.gtk_box_append(@ptrCast(services), makeButton("MangoWC options", "Edit the user MangoWC configuration in a terminal", &onMangoClicked, self));
+        c.gtk_box_append(@ptrCast(services), makeButton("Labwc options", "Edit the user labwc configuration in a terminal", &onLabwcClicked, self));
         c.gtk_box_append(@ptrCast(services), makeButton("Firewall", "Open the UFW graphical policy editor", &onFirewallClicked, self));
         c.gtk_box_append(@ptrCast(content), services);
 
@@ -270,13 +270,13 @@ const App = struct {
         self.setStatus("Control panel launched");
     }
 
-    fn launchMangoOptions(self: *App) void {
-        const path = std.fs.path.join(allocator, &.{ self.home, ".config", "mango", "config.conf" }) catch {
-            self.setStatusError("Unable to resolve MangoWC configuration");
+    fn launchLabwcOptions(self: *App) void {
+        const path = std.fs.path.join(allocator, &.{ self.home, ".config", "labwc", "rc.xml" }) catch {
+            self.setStatusError("Unable to resolve labwc configuration");
             return;
         };
         defer allocator.free(path);
-        self.launch(&.{ "foot", "--app-id=dinx-mango-options", "-e", "nano", path });
+        self.launch(&.{ "foot", "--app-id=dinx-labwc-options", "-e", "nano", path });
     }
 
     fn detectGpu(self: *App) void {
@@ -623,8 +623,8 @@ fn onServicesClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"dinitui"});
 }
 
-fn onMangoClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launchMangoOptions();
+fn onLabwcClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launchLabwcOptions();
 }
 
 fn onFirewallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
@@ -650,7 +650,7 @@ fn onShellyClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 }
 
 fn onDisplayClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{"wdisplays"});
+    asApp(data).launch(&.{"dinx-wdisplays"});
 }
 
 fn onHardwareClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

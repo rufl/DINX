@@ -50,13 +50,21 @@
 DINX is an Artix distribution focused on a small, legible and controllable desktop session:
 
 - **Artix Linux + dinit** as the base;
-- **Wayland, MangoWC and Noctalia Shell** for the graphical session;
+- **Wayland, labwc and Noctalia Shell** for the graphical session;
 - **PipeWire, D-Bus, portals, polkit and GPU acceleration** in the ISO payload;
 - **DinitUI and DINXPanel** for services, Normal/Lite/Gaming profiles, system shortcuts, drivers and Artix kernels;
 - a separate **DINX Gaming session** with Gamescope/Steam and a 32-bit graphics payload;
-- **Calamares and KDE Partition Manager** for the experimental installation path.
+- **Calamares, GParted, File Roller, Pori and Phyto** for installation, partition editing, archive handling, storage and file management; DINX's **Display Setup** wrapper opens **wdisplays**, saves the named **Shikane** profile on close and reapplies it with the session daemon, while the kernel `ntfs3` driver covers NTFS read/write;
+
+The optional **Dome** system monitor is delivered through the signed Seafoam package group rather than the base ISO. Its resource/process views remain useful on dinit; its optional systemd service provider is unavailable by design.
+
+The same optional Seafoam group provides **Seafoam Settings**, a compact native Zig/GTK4 launcher for display, labwc, DinitUI, DINXPanel, Qt and Dome entry points, plus **ZLS 0.16.0** for Zig language-server support in Nocted. Neither package is in the base ISO; install them from the signed optional repository when needed.
 
 Noctty, Nocted and the remaining integration contracts stay versioned with the distribution when that reduces risk and keeps the ISO reproducible.
+Aqueous and Pearl are planned as an alternate Zig compositor/shell option, not a shipped Alpha 8 session. Their upstream session currently depends on `uwsm` and systemd user units; DINX will not expose a session entry until a dinit-native package is qualified. Labwc + Noctalia remains the supported session, with no silent compositor fallback.
+
+Run `dinx-doctor` for a read-only snapshot of the current session, dinit boundary, storage/display paths and installed DINX packages. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket; it never starts, stops, mounts or updates anything.
+
 
 ## Quick install
 
@@ -68,7 +76,7 @@ Noctty, Nocted and the remaining integration contracts stay versioned with the d
    sha512sum -c dinx-0.1.0-alpha.8-x86_64.iso.sha512
    ```
 
-3. Write the verified ISO to the whole USB device, boot in UEFI mode and select `MangoWM (DINX)` in the greeter. The tested live login is `dinx` / `dinx`.
+3. Write the verified ISO to the whole USB device, boot in UEFI mode and select `Labwc (DINX)` in the greeter. The tested live login is `dinx` / `dinx`.
 
 Read the [easy installation guide](docs/install.md) before partitioning. It covers Windows side-by-side layouts, recovery TTYs, device verification and installer limits.
 

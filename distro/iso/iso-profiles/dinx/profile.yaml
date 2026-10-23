@@ -31,15 +31,14 @@ rootfs:
     - elogind
     - exfatprogs
     - ffmpeg
+    - file-roller
     - flatpak
     - fwupd
+    - gparted
     - libva
     - libva-utils
-    - file-roller
-    - gvfs
-    - gvfs-gphoto2
-    - gvfs-mtp
-    - gvfs-smb
+    - phyto
+    - pori
     - greetd
     - greetd-regreet
     - linux-firmware-amdgpu
@@ -59,27 +58,23 @@ rootfs:
     - nano
     - noctty
     - foot
-    - mangowm
+    - labwc
     - noctalia
     - qt6-wayland
     - qt6ct
+    - shikane
+    - wdisplays
     - kolourpaint
     - adw-gtk-theme
     - cantarell-fonts
-    - partitionmanager
     - firefox
     - pipewire
     - pipewire-pulse
     - polkit
     - lxqt-policykit
     - seatd
-    - thunar
-    - thunar-archive-plugin
-    - thunar-volman
-    - tumbler
     - udisks2
     - udisks2-btrfs
-    - squashfs-tools
     - wayland
     - wireplumber
     - xdg-desktop-portal
@@ -141,7 +136,6 @@ rootfs:
     - zathura
     - zathura-pdf-mupdf
     - mkinitcpio-nfs-utils
-    - ntfs-3g
     - os-prober
     - cyan-skillfish-governor-smu
     - cyan-skillfish-governor-smu-dinit
@@ -163,7 +157,6 @@ livefs:
   packages:
     - artix-grub-live
     - mkinitcpio-nfs-utils
-    - squashfs-tools
   packages-init:
     dinit:
       - artix-live-dinit

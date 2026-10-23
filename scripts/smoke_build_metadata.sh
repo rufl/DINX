@@ -17,10 +17,11 @@ feature_groups_sha=$(sha256sum "$root/distro/iso/iso-profiles/dinx/feature-group
 noctty_source_env_sha=$(sha256sum "$root/distro/packages/noctty/source.env" | cut -d ' ' -f 1)
 compression_wrapper_sha=$(sha256sum "$root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 
+fixture_commit=0000000000000000000000000000000000000000
 cat >"$metadata" <<EOF
 schema=dinx-build-metadata/v1
 repository=rufl/DINX
-commit=0000000000000000000000000000000000000000
+commit=$fixture_commit
 workflow_run=1
 artix_image=artixlinux/artixlinux@sha256:0000000000000000000000000000000000000000000000000000000000000000
 builder_pacman_conf_sha256=0000000000000000000000000000000000000000000000000000000000000000
@@ -33,7 +34,7 @@ feature_groups_sha256=$feature_groups_sha
 noctty_source_env_sha256=$noctty_source_env_sha
 compression_schema=dinx-squashfs/v1
 compression_algorithm=xz
-compression_level=9
+compression_level=tool-default
 compression_block=1M
 compression_dictionary=1M
 compression_bcj=x86
@@ -59,9 +60,9 @@ mkinitcpio 42.2-1
 fixture 1
 EOF
 
-verified=$($root/scripts/check_build_metadata.sh "$metadata" "$iso")
+verified=$(GITHUB_SHA="$fixture_commit" "$root/scripts/check_build_metadata.sh" "$metadata" "$iso")
 grep -Fq 'iso_binding=verified' <<<"$verified"
-unchecked=$($root/scripts/check_build_metadata.sh "$metadata")
+unchecked=$(GITHUB_SHA="$fixture_commit" "$root/scripts/check_build_metadata.sh" "$metadata")
 grep -Fq 'iso_binding=not-checked' <<<"$unchecked"
 
 printf 'corrupt fixture\n' >>"$iso"

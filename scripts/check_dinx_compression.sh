@@ -14,7 +14,6 @@ for required in \
   '-comp xz' \
   '-b 1M' \
   '-Xbcj x86' \
-  '-Xcompression-level 9' \
   '-Xdict-size 1M' \
   "'usr/src/linux*'" \
   "'var/cache/pacman/pkg/*'" \
@@ -53,8 +52,6 @@ xz
 1M
 -Xbcj
 x86
--Xcompression-level
-9
 -Xdict-size
 1M
 -wildcards
@@ -70,4 +67,4 @@ actual=$(cat "$args_file")
   fail 'wrapper did not enforce the deterministic compression arguments'
 }
 
-printf 'dinx_compression_contract compression=xz block=1M dict=1M level=9 bcj=x86 excludes=kernel-source+pacman-cache+logs override_safe=true\n'
+printf 'dinx_compression_contract compression=xz block=1M dict=1M level=tool-default bcj=x86 excludes=kernel-source+pacman-cache+logs override_safe=true\n'

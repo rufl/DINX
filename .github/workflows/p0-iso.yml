@@ -521,7 +521,7 @@ jobs:
                 printf "noctty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d " " -f 1)"
                 printf "compression_schema=dinx-squashfs/v1\n"
                 printf "compression_algorithm=xz\n"
-                printf "compression_level=9\n"
+                printf "compression_level=tool-default\n"
                 printf "compression_block=1M\n"
                 printf "compression_dictionary=1M\n"
                 printf "compression_bcj=x86\n"

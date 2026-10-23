@@ -4,7 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
-- Strengthened deterministic ISO compaction: the SquashFS wrapper now uses xz level 9, x86 BCJ, 1 MiB blocks and a 1 MiB dictionary, while excluding kernel sources, pacman package caches and build logs. The base runtime no longer carries build-only `squashfs-tools`; the builder keeps it in its host toolchain.
+- Strengthened deterministic ISO compaction: the SquashFS wrapper now uses the tool's supported xz preset, x86 BCJ, 1 MiB blocks and a 1 MiB dictionary, while excluding kernel sources, pacman package caches and build logs. The base runtime no longer carries build-only `squashfs-tools`; the builder keeps it in its host toolchain.
 - Hardened the Artix builder contract: the pinned image digest is asserted before package/build work, forwarded explicitly into the container, and recorded safely in build metadata.
 - Reduced the full-image payload with a repository-owned compact common manifest: the documented AMDGPU path remains included, generic firmware and `powertop` are omitted from final images, and kernel headers remain only for ISO initramfs generation while their source tree is excluded from final SquashFS.
 - Switched the compositor session to labwc while retaining the Noctalia shell and user-session integration.

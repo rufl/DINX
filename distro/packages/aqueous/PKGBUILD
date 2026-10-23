@@ -68,6 +68,11 @@ source=(
 )
 sha256sums=("$AQUEOUS_SOURCE_SHA256" "$AQUEOUS_WLROOTS_SHA256")
 
+prepare() {
+  cd "$srcdir/Aqueous-$pkgver"
+  patch --forward --fuzz=0 -Np1 < "$startdir/systemd-library.patch"
+}
+
 build() {
   local root="$srcdir/Aqueous-$pkgver"
   local zig_cpu=baseline

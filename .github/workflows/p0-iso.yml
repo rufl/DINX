@@ -266,6 +266,7 @@ jobs:
                 qt5-base \
                 qt6-base \
                 shaderc \
+                scdoc \
                 systemd-libs \
                 vulkan-headers \
                 vulkan-icd-loader \

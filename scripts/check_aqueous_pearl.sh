@@ -18,6 +18,7 @@ fail() {
 for path in \
   "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
+  "$aqueous_dir/systemd-library.patch" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
@@ -59,6 +60,10 @@ grep -Fq '$AQUEOUS_WLROOTS_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous wlro
 grep -Fq 'settingsApplication/build.zig' "$aqueous_dir/PKGBUILD" || fail 'Aqueous config helper is not built'
 grep -Fq 'aqueous-config' "$aqueous_dir/PKGBUILD" || fail 'Aqueous config helper is not packaged'
 grep -Fq "'systemd-libs'" "$aqueous_dir/PKGBUILD" || fail 'Aqueous compatibility library dependency is not explicit'
+grep -Fq 'systemd-library.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous compatibility link patch is not applied'
+grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous compatibility patch is not applied reproducibly'
 if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$aqueous_dir/PKGBUILD" \
   || grep -Eiq '(^|[[:space:]])(systemctl|uwsm)([[:space:]]|$)' "$aqueous_dir/PKGBUILD"; then
   fail 'Aqueous recipe contains a systemd init, systemctl or uwsm dependency/command'
@@ -76,6 +81,7 @@ fi
 
 grep -Fq 'build_package aqueous' "$workflow" || fail 'workflow does not build Aqueous'
 grep -Fq 'build_package pearl' "$workflow" || fail 'workflow does not build Pearl'
+grep -Fq '                scdoc \' "$workflow" || fail 'workflow does not install Aqueous man-page builder'
 grep -Fq 'scripts/check_aqueous_pearl.sh' "$workflow" || fail 'workflow does not run the Aqueous/Pearl contract'
 grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not run the session contract'
 

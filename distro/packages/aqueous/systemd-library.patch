@@ -1,0 +1,9 @@
+diff --git a/compositor/build.zig b/compositor/build.zig
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -292,1 +292,1 @@
+-        river.root_module.linkSystemLibrary("libsystemd", .{});
++        river.root_module.linkSystemLibrary("systemd", .{});
+@@ -718,1 +718,1 @@
+-        keyboard_test.root_module.linkSystemLibrary("libsystemd", .{});
++        keyboard_test.root_module.linkSystemLibrary("systemd", .{});

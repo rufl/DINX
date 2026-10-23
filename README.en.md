@@ -50,11 +50,13 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 
 `dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket.
 
+## Seafoam in the base ISO
+
+**Dome**, **Seafoam Settings** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Dome provides resource/process monitoring without installing or requiring systemd; Seafoam Settings groups display and session entry points; ZLS provides Zig LSP support in Nocted.
+
 ## Outside the base ISO
 
-**Dome**, **Seafoam Settings** and **ZLS 0.16.0** are optional packages from the signed Seafoam repository. Dome provides resource/process monitoring; Seafoam Settings groups display and session entry points; ZLS provides Zig LSP support in Nocted.
-
-**Aqueous** and **Pearl** remain planned as an alternate Zig option. Their upstream packaging still depends on `uwsm` and systemd user units, so DINX does not expose those sessions in the greeter. Labwc + Noctalia remains the supported path, with no silent compositor fallback.
+**Aqueous** and **Pearl** remain planned as an alternate Zig option. Their upstream packaging requires `uwsm` and systemd user units; DINX does not install systemd or expose those sessions in the greeter. Labwc + Noctalia remains the supported path, with no silent compositor fallback.
 
 ## Current state
 

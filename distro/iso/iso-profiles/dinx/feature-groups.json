@@ -58,6 +58,9 @@
         "dialog",
         "file-roller",
         "diffutils",
+        "dome",
+        "seafoam-settings",
+        "zls",
         "phyto",
         "pori",
         "inxi",
@@ -153,9 +156,6 @@
       "iso": false,
       "external": true,
       "packages": [
-        "dome",
-        "seafoam-settings",
-        "zls",
         "cups-dinit",
         "ntfs-3g",
         "wizp"

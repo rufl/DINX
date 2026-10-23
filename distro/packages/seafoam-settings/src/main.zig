@@ -70,10 +70,10 @@ const App = struct {
 
         appendSectionTitle(content, "Seafoam tools");
         const seafoam = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_box_append(@ptrCast(seafoam), makeButton("Dome", "Open Dome when the optional Seafoam monitor package is installed", &onDomeClicked, self));
+        c.gtk_box_append(@ptrCast(seafoam), makeButton("Dome", "Open the bundled Seafoam resource monitor", &onDomeClicked, self));
         c.gtk_box_append(@ptrCast(content), seafoam);
 
-        const note = c.gtk_label_new("Optional developer tool: ZLS is available to Nocted and other Zig-aware editors when the signed optional package is installed.") orelse return;
+        const note = c.gtk_label_new("ZLS is bundled for Nocted and other Zig-aware editors.") orelse return;
         c.gtk_label_set_xalign(@ptrCast(note), 0.0);
         c.gtk_label_set_wrap(@ptrCast(note), 1);
         c.gtk_widget_add_css_class(note, "dim-label");

@@ -167,7 +167,7 @@ tmp=/var/lib/dinx/install-smoke.booted.tmp
   printf 'dinit-first-boot=%s\n' "$(date -u +%FT%TZ)"
   [ -d /var/lib/pacman/local ] || fail pacman_database_missing
   printf 'pacman_database=true\n'
-  /usr/bin/pacman -Q dinit dinitui dinxpanel >/dev/null 2>&1 \
+  /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls >/dev/null 2>&1 \
     || fail core_packages_missing
   printf 'core_packages=true\n'
   for service in NetworkManager elogind; do
@@ -185,7 +185,7 @@ tmp=/var/lib/dinx/install-smoke.booted.tmp
   done
   printf 'dinit_services=true\n'
   [ -x /usr/bin/ldd ] || fail ldd_missing
-  for binary in /usr/bin/dinitui /usr/bin/dinxpanel; do
+  for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings /usr/bin/zls; do
     [ -x "$binary" ] || fail "binary_missing_${binary##*/}"
     if /usr/bin/ldd "$binary" 2>&1 | grep -Fq 'not found'; then
       fail "library_missing_${binary##*/}"

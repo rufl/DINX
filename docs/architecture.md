@@ -16,7 +16,7 @@
 
 ```text
 DINX applications
-  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings (optional Seafoam package) · Dome (optional Seafoam package) · ZLS (optional developer tool)
+  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (base ISO)
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · optional Noctalia IPC
@@ -62,7 +62,7 @@ Nocted is a lightweight code editor, not a full IDE. Its boundaries are:
 - a proven syntax parser such as Tree-sitter;
 - an LSP process/client layer;
 - Git status, bounded unified diff output and per-file change markers are exposed through the editor's Tools action; Git is an optional project capability and never blocks opening or editing a file outside a repository.
-- Nocted's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses `zls` when available; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a Noctalia dependency.
+- Nocted's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses the bundled `zls`; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a Noctalia dependency.
 - The editor selects its documented light/dark scheme from `NOCTALIA_COLOR_SCHEME` or `NOCTED_THEME` and falls back to the DINX dark scheme. Noctalia may provide the preference, but the editor remains functional without the shell.
 
 The editor must remain useful without Noctalia. Noctalia supplies optional presentation and launcher integration, not the editor's core functionality.
@@ -86,16 +86,16 @@ DINX ships a local Noctalia `dinx/performance` plugin. Its Control Center shortc
 
 ### Dome
 
-`Dome` is an optional native Zig/GTK4 system monitor delivered through the signed Seafoam package group rather than the base ISO. Its resource and process views work without systemd; the optional systemd service provider is unavailable on DINX's dinit system and must not block application startup or monitoring.
+`Dome` is a base native Zig/GTK4 system monitor delivered in the signed DINX package repository and included in the ISO. Its resource and process views are dinit-safe; the package installs no systemd, systemctl or uwsm integration.
 
 ### Seafoam Settings and ZLS
 
-`Seafoam Settings` is an optional native Zig/GTK4 launcher for the DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct and Dome. It launches fixed argument vectors and opens only the documented user configuration files in Foot/Nano; it does not interpret arbitrary shell commands or replace the specialist applications.
+`Seafoam Settings` is a base native Zig/GTK4 launcher for the DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct and Dome. It launches fixed argument vectors and opens only the documented user configuration files in Foot/Nano; it does not interpret arbitrary shell commands or replace the specialist applications.
 
-`zls` is an optional source-pinned official Zig Language Server 0.16.0 package. Nocted starts it for Zig projects when present; the package is independent of the base ISO and is not a service or compositor dependency.
+`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. Nocted starts it for Zig projects; the package is independent of the session shell and is not a service or compositor dependency.
 ### Aqueous, Pearl and the dinit session boundary
 
-Aqueous and Pearl remain planned optional Zig compositor/shell components, not shipped DINX sessions. Their upstream session packaging uses `uwsm` and systemd user units, and Aqueous core links libsystemd APIs. DINX therefore keeps `Labwc (DINX)` with Noctalia as the only supported graphical session until a dinit-native package, lifecycle contract and physical session qualification exist. There is no silent fallback from an unavailable alternate session.
+Aqueous and Pearl remain planned optional Zig compositor/shell components, not shipped DINX sessions. Their upstream session packaging uses `uwsm` and systemd user units, and Aqueous core links libsystemd APIs. DINX does not install systemd and therefore keeps `Labwc (DINX)` with Noctalia as the only supported graphical session until a dinit-native package, lifecycle contract and physical session qualification exist. There is no silent fallback from an unavailable alternate session.
 
 `dinx-doctor` is the read-only evidence surface for the current session, dinit, storage, display and package paths. It does not start services, mount devices, modify Shikane, run package transactions or contact a network. `DINX_DOCTOR_QUERY_DINIT=1` opts into a read-only user-dinit list query.
 

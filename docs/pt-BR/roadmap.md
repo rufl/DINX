@@ -149,7 +149,7 @@ Gate de release P3:
 - o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
 - o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
 - os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, Phyto, File Roller, GParted, TTY de recuperação e comportamento de hardware.
-- documentado o limite da sessão alternativa Aqueous/Pearl: os requisitos upstream de `uwsm`/unidades systemd de usuário mantêm os dois componentes fora da sessão dinit distribuída até que uma adaptação nativa seja qualificada;
+- documentado o limite da sessão alternativa Aqueous/Pearl: os requisitos upstream de `uwsm`/unidades systemd de usuário mantêm os dois componentes fora da sessão dinit distribuída; a DINX não instala systemd até que uma adaptação nativa seja qualificada;
 
 **Gates de release restantes:**
 

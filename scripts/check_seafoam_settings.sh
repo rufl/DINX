@@ -24,6 +24,8 @@ done
 
 grep -Fqx 'pkgname=seafoam-settings' "$pkgbuild" || fail 'package name is not seafoam-settings'
 grep -Fqx 'source=()' "$pkgbuild" || fail 'Seafoam Settings must be a local staged package'
+grep -Fq 'depends=(gtk4 libadwaita glibc foot nano dinitui dinxpanel qt6ct wdisplays shikane dome)' "$pkgbuild" \
+  || fail 'package does not bundle Dome in the base runtime'
 grep -Fq 'zig build -Doptimize=ReleaseSafe' "$pkgbuild" || fail 'package does not use the release-safe Zig build'
 grep -Fq 'install -Dm755 "$srcdir/stage/bin/seafoam-settings"' "$pkgbuild" || fail 'package does not install the binary'
 grep -Fq 'Name=Seafoam Settings' "$desktop" || fail 'desktop name is missing'
@@ -44,14 +46,21 @@ for required in \
   'seafoam_settings_smoke'; do
   grep -Fq -- "$required" "$source_file" || fail "source is missing fixed action or smoke marker: $required"
 done
-if grep -Eiq '(^|[^[:alnum:]_])systemd([^[:alnum:]_]|$)|systemctl|g_spawn_command_line|/bin/sh' "$source_file"; then
-  fail 'source contains a systemd, shell or arbitrary command-launch path'
+if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)|g_spawn_command_line|/bin/sh' "$source_file"; then
+  fail 'source contains a systemd, uwsm, shell or arbitrary command-launch path'
+fi
+if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$pkgbuild"; then
+  fail 'package recipe contains a systemd or uwsm dependency or command'
 fi
 
-jq -e '.groups.optional.packages | index("seafoam-settings") != null' "$groups" >/dev/null \
-  || fail 'optional feature group is missing Seafoam Settings'
+jq -e '.groups.desktop.packages | index("dome") != null and index("seafoam-settings") != null and index("zls") != null' "$groups" >/dev/null \
+  || fail 'desktop feature group is missing a Seafoam base package'
+if jq -e 'any(.groups.optional.packages[]; . == "dome" or . == "seafoam-settings" or . == "zls")' "$groups" >/dev/null; then
+  fail 'a Seafoam base package remains in the optional feature group'
+fi
 grep -Fq 'build_package seafoam-settings' "$workflow" || fail 'workflow does not build Seafoam Settings'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
 grep -Fq 'scripts/seafoam_settings_smoke.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings smoke'
+grep -Fq '"$package_repo"/dome-*.pkg.tar.zst' "$workflow" || fail 'workflow does not install Dome before the Seafoam Settings smoke'
 
-printf 'seafoam_settings_contract package=true optional=true argv_safe=true smoke=true\n'
+printf 'seafoam_settings_contract package=true base=true dome_dependency=true argv_safe=true smoke=true\n'

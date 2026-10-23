@@ -26,6 +26,9 @@ rootfs:
     - dinit-rc
     - dinitui
     - dinxpanel
+    - dome
+    - seafoam-settings
+    - zls
     - e2fsprogs
     - efibootmgr
     - elogind

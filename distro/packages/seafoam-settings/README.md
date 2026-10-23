@@ -8,8 +8,8 @@ Seafoam Settings is a small native Zig/GTK4 launcher for the DINX desktop tools 
 - DinitUI and DINXPanel for services and DINX controls;
 - `qt6ct` for Qt appearance;
 - the labwc and Shikane user configuration files;
-- Dome when the optional Seafoam monitor package is installed.
+- Dome for resource/process monitoring; it is bundled in the base ISO.
 
 Actions use fixed argument vectors. The display wrapper launches `wdisplays`, replaces only the DINX-owned `DINX wdisplays` profile in `~/.config/shikane/config.toml`, and reloads Shikane; the app does not interpret arbitrary shell commands or replace the specialist tools.
 
-The package is optional and is not part of the base DINX ISO. `zls` is packaged separately as an optional Zig language server and is consumed by Nocted when installed.
+The package is part of the base DINX ISO. `zls` is bundled as the Zig language server for Nocted. The package and its dependencies use the dinit-native DINX runtime; they do not install or require systemd.

@@ -104,6 +104,18 @@ required_paths=(
   usr/bin/phyto
   usr/bin/pori
   usr/bin/file-roller
+  usr/bin/dome
+  usr/bin/seafoam-settings
+  usr/bin/zls
+  usr/share/applications/org.aqueous.Dome.desktop
+  usr/share/applications/seafoam-settings.desktop
+  usr/share/icons/hicolor/scalable/apps/org.aqueous.Dome.svg
+  usr/share/icons/hicolor/scalable/apps/org.seafoam.Settings.svg
+  usr/share/metainfo/org.aqueous.Dome.metainfo.xml
+  usr/share/licenses/seafoam-settings/LICENSE
+  usr/share/licenses/zls/LICENSE
+  usr/share/doc/seafoam-settings/README.md
+  usr/share/doc/zls/README.md
   usr/bin/gparted
   usr/bin/shikane
   usr/bin/shikanectl
@@ -515,6 +527,12 @@ grep -Fq 'Icon=org.dinx.DinitUI' <<<"$dinitui_desktop" || fail 'DinitUI desktop 
 dinxpanel_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinxpanel.desktop)
 grep -Fq 'Exec=dinxpanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop launcher is missing'
 grep -Fq 'Icon=org.dinx.DinxPanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop icon contract is missing'
+dome_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.aqueous.Dome.desktop)
+grep -Fq 'Exec=dome' <<<"$dome_desktop" || fail 'Dome desktop launcher is missing'
+grep -Fq 'Icon=org.aqueous.Dome' <<<"$dome_desktop" || fail 'Dome desktop icon contract is missing'
+settings_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/seafoam-settings.desktop)
+grep -Fq 'Exec=seafoam-settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop launcher is missing'
+grep -Fq 'Icon=org.seafoam.Settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop icon contract is missing'
 grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missing'
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'

@@ -36,16 +36,15 @@ source "$zls_dir/source.env"
   || fail 'ZLS source checksum changed'
 grep -Fqx '    - shikane' "$profile" || fail 'profile is missing shikane'
 grep -Fqx '    - wdisplays' "$profile" || fail 'profile is missing wdisplays'
-for optional_package in dome seafoam-settings zls; do
-  if grep -Fqx "    - $optional_package" "$profile"; then
-    fail "$optional_package is in the base ISO profile; keep it in the signed optional group"
-  fi
+for base_package in dome seafoam-settings zls; do
+  grep -Fqx "    - $base_package" "$profile" || fail "profile is missing base package: $base_package"
 done
 
-jq -e '.groups.desktop.packages | index("shikane") != null and index("wdisplays") != null' "$groups" >/dev/null \
-  || fail 'desktop feature group is missing shikane or wdisplays'
-jq -e '.groups.optional.packages | index("dome") != null and index("seafoam-settings") != null and index("zls") != null' "$groups" >/dev/null \
-  || fail 'optional feature group is missing a Seafoam package'
+jq -e '.groups.desktop.packages | index("shikane") != null and index("wdisplays") != null and index("dome") != null and index("seafoam-settings") != null and index("zls") != null' "$groups" >/dev/null \
+  || fail 'desktop feature group is missing a required Seafoam package or display tool'
+if jq -e 'any(.groups.optional.packages[]; . == "dome" or . == "seafoam-settings" or . == "zls")' "$groups" >/dev/null; then
+  fail 'a Seafoam base package remains in the optional feature group'
+fi
 if jq -e 'any(.groups[].packages[]; . == "coral")' "$groups" >/dev/null; then
   fail 'Coral is present even though the selected Seafoam set excludes it'
 fi
@@ -54,25 +53,40 @@ for required in \
   '  usr/bin/shikane' \
   '  usr/bin/shikanectl' \
   '  usr/bin/wdisplays' \
-  '  usr/share/applications/network.cycles.wdisplays.desktop'; do
+  '  usr/bin/dome' \
+  '  usr/bin/seafoam-settings' \
+  '  usr/bin/zls' \
+  '  usr/share/applications/network.cycles.wdisplays.desktop' \
+  '  usr/share/applications/org.aqueous.Dome.desktop' \
+  '  usr/share/applications/seafoam-settings.desktop' \
+  '  usr/share/icons/hicolor/scalable/apps/org.aqueous.Dome.svg' \
+  '  usr/share/icons/hicolor/scalable/apps/org.seafoam.Settings.svg' \
+  '  usr/share/metainfo/org.aqueous.Dome.metainfo.xml' \
+  '  usr/share/licenses/seafoam-settings/LICENSE' \
+  '  usr/share/licenses/zls/LICENSE' \
+  '  usr/share/doc/seafoam-settings/README.md' \
+  '  usr/share/doc/zls/README.md'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
 
 grep -Fq 'pkgver="$DOME_VERSION"' "$dome_dir/PKGBUILD" || fail 'Dome package version is not pinned'
 grep -Fq '$DOME_SOURCE_SHA256' "$dome_dir/PKGBUILD" || fail 'Dome source checksum is not wired to source.env'
 grep -Fq '"${ZIG:-zig}" build' "$dome_dir/PKGBUILD" || fail 'Dome package does not honor the selected Zig toolchain'
-if grep -Eiq '(^|[^[:alnum:]_])systemd([^[:alnum:]_]|$)|systemctl' "$dome_dir/PKGBUILD"; then
-  fail 'Dome package recipe introduces a systemd dependency or command'
+if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$dome_dir/PKGBUILD"; then
+  fail 'Dome package recipe introduces a systemd or uwsm dependency or command'
 fi
 grep -Fq 'pkgver="$ZLS_VERSION"' "$zls_dir/PKGBUILD" || fail 'ZLS package version is not pinned'
 grep -Fq '$ZLS_SOURCE_SHA256' "$zls_dir/PKGBUILD" || fail 'ZLS source checksum is not wired to source.env'
 grep -Fq 'source.env' "$zls_dir/PKGBUILD" || fail 'ZLS package does not load source.env'
-grep -Fq 'build_package dome' "$workflow" || fail 'workflow does not build Dome for the signed optional repository'
-grep -Fq 'build_package zls' "$workflow" || fail 'workflow does not build ZLS for the signed optional repository'
-grep -Fq 'build_package seafoam-settings' "$workflow" || fail 'workflow does not build Seafoam Settings for the signed optional repository'
+if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$zls_dir/PKGBUILD"; then
+  fail 'ZLS package recipe introduces a systemd or uwsm dependency or command'
+fi
+grep -Fq 'build_package dome' "$workflow" || fail 'workflow does not build Dome for the base ISO package repository'
+grep -Fq 'build_package zls' "$workflow" || fail 'workflow does not build ZLS for the base ISO package repository'
+grep -Fq 'build_package seafoam-settings' "$workflow" || fail 'workflow does not build Seafoam Settings for the base ISO package repository'
 grep -Fq '"$package_name" == dome' "$workflow" || fail 'workflow does not assign Zig 0.16 to Dome'
 grep -Fq 'scripts/check_seafoam_apps.sh' "$workflow" || fail 'workflow does not run the Seafoam app contract'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
 "$settings_contract"
 
-printf 'seafoam_apps_contract dome=true coral=false display_tools=wdisplays+shikane zls=true seafoam_settings=true dinit_safe=true optional_sources_pinned=true\n'
+printf 'seafoam_apps_contract dome=true seafoam_settings=true zls=true coral=false display_tools=wdisplays+shikane dinit_safe=true sources_pinned=true base=true\n'

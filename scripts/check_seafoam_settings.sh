@@ -11,6 +11,7 @@ icon="$package_dir/resources/seafoam-settings.svg"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$root/.github/workflows/p0-iso.yml"
 smoke_script="$root/scripts/seafoam_settings_smoke.sh"
+zls_smoke="$root/scripts/smoke_zls.sh"
 
 fail() {
   printf 'seafoam_settings_contract: %s\n' "$*" >&2
@@ -18,7 +19,7 @@ fail() {
 }
 
 for path in "$pkgbuild" "$build_file" "$source_file" "$desktop" "$icon" "$package_dir/README.md" \
-  "$groups" "$workflow" "$smoke_script"; do
+  "$groups" "$workflow" "$smoke_script" "$zls_smoke"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -59,8 +60,11 @@ if jq -e 'any(.groups.optional.packages[]; . == "dome" or . == "seafoam-settings
   fail 'a Seafoam base package remains in the optional feature group'
 fi
 grep -Fq 'build_package seafoam-settings' "$workflow" || fail 'workflow does not build Seafoam Settings'
+grep -Fq 'build_package zls' "$workflow" || fail 'workflow does not build ZLS'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
 grep -Fq 'scripts/seafoam_settings_smoke.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings smoke'
+grep -Fq 'scripts/smoke_zls.sh' "$workflow" || fail 'workflow does not run the ZLS smoke'
+grep -Fq '"$package_repo"/zls-*.pkg.tar.zst' "$workflow" || fail 'workflow does not install ZLS before the Seafoam smoke'
 grep -Fq '"$package_repo"/dome-*.pkg.tar.zst' "$workflow" || fail 'workflow does not install Dome before the Seafoam Settings smoke'
 
-printf 'seafoam_settings_contract package=true base=true dome_dependency=true argv_safe=true smoke=true\n'
+printf 'seafoam_settings_contract package=true base=true dome_dependency=true zls_runtime=true argv_safe=true smoke=true\n'

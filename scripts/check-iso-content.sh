@@ -114,8 +114,13 @@ required_paths=(
   usr/share/metainfo/org.aqueous.Dome.metainfo.xml
   usr/share/licenses/seafoam-settings/LICENSE
   usr/share/licenses/zls/LICENSE
+  usr/share/licenses/zls/zig-LICENSE
   usr/share/doc/seafoam-settings/README.md
   usr/share/doc/zls/README.md
+  etc/xdg/zls.json
+  usr/lib/zls/zig-env
+  usr/lib/zls/zig-env.zon
+  usr/lib/zls/zig/std/std.zig
   usr/bin/gparted
   usr/bin/shikane
   usr/bin/shikanectl
@@ -533,6 +538,13 @@ grep -Fq 'Icon=org.aqueous.Dome' <<<"$dome_desktop" || fail 'Dome desktop icon c
 settings_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/seafoam-settings.desktop)
 grep -Fq 'Exec=seafoam-settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop launcher is missing'
 grep -Fq 'Icon=org.seafoam.Settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop icon contract is missing'
+zls_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/zls.json)
+grep -Fq '"zig_exe_path": "/usr/lib/zls/zig-env"' <<<"$zls_config" || fail 'ZLS Zig executable configuration is missing'
+grep -Fq '"zig_lib_path": "/usr/lib/zls/zig"' <<<"$zls_config" || fail 'ZLS Zig library configuration is missing'
+zls_shim=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/zls/zig-env)
+grep -Fq 'case "${1:-}" in' <<<"$zls_shim" || fail 'ZLS Zig shim command contract is missing'
+grep -Fq '/usr/bin/zig' <<<"$zls_shim" || fail 'ZLS Zig shim compiler delegation is missing'
+grep -Fq 'printf '\''%s\n'\'' 0.16.0' <<<"$zls_shim" || fail 'ZLS Zig shim version contract is missing'
 grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missing'
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'

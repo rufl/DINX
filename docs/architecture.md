@@ -92,7 +92,7 @@ DINX ships a local Noctalia `dinx/performance` plugin. Its Control Center shortc
 
 `Seafoam Settings` is a base native Zig/GTK4 launcher for the DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct and Dome. It launches fixed argument vectors and opens only the documented user configuration files in Foot/Nano; it does not interpret arbitrary shell commands or replace the specialist applications.
 
-`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. Nocted starts it for Zig projects; the package is independent of the session shell and is not a service or compositor dependency.
+`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Nocted completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
 ### Aqueous, Pearl and the dinit session boundary
 
 Aqueous and Pearl remain planned optional Zig compositor/shell components, not shipped DINX sessions. Their upstream session packaging uses `uwsm` and systemd user units, and Aqueous core links libsystemd APIs. DINX does not install systemd and therefore keeps `Labwc (DINX)` with Noctalia as the only supported graphical session until a dinit-native package, lifecycle contract and physical session qualification exist. There is no silent fallback from an unavailable alternate session.

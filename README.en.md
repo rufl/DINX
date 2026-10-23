@@ -52,7 +52,7 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 
 ## Seafoam in the base ISO
 
-**Dome**, **Seafoam Settings** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Dome provides resource/process monitoring without installing or requiring systemd; Seafoam Settings groups display and session entry points; ZLS provides Zig LSP support in Nocted.
+**Dome**, **Seafoam Settings** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Dome provides resource/process monitoring without installing or requiring systemd; Seafoam Settings groups display and session entry points; ZLS provides Zig LSP support in Nocted with the matching Zig standard library and a compact metadata shim, without requiring a full Zig compiler in the ISO.
 
 ## Outside the base ISO
 

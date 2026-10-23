@@ -6,18 +6,59 @@ source_env="$startdir/source.env"
 : "${ZLS_REPOSITORY:?missing ZLS_REPOSITORY}"
 : "${ZLS_SOURCE_URL:?missing ZLS_SOURCE_URL}"
 : "${ZLS_SOURCE_SHA256:?missing ZLS_SOURCE_SHA256}"
+: "${ZIG_VERSION:?missing ZIG_VERSION}"
+: "${ZIG_SOURCE_URL:?missing ZIG_SOURCE_URL}"
+: "${ZIG_SOURCE_SHA256:?missing ZIG_SOURCE_SHA256}"
 pkgver="$ZLS_VERSION"
 pkgrel=1
-pkgdesc='Zig language server'
+pkgdesc='Zig language server with a compact Zig standard-library runtime'
 arch=('x86_64')
 url="$ZLS_REPOSITORY"
 license=('MIT')
-depends=('glibc' 'zig>=0.16')
-source=("$ZLS_SOURCE_URL")
-sha256sums=("$ZLS_SOURCE_SHA256")
+depends=('glibc')
+source=("$ZLS_SOURCE_URL" "$ZIG_SOURCE_URL")
+sha256sums=("$ZLS_SOURCE_SHA256" "$ZIG_SOURCE_SHA256")
 
 package() {
+  local zig_root="$srcdir/zig-x86_64-linux-$ZIG_VERSION"
+
   install -Dm755 "$srcdir/zls" "$pkgdir/usr/bin/zls"
+  install -d "$pkgdir/usr/lib/zls/zig"
+  cp -a "$zig_root/lib/std" "$pkgdir/usr/lib/zls/zig/"
+  "$zig_root/zig" env \
+    | sed \
+        -e "s|$zig_root/zig|/usr/lib/zls/zig-env|g" \
+        -e "s|$zig_root/lib|/usr/lib/zls/zig|g" \
+        -e "s|zig-x86_64-linux-$ZIG_VERSION/lib/std|/usr/lib/zls/zig/std|g" \
+    > "$pkgdir/usr/lib/zls/zig-env.zon"
+  install -Dm755 /dev/stdin "$pkgdir/usr/lib/zls/zig-env" <<'EOF'
+#!/bin/sh
+set -eu
+
+case "${1:-}" in
+  env)
+    exec /usr/bin/cat /usr/lib/zls/zig-env.zon
+    ;;
+  version)
+    printf '%s\n' @ZIG_VERSION@
+    ;;
+esac
+
+if [ -x /usr/bin/zig ]; then
+  exec /usr/bin/zig "$@"
+fi
+
+printf 'Zig compiler is not installed; install the optional zig package for this command.\n' >&2
+exit 127
+EOF
+  sed -i "s/@ZIG_VERSION@/$ZIG_VERSION/" "$pkgdir/usr/lib/zls/zig-env"
+  install -Dm644 /dev/stdin "$pkgdir/etc/xdg/zls.json" <<'EOF'
+{
+  "zig_exe_path": "/usr/lib/zls/zig-env",
+  "zig_lib_path": "/usr/lib/zls/zig"
+}
+EOF
   install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/zls/LICENSE"
+  install -Dm644 "$zig_root/LICENSE" "$pkgdir/usr/share/licenses/zls/zig-LICENSE"
   install -Dm644 "$srcdir/README.md" "$pkgdir/usr/share/doc/zls/README.md"
 }

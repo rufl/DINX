@@ -430,8 +430,10 @@ jobs:
               build_package seafoam-settings
               pacman -U --noconfirm \
                 "$package_repo"/dome-*.pkg.tar.zst \
-                "$package_repo"/seafoam-settings-*.pkg.tar.zst
+                "$package_repo"/seafoam-settings-*.pkg.tar.zst \
+                "$package_repo"/zls-*.pkg.tar.zst
               SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
+              ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               source /workspace/distro/packages/noctty/source.env
               [[ -n "$NOCTTY_VERSION" ]]
               icon_svg=/tmp/dinx-nocted-icon.svg

@@ -92,7 +92,7 @@ O `Dome` é um monitor de sistema nativo em Zig/GTK4 entregue no repositório DI
 
 O `Seafoam Settings` é um launcher nativo base em Zig/GTK4 para as superfícies DINX de display/sessão: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct e Dome. Ele inicia vetores de argumentos fixos e abre somente os arquivos de configuração documentados do usuário no Foot/Nano; não interpreta comandos shell arbitrários nem substitui os aplicativos especializados.
 
-O `zls` é o pacote oficial do Zig Language Server 0.16.0, com fonte fixada e incluído na ISO. O Nocted o inicia para projetos Zig; o pacote é independente do shell da sessão e não é uma dependência de serviço ou compositor.
+O `zls` é o pacote oficial do Zig Language Server 0.16.0, com fonte fixada e incluído na ISO. Ele carrega a árvore `lib/std` correspondente do Zig 0.16.0 e um shim de metadados em `/usr/lib/zls/zig-env`; assim, completion e navegação do Nocted funcionam na ISO base sem compilador Zig completo, systemd ou serviço. Se o pacote opcional `zig` do Artix for instalado depois, o shim delega os comandos do compilador para ele.
 ### Aqueous, Pearl e o limite da sessão dinit
 
 Aqueous e Pearl continuam sendo componentes opcionais planejados de compositor/shell em Zig, não sessões distribuídas pela DINX. O empacotamento upstream da sessão usa `uwsm` e unidades systemd de usuário, e o core do Aqueous liga APIs de libsystemd. A DINX não instala systemd e, por isso, mantém `Labwc (DINX)` com Noctalia como a única sessão gráfica suportada até existir um pacote nativo de dinit, um contrato de ciclo de vida e uma qualificação física da sessão. Não há fallback silencioso quando uma sessão alternativa não está disponível.

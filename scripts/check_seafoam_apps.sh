@@ -10,6 +10,7 @@ dome_dir="$root/distro/packages/dome"
 
 dome_source="$dome_dir/source.env"
 zls_dir="$root/distro/packages/zls"
+zls_smoke="$root/scripts/smoke_zls.sh"
 settings_contract="$root/scripts/check_seafoam_settings.sh"
 fail() {
   printf 'seafoam_apps_contract: %s\n' "$*" >&2
@@ -18,7 +19,7 @@ fail() {
 
 for path in "$profile" "$groups" "$iso_check" "$workflow" \
   "$dome_dir/PKGBUILD" "$dome_source" "$zls_dir/PKGBUILD" "$zls_dir/source.env" \
-  "$settings_contract"; do
+  "$zls_smoke" "$settings_contract"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -34,6 +35,11 @@ source "$zls_dir/source.env"
   || fail 'ZLS source URL changed'
 [[ "$ZLS_SOURCE_SHA256" == ded6d562a0b86ee878b1ddf70ffab2797ce3cdca3b02d6077548f9d56dff96b6 ]] \
   || fail 'ZLS source checksum changed'
+[[ "$ZIG_VERSION" == 0.16.0 ]] || fail "unexpected bundled Zig runtime version: $ZIG_VERSION"
+[[ "$ZIG_SOURCE_URL" == https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz ]] \
+  || fail 'bundled Zig runtime source URL changed'
+[[ "$ZIG_SOURCE_SHA256" == 70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00 ]] \
+  || fail 'bundled Zig runtime checksum changed'
 grep -Fqx '    - shikane' "$profile" || fail 'profile is missing shikane'
 grep -Fqx '    - wdisplays' "$profile" || fail 'profile is missing wdisplays'
 for base_package in dome seafoam-settings zls; do
@@ -64,8 +70,13 @@ for required in \
   '  usr/share/metainfo/org.aqueous.Dome.metainfo.xml' \
   '  usr/share/licenses/seafoam-settings/LICENSE' \
   '  usr/share/licenses/zls/LICENSE' \
+  '  usr/share/licenses/zls/zig-LICENSE' \
   '  usr/share/doc/seafoam-settings/README.md' \
-  '  usr/share/doc/zls/README.md'; do
+  '  usr/share/doc/zls/README.md' \
+  '  etc/xdg/zls.json' \
+  '  usr/lib/zls/zig-env' \
+  '  usr/lib/zls/zig-env.zon' \
+  '  usr/lib/zls/zig/std/std.zig'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
 
@@ -77,7 +88,11 @@ if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$dome
 fi
 grep -Fq 'pkgver="$ZLS_VERSION"' "$zls_dir/PKGBUILD" || fail 'ZLS package version is not pinned'
 grep -Fq '$ZLS_SOURCE_SHA256' "$zls_dir/PKGBUILD" || fail 'ZLS source checksum is not wired to source.env'
+grep -Fq '$ZIG_SOURCE_SHA256' "$zls_dir/PKGBUILD" || fail 'bundled Zig runtime checksum is not wired to source.env'
 grep -Fq 'source.env' "$zls_dir/PKGBUILD" || fail 'ZLS package does not load source.env'
+grep -Fq 'zig_root/lib/std' "$zls_dir/PKGBUILD" || fail 'ZLS package does not bundle the Zig standard library'
+grep -Fq 'sed -i "s/@ZIG_VERSION@/$ZIG_VERSION/"' "$zls_dir/PKGBUILD" || fail 'ZLS shim version is not generated from source.env'
+grep -Fq 'zig-x86_64-linux-$ZIG_VERSION/lib/std' "$zls_dir/PKGBUILD" || fail 'ZLS package does not normalize the Zig standard-library path'
 if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$zls_dir/PKGBUILD"; then
   fail 'ZLS package recipe introduces a systemd or uwsm dependency or command'
 fi
@@ -85,6 +100,7 @@ grep -Fq 'build_package dome' "$workflow" || fail 'workflow does not build Dome 
 grep -Fq 'build_package zls' "$workflow" || fail 'workflow does not build ZLS for the base ISO package repository'
 grep -Fq 'build_package seafoam-settings' "$workflow" || fail 'workflow does not build Seafoam Settings for the base ISO package repository'
 grep -Fq '"$package_name" == dome' "$workflow" || fail 'workflow does not assign Zig 0.16 to Dome'
+grep -Fq 'scripts/smoke_zls.sh' "$workflow" || fail 'workflow does not smoke-test ZLS'
 grep -Fq 'scripts/check_seafoam_apps.sh' "$workflow" || fail 'workflow does not run the Seafoam app contract'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
 "$settings_contract"

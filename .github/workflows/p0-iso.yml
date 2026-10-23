@@ -527,6 +527,31 @@ jobs:
               fi
               printf "\n[dinx]\nSigLevel = Required\nServer = http://127.0.0.1:8765\n" \
                 >> "$pacman_conf"
+              pacman_options_tmp="$pacman_conf.dinx"
+              awk '
+                /^\[options\][[:space:]]*$/ && !injected {
+                  print
+                  print "NoExtract = usr/lib/systemd"
+                  print "NoExtract = usr/lib/systemd/*"
+                  print "NoExtract = etc/systemd"
+                  print "NoExtract = etc/systemd/*"
+                  print "NoExtract = usr/share/uwsm"
+                  print "NoExtract = usr/share/uwsm/*"
+                  print "NoExtract = usr/bin/systemd"
+                  print "NoExtract = usr/bin/systemctl"
+                  print "NoExtract = usr/bin/uwsm"
+                  injected = 1
+                  next
+                }
+                { print }
+                END {
+                  if (!injected) exit 1
+                }
+              ' "$pacman_conf" > "$pacman_options_tmp"
+              mv -- "$pacman_options_tmp" "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/lib/systemd/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = etc/systemd/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/uwsm/*' "$pacman_conf"
               builder_pacman_conf_sha256=$(sha256sum "$pacman_conf" | cut -d " " -f 1)
               builder_mirrorlist=/etc/pacman.d/mirrorlist
               test -r "$builder_mirrorlist"

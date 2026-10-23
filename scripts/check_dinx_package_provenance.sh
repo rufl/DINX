@@ -85,6 +85,9 @@ for required in \
   'package_repository_publication=github-release-assets/v1' \
   'Bundle signed package repository for artifact portability' \
   'dist/dinx-package-repository.tar' \
+  'NoExtract = usr/lib/systemd/*' \
+  'NoExtract = etc/systemd/*' \
+  'NoExtract = usr/share/uwsm/*' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'makepkg --clean --nodeps --nocheck --noconfirm' \
   '--sign --key' \

@@ -1,0 +1,51 @@
+pkgname=matugen
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${MATUGEN_VERSION:?missing MATUGEN_VERSION}"
+: "${MATUGEN_REPOSITORY:?missing MATUGEN_REPOSITORY}"
+: "${MATUGEN_SOURCE_URL:?missing MATUGEN_SOURCE_URL}"
+: "${MATUGEN_SOURCE_SHA256:?missing MATUGEN_SOURCE_SHA256}"
+pkgver="$MATUGEN_VERSION"
+pkgrel=1
+pkgdesc='Material You color generation tool for Pearl themes'
+arch=('x86_64')
+url="$MATUGEN_REPOSITORY"
+license=('GPL-2.0-only')
+depends=('glibc' 'libgcc')
+makedepends=('cargo')
+source=("matugen-$pkgver.tar.gz::${MATUGEN_SOURCE_URL}")
+sha256sums=("$MATUGEN_SOURCE_SHA256")
+
+_srcenv() {
+  cd "matugen-$pkgver"
+  export CARGO_HOME="$srcdir"
+  export CARGO_PROFILE_RELEASE_DEBUG=2
+  export CARGO_PROFILE_RELEASE_STRIP=false
+  export CARGO_PROFILE_RELEASE_LTO=thin
+  export CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
+  export CARGO_PROFILE_RELEASE_OPT_LEVEL=3
+  CFLAGS+=' -ffat-lto-objects'
+}
+
+prepare() {
+  _srcenv
+  cargo fetch --locked
+}
+
+build() {
+  _srcenv
+  cargo build --frozen --release --all-features
+}
+
+check() {
+  _srcenv
+  cargo test --frozen --all-features
+}
+
+package() {
+  depends+=(libgcc_s.so)
+  cd "matugen-$pkgver"
+  install -Dm0755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

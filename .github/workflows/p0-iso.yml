@@ -260,7 +260,6 @@ jobs:
                 libpulse \
                 libsecret \
                 libxml2 \
-                matugen \
                 pam \
                 playerctl \
                 polkit \
@@ -452,6 +451,8 @@ jobs:
               build_package shikane
               pacman -U --noconfirm "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
+              build_package matugen
+              pacman -U --noconfirm "$package_repo"/matugen-*.pkg.tar.zst
               build_package aqueous
               build_package pearl
               pacman -U --noconfirm \

@@ -413,12 +413,14 @@ jobs:
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
               scripts/smoke_calamares_startup.sh
               build_package dinxpanel
+              pacman -U --noconfirm "$package_repo"/dinxpanel-*.pkg.tar.zst
+              pacman_retry -S --needed --noconfirm shikane wdisplays qt6ct
               build_package pori
               build_package phyto
               build_package dome
               build_package zls
               build_package seafoam-settings
-              pacman -U --nodeps --noconfirm "$package_repo"/seafoam-settings-*.pkg.tar.zst
+              pacman -U --noconfirm "$package_repo"/seafoam-settings-*.pkg.tar.zst
               SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
               source /workspace/distro/packages/noctty/source.env
               [[ -n "$NOCTTY_VERSION" ]]

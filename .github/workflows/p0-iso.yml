@@ -415,9 +415,9 @@ jobs:
               pacman -U --noconfirm "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
               scripts/smoke_calamares_startup.sh
-              build_package dinxpanel
-              pacman -U --noconfirm "$package_repo"/dinxpanel-*.pkg.tar.zst
-              pacman_retry -S --needed --noconfirm shikane wdisplays qt6ct
+              build_package shikane
+              pacman -U --noconfirm "$package_repo"/shikane-*.pkg.tar.zst
+              pacman_retry -S --needed --noconfirm wdisplays qt6ct
               build_package pori
               build_package phyto
               build_package dome

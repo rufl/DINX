@@ -1,0 +1,28 @@
+pkgname=shikane
+pkgver=1.1.1
+pkgrel=1
+pkgdesc='Deterministic dynamic output configuration tool for Wayland compositors'
+arch=('x86_64')
+url='https://gitlab.com/w0lff/shikane'
+license=('MIT')
+depends=('glibc' 'libgcc')
+makedepends=('cargo')
+source=("$url/-/archive/v$pkgver/$pkgname-v$pkgver.tar.gz")
+b2sums=('1766f42e535515059c1c034c01ff4ee27809186c4f21d720b1783ba0e29d8d07f3efd5ed6a643def9c1cd6bb1ff3ba5c00f9d1de5be96dadb9afd7606b15614b')
+
+prepare() {
+  cd "$pkgname-v$pkgver"
+  cargo fetch --locked --target "$(rustc --print host-tuple)"
+}
+
+build() {
+  cd "$pkgname-v$pkgver"
+  cargo build --frozen --release --all-features
+}
+
+package() {
+  cd "$pkgname-v$pkgver"
+  install -Dm755 target/release/shikane "$pkgdir/usr/bin/shikane"
+  install -Dm755 target/release/shikanectl "$pkgdir/usr/bin/shikanectl"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

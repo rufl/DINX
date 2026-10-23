@@ -22,11 +22,12 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 The latest compact Alpha 9 build is [CI run 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. It passed the first-party/static contracts, Artix package builds, compact ISO creation, QEMU boot and graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, persistent package signing, provenance attestation and release publication. The published direct ISO totals 2,008,801,280 bytes and has SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`; the signed stable package repository snapshot is `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
 
 A separate post-release validation on `main`, [run 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) at commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, completed in 52m02s after passing the build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY, attestation and upload checks. It confirms the contracts after the published snapshot but did not publish another asset; Alpha 9 remains the current release.
-The release now uses the deterministic compact-ISO path from
-`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 256 KiB
-blocks and a 256 KiB dictionary, with a strict ISO budget below GitHub's 2 GiB
-per-asset limit. Alpha 9 publishes one direct ISO asset; older releases may
-still use split ISO parts.
+The published Alpha 9 artifact used the earlier deterministic compact-ISO path from
+`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 1 MiB
+blocks and a 1 MiB dictionary. The current main build path uses 256 KiB blocks
+and a 256 KiB dictionary to avoid the rootfs verification failure seen with the
+larger block configuration; it keeps the strict ISO budget below GitHub's 2 GiB
+per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
 ## Published assets

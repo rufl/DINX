@@ -28,7 +28,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Publicadas a ISO direta, o checksum SHA-512, os metadados de build, o pacote Windows para QEMU, o repositório DINX assinado e os assets de verificação.
 - Tamanho publicado da ISO: `2.008.801.280` bytes. SHA-512 completo: `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.
 - Snapshot publicado do repositório DINX assinado: `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
-- O preset xz suportado, com BCJ x86, blocos de 256 KiB e dicionário de 256 KiB, mantém a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
+- O preset xz suportado, com BCJ x86, blocos de 1 MiB e dicionário de 1 MiB, mantém a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
 
 ## v0.1.0-alpha.8 — 2026-10-21
 

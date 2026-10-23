@@ -18,6 +18,15 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Documentado o limite Aqueous/Pearl: o empacotamento atual de sessão `uwsm`/systemd de usuário não é exposto como sessão DINX até que uma adaptação nativa de dinit seja qualificada.
 
 
+## v0.1.0-alpha.9 — 2026-10-23
+
+- Publicado o alpha público atual da DINX para Artix Linux x86_64 com dinit: [release no GitHub](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
+- A execução de release [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou os contratos de pacotes/perfil, os builds de pacotes Artix, a criação da ISO compacta, boot/payload gráfico no QEMU, smokes BIOS/UEFI/Btrfs do Calamares, instalação persistente/TTY de recuperação em discos descartáveis, verificação dos metadados de build, assinatura persistente de pacotes, atestação de procedência e publicação do release.
+- Publicadas a ISO direta, o checksum SHA-512, os metadados de build, o pacote Windows para QEMU, o repositório DINX assinado e os assets de verificação.
+- Tamanho publicado da ISO: `2.008.801.280` bytes. SHA-512 completo: `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.
+- Snapshot publicado do repositório DINX assinado: `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
+- O preset xz suportado, com BCJ x86, blocos de 1 MiB e dicionário de 1 MiB, mantém a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
+
 ## v0.1.0-alpha.8 — 2026-10-21
 
 - Publicado o alpha público atual da DINX para Artix Linux x86_64 com dinit: [release no GitHub](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8).

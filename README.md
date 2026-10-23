@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="Status da validação P0" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
   <img alt="Estágio: beta de jogos P5" src="https://img.shields.io/badge/estágio-P5%20beta%20de%20jogos-f59e0b">
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
@@ -27,21 +27,21 @@
 
 | Se você quer… | Vá para |
 |---|---|
-| Baixar a imagem atual | [DINX v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8) |
+| Baixar a imagem atual | [DINX v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9) |
 | Instalar e inicializar com segurança | [Guia de instalação](docs/pt-BR/install.md) |
 | Ver o que foi realmente qualificado | [Evidência P0](docs/pt-BR/p0-build.md) |
 | Entender os limites do alpha | [Roadmap](docs/pt-BR/roadmap.md) e [compatibilidade](docs/pt-BR/compatibility.md) |
 | Ver as mudanças da release | [Changelog](CHANGELOG.pt-BR.md) |
 | Ler em inglês | [README em inglês](README.en.md) |
 
-## Alpha 8 em um minuto
+## Alpha 9 em um minuto
 
-A [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8) é o snapshot público atual. A execução de release [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), no commit `eea66ac`, passou os contratos estáticos, builds de pacotes Artix, criação e boot da ISO, validação do payload gráfico, smokes do Calamares em BIOS/UEFI/Btrfs, instalação persistente e TTY de recuperação em discos descartáveis BIOS/UEFI, verificação de metadados, assinatura persistente de pacotes, atestação e publicação.
+A [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9) é o snapshot público atual. A execução de release [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou os contratos estáticos, builds de pacotes Artix, criação e boot da ISO compacta, validação do payload gráfico, smokes do Calamares em BIOS/UEFI/Btrfs, instalação persistente e TTY de recuperação em discos descartáveis BIOS/UEFI, verificação de metadados, assinatura persistente de pacotes, atestação de procedência e publicação.
 
 | Item | Evidência |
 |---|---|
-| ISO | 2.803.349.504 bytes, com partes e checksum SHA-512 publicados |
-| Repositório DINX | Snapshot assinado `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9` |
+| ISO | 2.008.801.280 bytes, com ISO direta e checksum SHA-512 publicado |
+| Repositório DINX | Snapshot assinado `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827` |
 | Imagem | Artix Linux x86_64 com dinit |
 | Estágio | P5 — Beta de jogos; P4 DinitUI qualificada para o gate alpha |
 
@@ -61,19 +61,18 @@ O monitor de sistema **Dome** é opcional e entregue pelo grupo de pacotes Seafo
 O mesmo grupo Seafoam opcional fornece o **Seafoam Settings**, um launcher nativo compacto em Zig/GTK4 para pontos de entrada de display, labwc, DinitUI, DINXPanel, Qt e Dome, além do **ZLS 0.16.0** para suporte de language server Zig no Nocted. Nenhum dos dois pacotes faz parte da ISO base; instale-os pelo repositório opcional assinado quando necessário.
 
 Noctty, Nocted e os demais contratos de integração ficam versionados junto com a distribuição quando isso reduz risco e mantém a ISO reproduzível.
-Aqueous e Pearl estão planejados como uma opção alternativa de compositor/shell em Zig, não como uma sessão incluída na Alpha 8. A sessão upstream atualmente depende de `uwsm` e unidades systemd de usuário; a DINX não exporá uma entrada de sessão até que um pacote nativo de dinit seja qualificado. Labwc + Noctalia continua sendo a sessão suportada, sem fallback silencioso para outro compositor.
+Aqueous e Pearl estão planejados como uma opção alternativa de compositor/shell em Zig, não como uma sessão incluída na Alpha 9. A sessão upstream atualmente depende de `uwsm` e unidades systemd de usuário; a DINX não exporá uma entrada de sessão até que um pacote nativo de dinit seja qualificado. Labwc + Noctalia continua sendo a sessão suportada, sem fallback silencioso para outro compositor.
 
 Execute `dinx-doctor` para obter um snapshot somente leitura da sessão atual, do limite do dinit, dos caminhos de armazenamento/display e dos pacotes DINX instalados. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente se também quiser consultar o socket do dinit de usuário; o comando nunca inicia, para, monta ou atualiza nada.
 
 
 ## Instalação rápida
 
-1. Baixe a release [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8). A ISO excede 2 GiB, então use todas as partes `*.iso.part-*`, o manifesto e o checksum.
-2. Concatene e verifique antes de gravar:
+1. Baixe a release [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9). A ISO direta tem 2.008.801.280 bytes; verifique o arquivo SHA-512 publicado.
+2. Verifique antes de gravar:
 
    ```bash
-   cat dinx-0.1.0-alpha.8-x86_64.iso.part-* > dinx-0.1.0-alpha.8-x86_64.iso
-   sha512sum -c dinx-0.1.0-alpha.8-x86_64.iso.sha512
+   sha512sum -c dinx-0.1.0-alpha.9-x86_64.iso.sha512
    ```
 
 3. Grave a ISO verificada no USB inteiro, inicialize em UEFI e selecione `Labwc (DINX)` no greeter. O login live de teste é `dinx` / `dinx`.

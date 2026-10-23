@@ -81,10 +81,7 @@ O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
 do builder. Ele força imagens SquashFS com o preset xz suportado pela ferramenta, BCJ x86,
 blocos de 1 MiB e dicionário de 1 MiB. Fontes do kernel, caches de pacotes pacman e logs de
 build ficam fora da imagem final; o `squashfs-tools` exclusivo do build permanece no ambiente
-do builder, não no payload de runtime. O orçamento P0
-rejeita uma ISO construída com tamanho igual ou maior que o limite de 2 GiB por
-asset do GitHub; a imagem publicada da Alpha 8 é anterior a essa meta e
-continua dividida entre os assets do release.
+do builder, não no payload de runtime. O orçamento P0 rejeita uma ISO construída com tamanho igual ou maior que o limite de 2 GiB por asset do GitHub; a Alpha 9 atende a essa meta com uma ISO direta de 2.008.801.280 bytes.
 
 ## Perfil gráfico
 
@@ -131,7 +128,7 @@ O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, m
 ## Limite do perfil
 
 O repositório versiona um manifesto comum compacto em `iso-profiles/common/common.yaml` em vez de depender do default do `iso-profiles` instalado. Ele mantém o payload completo de desktop/gaming/hardware da DINX enquanto remove firmware genérico e `powertop` da imagem final e exclui os headers do kernel, usados apenas no build, das imagens SquashFS finais; seu SHA-256 é registrado em `build-metadata.txt`. `WORKSPACE_DIR` em `scripts/build-iso.sh` seleciona os dois manifestos locais de forma determinística.
-A evidência de release com tag atual é o [workflow 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) para a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), no commit `eea66ac`. Ele passou a geração do checksum, a validação do payload SquashFS, o boot no QEMU, o smoke transacional de particionamento BIOS/UEFI/Btrfs do Calamares, o smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a atestação de procedência e a publicação do release. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
+A evidência de release com tag atual é o [workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) para a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. Ele passou a geração do checksum, a validação do payload SquashFS compacto, o boot e a captura gráfica no QEMU, o smoke transacional de particionamento BIOS/UEFI/Btrfs do Calamares, o smoke de instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a atestação de procedência e a publicação do release. A ISO direta tem 2.008.801.280 bytes, abaixo do limite de 2 GiB por asset. Rede, áudio, uso autenticado de Steam/jogo, saída gaming DRM real, hardware físico e qualificação de atualização/rollback continuam fora deste resultado.
 
 ## Validação do build
 

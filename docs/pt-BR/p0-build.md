@@ -23,7 +23,7 @@ Os pontos de entrada são:
 - `scripts/check_dinxpanel.sh` — contrato do centro de controle DINXPanel, ponte fixa de GPU e instalador seguro de kernels;
 - `scripts/check_gaming.sh` — contrato da sessão standalone Gamescope/Steam, gráficos de 32 bits e payload da ISO;
 - `scripts/check_alpha7_hardware_report.sh` e `scripts/check_dinx_hardware_evidence.sh` — o schema do relatório de hardware mantém o nome Alpha 7 por compatibilidade; os checks cobrem detecção BC250, limites manuais e evidência de release;
-- `docs/pt-BR/alpha7-qualification.md` — matriz de evidências de hardware para três máquinas e limite de qualificação manual da release Alpha 8;
+- `docs/pt-BR/alpha7-qualification.md` — matriz de evidências de hardware para três máquinas e limite de qualificação manual da release Alpha 9;
 - `scripts/check_dinx_budget.sh` e `scripts/measure_dinx_session.sh` — tetos de payload/inicialização/binários nativos/janela de boot/ISO e observação de RSS/CPU em runtime;
 - `scripts/gaming_p5_qualification.sh` — qualificação do retorno da sessão por fixture, limpeza do grupo de processos/restauração do perfil durante sinais e launch/exit real headless do Gamescope;
 - `scripts/noctty_p2_qualification.sh` — matriz P2 determinística em ReleaseSafe para allocator/fairness, continuidade de PTY/sessão, ncurses e TUIs do sistema;
@@ -75,7 +75,7 @@ O smoke GTK isolado do Nocted renderiza os fallbacks de ícone para PNG com `rsv
 
 ### Qualificação local P4/P5
 
-Os gates locais passam o contrato do pacote DinitUI, um daemon Dinit de usuário temporário real com o smoke GTK e o fixture da sessão gaming com lançamento/saída headless do Gamescope. A execução de release com tag [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) fornece o repositório estável de pacotes, ISO, QEMU, payload, smoke transacional BIOS/UEFI/Btrfs do Calamares, instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e assets publicados correspondentes. Os limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico da P5 continuam abertos.
+Os gates locais passam o contrato do pacote DinitUI, um daemon Dinit de usuário temporário real com o smoke GTK e o fixture da sessão gaming com lançamento/saída headless do Gamescope. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) fornece o repositório estável de pacotes, ISO, QEMU, payload, smoke transacional BIOS/UEFI/Btrfs do Calamares, instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e assets publicados da Alpha 9. Os limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico da P5 continuam abertos.
 
 A verificação de payload prova que labwc, Noctalia, ReGreet, greetd, a sessão `Labwc (DINX)`, o launcher/sessão gaming standalone, Gamescope, Steam, o payload gráfico de 32 bits, os arquivos de serviço dinit, NOCTTY/NoctEd, `clangd`, os dois esquemas do editor Nocted, Nano, Pori, Phyto e UDisks2 chegaram à ISO. O contrato de armazenamento exige o caminho de serviços dinit do Pori em `/etc/dinit.d`, o módulo de kernel `ntfs3` para leitura e escrita na sessão live e o canal opcional pós-instalação `ntfs-3g`, exige o File Roller para ações com arquivos compactados e o GParted para particionamento gráfico independente, enquanto rejeita payloads de Thunar, GVFS, Tumbler e KDE Partition Manager. Ela também confirma o agente independente de PolicyKit, rejeita metadados/runtime do pacote init systemd enquanto permite bibliotecas de compatibilidade exigidas por Gamescope/Steam e rejeita sessões completas do Xfce/LXQt. O smoke test do QEMU ainda prova somente aceitação de boot em nível de processo; não prova login gráfico, rede, MTP, SMB, acesso à câmera ou áudio dentro do guest.
 A verificação de payload também prova Firefox, sua entrada desktop, os manipuladores padrão de HTML/XHTML/HTTP/HTTPS e `/etc/firefox/policies/policies.json`. Essa política remove superfícies patrocinadas do navegador, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado sem desabilitar atualizações normais ou Firefox Accounts iniciado pelo usuário.
@@ -111,15 +111,16 @@ Para uma segunda captura diagnóstica após entrada de teclas, defina também `D
 
 ## Última execução bem-sucedida observada
 
-A execução [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), para a tag `v0.1.0-alpha.8` no commit `eea66ac`, concluiu com sucesso todas as etapas do workflow de release, incluindo a verificação dos metadados de build:
+A execução [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), para a tag `v0.1.0-alpha.9` no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, concluiu com sucesso todas as etapas do workflow de release, incluindo a verificação dos metadados de build:
 
 - os contratos estáticos dos pacotes próprios, DinitUI, gaming e payload da ISO passaram antes do build do container;
 - os builds de pacotes Artix e o `buildiso` concluíram, incluindo os pacotes Steam/gráficos de 32 bits resolvidos pelo repositório Artix `lib32` habilitado;
 - o contrato de particionamento do Calamares passou, incluindo round-trips de tabela/filesystem BIOS/UEFI e um volume Btrfs existente com `@` e `@home`;
+- boot e captura gráfica no QEMU passaram;
 - a validação do payload gráfico da ISO passou, incluindo DinitUI, a sessão gaming standalone, Steam e o payload gráfico de 32 bits;
 - os smokes de instalação persistente, primeiro boot e TTY de recuperação em discos descartáveis BIOS e UEFI passaram;
 - geração do SHA-512, atestação de procedência no GitHub, verificação dos metadados de build e upload do artefato passaram;
-- assets publicados incluem as partes da ISO, checksums, repositório estável de pacotes assinado, pacote Windows e metadados de build; a ISO tem 2.803.349.504 bytes e SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`.
+- os assets publicados incluem a ISO direta, checksum, repositório estável de pacotes assinado, pacote Windows e metadados de build; a ISO tem 2.008.801.280 bytes e SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.
 
 
 Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, dos smokes transacionais dos layouts suportados pelo Calamares, dos caminhos persistentes/recuperação em BIOS e UEFI descartáveis e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, firmware ou instalação em hardware físico, atualizações, rollback, redimensionamento de Windows com BitLocker/hibernação ou saúde de serviços em hardware por longo prazo.

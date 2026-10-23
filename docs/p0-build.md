@@ -22,7 +22,7 @@ The entry points are:
 - `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;
 - `scripts/check_gaming.sh` — standalone Gamescope/Steam session, 32-bit graphics and ISO payload contract;
 - `scripts/check_alpha7_hardware_report.sh` and `scripts/check_dinx_hardware_evidence.sh` — the hardware-report schema retains the Alpha 7 name for compatibility; the checks cover BC250 detection, manual boundaries and release evidence;
-- `docs/alpha7-qualification.md` — three-machine hardware evidence matrix and manual qualification boundary for the Alpha 8 system release;
+- `docs/alpha7-qualification.md` — three-machine hardware evidence matrix and manual qualification boundary for the Alpha 9 system release;
 - `scripts/check_dinx_budget.sh` and `scripts/measure_dinx_session.sh` — payload/startup/native-binary/boot-window/ISO ceilings and runtime RSS/CPU observation;
 - `scripts/gaming_p5_qualification.sh` — fixture session return, signal-time process-group cleanup/profile restoration and real headless Gamescope launch/exit qualification;
 - `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
@@ -75,7 +75,7 @@ The isolated NoctEd GTK smoke renders its fallback icons to PNG with `rsvg-conve
 
 ### Local P4/P5 qualification
 
-The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Tagged release run [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) supplies the matching stable package repository, ISO, QEMU, payload, Calamares BIOS/UEFI/Btrfs transaction, disposable BIOS and UEFI persistent-install/recovery-TTY, build-metadata verification, attestation and published release assets. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
+The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Tagged release run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) supplies the matching stable package repository, ISO, QEMU, payload, Calamares BIOS/UEFI/Btrfs transaction, disposable BIOS and UEFI persistent-install/recovery-TTY, build-metadata verification, attestation and published Alpha 9 release assets. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
 
 A verificação de payload prova que labwc, Noctalia, ReGreet, greetd, a sessão `Labwc (DINX)`, o launcher/sessão gaming standalone, Gamescope, Steam, o payload gráfico de 32 bits, os arquivos de serviço dinit, NOCTTY/NoctEd, `clangd`, os dois esquemas do editor Nocted, Nano, Pori, Phyto e UDisks2 chegaram à ISO. O contrato de armazenamento exige o caminho de serviços dinit do Pori em `/etc/dinit.d`, o módulo de kernel `ntfs3` para leitura e escrita na sessão live e o canal opcional pós-instalação `ntfs-3g`, exige File Roller para ações com arquivos compactados e GParted para particionamento gráfico independente, enquanto rejeita payloads de Thunar, GVFS, Tumbler e KDE Partition Manager. Ela também confirma o agente independente de PolicyKit, rejeita metadados/runtime do pacote init systemd enquanto permite bibliotecas de compatibilidade exigidas por Gamescope/Steam e rejeita sessões completas do Xfce/LXQt. O smoke test do QEMU ainda prova somente aceitação de boot em nível de processo; não prova login gráfico, rede, MTP, SMB, acesso à câmera ou áudio dentro do guest.
 The payload check also proves Firefox, its desktop entry, the default HTML/XHTML/HTTP/HTTPS handlers and `/etc/firefox/policies/policies.json`. That policy removes sponsored browser surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection without disabling normal browser updates or user-initiated Firefox Accounts.
@@ -109,7 +109,7 @@ For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT
 
 ## Latest observed successful run
 
-Run [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) for tag `v0.1.0-alpha.8` on commit `eea66ac` completed every release workflow step successfully, including build-metadata verification:
+Run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for tag `v0.1.0-alpha.9` on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404` completed every release workflow step successfully, including build-metadata verification:
 
 - the static contracts for first-party packages, DinitUI, gaming and the ISO payload passed before the container build;
 - Artix package builds and `buildiso` completed, including the Steam/32-bit graphics packages resolved from the enabled Artix `lib32` repository;
@@ -118,7 +118,7 @@ Run [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) for tag
 - graphical ISO payload validation passed, including DinitUI, the standalone gaming session, Steam and the 32-bit graphics payload;
 - disposable persistent-install, first-boot and recovery-TTY smoke passed on both BIOS and UEFI disks;
 - GitHub provenance attestation, build-metadata verification and artifact upload passed;
-- published release assets include the ISO parts, checksums, signed stable package repository, Windows package and build metadata; the ISO is 2,803,349,504 bytes with SHA-512 `50e8d535fd4a482ea5433b454921a34402f64e2aa9f82ed9434cff659820c944df7b44b062ebd56094948147109ff65b6f31889080340de484c36fb5d7eb5b8a`.
+- published release assets include the direct ISO, checksum, signed stable package repository, Windows package and build metadata; the ISO is 2,008,801,280 bytes with SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.
 
 
 This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, Calamares supported-layout transaction smokes, disposable BIOS and UEFI persistent-install/recovery paths and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical firmware or hardware installation, upgrades, rollback, BitLocker/hibernated Windows resizing or long-term hardware service health.

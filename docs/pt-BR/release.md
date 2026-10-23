@@ -22,11 +22,12 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-A compilação compacta atual da Alpha 8 é a [execução CI 39710941142](https://github.com/rufl/DINX/actions/runs/39710941142) para a [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), no commit `c072866777f1d591a25af6cf16ffffd2976ac204`. Ela passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO compacta, boot no QEMU, validação do payload gráfico, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, limite de boot e checks dos assets do release. A ISO publicada tem 2.056.595.456 bytes e SHA-512 `2fa4a17e9e72f46cc074300f485fd5456f49ffd92e7864af048c8785559b4dbf0a3d060c5d5e6623fefe98ce3f89a174cafeabe1126106ae774d458754829cd3`; o snapshot do repositório estável de pacotes é `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
+A compilação compacta atual da Alpha 9 é a [execução CI 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) para a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. Ela passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO compacta, boot e payload gráfico no QEMU, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, assinatura persistente de pacotes, atestação de procedência e publicação do release. A ISO direta publicada tem 2.008.801.280 bytes e SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`; o snapshot do repositório estável assinado é `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
 O release agora usa o caminho determinístico de ISO compacta de
-`scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86 e um limite
-estrito abaixo do limite de 2 GiB por asset do GitHub. A Alpha 8 agora publica
-uma ISO direta; releases antigos ainda podem usar partes da ISO.
+`scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86, blocos de
+1 MiB e dicionário de 1 MiB, com limite estrito abaixo de 2 GiB por asset do
+GitHub. A Alpha 9 publica uma ISO direta; releases antigos ainda podem usar
+partes da ISO.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.
 
 ## Artefatos publicados
@@ -133,8 +134,8 @@ checksum de um pacote ou release anterior:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.8'
-$zipName = 'dinx-0.1.0-alpha.8-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.9'
+$zipName = 'dinx-0.1.0-alpha.9-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -195,7 +196,7 @@ Os metadados do pacote apontam para o receptor Windows registrado `ddjarin`. Na 
 do proprietário, faça primeiro o preview da atribuição imutável:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.8
+scripts/deploy-ztash.sh v0.1.0-alpha.9
 ```
 
 O script lê os metadados do release, verifica URL HTTPS, SHA-256, tamanho, target e
@@ -205,7 +206,7 @@ imprime o token e nunca cria credenciais.
 Depois de revisar o preview, aplique explicitamente:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.8 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.9 --apply
 ```
 
 A operação exige o token privado do proprietário para DDJARIN em `ZEER_TOKEN_FILE`

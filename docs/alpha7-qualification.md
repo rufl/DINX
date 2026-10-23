@@ -1,7 +1,7 @@
 # DINX hardware qualification (Alpha 7 report contract)
 
 The Alpha 7 report utility and environment names are retained for compatibility.
-This matrix is the manual hardware boundary for the current `v0.1.0-alpha.8`
+This matrix is the manual hardware boundary for the current `v0.1.0-alpha.9`
 release; it separates repository evidence from manual hardware testing after the ISO is generated.
 
 ## Build gate
@@ -106,7 +106,7 @@ each manual result only after running the corresponding test:
 ```bash
 export DINX_ALPHA7_MACHINE_ROLE=desktop   # desktop, laptop or bc250
 export DINX_ALPHA7_FIRMWARE_MODE=uefi    # bios or uefi
-export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.8
+export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.9
 export DINX_ALPHA7_BUILD_COMMIT=0123456789012345678901234567890123456789
 export DINX_ALPHA7_PACKAGE_REPOSITORY_SNAPSHOT=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 for result in \
@@ -136,6 +136,6 @@ game launch, controller input, PipeWire game audio, suspend/resume, physical
 brightness, GPU recovery, firmware behavior, or long-running hardware health.
 Those claims remain open until the three-machine manual matrix passes.
 
-P5 gaming remains a separate beta gate. The `v0.1.0-alpha.8` release is a
+P5 gaming remains a separate beta gate. The `v0.1.0-alpha.9` release is a
 system alpha; this document does not claim that the gaming beta exit criterion
 has passed.

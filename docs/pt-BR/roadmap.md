@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/recuperação em discos descartáveis passaram. A execução de release com tag [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), no commit `eea66ac`, é a evidência P0 atual e inclui discos BIOS e UEFI descartáveis, o smoke transacional BIOS/UEFI/Btrfs do Calamares, a verificação dos metadados de build, a assinatura persistente de pacotes e a publicação do release. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
+**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/recuperação em discos descartáveis passaram. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, é a evidência P0 atual e inclui discos BIOS e UEFI descartáveis, o smoke transacional BIOS/UEFI/Btrfs do Calamares, a verificação dos metadados de build, a assinatura persistente de pacotes e a publicação do release. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
 
 ## P0 — fundação
 
@@ -33,7 +33,7 @@ Backlog:
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
-**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.8`.
+**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.9`.
 
 Concluído:
 
@@ -95,7 +95,7 @@ Gate de release P3:
 
 **Objetivo:** tornar as operações do Dinit compreensíveis, completas e seguras sem importar conceitos do systemd.
 
-**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução de release com tag [39611695024](https://github.com/rufl/DINX/actions/runs/39611695024), no commit `eea66ac`, também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke transacional de particionamento BIOS/UEFI/Btrfs do Calamares, o smoke de instalação persistente/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a assinatura persistente de pacotes, a atestação de procedência e a publicação do release. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
+**Status:** qualificada para o gate alpha. `zig build test`, builds ReleaseSafe, payloads de pacotes Arch, checks estáticos, um daemon Dinit de usuário temporário real e as superfícies GTK de produção foram qualificados. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, também passou o build do pacote Artix, o payload da ISO, o boot no QEMU, o smoke transacional de particionamento BIOS/UEFI/Btrfs do Calamares, o smoke de instalação persistente/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a assinatura persistente de pacotes, a atestação de procedência e a publicação do release. A DINXPanel agora é dona dos controles visíveis de hardware/drivers e do instalador fixo de kernels; a matriz de hardware mais ampla continua sendo um gate de release de produção.
 
 **Entregue:**
 

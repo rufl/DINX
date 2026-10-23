@@ -82,8 +82,7 @@ It forces xz-compressed SquashFS images with the tool's supported xz preset,
 x86 BCJ, 1 MiB blocks and a 1 MiB dictionary. Kernel sources, pacman package
 caches and build logs are excluded from the final image; build-only `squashfs-tools`
 remains in the builder environment rather than the runtime payload. The P0 budget rejects a
-built ISO at or above GitHub's 2 GiB per-asset limit; the published Alpha 8
-image predates this target and remains split across release assets.
+built ISO at or above GitHub's 2 GiB per-asset limit; Alpha 9 meets this target with one direct ISO asset at 2,008,801,280 bytes.
 
 ## Graphical profile
 
@@ -134,7 +133,7 @@ GRUB uses the DINX surface, foreground and primary selection colors while retain
 ## Profile boundary
 
 The repository vendors a compact common package manifest at `iso-profiles/common/common.yaml` instead of relying on the installed `iso-profiles` default. It keeps the full DINX desktop/gaming/hardware payload while removing generic firmware and `powertop` from the final image and excluding build-only kernel headers from the final SquashFS images; its SHA-256 is recorded in `build-metadata.txt`. `WORKSPACE_DIR` in `scripts/build-iso.sh` selects both local manifests deterministically.
-The current tagged release evidence is [workflow 39611695024](https://github.com/rufl/DINX/actions/runs/39611695024) for [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), on commit `eea66ac`. It passed checksum generation, SquashFS payload validation, QEMU boot, Calamares BIOS/UEFI/Btrfs partition transaction smoke, disposable BIOS and UEFI installation/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and release publication. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
+The current tagged release evidence is [workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. It passed checksum generation, compact SquashFS payload validation, QEMU boot and graphical capture, Calamares BIOS/UEFI/Btrfs partition transaction smoke, disposable BIOS and UEFI installation/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and release publication. The direct ISO is 2,008,801,280 bytes, below the 2 GiB per-asset limit. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
 
 ## Build validation
 

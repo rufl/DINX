@@ -19,11 +19,12 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 ## Current validated snapshot
 
-The latest compact Alpha 8 build is [CI run 39710941142](https://github.com/rufl/DINX/actions/runs/39710941142) for [v0.1.0-alpha.8](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.8), on commit `c072866777f1d591a25af6cf16ffffd2976ac204`. It passed the first-party/static contracts, Artix package builds, compact ISO creation, QEMU boot, graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, boot-window budget and release-asset checks. The published ISO totals 2,056,595,456 bytes and has SHA-512 `2fa4a17e9e72f46cc074300f485fd5456f49ffd92e7864af048c8785559b4dbf0a3d060c5d5e6623fefe98ce3f89a174cafeabe1126106ae774d458754829cd3`; the stable package repository snapshot is `5a61d50f3837161bed1af7619965b44e80bd885e79457e443c328e0151d805d9`.
+The latest compact Alpha 9 build is [CI run 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. It passed the first-party/static contracts, Artix package builds, compact ISO creation, QEMU boot and graphical payload validation, Calamares partition and persistent-install/recovery smokes, build-metadata verification, persistent package signing, provenance attestation and release publication. The published direct ISO totals 2,008,801,280 bytes and has SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`; the signed stable package repository snapshot is `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
 The release now uses the deterministic compact-ISO path from
-`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering and a
-strict ISO budget below GitHub's 2 GiB per-asset limit. Alpha 8 now publishes
-one direct ISO asset; older releases may still use split ISO parts.
+`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 1 MiB
+blocks and a 1 MiB dictionary, with a strict ISO budget below GitHub's 2 GiB
+per-asset limit. Alpha 9 publishes one direct ISO asset; older releases may
+still use split ISO parts.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
 ## Published assets
@@ -129,8 +130,8 @@ checksum from an older package or a different release:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.8'
-$zipName = 'dinx-0.1.0-alpha.8-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.9'
+$zipName = 'dinx-0.1.0-alpha.9-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -190,7 +191,7 @@ The package metadata targets the registered `ddjarin` Windows receiver. On the t
 owner machine, preview the immutable assignment first:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.8
+scripts/deploy-ztash.sh v0.1.0-alpha.9
 ```
 
 The script reads the release metadata, verifies the HTTPS URL, package SHA-256, size,
@@ -200,7 +201,7 @@ mode. It never prints the token and never creates credentials.
 After reviewing the preview, apply explicitly:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.8 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.9 --apply
 ```
 
 The operation requires the owner-private DDJARIN token in

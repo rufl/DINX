@@ -60,7 +60,7 @@ on:
       - "scripts/check_pori_phyto.sh"
       - "scripts/check_seafoam_apps.sh"
       - "scripts/check_seafoam_settings.sh"
-      - "scripts/seafoam_settings_smoke.sh"
+      - "scripts/smoke_zls.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
       - "scripts/check_firewall_tools.sh"

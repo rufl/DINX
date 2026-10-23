@@ -40,7 +40,7 @@
 DINX is an Artix distribution for a small, legible and controllable desktop session:
 
 - **Artix Linux + dinit** as the base, without replacing the init system with systemd;
-- **labwc + Noctalia** as the supported session;
+- **labwc + Noctalia** as the default session, with **Aqueous + Pearl** as an alternate direct-dinit session;
 - **DinitUI** and **DINXPanel** for service, hardware, driver and kernel profiles;
 - **Calamares** for experimental installation, **GParted** for separate partition editing and **Pori** for persistent disks and mounts through dinit;
 - **Phyto** as the default file manager and **File Roller** for opening, creating and extracting archives;
@@ -50,13 +50,11 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 
 `dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket.
 
-## Seafoam in the base ISO
+## Seafoam and alternate sessions in the base ISO
 
 **Dome**, **Seafoam Settings** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Dome provides resource/process monitoring without installing or requiring systemd; Seafoam Settings groups display and session entry points; ZLS provides Zig LSP support in Nocted with the matching Zig standard library and a compact metadata shim, without requiring a full Zig compiler in the ISO.
 
-## Outside the base ISO
-
-**Aqueous** and **Pearl** remain planned as an alternate Zig option. Their upstream packaging requires `uwsm` and systemd user units; DINX does not install systemd or expose those sessions in the greeter. Labwc + Noctalia remains the supported path, with no silent compositor fallback.
+**Aqueous 1.0.5** and **Pearl 0.3.0** also ship in the base ISO. `Aqueous + Pearl (DINX)` is a greeter entry backed by DINX wrappers: it starts Aqueous directly, runs the DINX user-session helpers, and execs Pearl without `systemd`, `systemctl`, `uwsm` or user units. Aqueous keeps `systemd-libs` only as a compatibility library. `Labwc + Noctalia` remains the default session; DINX does not silently fall back if the alternate session fails.
 
 ## Current state
 

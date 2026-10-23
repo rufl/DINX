@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Aqueous + Pearl (DINX)
+Comment=Aqueous compositor with the Pearl shell
+Exec=dbus-run-session /usr/local/libexec/dinx-aqueous-pearl
+TryExec=/usr/local/libexec/dinx-aqueous-pearl
+Type=Application
+DesktopNames=Aqueous;Pearl

@@ -101,6 +101,10 @@ required_paths=(
   usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
   usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
   usr/bin/foot
+  usr/bin/aqueous
+  usr/bin/aqueousctl
+  usr/bin/aqueous-config
+  usr/bin/pearl
   usr/bin/phyto
   usr/bin/pori
   usr/bin/file-roller
@@ -231,12 +235,15 @@ required_paths=(
   usr/share/nocted/styles/nocted-light.xml
   usr/bin/calamares
   usr/share/wayland-sessions/dinx-labwc.desktop
+  usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
   usr/share/wayland-sessions/labwc.desktop
   usr/bin/regreet
   usr/local/libexec/dinx-regreet
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
   usr/local/libexec/dinx-labwc
+  usr/local/libexec/dinx-aqueous-pearl
+  usr/local/libexec/dinx-aqueous-init
   usr/share/applications/dinx-installer.desktop
   usr/local/bin/dinx-save-shikane-profile
   usr/local/bin/dinx-wdisplays
@@ -276,10 +283,21 @@ fi
 gaming_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-gaming.desktop)
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session command is incorrect'
 grep -Fq 'TryExec=/usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session TryExec is missing'
+aqueous_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-aqueous-pearl.desktop)
+grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" || fail 'DINX Aqueous/Pearl session command is incorrect'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" || fail 'DINX Aqueous/Pearl session TryExec is missing'
+aqueous_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
+aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
+grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not launch the direct init child'
+grep -Fq 'exec /usr/bin/pearl' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch Pearl'
+if grep -Eq 'systemd|systemctl|uwsm|loginctl' <<<"$aqueous_session$aqueous_launcher$aqueous_init"; then
+  fail 'DINX Aqueous/Pearl session contains a forbidden systemd or uwsm integration'
+fi
 
-plasma_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/xsessions/plasmax11.desktop)
-grep -Fq 'Hidden=true' <<<"$plasma_session" || fail 'Plasma X11 session is not hidden from the DINX greeter'
-grep -Fq 'NoDisplay=true' <<<"$plasma_session" || fail 'Plasma X11 session remains visible to the DINX greeter'
+
+if grep -Fq '/usr/share/xsessions/plasmax11.desktop' <<<"$manifest"; then
+  fail 'legacy Plasma X11 session is still present in the ISO payload'
+fi
 
 plasma_wayland_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/plasma.desktop)
 grep -Fq 'Hidden=true' <<<"$plasma_wayland_session" || fail 'Plasma Wayland session is not hidden from the DINX greeter'
@@ -450,9 +468,13 @@ grep -Fq 'audio/flac=org.strawberrymusicplayer.strawberry.desktop;' <<<"$mimeapp
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
   etc/systemd \
+  usr/lib/systemd \
   usr/lib/systemd/systemd \
   usr/lib/systemd/user/bc250-control-centerd.service \
   usr/lib/systemd/system/cyan-skillfish-governor-smu.service.d/91-bc250-control-center-overlay-preflight.conf \
+  etc/uwsm \
+  usr/share/uwsm \
+  usr/bin/uwsm \
   usr/bin/systemd \
   usr/bin/systemctl \
   usr/bin/xfce4-session \
@@ -481,6 +503,15 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/systemd-[0-9][^/]*/' <<<"$
   printf '%s\n' "$forbidden_matches" >&2
   fail 'systemd init package metadata is present; compatibility libraries are allowed'
 fi
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/(xorg-server-[0-9]|xorg-xinit-[0-9]|xorg-xhost-[0-9]|xf86-(input|video)-|xlibre-)[^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'legacy X11 server, driver or session packages are present in the ISO payload'
+fi
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/uwsm-[^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'uwsm package metadata is present; the DINX Aqueous/Pearl path is direct'
+fi
+
 grep -Fq '/usr/bin/os-prober' <<<"$manifest" || fail 'os-prober is missing from the ISO payload'
 grep -Fq '/usr/bin/mount' <<<"$manifest" || fail 'util-linux mount is missing from the ISO payload'
 if grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest"; then

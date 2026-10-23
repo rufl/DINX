@@ -27,6 +27,8 @@ rootfs:
     - dinitui
     - dinxpanel
     - dome
+    - aqueous
+    - pearl
     - seafoam-settings
     - zls
     - e2fsprogs

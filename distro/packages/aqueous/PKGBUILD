@@ -1,0 +1,130 @@
+pkgname=aqueous
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${AQUEOUS_VERSION:?missing AQUEOUS_VERSION}"
+: "${AQUEOUS_SOURCE_URL:?missing AQUEOUS_SOURCE_URL}"
+: "${AQUEOUS_SOURCE_SHA256:?missing AQUEOUS_SOURCE_SHA256}"
+: "${AQUEOUS_WLROOTS_SHA256:?missing AQUEOUS_WLROOTS_SHA256}"
+pkgver="$AQUEOUS_VERSION"
+pkgrel=1
+pkgdesc='Aqueous Wayland compositor and control clients for DINX'
+arch=('x86_64')
+url="$AQUEOUS_SOURCE_URL"
+license=('GPL-3.0-only' 'MIT' '0BSD' 'CC-BY-SA-4.0')
+depends=(
+  'wayland'
+  'libxkbcommon'
+  'libinput'
+  'pixman'
+  'libdrm'
+  'libevdev'
+  'libdecor'
+  'xorg-xwayland'
+  'pipewire'
+  'glib2'
+  'fontconfig'
+  'mesa'
+  'systemd-libs'
+  'seatd'
+  'libdisplay-info'
+  'libliftoff'
+  'lcms2'
+  'vulkan-icd-loader'
+  'libxcb'
+  'xcb-util-errors'
+  'xcb-util-wm'
+  'xcb-util-renderutil'
+  'brightnessctl'
+  'playerctl'
+)
+makedepends=(
+  'git'
+  'curl'
+  'patch'
+  'scdoc'
+  'python'
+  'shaderc'
+  'clang'
+  'lld'
+  'llvm'
+  'libinih'
+  'wayland-protocols>=1.49'
+  'pkgconf'
+  'meson'
+  'ninja'
+  'glslang'
+  'vulkan-headers'
+  'hwdata'
+  'jq'
+  'zig>=0.16'
+)
+provides=('aqueous-compositor')
+conflicts=('aqueous-core' 'aqueous-session' 'aqueous-bin')
+options=('!strip' '!debug')
+source=(
+  "Aqueous-$pkgver.tar.gz::${AQUEOUS_SOURCE_URL}"
+  'wlroots-0.20.2.tar.gz::https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/0.20.2/wlroots-0.20.2.tar.gz'
+)
+sha256sums=("$AQUEOUS_SOURCE_SHA256" "$AQUEOUS_WLROOTS_SHA256")
+
+build() {
+  local root="$srcdir/Aqueous-$pkgver"
+  local zig_cpu=baseline
+  export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
+  export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
+
+  "${ZIG:-zig}" build --build-file "$root/settingsApplication/build.zig" \
+    -Dcpu="$zig_cpu" -Doptimize=ReleaseSafe \
+    --prefix "$srcdir/aqueous-config-dist"
+
+  cd "$root/compositor"
+  AQUEOUS_WLROOTS_CACHE_DIR="$srcdir" bash scripts/build-wlroots-render-hook.sh
+  PKG_CONFIG_PATH="$PWD/.deps/wlroots-render-hook/lib/pkgconfig" \
+    "${ZIG:-zig}" build -Dcpu="$zig_cpu" -Doptimize=ReleaseSafe \
+    -Dxwayland -Dllvm -Dman-pages=true -Dversion-string="$pkgver" \
+    --prefix "$srcdir/aqueous-dist" install
+}
+
+check() {
+  "$srcdir/aqueous-dist/bin/aqueous" -version
+  test -x "$srcdir/aqueous-dist/bin/aqueousctl"
+  test -x "$srcdir/aqueous-config-dist/bin/aqueous-config"
+  cmp "$srcdir/aqueous-dist/lib/aqueous/libwlroots-0.20.so" \
+    "$srcdir/Aqueous-$pkgver/compositor/.deps/wlroots-render-hook/lib/libwlroots-0.20.so"
+  readelf -d "$srcdir/aqueous-dist/bin/aqueous" | grep -F '$ORIGIN/../lib/aqueous' >/dev/null
+}
+
+package() {
+  local root="$srcdir/Aqueous-$pkgver"
+  local compositor="$srcdir/aqueous-dist"
+
+  install -Dm755 "$compositor/bin/aqueous" "$pkgdir/usr/bin/aqueous"
+  install -Dm755 "$compositor/bin/aqueousctl" "$pkgdir/usr/bin/aqueousctl"
+  if [[ -x "$compositor/bin/aqueous-activity-launch" ]]; then
+    install -Dm755 "$compositor/bin/aqueous-activity-launch" \
+      "$pkgdir/usr/bin/aqueous-activity-launch"
+  fi
+  install -Dm755 "$compositor/lib/aqueous/libwlroots-0.20.so" \
+    "$pkgdir/usr/lib/aqueous/libwlroots-0.20.so"
+  for name in aqueous aqueousctl; do
+    install -Dm644 "$compositor/share/man/man1/$name.1" \
+      "$pkgdir/usr/share/man/man1/$name.1"
+  done
+  cp -a "$compositor/share/aqueous-protocols" "$pkgdir/usr/share/"
+  install -Dm644 "$compositor/share/pkgconfig/aqueous-protocols.pc" \
+    "$pkgdir/usr/share/pkgconfig/aqueous-protocols.pc"
+  install -Dm644 "$compositor/share/aqueous/build-policy.json" \
+    "$pkgdir/usr/share/aqueous/build-policy.json"
+  install -Dm644 "$root/wm.toml" "$pkgdir/usr/share/aqueous/wm.toml"
+  install -Dm644 "$root/outputs.toml" "$pkgdir/usr/share/aqueous/outputs.toml"
+  install -Dm644 "$root/wm.toml" "$pkgdir/etc/xdg/aqueous/wm.toml"
+  install -Dm644 "$root/outputs.toml" "$pkgdir/etc/xdg/aqueous/outputs.toml"
+  install -Dm644 "$root/README.md" "$pkgdir/usr/share/doc/aqueous/README.md"
+  install -Dm644 "$root/compositor/LICENSES/"* -t "$pkgdir/usr/share/licenses/$pkgname/"
+
+  AQUEOUS_CONFIG_BINARY="$srcdir/aqueous-config-dist/bin/aqueous-config" \
+    AQUEOUSCTL_BINARY="$compositor/bin/aqueousctl" \
+    DESTDIR="$pkgdir" PREFIX=/usr \
+    bash "$root/settingsApplication/packaging/install-config.sh"
+}

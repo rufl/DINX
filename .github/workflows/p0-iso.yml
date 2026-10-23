@@ -60,6 +60,7 @@ on:
       - "scripts/check_pori_phyto.sh"
       - "scripts/check_seafoam_apps.sh"
       - "scripts/check_seafoam_settings.sh"
+      - "scripts/check_aqueous_pearl.sh"
       - "scripts/smoke_zls.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
@@ -121,6 +122,8 @@ jobs:
         run: ./scripts/check_seafoam_apps.sh
       - name: Verify Seafoam Settings package and argv contract
         run: ./scripts/check_seafoam_settings.sh
+      - name: Verify Aqueous/Pearl direct dinit session contract
+        run: ./scripts/check_aqueous_pearl.sh
       - name: Verify wdisplays to Shikane persistence contract
         run: ./scripts/check_dinx_display_persistence.sh
       - name: Smoke-test wdisplays to Shikane persistence
@@ -223,6 +226,7 @@ jobs:
                 btop \
                 curl \
                 clang \
+                brightnessctl \
                 cairo \
                 cjson \
                 calamares \
@@ -248,6 +252,28 @@ jobs:
                 gtk4 \
                 libadwaita \
                 libarchive \
+                libcups \
+                libdecor \
+                libevdev \
+                libinih \
+                lcms2 \
+                libpulse \
+                libsecret \
+                libxml2 \
+                matugen \
+                pam \
+                playerctl \
+                polkit \
+                qt5-base \
+                qt6-base \
+                shaderc \
+                systemd-libs \
+                vulkan-headers \
+                vulkan-icd-loader \
+                gtk4-layer-shell \
+                gtksourceview5 \
+                enchant \
+                hunspell \
                 gtksourceview4 \
                 vte3 \
                 ghostty \
@@ -277,6 +303,7 @@ jobs:
                 pixman \
                 pkgconf \
                 procps-ng \
+                pipewire \
                 python \
                 seatd \
                 shared-mime-info \
@@ -291,6 +318,8 @@ jobs:
                 xcb-util-renderutil \
                 xcb-util-wm \
                 xorg-xwayland \
+                xdg-desktop-portal \
+                xdg-utils \
                 xorg-server-xvfb \
                 xz \
                 zlib \
@@ -390,7 +419,7 @@ jobs:
                 if [[ "$package_name" == noctty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                 fi
-                if [[ "$package_name" == pori || "$package_name" == phyto || "$package_name" == dome ]]; then
+                if [[ "$package_name" == pori || "$package_name" == phyto || "$package_name" == dome || "$package_name" == aqueous || "$package_name" == pearl ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_16_version}/zig")
                 fi
                 (
@@ -423,6 +452,11 @@ jobs:
               build_package shikane
               pacman -U --noconfirm "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
+              build_package aqueous
+              build_package pearl
+              pacman -U --noconfirm \
+                "$package_repo"/aqueous-*.pkg.tar.zst \
+                "$package_repo"/pearl-*.pkg.tar.zst
               build_package pori
               build_package phyto
               build_package dome

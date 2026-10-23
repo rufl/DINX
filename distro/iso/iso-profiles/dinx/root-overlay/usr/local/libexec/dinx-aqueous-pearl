@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+export XDG_CURRENT_DESKTOP=Aqueous
+export XDG_SESSION_DESKTOP=Aqueous
+export XDG_SESSION_TYPE=wayland
+export QT_QPA_PLATFORM='wayland;xcb'
+export GDK_BACKEND='wayland,x11'
+export SDL_VIDEODRIVER='wayland,x11'
+export CLUTTER_BACKEND=wayland
+export MOZ_ENABLE_WAYLAND=1
+export _JAVA_AWT_WM_NONREPARENTING=1
+export AQUEOUS_MOD="${AQUEOUS_MOD:-Super}"
+export AQUEOUS_NESTED=0
+unset DISPLAY
+
+if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+  XDG_RUNTIME_DIR="/run/user/$(id -u)"
+  export XDG_RUNTIME_DIR
+fi
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 0700 "$XDG_RUNTIME_DIR" 2>/dev/null || true
+
+config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
+if [ -n "${HOME:-}" ]; then
+  if [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then
+    install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
+  fi
+  if [ ! -e "$config_home/aqueous/outputs.toml" ] && [ -r /etc/xdg/aqueous/outputs.toml ]; then
+    install -Dm644 /etc/xdg/aqueous/outputs.toml "$config_home/aqueous/outputs.toml"
+  fi
+fi
+
+exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init

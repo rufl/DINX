@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+export XDG_CURRENT_DESKTOP=Aqueous
+export XDG_SESSION_DESKTOP=Aqueous
+export XDG_SESSION_TYPE=wayland
+
+# Aqueous invokes this child after its Wayland socket and XWayland endpoint
+# exist. Start only DINX user-session helpers directly; dinit remains the init
+# boundary and Pearl owns the visible shell.
+shikane >/dev/null 2>&1 &
+lxqt-policykit-agent >/dev/null 2>&1 &
+bc250-control-centerd >/dev/null 2>&1 &
+/usr/local/libexec/dinx-idle >/dev/null 2>&1 &
+
+exec /usr/bin/pearl

@@ -1,7 +1,7 @@
 /* DINX fallback theme; Noctalia templates refine this palette at session start. */
 * {
-    font-family: Cantarell;
-    font-size: 11pt;
+    font-family: Noto Sans;
+    font-size: 10pt;
     color: #d7dde8;
 }
 

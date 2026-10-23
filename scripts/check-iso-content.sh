@@ -79,6 +79,8 @@ required_paths=(
   etc/xdg/labwc-greeter/rc.xml
   etc/xdg/labwc-greeter/autostart
   etc/profile.d/dinx.sh
+  etc/default/useradd
+  etc/fish/config.fish
   etc/skel/.bash_profile
   etc/skel/.config/gtk-3.0/settings.ini
   etc/skel/.config/gtk-4.0/settings.ini
@@ -106,6 +108,7 @@ required_paths=(
   usr/bin/shikane
   usr/bin/shikanectl
   usr/bin/wdisplays
+  usr/bin/fish
   usr/bin/nano
   usr/bin/ffmpeg
   usr/bin/btop
@@ -237,7 +240,7 @@ done
 regreet_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-regreet)
 grep -Fq 'kill -TERM "$PPID"' <<<"$regreet_launcher" || fail 'DINX labwc greeter does not terminate its host session'
 if grep -Fq 'mmsg ' <<<"$regreet_launcher"; then
-  fail 'DINX labwc greeter still depends on the removed MangoWM message client'
+  fail 'DINX labwc greeter still depends on the removed compositor message client'
 fi
 doctor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/dinx-doctor)
 grep -Fq 'schema dinx-doctor/v1' <<<"$doctor" || fail 'DINX doctor schema is missing'
@@ -282,7 +285,7 @@ fi
 regreet_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/regreet.toml)
 grep -Fq 'application_prefer_dark_theme = true' <<<"$regreet_config" || fail 'ReGreet dark mode is not enabled'
 grep -Fq 'theme_name = "DINX"' <<<"$regreet_config" || fail 'ReGreet DINX theme is not enabled'
-grep -Fq 'font_name = "Cantarell 11"' <<<"$regreet_config" || fail 'ReGreet font contract is missing'
+grep -Fq 'font_name = "Noto Sans 10"' <<<"$regreet_config" || fail 'ReGreet font contract is missing'
 
 noctalia_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/config.toml)
 grep -Fq 'mode = "dark"' <<<"$noctalia_config" || fail 'Noctalia dark mode is not enabled'
@@ -315,15 +318,15 @@ noctalia_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img"
 grep -Fq '"mSurface": "#0b0d12"' <<<"$noctalia_palette" || fail 'DINX Noctalia surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$noctalia_palette" || fail 'DINX Noctalia primary palette is missing'
 gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
-grep -Fq 'gtk-font-name=Cantarell 11' <<<"$gtk3_settings" || fail 'GTK3 Cantarell font contract is missing'
+grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
 gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
-grep -Fq 'gtk-font-name=Cantarell 11' <<<"$gtk4_settings" || fail 'GTK4 Cantarell font contract is missing'
+grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
 grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "qt"]' <<<"$noctalia_config" || fail 'Noctalia application templates are missing'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
 grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
-grep -Fq 'font-family: Cantarell;' <<<"$gtk3_theme" || fail 'DINX GTK3 font family is missing'
-grep -Fq 'font-size: 11pt;' <<<"$gtk3_theme" || fail 'DINX GTK3 font size is missing'
+grep -Fq 'font-family: Noto Sans;' <<<"$gtk3_theme" || fail 'DINX GTK3 font family is missing'
+grep -Fq 'font-size: 10pt;' <<<"$gtk3_theme" || fail 'DINX GTK3 font size is missing'
 grep -Fq 'background-color: #11151d' <<<"$gtk3_theme" || fail 'DINX GTK3 control surface is missing'
 grep -Fq 'background-color: #263249' <<<"$gtk3_theme" || fail 'DINX GTK3 hover state is missing'
 if grep -Eq '#(31415d|151923|2859a8)' <<<"$gtk3_theme"; then
@@ -332,27 +335,27 @@ fi
 gtk4_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk4_theme" || fail 'DINX GTK4 surface is missing'
 grep -Fq 'background-color: #8fb8ff' <<<"$gtk4_theme" || fail 'DINX GTK4 accent is missing'
-grep -Fq 'font-family: Cantarell;' <<<"$gtk4_theme" || fail 'DINX GTK4 font family is missing'
-grep -Fq 'font-size: 11pt;' <<<"$gtk4_theme" || fail 'DINX GTK4 font size is missing'
+grep -Fq 'font-family: Noto Sans;' <<<"$gtk4_theme" || fail 'DINX GTK4 font family is missing'
+grep -Fq 'font-size: 10pt;' <<<"$gtk4_theme" || fail 'DINX GTK4 font size is missing'
 grep -Fq 'background-color: #11151d' <<<"$gtk4_theme" || fail 'DINX GTK4 control surface is missing'
 grep -Fq 'background-color: #263249' <<<"$gtk4_theme" || fail 'DINX GTK4 hover state is missing'
 if grep -Eq '#(31415d|151923|2859a8)' <<<"$gtk4_theme"; then
   fail 'DINX GTK4 contains an out-of-contract color'
 fi
 calamares_stylesheet=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/branding/dinx/stylesheet.qss)
-grep -Fq 'font-family: Cantarell;' <<<"$calamares_stylesheet" || fail 'Calamares font family is missing'
-grep -Fq 'font-size: 11pt;' <<<"$calamares_stylesheet" || fail 'Calamares font size is missing'
+grep -Fq 'font-family: Noto Sans;' <<<"$calamares_stylesheet" || fail 'Calamares font family is missing'
+grep -Fq 'font-size: 10pt;' <<<"$calamares_stylesheet" || fail 'Calamares font size is missing'
 grep -Fq 'border-radius: 0' <<<"$calamares_stylesheet" || fail 'Calamares geometry contract is missing'
 if grep -Eq 'border-radius: [1-9]|#(31415d|151923|2859a8)' <<<"$calamares_stylesheet"; then
   fail 'Calamares contains an out-of-contract geometry or color'
 fi
 qt6ct_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/qt6ct.conf)
 grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/noctalia.conf' <<<"$qt6ct_config" || fail 'Qt6ct Noctalia color path is missing'
-grep -Fq 'general="Cantarell,11' <<<"$qt6ct_config" || fail 'Qt6ct Cantarell font contract is missing'
+grep -Fq 'general="Noto Sans,10' <<<"$qt6ct_config" || fail 'Qt6ct Noto Sans font contract is missing'
 swayimg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/swayimg/init.lua)
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' <<<"$swayimg_config" || fail 'DINX Swayimg surface is missing'
-grep -Fq 'swayimg.text.font = "Cantarell"' <<<"$swayimg_config" || fail 'Swayimg font contract is missing'
-grep -Fq 'swayimg.text.size = 11' <<<"$swayimg_config" || fail 'Swayimg text size does not match Cantarell 11'
+grep -Fq 'swayimg.text.font = "Noto Sans"' <<<"$swayimg_config" || fail 'Swayimg font contract is missing'
+grep -Fq 'swayimg.text.size = 10' <<<"$swayimg_config" || fail 'Swayimg text size does not match Noto Sans 10'
 gtk_index=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/index.theme)
 grep -Fq 'Name=DINX' <<<"$gtk_index" || fail 'DINX GTK theme index is missing'
 grep -Fq 'IconTheme=Adwaita' <<<"$gtk_index" || fail 'DINX icon theme bridge is missing'
@@ -409,6 +412,13 @@ grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is 
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 grep -Fq 'QT_QPA_PLATFORMTHEME=' <<<"$shell_config" || fail 'Qt6ct session integration is missing'
 grep -Fq 'NOCTALIA_COLOR_SCHEME=' <<<"$shell_config" || fail 'Noctalia color scheme session integration is missing'
+grep -Fq 'export SHELL=/bin/fish' <<<"$shell_config" || fail 'DINX POSIX shell default is not Fish'
+fish_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/fish/config.fish)
+grep -Fq 'set -gx SHELL /bin/fish' <<<"$fish_config" || fail 'DINX Fish shell default is missing'
+useradd_defaults=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/default/useradd)
+grep -Fq 'SHELL=/bin/fish' <<<"$useradd_defaults" || fail 'new-user shell default is not Fish'
+users_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/users.conf)
+grep -Fq 'shell: /bin/fish' <<<"$users_config" || fail 'Calamares user shell is not Fish'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || fail 'Phyto is not the default directory handler'
 grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'

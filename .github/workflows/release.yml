@@ -261,7 +261,7 @@ jobs:
           The installer contract is qualified in CI on disposable BIOS and UEFI disks, but physical hardware
           installation, installed-ISO upgrades, filesystem rollback and data preservation remain unsupported;
           verify the target device and read the installation guide before using either destructive tool.
-          The live account is \`dinx\` / \`dinx\`; it is disposable and must never be reused.
+          The live session automatically opens the disposable \`dinx\` account; no username or password is requested. If ReGreet appears unexpectedly, select \`dinx\` / \`Labwc (DINX)\` and use the disposable password \`dinx\` only for diagnosis; never reuse it.
           EOF
       - name: Attest release provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4

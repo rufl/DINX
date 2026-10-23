@@ -1,10 +1,10 @@
 [GTK]
-# DINX uses the same dark palette and Cantarell typography as the session.
+# DINX follows CachyOS's Noto Sans UI typography.
 application_prefer_dark_theme = true
 theme_name = "DINX"
 icon_theme_name = "Adwaita"
 cursor_theme_name = "Adwaita"
-font_name = "Cantarell 11"
+font_name = "Noto Sans 10"
 cursor_blink = true
 
 [commands]

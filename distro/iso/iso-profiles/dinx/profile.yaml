@@ -31,6 +31,7 @@ rootfs:
     - elogind
     - exfatprogs
     - ffmpeg
+    - fish
     - file-roller
     - flatpak
     - fwupd
@@ -66,7 +67,7 @@ rootfs:
     - wdisplays
     - kolourpaint
     - adw-gtk-theme
-    - cantarell-fonts
+    - noto-fonts
     - firefox
     - pipewire
     - pipewire-pulse

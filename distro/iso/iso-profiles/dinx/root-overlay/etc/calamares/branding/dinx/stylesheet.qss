@@ -2,8 +2,8 @@ QMainWindow,
 QWidget {
     background: #0b0d12;
     color: #d7dde8;
-    font-family: Cantarell;
-    font-size: 11pt;
+    font-family: Noto Sans;
+    font-size: 10pt;
 }
 
 QFrame#sidebarApp,

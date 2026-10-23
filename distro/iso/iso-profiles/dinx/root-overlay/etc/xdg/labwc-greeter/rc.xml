@@ -2,6 +2,6 @@
 <labwc_config>
   <theme>
     <cornerRadius>0</cornerRadius>
-    <font name="Cantarell" size="11" />
+    <font name="Noto Sans" size="10" />
   </theme>
 </labwc_config>

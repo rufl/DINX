@@ -15,6 +15,11 @@ architecture="$root/docs/architecture.md"
 compatibility="$root/docs/compatibility.md"
 pt_architecture="$root/docs/pt-BR/architecture.md"
 pt_compatibility="$root/docs/pt-BR/compatibility.md"
+shell_profile="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh"
+fish_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"
+useradd_defaults="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/useradd"
+users_conf="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/modules/users.conf"
+labwc_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/environment"
 
 alternate_session_entries=(
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-aqueous.desktop"
@@ -27,13 +32,13 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$labwc" "$autostart" "$wrapper" "$session" "$noctalia" "$lock" "$idle" "$desktop"; do
+for path in "$profile" "$labwc" "$autostart" "$wrapper" "$session" "$noctalia" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" "$useradd_defaults" "$users_conf" "$labwc_environment"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
 
-for package in labwc brightnessctl swayidle swaylock; do
+for package in labwc brightnessctl swayidle swaylock fish; do
   grep -Fq "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in aqueous-core aqueous-session pearl; do
@@ -41,6 +46,11 @@ for package in aqueous-core aqueous-session pearl; do
     fail "$package is exposed before its dinit-native session adaptation is qualified"
   fi
 done
+grep -Fq 'export SHELL=/bin/fish' "$shell_profile" || fail 'POSIX shell default is not Fish'
+grep -Fq 'set -gx SHELL /bin/fish' "$fish_config" || fail 'Fish system shell default is missing'
+grep -Fq 'SHELL=/bin/fish' "$useradd_defaults" || fail 'new-user shell default is not Fish'
+grep -Fq 'shell: /bin/fish' "$users_conf" || fail 'Calamares user shell is not Fish'
+grep -Fq 'SHELL=/bin/fish' "$labwc_environment" || fail 'labwc session shell default is not Fish'
 
 for entry in "${alternate_session_entries[@]}"; do
   [[ ! -e "$entry" ]] || fail "unsupported alternate session entry is shipped: $entry"

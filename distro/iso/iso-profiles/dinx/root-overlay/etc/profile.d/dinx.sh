@@ -1,4 +1,6 @@
 # DINX shell defaults are deliberately small so recovery TTYs remain usable.
+# Fish is the DINX login shell; keep this POSIX fallback for recovery and non-Fish callers.
+export SHELL=/bin/fish
 export TERMINAL="${TERMINAL:-dinx-terminal}"
 export EDITOR="${EDITOR:-nocted}"
 export VISUAL="${VISUAL:-$EDITOR}"

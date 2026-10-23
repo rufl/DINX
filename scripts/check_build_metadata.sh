@@ -90,8 +90,13 @@ source_env_sha=$(sha256sum "$repo_root/distro/packages/noctty/source.env" | cut 
 compression_wrapper_sha=$(sha256sum "$repo_root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 [[ "$(read_value compression_wrapper_sha256)" == "$compression_wrapper_sha" ]] \
   || fail 'compression wrapper checksum does not match the checked-out source'
-if [[ -n "${GITHUB_SHA:-}" && "$(read_value commit)" != "$GITHUB_SHA" ]]; then
-  fail "metadata commit does not match GITHUB_SHA: $(read_value commit) != $GITHUB_SHA"
+checkout_commit=$(git -C "$repo_root" rev-parse HEAD) \
+  || fail 'checked-out commit cannot be resolved'
+metadata_commit=$(read_value commit)
+[[ "$metadata_commit" == "$checkout_commit" ]] \
+  || fail "metadata commit does not match checked-out source: $metadata_commit != $checkout_commit"
+if [[ -n "${GITHUB_SHA:-}" && "$GITHUB_SHA" != "$checkout_commit" && "$GITHUB_SHA" != "$(printf '%040d' 0)" ]]; then
+  fail "GITHUB_SHA does not match checked-out source: $GITHUB_SHA != $checkout_commit"
 fi
 
 printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true repository_inputs=true signed_package_repository=true source_checksums=true iso_binding=%s\n' \

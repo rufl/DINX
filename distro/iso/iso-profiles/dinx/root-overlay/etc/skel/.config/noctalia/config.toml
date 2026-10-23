@@ -93,7 +93,7 @@ launcher_position = "none"
 pinned = ["firefox", "dinxpanel", "dinitui", "io.github.movacx.bc250-control-center", "org.aqueous.Phyto", "com.pori.app", "foot", "com.noctty.NOCTTY", "com.noctty.NoctEd"]
 
 [shell]
-font_family = "Cantarell"
+font_family = "Noto Sans"
 settings_window_translucent = false
 
 [shell.animation]

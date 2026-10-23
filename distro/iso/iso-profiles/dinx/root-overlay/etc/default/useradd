@@ -1,0 +1,2 @@
+# DINX uses Fish as the default shell for live and newly created users.
+SHELL=/bin/fish

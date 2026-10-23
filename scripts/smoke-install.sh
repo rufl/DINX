@@ -136,7 +136,7 @@ chroot "$target_dir" /usr/bin/pacman -R --noconfirm \
   artix-live-base artix-live-dinit calamares calamares-extensions >/dev/null
 
 printf 'smoke-install: creating the Calamares user and persistent fstab\n'
-chroot "$target_dir" /usr/bin/useradd --create-home --user-group --shell /bin/bash \
+chroot "$target_dir" /usr/bin/useradd --create-home --user-group --shell /bin/fish \
   --groups users,audio,video,network,storage,wheel dinx
 printf 'dinx:dinx\n' | chroot "$target_dir" /usr/bin/chpasswd
 root_uuid=$(blkid -s UUID -o value "$root_device")

@@ -189,7 +189,7 @@ jobs:
             --volume "$RUNNER_TEMP/dinx-artools:/var/lib/artools/buildiso" \
             --workdir /workspace \
             --env DINX_ISO_OUTPUT=/workspace/dist/iso \
-            --env DINX_COMMIT="$GITHUB_SHA" \
+            --env DINX_COMMIT="$(git rev-parse HEAD)" \
             --env DINX_RUN_ID="$GITHUB_RUN_ID" \
             --env DINX_REPOSITORY="$GITHUB_REPOSITORY" \
             --env DINX_PACKAGE_SIGNING_KEY \

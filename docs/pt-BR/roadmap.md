@@ -149,7 +149,7 @@ Gate de release P3:
 - o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
 - o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
 - os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, Phyto, File Roller, GParted, TTY de recuperação e comportamento de hardware.
-- entregue a sessão alternativa Aqueous 1.0.5/Pearl 0.3.0 por wrappers DINX diretos: o greeter inicia Aqueous, o filho de init inicia os helpers de sessão da DINX e o Pearl, e nenhuma unidade upstream de `uwsm` ou systemd de usuário é instalada; permanece apenas a biblioteca de compatibilidade `systemd-libs` do Aqueous;
+- entregue a sessão alternativa Aqueous 1.0.5/Pearl 0.3.0 por wrappers DINX diretos: o greeter inicia Aqueous, o filho de init inicia os helpers de sessão da DINX e o Pearl, o bootstrap de atividade do Aqueous usa identidade direta de processo dinit e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
 
 **Gates de release restantes:**
 

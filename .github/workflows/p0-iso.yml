@@ -267,7 +267,6 @@ jobs:
                 qt6-base \
                 shaderc \
                 scdoc \
-                systemd-libs \
                 vulkan-headers \
                 vulkan-icd-loader \
                 gtk4-layer-shell \

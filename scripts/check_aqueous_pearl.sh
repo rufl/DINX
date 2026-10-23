@@ -18,7 +18,7 @@ fail() {
 for path in \
   "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
-  "$aqueous_dir/systemd-library.patch" \
+  "$aqueous_dir/dinit.patch" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
@@ -59,11 +59,19 @@ grep -Fq '$AQUEOUS_SOURCE_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous sourc
 grep -Fq '$AQUEOUS_WLROOTS_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous wlroots checksum is not wired to source.env'
 grep -Fq 'settingsApplication/build.zig' "$aqueous_dir/PKGBUILD" || fail 'Aqueous config helper is not built'
 grep -Fq 'aqueous-config' "$aqueous_dir/PKGBUILD" || fail 'Aqueous config helper is not packaged'
-grep -Fq "'systemd-libs'" "$aqueous_dir/PKGBUILD" || fail 'Aqueous compatibility library dependency is not explicit'
-grep -Fq 'systemd-library.patch' "$aqueous_dir/PKGBUILD" \
-  || fail 'Aqueous compatibility link patch is not applied'
+if grep -Fq "'systemd-libs'" "$aqueous_dir/PKGBUILD"; then
+  fail 'Aqueous must not depend on systemd-libs'
+fi
+grep -Fq 'dinit.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous dinit patch is not applied'
 grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
-  || fail 'Aqueous compatibility patch is not applied reproducibly'
+  || fail 'Aqueous dinit patch is not applied reproducibly'
+grep -Fq '@@ -292,1 +292,0 @@' "$aqueous_dir/dinit.patch" \
+  || fail 'Aqueous build still links systemd'
+grep -Fq '@@ -718,1 +718,0 @@' "$aqueous_dir/dinit.patch" \
+  || fail 'Aqueous keyboard test still links systemd'
+grep -Fq 'compositor/aqueous/activity_bootstrap.c' "$aqueous_dir/dinit.patch" \
+  || fail 'Aqueous activity bootstrap is not patched for dinit'
 if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$aqueous_dir/PKGBUILD" \
   || grep -Eiq '(^|[[:space:]])(systemctl|uwsm)([[:space:]]|$)' "$aqueous_dir/PKGBUILD"; then
   fail 'Aqueous recipe contains a systemd init, systemctl or uwsm dependency/command'
@@ -82,6 +90,9 @@ fi
 grep -Fq 'build_package aqueous' "$workflow" || fail 'workflow does not build Aqueous'
 grep -Fq 'build_package pearl' "$workflow" || fail 'workflow does not build Pearl'
 grep -Fq '                scdoc \' "$workflow" || fail 'workflow does not install Aqueous man-page builder'
+if grep -Fq '                systemd-libs \' "$workflow"; then
+  fail 'workflow still installs systemd-libs for Aqueous'
+fi
 grep -Fq 'scripts/check_aqueous_pearl.sh' "$workflow" || fail 'workflow does not run the Aqueous/Pearl contract'
 grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not run the session contract'
 

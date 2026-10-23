@@ -54,7 +54,7 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 
 **Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO.
 
-**Aqueous 1.0.5** e **Pearl 0.3.0** também vêm na ISO base. `Aqueous + Pearl (DINX)` é uma entrada do greeter respaldada por wrappers DINX: inicia o Aqueous diretamente, executa os helpers de sessão da DINX e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O Aqueous mantém apenas `systemd-libs` como biblioteca de compatibilidade. `Labwc + Noctalia` continua sendo a sessão padrão; a DINX não faz fallback silencioso se a sessão alternativa falhar.
+**Aqueous 1.0.5** e **Pearl 0.3.0** também vêm na ISO base. `Aqueous + Pearl (DINX)` é uma entrada do greeter respaldada por wrappers DINX: inicia o Aqueous diretamente, executa os helpers de sessão da DINX e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O bootstrap de atividade direto sobre dinit autoriza o Pearl por pidfd e verificações do executável e do ambiente; a sessão não adiciona pacote nem runtime systemd. `Labwc + Noctalia` continua sendo a sessão padrão; a DINX não faz fallback silencioso se a sessão alternativa falhar.
 
 ## Estado atual
 

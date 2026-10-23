@@ -1,0 +1,76 @@
+diff --git a/compositor/build.zig b/compositor/build.zig
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -292,1 +292,0 @@
+-        river.root_module.linkSystemLibrary("libsystemd", .{});
+@@ -718,1 +718,0 @@
+-        keyboard_test.root_module.linkSystemLibrary("libsystemd", .{});
+diff --git a/compositor/aqueous/activity_bootstrap.c b/compositor/aqueous/activity_bootstrap.c
+--- a/compositor/aqueous/activity_bootstrap.c
++++ b/compositor/aqueous/activity_bootstrap.c
+@@ -19,8 +19,6 @@
+ #include <sys/un.h>
+ #include <time.h>
+ #include <unistd.h>
+-#include <systemd/sd-bus.h>
+-#include <systemd/sd-login.h>
+ #ifndef SO_PEERPIDFD
+ #define SO_PEERPIDFD 77
+ #endif
+@@ -28,7 +26,7 @@
+ struct bootstrap {
+     int listener, peer, peer_pidfd, capability, owner_pidfd;
+     pid_t peer_pid, owner_pid;
+-    char path[108], ipc[108], unit[80], launcher[PATH_MAX];
++    char path[108], ipc[108], launcher[PATH_MAX];
+     pthread_t worker;
+     bool working, consumed;
+     atomic_bool done;
+@@ -83,28 +81,7 @@
+     if (exe >= 0) close(exe);
+     if (wrapper >= 0) close(wrapper);
+     if (!matches) return false;
+-    char *unit = NULL;
+-    if (sd_pidfd_get_user_unit(b->peer_pidfd, &unit) < 0) return false;
+-    matches = !strcmp(unit, b->unit);
+-    free(unit);
+-    if (!matches) return false;
+-    sd_bus *bus = NULL;
+-    sd_bus_message *reply = NULL;
+-    bool allowed = false;
+-    if (sd_bus_open_user(&bus) < 0) goto out;
+-    sd_bus_set_method_call_timeout(bus, 500000);
+-    if (sd_bus_call_method(bus, "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+-            "org.freedesktop.systemd1.Manager", "GetUnit", NULL, &reply, "s", b->unit) < 0) goto out;
+-    const char *unit_path;
+-    if (sd_bus_message_read(reply, "o", &unit_path) < 0) goto out;
+-    uint32_t main_pid = 0;
+-    if (sd_bus_get_property_trivial(bus, "org.freedesktop.systemd1", unit_path,
+-            "org.freedesktop.systemd1.Service", "MainPID", NULL, 'u', &main_pid) < 0) goto out;
+-    allowed = main_pid == (uint32_t)b->peer_pid && alive(b->peer_pidfd);
+-out:
+-    sd_bus_message_unref(reply);
+-    sd_bus_unref(bus);
+-    return allowed;
++    return matches;
+ }
+ static void *worker(void *data) {
+     struct bootstrap *b = data;
+@@ -127,15 +104,15 @@
+ void *aq_activity_bootstrap_create(const char *ipc, const char *unit) {
+     struct bootstrap *b = calloc(1, sizeof(*b));
+     if (!b) return NULL;
++    (void)unit;
+     atomic_init(&b->done, false);
+     b->listener = b->peer = b->peer_pidfd = b->capability = b->owner_pidfd = -1;
+-    if (strlen(ipc) >= sizeof(b->ipc) || strlen(unit) >= sizeof(b->unit)) goto fail;
++    if (strlen(ipc) >= sizeof(b->ipc)) goto fail;
+     strcpy(b->ipc, ipc);
+     strcpy(b->path, ipc);
+     char *slash = strrchr(b->path, '/');
+     if (!slash || (size_t)(slash-b->path) + sizeof("/activity.sock") > sizeof(b->path)) goto fail;
+     strcpy(slash, "/activity.sock");
+-    strcpy(b->unit, unit);
+     ssize_t n = readlink("/proc/self/exe", b->launcher, sizeof(b->launcher)-1);
+     if (n < 0) goto fail;
+     b->launcher[n] = 0;

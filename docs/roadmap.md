@@ -149,7 +149,7 @@ P3 release gate:
 - build metadata now binds the recorded ISO byte count and SHA-512 to the exact artifact checked by CI and the tagged release preflight;
 - metadata records the largest installed packages so size regressions have an actionable diagnostic;
 - the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, Phyto, File Roller, GParted, recovery TTY and hardware behavior.
-- shipped the Aqueous 1.0.5/Pearl 0.3.0 alternate session through direct DINX wrappers: the greeter launches Aqueous, the init child starts the DINX user-session helpers and Pearl, and no upstream `uwsm` or systemd user units are installed; only Aqueous's `systemd-libs` compatibility library remains;
+- shipped the Aqueous 1.0.5/Pearl 0.3.0 alternate session through direct DINX wrappers: the greeter launches Aqueous, the init child starts the DINX user-session helpers and Pearl, the Aqueous activity bootstrap uses direct dinit process identity, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
 
 **Remaining release gates:**
 

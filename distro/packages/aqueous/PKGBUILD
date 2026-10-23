@@ -25,7 +25,6 @@ depends=(
   'glib2'
   'fontconfig'
   'mesa'
-  'systemd-libs'
   'seatd'
   'libdisplay-info'
   'libliftoff'
@@ -70,7 +69,7 @@ sha256sums=("$AQUEOUS_SOURCE_SHA256" "$AQUEOUS_WLROOTS_SHA256")
 
 prepare() {
   cd "$srcdir/Aqueous-$pkgver"
-  patch --forward --fuzz=0 -Np1 < "$startdir/systemd-library.patch"
+  patch --forward --fuzz=0 -Np1 < "$startdir/dinit.patch"
 }
 
 build() {

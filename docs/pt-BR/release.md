@@ -23,6 +23,8 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 ## Snapshot validado atual
 
 A compilação compacta atual da Alpha 9 é a [execução CI 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) para a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. Ela passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO compacta, boot e payload gráfico no QEMU, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, assinatura persistente de pacotes, atestação de procedência e publicação do release. A ISO direta publicada tem 2.008.801.280 bytes e SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`; o snapshot do repositório estável assinado é `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
+
+Uma validação pós-release separada na `main`, a [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) no commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, concluiu em 52m02s após passar pelos checks de build, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload. Ela confirma os contratos depois do snapshot publicado, mas não publicou outro asset; a Alpha 9 continua sendo o release atual.
 O release agora usa o caminho determinístico de ISO compacta de
 `scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86, blocos de
 1 MiB e dicionário de 1 MiB, com limite estrito abaixo de 2 GiB por asset do

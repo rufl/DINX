@@ -5,8 +5,8 @@
 <h1 align="center">DINX</h1>
 
 <p align="center">
-  <strong>Uma versão alpha prática do Artix Linux com dinit, desktop Wayland rápido e um caminho claro para gaming.</strong><br>
-  Pouco footprint. Limites explícitos. Nenhuma mudança silenciosa no sistema.
+  <strong>Artix Linux + dinit, com um desktop Wayland enxuto e explícito.</strong><br>
+  Um alpha público para testar a base, os limites e o caminho de instalação — sem esconder o que ainda falta.
 </p>
 
 <p align="center">
@@ -21,72 +21,75 @@
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
 </p>
 
-> **Software alpha público.** Faça backup antes de testar. O instalador é experimental; hardware físico e as afirmações de gaming ainda têm limites claros.
+> **Software alpha público.** Faça backup antes de testar. A ISO live e o instalador são experimentais; um boot bem-sucedido não é uma qualificação de hardware.
 
 ## Comece aqui
 
-| Se você quer… | Vá para |
+| Você quer… | Vá para |
 |---|---|
-| Baixar a imagem atual | [DINX v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9) |
-| Instalar e inicializar com segurança | [Guia de instalação](docs/pt-BR/install.md) |
-| Ver o que foi realmente qualificado | [Evidência P0](docs/pt-BR/p0-build.md) |
-| Entender os limites do alpha | [Roadmap](docs/pt-BR/roadmap.md) e [compatibilidade](docs/pt-BR/compatibility.md) |
-| Ver as mudanças da release | [Changelog](CHANGELOG.pt-BR.md) |
+| Baixar a imagem publicada | [DINX v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9) |
+| Verificar e instalar a ISO | [Guia de instalação](docs/pt-BR/install.md) |
+| Ver o que o CI realmente provou | [Status do build P0](docs/pt-BR/p0-build.md) |
+| Entender compatibilidade e limites | [Compatibilidade](docs/pt-BR/compatibility.md) · [Roadmap](docs/pt-BR/roadmap.md) |
+| Ler o processo de release | [Release alpha](docs/pt-BR/release.md) |
+| Consultar a licença e o REUSE | [Licenciamento](docs/pt-BR/licensing.md) |
 | Ler em inglês | [README em inglês](README.en.md) |
 
-## Alpha 9 em um minuto
+## Em resumo
 
-A [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9) é o snapshot público atual. A execução de release [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou os contratos estáticos, builds de pacotes Artix, criação e boot da ISO compacta, validação do payload gráfico, smokes do Calamares em BIOS/UEFI/Btrfs, instalação persistente e TTY de recuperação em discos descartáveis BIOS/UEFI, verificação de metadados, assinatura persistente de pacotes, atestação de procedência e publicação.
+DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e controlável:
 
-| Item | Evidência |
+- **Artix Linux + dinit** como base, sem trocar o init por systemd;
+- **labwc + Noctalia** como a sessão suportada;
+- **DinitUI** e **DINXPanel** para perfis de serviços, hardware, drivers e kernels;
+- **Calamares** para a instalação experimental, **GParted** para particionamento separado e **Pori** para discos e montagens persistentes via dinit;
+- **Phyto** como gerenciador de arquivos padrão e **File Roller** para abrir, criar e extrair arquivos compactados;
+- **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
+- o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
+- uma sessão **DINX Gaming** separada, com Gamescope, Steam e bibliotecas gráficas de 32 bits.
+
+`dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
+
+## O que fica fora da ISO base
+
+**Dome**, **Seafoam Settings** e **ZLS 0.16.0** são pacotes opcionais do repositório Seafoam assinado. Dome oferece monitoramento de recursos/processos; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted.
+
+**Aqueous** e **Pearl** continuam planejados como uma opção alternativa em Zig. O empacotamento upstream ainda depende de `uwsm` e unidades systemd de usuário, então não há uma entrada dessas sessões no greeter DINX. Labwc + Noctalia continua sendo o caminho suportado, sem fallback silencioso.
+
+## Estado atual
+
+| Item | Estado |
 |---|---|
-| ISO | 2.008.801.280 bytes, com ISO direta e checksum SHA-512 publicado |
-| Repositório DINX | Snapshot assinado `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827` |
-| Imagem | Artix Linux x86_64 com dinit |
-| Estágio | P5 — Beta de jogos; P4 DinitUI qualificada para o gate alpha |
+| Release publicado | `v0.1.0-alpha.9`, ISO direta de 2.008.801.280 bytes |
+| Base | Artix Linux x86_64 com dinit |
+| Fase | P5 — beta de jogos; P4 DinitUI qualificada para o gate alpha |
+| Validação da release | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
+| Validação mais recente da `main` | [Workflow 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077), verde após build, boot, payload gráfico, BIOS/UEFI, TTY, atestação e upload |
 
-## O que é a DINX
-
-A DINX é uma distribuição Artix focada em uma sessão desktop enxuta, legível e controlável:
-
-- **Artix Linux + dinit** como base;
-- **Wayland, labwc e Noctalia Shell** para a sessão gráfica;
-- **PipeWire, D-Bus, portais, polkit e aceleração GPU** no payload da ISO;
-- **DinitUI e DINXPanel** para serviços, perfis Normal/Lite/Gaming, atalhos de sistema, drivers e kernels Artix;
-- **sessão DINX Gaming** separada, com Gamescope/Steam e payload gráfico de 32 bits;
-- **Calamares, GParted, File Roller, Pori e Phyto** para instalação, particionamento, arquivos compactados, armazenamento e gerenciamento de arquivos; **wdisplays** e **shikane** cuidam da configuração de displays Wayland, e o kernel `ntfs3` cobre leitura e escrita NTFS;
-
-O monitor de sistema **Dome** é opcional e entregue pelo grupo de pacotes Seafoam assinado, não pela ISO base. Suas telas de recursos/processos continuam úteis no dinit; seu provedor opcional de serviços systemd fica indisponível por design.
-
-O mesmo grupo Seafoam opcional fornece o **Seafoam Settings**, um launcher nativo compacto em Zig/GTK4 para pontos de entrada de display, labwc, DinitUI, DINXPanel, Qt e Dome, além do **ZLS 0.16.0** para suporte de language server Zig no Nocted. Nenhum dos dois pacotes faz parte da ISO base; instale-os pelo repositório opcional assinado quando necessário.
-
-Noctty, Nocted e os demais contratos de integração ficam versionados junto com a distribuição quando isso reduz risco e mantém a ISO reproduzível.
-Aqueous e Pearl estão planejados como uma opção alternativa de compositor/shell em Zig, não como uma sessão incluída na Alpha 9. A sessão upstream atualmente depende de `uwsm` e unidades systemd de usuário; a DINX não exporá uma entrada de sessão até que um pacote nativo de dinit seja qualificado. Labwc + Noctalia continua sendo a sessão suportada, sem fallback silencioso para outro compositor.
-
-Execute `dinx-doctor` para obter um snapshot somente leitura da sessão atual, do limite do dinit, dos caminhos de armazenamento/display e dos pacotes DINX instalados. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente se também quiser consultar o socket do dinit de usuário; o comando nunca inicia, para, monta ou atualiza nada.
-
+A release Alpha 9 publica a ISO, checksum SHA-512, metadados, evidências QEMU e o repositório de pacotes DINX assinado. A validação da `main` não cria uma nova release; ela confirma que os contratos continuam verdes depois do snapshot publicado.
 
 ## Instalação rápida
 
-1. Baixe a release [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9). A ISO direta tem 2.008.801.280 bytes; verifique o arquivo SHA-512 publicado.
-2. Verifique antes de gravar:
+1. Baixe a ISO e o arquivo `.iso.sha512` da [release Alpha 9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
+2. No mesmo diretório, verifique o arquivo:
 
    ```bash
    sha512sum -c dinx-0.1.0-alpha.9-x86_64.iso.sha512
    ```
 
-3. Grave a ISO verificada no USB inteiro, inicialize em UEFI e selecione `Labwc (DINX)` no greeter. O login live de teste é `dinx` / `dinx`.
+3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
+4. Selecione `Labwc (DINX)` no greeter. O login live de teste é `dinx` / `dinx`.
 
-Leia o [guia de instalação](docs/pt-BR/install.md) antes de particionar. Ele cobre Windows side-by-side, recuperação por TTY, verificação de dispositivo e os limites do instalador.
+Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 
-## O que já foi provado
+## Evidência e limites
 
-| Qualificado no release | Ainda não alegado |
+| A qualificação atual cobre | Ainda não é alegado |
 |---|---|
-| Boot x86_64 em QEMU e payload gráfico esperado | Matriz de hardware físico |
-| Transação de particionamento Calamares BIOS/UEFI/Btrfs | Sessão DRM real e seleção gaming pelo greeter |
+| Boot x86_64 e payload gráfico em QEMU | Matriz de hardware físico |
+| Contratos de particionamento Calamares BIOS/UEFI/Btrfs | Secure Boot |
 | Instalação descartável BIOS/UEFI, primeiro boot dinit e TTY de recuperação | Steam autenticado, jogo comercial, controle e áudio PipeWire |
-| Checksums, metadados, atestação e repositório de pacotes DINX assinado | Suspensão/retomada, recuperação de GPU e upgrades/rollback da ISO instalada |
+| ISO compacta, checksums, metadados, atestação e repositório assinado | Suspensão/retomada, recuperação de GPU e upgrade/rollback da ISO instalada |
 
 ## Documentação
 
@@ -96,15 +99,15 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de particionar. Ele c
 - [Status do build P0](docs/pt-BR/p0-build.md)
 - [Roadmap](docs/pt-BR/roadmap.md)
 - [Processo de release](docs/pt-BR/release.md)
-- [Qualificação de hardware](docs/pt-BR/alpha7-qualification.md) — o utilitário mantém o nome `dinx-alpha7-hardware-report` por compatibilidade
+- [Qualificação de hardware](docs/pt-BR/alpha7-qualification.md)
 - [Fundação da ISO](distro/iso/README.pt-BR.md)
 - [Modelo de segurança](docs/pt-BR/security-model.md)
+- [Licenciamento e REUSE](docs/pt-BR/licensing.md)
 - [Changelog](CHANGELOG.pt-BR.md)
-- [Licença Apache 2.0](LICENSE)
 
-## Código e contratos
+## Código, contratos e licença
 
-A DINX é um monorepo público para manter juntos os contratos do desktop, pacotes, perfil da ISO, testes de qualificação e ferramentas de release. Os aplicativos devem integrar-se profundamente à plataforma, mas continuar utilizáveis em outros sistemas Linux quando seus requisitos estiverem disponíveis.
+Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O archive versionado do Noctty é uma fonte upstream separada sob MIT; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
 
 - [Código no GitHub](https://github.com/rufl/DINX)
 - [Issues](https://github.com/rufl/DINX/issues)

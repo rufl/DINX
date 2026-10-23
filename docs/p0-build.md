@@ -107,7 +107,7 @@ The Calamares partition contract is checked before the container build: a 1 GiB 
 For a second diagnostic capture after input, also set `DINX_QEMU_POST_SCREENSHOT`, optionally `DINX_QEMU_POST_SCREENSHOT_DELAY` and `DINX_QEMU_POST_KEYS`. This does not prove that the greeter accepted credentials.
 
 
-## Latest observed successful run
+## Latest published release run
 
 Run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for tag `v0.1.0-alpha.9` on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404` completed every release workflow step successfully, including build-metadata verification:
 
@@ -122,6 +122,10 @@ Run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for tag
 
 
 This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha gate. It proves the package, ISO, VM boot, graphical payload, Calamares supported-layout transaction smokes, disposable BIOS and UEFI persistent-install/recovery paths and provenance contracts. It does not prove authenticated Steam/game use, a real DRM gaming display, controller/audio hardware, physical firmware or hardware installation, upgrades, rollback, BitLocker/hibernated Windows resizing or long-term hardware service health.
+
+## Latest post-release `main` validation
+
+Run [39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) on `main` commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb` completed in 52m02s after passing the same package/profile contracts, compact ISO build, QEMU boot and graphical payload checks, BIOS/UEFI persistent-install and recovery-TTY smokes, provenance attestation and artifact upload. This is validation evidence only; it did not publish a new release.
 
 ## Earlier observed successful run
 

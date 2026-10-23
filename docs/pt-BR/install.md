@@ -1,4 +1,4 @@
-# Easy install da DINX
+# Instalação fácil da DINX
 
 [Português (Brasil)](install.md) · [English](../install.md)
 
@@ -6,6 +6,8 @@
 
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações da ISO instalada, rollback do filesystem ou preservação de dados.
 O projeto está atualmente na **P5 — Beta de jogos**. O workflow de validação com tag [execução 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou o build da ISO, boot e payload gráfico no QEMU, smokes de layouts suportados e de instalação persistente/recuperação do Calamares, verificação dos metadados de build, atestação de procedência e publicação do release. O prerelease público é a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), com uma ISO direta, checksum SHA-512 correspondente e repositório DINX estável assinado. A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
+
+A validação pós-release da `main`, [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) no commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, também concluiu em 52m02s com sucesso nos checks de build, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload. Ela não publicou outro release; a Alpha 9 continua sendo a imagem publicada atual.
 
 O Pori é a ferramenta gráfica de armazenamento dinit. Use-o para inspecionar discos e criar serviços persistentes de montagem em `/etc/dinit.d`; use o File Roller para abrir, criar e extrair arquivos compactados, o GParted para editar partições fora do instalador e o Calamares para a transação final de particionamento e instalação.
 

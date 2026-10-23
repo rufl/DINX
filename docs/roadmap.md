@@ -8,6 +8,8 @@ Milestones are capability gates, not calendar promises.
 
 **P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Tagged release run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404` is the current P0 evidence, including BIOS and UEFI disposable disks, the Calamares BIOS/UEFI/Btrfs transaction smoke, build-metadata verification, persistent package signing and release publication. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
 
+A post-release `main` validation, [run 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) on commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, completed in 52m02s with the same build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY, attestation and upload checks; it did not publish another release.
+
 ## P0 — foundation
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.

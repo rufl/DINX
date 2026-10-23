@@ -16,6 +16,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Added the DINX display persistence bridge: the wdisplays desktop entry, DINXPanel and Seafoam Settings use `dinx-wdisplays`; closing the editor atomically replaces the `DINX wdisplays` profile, reloads Shikane and keeps the layout across sessions.
 - Added the read-only `dinx-doctor` report for session, dinit, storage, display and package evidence; it never performs service, mount, package or network mutations.
 - Documented the Aqueous/Pearl boundary: their current `uwsm`/systemd user-session packaging is not exposed as a DINX session until a dinit-native adaptation is qualified.
+- Refreshed the English and Brazilian Portuguese landing pages and operational documentation with the published Alpha 9 snapshot plus the successful post-release `main` validation run `39934458077`; the docs distinguish validation evidence from published release assets.
+- Added repository-wide REUSE metadata with Apache-2.0 coverage for DINX-owned files, canonical license texts in `LICENSES/`, an explicit MIT exception for the verbatim Noctty archive and bilingual licensing guides.
 
 
 ## v0.1.0-alpha.9 — 2026-10-23

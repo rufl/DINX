@@ -109,7 +109,7 @@ O contrato de particionamento do Calamares é verificado antes do build do conta
 Para uma segunda captura diagnóstica após entrada de teclas, defina também `DINX_QEMU_POST_SCREENSHOT` e, opcionalmente, `DINX_QEMU_POST_SCREENSHOT_DELAY` e `DINX_QEMU_POST_KEYS`. Isso não prova que o greeter aceitou as credenciais.
 
 
-## Última execução bem-sucedida observada
+## Última execução de release publicada
 
 A execução [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), para a tag `v0.1.0-alpha.9` no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, concluiu com sucesso todas as etapas do workflow de release, incluindo a verificação dos metadados de build:
 
@@ -124,6 +124,10 @@ A execução [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082
 
 
 Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, dos smokes transacionais dos layouts suportados pelo Calamares, dos caminhos persistentes/recuperação em BIOS e UEFI descartáveis e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, firmware ou instalação em hardware físico, atualizações, rollback, redimensionamento de Windows com BitLocker/hibernação ou saúde de serviços em hardware por longo prazo.
+
+## Última validação pós-release da `main`
+
+A execução [39934458077](https://github.com/rufl/DINX/actions/runs/39934458077), no commit da `main` `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, concluiu em 52m02s após passar pelos mesmos contratos de pacote/perfil, build da ISO compacta, boot e payload gráfico no QEMU, smokes de instalação persistente/TTY de recuperação em BIOS e UEFI, atestação de procedência e upload do artefato. Esta é apenas evidência de validação; não publicou um novo release.
 
 ## Execução bem-sucedida anterior observada
 

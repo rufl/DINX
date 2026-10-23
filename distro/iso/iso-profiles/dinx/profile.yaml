@@ -2,7 +2,7 @@
 live-session:
   user: dinx
   password: dinx
-  autologin: false
+  autologin: true
   use-xlibre: false
   services:
     - metalog
@@ -157,6 +157,7 @@ livefs:
   packages:
     - artix-grub-live
     - mkinitcpio-nfs-utils
+    - dinx-live-autologin
   packages-init:
     dinit:
       - artix-live-dinit

@@ -306,8 +306,8 @@ if ([string]::IsNullOrWhiteSpace($bootKeys)) {
     $bootKeys = 'down,down,ret'
 }
 $postKeys = [Environment]::GetEnvironmentVariable('DINX_QEMU_POST_KEYS')
-if ([string]::IsNullOrWhiteSpace($postKeys)) {
-    $postKeys = 'ret,d,i,n,x,ret'
+if ($null -eq $postKeys) {
+    $postKeys = ''
 }
 $screenshotPath = Join-Path $PSScriptRoot 'evidence/dinx-qemu-graphical.ppm'
 $bootScreenshotPath = Join-Path $PSScriptRoot 'evidence/dinx-qemu-boot.ppm'
@@ -343,8 +343,10 @@ try {
     if ($visual) {
         Start-Sleep -Seconds $screenshotDelay
         Capture-Screen $monitor $screenshotPath 'graphical'
-        Send-Keys $monitor $postKeys
-        Write-Host "smoke-iso: sent post-screenshot QEMU keys: $postKeys"
+        if (-not [string]::IsNullOrWhiteSpace($postKeys)) {
+            Send-Keys $monitor $postKeys
+            Write-Host "smoke-iso: sent post-screenshot QEMU keys: $postKeys"
+        }
         Start-Sleep -Seconds $postScreenshotDelay
         Capture-Screen $monitor $postScreenshotPath 'post'
     } else {

@@ -58,7 +58,7 @@ relatório para cada alvo.
 
 ### Desktop
 
-- inicializar a sessão live e selecionar a sessão DINX normal no ReGreet;
+- inicializar a sessão live e verificar que ela abre diretamente na sessão DINX normal; se o ReGreet aparecer, registrar esse fallback e selecionar `Labwc (DINX)`;
 - verificar Wayland, labwc, Noctalia, áudio, rede e aceleração GPU;
 - se o suporte a NVIDIA for alegado, instalar `nvidia-open-dkms` com headers correspondentes, reiniciar e verificar render node, Vulkan e saída do Gamescope;
 - bloquear com `Super+L`;

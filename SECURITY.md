@@ -24,7 +24,7 @@ If private reporting is unavailable, contact the repository owner through the Gi
 
 ## Alpha-specific boundaries
 
-- The live image intentionally exposes the disposable test account `dinx` with password `dinx`; never reuse it elsewhere.
+- The live image automatically opens the disposable `dinx` account in `Labwc (DINX)`; the public `dinx` password remains only as a diagnostic fallback if the greeter appears. Physical boot access already grants control of the live machine, so autologin is not an authentication boundary. Never reuse the password elsewhere.
 - Verify the ISO checksum before writing removable media or booting it.
 - Do not place production credentials, personal data or private keys in the live session.
 - A successful boot is not evidence of production security, persistence safety or update safety.

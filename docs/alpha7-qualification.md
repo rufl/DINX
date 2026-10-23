@@ -55,7 +55,7 @@ resulting report path for each target.
 
 ### Desktop
 
-- boot live session and select the normal DINX session in ReGreet;
+- boot the live session and verify that it opens directly in the normal DINX session; if ReGreet appears, record that fallback path and select `Labwc (DINX)`;
 - verify Wayland, labwc, Noctalia, audio, network and GPU acceleration;
 - if NVIDIA support is claimed, install `nvidia-open-dkms` with matching headers, reboot, and verify render-node, Vulkan and Gamescope output;
 - lock with `Super+L`;

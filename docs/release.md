@@ -35,7 +35,7 @@ Each alpha release contains:
 
 - `dinx-<version>-x86_64.iso` when it fits GitHub's per-asset limit; older releases that exceed it use ordered `.iso.part-*` files plus `.iso.parts.json`;
 - the matching `.iso.sha512` file;
-- Linux QEMU boot-menu, graphical and post-input PPM captures plus the serial log;
+- Linux QEMU boot-menu, graphical and post-session PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
 - the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`;
 - `dinx-<version>-build-metadata.txt` — builder image, source commit, package snapshot, source checksums and ISO digest;
@@ -175,10 +175,10 @@ From the extracted package:
 
 The default command (`.\dinx.exe`) is equivalent. The launcher boots the ISO with
 QEMU, captures the graphical boot-menu frame before sending the tested boot keys,
-then sends the greeter key sequence, captures the initial greeter frame and a
-post-input session frame, validates all three as binary PPM files and terminates
-QEMU. Evidence is retained under `evidence\` beside the package. The bounded headless
-gate used by package qualification is:
+then captures the autologged-in session frame and a later post-session frame,
+validates all three as binary PPM files and terminates QEMU. Evidence is retained
+under `evidence\` beside the package. The bounded headless gate used by package
+qualification is:
 
 ```powershell
 .\dinx.exe --package-smoke
@@ -241,8 +241,7 @@ hardware/session evidence without changing system state.
 
 ## Release limits
 
-- The live account is `dinx` / `dinx`; it is public, disposable and must never be
-  reused.
+- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if ReGreet appears. It is never an authentication boundary and must not be reused.
 - The image is still an experimental disk installer without an installed-ISO upgrade,
   filesystem rollback or signed Secure Boot path. CI qualifies the offline rootfs
   contract on disposable BIOS and UEFI disks and captures a recovery-TTY frame; it

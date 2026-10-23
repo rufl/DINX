@@ -45,6 +45,7 @@ required_paths=(
   etc/calamares/settings.conf
   etc/default/grub.d/40-dinx-windows.cfg
   etc/dinit.d/greetd
+  etc/greetd/config.toml
   usr/bin/dinitui
   usr/bin/dinxpanel
   usr/share/applications/dinitui.desktop
@@ -270,6 +271,13 @@ if grep -Eq '^[[:space:]]*(menu_pixmap_style|selected_item_pixmap_style)[[:space
 fi
 grep -Fq 'desktop-color: "#0b0d12"' <<<"$grub_theme" || fail 'DINX GRUB background color is missing'
 grep -Fq 'selected_item_color = "#8fb8ff"' <<<"$grub_theme" || fail 'DINX GRUB accent color is missing'
+
+root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)
+grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-labwc --greeter"' <<<"$root_greetd_config" || fail 'installed greetd fallback session is incorrect'
+grep -Fq 'user = "greeter"' <<<"$root_greetd_config" || fail 'installed greetd fallback user is incorrect'
+if grep -Fq '[initial_session]' <<<"$root_greetd_config"; then
+  fail 'installed rootfs unexpectedly enables live autologin'
+fi
 
 regreet_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/regreet.toml)
 grep -Fq 'application_prefer_dark_theme = true' <<<"$regreet_config" || fail 'ReGreet dark mode is not enabled'
@@ -510,6 +518,8 @@ livefs_required_paths=(
   etc/dinit.d/boot.d/NetworkManager
   etc/dinit.d/boot.d/artix-live
   etc/dinit.d/boot.d/cyan-skillfish-governor-smu
+  etc/dinit.d/boot.d/dinx-live-autologin
+  etc/dinit.d/dinx-live-autologin
   etc/dinit.d/boot.d/greetd
   etc/dinit.d/boot.d/logind
   etc/dinit.d/boot.d/metalog
@@ -522,8 +532,15 @@ for path in "${livefs_required_paths[@]}"; do
 done
 
 live_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/artools/live.conf)
-grep -Fq 'AUTOLOGIN=false' <<<"$live_config" || fail 'live session autologin is not disabled'
+grep -Fq 'AUTOLOGIN=true' <<<"$live_config" || fail 'live session autologin is not enabled'
 grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not dinx'
+
+live_autologin_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
+grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologin initial session is missing'
+grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-labwc"' <<<"$live_autologin_wrapper" || fail 'live autologin command is incorrect'
+grep -Fq 'user = "dinx"' <<<"$live_autologin_wrapper" || fail 'live autologin user is incorrect'
+live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
+grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin service does not precede greetd'
 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'

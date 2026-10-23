@@ -38,7 +38,7 @@ Cada release alpha contém:
 
 - `dinx-<versão>-x86_64.iso` quando ela couber no limite por arquivo do GitHub; releases antigos que excedam o limite usam arquivos ordenados `.iso.part-*` mais `.iso.parts.json`;
 - o arquivo `.iso.sha512` correspondente;
-- capturas PPM do menu de boot, gráficas e pós-entrada do QEMU Linux, além do log serial;
+- capturas PPM do menu de boot, gráficas e da sessão posterior do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;
 - metadados do pacote Windows, manifesto de deploy ZTASH e `SHA256SUMS`;
 - `dinx-<versão>-build-metadata.txt` — imagem do builder, commit da fonte, snapshot de pacotes, checksums das fontes e digest da ISO;
@@ -180,10 +180,10 @@ No pacote extraído:
 
 O comando padrão (`.\dinx.exe`) é equivalente. O launcher inicia a ISO com QEMU,
 captura o quadro gráfico do menu de boot antes de enviar as teclas testadas,
-envia a sequência de teclas do greeter, captura o quadro inicial do greeter e um
-quadro da sessão após a entrada, valida os três como PPM binário e encerra o QEMU.
-As evidências ficam em `evidence\` ao lado do pacote. O gate headless limitado usado
-na qualificação do pacote é:
+captura o quadro da sessão aberta automaticamente e outro quadro posterior,
+valida os três como PPM binário e encerra o QEMU. As evidências ficam em
+`evidence\` ao lado do pacote. O gate headless limitado usado na qualificação do
+pacote é:
 
 ```powershell
 .\dinx.exe --package-smoke
@@ -247,7 +247,7 @@ evidências de hardware e sessão sem alterar o estado do sistema.
 
 ## Limites do release
 
-- A conta live é `dinx` / `dinx`; é pública, descartável e nunca deve ser reutilizada.
+- A imagem live faz autologin na conta descartável `dinx` e mantém a senha pública `dinx` apenas como fallback diagnóstico se o ReGreet aparecer. Ela nunca é uma fronteira de autenticação e não deve ser reutilizada.
 - A imagem ainda é um instalador de disco experimental, sem atualização da ISO instalada,
   rollback do filesystem ou caminho Secure Boot assinado. O CI qualifica o contrato
   offline do rootfs em discos BIOS e UEFI descartáveis e captura um quadro da TTY de

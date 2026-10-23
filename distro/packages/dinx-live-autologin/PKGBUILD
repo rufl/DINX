@@ -1,0 +1,20 @@
+pkgname=dinx-live-autologin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='DINX live-session autologin dinit service'
+arch=('any')
+url='https://github.com/rufl/DINX'
+license=('Apache-2.0')
+depends=('dinit' 'greetd')
+source=('dinx-live-autologin' 'dinx-live-autologin.service')
+sha256sums=('b79c9f2b5abe602968a545e24a7883ca94026d8ec297ad19844b3c026674ddb4' '4146cc3bd56017b716e4d4ab660ec9f80441ecb193c419bfb5868e91e749fe5f')
+
+package() {
+  install -Dm755 "$srcdir/dinx-live-autologin" \
+    "$pkgdir/usr/local/libexec/dinx-live-autologin"
+  install -Dm644 "$srcdir/dinx-live-autologin.service" \
+    "$pkgdir/etc/dinit.d/dinx-live-autologin"
+  install -d "$pkgdir/etc/dinit.d/boot.d"
+  ln -s ../dinx-live-autologin \
+    "$pkgdir/etc/dinit.d/boot.d/dinx-live-autologin"
+}

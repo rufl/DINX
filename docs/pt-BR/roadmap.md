@@ -29,7 +29,7 @@ Backlog:
 - manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
 - adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
 
-**Critério de saída:** um boot live limpo faz login gráfico, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis e o caminho transacional de pacotes assinados; atualizações da ISO instalada, rollback do filesystem e preservação de dados continuam gates de release.
+**Critério de saída:** um boot live limpo abre uma sessão gráfica, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis e o caminho transacional de pacotes assinados; atualizações da ISO instalada, rollback do filesystem e preservação de dados continuam gates de release.
 
 ## P1 — alpha pública 0.1
 

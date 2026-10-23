@@ -4,7 +4,7 @@
 
 A DINX é uma alpha pública. O modelo de segurança prioriza instalação segura, limites de confiança explícitos e capacidade de recuperação em vez de conveniência.
 
-A imagem live inclui intencionalmente a conta de teste descartável `dinx`, com senha `dinx`, para que o smoke gráfico possa fazer login. Essa credencial é pública, nunca deve ser reutilizada e não é adequada para um sistema instalado.
+A imagem live abre automaticamente a conta descartável `dinx` no `Labwc (DINX)`. Como quem consegue inicializar a ISO já controla a máquina live, um prompt de login adiciona atrito, mas não uma fronteira de segurança significativa. A senha pública `dinx` fica apenas como fallback diagnóstico se o ReGreet aparecer; o sistema instalado mantém sua política de login separada, criada pelo Calamares.
 
 ## Hipóteses de ameaça
 

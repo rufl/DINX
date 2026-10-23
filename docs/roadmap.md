@@ -28,7 +28,7 @@ Backlog:
 - retain a recovery TTY and document recovery from a broken graphical session;
 - add clean-build and VM boot/install smoke paths.
 
-**Exit criterion:** a clean live boot logs in graphically, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks and the signed package transaction path; installed-ISO upgrades, filesystem rollback and data preservation remain release gates.
+**Exit criterion:** a clean live boot opens a graphical session, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks and the signed package transaction path; installed-ISO upgrades, filesystem rollback and data preservation remain release gates.
 
 ## P1 — public alpha 0.1
 

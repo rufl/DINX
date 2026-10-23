@@ -68,6 +68,7 @@ on:
       - "scripts/check_bc250_control_center.sh"
       - "scripts/check_dinitui.sh"
       - "scripts/check_dinxpanel.sh"
+      - "scripts/check_dinx_live_autologin.sh"
       - "scripts/check_dinx_session.sh"
       - "scripts/check_dinx_doctor.sh"
       - "scripts/smoke_dinx_doctor.sh"
@@ -142,6 +143,8 @@ jobs:
         run: ./scripts/check_dinxpanel.sh
       - name: Verify DINX lock, idle, brightness and launcher hierarchy contract
         run: ./scripts/check_dinx_session.sh
+      - name: Verify live-session autologin boundary
+        run: ./scripts/check_dinx_live_autologin.sh
       - name: Verify read-only DINX doctor contract
         run: ./scripts/check_dinx_doctor.sh
       - name: Smoke-test read-only DINX doctor
@@ -441,6 +444,7 @@ jobs:
               rm -f "$icon_svg"
               build_package noctty
               pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
+              build_package dinx-live-autologin
               build_package swayimg
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
@@ -595,7 +599,6 @@ jobs:
           DINX_QEMU_BOOT_KEYS: down,down,ret
           DINX_QEMU_POST_SCREENSHOT: dist/iso/dinx/dinx-session-screen.ppm
           DINX_QEMU_POST_SCREENSHOT_DELAY: 10
-          DINX_QEMU_POST_KEYS: ret,d,i,n,x,ret
         run: scripts/smoke-iso.sh "$DINX_ISO"
 
       - name: Verify graphical ISO payload

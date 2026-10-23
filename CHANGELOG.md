@@ -17,6 +17,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Added the read-only `dinx-doctor` report for session, dinit, storage, display and package evidence; it never performs service, mount, package or network mutations.
 - Documented the Aqueous/Pearl boundary: their current `uwsm`/systemd user-session packaging is not exposed as a DINX session until a dinit-native adaptation is qualified.
 - Refreshed the English and Brazilian Portuguese landing pages and operational documentation with the published Alpha 9 snapshot plus the successful post-release `main` validation run `39934458077`; the docs distinguish validation evidence from published release assets.
+- Removed the manual live greeter step: the disposable ISO session now starts `Labwc (DINX)` through a live-only dinit autologin package, while the installed system and Calamares keep autologin disabled. ReGreet remains the live fallback if the initial session exits.
 - Added repository-wide REUSE metadata with Apache-2.0 coverage for DINX-owned files, canonical license texts in `LICENSES/`, an explicit MIT exception for the verbatim Noctty archive and bilingual licensing guides.
 
 

@@ -4,7 +4,7 @@
 
 DINX is a public alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
-The live image intentionally includes the disposable test account `dinx` with password `dinx` so the graphical smoke path can log in. This credential is public, must never be reused and is not suitable for an installed system.
+The live image automatically opens the disposable `dinx` account in `Labwc (DINX)`. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. The public `dinx` password remains only as a diagnostic fallback if ReGreet appears; the installed system keeps its separate Calamares-created login policy.
 
 ## Threat assumptions
 

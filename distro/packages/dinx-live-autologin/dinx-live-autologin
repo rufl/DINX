@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+live_conf=/etc/artools/live.conf
+config=/etc/greetd/config.toml
+
+if [ ! -r "$live_conf" ] || ! grep -Eq '^[[:space:]]*AUTOLOGIN=true([[:space:]]*)$' "$live_conf"; then
+  exit 0
+fi
+
+if [ ! -r "$config" ]; then
+  printf '%s\n' 'dinx-live-autologin: greetd configuration is missing' >&2
+  exit 1
+fi
+
+tmp=$(mktemp "${config}.dinx-live.XXXXXX")
+cleanup() {
+  rm -f "$tmp"
+}
+trap cleanup EXIT INT TERM
+
+cat > "$tmp" <<'EOF'
+[terminal]
+vt = 1
+
+[default_session]
+command = "dbus-run-session /usr/local/libexec/dinx-labwc --greeter"
+user = "greeter"
+
+[initial_session]
+command = "dbus-run-session /usr/local/libexec/dinx-labwc"
+user = "dinx"
+EOF
+
+chmod 0644 "$tmp"
+mv -f "$tmp" "$config"
+trap - EXIT INT TERM

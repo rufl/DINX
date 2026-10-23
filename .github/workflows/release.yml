@@ -206,7 +206,7 @@ jobs:
           ## Verification
 
           - SHA-512: \`${iso_name}.sha512\`
-          - Linux QEMU boot, graphical payload, boot-menu and automated greeter/session captures passed in CI.
+          - Linux QEMU boot, graphical payload, boot-menu and automated live-session captures passed in CI.
           - The persistent-install smoke copied the Calamares rootfs contract to disposable BIOS and UEFI disks, booted dinit and captured a recovery TTY frame.
           - GitHub artifact attestations cover the ISO or its parts, checksums, Windows package and release metadata. Verify with \`gh attestation verify <file> -R rufl/DINX\`.
           - \`${build_metadata_name}\` records the source commit, builder image, package snapshot and ISO digest.
@@ -249,7 +249,7 @@ jobs:
           \`${package_name}\` is a small launcher package. It downloads the URL
           pinned in \`dinx-iso.json\`, downloads and verifies each ISO part when required,
           assembles the ISO, verifies the full SHA-512, requires
-          \`qemu-system-x86_64.exe\`, and captures the boot-menu, greeter and post-input session
+          \`qemu-system-x86_64.exe\`, and captures the boot-menu and post-autologin session
           frames in a desktop Windows session. It does not install QEMU or a Windows
           service.
 

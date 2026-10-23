@@ -66,7 +66,7 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 | Release validation | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
 | Latest `main` validation | [Workflow 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077), green after build, boot, graphical payload, BIOS/UEFI, TTY, attestation and upload |
 
-Alpha 9 publishes the ISO, SHA-512 checksum, metadata, QEMU evidence and signed DINX package repository. The `main` validation is not a new release; it confirms that the contracts remain green after the published snapshot.
+Alpha 9 publishes the ISO, SHA-512 checksum, metadata, QEMU evidence and signed DINX package repository. The `main` validation is not a new release; it confirms that the contracts remain green after the published snapshot. The live-autologin change on `main` applies to the next ISO build; it does not change the already-published Alpha 9 artifact retroactively.
 
 ## Quick install
 
@@ -78,7 +78,7 @@ Alpha 9 publishes the ISO, SHA-512 checksum, metadata, QEMU evidence and signed 
    ```
 
 3. Write the verified ISO to the whole USB device — not a partition — and boot in UEFI mode.
-4. Select `Labwc (DINX)` in the greeter. The tested live login is `dinx` / `dinx`.
+4. The published Alpha 9 image follows its release snapshot. The next ISO built from `main` will open directly in `Labwc (DINX)`; no username or password will be requested.
 
 Read the [installation guide](docs/install.md) before touching a disk. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 

@@ -63,6 +63,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes gnupg libarchive-tools
 
+      - name: Unpack signed package repository artifact
+        run: |
+          set -euo pipefail
+          repository_archive=$(find dist/release-input -type f \
+            -name 'dinx-package-repository.tar' -print -quit)
+          test -n "$repository_archive"
+          tar -xf "$repository_archive" -C dist/release-input
+          test -f dist/release-input/packages/dinx.db.tar.gz
+
       - name: Assemble release assets
         env:
           GH_TOKEN: ${{ github.token }}

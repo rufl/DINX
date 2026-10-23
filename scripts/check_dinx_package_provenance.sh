@@ -72,6 +72,7 @@ for source_env in distro/packages/*/source.env; do
 done
 
 workflow=.github/workflows/p0-iso.yml
+release_workflow=.github/workflows/release.yml
 update_smoke=scripts/smoke_dinx_update.sh
 for required in \
   'scripts/check_dinx_package_provenance.sh' \
@@ -82,6 +83,8 @@ for required in \
   'DINX_PACKAGE_SIGNING_FINGERPRINT' \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
+  'Bundle signed package repository for artifact portability' \
+  'dist/dinx-package-repository.tar' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'makepkg --clean --nodeps --nocheck --noconfirm' \
   '--sign --key' \
@@ -93,6 +96,13 @@ for required in \
   'printf "noctty_source_env_sha256=%s\n"' \
   '--env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE"'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
+done
+for required in \
+  'Unpack signed package repository artifact' \
+  'tar -xf "$repository_archive" -C dist/release-input' \
+  'test -f dist/release-input/packages/dinx.db.tar.gz'; do
+  grep -Fq -- "$required" "$release_workflow" \
+    || fail "release workflow is missing package repository extraction: $required"
 done
 for required in \
   'pacman_run -Syy --noconfirm' \

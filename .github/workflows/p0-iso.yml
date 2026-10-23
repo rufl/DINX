@@ -616,6 +616,17 @@ jobs:
           printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
           printf 'metadata_path=%s\n' "$metadata_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
+      - name: Bundle signed package repository for artifact portability
+        run: |
+          set -euo pipefail
+          test -d dist/packages
+          tar --format=posix --owner=0 --group=0 --numeric-owner \
+            --directory dist \
+            --create \
+            --file dist/dinx-package-repository.tar \
+            packages
+          test -s dist/dinx-package-repository.tar
+
       - name: Smoke-test build metadata artifact binding
         run: ./scripts/smoke_build_metadata.sh
       - name: Verify build metadata
@@ -657,7 +668,7 @@ jobs:
             ${{ steps.artifact.outputs.iso_path }}
             ${{ steps.artifact.outputs.iso_path }}.sha512
             ${{ steps.artifact.outputs.metadata_path }}
-            dist/packages/**/*
+            dist/dinx-package-repository.tar
       - name: Upload alpha workflow artifact
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -670,5 +681,5 @@ jobs:
             dist/iso/**/*.sha512
             dist/iso/**/*.qemu.log
             dist/iso/**/*.ppm
-            dist/packages/**/*
+            dist/dinx-package-repository.tar
             dist/iso/**/build-metadata.txt

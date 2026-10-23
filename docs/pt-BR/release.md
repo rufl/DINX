@@ -27,7 +27,7 @@ A compilação compacta atual da Alpha 9 é a [execução CI 39924316082](https:
 Uma validação pós-release separada na `main`, a [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) no commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, concluiu em 52m02s após passar pelos checks de build, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload. Ela confirma os contratos depois do snapshot publicado, mas não publicou outro asset; a Alpha 9 continua sendo o release atual.
 O release agora usa o caminho determinístico de ISO compacta de
 `scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86, blocos de
-1 MiB e dicionário de 1 MiB, com limite estrito abaixo de 2 GiB por asset do
+256 KiB e dicionário de 256 KiB, com limite estrito abaixo de 2 GiB por asset do
 GitHub. A Alpha 9 publica uma ISO direta; releases antigos ainda podem usar
 partes da ISO.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.

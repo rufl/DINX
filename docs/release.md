@@ -23,8 +23,8 @@ The latest compact Alpha 9 build is [CI run 39924316082](https://github.com/rufl
 
 A separate post-release validation on `main`, [run 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) at commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, completed in 52m02s after passing the build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY, attestation and upload checks. It confirms the contracts after the published snapshot but did not publish another asset; Alpha 9 remains the current release.
 The release now uses the deterministic compact-ISO path from
-`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 1 MiB
-blocks and a 1 MiB dictionary, with a strict ISO budget below GitHub's 2 GiB
+`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 256 KiB
+blocks and a 256 KiB dictionary, with a strict ISO budget below GitHub's 2 GiB
 per-asset limit. Alpha 9 publishes one direct ISO asset; older releases may
 still use split ISO parts.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.

@@ -79,7 +79,7 @@ The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. 
 
 The build wrapper prepends `scripts/iso-tools/mksquashfs` to the builder `PATH`.
 It forces xz-compressed SquashFS images with the tool's supported xz preset,
-x86 BCJ, 1 MiB blocks and a 1 MiB dictionary. Kernel sources, pacman package
+x86 BCJ, 256 KiB blocks and a 256 KiB dictionary. Kernel sources, pacman package
 caches and build logs are excluded from the final image; build-only `squashfs-tools`
 remains in the builder environment rather than the runtime payload. The P0 budget rejects a
 built ISO at or above GitHub's 2 GiB per-asset limit; Alpha 9 meets this target with one direct ISO asset at 2,008,801,280 bytes.

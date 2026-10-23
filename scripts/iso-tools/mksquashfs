@@ -31,8 +31,8 @@ done
 # source/cache/log payloads from the final SquashFS image.
 exec "$real_mksquashfs" "${filtered[@]}" \
   -comp xz \
-  -b 1M \
+  -b 256K \
   -Xbcj x86 \
-  -Xdict-size 1M \
+  -Xdict-size 256K \
   -wildcards \
   -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

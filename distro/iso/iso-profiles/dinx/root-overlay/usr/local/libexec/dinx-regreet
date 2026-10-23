@@ -5,4 +5,4 @@ export GTK_THEME="${GTK_THEME:-DINX:dark}"
 export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
 export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
 regreet
-mmsg dispatch quit
+kill -TERM "$PPID"

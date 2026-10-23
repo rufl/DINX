@@ -194,7 +194,6 @@ required_paths=(
   usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
   usr/bin/labwc
-  usr/bin/mmsg
   usr/bin/noctalia
   usr/bin/noctty
   usr/bin/nocted
@@ -234,6 +233,11 @@ required_paths=(
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
+regreet_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-regreet)
+grep -Fq 'kill -TERM "$PPID"' <<<"$regreet_launcher" || fail 'DINX labwc greeter does not terminate its host session'
+if grep -Fq 'mmsg ' <<<"$regreet_launcher"; then
+  fail 'DINX labwc greeter still depends on the removed MangoWM message client'
+fi
 doctor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/dinx-doctor)
 grep -Fq 'schema dinx-doctor/v1' <<<"$doctor" || fail 'DINX doctor schema is missing'
 grep -Fq 'mode read-only' <<<"$doctor" || fail 'DINX doctor is not read-only'

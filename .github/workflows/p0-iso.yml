@@ -408,6 +408,9 @@ jobs:
               build_package topgrade
               build_package paru
               build_package shelly
+              pacman -U --noconfirm \
+                "$package_repo"/topgrade-*.pkg.tar.zst \
+                "$package_repo"/shelly-*.pkg.tar.zst
               build_package dinitui
               pacman -U --noconfirm "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh

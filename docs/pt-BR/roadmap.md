@@ -20,14 +20,16 @@ pacotes estão implementadas no CI; configuração da chave de produção, hardw
 atualizações da ISO instalada, rollback do filesystem e saúde de serviços em hardware
 por longo prazo continuam gates de release.
 
-Backlog:
+Implementação entregue:
 
-- qualificar o instalador offline Calamares selecionado, o alvo dinit e o particionador independente;
-- definir o manifesto de pacotes base e o limite dos pacotes específicos da DINX;
-- configurar Wayland, labwc, Noctalia Shell e o greeter;
-- validar rede, PipeWire, D-Bus, portais, polkit e aceleração de GPU;
-- manter uma TTY de recuperação e documentar como recuperar uma sessão gráfica quebrada;
-- adicionar caminhos de build limpo e smoke tests de boot/instalação em VM.
+- o gate da fundação ISO/VM P0, o caminho de transações de pacotes assinados e o contrato de TTY de recuperação;
+- a sessão Aqueous/Pearl direta, o Pearl Greeter pelo greetd e o runtime somente dinit, sem systemd/UWSM;
+- os defaults Fish, o limite do payload base e os smokes de build limpo/VM.
+
+Gates de release da fundação ainda abertos:
+
+- validar rede, PipeWire, D-Bus, portais, polkit e aceleração de GPU em hardware físico;
+- manter e exercitar a recuperação depois de uma falha da sessão gráfica;
 
 **Critério de saída:** um boot live limpo abre uma sessão gráfica, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis e o caminho transacional de pacotes assinados; atualizações da ISO instalada, rollback do filesystem e preservação de dados continuam gates de release.
 
@@ -59,7 +61,7 @@ Evidências de saída da P2:
 - o archive exato do NOCTTY/NoctEd é fixado por SHA-256, verificado e compilado no pacote Artix;
 - o core nativo Zig qualifica criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, compatibilidade de protocolo/Unicode, ciclo de vida com contabilização do allocator e fairness em 30 panes com paste de 8 MiB;
 - a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
-- o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta pelo Noctalia e runtime do pacote estão verificados;
+- o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta do Aqueous/Pearl e runtime do pacote estão verificados;
 - a execução P0 final prova criação do pacote, geração da ISO, boot no QEMU, payload gráfico, instalação persistente, TTY de recuperação, atestação e upload do artefato.
 
 Limites mantidos depois da P2:
@@ -83,7 +85,7 @@ Entregue:
 - busca no arquivo/no projeto, substituição por fluxos de seleção e atalhos de teclado;
 - gerenciamento limitado de processos/clientes LSP com diagnósticos, completion, hover, definições, referências, rename, símbolos e formatação;
 - status do Git, diffs unificados e marcadores de alterações no menu Tools e no `--git-probe` headless;
-- esquemas claro/escuro sensíveis ao Noctalia pelo contrato documentado de ambiente `NOCTALIA_COLOR_SCHEME`/`NOCTED_THEME`, mantendo o editor útil sem o Noctalia.
+- esquemas estáticos claro/escuro do DINX pelo contrato documentado de ambiente `DINX_COLOR_SCHEME`/`NOCTED_THEME`, mantendo o editor útil independentemente de um shell gráfico;
 
 Gate de release P3:
 
@@ -106,7 +108,7 @@ Gate de release P3:
 - ações de ciclo de vida, boot, dependência, ambiente, sinais e daemon usando o vocabulário próprio do `dinitctl`;
 - execução por argv validado, escopos system/usuário e retry explícito por `pkexec` somente após falha de autorização;
 - perfis de serviços de sistema `normal`, `lite`, `gaming` e customizados, com editor GTK, persistência e integração CLI;
-- plugin local `dinx/performance` do Noctalia com atalho Gaming no Control Center e painel de perfis;
+- controles diretos de perfis de serviços DINX/dinit com atalho Gaming no Control Center e painel de perfis;
 - DINXPanel com atalhos fixos de hardware/painéis de controle, ponte para o backend de GPU do DinitUI e catálogo de kernels Artix sem remoção;
 - contratos do pacote, metadados desktop, licença e payload da ISO.
 
@@ -149,7 +151,7 @@ Gate de release P3:
 - o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
 - o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
 - os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, Phyto, File Roller, GParted, TTY de recuperação e comportamento de hardware.
-- entregue a sessão alternativa Aqueous 1.0.5/Pearl 0.3.0 por wrappers DINX diretos: o greeter inicia Aqueous, o filho de init inicia os helpers de sessão da DINX e o Pearl, o bootstrap de atividade do Aqueous usa identidade direta de processo dinit e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
+- entregue Aqueous 1.0.5/Pearl 0.3.0 como a única sessão do usuário por wrappers DINX diretos: o autologin live e o greeter iniciam Aqueous, o filho de init inicia os helpers de sessão da DINX e o Pearl, o bootstrap de atividade do Aqueous usa identidade direta de processo dinit e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
 
 **Gates de release restantes:**
 

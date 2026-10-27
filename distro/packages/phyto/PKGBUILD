@@ -19,7 +19,7 @@ optdepends=(
   'ffmpeg: optional video still previews'
   'bubblewrap: sandbox required for optional PDF and video previews'
 )
-makedepends=('zig>=0.16')
+makedepends=('zig>=0.17')
 source=("pearl-$PHYTO_SOURCE_VERSION.tar.gz::${PHYTO_REPOSITORY}/archive/refs/tags/v${PHYTO_SOURCE_VERSION}.tar.gz")
 sha256sums=("$PHYTO_SOURCE_SHA256")
 

@@ -1,127 +1,84 @@
-# Contrato de compatibilidade com o Noctalia
+# Contrato de compatibilidade DINX
 
 [Português (Brasil)](compatibility.md) · [English](../compatibility.md)
 
-Os aplicativos DINX complementam o Noctalia e não devem depender de detalhes internos não documentados. A compatibilidade é dividida em níveis para que os aplicativos continuem úteis sem o shell.
+Os aplicativos da DINX integram-se por metadados XDG, protocolos Wayland, D-Bus, PipeWire e limites dinit padrão. A sessão base não exige IPC privado de shell, systemd, uwsm ou serviço de shell para funcionar.
 
 ## Nível 1 — integração direta
 
-Obrigatório para as primeiras versões utilizáveis dos aplicativos:
+Obrigatório para a ISO base:
 
-- Noctty é descoberto como terminal e funciona por meio de `$TERMINAL`.
-- Noctty aceita os argumentos esperados de inicialização do terminal, incluindo diretório de trabalho quando suportado.
-- Nocted possui uma entrada `.desktop` válida e aparece no launcher do Noctalia.
-- Nocted suporta abertura normal por arquivos `.desktop` e argumentos de arquivo/linha quando implementados.
-- Ambos seguem navegação de teclado padrão e locais XDG.
-- Firefox é descoberto como o manipulador padrão de HTML, XHTML e HTTP/HTTPS.
+- O Noctty é descoberto por `$TERMINAL`, aceita os argumentos documentados de inicialização e respeita um diretório de trabalho quando fornecido.
+- O Nocted possui uma entrada `.desktop` válida, abre arquivos e diretórios por launchers XDG padrão e aceita argumentos de arquivo/linha suportados.
+- O Nocted inicia o LSP documentado para cada tipo de arquivo. Zig usa o ZLS 0.16.0 incluído; C/C++ usa `clangd`.
+- O Firefox é o manipulador padrão de HTML, XHTML, HTTP e HTTPS.
+- O Phyto é o manipulador padrão de diretórios; o File Roller cuida de abrir/criar/extrair arquivos compactados; o GParted cuida do particionamento independente.
+- O Pori descobre dispositivos de bloco pelo UDisks2 e persiste montagens do usuário por serviços dinit em `/etc/dinit.d`.
+- Navegação por teclado e locais XDG de configuração/dados continuam utilizáveis sem integração privada de shell.
 
-## Nível 2 — integração visual
+## Nível 2 — integração visual e de sessão
 
-Os aplicativos consomem um formato ou adaptador documentado do Dinx Theme:
+O contrato do tema estático DINX é a fonte de verdade:
 
-- modo claro/escuro;
-- cores de destaque, fundo, primeiro plano e seleção;
-- paleta ANSI do terminal;
-- escolhas de fonte e ícones quando a plataforma as expuser.
+- paleta: `/usr/share/dinx/theme/DINX.json`;
+- escolha de cor do usuário: `DINX_COLOR_SCHEME=light|dark`, com `NOCTED_THEME=prefer-light` aceito pelo Nocted;
+- cores Qt6ct: `~/.config/qt6ct/colors/DINX.conf`;
+- tema GTK: tema instalado `DINX` com Noto Sans 10;
+- texto de largura fixa: Noto Sans Mono 10 quando exigido pelo aplicativo;
+- bridges gráficas: estados DINX de superfície, controle, hover, primário e erro, com ícones Adwaita quando disponíveis.
 
-O contrato do adaptador do Nocted é deliberadamente pequeno: `NOCTALIA_COLOR_SCHEME=light` ou `NOCTED_THEME=prefer-light` seleciona o esquema empacotado `nocted-light`; os demais valores usam `nocted-dark`. O editor não interpreta arquivos privados do Noctalia e continua utilizável quando nenhuma variável ou o Noctalia está presente.
+`DINX_COLOR_SCHEME=light` ou `NOCTED_THEME=prefer-light` seleciona o esquema claro empacotado do editor. Os demais valores usam o esquema escuro DINX. O Nocted não interpreta arquivos privados de shell e continua funcional sem nenhuma variável.
 
-O gate de compatibilidade P3 exercita os dois esquemas pelo smoke GTK nativo, verifica o contrato de abertura por arquivo do `.desktop` do NoctEd e executa o probe LSP real com `clangd`. Um repositório Git é opcional; quando presente, a ação Tools informa status e diff unificado limitados, com marcadores por arquivo.
-O Firefox acompanha `/etc/firefox/policies/policies.json`. A política remove superfícies patrocinadas da Nova Aba/Suggest, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado. Firefox Accounts continua opcional e controlado pelo usuário; as atualizações normais do navegador permanecem habilitadas.
-O contrato visual entregue é a paleta Noctalia `DINX` em `~/.config/noctalia/palettes/DINX.json`. Ela define os papéis semânticos claro/escuro e a paleta ANSI completa do terminal; o Noctalia usa `source = "custom"`, `sync_color_scheme = true` e os templates nativos de btop, Foot, Ghostty, GTK 3/4, KDE e Qt.
-
-Aplicativos GTK usam o tema fallback instalado `DINX` até o Noctalia aplicar seu CSS gerado. Aplicativos Qt usam `qt6ct` com `~/.config/qt6ct/colors/noctalia.conf` gerado pelo Noctalia; o labwc lê `/etc/xdg/labwc` e mescla overrides do usuário em `~/.config/labwc/rc.xml`. O Swayimg recebe um fallback DINX de overlay/galeria em `~/.config/swayimg/init.lua`. A sessão exporta defaults documentados para `NOCTALIA_COLOR_SCHEME`, `NOCTED_THEME`, `QT_QPA_PLATFORMTHEME`, `XCURSOR_THEME` e `XCURSOR_SIZE`.
-
-As bridges voltadas à interface usam Noto Sans 10, alinhado à tipografia GTK padrão do CachyOS, geometria quadrada nos controles, os estados semânticos DINX de superfície/controle/hover/primário e ícones Adwaita quando a plataforma os expõe. ReGreet e Calamares consomem bridges estáticas DINX porque executam antes ou fora do shell. O GRUB usa os mesmos tokens de superfície/texto/primário, com as texturas opacas do menu desativadas. A barra principal do Noctalia inclui um drawer de tray StatusNotifier, e o perfil fornece `libayatana-appindicator` para manter compatibilidade com aplicativos indicadores legados. `scripts/check_dinx_theme.sh` valida a paleta, os templates, os pacotes, a tipografia, os estados e cada bridge antes do build da ISO; `check-iso-content.sh` repete as verificações dentro do SquashFS.
-
-As diferenças restantes são limites de plataforma intencionais: o Qt mantém Fusion como backend de estilo e Noto Sans Mono 10 para campos de largura fixa; DinitUI e DINXPanel mantêm visual monoespaçado nos logs; o GRUB mantém `u_vga16 16` por compatibilidade com assets do boot inicial. Essas exceções não substituem as cores DINX nem o contrato de interface Noto Sans 10.
+Pearl Greeter, Calamares e GRUB usam bridges estáticas DINX porque executam antes ou fora da sessão do usuário. O Pearl Greeter lê `/etc/pearl/greeter.json`, roda pela conta dedicada `pearl-greeter` e força a única entrada Aqueous/Pearl com X11 e UWSM desativados. Swayimg, btop, Foot, Ghostty, GTK e Qt usam seus caminhos DINX versionados. `scripts/check_dinx_theme.sh` valida paleta, tipografia, estados e bridges; `scripts/check-iso-content.sh` repete os checks dentro do SquashFS.
 
 ## Contrato do gerenciador de serviços DinitUI
 
-DinitUI é o frontend DINX do dinit, não uma camada de compatibilidade com systemd. Descobre serviços carregados por `dinitctl list` e arquivos de descrição nos diretórios Dinit do sistema/usuário, incluindo o framing aninhado nativo do Dinit. Seu catálogo cobre ciclo de vida, dependências de boot/runtime, ambiente, logs em buffer, sinais e desligamento. `scripts/check_dinitui.sh` cobre o limite do pacote; a qualificação contra daemon real prova um daemon de usuário temporário pela superfície GTK.
-A UI passa tokens validados diretamente ao `dinitctl`; nunca inicia um shell. O escopo de usuário usa `dinitctl --user`. O escopo system tenta primeiro `dinitctl --system` e usa `pkexec` somente após falha explícita de autorização. O contrato do payload da ISO verifica executável, desktop, ícone, launcher gaming standalone, sessão Wayland, Gamescope e Steam.
+DinitUI é o frontend DINX do dinit, não uma camada de compatibilidade com systemd. Ele descobre serviços carregados e arquivos de descrição, exibe status e logs em buffer e expõe ações de ciclo de vida, dependências, ambiente, sinais e daemon por argv validado do `dinitctl`. Nunca interpola texto do usuário em comandos de shell.
 
-O contrato de perfis adiciona políticas de serviços de sistema `normal`, `lite`, `gaming` e definidas pelo usuário. O DinitUI salva-as em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente o `bluetoothd` opcional, enquanto `gaming` habilita `bluetoothd` para controles e mantém disponíveis Bluetooth, UFW e os serviços de política do OpenSnitch. Ele nunca desabilita a segurança de rede nem o caminho essencial de rede/áudio/login/display. O plugin local `dinx/performance` do Noctalia expõe o atalho Gaming e o painel de perfis no Control Center, chama o `dinitui` por argv direto e mapeia Gaming para o perfil de energia `performance` do Noctalia. A sessão Gamescope standalone continua independente porque não inicia Noctalia.
+O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --system` e só tenta `pkexec` após uma falha explícita de autorização. Perfis `normal`, `lite`, `gaming` e definidos pelo usuário persistem em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente Bluetooth opcional, enquanto `gaming` habilita Bluetooth para controles e preserva serviços de firewall/política de processos. O launcher gaming standalone entra e restaura o perfil explicitamente.
 
-O fluxo do centro de controle DINXPanel é dono das ações visíveis de GPU: delega ao DinitUI o contrato fixo de backend `--gpu-status` e `--install-gpu-drivers` e oferece atalhos fixos para NetworkManager, Bluetooth, display, áudio, firewall, opções do labwc, serviços Dinit, upgrades de pacotes e firmware. `Check upgrades` usa `shelly sync`, `shelly list-updates all`, `fwupdmgr refresh` e `fwupdmgr get-updates` sem instalar nada; o preview do Topgrade usa `--dry-run --show-skipped`, enquanto as ações explícitas de Topgrade e Shelly continuam como fluxos confirmados pelo usuário no terminal. Seu instalador de kernels expõe apenas `linux`, `linux-lts`, `linux-zen` e `linux-hardened` com os headers correspondentes, instala por argv direto, nunca remove pacotes, protege o kernel em execução e exige reinicialização.
+## Contrato da sessão Aqueous/Pearl
 
+- Aqueous/Pearl é a única sessão de usuário selecionável e suportada da DINX.
+- A ISO live abre `dinx` diretamente pelo autologin dinit; o rootfs instalado mantém login manual.
+- O Pearl Greeter é a interface de login instalada do greetd, não uma segunda sessão de usuário; sua configuração pertencente ao root força `Aqueous + Pearl (DINX)` e não há fallback silencioso.
+- `dinx-aqueous-pearl` inicia o Aqueous diretamente. O filho init do Aqueous espera o Wayland e o D-Bus da sessão ficarem prontos; então `dinx-session-supervisor` inicia Shikane, PolicyKit, BC250 opcional, o helper de idle obrigatório e Pearl.
+- Falha de helper obrigatório ou do Pearl registra estado explícito e encerra o compositor, em vez de deixar um desktop vazio.
+- A sessão usa elogind/libseat e execução direta sobre dinit; não exige systemd, systemctl, uwsm ou unidades de usuário.
+- `swayidle` bloqueia após 600 segundos e em `before-sleep`; `Super+L`, a ação do launcher e a DINXPanel usam o mesmo caminho `swaylock`. `brightnessctl` fornece passos fixos de 5% para brilho.
 
+## Integração de display e Seafoam
 
-O contrato de desktop labwc/Noctalia da DINX é explícito:
+`dinx-wdisplays` inicia o editor interativo de displays Wayland. Ao fechar, serializa o resultado com `flock`, substitui atomicamente o perfil DINX `DINX wdisplays` em `~/.config/shikane/config.toml` e recarrega o Shikane. Falha no reload é reportada como falha. O Shikane inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes quando as saídas mudam.
 
-- o labwc fornece uma sessão Wayland com janelas empilhadas; sua configuração versionada mantém dois workspaces e `Super+Return` inicia `dinx-terminal`;
-- a barra Noctalia chamada `main` reserva o topo e o dock de aplicativos reserva a parte inferior;
-- NetworkManager, BlueZ, UPower e PipeWire alimentam os widgets de rede, Bluetooth, bateria e volume do Noctalia;
-- o Noctalia é dono das superfícies de captura de tela e clipboard; `wl-copy`/`wl-paste` continuam como complemento de CLI, enquanto `grim`/`slurp` não são duplicados.
-- a barra principal inclui um drawer de tray StatusNotifier; `libayatana-appindicator` mantém aplicativos indicadores legados visíveis pela mesma superfície;
+O Seafoam Settings expõe entradas fixas para wdisplays, salvador de perfil, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. O Dome fornece monitoramento dinit-safe de recursos/processos. Os pacotes Zig nativos da DINX usam Zig 0.17.0. O ZLS continua sendo backend do editor; seu runtime compacto contém a biblioteca padrão Zig 0.16.0 correspondente e um shim de metadados, não o compilador completo. Instalar o pacote opcional `zig` do Artix habilita comandos de compilação pelo mesmo shim.
 
-O dock do Noctalia é limitado deliberadamente às superfícies DINX principais: Firefox, DINXPanel, DinitUI, BC250 Control Center, Phyto, Pori, Foot, Noctty e NoctEd. Ferramentas especializadas continuam descobertas pelo launcher e mantêm seus arquivos desktop: `nm-connection-editor`, Blueman, pwvucontrol, Gufw, Qps, OpenSnitch, Shelly, Swayimg, KolourPaint, VLC, Strawberry, `wdisplays` e `shikane`; Dome e Seafoam Settings aparecem da mesma forma a partir da ISO base. O ZLS continua sendo backend do editor, não superfície do launcher.
+## Limite do gaming
 
-O `wdisplays` é o editor interativo de displays por meio do wrapper DINX `dinx-wdisplays`. Ao fechar o editor, o perfil DINX `DINX wdisplays` é substituído atomicamente em `~/.config/shikane/config.toml` e o Shikane é recarregado; o daemon inicia com o labwc e reaplica perfis correspondentes quando as saídas mudam. O Seafoam Settings agrupa pontos de entrada fixos para o wrapper, o salvador de perfil, Shikane, labwc, DinitUI, DINXPanel, Qt6ct e Dome sem criar um segundo backend de Settings. O monitoramento de recursos/processos do Dome é compatível com dinit e seu pacote não instala integração com systemd. O Nocted usa o ZLS 0.16.0 incluído para operações LSP Zig.
-O runtime base do ZLS é deliberadamente compacto: inclui a biblioteca padrão correspondente do Zig 0.16.0 e um shim executável somente de metadados, não o compilador Zig completo. O caminho de completion/navegação Zig do Nocted é testado com esse runtime e permanece independente de systemd; instalar o pacote opcional `zig` do Artix habilita comandos do compilador pelo mesmo shim.
-
-Aqueous/Pearl são suportados como uma sessão alternativa da DINX. A entrada do greeter usa o wrapper direto `dinx-aqueous-pearl`; o Aqueous inicia o filho de init da DINX, que lança Shikane, PolicyKit, BC250 e os helpers de idle antes de executar o Pearl. A DINX remove `uwsm` e unidades systemd de usuário upstream; o build direto do Aqueous sobre dinit remove a biblioteca systemd e autoriza o Pearl por pidfd e verificações do executável e do ambiente em vez de verificações de unidade/D-Bus. `Labwc + Noctalia` continua sendo a sessão padrão, e o `dinx-doctor` registra os dois limites de sessão sem executar mutações.
-
-
-O widget de sessão do Noctalia continua sendo a superfície de energia. A DINX também fornece `Super+L`, uma ação `Lock screen` no launcher e botões na DINXPanel para bloquear e alterar o brilho em passos de 5%. O `swayidle` bloqueia após 10 minutos e invoca a mesma ação pelo evento `before-sleep`, portanto a suspensão é precedida por uma tentativa de bloqueio. `brightnessctl` é associado às teclas padrão de brilho quando o compositor as expõe.
-Os papéis de gerenciamento de pacotes são separados deliberadamente: `pacman` é dono da transação oficial do sistema Artix; Shelly é dono dos metadados e fluxos explícitos de pacotes/AUR; `paru` é o helper avançado de AUR; Topgrade orquestra previews e atualizações confirmadas pelo usuário; DINXPanel é a superfície visível de descoberta/relatório e nunca instala durante uma verificação. Nenhuma ferramenta inicia automaticamente, e receitas AUR exigem revisão explícita.
-O suporte a AMD Cyan Skillfish/BC-250 é um contrato de payload: firmware AMDGPU do Artix, Mesa RADV, diagnóstico Vulkan e o governor SMU fixado são instalados. O serviço dinit inicia automaticamente apenas o caminho do governor para PCI `1002:13fe`, usa a faixa segura de 1000-1850 MHz e encerra em outro hardware, sem unidade systemd.
-O BC250 Control Center v1.21.1 é o contrato de launcher/monitor da BC-250: seu pacote MIT fixado fornece entrada desktop, CLI, política polkit e daemon headless. O daemon é iniciado uma vez pela sessão do usuário labwc através de `/etc/xdg/labwc/autostart`, não por systemd ou serviço root dinit; a DINX remove a unidade systemd e o drop-in do Cyan upstream. O dinit continua sendo um limite de persistência de serviço ao vivo/somente leitura no aplicativo upstream, portanto a falha ao inspecionar um serviço persistente não pode impedir a inicialização nem a telemetria ao vivo.
-
-## Nível 3 — integração avançada
-
-Recursos opcionais podem usar interfaces documentadas do Noctalia:
-
-- ações do launcher que abrem o Nocted em um arquivo e linha;
-- ações do launcher que abrem o Noctty em um diretório de trabalho escolhido;
-- notificações e ações de aplicativos;
-- plugins opcionais que expõem projetos do editor, arquivos recentes ou perfis de terminal.
-
-A falha de uma integração opcional não pode impedir o aplicativo de iniciar ou editar arquivos.
+DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecionável. `dinx-gaming` inicia o argv empacotado de Gamescope/Steam por `dbus-run-session`; o perfil base carrega os pacotes Artix Mesa/RADV/Vulkan de 32 bits e `steam-devices` necessários. Ele não presume uma configuração específica de shell ou compositor por baixo.
 
 ## Matriz de testes de compatibilidade
 
-A suíte deve testar contratos observáveis, não detalhes de implementação:
-
 | Área | Critério de aceitação |
 | --- | --- |
-| Descoberta do terminal | `$TERMINAL` inicia o Noctty com um shell e o diretório solicitado |
-| Metadados do desktop | entradas `.desktop` são válidas e descobertas |
-| Argumentos de inicialização | comportamento de arquivo, linha e diretório de trabalho é determinístico |
-| Importação de tema | um fixture de tema documentado produz as cores semânticas esperadas |
-| Mudança de tema | um caminho suportado altera o aplicativo sem perda de dados |
-| Paleta DINX | as duas variantes da paleta Noctalia contêm todos os papéis semânticos e cores ANSI do terminal |
-| Templates de aplicativos | btop, Foot, Ghostty, GTK 3/4, KDE e Qt consomem as saídas geradas pelo Noctalia; labwc usa a configuração versionada do compositor; Swayimg usa o fallback de overlay DINX |
-| Greeter/instalador/boot | ReGreet, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
-| Firefox padrão | Firefox é o manipulador padrão de HTML/XHTML/HTTP/HTTPS |
-| Política pró-user do Firefox | `policies.json` é analisado e desativa superfícies patrocinadas, Pocket/Stories, telemetria, recomendações, superfícies de assistente de IA e IP Protection integrado sem desativar atualizações |
-| Layout do desktop | labwc fornece janelas empilhadas; Noctalia reserva a barra superior e o dock inferior |
-| Segurança da sessão | `swayidle` bloqueia após 600 segundos, `before-sleep` invoca o wrapper de bloqueio, `Super+L` e o launcher invocam `swaylock`, e as teclas de brilho usam `brightnessctl` |
-| Orçamento do payload | `scripts/check_dinx_budget.sh` impõe os tetos versionados de pacotes rootfs e inicialização dinit, a janela de boot QEMU de 120 segundos, o tamanho dos binários nativos e o teto de ISO de 4 GiB quando um caminho de ISO é fornecido; `scripts/measure_dinx_session.sh` relata snapshots de RSS/CPU sem tratar a ausência da sessão no host como prova |
-| Utilitários do shell | Noctalia fornece UI de captura/clipboard; `wl-clipboard` fornece copy/paste de CLI |
-| Caminho de mídia e imagem | `ffmpeg`, VLC, VA-API (`libva`/`vainfo`), SANE `scanimage`, KolourPaint e handlers MIME comuns de vídeo/áudio/imagem são fornecidos; decode por hardware e hardware de scanner continuam sendo afirmações de qualificação física |
-| Gerenciamento de pacotes | `topgrade`, `paru` e Shelly usam a configuração ALPM/pacman do Artix, não têm dependência/unidade `systemd`, não adicionam repositórios Arch e continuam disponíveis para atualizações executadas explicitamente pelo usuário |
-| BC250 Control Center | GUI/CLI/daemon v1.21.1, entrada no dock Noctalia, autostart na sessão do usuário labwc, fonte fixada e nenhum payload systemd; a telemetria ao vivo continua disponível quando a inspeção de persistência dinit não é suportada |
-| Firewall/monitoramento de processos | Gufw, Qps e OpenSnitch são descobertos; os serviços UFW/OpenSnitch ficam desabilitados até configuração explícita |
-| Fallback | aplicativos continuam utilizáveis sem o Noctalia |
-| Falha de IPC | IPC indisponível ou malformado não impede a inicialização |
-| Acesso por teclado | ações principais funcionam sem entrada de ponteiro |
-| Controle de serviços DinitUI | serviços dinit carregados/descobertos por arquivo, status, ciclo de vida, dependências, ambiente, logs, sinais e shutdown usam argv validado do `dinitctl` com fallback `pkexec` restrito |
-| Controle de manutenção DINXPanel | atalhos fixos de hardware/painéis, ações delegadas de status/instalação de GPU, fluxos de atualização de pacotes Shelly/Topgrade, descoberta opcional de firmware pelo fwupd, catálogo fixo de kernels Artix, execução por argv direto e segurança de kernel somente-instalação |
-| Sessão gaming | entrada standalone `dbus-run-session` Gamescope/Steam, payload Mesa/RADV/Vulkan de 32 bits, launch/exit por fixture e launch/exit de filho headless do Gamescope |
+| Descoberta do terminal | `$TERMINAL` inicia o Noctty com shell e diretório solicitado |
+| Metadados desktop | entradas `.desktop` são válidas e descobertas |
+| Argumentos de inicialização | comportamento de arquivo, linha e diretório é determinístico |
+| Contrato de tema | paleta DINX estática, tema GTK, cores Qt6ct e `DINX_COLOR_SCHEME` estão presentes |
+| Greeter/instalador/boot | Pearl Greeter, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
+| Firefox padrão | Firefox trata HTML/XHTML/HTTP/HTTPS por default |
+| Armazenamento e arquivos | persistência dinit do Pori, diretórios no Phyto, arquivos compactados no File Roller e edição no GParted estão presentes |
+| Layout do desktop | Aqueous/Pearl é a única sessão de usuário; Pearl Greeter é a interface de login dedicada do greetd |
+| Segurança da sessão | lock por idle, lock antes de suspend, lock explícito e brilho usam caminhos fixos |
+| Persistência de display | mudanças do wdisplays atualizam atomicamente e recarregam o perfil nomeado do Shikane |
+| ZLS | Nocted encontra a biblioteca Zig correspondente sem compilador completo |
+| Gerenciamento de pacotes | pacman, Shelly, paru e Topgrade usam a configuração Artix e são executados pelo usuário |
+| Firewall/monitoramento | Gufw, Qps e OpenSnitch são descobertos; serviços ficam desabilitados até configuração |
+| DinitUI | descoberta e controle usam argv validado do dinitctl com fallback pkexec restrito |
+| Gaming | entrada oculta Gamescope/Steam e payload gráfico 32-bit iniciam pelo limite documentado |
+| Isolamento de falhas | helpers ou endpoints D-Bus opcionais indisponíveis produzem falha visível sem bloquear o startup |
+| Acesso por teclado | ações principais funcionam sem ponteiro |
 
-## Gate de release da P2 — Noctty
+## Gates de release
 
-O gate da P2 combina `zig build test`, qualificação de PTY/sessão com contabilização do allocator, qualificação determinística de protocolo/Unicode, fairness do GLib e paste grande, a matriz de TUIs instaladas em ReleaseSafe e `scripts/check_noctty_integration.sh`. A matriz instalada exercita Vim, nano, less, dialog, top, watch, whiptail, fzf, SQLite, Glances, Bash, man/less e SFTP local reais pelo caminho de PTY/VT de produção. Ela inicia primeiro o `info` instalado; em ambientes mínimos ou sem TTY, usa um fixture estilizado determinístico como fallback da superfície do `info`. Os argumentos de lançamento tmux/Zellij usam shims determinísticos para manter o gate do pacote headless.
-
-O runner de três aplicativos Codex/Vim/btop usa um fixture local da superfície do Codex no gate do pacote DINX. Isso prova os casos reais de Vim e btop sem autenticação, rede ou dependência de produto Codex; não é evidência de Codex autenticado.
-
-Cada interface do Noctalia suportada deve identificar a versão testada e a versão do adaptador. Mudanças de versão exigem executar novamente a matriz de compatibilidade.
-
-## Gate de release da P3 — Nocted
-
-O gate da P3 é `scripts/nocted_p3_qualification.sh`. Ele executa as qualificações determinísticas do core/índice/workers/estado/tarefas do Nocted, um probe LSP real com `clangd`, smoke GTK/X11 nativo nos modos escuro e claro e um fixture Git real pelo binário de produção `--git-probe`. O gate do pacote chama esse script após `zig build -Doptimize=ReleaseSafe test`; `check_noctty_integration.sh` e `check-iso-content.sh` verificam os contratos do pacote e da ISO.
-
-O workflow P0 é o gate de release do pacote e da ISO resultantes. A execução com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou o build de pacote/perfil, o boot e a validação do payload gráfico no QEMU, o contrato de particionamento e o smoke transacional BIOS/UEFI/Btrfs do Calamares, a instalação/primeiro boot/recuperação em discos BIOS e UEFI descartáveis, a verificação dos metadados de build, a assinatura persistente de pacotes, a atestação do release e a publicação dos assets da Alpha 9. Mudanças futuras devem passar pelo mesmo gate antes de atualizar a evidência de release.
-
-Uma validação posterior da `main`, a [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) no commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, também passou os checks de pacote/ISO, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload. Ela é evidência de validação, não um novo release.
+`scripts/check_noctty_integration.sh`, `scripts/nocted_p3_qualification.sh`, `scripts/check_dinitui.sh`, `scripts/check_dinx_session.sh`, `scripts/check_dinx_display_persistence.sh`, `scripts/check_dinx_theme.sh`, `scripts/check_pori_phyto.sh` e `scripts/check-iso-content.sh` verificam os contratos de pacote, sessão e ISO. O workflow P0 continua sendo o gate de criação dos pacotes, montagem da ISO, boot QEMU, instalação Calamares, TTY de recuperação, atestação e publicação.

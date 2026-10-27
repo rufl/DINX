@@ -11,10 +11,10 @@ if not set -q VISUAL
     set -gx VISUAL $EDITOR
 end
 if not set -q XDG_CURRENT_DESKTOP
-    set -gx XDG_CURRENT_DESKTOP Labwc
+    set -gx XDG_CURRENT_DESKTOP Aqueous
 end
-if not set -q NOCTALIA_COLOR_SCHEME
-    set -gx NOCTALIA_COLOR_SCHEME dark
+if not set -q DINX_COLOR_SCHEME
+    set -gx DINX_COLOR_SCHEME dark
 end
 if not set -q NOCTED_THEME
     set -gx NOCTED_THEME prefer-dark

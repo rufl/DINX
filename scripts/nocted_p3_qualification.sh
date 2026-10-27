@@ -21,10 +21,10 @@ done
 
 [[ -f resources/nocted/styles/nocted-dark.xml ]] || fail 'dark NoctEd scheme is missing'
 [[ -f resources/nocted/styles/nocted-light.xml ]] || fail 'light NoctEd scheme is missing'
-grep -Fq 'NOCTALIA_COLOR_SCHEME' src/nocted/main.zig || fail 'Noctalia color-scheme contract is missing'
+grep -Fq 'DINX_COLOR_SCHEME' src/nocted/main.zig || fail 'DINX color-scheme contract is missing'
 grep -Fq 'Git Status and Diff...' src/nocted/main.zig || fail 'Git editor action is missing'
 
-echo 'nocted_p3_gate source_contract=true git_action=true dark_scheme=true light_scheme=true noctalia_scheme=true'
+echo 'nocted_p3_gate source_contract=true git_action=true dark_scheme=true light_scheme=true dinx_scheme=true'
 
 ./scripts/nocted_core_endurance_qualification.sh
 ./scripts/nocted_project_index_qualification.sh
@@ -197,7 +197,7 @@ EOF
     NOCTTY_DEDICATED_DISPLAY=1 \
     NOCTTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
-    NOCTALIA_COLOR_SCHEME="$theme" \
+    DINX_COLOR_SCHEME="$theme" \
     GTK_ICON_THEME=NoctedSmoke \
     WAYLAND_DISPLAY= \
     XDG_DATA_HOME="$icon_home" \

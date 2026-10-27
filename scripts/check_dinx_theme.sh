@@ -3,17 +3,15 @@ set -euo pipefail
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 profile="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
-noctalia_config="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml"
-palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/palettes/DINX.json"
+palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/theme/DINX.json"
 profile_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh"
-greeter="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/regreet.toml"
-greeter_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-regreet"
+pearl_greeter="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.json"
+pearl_pkg="$repo_root/distro/packages/pearl/PKGBUILD"
 grub="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/theme.txt"
 calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/stylesheet.qss"
 calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
-labwc="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/rc.xml"
 dinitui_source="$repo_root/distro/packages/dinitui/src/main.zig"
 dinxpanel_source="$repo_root/distro/packages/dinxpanel/src/main.zig"
 seafoam_settings_source="$repo_root/distro/packages/seafoam-settings/src/main.zig"
@@ -29,8 +27,8 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$noctalia_config" "$palette" "$profile_shell" "$greeter" \
-  "$greeter_launcher" "$grub" "$calamares" "$calamares_branding" "$qt" "$swayimg" "$labwc" \
+for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg" \
+  "$grub" "$calamares" "$calamares_branding" "$qt" "$swayimg" \
   "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source" "$gtk_index" \
   "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" "$gtk3_settings" "$gtk4_settings"; do
   [[ -r "$path" ]] || fail "missing file: $path"
@@ -89,18 +87,24 @@ PY
 grep -Fqx '    - qt6ct' "$profile" || fail 'profile does not install qt6ct'
 grep -Fqx '    - adw-gtk-theme' "$profile" || fail 'profile does not install adw-gtk-theme'
 grep -Fqx '    - noto-fonts' "$profile" || fail 'profile does not install Noto fonts'
-grep -Fq 'source = "custom"' "$noctalia_config" || fail 'Noctalia custom palette source is missing'
-grep -Fq 'custom_palette = "DINX"' "$noctalia_config" || fail 'Noctalia DINX palette selection is missing'
-grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "qt"]' "$noctalia_config" || fail 'Noctalia application template set is incomplete'
-grep -Fq 'font_family = "Noto Sans"' "$noctalia_config" || fail 'Noctalia font contract is missing'
-grep -Fq '<font name="Noto Sans" size="10" />' "$labwc" || fail 'labwc font contract is missing'
-grep -Fq 'theme_name = "DINX"' "$greeter" || fail 'ReGreet does not use DINX theme'
-grep -Fq 'font_name = "Noto Sans 10"' "$greeter" || fail 'ReGreet font contract is missing'
-grep -Fq 'GTK_THEME="${GTK_THEME:-DINX:dark}"' "$greeter_launcher" || fail 'ReGreet launcher does not force DINX fallback theme'
-grep -Fq 'QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}"' "$profile_shell" || fail 'Qt6ct session adapter is missing'
-grep -Fq 'NOCTALIA_COLOR_SCHEME="${NOCTALIA_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'Noctalia color scheme environment contract is missing'
-grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/noctalia.conf' "$qt" || fail 'Qt6ct does not consume Noctalia colors'
+grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
+grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt" || fail 'Qt6ct does not consume DINX colors'
 grep -Fq 'general="Noto Sans,10' "$qt" || fail 'Qt6ct GUI font does not match Noto Sans 10'
+grep -Fq '"theme": "gtk"' "$pearl_greeter" || fail 'Pearl Greeter does not use the GTK theme bridge'
+grep -Fq '"gtk_theme": "DINX"' "$pearl_greeter" || fail 'Pearl Greeter does not use the DINX GTK theme'
+grep -Fq '"wallpaper_color": "#0b0d12"' "$pearl_greeter" || fail 'Pearl Greeter surface color is missing'
+grep -Fq '"font_size": 16' "$pearl_greeter" || fail 'Pearl Greeter font size is missing'
+grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' "$pearl_greeter" \
+  || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
+grep -Fq '"allow_uwsm": false' "$pearl_greeter" || fail 'Pearl Greeter UWSM integration is not disabled'
+grep -Fq '"x11": false' "$pearl_greeter" || fail 'Pearl Greeter X11 integration is not disabled'
+if grep -Eiq 'systemd|systemctl' "$pearl_greeter"; then
+  fail 'Pearl Greeter configuration contains a systemd integration'
+fi
+grep -Fq 'build-greeter' "$pearl_pkg" || fail 'Pearl Greeter is not built by the package'
+grep -Fq 'pearl-greeter-host' "$pearl_pkg" || fail 'Pearl Greeter host is not packaged'
+grep -Fq 'rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"' "$pearl_pkg" \
+  || fail 'Pearl upstream lifecycle payloads are not removed'
 for gtk_settings in "$gtk3_settings" "$gtk4_settings"; do
   grep -Fq 'gtk-theme-name=DINX' "$gtk_settings" || fail "GTK settings omit DINX theme: $gtk_settings"
   grep -Fq 'gtk-font-name=Noto Sans 10' "$gtk_settings" || fail "GTK settings omit Noto Sans 10: $gtk_settings"
@@ -161,5 +165,4 @@ grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' "$swayimg" || fail 'Swayimg surface color is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' "$swayimg" || fail 'Swayimg font contract is missing'
 grep -Fq 'swayimg.text.size = 10' "$swayimg" || fail 'Swayimg text size does not match Noto Sans 10'
-
-printf 'dinx_theme_contract palette=true templates=true typography=true states=true gtk=true qt=true labwc=true swayimg=true greeter=true grub=true calamares=true\n'
+printf 'dinx_theme_contract palette=true static=true typography=true states=true gtk=true qt=true swayimg=true pearl_greeter=true grub=true calamares=true\n'

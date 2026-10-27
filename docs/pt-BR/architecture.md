@@ -4,145 +4,114 @@
 
 ## Princípios
 
-1. **Integração profunda, dependências fracas.** Os aplicativos da DINX compartilham contratos e experiência de uso sem exigir toda a distribuição em tempo de execução.
-2. **Uso de componentes de baixo nível comprovados.** Emulação de terminal, edição de texto, parsing e ferramentas de linguagem são pontos de integração, não motivos para reimplementar subsistemas maduros.
-3. **O sistema inicializável é o primeiro produto.** Os aplicativos só entram depois que instalação, login, recuperação e atualizações puderem ser testados.
-4. **Operações privilegiadas devem ser restritas.** Interfaces de usuário não podem transformar entrada arbitrária em comandos privilegiados.
-5. **As tarefas comuns devem funcionar no primeiro boot.** Reprodução de mídia, diagnóstico de hardware, handlers padrão, aplicativos de tray, recuperação e limites das fontes de pacotes devem ter um default funcional ou um estado indisponível explícito.
-6. **Prefira padrões a lock-in de ecossistema.** A DINX usa metadados XDG, protocolos Wayland, PipeWire, entradas desktop e interfaces de pacotes documentadas para que os aplicativos continuem utilizáveis sem comportamento exclusivo da DINX.
-7. **Exija evidência antes de fazer afirmações.** Cada recurso enviado tem um gate estático, fixture, CI, QEMU ou hardware físico; caminhos experimentais permanecem identificados em vez de serem apresentados como concluídos.
+1. **Integração profunda, dependências fracas.** Os aplicativos compartilham contratos e experiência sem exigir toda a distribuição em tempo de execução.
+2. **Componentes de baixo nível comprovados.** Terminal, edição, parsing e ferramentas de linguagem são pontos de integração, não motivos para reimplementar subsistemas maduros.
+3. **O sistema inicializável é o primeiro produto.** Instalação, login, recuperação e atualização devem ser testáveis antes de ampliar o payload.
+4. **Operações privilegiadas restritas.** Interfaces não podem transformar entrada arbitrária em comandos privilegiados.
+5. **Tarefas comuns no primeiro boot.** Handlers, mídia, diagnóstico, recuperação e fontes de pacotes devem ter um caminho funcional ou estado indisponível explícito.
+6. **Padrões antes de lock-in.** A DINX usa XDG, Wayland, PipeWire, D-Bus, entradas desktop e interfaces dinit documentadas.
+7. **Evidência antes de afirmações.** Recursos enviados têm gate estático, fixture, CI, QEMU ou hardware físico; caminhos experimentais permanecem identificados.
 
 ## Camadas do sistema
 
 ```text
 Aplicativos DINX
-  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (ISO base)
+  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS
 
-Contratos compartilhados de integração
-  Dinx Theme · caminhos XDG · metadados .desktop · $TERMINAL · IPC opcional do Noctalia
+Contratos compartilhados
+  Tema DINX estático · XDG · .desktop · $TERMINAL · D-Bus padrão
 
 Sessão do desktop
-  Wayland · labwc · Noctalia Shell · greeter
+  Wayland · Aqueous · Pearl · host Pearl Greeter
 
-Fundação do sistema operacional
+Fundação
   Artix Linux · dinit · kernel · Mesa/Vulkan · PipeWire · D-Bus · portais · polkit
 
 Release e validação
-  manifestos de pacotes · assinatura · build da ISO · checksums · smoke tests em VM · relatórios de hardware
+  manifestos · assinatura · build ISO · checksums · VM · relatórios de hardware
 ```
 
 ## Fundação da distribuição
 
-O primeiro alvo é o Artix Linux com dinit em x86_64. A imagem base deve fornecer:
+O alvo é Artix Linux com dinit em x86_64. A imagem base fornece:
 
-- uma ISO inicializável e um caminho de instalação documentado;
+- ISO inicializável e caminho de instalação documentado;
 - login gráfico com TTY de recuperação;
 - rede, PipeWire, D-Bus, portais, polkit e gráficos acelerados;
-- o Pori gerencia discos e montagens sobre UDisks2, com serviços dinit persistentes em `/etc/dinit.d`;
-- o Phyto fornece gerenciamento nativo de arquivos e é o manipulador padrão de diretórios; a DINX inclui o File Roller para ações com arquivos compactados e o GParted para particionamento gráfico independente, enquanto `wdisplays` e `shikane` cuidam da configuração de displays Wayland; Thunar, GVFS, Tumbler e KDE Partition Manager continuam omitidos;
-- manifestos de pacotes que identifiquem cada entrada específica da DINX;
-- um snapshot conhecido como funcional, reproduzível em um ambiente de build limpo.
+- Pori para discos/montagens sobre UDisks2, com serviços persistentes dinit em `/etc/dinit.d`;
+- Phyto como gerenciador de arquivos e handler padrão de diretórios;
+- File Roller para abrir/criar/extrair arquivos compactados e GParted para particionamento independente;
+- `wdisplays` e `shikane` para configuração Wayland e reaplicação de layouts;
+- manifestos que identificam cada entrada específica da DINX;
+- snapshot reproduzível em ambiente de build limpo.
 
-Pacotes compatíveis com o upstream são preferidos. Pacotes e patches específicos da DINX devem permanecer pequenos, explícitos e identificáveis separadamente.
+Pacotes upstream são preferidos. Pacotes e patches específicos da DINX permanecem pequenos, explícitos e identificáveis.
 
 ## Limites dos aplicativos
 
-### Noctty
+### Noctty e Nocted
 
-Noctty é responsável pela janela, preferências, atalhos, abas/painéis e integração de temas. O limite de terminal da P2 é o `Vt.Grid` e o `TerminalSession` nativos em Zig: eles são responsáveis pelo parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção e paste, enquanto a superfície VT/runtime pública do Ghostty permanece um adaptador isolado.
+Noctty é responsável pela janela, preferências, atalhos, abas/painéis e sessões de terminal. Seu núcleo Zig possui parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção, paste e ciclo de vida PTY; Ghostty permanece um adaptador isolado.
 
-A decisão do núcleo da P2 está fixada pelo corpus determinístico de protocolo/Unicode, pelo ciclo de vida PTY com contabilidade de alocação, pela faixa de fairness/paste grande e pela matriz de aplicativos instalados para Vim, nano, less, dialog, perfis de lançamento tmux/Zellij, SSH/SFTP e TUIs comuns. Substituir esse núcleo é uma decisão separada de compatibilidade e migração, não uma dependência implícita da P2.
-
-### Nocted
-
-Nocted é um editor de código leve, não um IDE completo. Seus limites são:
-
-- estado e interface do aplicativo em Zig;
-- um adaptador do motor de edição para buffers, seleções, undo/redo e atualizações incrementais;
-- um parser de sintaxe comprovado, como Tree-sitter;
-- uma camada de processos/cliente LSP;
-- status do Git, saída limitada de diff unificado e marcadores de alterações por arquivo ficam disponíveis pela ação Tools do editor; Git é uma capacidade opcional do projeto e nunca impede abrir ou editar um arquivo fora de um repositório.
-- a camada LSP do Nocted inicia o servidor selecionado pelo tipo do arquivo com framing JSON-RPC limitado. Zig usa o `zls` incluído; C/C++ usa `clangd`; diagnósticos e navegação continuam sendo recursos do editor, não uma dependência do Noctalia.
-- o editor seleciona o esquema claro/escuro documentado por `NOCTALIA_COLOR_SCHEME` ou `NOCTED_THEME` e usa o esquema escuro DINX como fallback. O Noctalia pode fornecer a preferência, mas o editor continua funcional sem o shell.
-
-O editor deve continuar útil sem o Noctalia. O Noctalia fornece apresentação e integração opcional com o launcher, não a funcionalidade principal do editor.
+Nocted é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. Zig usa o ZLS incluído; C/C++ usa `clangd`. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `NOCTED_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
 
 ### DinitUI
 
-DinitUI apresenta serviços dinit carregados e descobertos, status, logs em buffer, ciclo de vida, dependências, ambiente e ações do daemon. Usa uma interface `dinitctl` restrita por argv, valida tokens de serviço/argumentos, entende os marcadores aninhados da listagem nativa do Dinit e só tenta autorização de escopo system por `pkexec` após uma falha explícita de permissão. Não pode interpolar texto do usuário em comandos de shell. O smoke contra daemon real usa um daemon Dinit de usuário temporário e prova a descoberta pela superfície GTK de produção.
+DinitUI é o frontend DINX do dinit. Descobre serviços carregados e arquivos de descrição, exibe status, logs em buffer, dependências, ambiente, sinais e ações do daemon por argv validado do `dinitctl`. Nunca interpola texto do usuário em shell.
 
-O DinitUI também é dono de perfis explícitos `normal`, `lite`, `gaming` e perfis de sistema definidos pelo usuário. `lite` desabilita somente o daemon opcional de Bluetooth; `gaming` habilita explicitamente `bluetoothd` para controles e mantém disponíveis Bluetooth, UFW e os serviços de política do OpenSnitch. NetworkManager, D-Bus, PipeWire, WirePlumber, elogind, greetd, seatd, metalog e os serviços de display ficam fora da política padrão. O editor salva a política do usuário em `~/.config/dinx/dinitui/profiles.conf` e expõe `--profile-status`, `--apply-profile`, `--toggle-profile`, `--gaming-enter`, `--gaming-leave`, `--gpu-status` e `--install-gpu-drivers` para integração com o shell.
+O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --system` e recorre a `pkexec` somente após falha explícita de autorização. Os perfis `normal`, `lite`, `gaming` e customizados persistem em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente Bluetooth opcional e `gaming` habilita Bluetooth para controles, preservando política de firewall/processos.
 
 ### DINXPanel
 
-A DINXPanel é o centro de controle inspirado no YaST. Ela é dona das ações visíveis de hardware e drivers, agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, opções do labwc, serviços Dinit, upgrades de pacotes e firmware e expõe um catálogo fixo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Seu relatório de upgrades sem instalação usa Shelly e os metadados opcionais do fwupd; o preview do Topgrade usa `--dry-run --show-skipped`; upgrades explícitos continuam sendo fluxos confirmados pelo usuário no terminal. As ações de kernel apenas instalam pacotes e headers; nunca removem o kernel em execução, exigem reinicialização e usam o bootloader para selecionar uma alternativa já instalada em caso de rollback.
+A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, serviços dinit, upgrades e firmware, além do catálogo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Checks de upgrade são somente leitura; ações explícitas usam argv fixo e confirmação do usuário. Kernels nunca são removidos, e mudanças informam a necessidade de reinicialização.
 
-A impressão é uma opção explícita após a instalação, não uma dependência da
-ISO: a DINXPanel baixa o pacote fixo `cups-dinit` do repositório Artix
-configurado; ele puxa o CUPS e fornece o serviço `cupsd` do dinit. O usuário
-habilita ou inicia esse serviço pelo DinitUI quando precisar de impressão.
+CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuário habilita o serviço pelo DinitUI quando necessário.
 
-A DINX inclui o plugin local `dinx/performance` do Noctalia. Seu atalho no Control Center aplica o perfil Gaming e sincroniza o perfil de energia documentado `performance`/`balanced` do Noctalia. A sessão Gamescope standalone não inicia o Noctalia e continua independente dessa integração.
+### Dome, Seafoam Settings e ZLS
 
-### Dome
+`Dome` é um monitor nativo Zig/GTK4 incluído na ISO e no repositório DINX assinado. Suas telas de recursos/processos são dinit-safe; o pacote não instala integração com systemd, systemctl ou uwsm.
 
-O `Dome` é um monitor de sistema nativo em Zig/GTK4 entregue no repositório DINX assinado e incluído na ISO. Suas telas de recursos e processos são compatíveis com dinit; o pacote não instala integração com systemd, systemctl ou uwsm.
+`Seafoam Settings` é um launcher Zig/GTK4 para `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Usa vetores de argumentos fixos e abre somente os arquivos documentados de Aqueous/Pearl e Shikane em Foot/Nano; não interpreta comandos arbitrários.
 
-### Seafoam Settings e ZLS
+`zls` é o pacote oficial Zig Language Server 0.16.0 com fonte fixada. Carrega a árvore `lib/std` correspondente e o shim de metadados `/usr/lib/zls/zig-env`; completion e navegação do Nocted funcionam sem compilador Zig completo. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; a árvore 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP. Um pacote Artix `zig` opcional habilita comandos de compilação pelo mesmo shim.
 
-O `Seafoam Settings` é um launcher nativo base em Zig/GTK4 para as superfícies DINX de display/sessão: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct e Dome. Ele inicia vetores de argumentos fixos e abre somente os arquivos de configuração documentados do usuário no Foot/Nano; não interpreta comandos shell arbitrários nem substitui os aplicativos especializados.
+### Aqueous, Pearl e o limite dinit
 
-O `zls` é o pacote oficial do Zig Language Server 0.16.0, com fonte fixada e incluído na ISO. Ele carrega a árvore `lib/std` correspondente do Zig 0.16.0 e um shim de metadados em `/usr/lib/zls/zig-env`; assim, completion e navegação do Nocted funcionam na ISO base sem compilador Zig completo, systemd ou serviço. Se o pacote opcional `zig` do Artix for instalado depois, o shim delega os comandos do compilador para ele.
-### Aqueous, Pearl e o limite da sessão dinit
+Aqueous 1.0.5 e Pearl 0.3.0 são a única sessão de usuário selecionável e a sessão inicial da live. `dinx-aqueous-pearl` seleciona elogind/libseat, usa fallback de renderização por software quando não existe nó DRM e inicia Aqueous diretamente.
 
-Aqueous 1.0.5 e Pearl 0.3.0 são distribuídos como uma sessão alternativa da DINX na ISO base. A entrada do greeter `Aqueous + Pearl (DINX)` executa `dinx-aqueous-pearl`, que inicia o Aqueous diretamente; o Aqueous chama `dinx-aqueous-init`, que inicia Shikane, o agente PolicyKit, o daemon BC250 e a proteção de idle antes de fazer `exec` do Pearl. A DINX remove o payload upstream de `uwsm` e unidades systemd de usuário. O build direto sobre dinit remove a biblioteca systemd e as verificações de atividade por D-Bus do Aqueous, autorizando o Pearl por pidfd e verificações do executável e do ambiente. `Labwc (DINX)` com Noctalia continua sendo a sessão padrão, sem fallback silencioso quando a sessão alternativa não está disponível.
+Aqueous chama `dinx-aqueous-init`, que espera Wayland e D-Bus da sessão e inicia sob supervisão Shikane, PolicyKit, BC250 opcional, idle obrigatório e Pearl. `dinx-session-supervisor` registra `starting`, `ready`, `failed` e `exited`; encerra o compositor quando um componente obrigatório falha e encerra o processo pai monitorado quando o supervisor para.
 
-O `dinx-doctor` é a superfície de evidência somente leitura para os caminhos da sessão atual, dinit, armazenamento, display e pacotes. Ele não inicia serviços, monta dispositivos, modifica o Shikane, executa transações de pacotes nem acessa a rede. `DINX_DOCTOR_QUERY_DINIT=1` opta por uma consulta somente leitura à lista do dinit de usuário.
+A sessão usa execução direta sobre dinit e não exige systemd, systemctl, uwsm ou unidades de usuário. O login instalado/manual usa o Pearl Greeter: o greetd inicia o host dedicado pela conta `pearl-greeter`, e `/etc/pearl/greeter.json` força a mesma entrada Aqueous/Pearl com X11 e UWSM desativados. O Pearl Greeter não é uma segunda sessão de usuário nem fallback silencioso.
 
+`dinx-doctor` é uma superfície somente leitura para sessão, dinit, armazenamento, display e pacotes. Não inicia serviços, monta dispositivos, altera Shikane, executa transações ou acessa a rede.
 
+## Tema e contratos compartilhados
 
-## Contratos compartilhados
+Os contratos compartilhados são versionados independentemente dos detalhes internos:
 
-Os contratos compartilhados são versionados independentemente dos detalhes internos dos aplicativos:
-
-- esquema de temas e tokens de design;
-- locais de configuração de aplicativos conforme as convenções XDG;
-- metadados `.desktop` e comportamento da linha de comando;
-- invocação por `$TERMINAL` e comportamento do diretório de trabalho;
-- adaptadores opcionais de IPC e notificações do Noctalia;
+- tema e tokens de design;
+- locais XDG de configuração;
+- metadados `.desktop` e comportamento de linha de comando;
+- `$TERMINAL` e diretório de trabalho;
+- adaptadores D-Bus padrão para notificações;
 - convenções de logs e diagnósticos.
 
-Um contrato deve ter uma versão documentada e um teste de compatibilidade antes de ser usado pelos aplicativos.
+O tema DINX v1 é estático em `/usr/share/dinx/theme/DINX.json`, com papéis de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa, Noto Sans 10, geometria quadrada e ícones Adwaita. GTK usa o tema DINX; Qt usa `~/.config/qt6ct/colors/DINX.conf`; o Pearl Greeter usa `/etc/pearl/greeter.json` com a bridge GTK DINX. Pearl, Pearl Greeter, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. Noto Sans Mono 10 em campos fixos, logs monoespaçados e `u_vga16 16` do GRUB são exceções intencionais.
 
-O contrato Dinx Theme v1 é uma paleta customizada do Noctalia: papéis semânticos de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa do terminal, Noto Sans 10 para bridges voltadas à interface (alinhado à tipografia GTK padrão do CachyOS), geometria quadrada nos controles e bridge de ícones Adwaita. GTK/Qt consomem as saídas documentadas dos templates do Noctalia; o labwc usa a configuração versionada em `/etc/xdg/labwc` e mescla overrides do usuário em `~/.config/labwc/rc.xml`. ReGreet, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. O backend Fusion do Qt, os campos de largura fixa Noto Sans Mono 10, os logs monoespaçados de DinitUI/DINXPanel e o `u_vga16 16` do GRUB permanecem limites de plataforma intencionais. `scripts/check_dinx_theme.sh` é a qualificação do contrato.
+## Sessão gaming
 
-## Sessão de jogos
+DINX Gaming é um launcher manual oculto, não uma sessão selecionável. `dinx-gaming` inicia Gamescope/Steam por uma entrada Wayland com `dbus-run-session`, usando apenas o argv empacotado. O perfil inclui Mesa/RADV/Vulkan de 32 bits e `steam-devices` do Artix. A qualificação prova argv, retorno, limpeza de processos e filho headless; não afirma Steam autenticado, jogo comercial, hardware de controle/áudio ou display DRM.
 
-A sessão de jogos é separada e baseada em Gamescope e Steam. `dinx-gaming` inicia `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` a partir de uma entrada Wayland standalone com `dbus-run-session`; ela não presume Noctalia ou labwc em execução por baixo. O perfil inclui as dependências Mesa/RADV/Vulkan de 32 bits do Steam e `steam-devices`; o builder P0 habilita explicitamente o repositório oficial `lib32` do Artix e não adiciona repositórios Arch. `scripts/gaming_p5_qualification.sh` prova argv/retorno do launcher com fixtures, limpeza do grupo de processos e restauração do perfil durante sinais, e lançamento/saída de um filho real headless do Gamescope; não afirma login Steam autenticado, jogo comercial, hardware de controle/áudio, display DRM, suspensão/retomada ou recuperação de GPU.
+## Armazenamento, NTFS e display
 
-## Limite de armazenamento e filesystem
+Pori usa UDisks2 e grava serviços dinit `process` em `/etc/dinit.d` que aguardam dispositivos, repetem montagens, mantêm somente montagens próprias e desmontam no encerramento. Nenhuma unidade de montagem systemd é gerada.
 
-O Pori é a única interface gráfica de armazenamento da DINX. Ele usa UDisks2 para descobrir dispositivos de bloco, mas seu ciclo de vida de montagem persistente é nativo do dinit: o Pori grava serviços scriptados em `/etc/dinit.d` e os controla com `dinitctl --system`. Nenhuma unidade de montagem systemd é gerada. O Phyto é o único gerenciador de arquivos base e o manipulador padrão de `inode/directory`. O File Roller fornece ações para abrir, criar e extrair arquivos compactados; o GParted fornece particionamento gráfico independente. O wrapper `dinx-wdisplays` fornece configuração interativa de displays Wayland, substitui atomicamente o perfil DINX `DINX wdisplays` em `~/.config/shikane/config.toml` e recarrega o daemon do usuário. O Shikane inicia com o labwc e reaplica perfis correspondentes quando as saídas mudam. A imagem omite gerenciadores de arquivos concorrentes e monitores de volume.
+O Phyto é o único gerenciador de arquivos base. File Roller e GParted cobrem arquivos compactados e particionamento independente. O módulo `ntfs3` fornece leitura/escrita NTFS na live e no sistema instalado; `ntfs-3g` é opcional pós-instalação. Fast Startup e hibernação do Windows devem ser desativados antes de montar um volume compartilhado.
 
-O módulo de kernel `ntfs3` fornece suporte NTFS de leitura e escrita tanto na ISO live quanto no sistema instalado. O Pori mapeia o tipo de filesystem `ntfs` do UDisks2 para `ntfs3`. O pacote legado `ntfs-3g` não fica na ISO nem na instalação base; continua opcional após a instalação para compatibilidade e ferramentas de reparo. O Fast Startup e a hibernação do Windows devem ser desativados antes de montar um volume NTFS compartilhado.
+`dinx-wdisplays` serializa exports com `flock`, substitui atomicamente o perfil `DINX wdisplays` em `~/.config/shikane/config.toml` e falha visivelmente se o reload do Shikane falhar. Shikane inicia dentro de Aqueous/Pearl e reaplica perfis quando as saídas mudam.
 
-## Caminho de instalação selecionado
+## Manifesto e CI
 
-A imagem base inclui o Phyto como gerenciador de arquivos padrão, o File Roller para ações com arquivos compactados, o Pori como gerenciador de armazenamento dinit, o GParted para particionamento gráfico independente, o `dinx-wdisplays` para configuração interativa com exportação persistente para o Shikane e o daemon de usuário Shikane. O perfil omite deliberadamente Thunar, GVFS, Tumbler e KDE Partition Manager em vez de enviar stacks concorrentes de gerenciador de arquivos, monitoramento de volumes e particionamento.
+`feature-groups.json` inventaria rootfs, init dinit, boot e livefs. `scripts/check_dinx_feature_groups.sh` compara inventários com as fontes YAML, rejeita ownership duplicado e impede pacotes opcionais no perfil base. `contracts.yml` executa checks não privilegiados; o workflow P0 permanece o gate privilegiado de build, QEMU, instalação, recuperação, atestação e release.
 
-O caminho de instalação persistente é o **Calamares** em modo offline: ele copia o root filesystem da ISO, cria o usuário e a tabela de sistemas de arquivos, habilita os serviços dinit, instala o GRUB e remove os pacotes exclusivos da sessão live. O usuário pode escolher particionamento automático ou manual, com ext4 e btrfs disponíveis no primeiro perfil. O perfil preserva layouts existentes de ESP/NTFS do Windows, habilita um diretório EFI separado para a DINX e mantém `os-prober` para a descoberta do Windows. O CI qualifica smokes transacionais BIOS/UEFI descartáveis, Btrfs com subvolumes existentes e Windows side-by-side/manual; o caminho continua experimental até qualificar proteções contra seleção destrutiva de dispositivo, instalação em hardware, atualizações da ISO instalada e recuperação de filesystem.
-
-A imagem base não inclui o KDE Partition Manager; o GParted fornece particionamento gráfico independente fora do Calamares, enquanto o Calamares continua sendo a transação de instalação.
-
-## Decisões ainda necessárias antes de um release de produção
-
-O caminho do instalador e o layout do repositório de pacotes estão selecionados,
-mas estas decisões continuam abertas antes de um release persistente de produção:
-
-- responsabilidade pela chave de assinatura de produção e provisionamento do segredo no GitHub;
-- matriz de GPUs e hardware suportados;
-- política de licença do repositório e dos artefatos.
-
-O perfil da ISO agora possui um manifesto versionado e validado de grupos foundation, desktop, gaming, hardware e opcionais. O CI assina o repositório pacman customizado, registra seu snapshot e qualifica transações assinadas de instalação/atualização/downgrade. A publicação com tag ainda exige o segredo da chave de produção; atualizações do sistema instalado, recuperação do filesystem e hardware físico continuam gates separados do release.
-
-O núcleo de terminal da P2 está selecionado para o pacote alpha; o release de produção ainda exige os gates mais amplos de hardware, provisionamento da chave e redistribuição.
+`scripts/check_dinx_budget.sh` mantém os tetos de pacotes rootfs, entradas dinit, binários e ISO. `scripts/check_dinx_session.sh`, `check_dinx_theme.sh`, `check_dinx_display_persistence.sh`, `check_pori_phyto.sh` e `check-iso-content.sh` verificam a integração observável antes da montagem final.

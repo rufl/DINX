@@ -1,6 +1,8 @@
 [Desktop Entry]
 Name=DINX Gaming
-Comment=Gamescope and Steam gaming session
+Comment=Gamescope and Steam gaming session (manual launch)
 Exec=dbus-run-session /usr/local/libexec/dinx-gaming
 TryExec=/usr/local/libexec/dinx-gaming
 Type=Application
+Hidden=true
+NoDisplay=true

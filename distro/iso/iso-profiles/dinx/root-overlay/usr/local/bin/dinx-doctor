@@ -56,10 +56,10 @@ print_value session.type "${XDG_SESSION_TYPE:-unknown}"
 print_value session.desktop "${XDG_CURRENT_DESKTOP:-unknown}"
 print_value session.session_desktop "${XDG_SESSION_DESKTOP:-unknown}"
 print_value session.wayland_display "${WAYLAND_DISPLAY:-unknown}"
-print_value session.default labwc+noctalia
-print_value session.alternate_boundary direct-dinit-aqueous-pearl
-command_state session.command.labwc labwc
-command_state session.command.noctalia noctalia
+print_value session.default aqueous+pearl
+print_value session.selectable aqueous+pearl-only
+print_value session.greeter_host aqueous
+command_state session.command.greeter aqueous
 command_state session.command.dinitctl dinitctl
 command_state session.command.dinitui dinitui
 command_state session.command.dinxpanel dinxpanel
@@ -107,7 +107,7 @@ fi
 print_value display.actions not-run
 
 for package in \
-  dinit labwc noctalia phyto pori wdisplays shikane file-roller gparted \
+  dinit phyto pori wdisplays shikane file-roller gparted \
   dinitui dinxpanel dome seafoam-settings zls aqueous pearl; do
   package_state "$package"
 done

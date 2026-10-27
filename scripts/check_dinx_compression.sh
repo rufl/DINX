@@ -38,6 +38,17 @@ DINX_COMPRESSION_ARGS="$args_file" \
   -comp=zstd -b=128K -Xbcj=arm -Xcompression-level=1 -Xdict-size=64K \
   -wildcards -e old-exclude
 
+guard_output=''
+if guard_output=$(DINX_MKSQUASHFS_REAL="$wrapper" "$wrapper" rootfs.img output.img 2>&1); then
+  guard_status=0
+else
+  guard_status=$?
+fi
+[[ "$guard_status" -eq 125 ]] || fail 'wrapper did not reject self-recursion'
+grep -Fq 'real binary resolves to the wrapper itself' <<<"$guard_output" \
+  || fail 'wrapper self-recursion diagnostic is missing'
+
+
 expected=$(cat <<'EOF'
 rootfs.img
 output.img

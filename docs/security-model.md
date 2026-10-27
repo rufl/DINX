@@ -4,7 +4,7 @@
 
 DINX is a public alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
-The live image automatically opens the disposable `dinx` account in `Labwc (DINX)`. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. The public `dinx` password remains only as a diagnostic fallback if ReGreet appears; the installed system keeps its separate Calamares-created login policy.
+The live image automatically opens the disposable `dinx` account in `Aqueous + Pearl (DINX)`. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. Installed/manual login uses Pearl Greeter through greetd and the dedicated `pearl-greeter` account; the configured host forces Aqueous/Pearl without X11, UWSM or systemd. The public `dinx` password remains only as a diagnostic fallback if Pearl Greeter appears after a manual live start; the installed system keeps its separate Calamares-created login policy.
 
 ## Threat assumptions
 
@@ -29,7 +29,7 @@ DINXPanel's GPU bridge and kernel installer MUST use fixed argv plans. Kernel ac
 The interface must distinguish a service that is stopped, failed, unknown or inaccessible. It must never report success based only on process launch.
 The gaming session is also a fixed boundary: its root overlay launcher starts only the packaged Gamescope/Steam argv, with no shell interpolation or systemd service. Steam's 32-bit/systemd compatibility libraries are payload dependencies, not an init runtime; the ISO content gate rejects the systemd daemon/runtime and systemctl. Controller devices, game content, Steam credentials and network services remain user-controlled inputs outside the alpha fixture qualification.
 
-Performance profiles are an explicit policy boundary, not an automatic service classifier. Built-in `normal`, `lite` and `gaming` lists touch only optional daemons; custom profiles accept only validated profile/service identifiers, persist under the user's XDG config, and apply system actions through the same `dinitctl`/`pkexec` path. The Noctalia plugin passes profile names as direct argv values and does not execute shell text.
+Performance profiles are an explicit policy boundary, not an automatic service classifier. Built-in `normal`, `lite` and `gaming` lists touch only optional daemons; custom profiles accept only validated profile/service identifiers, persist under the user's XDG config, and apply system actions through the same `dinitctl`/`pkexec` path. No shell plugin or private IPC is required.
 
 ## Package and ISO trust
 
@@ -47,7 +47,7 @@ Reproducibility is an acceptance target. A build that cannot identify its inputs
 
 Noctty and Nocted must not require elevated privileges. Project files, editor plugins and terminal commands are untrusted inputs. The applications should follow normal XDG permission boundaries and must not silently execute project code.
 
-Optional Noctalia IPC is treated as an untrusted integration boundary: validate message shape, handle unavailable endpoints and keep startup independent of the shell.
+Optional integrations use standard XDG, Wayland and D-Bus boundaries. Validate message shape, handle unavailable endpoints and keep startup independent of optional services.
 
 ## Alpha release handling
 

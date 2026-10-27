@@ -35,7 +35,7 @@ grep -Fq "depends=('clang'" "$pkgbuild" || fail 'clangd runtime dependency is mi
 grep -Fq "'git'" "$pkgbuild" || fail 'Git runtime dependency is missing'
 grep -Fqx '    - clang' "$profile" || fail 'profile does not install clangd'
 grep -Fq 'Git Status and Diff...' "$repo_root/distro/packages/noctty/qualification-compat.patch" || fail 'NoctEd Git action is missing'
-grep -Fq 'NOCTALIA_COLOR_SCHEME' "$repo_root/distro/packages/noctty/qualification-compat.patch" || fail 'Noctalia color scheme contract is missing'
+grep -Fq 'DINX_COLOR_SCHEME' "$repo_root/distro/packages/noctty/qualification-compat.patch" || fail 'DINX color scheme contract is missing'
 grep -Fq "'ghostty'" "$pkgbuild" || fail 'ghostty runtime dependency is missing'
 
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/dinx-noctty-integration.XXXXXX")
@@ -63,11 +63,10 @@ grep -Fq 'selected=foot argc=2 argv=--working-directory /tmp' <<<"$fallback_outp
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
-grep -Fqx 'TERMINAL=dinx-terminal EDITOR=nocted VISUAL=nocted XDG_CURRENT_DESKTOP=Labwc' <<<"$shell_output" || fail 'shell defaults are not deterministic'
+grep -Fqx 'TERMINAL=dinx-terminal EDITOR=nocted VISUAL=nocted XDG_CURRENT_DESKTOP=Aqueous' <<<"$shell_output" || fail 'shell defaults are not deterministic'
 
 tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/com.noctty.NOCTTY.desktop' >/dev/null || fail 'Noctty desktop entry is not packaged'
 tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/nocttyhere.desktop' >/dev/null || fail 'Open Here service menu is not packaged'
-tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/noctalia/noctalia-v5-widget.toml' >/dev/null || fail 'Noctalia widget resource is not packaged'
 tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/nocted/styles/nocted-dark.xml' >/dev/null || fail 'NoctEd dark scheme is not packaged in source'
 nocted_desktop=$(tar -xOf "$archive" noctty-0.1.0/resources/com.noctty.NoctEd.desktop)
 grep -Fqx 'Exec=nocted %F' <<<"$nocted_desktop" || fail 'NoctEd file opening contract is missing'
@@ -78,8 +77,5 @@ grep -Fqx 'Exec=noctty --open-uri %u' <<<"$desktop" || fail 'Noctty desktop URI 
 grep -Fqx 'Categories=System;TerminalEmulator;' <<<"$desktop" || fail 'Noctty desktop category is missing'
 service_menu=$(tar -xOf "$archive" noctty-0.1.0/resources/nocttyhere.desktop)
 grep -Fqx 'Exec=noctty --new-window --working-directory %f' <<<"$service_menu" || fail 'Open Here working-directory launch is missing'
-noctalia=$(tar -xOf "$archive" noctty-0.1.0/resources/noctalia/noctalia-v5-widget.toml)
-grep -Fqx 'left = "exec noctty --toggle"' <<<"$noctalia" || fail 'Noctalia toggle action is missing'
-grep -Fqx 'right = "exec noctty --show"' <<<"$noctalia" || fail 'Noctalia show action is missing'
 
-printf 'noctty_integration_contract terminal_discovery=true fallback=true shell_defaults=true nocted_file_open=true nocted_icon=true desktop=true working_directory=true noctalia=true package_runtime=true\n'
+printf 'noctty_integration_contract terminal_discovery=true fallback=true shell_defaults=true nocted_file_open=true nocted_icon=true desktop=true working_directory=true package_runtime=true\n'

@@ -1,4 +1,0 @@
-#!/bin/sh
-set -eu
-
-/usr/local/libexec/dinx-regreet

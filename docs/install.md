@@ -148,18 +148,18 @@ Use a trusted image writer such as Rufus. Select the verified ISO and the correc
 2. Reboot and open the one-time boot menu (`F12`, `F11`, `Esc` or the vendor-specific key).
 3. Select the UEFI entry for the USB.
 4. If the firmware refuses the image, disable Secure Boot for this test; the current alpha does not provide a signed Secure Boot path.
-5. Wait for the live desktop; the disposable session opens directly in `Labwc (DINX)`.
+5. Wait for the live desktop; the disposable session opens directly in `Aqueous + Pearl (DINX)`.
 
-The live session automatically opens the disposable `dinx` account in `Labwc (DINX)`; no username or password is requested. This is intentional: anyone who can boot the ISO already controls the live machine. The public `dinx` password remains only as a diagnostic fallback if ReGreet appears unexpectedly; never reuse it on another system or network.
+The live session automatically opens the disposable `dinx` account in `Aqueous + Pearl (DINX)`; no username or password is requested. This is intentional: anyone who can boot the ISO already controls the live machine. Installed/manual login uses Pearl Greeter through greetd and the dedicated `pearl-greeter` account. The public `dinx` password remains only as a diagnostic fallback if the live session is started manually; never reuse it on another system or network.
 
-Once the desktop appears, the tested graphical state shows labwc with the Noctalia welcome screen. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
-Noctalia starts with animations, panel translucency and Settings-window translucency disabled. These are user preferences, not locks: change them later in Noctalia Settings. labwc starts with two workspaces; edit `~/.config/labwc/rc.xml` for user overrides.
-Phyto is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts with labwc and reapplies matching profiles. `Dome`, `Seafoam Settings` and `zls` are bundled in the signed base ISO. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings groups the documented display/session configuration entry points; Nocted uses the bundled ZLS for Zig projects.
+Once the desktop appears, the tested graphical state is Aqueous/Pearl. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
+Pearl is the active shell. The static DINX theme is applied through the checked-in GTK/Qt bridges; Pearl Greeter reads `/etc/pearl/greeter.json`, uses the GTK DINX theme and forces the Aqueous/Pearl entry without X11 or UWSM.
+Phyto is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts inside Aqueous/Pearl and reapplies matching profiles. `Dome`, `Seafoam Settings` and `zls` are bundled in the signed base ISO. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings groups the documented display/session configuration entry points; Nocted uses the bundled ZLS for Zig projects.
 The base ZLS runtime is compact by design: completion and navigation use the bundled matching `lib/std` tree through `/usr/lib/zls/zig-env`; a full Zig compiler is optional and is not part of the ISO payload.
 
 ### BC250 Control Center
 
-Once the desktop is open, open **BC250 Control Center** from the Noctalia launcher or dock. DINX starts `bc250-control-centerd` once in the logged-in user session through the labwc autostart, so the daemon does not require a systemd unit or a root dinit service. It provides BC-250 telemetry and the upstream polkit-gated controls when the hardware and permissions are available. On dinit, upstream service persistence is detection-only; that limitation does not block the GUI or live readings.
+Once the desktop is open, open **BC250 Control Center** from the Pearl launcher or dock. The Aqueous/Pearl session supervisor starts `bc250-control-centerd` once when the BC-250 helper is available; the restricted Aqueous greeter host is not a user-session fallback. The daemon does not require a systemd unit or a root dinit service. It provides BC-250 telemetry and the upstream polkit-gated controls when the hardware and permissions are available. On dinit, upstream service persistence is detection-only; that limitation does not block the GUI or live readings.
 
 ## 5. Experimental persistent installation
 
@@ -168,7 +168,7 @@ From the live desktop:
 1. Open the application launcher and choose **Instalar DINX**.
 2. If the launcher entry is unavailable, run `pkexec calamares` from a terminal.
 3. Choose automatic or manual partitioning and verify the target disk, firmware mode and mount points before continuing.
-4. For advanced storage operations, open **Pori** from the Noctalia launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
+4. For advanced storage operations, open **Pori** from the Pearl launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
 5. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
 Calamares and GParted can erase, format or resize data. Pori mount actions do not format disks, but verify the device, filesystem and mount target before confirming any privileged action. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
@@ -188,9 +188,7 @@ If the graphical session is unavailable, use the independent Wayland fallback:
 DINX_TERMINAL_FALLBACK=1 dinx-terminal
 ```
 
-`Super+Enter` launches `dinx-terminal` in the labwc session. `$TERMINAL` points
-to `dinx-terminal`, which prefers NOCTTY and falls back to `foot` when NOCTTY is not
-installed.
+`$TERMINAL` points to `dinx-terminal`, which prefers NOCTTY and falls back to `foot` when NOCTTY is not installed. The only user compositor session is Aqueous/Pearl; the dedicated Pearl Greeter host is a greetd login surface, not a user-session configuration.
 Para registrar o estado sem alterar o sistema, execute:
 
 ```bash
@@ -206,9 +204,9 @@ O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `mi
 ### Supported by the current smoke evidence
 
 - x86_64 boot path in QEMU;
-- ReGreet rendering;
-- graphical login into the labwc session;
-- Noctalia startup;
+- Pearl Greeter payload and greetd configuration;
+- graphical login into the Aqueous/Pearl session;
+- Pearl startup;
 - presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
 - Windows-style GPT side-by-side and manual-layout transaction smoke: existing FAT32 ESP/Microsoft boot files and NTFS partition remain intact while DINX root, fstab and GRUB data are added;
 - presence of the Calamares offline-install configuration, Pori, Phyto and the kernel `ntfs3` storage path;
@@ -265,7 +263,7 @@ offline ISO payload.
 
 ### The live session does not open
 
-The expected path is direct autologin into `dinx`/`Labwc (DINX)`. If ReGreet appears unexpectedly, select user `dinx`, session `Labwc (DINX)`, and enter the exact disposable password `dinx` only for diagnosis. If it still fails, retain the workflow commit and hardware details; do not try random credentials.
+The expected path is direct autologin into `dinx`/`Aqueous + Pearl (DINX)`. If Pearl Greeter appears, it should already show only the forced `Aqueous + Pearl (DINX)` entry; capture the workflow commit and hardware details if the session does not start. Do not try random credentials.
 
 ### The checksum fails
 

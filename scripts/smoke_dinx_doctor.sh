@@ -16,7 +16,7 @@ cat > "$tmp/bin/pacman" <<'EOF'
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
 if [ "$1" = -Q ]; then
   case "$2" in
-    dinit|labwc|noctalia|phyto|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|dome|seafoam-settings|zls|aqueous|pearl) exit 0 ;;
+    dinit|phyto|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|dome|seafoam-settings|zls|aqueous|pearl) exit 0 ;;
   esac
 fi
 exit 1
@@ -28,7 +28,7 @@ printf '%s\n' "$*" >> "$DINX_DOCTOR_DINIT_LOG"
 [ "$1" = --user ] && [ "$2" = list ]
 EOF
 
-for command in labwc noctalia dinitui dinxpanel aqueous pearl phyto pori wdisplays shikane shikanectl udisksctl; do
+for command in dinitui dinxpanel aqueous pearl phyto pori wdisplays shikane shikanectl udisksctl; do
   : > "$tmp/bin/$command"
 done
 chmod +x "$tmp/bin/pacman" "$tmp/bin/dinitctl" "$tmp/bin"/*
@@ -45,9 +45,8 @@ report=$(
 for required in \
   'schema=dinx-doctor/v1' \
   'mode=read-only' \
-  'session.default=labwc+noctalia' \
+  'session.default=aqueous+pearl' \
   'storage.ntfs3_write=kernel-driver' \
-  'package.labwc=installed' \
   'package.aqueous=installed' \
   'package.pearl=installed' \
   'package.transactions=not-run' \

@@ -1,4 +1,4 @@
-/* DINX fallback theme; Noctalia templates refine this palette at session start. */
+/* DINX static theme; the Aqueous/Pearl session does not require a shell theme service. */
 * {
     font-family: Noto Sans;
     font-size: 10pt;

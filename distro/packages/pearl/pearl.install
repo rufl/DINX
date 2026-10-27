@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: DINX contributors
+# SPDX-License-Identifier: Apache-2.0
+
+ensure_pearl_greeter_account() {
+  if ! getent group pearl-greeter >/dev/null 2>&1; then
+    groupadd --system pearl-greeter
+  fi
+  if ! getent passwd pearl-greeter >/dev/null 2>&1; then
+    useradd --system --gid pearl-greeter \
+      --home-dir /var/empty/pearl-greeter \
+      --shell /usr/bin/nologin --no-create-home pearl-greeter
+  fi
+  usermod --append --groups video pearl-greeter
+  install -d -o root -g root -m 0755 /var/empty/pearl-greeter
+  install -d -o pearl-greeter -g pearl-greeter -m 0700 \
+    /var/lib/pearl-greeter /var/cache/pearl-greeter
+}
+
+post_install() {
+  ensure_pearl_greeter_account
+}
+
+post_upgrade() {
+  ensure_pearl_greeter_account
+}

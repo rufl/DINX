@@ -1,6 +1,9 @@
 [terminal]
 vt = 1
 
+[general]
+source_profile = false
+
 [default_session]
-command = "dbus-run-session /usr/local/libexec/dinx-labwc --greeter"
-user = "greeter"
+command = "/usr/lib/pearl/pearl-greeter-host"
+user = "pearl-greeter"

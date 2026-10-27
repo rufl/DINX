@@ -13,7 +13,7 @@ arch=('x86_64')
 url="$DOME_REPOSITORY"
 license=('LicenseRef-Pearl-Unlicensed')
 depends=('gtk4' 'glib2' 'glibc' 'hicolor-icon-theme' 'libpng' 'wayland')
-makedepends=('zig>=0.16')
+makedepends=('zig>=0.17')
 source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz")
 sha256sums=("$DOME_SOURCE_SHA256")
 

@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 profile="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
 mimeapps="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
-noctalia="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml"
+pearl_pkg="$repo_root/distro/packages/pearl/PKGBUILD"
 policy="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/firefox/policies/policies.json"
 
 fail() {
@@ -12,7 +12,7 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$mimeapps" "$noctalia" "$policy"; do
+for path in "$profile" "$mimeapps" "$pearl_pkg" "$policy"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -27,9 +27,9 @@ grep -Fqx 'text/html=firefox.desktop;' "$mimeapps" || fail 'Firefox is not the d
 grep -Fqx 'application/xhtml+xml=firefox.desktop;' "$mimeapps" || fail 'Firefox is not the default XHTML handler'
 grep -Fqx 'x-scheme-handler/http=firefox.desktop;' "$mimeapps" || fail 'Firefox is not the default HTTP handler'
 grep -Fqx 'x-scheme-handler/https=firefox.desktop;' "$mimeapps" || fail 'Firefox is not the default HTTPS handler'
-grep -Fq 'pinned = ["firefox"' "$noctalia" || fail 'Noctalia does not pin Firefox'
+grep -Fqx '    - pearl' "$profile" || fail 'Pearl is not present for desktop application discovery'
 
-if grep -Eiq 'palemoon|moonchild' "$profile" "$mimeapps" "$noctalia"; then
+if grep -Eiq 'palemoon|moonchild' "$profile" "$mimeapps"; then
   fail 'Pale Moon remains in the DINX default browser contract'
 fi
 

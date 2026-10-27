@@ -24,7 +24,7 @@ Se o reporte privado estiver indisponível, contate o proprietário pelo perfil 
 
 ## Limites específicos da alpha
 
-- A imagem live abre automaticamente a conta descartável `dinx` no `Labwc (DINX)`; a senha pública `dinx` fica apenas como fallback diagnóstico se o greeter aparecer. O acesso físico ao boot já dá controle da máquina live, então o autologin não é uma fronteira de autenticação. Nunca reutilize a senha em outro lugar.
+- A imagem live abre automaticamente a conta descartável `dinx` no `Aqueous + Pearl (DINX)`; o login instalado/manual usa o Pearl Greeter pelo greetd e pela conta dedicada `pearl-greeter`. O Greeter não é uma fronteira de autenticação da imagem live: o acesso físico ao boot já dá controle da máquina. A senha pública `dinx` fica apenas como fallback diagnóstico se a sessão live for iniciada manualmente. Nunca reutilize a senha em outro lugar.
 - Verifique o checksum da ISO antes de gravar mídia removível ou inicializá-la.
 - Não coloque credenciais de produção, dados pessoais ou chaves privadas na sessão live.
 - Um boot bem-sucedido não prova segurança de produção, segurança de persistência ou segurança de atualizações.

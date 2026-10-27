@@ -1,0 +1,54 @@
+name: DINX contracts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "distro/**"
+      - "scripts/**"
+      - "docs/**"
+      - "CHANGELOG*"
+      - "LICENSE"
+      - "REUSE.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-contracts-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Static and fixture contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install contract tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes curl jq python3-venv
+      - name: Install pinned Zig for source smokes
+        run: |
+          zig_version=0.17.0
+          zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
+          zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$RUNNER_TEMP/$zig_archive" \
+            "https://ziglang.org/download/${zig_version}/${zig_archive}"
+          printf '%s  %s\n' "$zig_sha256" "$RUNNER_TEMP/$zig_archive" | sha256sum -c -
+          tar -xJf "$RUNNER_TEMP/$zig_archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
+
+      - name: Run DINX static and fixture contracts
+        run: ./scripts/check_dinx_contracts.sh
+      - name: Verify REUSE metadata
+        run: |
+          python3 -m venv "$RUNNER_TEMP/reuse"
+          "$RUNNER_TEMP/reuse/bin/pip" install --quiet reuse
+          "$RUNNER_TEMP/reuse/bin/reuse" lint

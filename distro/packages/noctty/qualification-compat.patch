@@ -416,7 +416,7 @@
      if (args.len > 1 and std.mem.eql(u8, args[1], "--runtime-contract")) {
 @@ -6955,2 +6955,7 @@
 +fn lightThemeRequested(environ_map: *const std.process.Environ.Map) bool {
-+    const value = environ_map.get("NOCTALIA_COLOR_SCHEME") orelse
++    const value = environ_map.get("DINX_COLOR_SCHEME") orelse
 +        environ_map.get("NOCTED_THEME") orelse return false;
 +    return std.mem.eql(u8, value, "light") or std.mem.eql(u8, value, "prefer-light");
 +}

@@ -31,10 +31,10 @@ livefs_packages=$(awk '
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
 
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-labwc --greeter"' "$root_greetd" \
-  || fail 'installed greetd fallback session is missing'
-grep -Fq 'user = "greeter"' "$root_greetd" \
-  || fail 'installed greetd fallback user is missing'
+grep -Fq 'command = "/usr/lib/pearl/pearl-greeter-host"' "$root_greetd" \
+  || fail 'installed greetd fallback does not launch Pearl Greeter'
+grep -Fq 'user = "pearl-greeter"' "$root_greetd" \
+  || fail 'installed greetd fallback user is not the dedicated Pearl Greeter account'
 ! grep -Fq '[initial_session]' "$root_greetd" \
   || fail 'installed greetd config must not enable autologin'
 grep -Fq 'displayAutologin: false' "$users_conf" \
@@ -44,8 +44,8 @@ grep -Fq 'doAutologin: false' "$users_conf" \
 
 grep -Fq "AUTOLOGIN=true" "$wrapper" || fail 'live wrapper does not guard on AUTOLOGIN=true'
 grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure greetd initial_session'
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-labwc"' "$wrapper" \
-  || fail 'live initial session command is missing'
+grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
+  || fail 'live initial Aqueous/Pearl command is missing'
 grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'after = artix-live' "$service" || fail 'live autologin service ordering is incomplete'
@@ -59,4 +59,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true fallback_greeter=true installed_autologin=false dinit=true\n'
+printf 'dinx_live_autologin_contract=live=true initial_session=true fallback_pearl_greeter=true installed_autologin=false dinit=true\n'

@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-real_mksquashfs=${DINX_MKSQUASHFS_REAL:-/usr/bin/mksquashfs}
+if [[ -x /usr/local/libexec/dinx-mksquashfs.real ]]; then
+  real_mksquashfs=${DINX_MKSQUASHFS_REAL:-/usr/local/libexec/dinx-mksquashfs.real}
+else
+  real_mksquashfs=${DINX_MKSQUASHFS_REAL:-/usr/bin/mksquashfs}
+fi
 [[ -x "$real_mksquashfs" ]] || {
   printf 'dinx mksquashfs wrapper: missing %s\n' "$real_mksquashfs" >&2
   exit 127
+}
+wrapper_path=$(readlink -f "$0")
+real_path=$(readlink -f "$real_mksquashfs")
+[[ "$wrapper_path" != "$real_path" ]] || {
+  printf 'dinx mksquashfs wrapper: real binary resolves to the wrapper itself\n' >&2
+  exit 125
 }
 
 filtered=()

@@ -9,15 +9,22 @@ else
 fi
 config_dir=$config_home/shikane
 config_path=$config_dir/config.toml
+lock_path=$config_dir/.dinx-wdisplays.lock
 
 mkdir -p "$config_dir"
 umask 077
+exec 9>"$lock_path"
+flock -n 9 || {
+    printf 'dinx-save-shikane-profile: another display profile update is running\n' >&2
+    exit 1
+}
 export_file=$(mktemp "$config_dir/.dinx-wdisplays-export.XXXXXX")
 merged_file=$(mktemp "$config_dir/.dinx-wdisplays-config.XXXXXX")
 cleanup() {
     rm -f "$export_file" "$merged_file"
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 143' HUP INT TERM
 exported=0
 for attempt in 1 2 3 4 5; do
     : >"$export_file"
@@ -84,9 +91,8 @@ else
 fi
 
 mv -f "$merged_file" "$config_path"
-if shikanectl reload >/dev/null 2>&1; then
-    reload_status=reloaded
-else
-    reload_status=deferred
+if ! shikanectl reload >/dev/null 2>&1; then
+    printf 'dinx-save-shikane-profile: shikanectl reload failed after saving %s\n' "$config_path" >&2
+    exit 1
 fi
-printf 'dinx_display_profile profile="%s" path="%s" reload=%s\n' "$profile_name" "$config_path" "$reload_status"
+printf 'dinx_display_profile profile="%s" path="%s" reload=reloaded\n' "$profile_name" "$config_path"

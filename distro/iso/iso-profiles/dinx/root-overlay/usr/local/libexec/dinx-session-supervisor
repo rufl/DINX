@@ -1,0 +1,151 @@
+#!/bin/sh
+set -eu
+
+mode=${1:-}
+[ "$mode" = aqueous ] || {
+    printf 'dinx-session-supervisor: usage: %s aqueous\n' "$0" >&2
+    exit 64
+}
+
+state_home=${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}
+state_dir="$state_home/dinx"
+mkdir -p "$state_dir"
+log_path="$state_dir/session.log"
+status_path="$state_dir/session.status"
+: >>"$log_path"
+
+libexec_dir=${DINX_SESSION_LIBEXEC:-/usr/local/libexec}
+parent_pid=${DINX_SESSION_COMPOSITOR_PID:-}
+wayland_display=${WAYLAND_DISPLAY:-wayland-0}
+
+log() {
+    printf '%s mode=%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$mode" "$*" >>"$log_path"
+}
+
+set_status() {
+    status=$1
+    tmp="$status_path.tmp.$$"
+    printf 'mode=%s\nstatus=%s\n' "$mode" "$status" >"$tmp"
+    mv -f "$tmp" "$status_path"
+}
+
+stop_parent() {
+    if [ -n "$parent_pid" ] && [ "$parent_pid" != "$$" ]; then
+        kill -TERM "$parent_pid" 2>/dev/null || true
+    fi
+}
+
+cleanup() {
+    for pid in $child_pids; do
+        kill -TERM "$pid" 2>/dev/null || true
+    done
+    stop_parent
+}
+
+fail_session() {
+    message=$1
+    set_status failed
+    log "status=failed reason=$message"
+    cleanup
+    exit 1
+}
+
+child_pids=''
+child_names=''
+
+trap cleanup EXIT
+trap 'exit 143' HUP INT TERM
+
+wait_for_wayland() {
+    if [ "${DINX_SESSION_SKIP_WAYLAND_CHECK:-0}" = 1 ]; then
+        return 0
+    fi
+    runtime_dir=${XDG_RUNTIME_DIR:-}
+    [ -n "$runtime_dir" ] || return 1
+    socket="$runtime_dir/$wayland_display"
+    attempt=0
+    while [ "$attempt" -lt 150 ]; do
+        [ -S "$socket" ] && return 0
+        attempt=$((attempt + 1))
+        sleep 0.1
+    done
+    return 1
+}
+
+wait_for_dbus() {
+    if [ "${DINX_SESSION_SKIP_DBUS_CHECK:-0}" = 1 ]; then
+        return 0
+    fi
+    command -v dbus-send >/dev/null 2>&1 || return 1
+    attempt=0
+    while [ "$attempt" -lt 75 ]; do
+        if dbus-send --session --print-reply --dest=org.freedesktop.DBus \
+            /org/freedesktop/DBus org.freedesktop.DBus.ListNames >/dev/null 2>&1; then
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        sleep 0.2
+    done
+    return 1
+}
+
+process_alive() {
+    pid=$1
+    kill -0 "$pid" 2>/dev/null || return 1
+    state=$(ps -o stat= -p "$pid" 2>/dev/null | tr -d ' ' || true)
+    [ -n "$state" ] && [ "${state#Z}" = "$state" ]
+}
+
+start_required() {
+    name=$1
+    command=$2
+    shift 2
+    command -v "$command" >/dev/null 2>&1 || fail_session "missing-$name"
+    "$command" "$@" >>"$log_path" 2>&1 &
+    pid=$!
+    child_pids="$child_pids $pid"
+    child_names="$child_names $name=$pid"
+    log "helper=$name pid=$pid started"
+}
+
+start_optional() {
+    name=$1
+    command=$2
+    shift 2
+    if ! command -v "$command" >/dev/null 2>&1; then
+        log "helper=$name unavailable"
+        return 0
+    fi
+    "$command" "$@" >>"$log_path" 2>&1 &
+    pid=$!
+    child_pids="$child_pids $pid"
+    log "helper=$name pid=$pid started optional=true"
+}
+
+log 'status=starting'
+set_status starting
+wait_for_wayland || fail_session wayland-not-ready
+wait_for_dbus || fail_session dbus-not-ready
+
+start_required shikane shikane
+start_required policykit lxqt-policykit-agent
+start_required idle "$libexec_dir/dinx-idle"
+start_optional bc250 bc250-control-centerd
+start_required shell pearl
+
+set_status ready
+log 'status=ready'
+
+while :; do
+    if [ -n "$parent_pid" ] && [ "$parent_pid" != "$$" ] && ! process_alive "$parent_pid"; then
+        set_status exited
+        log 'status=exited reason=compositor-ended'
+        exit 0
+    fi
+    for entry in $child_names; do
+        name=${entry%%=*}
+        pid=${entry#*=}
+        process_alive "$pid" || fail_session "helper-$name-exited"
+    done
+    sleep 1
+done

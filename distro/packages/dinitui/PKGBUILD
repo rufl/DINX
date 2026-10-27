@@ -6,7 +6,7 @@ arch=(x86_64)
 url='https://github.com/rufl/DINX'
 license=(Apache)
 depends=(dinit gtk4 libadwaita polkit pciutils)
-makedepends=(zig)
+makedepends=('zig>=0.17')
 source=()
 sha256sums=()
 
@@ -22,10 +22,6 @@ package() {
   install -Dm644 resources/dinitui.desktop "$pkgdir/usr/share/applications/dinitui.desktop"
   install -Dm644 resources/dinitui.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg"
   install -Dm644 profiles.conf "$pkgdir/etc/dinx/dinitui/profiles.conf"
-  install -Dm644 resources/noctalia-plugin/dinx-performance/plugin.toml "$pkgdir/etc/skel/.local/share/noctalia/plugins/dinx-performance/plugin.toml"
-  install -Dm644 resources/noctalia-plugin/dinx-performance/gaming.luau "$pkgdir/etc/skel/.local/share/noctalia/plugins/dinx-performance/gaming.luau"
-  install -Dm644 resources/noctalia-plugin/dinx-performance/panel.luau "$pkgdir/etc/skel/.local/share/noctalia/plugins/dinx-performance/panel.luau"
-  install -Dm644 resources/noctalia-plugin/dinx-performance/service.luau "$pkgdir/etc/skel/.local/share/noctalia/plugins/dinx-performance/service.luau"
   install -Dm644 README.md "$pkgdir/usr/share/doc/dinitui/README.md"
   install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/dinitui/LICENSE"
 }

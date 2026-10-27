@@ -4,7 +4,7 @@
 
 A DINX é uma alpha pública. O modelo de segurança prioriza instalação segura, limites de confiança explícitos e capacidade de recuperação em vez de conveniência.
 
-A imagem live abre automaticamente a conta descartável `dinx` no `Labwc (DINX)`. Como quem consegue inicializar a ISO já controla a máquina live, um prompt de login adiciona atrito, mas não uma fronteira de segurança significativa. A senha pública `dinx` fica apenas como fallback diagnóstico se o ReGreet aparecer; o sistema instalado mantém sua política de login separada, criada pelo Calamares.
+A imagem live abre automaticamente a conta descartável `dinx` no `Aqueous + Pearl (DINX)`. Como quem consegue inicializar a ISO já controla a máquina live, um prompt de login adiciona atrito, mas não uma fronteira de segurança significativa. O login instalado/manual usa o Pearl Greeter pelo greetd e pela conta dedicada `pearl-greeter`; o host configurado força Aqueous/Pearl sem X11, UWSM ou systemd. A senha pública `dinx` fica apenas como fallback diagnóstico se o Pearl Greeter aparecer após uma inicialização manual da live; o sistema instalado mantém sua política de login separada, criada pelo Calamares.
 
 ## Hipóteses de ameaça
 
@@ -29,7 +29,7 @@ A ponte de GPU e o instalador de kernels da DINXPanel DEVEM usar planos fixos po
 A interface deve diferenciar um serviço parado, com falha, desconhecido ou inacessível. Nunca deve informar sucesso apenas porque um processo foi iniciado.
 A sessão gaming também é um limite fixo: o launcher no root overlay inicia somente o argv empacotado de Gamescope/Steam, sem interpolação de shell ou serviço systemd. As bibliotecas de compatibilidade systemd/32 bits do Steam são dependências de payload, não um runtime de init; o gate de conteúdo da ISO rejeita o daemon/runtime systemd e o systemctl. Dispositivos de controle, conteúdo dos jogos, credenciais Steam e serviços de rede continuam entradas controladas pelo usuário fora da qualificação por fixture da alpha.
 
-Perfis de performance são um limite de política explícito, não um classificador automático de serviços. As listas embutidas `normal`, `lite` e `gaming` atuam apenas sobre daemons opcionais; perfis customizados aceitam somente identificadores de perfil/serviço validados, persistem na configuração XDG do usuário e aplicam ações de sistema pelo mesmo caminho `dinitctl`/`pkexec`. O plugin Noctalia passa nomes de perfil como argv direto e não executa texto de shell.
+Perfis de performance são um limite de política explícito, não um classificador automático de serviços. As listas embutidas `normal`, `lite` e `gaming` atuam apenas sobre daemons opcionais; perfis customizados aceitam somente identificadores de perfil/serviço validados, persistem na configuração XDG do usuário e aplicam ações de sistema pelo mesmo caminho `dinitctl`/`pkexec`. Nenhum plugin de shell ou IPC privado é necessário.
 
 ## Confiança em pacotes e ISOs
 
@@ -47,7 +47,7 @@ Reprodutibilidade é um critério de aceitação. Um build que não identifica s
 
 Noctty e Nocted não devem exigir privilégios elevados. Arquivos de projeto, plugins do editor e comandos de terminal são entradas não confiáveis. Os aplicativos devem seguir os limites normais de permissões XDG e não podem executar código do projeto silenciosamente.
 
-O IPC opcional do Noctalia é tratado como um limite de integração não confiável: a forma das mensagens deve ser validada, endpoints indisponíveis devem ser tratados e a inicialização deve ser independente do shell.
+Integrações opcionais usam limites padrão de XDG, Wayland e D-Bus. A forma das mensagens deve ser validada, endpoints indisponíveis devem ser tratados e a inicialização deve ser independente de serviços opcionais.
 
 ## Tratamento dos releases alpha
 

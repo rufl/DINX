@@ -4,7 +4,7 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 saver="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-save-shikane-profile"
 launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-wdisplays"
-autostart="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/autostart"
+supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
 seed="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/shikane/config.toml"
 desktop="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
 iso_check="$root/scripts/check-iso-content.sh"
@@ -18,20 +18,24 @@ fail() {
   exit 1
 }
 
-for path in "$saver" "$launcher" "$autostart" "$seed" "$desktop" "$iso_check" "$workflow" "$seafoam_source" "$dinxpanel_source" "$smoke"; do
+for path in "$saver" "$launcher" "$seed" "$desktop" "$iso_check" "$workflow" "$seafoam_source" \
+  "$dinxpanel_source" "$smoke" "$supervisor"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 [[ -x "$saver" ]] || fail 'profile saver is not executable'
 [[ -x "$launcher" ]] || fail 'wdisplays wrapper is not executable'
 
 grep -Fq "profile_name='DINX wdisplays'" "$saver" || fail 'profile name is not stable'
+grep -Fq 'flock -n 9' "$saver" || fail 'saver does not serialize concurrent display updates'
 grep -Fq 'shikanectl export "$profile_name"' "$saver" || fail 'saver does not export the current display state'
 grep -Fq 'shikanectl reload' "$saver" || fail 'saver does not reload the daemon'
+grep -Fq 'reload failed after saving' "$saver" || fail 'saver hides reload failures'
+grep -Fq 'trap cleanup EXIT' "$saver" || fail 'saver cleanup is not guaranteed on normal exit'
+grep -Fq "trap 'exit 143' HUP INT TERM" "$saver" || fail 'saver does not terminate cleanly on signals'
 grep -Fq 'awk -v generated="$export_file"' "$saver" || fail 'saver does not merge the generated profile'
 grep -Fq 'mv -f "$merged_file" "$config_path"' "$saver" || fail 'saver is not atomic'
-grep -Fq 'wdisplays "$@"' "$launcher" || fail 'wrapper does not launch wdisplays'
-grep -Fq 'exec dinx-save-shikane-profile' "$launcher" || fail 'wrapper does not save after wdisplays exits'
-grep -Fq 'shikane >/dev/null 2>&1 &' "$autostart" || fail 'Shikane daemon is not started with the session'
+grep -Fq 'start_required shikane shikane' "$supervisor" \
+  || fail 'Aqueous supervisor does not own the display daemon'
 grep -Fq 'dinx-wdisplays' "$seed" || fail 'seed config does not document the DINX display path'
 grep -Fq 'timeout = 0' "$seed" || fail 'seed config is not valid Shikane TOML'
 grep -Fq 'Exec=dinx-wdisplays' "$desktop" || fail 'display desktop entry does not use the DINX wrapper'

@@ -56,7 +56,7 @@ makedepends=(
   'vulkan-headers'
   'hwdata'
   'jq'
-  'zig>=0.16'
+  'zig>=0.17'
 )
 provides=('aqueous-compositor')
 conflicts=('aqueous-core' 'aqueous-session' 'aqueous-bin')

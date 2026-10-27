@@ -12,23 +12,38 @@ export MOZ_ENABLE_WAYLAND=1
 export _JAVA_AWT_WM_NONREPARENTING=1
 export AQUEOUS_MOD="${AQUEOUS_MOD:-Super}"
 export AQUEOUS_NESTED=0
+export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"
+export DINX_DISPLAY_AUTHORITY=shikane
+export DINX_SESSION_COMPOSITOR_PID=$$
 unset DISPLAY
+
+has_render_node=false
+for render_node in /dev/dri/renderD*; do
+  if [ -e "$render_node" ]; then
+    has_render_node=true
+    break
+  fi
+done
+if [ "$has_render_node" = false ]; then
+  export WLR_RENDERER_ALLOW_SOFTWARE=1
+fi
 
 if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
   XDG_RUNTIME_DIR="/run/user/$(id -u)"
   export XDG_RUNTIME_DIR
 fi
-mkdir -p "$XDG_RUNTIME_DIR"
-chmod 0700 "$XDG_RUNTIME_DIR" 2>/dev/null || true
+if [ ! -d "$XDG_RUNTIME_DIR" ]; then
+  mkdir -p "$XDG_RUNTIME_DIR"
+fi
+if [ "$(stat -c '%u' "$XDG_RUNTIME_DIR")" != "$(id -u)" ]; then
+  printf 'dinx-aqueous-pearl: XDG_RUNTIME_DIR is not owned by the session user\n' >&2
+  exit 1
+fi
+chmod 0700 "$XDG_RUNTIME_DIR"
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
-if [ -n "${HOME:-}" ]; then
-  if [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then
-    install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
-  fi
-  if [ ! -e "$config_home/aqueous/outputs.toml" ] && [ -r /etc/xdg/aqueous/outputs.toml ]; then
-    install -Dm644 /etc/xdg/aqueous/outputs.toml "$config_home/aqueous/outputs.toml"
-  fi
+if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then
+  install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
 fi
 
 exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init

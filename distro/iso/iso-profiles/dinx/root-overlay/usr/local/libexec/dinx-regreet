@@ -1,8 +1,0 @@
-#!/bin/sh
-set -eu
-
-export GTK_THEME="${GTK_THEME:-DINX:dark}"
-export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
-export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
-regreet
-kill -TERM "$PPID"

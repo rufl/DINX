@@ -19,7 +19,7 @@ for path in \
   "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
   "$aqueous_dir/dinit.patch" \
-  "$pearl_dir/PKGBUILD" "$pearl_dir/source.env"; do
+  "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -48,6 +48,13 @@ for required in \
   '  usr/bin/aqueousctl' \
   '  usr/bin/aqueous-config' \
   '  usr/bin/pearl' \
+  '  usr/bin/pearl-greeter' \
+  '  usr/lib/pearl/pearl-greeter-host' \
+  '  usr/lib/pearl/pearl-greeter-session' \
+  '  usr/lib/pearl/pearl-greeter-init' \
+  '  usr/share/pearl-greeter/release-gate.json' \
+  '  etc/pearl/greeter.json' \
+  '  usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy' \
   '  usr/share/wayland-sessions/dinx-aqueous-pearl.desktop' \
   '  usr/local/libexec/dinx-aqueous-pearl' \
   '  usr/local/libexec/dinx-aqueous-init'; do
@@ -80,11 +87,25 @@ fi
 grep -Fq 'pkgver="$PEARL_VERSION"' "$pearl_dir/PKGBUILD" || fail 'Pearl package version is not pinned'
 grep -Fq '$PEARL_SOURCE_SHA256' "$pearl_dir/PKGBUILD" || fail 'Pearl source checksum is not wired to source.env'
 grep -Fq -- '-Dwasm-plugins=false' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not select the compact native build'
+grep -Fq 'build-greeter' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not build Pearl Greeter'
+grep -Fq 'install=pearl.install' "$pearl_dir/PKGBUILD" || fail 'Pearl package has no greeter account install hook'
+grep -Fq "'greetd'" "$pearl_dir/PKGBUILD" || fail 'Pearl package does not declare greetd integration'
+grep -Fq "'elogind'" "$pearl_dir/PKGBUILD" || fail 'Pearl package does not declare elogind power integration'
+grep -Fq 'pearl-greeter-host' "$pearl_dir/PKGBUILD" || fail 'Pearl Greeter host is not packaged'
+grep -Fq 'pearl-greeter-session' "$pearl_dir/PKGBUILD" || fail 'Pearl Greeter session helper is not packaged'
+grep -Fq 'pearl-greeter-init' "$pearl_dir/PKGBUILD" || fail 'Pearl Greeter init helper is not packaged'
 grep -Fq 'rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"' "$pearl_dir/PKGBUILD" \
   || fail 'Pearl upstream lifecycle payload is not removed'
 if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$pearl_dir/PKGBUILD" \
   || grep -Eiq '(^|[[:space:]])(systemctl|uwsm)([[:space:]]|$)' "$pearl_dir/PKGBUILD"; then
   fail 'Pearl recipe contains a systemd init, systemctl or uwsm dependency/command'
+fi
+grep -Fq 'useradd --system --gid pearl-greeter' "$pearl_dir/pearl.install" \
+  || fail 'Pearl Greeter account is not provisioned by the package hook'
+grep -Fq 'usermod --append --groups video pearl-greeter' "$pearl_dir/pearl.install" \
+  || fail 'Pearl Greeter account is missing video access'
+if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_dir/pearl.install"; then
+  fail 'Pearl Greeter install hook contains a systemd integration'
 fi
 
 grep -Fq 'build_package aqueous' "$workflow" || fail 'workflow does not build Aqueous'
@@ -99,9 +120,15 @@ grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not 
 grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" \
   || fail 'direct Aqueous wrapper command is missing'
-grep -Fq 'exec /usr/bin/pearl' \
+grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init" \
-  || fail 'direct Pearl command is missing'
+  || fail 'Aqueous init does not delegate to the supervised dinit session'
+grep -Fq 'start_required shell pearl' \
+  "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
+  || fail 'session supervisor does not own Pearl'
+grep -Fq 'wait_for_wayland' \
+  "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
+  || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s direct_dinit=true systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

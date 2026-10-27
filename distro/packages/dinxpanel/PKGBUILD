@@ -7,7 +7,7 @@ url='https://github.com/rufl/DINX'
 license=(Apache)
 depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)
 optdepends=('fwupd: firmware metadata and update checks' 'cups-dinit: optional CUPS printing support; downloads cups and dinit service files after installation')
-makedepends=(zig)
+makedepends=('zig>=0.17')
 source=()
 sha256sums=()
 

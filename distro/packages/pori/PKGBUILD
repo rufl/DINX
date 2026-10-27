@@ -14,13 +14,14 @@ license=('GPL-3.0-only')
 provides=('pori')
 depends=('dinit' 'gtk4' 'glib2' 'hicolor-icon-theme' 'glibc' 'polkit' 'udisks2' 'util-linux')
 optdepends=('ntfs-3g: optional legacy userspace NTFS driver and repair tools')
-makedepends=('zig>=0.16')
+makedepends=('zig>=0.17')
 source=(
   "$pkgname-$pkgver.tar.gz::${PORI_REPOSITORY}/archive/refs/tags/v${pkgver}.tar.gz"
   'units-dinit.zig'
   'privops-dinit.zig'
   'watch-dinit.zig'
   'pori-dinit.patch'
+  'pori-mount-service'
 )
 sha256sums=(
   "$PORI_SOURCE_SHA256"
@@ -28,6 +29,7 @@ sha256sums=(
   '2ff035ded115777d8e1015a9ed36f4315b3d9c3373f7c6ad8093fa86e7f99ad1'
   '3cdb23f243c02efcba94f2aa6c81fcbd58c538d256e270cee6b93e06e14e8e9c'
   '69a2da05e42d1392f4271518613236be0315a75d654a0da4de746fff9053a7ec'
+  '7dabe12d3c7f24a2fa8189ae0b7b517527e2867362e24cb4b425f4664b7b2e5d'
 )
 
 prepare() {
@@ -62,6 +64,7 @@ EOF
 
 package() {
   cd "$srcdir/Pori-$pkgver"
+  install -Dm755 "$srcdir/pori-mount-service" "$pkgdir/usr/local/libexec/pori-mount-service"
   install -Dm755 out/bin/pori "$pkgdir/usr/bin/pori"
   install -Dm644 Pori.Ui/assets/pori.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/pori.png"
   cat <<'EOF' | install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/com.pori.app.desktop"

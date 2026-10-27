@@ -46,7 +46,6 @@ rootfs:
     - phyto
     - pori
     - greetd
-    - greetd-regreet
     - linux-firmware-amdgpu
     - mesa
     - networkmanager
@@ -64,8 +63,6 @@ rootfs:
     - nano
     - noctty
     - foot
-    - labwc
-    - noctalia
     - qt6-wayland
     - qt6ct
     - shikane

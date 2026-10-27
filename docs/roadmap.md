@@ -19,14 +19,16 @@ publication plus package install/update/downgrade qualification is implemented i
 production key configuration, physical hardware, installed-ISO upgrades, filesystem
 rollback and long-term hardware service health remain release gates.
 
-Backlog:
+Implementation delivered:
 
-- qualify the selected Calamares offline installer, dinit target and standalone partitioner;
-- define the base package manifest and DINX-specific package boundary;
-- configure Wayland, labwc, Noctalia Shell and the greeter;
-- validate networking, PipeWire, D-Bus, portals, polkit and GPU acceleration;
-- retain a recovery TTY and document recovery from a broken graphical session;
-- add clean-build and VM boot/install smoke paths.
+- the P0 ISO/VM foundation gate, signed package transaction path and recovery-TTY contract;
+- the direct Aqueous/Pearl session, Pearl Greeter through greetd, and dinit-only runtime with no systemd/UWSM;
+- the Fish defaults, base package boundary and clean-build/VM smoke paths.
+
+Open foundation release gates:
+
+- validate networking, PipeWire, D-Bus, portals, polkit and GPU acceleration on physical hardware;
+- retain and exercise recovery after a broken graphical session;
 
 **Exit criterion:** a clean live boot opens a graphical session, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks and the signed package transaction path; installed-ISO upgrades, filesystem rollback and data preservation remain release gates.
 
@@ -58,7 +60,7 @@ P2 exit evidence:
 - the exact NOCTTY/NoctEd source archive is SHA-256 pinned, archive-verified and built into the Artix package;
 - the native Zig core qualifies PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, protocol/Unicode compatibility, allocator-accounted lifecycle and fairness under 30 panes with an 8 MiB paste;
 - the ReleaseSafe matrix qualifies actual tmux, a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP, real Vim/btop, and the installed `info` command or its deterministic styled fallback for minimal/non-TTY surfaces;
-- the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, Noctalia discovery and package-runtime contracts are verified;
+- the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, Aqueous/Pearl discovery and package-runtime contracts are verified;
 - the final P0 workflow proves package creation, ISO generation, QEMU boot, graphical payload, persistent installation, recovery TTY, attestation and artifact upload.
 
 Boundaries retained after P2:
@@ -83,7 +85,7 @@ Delivered:
 - bounded LSP process/client management with diagnostics, completion, hover, definitions, references, rename, symbols and formatting;
 - Git status, unified diffs and change markers exposed from the editor's Tools menu and the headless `--git-probe`;
 
-- Noctalia-aware light/dark editor schemes through the documented `NOCTALIA_COLOR_SCHEME`/`NOCTED_THEME` environment contract, with useful operation independent of Noctalia.
+- DINX static light/dark editor schemes through the documented `DINX_COLOR_SCHEME`/`NOCTED_THEME` environment contract, with useful operation independent of a desktop shell;
 
 P3 release gate:
 
@@ -106,7 +108,7 @@ P3 release gate:
 - lifecycle, boot activation, dependency, environment, signal and daemon actions from Dinit's own `dinitctl` vocabulary;
 - validated argv execution, system/user scopes and explicit `pkexec` retry only after authorization failure;
 - `normal`, `lite`, `gaming` and custom system-service profiles, with a GTK editor, persistence and CLI integration;
-- the local Noctalia `dinx/performance` plugin with a Control Center Gaming shortcut and profile panel;
+- direct DINX/dinit service-profile controls with a Control Center Gaming shortcut and profile panel;
 - DINXPanel with fixed hardware/control-panel shortcuts, the DinitUI GPU backend bridge and a non-removing Artix kernel catalog;
 - package, desktop metadata, license and ISO payload contracts.
 
@@ -149,7 +151,7 @@ P3 release gate:
 - build metadata now binds the recorded ISO byte count and SHA-512 to the exact artifact checked by CI and the tagged release preflight;
 - metadata records the largest installed packages so size regressions have an actionable diagnostic;
 - the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, Phyto, File Roller, GParted, recovery TTY and hardware behavior.
-- shipped the Aqueous 1.0.5/Pearl 0.3.0 alternate session through direct DINX wrappers: the greeter launches Aqueous, the init child starts the DINX user-session helpers and Pearl, the Aqueous activity bootstrap uses direct dinit process identity, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
+- shipped Aqueous 1.0.5/Pearl 0.3.0 as the sole user session through direct DINX wrappers: live autologin and the greeter launch Aqueous, the init child starts the DINX user-session helpers and Pearl, the Aqueous activity bootstrap uses direct dinit process identity, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
 
 **Remaining release gates:**
 

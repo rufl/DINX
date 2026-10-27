@@ -12,9 +12,9 @@ cd "$repo_root"
 for path in \
   distro/packages/bc250-control-center/PKGBUILD \
   distro/packages/bc250-control-center/source.env \
+  distro/packages/pearl/PKGBUILD \
   distro/iso/iso-profiles/dinx/profile.yaml \
-  distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/autostart \
-  distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml; do
+  distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor; do
   [[ -f "$path" ]] || fail "missing contract file: $path"
 done
 
@@ -36,12 +36,13 @@ if grep -Eq '^install=' distro/packages/bc250-control-center/PKGBUILD; then
 fi
 
 grep -Fq '    - bc250-control-center' distro/iso/iso-profiles/dinx/profile.yaml || fail 'package is missing from the DINX rootfs'
+grep -Fq '    - pearl' distro/iso/iso-profiles/dinx/profile.yaml || fail 'Pearl shell is missing from the DINX rootfs'
 grep -Fq '    - python-pyqt6' distro/iso/iso-profiles/dinx/profile.yaml || fail 'PyQt6 runtime is missing from the DINX rootfs'
 grep -Fq '    - python-psutil' distro/iso/iso-profiles/dinx/profile.yaml || fail 'psutil runtime is missing from the DINX rootfs'
 grep -Fq '    - qt6-svg' distro/iso/iso-profiles/dinx/profile.yaml || fail 'Qt SVG runtime is missing from the DINX rootfs'
 grep -Fq 'build_package bc250-control-center' .github/workflows/p0-iso.yml || fail 'CI does not build BC250 Control Center'
-grep -Fq 'bc250-control-centerd >/dev/null 2>&1 &' distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/labwc/autostart || fail 'session daemon autostart is missing'
-grep -Fq 'io.github.movacx.bc250-control-center' distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/noctalia/config.toml || fail 'Noctalia dock launcher is missing'
+grep -Fq 'start_optional bc250 bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor \
+  || fail 'session daemon is not supervised by the DINX session boundary'
 
-printf 'bc250_control_center_contract version=%s python=>=3.12 pyqt6=true daemon=session_autostart systemd=false source_sha256=%s\n' \
+printf 'bc250_control_center_contract version=%s python=>=3.12 pyqt6=true daemon=session_supervised systemd=false source_sha256=%s\n' \
   "$BC250_CONTROL_CENTER_VERSION" "$BC250_CONTROL_CENTER_SOURCE_SHA256"

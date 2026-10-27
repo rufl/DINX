@@ -1,6 +1,6 @@
 # DINXPanel
 
-DINXPanel is the DINX-native, YaST-inspired system control center. It groups fixed entry points for hardware, network, Bluetooth, audio, display, brightness, session lock, Dinit services, labwc options, firewall, updates and kernel installation.
+DINXPanel is the DINX-native, YaST-inspired system control center. It groups fixed entry points for hardware, network, Bluetooth, audio, display, brightness, session lock, Dinit services, firewall, updates and kernel installation.
 
 ## Safety boundary
 
@@ -46,4 +46,4 @@ fwupdmgr get-updates
 dinxpanel
 ```
 
-The display shortcut targets DINX's `dinx-wdisplays` wrapper. It opens `wdisplays`; closing it replaces the DINX-owned `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the session's Shikane daemon. Use `dinx-save-shikane-profile` to save without reopening the editor. Labwc options open the user's fixed `~/.config/labwc/rc.xml` in `nano` through `foot`; they do not evaluate configuration as shell input.
+The display shortcut targets DINX's `dinx-wdisplays` wrapper. It opens `wdisplays`; closing it replaces the DINX-owned `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the session's Shikane daemon. Use `dinx-save-shikane-profile` to save without reopening the editor.

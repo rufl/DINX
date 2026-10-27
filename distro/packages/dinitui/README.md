@@ -5,7 +5,7 @@ DinitUI is the DINX-native desktop frontend for the Dinit service manager.
 ## Design contract
 
 - GTK4 and libadwaita, chosen instead of a Qt/QML bridge to keep the Zig build and runtime dependency graph small.
-- DINX/Noctalia colors: `#0b0d12`, `#11151d`, `#d7dde8`, `#7f8a9c`, `#8fb8ff`, `#9ece6a`, `#f7768e`.
+- DINX colors: `#0b0d12`, `#11151d`, `#d7dde8`, `#7f8a9c`, `#8fb8ff`, `#9ece6a`, `#f7768e`.
 - Keyboard-first native controls, visible focus, no color-only state signal, and compact service-dashboard density.
 
 ## Control model
@@ -23,7 +23,7 @@ DinitUI provides `normal`, `lite`, and `gaming` system-service profiles plus cus
 
 The GTK interface selects and applies profiles, creates custom profiles, and edits whether the selected system service is enabled in the selected profile. User-scope services are not changed by profile operations. Policies are stored per user in `~/.config/dinx/dinitui/profiles.conf`; the packaged defaults are `/etc/dinx/dinitui/profiles.conf`.
 
-The CLI is used by Noctalia and DINXPanel. DINXPanel owns the visible hardware and driver controls; DinitUI remains focused on Dinit services and performance profiles.
+The CLI is used by DINXPanel and Seafoam Settings. DINXPanel owns the visible hardware and driver controls; DinitUI remains focused on Dinit services and performance profiles.
 
 ```text
 dinitui --profile-status
@@ -38,6 +38,4 @@ dinitui --install-gpu-drivers
 
 The `--gpu-*` commands are a fixed backend contract for DINXPanel: detection reads `lspci -nnk`, and installation builds an Artix `pacman --needed -S` plan. It uses `pkexec` only after an explicit root/authorization failure, never accepts package names from user input, and reports that a reboot is required after kernel-driver changes. NVIDIA uses `nvidia-open-dkms`, `nvidia-utils-dinit`, and the 32-bit userspace path for modern GPUs; legacy cards may need the matching `nvidia-580xx` family.
 
-Noctalia applies the Dinit profile first and reports a separate power-profile synchronization failure instead of presenting the combined operation as fully successful.
-
-Noctalia installs the `dinx/performance` plugin in the user skeleton. Its Control Center Gaming shortcut applies the Dinit profile and synchronizes Noctalia's `performance`/`balanced` power profile. Custom service membership remains a DinitUI concern and is opened from the plugin panel.
+DinitUI exposes the profile state and failure details directly to its GTK interface, DINXPanel and Seafoam Settings. No shell plugin or user-session service is required.

@@ -65,7 +65,6 @@ const App = struct {
         c.gtk_box_append(@ptrCast(session), makeButton("Dinit services", "Open the Dinit service and profile manager", &onDinitClicked, self));
         c.gtk_box_append(@ptrCast(session), makeButton("DINX controls", "Open the DINX system control center", &onDinxPanelClicked, self));
         c.gtk_box_append(@ptrCast(session), makeButton("Qt appearance", "Open Qt6 appearance settings", &onQtClicked, self));
-        c.gtk_box_append(@ptrCast(session), makeButton("Edit labwc", "Edit the user labwc configuration in a terminal", &onLabwcEditClicked, self));
         c.gtk_box_append(@ptrCast(content), session);
 
         appendSectionTitle(content, "Seafoam tools");
@@ -195,9 +194,6 @@ fn onQtClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"qt6ct"});
 }
 
-fn onLabwcEditClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launchConfig(".config/labwc/rc.xml", "--app-id=seafoam-settings-labwc");
-}
 
 fn onDomeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"dome"});

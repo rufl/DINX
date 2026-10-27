@@ -242,7 +242,7 @@ hardware/session evidence without changing system state.
 
 ## Release limits
 
-- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if ReGreet appears. It is never an authentication boundary and must not be reused.
+- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if Pearl Greeter appears after a manual live start. It is never an authentication boundary and must not be reused.
 - The image is still an experimental disk installer without an installed-ISO upgrade,
   filesystem rollback or signed Secure Boot path. CI qualifies the offline rootfs
   contract on disposable BIOS and UEFI disks and captures a recovery-TTY frame; it

@@ -19,10 +19,10 @@ DINX applications
   Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (base ISO)
 
 Shared integration contracts
-  Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · optional Noctalia IPC
+  Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · standard D-Bus adapters
 
 Desktop session
-  Wayland · labwc · Noctalia Shell · greeter
+  Wayland · Aqueous · Pearl · Pearl Greeter host
 
 Operating-system foundation
   Artix Linux · dinit · kernel · Mesa/Vulkan · PipeWire · D-Bus · portals · polkit
@@ -62,10 +62,10 @@ Nocted is a lightweight code editor, not a full IDE. Its boundaries are:
 - a proven syntax parser such as Tree-sitter;
 - an LSP process/client layer;
 - Git status, bounded unified diff output and per-file change markers are exposed through the editor's Tools action; Git is an optional project capability and never blocks opening or editing a file outside a repository.
-- Nocted's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses the bundled `zls`; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a Noctalia dependency.
-- The editor selects its documented light/dark scheme from `NOCTALIA_COLOR_SCHEME` or `NOCTED_THEME` and falls back to the DINX dark scheme. Noctalia may provide the preference, but the editor remains functional without the shell.
+- Nocted's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses the bundled `zls`; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a shell dependency.
+- The editor selects its documented light/dark scheme from `DINX_COLOR_SCHEME` or `NOCTED_THEME` and falls back to the DINX dark scheme.
 
-The editor must remain useful without Noctalia. Noctalia supplies optional presentation and launcher integration, not the editor's core functionality.
+The editor remains useful without a shell session service or private IPC. Presentation and launcher integration are optional and use standard XDG/Wayland boundaries.
 
 ### DinitUI
 
@@ -75,14 +75,14 @@ DinitUI also owns explicit `normal`, `lite`, `gaming` and user-defined system-se
 
 ### DINXPanel
 
-DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, labwc options, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its read-only upgrade report uses Shelly and optional fwupd metadata; Topgrade preview uses `--dry-run --show-skipped`; explicit upgrades remain user-confirmed terminal workflows. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
+DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its read-only upgrade report uses Shelly and optional fwupd metadata; Topgrade preview uses `--dry-run --show-skipped`; explicit upgrades remain user-confirmed terminal workflows. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
 
 Printing is an explicit post-install option rather than an ISO dependency:
 DINXPanel downloads the fixed `cups-dinit` package from the configured Artix
 repository, which pulls CUPS and provides the `cupsd` dinit service. The user
 enables or starts that service through DinitUI when printing is required.
 
-DINX ships a local Noctalia `dinx/performance` plugin. Its Control Center shortcut applies the Gaming profile and synchronizes Noctalia's documented `performance`/`balanced` power profile. The standalone Gamescope session does not start Noctalia and therefore remains independent of this integration.
+The standalone Gamescope session is independent of the Aqueous/Pearl session supervisor and does not install a shell plugin or systemd integration.
 
 ### Dome
 
@@ -90,21 +90,26 @@ DINX ships a local Noctalia `dinx/performance` plugin. Its Control Center shortc
 
 ### Seafoam Settings and ZLS
 
-`Seafoam Settings` is a base native Zig/GTK4 launcher for the DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, labwc, DinitUI, DINXPanel, Qt6ct and Dome. It launches fixed argument vectors and opens only the documented user configuration files in Foot/Nano; it does not interpret arbitrary shell commands or replace the specialist applications.
+`Seafoam Settings` is a base native Zig/GTK4 launcher for the DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Dome. It launches fixed argument vectors and opens only the documented Aqueous/Pearl and Shikane configuration files in Foot/Nano; it does not interpret arbitrary shell commands or expose a compositor or greeter-session editor.
 
-`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Nocted completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
+`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Nocted completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0; the 0.16.0 tree here is only the ZLS/LSP compatibility runtime. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
 ### Aqueous, Pearl and the dinit session boundary
 
-Aqueous 1.0.5 and Pearl 0.3.0 are shipped as an alternate DINX session in the base ISO. The greeter entry `Aqueous + Pearl (DINX)` runs `dinx-aqueous-pearl`, which starts Aqueous directly; Aqueous invokes `dinx-aqueous-init`, which starts Shikane, the PolicyKit agent, the BC250 daemon and the idle guard before it `exec`s Pearl. DINX removes the upstream `uwsm` and systemd user-unit payload. The direct-dinit Aqueous build removes its systemd library and activity-bootstrap D-Bus checks, authorizing Pearl through pidfd, executable and environment checks instead. `Labwc (DINX)` with Noctalia remains the default session, and there is no silent fallback from an unavailable alternate session.
+Aqueous 1.0.5 and Pearl 0.3.0 are shipped as the only selectable DINX user session and the live initial session. The `Aqueous + Pearl (DINX)` entry runs `dinx-aqueous-pearl`, selects the elogind/libseat backend, applies a software-renderer fallback when no DRM render node exists and invokes Aqueous directly. Aqueous invokes `dinx-aqueous-init`; that child waits for the Wayland socket and session D-Bus, then starts supervised Shikane, PolicyKit, optional BC250, the required idle helper and Pearl. `dinx-session-supervisor` records `starting`, `ready`, `failed` and `exited` state and terminates the compositor when a required helper or Pearl exits; if the supervisor itself is stopped, its cleanup path terminates the tracked compositor parent too. DINX removes upstream `uwsm` and systemd user-unit payloads. Installed/manual login uses Pearl Greeter: greetd launches its dedicated host through the `pearl-greeter` account, and `/etc/pearl/greeter.json` forces the same Aqueous/Pearl entry with X11 and UWSM disabled. Pearl Greeter is not a user-session fallback and never performs a silent session switch.
 
 `dinx-doctor` is the read-only evidence surface for the current session, dinit, storage, display and package paths. It does not start services, mount devices, modify Shikane, run package transactions or contact a network. `DINX_DOCTOR_QUERY_DINIT=1` opts into a read-only user-dinit list query.
 
 
 ### Session safety and payload budgets
 
-The labwc session starts the fixed `dinx-idle` wrapper. It uses `swayidle` to lock after 600 seconds and on `before-sleep`; `dinx-lock`, `Super+L`, the Noctalia launcher and DINXPanel use the same `swaylock` path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
+The Aqueous/Pearl session starts the fixed `dinx-idle` wrapper. It uses `swayidle` to lock after 600 seconds and on `before-sleep`; `dinx-lock`, `Super+L`, Pearl's lock surface and DINXPanel use the same `swaylock` path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
 
 The profile has one combined Artix package payload because `buildiso` consumes one YAML profile. DinitUI separates Normal/Lite/Gaming service policy at runtime, while `scripts/check_dinx_budget.sh` prevents package/startup/binary growth. `scripts/measure_dinx_session.sh` is a runtime observation tool; it reports RSS/CPU only when a real session exists and does not substitute for hardware qualification.
+
+## Manifest and CI boundary
+
+`feature-groups.json` classifies the DINX rootfs payload and now also inventories the selected common, dinit-init, boot and livefs inputs. `scripts/check_dinx_feature_groups.sh` compares those inventories with the YAML sources, rejects duplicate group ownership and rejects optional packages entering the base profile. The unprivileged `contracts.yml` workflow runs these checks, the supervised-session/display/storage fixture smokes and the pinned Zig 0.17 Pori source smoke on pull requests; the privileged P0 workflow remains the build, QEMU and install gate.
+
 
 ## Shared contracts
 
@@ -114,20 +119,20 @@ Shared contracts are versioned independently from application internals:
 - application configuration locations under XDG conventions;
 - `.desktop` metadata and command-line behavior;
 - `$TERMINAL` invocation and working-directory behavior;
-- optional Noctalia IPC and notification adapters;
+- standard D-Bus notification adapters;
 - logging and diagnostic conventions.
 
 A contract must have a documented version and a compatibility test before applications rely on it.
 
-The DINX Theme v1 contract is a Noctalia custom palette: semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges (matching CachyOS's default GTK typography), square control geometry and Adwaita icon bridging. GTK/Qt consume the documented Noctalia template outputs; labwc uses the checked-in `/etc/xdg/labwc` configuration and merges user overrides from `~/.config/labwc/rc.xml`. ReGreet, Calamares, Swayimg and GRUB use static bridges with the same tokens. Qt's Fusion backend, fixed-width Noto Sans Mono 10 fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
+The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry and Adwaita icon bridging. GTK uses the installed DINX theme; Qt uses the checked-in `DINX.conf`; Pearl Greeter uses `/etc/pearl/greeter.json` with the GTK DINX bridge. Pearl, Pearl Greeter, Calamares, Swayimg and GRUB use static bridges with the same tokens. Qt's Fusion backend, fixed-width Noto Sans Mono 10 fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
 
 ## Gaming session
 
-Gaming is a separate session built around Gamescope and Steam. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry; it does not assume that Noctalia or labwc is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`; the P0 builder explicitly enables Artix's official `lib32` repository and does not add Arch repositories. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures, signal-time process-group cleanup and profile restoration, and a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware, DRM display, suspend/resume or GPU recovery.
+Gaming is a manual launcher built around Gamescope and Steam, not a selectable user session. `dinx-gaming` starts `gamescope --backend drm --steam --fullscreen -- steam -tenfoot` from a standalone `dbus-run-session` Wayland desktop entry marked hidden from the greeter; it does not assume that the Aqueous/Pearl session is running underneath. The profile carries Steam's 32-bit Mesa/RADV/Vulkan dependencies and `steam-devices`; the P0 builder explicitly enables Artix's official `lib32` repository and does not add Arch repositories. `scripts/gaming_p5_qualification.sh` proves launcher argv/return behavior with fixtures, signal-time process-group cleanup and profile restoration, and a real headless Gamescope child launch/exit; it does not claim an authenticated Steam login, a commercial game, controller/audio hardware or DRM display qualification.
 
 ## Storage and filesystem boundary
 
-Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, but its persistent mount lifecycle is dinit-native: Pori writes scripted services under `/etc/dinit.d` and controls them with `dinitctl --system`. No systemd mount units are generated. Phyto is the only base file manager and the default `inode/directory` handler. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, then atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the user daemon. Shikane starts with labwc and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
+Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. Phyto is the only base file manager and the default `inode/directory` handler. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside Aqueous/Pearl and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
 
 The kernel `ntfs3` module supplies NTFS read/write support in both the live ISO and the installed system. Pori maps UDisks2's `ntfs` filesystem type to `ntfs3`. The legacy `ntfs-3g` package is not in the ISO or base install; it remains an optional post-install package for compatibility and repair tooling. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 

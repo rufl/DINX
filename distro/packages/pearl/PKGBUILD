@@ -8,7 +8,7 @@ source_env="$startdir/source.env"
 pkgver="$PEARL_VERSION"
 pkgrel=1
 epoch=1
-pkgdesc='Pearl GTK desktop shell for direct Aqueous sessions on DINX'
+pkgdesc='Pearl GTK desktop shell and Pearl Greeter for direct Aqueous sessions on DINX'
 arch=('x86_64')
 url="$PEARL_SOURCE_URL"
 license=('LicenseRef-Pearl-Unlicensed')
@@ -38,10 +38,13 @@ depends=(
   'gdk-pixbuf2>=2.44.7'
   'cairo>=1.18.4'
   'aqueous>=1.0.5'
+  'dbus'
+  'elogind'
+  'greetd'
 )
 makedepends=(
   'git'
-  'zig>=0.16'
+  'zig>=0.17'
   'pkgconf'
   'gcc'
   'qt5-base'
@@ -61,17 +64,19 @@ optdepends=(
   'upower: battery status'
   'power-profiles-daemon: power profiles'
 )
-provides=('pearl-capture-picker=0.3.0')
+provides=('pearl-capture-picker=0.3.0' 'pearl-greeter=0.3.0')
 conflicts=('pearl-git')
 options=('!strip' '!debug')
 source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}")
 sha256sums=("$PEARL_SOURCE_SHA256")
+install=pearl.install
+
 
 build() {
   cd "$srcdir/pearl-$pkgver"
   export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
   export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
-  "${ZIG:-zig}" build -Dqt-themes=true -Doptimize=ReleaseSafe \
+  "${ZIG:-zig}" build install build-greeter -Dqt-themes=true -Doptimize=ReleaseSafe \
     -Drelease=true -Dcpu=baseline -Dwasm-plugins=false
 }
 
@@ -81,14 +86,37 @@ check() {
     pearl-chooser pearl-preview-helper xdg-desktop-portal-pearl pearl-scheduling-helper; do
     test -x "$srcdir/pearl-$pkgver/zig-out/bin/$bin"
   done
+  for bin in pearl-greeter pearl-greeter-session pearl-greeter-host pearl-greeter-sync; do
+    test -x "$srcdir/pearl-$pkgver/zig-out/greeter/bin/$bin"
+  done
 }
 
 package() {
   cd "$srcdir/pearl-$pkgver"
   DESTDIR="$pkgdir" PEARL_BINARY_DIR="$PWD/zig-out/bin" \
     bash packaging/install.sh
-  # DINX launches Pearl directly from its Aqueous child process. Upstream's
-  # optional lifecycle files are intentionally not installed because DINX uses
-  # dinit and direct session launch.
+
+  local greeter_stage="$srcdir/pearl-greeter-stage"
+  rm -rf "$greeter_stage"
+  python3 packaging/greeter/stage.py \
+    --build "$PWD/zig-out/greeter/bin" \
+    --dest "$greeter_stage"
+
+  install -Dm755 "$greeter_stage/usr/bin/pearl-greeter" \
+    "$pkgdir/usr/bin/pearl-greeter"
+  for bin in pearl-greeter-session pearl-greeter-host; do
+    install -Dm755 "$greeter_stage/usr/lib/pearl/$bin" \
+      "$pkgdir/usr/lib/pearl/$bin"
+  done
+  install -Dm755 "$greeter_stage/usr/lib/pearl/pearl-greeter-init" \
+    "$pkgdir/usr/lib/pearl/pearl-greeter-init"
+  install -Dm644 \
+    "$greeter_stage/usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy" \
+    "$pkgdir/usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy"
+  install -Dm644 "$greeter_stage/greeter-release-gate.json" \
+    "$pkgdir/usr/share/pearl-greeter/release-gate.json"
+
+  # DINX launches Pearl and Pearl Greeter directly through dinit/greetd.
+  # Upstream systemd/UWSM lifecycle payloads are never shipped.
   rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"
 }

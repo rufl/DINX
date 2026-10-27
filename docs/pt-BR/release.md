@@ -248,7 +248,7 @@ evidências de hardware e sessão sem alterar o estado do sistema.
 
 ## Limites do release
 
-- A imagem live faz autologin na conta descartável `dinx` e mantém a senha pública `dinx` apenas como fallback diagnóstico se o ReGreet aparecer. Ela nunca é uma fronteira de autenticação e não deve ser reutilizada.
+- A imagem live faz autologin na conta descartável `dinx` e mantém a senha pública `dinx` apenas como fallback diagnóstico se o Pearl Greeter aparecer após uma inicialização manual da live. Ela nunca é uma fronteira de autenticação e não deve ser reutilizada.
 - A imagem ainda é um instalador de disco experimental, sem atualização da ISO instalada,
   rollback do filesystem ou caminho Secure Boot assinado. O CI qualifica o contrato
   offline do rootfs em discos BIOS e UEFI descartáveis e captura um quadro da TTY de

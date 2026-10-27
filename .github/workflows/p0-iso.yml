@@ -64,6 +64,9 @@ on:
       - "scripts/smoke_zls.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
+      - "scripts/smoke_dinx_session_supervisor.sh"
+      - "scripts/smoke_pori_mount_service.sh"
+      - "scripts/smoke_pori_zig.sh"
       - "scripts/check_firewall_tools.sh"
       - "scripts/check_cyan_skillfish.sh"
       - "scripts/check_bc250_control_center.sh"
@@ -76,7 +79,6 @@ on:
       - "scripts/check_dinx_budget.sh"
       - "scripts/measure_dinx_session.sh"
       - "scripts/smoke_dinx_session.sh"
-      - "scripts/check_gaming.sh"
       - "scripts/check_alpha7_hardware_report.sh"
       - "scripts/check_dinx_hardware_evidence.sh"
       - "scripts/dinitui_dinit_qualification.sh"
@@ -96,7 +98,7 @@ jobs:
   build-and-smoke:
     name: Build and smoke-test DINX foundation ISO
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - name: Checkout DINX
@@ -128,6 +130,10 @@ jobs:
         run: ./scripts/check_dinx_display_persistence.sh
       - name: Smoke-test wdisplays to Shikane persistence
         run: ./scripts/smoke_dinx_display_persistence.sh
+      - name: Smoke-test the sole Aqueous/Pearl session boundary
+        run: ./scripts/smoke_dinx_session_supervisor.sh
+      - name: Smoke-test supervised Pori NTFS mount service
+        run: ./scripts/smoke_pori_mount_service.sh
       - name: Verify WIZP package staging and desktop contract
         run: ./scripts/check_wizp_package.sh
       - name: Verify DINX package provenance policy
@@ -202,6 +208,8 @@ jobs:
             "$DINX_ARTIX_IMAGE" \
             bash -ceu "$(cat <<'DINX_CONTAINER_SCRIPT'
               set -euxo pipefail
+              DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"
+              export DINX_ARTIX_IMAGE
               : "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"
               pacman_retry() {
                 local attempt
@@ -340,19 +348,7 @@ jobs:
               actual_zig_version=$(zig version)
               printf "zig_version=%s\n" "$actual_zig_version"
               test "$actual_zig_version" = "$zig_version"
-              zig_16_version=0.16.0
-              zig_16_archive="zig-x86_64-linux-${zig_16_version}.tar.xz"
-              zig_16_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00
-              curl --fail --silent --show-error --location --retry 3 \
-                --output "/tmp/$zig_16_archive" \
-                "https://ziglang.org/download/${zig_16_version}/${zig_16_archive}"
-              actual_zig_16_sha=$(sha256sum "/tmp/$zig_16_archive" | cut -d " " -f 1)
-              printf "zig_16_sha256=%s\n" "$actual_zig_16_sha"
-              test "$actual_zig_16_sha" = "$zig_16_sha256"
-              tar -xJf "/tmp/$zig_16_archive" --directory /tmp
-              actual_zig_16_version=$("/tmp/zig-x86_64-linux-${zig_16_version}/zig" version)
-              printf "zig_16_version=%s\n" "$actual_zig_16_version"
-              test "$actual_zig_16_version" = "$zig_16_version"
+              ZIG="/tmp/zig-x86_64-linux-${zig_version}/zig" scripts/smoke_pori_zig.sh
 
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_dinx_theme.sh
@@ -419,7 +415,7 @@ jobs:
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                 fi
                 if [[ "$package_name" == pori || "$package_name" == phyto || "$package_name" == dome || "$package_name" == aqueous || "$package_name" == pearl ]]; then
-                  extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_16_version}/zig")
+                  extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")
                 fi
                 (
                   cd "$package_dir"
@@ -563,6 +559,13 @@ jobs:
               repo_pid=$!
               trap "kill $repo_pid 2>/dev/null || true" EXIT
 
+              real_mksquashfs=$(readlink -f "$(command -v mksquashfs)")
+              test -x "$real_mksquashfs"
+              install -D -m 0755 "$real_mksquashfs" /usr/local/libexec/dinx-mksquashfs.real
+              install -m 0755 /workspace/scripts/iso-tools/mksquashfs /usr/bin/mksquashfs
+              export DINX_MKSQUASHFS_REAL=/usr/local/libexec/dinx-mksquashfs.real
+              command -v mksquashfs | grep -Fqx /usr/bin/mksquashfs
+              printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$(command -v mksquashfs)" "$DINX_MKSQUASHFS_REAL"
               scripts/check-iso-host.sh
               scripts/build-iso.sh
               metadata_path="$DINX_ISO_OUTPUT/dinx/build-metadata.txt"

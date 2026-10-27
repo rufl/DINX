@@ -99,10 +99,11 @@ fn buildServiceContent(
     const what_token = try dinitToken(arena, what);
     const path_token = try dinitToken(arena, path);
     const options_token = try dinitToken(arena, options_line);
-    const command = if (options_line.len > 0)
-        try std.fmt.allocPrint(arena, "/usr/bin/mount -t {s} -o {s} {s} {s}", .{ type_token, options_token, what_token, path_token })
-    else
-        try std.fmt.allocPrint(arena, "/usr/bin/mount -t {s} {s} {s}", .{ type_token, what_token, path_token });
+    const command = try std.fmt.allocPrint(
+        arena,
+        "/usr/local/libexec/pori-mount-service {s} {s} {s} {s}",
+        .{ what_token, path_token, type_token, options_token },
+    );
 
     return std.fmt.allocPrint(arena,
         \\# Managed by Pori for DINX (dinit).
@@ -111,13 +112,14 @@ fn buildServiceContent(
         \\# Pori-Where: {s}
         \\# Pori-Type: {s}
         \\# Pori-Options: {s}
-        \\type = scripted
+        \\type = process
         \\command = {s}
-        \\stop-command = /usr/bin/umount {s}
-        \\restart = false
+        \\restart = true
+        \\restart-delay = 5
+        \\restart-limit-count = 0
         \\depends-on = local.target
         \\
-    , .{ description_line, what, path, effective_type, options_line, command, path_token });
+    , .{ description_line, what, path, effective_type, options_line, command });
 }
 
 var temp_counter: std.atomic.Value(u64) = std.atomic.Value(u64).init(0);
@@ -228,13 +230,16 @@ test "shQuote escapes single quotes" {
     try std.testing.expectEqualStrings("'it'\\''s a trap'", quoted);
 }
 
-test "dinit content maps NTFS to the kernel driver" {
+test "dinit content maps NTFS to the supervised kernel driver" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     const content = try buildServiceContent(arena.allocator(), "Games", "/dev/disk/by-uuid/abcd-1234", "mnt/games", "ntfs", "defaults,noatime");
-    try std.testing.expect(std.mem.indexOf(u8, content, "type = scripted") != null);
-    try std.testing.expect(std.mem.indexOf(u8, content, "-t ntfs3") != null);
-    try std.testing.expect(std.mem.indexOf(u8, content, "/etc/dinit.d") == null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "type = process") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "pori-mount-service") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "ntfs3") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "restart = true") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "restart-delay = 5") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "restart-limit-count = 0") != null);
 }
 
 test "dinit tokens preserve spaces and backslashes" {

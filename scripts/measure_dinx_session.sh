@@ -7,7 +7,7 @@ if ! command -v ps >/dev/null 2>&1; then
 fi
 
 printf 'dinx_session_measurement source=procfs snapshot=true\n'
-for process in labwc noctalia bc250-control-centerd dinx-idle swayidle; do
+for process in aqueous pearl bc250-control-centerd dinx-idle swayidle; do
   read -r count rss cpu <<EOF
 $(ps -eo comm=,rss=,%cpu= | awk -v target="$process" '$1 == target {count++; rss += $2; cpu += $3} END {printf "%d %d %.2f", count + 0, rss + 0, cpu + 0}')
 EOF

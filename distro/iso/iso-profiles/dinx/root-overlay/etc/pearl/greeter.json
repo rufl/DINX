@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "theme": "gtk",
+  "gtk_theme": "DINX",
+  "wallpaper_color": "#0b0d12",
+  "font_size": 16,
+  "reduced_motion": true,
+  "high_contrast": false,
+  "default_session": "wayland:dinx-aqueous-pearl.desktop",
+  "force_session": "wayland:dinx-aqueous-pearl.desktop",
+  "allow": ["wayland:dinx-aqueous-pearl.desktop"],
+  "roots": [
+    {"path": "/usr/share/wayland-sessions", "type": "wayland"}
+  ],
+  "accounts": true,
+  "password_first": true,
+  "power": true,
+  "remember_session": false,
+  "fingerprint_hint": false,
+  "allow_uwsm": false,
+  "x11": false
+}

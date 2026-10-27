@@ -6,7 +6,7 @@ arch=(x86_64)
 url='https://github.com/rufl/DINX'
 license=(Apache)
 depends=(gtk4 libadwaita glibc foot nano dinitui dinxpanel qt6ct wdisplays shikane dome)
-makedepends=(zig)
+makedepends=('zig>=0.17')
 source=()
 sha256sums=()
 

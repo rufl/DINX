@@ -40,21 +40,21 @@
 DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e controlável:
 
 - **Artix Linux + dinit** como base, sem trocar o init por systemd;
-- **labwc + Noctalia** como sessão padrão, com **Aqueous + Pearl** como sessão alternativa direta sobre dinit;
+- **Aqueous + Pearl** como a única sessão do usuário, iniciada diretamente sobre dinit; o **Pearl Greeter** é a interface de login do greetd e é hospedado pelo Aqueous sem systemd ou UWSM;
 - **DinitUI** e **DINXPanel** para perfis de serviços, hardware, drivers e kernels;
 - **Calamares** para a instalação experimental, **GParted** para particionamento separado e **Pori** para discos e montagens persistentes via dinit;
 - **Phyto** como gerenciador de arquivos padrão e **File Roller** para abrir, criar e extrair arquivos compactados;
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
-- uma sessão **DINX Gaming** separada, com Gamescope, Steam e bibliotecas gráficas de 32 bits.
+- um launcher manual **DINX Gaming** com Gamescope, Steam e bibliotecas gráficas de 32 bits; ele fica oculto da lista de sessões do greeter;
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
 
-## Seafoam e sessões alternativas na ISO base
+## Seafoam e a sessão única na ISO base
 
-**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO.
+**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; o payload 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP.
 
-**Aqueous 1.0.5** e **Pearl 0.3.0** também vêm na ISO base. `Aqueous + Pearl (DINX)` é uma entrada do greeter respaldada por wrappers DINX: inicia o Aqueous diretamente, executa os helpers de sessão da DINX e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O bootstrap de atividade direto sobre dinit autoriza o Pearl por pidfd e verificações do executável e do ambiente; a sessão não adiciona pacote nem runtime systemd. `Labwc + Noctalia` continua sendo a sessão padrão; a DINX não faz fallback silencioso se a sessão alternativa falhar.
+**Aqueous 1.0.5** e **Pearl 0.3.0** vêm na ISO base. `Aqueous + Pearl (DINX)` é a única sessão de usuário selecionável e a sessão inicial da live: a DINX inicia o Aqueous diretamente, executa os helpers supervisionados de Shikane/PolicyKit/idle e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O login instalado/manual usa o **Pearl Greeter**, iniciado diretamente pelo greetd através da conta dedicada `pearl-greeter`; o Greeter força a mesma entrada Aqueous/Pearl e não expõe X11 nem UWSM. Se a sessão Aqueous/Pearl da live terminar, o greetd retorna ao Pearl Greeter em vez de trocar de sessão silenciosamente.
 
 ## Estado atual
 
@@ -78,7 +78,7 @@ A release Alpha 9 publica a ISO, checksum SHA-512, metadados, evidências QEMU e
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
-4. A imagem Alpha 9 publicada segue o snapshot do release. A próxima ISO compilada da `main` abrirá diretamente em `Labwc (DINX)`; nenhum usuário ou senha será solicitado.
+4. A imagem Alpha 9 publicada segue o snapshot do release. A próxima ISO compilada da `main` abrirá diretamente em `Aqueous + Pearl (DINX)`; nenhum usuário ou senha será solicitado.
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 
@@ -95,7 +95,7 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer 
 
 - [Arquitetura](docs/pt-BR/architecture.md)
 - [Guia de instalação](docs/pt-BR/install.md)
-- [Compatibilidade com Noctalia](docs/pt-BR/compatibility.md)
+- [Compatibilidade DINX](docs/pt-BR/compatibility.md)
 - [Status do build P0](docs/pt-BR/p0-build.md)
 - [Roadmap](docs/pt-BR/roadmap.md)
 - [Processo de release](docs/pt-BR/release.md)

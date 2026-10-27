@@ -27,8 +27,42 @@ xorriso -osirrox on \
   -extract /LiveOS/livefs.img "$tmp_dir/livefs.img" \
   >/dev/null
 
+for squashfs in "$tmp_dir/rootfs.img" "$tmp_dir/livefs.img"; do
+  squashfs_stats=$(unsquashfs -no-xattrs -no-progress -s "$squashfs")
+  grep -Eq 'Compression[[:space:]]+xz([[:space:]]|$)' <<<"$squashfs_stats" \
+    || fail "SquashFS image is not xz-compressed: $squashfs"
+  grep -Eq 'Block size[[:space:]]+262144([[:space:]]|$)' <<<"$squashfs_stats" \
+    || fail "SquashFS image does not use 256 KiB blocks: $squashfs"
+done
+
 manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/rootfs.img")
 livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
+
+for live_path in \
+  etc/artools/live.conf \
+  etc/dinit.d/dinx-live-autologin \
+  etc/dinit.d/boot.d/dinx-live-autologin \
+  usr/local/libexec/dinx-live-autologin; do
+  grep -Fq "/$live_path" <<<"$livefs_manifest" \
+    || fail "missing livefs path: $live_path"
+done
+live_conf=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/artools/live.conf)
+grep -Eq '^AUTOLOGIN=true$' <<<"$live_conf" \
+  || fail 'livefs does not enable DINX autologin'
+live_autologin=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
+grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin" \
+  || fail 'livefs autologin does not select Aqueous/Pearl'
+grep -Fq 'user = "dinx"' <<<"$live_autologin" \
+  || fail 'livefs autologin does not select the dinx user'
+live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
+grep -Fq 'command = /usr/local/libexec/dinx-live-autologin' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service command is incorrect'
+grep -Fq 'before = greetd' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service does not precede greetd'
+
+[scripts/check-iso-content.sh#6F7C]
+
+[scripts/check-iso-content.sh#8974]
 
 required_paths=(
   etc/calamares/branding/dinx/branding.desc
@@ -46,6 +80,8 @@ required_paths=(
   etc/default/grub.d/40-dinx-windows.cfg
   etc/dinit.d/greetd
   etc/greetd/config.toml
+  usr/bin/reboot
+  usr/bin/poweroff
   usr/bin/dinitui
   usr/bin/dinxpanel
   usr/share/applications/dinitui.desktop
@@ -72,22 +108,21 @@ required_paths=(
   usr/bin/steam
   etc/dinit.d/bluetoothd
   etc/dinit.d/root-ro
-  etc/greetd/regreet.toml
-  etc/xdg/labwc/rc.xml
-  etc/xdg/labwc/autostart
-  etc/xdg/labwc/environment
-  etc/xdg/labwc-greeter/rc.xml
-  etc/xdg/labwc-greeter/autostart
+  etc/pearl/greeter.json
+  usr/bin/pearl-greeter
+  usr/lib/pearl/pearl-greeter-host
+  usr/lib/pearl/pearl-greeter-session
+  usr/lib/pearl/pearl-greeter-init
+  usr/share/pearl-greeter/release-gate.json
   etc/profile.d/dinx.sh
   etc/default/useradd
   etc/fish/config.fish
   etc/skel/.bash_profile
   etc/skel/.config/gtk-3.0/settings.ini
   etc/skel/.config/gtk-4.0/settings.ini
-  etc/skel/.config/labwc/rc.xml
-  etc/skel/.config/noctalia/config.toml
-  etc/skel/.config/noctalia/palettes/DINX.json
+  etc/skel/.config/dinx/theme.json
   etc/skel/.config/qt6ct/qt6ct.conf
+  etc/skel/.config/qt6ct/colors/DINX.conf
   etc/skel/.config/swayimg/init.lua
   etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
@@ -105,8 +140,11 @@ required_paths=(
   usr/bin/aqueousctl
   usr/bin/aqueous-config
   usr/bin/pearl
+  usr/share/dinx/theme/DINX.json
+  usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy
   usr/bin/phyto
   usr/bin/pori
+  usr/local/libexec/pori-mount-service
   usr/bin/file-roller
   usr/bin/dome
   usr/bin/seafoam-settings
@@ -147,7 +185,6 @@ required_paths=(
   usr/bin/whiptail
   usr/share/kio/servicemenus/nocttyhere.desktop
   usr/lib/ssh/sftp-server
-  usr/share/noctty/noctalia/noctalia-v5-widget.toml
   usr/bin/nvtop
   usr/bin/zathura
   usr/bin/pwvucontrol
@@ -219,8 +256,6 @@ required_paths=(
   usr/share/applications/org.pwmt.zathura.desktop
   usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
-  usr/bin/labwc
-  usr/bin/noctalia
   usr/bin/noctty
   usr/bin/nocted
   usr/bin/clangd
@@ -234,16 +269,15 @@ required_paths=(
   usr/share/nocted/styles/nocted-dark.xml
   usr/share/nocted/styles/nocted-light.xml
   usr/bin/calamares
-  usr/share/wayland-sessions/dinx-labwc.desktop
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
-  usr/share/wayland-sessions/labwc.desktop
-  usr/bin/regreet
-  usr/local/libexec/dinx-regreet
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
-  usr/local/libexec/dinx-labwc
   usr/local/libexec/dinx-aqueous-pearl
   usr/local/libexec/dinx-aqueous-init
+  usr/local/libexec/dinx-session-supervisor
+  usr/bin/dbus-send
+  usr/bin/lxqt-policykit-agent
+  usr/bin/ps
   usr/share/applications/dinx-installer.desktop
   usr/local/bin/dinx-save-shikane-profile
   usr/local/bin/dinx-wdisplays
@@ -256,16 +290,35 @@ required_paths=(
   usr/share/applications/gparted.desktop
   usr/share/applications/network.cycles.wdisplays.desktop
   usr/share/grub/themes/artix/theme.txt
-  usr/share/xdg-desktop-portal/labwc-portals.conf
 )
 
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
-regreet_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-regreet)
-grep -Fq 'kill -TERM "$PPID"' <<<"$regreet_launcher" || fail 'DINX labwc greeter does not terminate its host session'
-if grep -Fq 'mmsg ' <<<"$regreet_launcher"; then
-  fail 'DINX labwc greeter still depends on the removed compositor message client'
+if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
+  fail 'retired Labwc user session remains in the ISO payload'
+fi
+pearl_greeter_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/pearl/greeter.json)
+grep -Fq '"theme": "gtk"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter GTK theme is not enabled'
+grep -Fq '"gtk_theme": "DINX"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter DINX theme is not enabled'
+grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
+  || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
+grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
+  || fail 'Pearl Greeter allows an unexpected user session'
+grep -Fq '"allow_uwsm": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter UWSM integration is enabled'
+grep -Fq '"x11": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter X11 integration is enabled'
+if grep -Eiq 'systemd|systemctl' <<<"$pearl_greeter_config"; then
+  fail 'Pearl Greeter config contains a systemd integration'
+fi
+pearl_release_gate=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/pearl-greeter/release-gate.json)
+grep -Fq '"schema": 1' <<<"$pearl_release_gate" || fail 'Pearl Greeter release gate schema is missing'
+grep -Fq '"activated_services": []' <<<"$pearl_release_gate" || fail 'Pearl Greeter release gate activates a service'
+pearl_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/passwd)
+grep -Eq '^pearl-greeter:' <<<"$pearl_passwd" || fail 'Pearl Greeter account is missing from the rootfs'
+pearl_group=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/group)
+grep -Eq '^pearl-greeter:' <<<"$pearl_group" || fail 'Pearl Greeter group is missing from the rootfs'
+if grep -E '/var/lib/pacman/local/greetd-regreet-[^/]*/' <<<"$manifest"; then
+  fail 'retired ReGreet package metadata is present'
 fi
 doctor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/dinx-doctor)
 grep -Fq 'schema dinx-doctor/v1' <<<"$doctor" || fail 'DINX doctor schema is missing'
@@ -282,26 +335,41 @@ if grep -Eq 'systemctl|/bin/sh -c|dbus-daemon' <<<"$gaming_launcher"; then
 fi
 gaming_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-gaming.desktop)
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session command is incorrect'
-grep -Fq 'TryExec=/usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session TryExec is missing'
+grep -Fq 'Hidden=true' <<<"$gaming_session" || fail 'DINX gaming session is not hidden'
+grep -Fq 'NoDisplay=true' <<<"$gaming_session" || fail 'DINX gaming session remains selectable'
 aqueous_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-aqueous-pearl.desktop)
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" || fail 'DINX Aqueous/Pearl session command is incorrect'
 grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" || fail 'DINX Aqueous/Pearl session TryExec is missing'
 aqueous_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
+session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
 grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not launch the direct init child'
-grep -Fq 'exec /usr/bin/pearl' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch Pearl'
-if grep -Eq 'systemd|systemctl|uwsm|loginctl' <<<"$aqueous_session$aqueous_launcher$aqueous_init"; then
+grep -Fq 'LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not select the elogind/libseat backend'
+grep -Fq 'WLR_RENDERER_ALLOW_SOFTWARE=1' <<<"$aqueous_launcher" || fail 'DINX Aqueous software-render fallback is missing'
+grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
+grep -Fq 'start_required shell pearl' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch Pearl'
+grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate Wayland readiness'
+grep -Fq 'wait_for_dbus' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate D-Bus readiness'
+if grep -Eq 'systemd|systemctl|uwsm|loginctl' <<<"$aqueous_session$aqueous_launcher$aqueous_init$session_supervisor"; then
   fail 'DINX Aqueous/Pearl session contains a forbidden systemd or uwsm integration'
 fi
 
 
-if grep -Fq '/usr/share/xsessions/plasmax11.desktop' <<<"$manifest"; then
-  fail 'legacy Plasma X11 session is still present in the ISO payload'
-fi
+session_entries=$(grep -oE '/usr/share/(wayland-sessions|xsessions)/[^[:space:]]+\.desktop' <<<"$manifest" | sort -u || true)
+while IFS= read -r session_path; do
+  [[ -n "$session_path" ]] || continue
+  case "$session_path" in
+    /usr/share/wayland-sessions/dinx-aqueous-pearl.desktop) continue ;;
+    /usr/share/wayland-sessions/dinx-gaming.desktop) ;;
+    *) fail "unsupported user session remains: $session_path" ;;
+  esac
+  session_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "${session_path#/}")
+  grep -Fq 'Hidden=true' <<<"$session_config" \
+    || fail "non-Aqueous session remains visible: $session_path"
+  grep -Fq 'NoDisplay=true' <<<"$session_config" \
+    || fail "non-Aqueous session remains discoverable: $session_path"
+done <<<"$session_entries"
 
-plasma_wayland_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/plasma.desktop)
-grep -Fq 'Hidden=true' <<<"$plasma_wayland_session" || fail 'Plasma Wayland session is not hidden from the DINX greeter'
-grep -Fq 'NoDisplay=true' <<<"$plasma_wayland_session" || fail 'Plasma Wayland session remains visible to the DINX greeter'
 
 grub_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/grub/themes/artix/theme.txt)
 grep -Fq 'DINX GRUB theme override.' <<<"$grub_theme" || fail 'DINX GRUB theme override is missing'
@@ -312,52 +380,30 @@ grep -Fq 'desktop-color: "#0b0d12"' <<<"$grub_theme" || fail 'DINX GRUB backgrou
 grep -Fq 'selected_item_color = "#8fb8ff"' <<<"$grub_theme" || fail 'DINX GRUB accent color is missing'
 
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-labwc --greeter"' <<<"$root_greetd_config" || fail 'installed greetd fallback session is incorrect'
-grep -Fq 'user = "greeter"' <<<"$root_greetd_config" || fail 'installed greetd fallback user is incorrect'
+grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general section is missing'
+grep -Fq 'source_profile = false' <<<"$root_greetd_config" || fail 'installed greetd sources the greeter profile'
+grep -Fq 'command = "/usr/lib/pearl/pearl-greeter-host"' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not launch Pearl Greeter'
+grep -Fq 'user = "pearl-greeter"' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not use the Pearl Greeter account'
 if grep -Fq '[initial_session]' <<<"$root_greetd_config"; then
-  fail 'installed rootfs unexpectedly enables live autologin'
+  fail 'installed greetd unexpectedly enables live autologin'
+fi
+if grep -Eiq 'systemd|systemctl' <<<"$root_greetd_config"; then
+  fail 'installed greetd config contains a systemd integration'
 fi
 
-regreet_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/regreet.toml)
-grep -Fq 'application_prefer_dark_theme = true' <<<"$regreet_config" || fail 'ReGreet dark mode is not enabled'
-grep -Fq 'theme_name = "DINX"' <<<"$regreet_config" || fail 'ReGreet DINX theme is not enabled'
-grep -Fq 'font_name = "Noto Sans 10"' <<<"$regreet_config" || fail 'ReGreet font contract is missing'
-
-noctalia_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/config.toml)
-grep -Fq 'mode = "dark"' <<<"$noctalia_config" || fail 'Noctalia dark mode is not enabled'
-grep -Fq '[shell.animation]' <<<"$noctalia_config" || fail 'Noctalia animation defaults are missing'
-grep -Fq 'enabled = false' <<<"$noctalia_config" || fail 'Noctalia animations are not disabled by default'
-grep -Fq 'settings_window_translucent = false' <<<"$noctalia_config" || fail 'Noctalia Settings transparency is not disabled by default'
-grep -Fq '[shell.panel]' <<<"$noctalia_config" || fail 'Noctalia panel defaults are missing'
-grep -Fq 'transparency_mode = "solid"' <<<"$noctalia_config" || fail 'Noctalia panel transparency is not disabled by default'
-grep -Fq '[bar]' <<<"$noctalia_config" || fail 'Noctalia bar defaults are missing'
-grep -Fq 'order = ["main"]' <<<"$noctalia_config" || fail 'Noctalia main bar is not first in creation order'
-grep -Fq '[bar.main]' <<<"$noctalia_config" || fail 'Noctalia main bar is not configured'
-grep -Fq 'position = "top"' <<<"$noctalia_config" || fail 'Noctalia main bar is not at the top'
-grep -Fq 'reserve_space = true' <<<"$noctalia_config" || fail 'Noctalia main bar does not reserve space'
-grep -Fq 'start = ["launcher", "workspaces"]' <<<"$noctalia_config" || fail 'Noctalia main bar launcher/workspace widgets are missing'
-grep -Fq 'end = ["screenshot", "clipboard", "tray", "network"' <<<"$noctalia_config" || fail 'Noctalia status tray widget is missing'
-grep -Fq '[widget.tray]' <<<"$noctalia_config" || fail 'Noctalia tray widget settings are missing'
-grep -Fq '[shell.screenshot]' <<<"$noctalia_config" || fail 'Noctalia screenshot shell defaults are missing'
-grep -Fq 'copy_to_clipboard = true' <<<"$noctalia_config" || fail 'Noctalia screenshots are not copied to the clipboard'
 grep -Fq '/usr/share/applications/swayimg.desktop' <<<"$manifest" || fail 'Swayimg desktop entry is not in the ISO payload'
 grep -Fq 'vlc.desktop' <<<"$manifest" || fail 'VLC desktop entry is not in the ISO payload'
 grep -Fq 'org.strawberrymusicplayer.strawberry.desktop' <<<"$manifest" || fail 'Strawberry desktop entry is not in the ISO payload'
 grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
-grep -Fq 'pinned = ["firefox", "dinxpanel", "dinitui"' <<<"$noctalia_config" || fail 'Noctalia dock does not establish the DINX primary hierarchy'
-for specialist in gufw qps opensnitch_ui nm-connection-editor blueman-manager com.shellyorg.shelly; do
-  if grep -Fq "\"$specialist\"" <<<"$noctalia_config"; then
-    fail "specialist launcher remains pinned in the Noctalia dock: $specialist"
-  fi
-done
-noctalia_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/noctalia/palettes/DINX.json)
-grep -Fq '"mSurface": "#0b0d12"' <<<"$noctalia_palette" || fail 'DINX Noctalia surface palette is missing'
-grep -Fq '"mPrimary": "#8fb8ff"' <<<"$noctalia_palette" || fail 'DINX Noctalia primary palette is missing'
+theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
+grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
+grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
 gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
 gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
-grep -Fq 'builtin_ids = ["btop", "foot", "ghostty", "gtk3", "gtk4", "kcolorscheme", "qt"]' <<<"$noctalia_config" || fail 'Noctalia application templates are missing'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
 grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
@@ -386,7 +432,7 @@ if grep -Eq 'border-radius: [1-9]|#(31415d|151923|2859a8)' <<<"$calamares_styles
   fail 'Calamares contains an out-of-contract geometry or color'
 fi
 qt6ct_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/qt6ct.conf)
-grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/noctalia.conf' <<<"$qt6ct_config" || fail 'Qt6ct Noctalia color path is missing'
+grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' <<<"$qt6ct_config" || fail 'Qt6ct DINX color path is missing'
 grep -Fq 'general="Noto Sans,10' <<<"$qt6ct_config" || fail 'Qt6ct Noto Sans font contract is missing'
 swayimg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/swayimg/init.lua)
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' <<<"$swayimg_config" || fail 'DINX Swayimg surface is missing'
@@ -416,28 +462,19 @@ grep -Fq '/etc/dinit.d/boot.d/cyan-skillfish-governor-smu' <<<"$manifest" || fai
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
 grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
 
-labwc_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/labwc/rc.xml)
-grep -Fq '<desktops number="2" />' <<<"$labwc_config" || fail 'labwc does not start with two virtual desktops'
-grep -Fq '<keybind key="W-l">' <<<"$labwc_config" || fail 'labwc lock shortcut is missing'
-grep -Fq 'command="/usr/local/libexec/dinx-lock"' <<<"$labwc_config" || fail 'labwc lock command is missing'
-grep -Fq 'command="brightnessctl set 5%-"' <<<"$labwc_config" || fail 'labwc brightness-down shortcut is missing'
-grep -Fq 'command="brightnessctl set 5%+"' <<<"$labwc_config" || fail 'labwc brightness-up shortcut is missing'
-labwc_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/labwc/autostart)
-grep -Fq 'noctalia >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not start Noctalia'
-grep -Fq 'bc250-control-centerd >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not autostart the BC250 user daemon'
-grep -Fq 'lxqt-policykit-agent >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not start the PolicyKit authentication agent'
-if grep -Fq 'thunar --daemon >/dev/null 2>&1 &' <<<"$labwc_autostart"; then
-  fail 'labwc still starts the removed Thunar volume monitor'
+aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
+grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
+aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
+grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'Aqueous init supervisor command is missing'
+session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
+grep -Fq 'start_required shell pearl' <<<"$session_supervisor" || fail 'Pearl is not required by the session supervisor'
+grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'Aqueous session does not gate Wayland readiness'
+grep -Fq 'wait_for_dbus' <<<"$session_supervisor" || fail 'Aqueous session does not gate D-Bus readiness'
+if grep -Eiq 'labwc|noctalia|systemd|uwsm' <<<"$aqueous_wrapper
+$aqueous_init
+$session_supervisor"; then
+  fail 'Aqueous/Pearl session contains a retired session or init integration'
 fi
-grep -Fq '/usr/local/libexec/dinx-idle >/dev/null 2>&1 &' <<<"$labwc_autostart" || fail 'labwc does not start the DINX idle manager'
-labwc_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-labwc.desktop)
-grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-labwc' <<<"$labwc_session" || fail 'DINX labwc session command is incorrect'
-grep -Fq 'TryExec=/usr/local/libexec/dinx-labwc' <<<"$labwc_session" || fail 'DINX labwc session TryExec is missing'
-generic_labwc_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/labwc.desktop)
-grep -Fq 'Hidden=true' <<<"$generic_labwc_session" || fail 'generic labwc session is not hidden'
-grep -Fq 'NoDisplay=true' <<<"$generic_labwc_session" || fail 'generic labwc session remains visible'
-greeter_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/labwc-greeter/autostart)
-grep -Fq '/usr/local/libexec/dinx-regreet' <<<"$greeter_autostart" || fail 'labwc greeter does not start ReGreet'
 idle_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-idle)
 grep -Fq 'timeout 600 /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock timeout is missing'
 grep -Fq 'before-sleep /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock-before-suspend hook is missing'
@@ -447,7 +484,7 @@ shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc
 grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is missing'
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 grep -Fq 'QT_QPA_PLATFORMTHEME=' <<<"$shell_config" || fail 'Qt6ct session integration is missing'
-grep -Fq 'NOCTALIA_COLOR_SCHEME=' <<<"$shell_config" || fail 'Noctalia color scheme session integration is missing'
+grep -Fq 'DINX_COLOR_SCHEME=' <<<"$shell_config" || fail 'DINX color scheme session integration is missing'
 grep -Fq 'export SHELL=/bin/fish' <<<"$shell_config" || fail 'DINX POSIX shell default is not Fish'
 fish_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/fish/config.fish)
 grep -Fq 'set -gx SHELL /bin/fish' <<<"$fish_config" || fail 'DINX Fish shell default is missing'
@@ -464,6 +501,9 @@ grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fa
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
 grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
 grep -Fq 'audio/flac=org.strawberrymusicplayer.strawberry.desktop;' <<<"$mimeapps_config" || fail 'Strawberry is not the default FLAC handler'
+for archive_mime in application/zip application/x-7z-compressed application/vnd.rar application/x-tar application/gzip application/x-bzip2 application/x-xz application/zstd; do
+  grep -Fq "$archive_mime=org.gnome.FileRoller.desktop;" <<<"$mimeapps_config" || fail "File Roller is not the default archive handler for $archive_mime"
+done
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 for forbidden_path in \
@@ -477,6 +517,13 @@ for forbidden_path in \
   usr/bin/uwsm \
   usr/bin/systemd \
   usr/bin/systemctl \
+  usr/bin/regreet \
+  usr/bin/labwc \
+  usr/bin/noctalia \
+  usr/local/libexec/dinx-labwc \
+  etc/xdg/labwc \
+  etc/xdg/labwc-greeter \
+  usr/share/noctty/noctalia \
   usr/bin/xfce4-session \
   usr/bin/xfdesktop \
   usr/bin/xfwm4 \
@@ -499,6 +546,14 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gvfs|gvfs-gphoto2|gvfs-mt
   printf '%s\n' "$forbidden_matches" >&2
   fail 'removed file-manager, volume-mounter or partition-manager package metadata is present'
 fi
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/(labwc|noctalia)-[^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'retired Labwc/Noctalia package metadata is present'
+fi
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/greetd-regreet-[^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'retired ReGreet package metadata is present'
+fi
 if forbidden_matches=$(grep -E '/var/lib/pacman/local/systemd-[0-9][^/]*/' <<<"$manifest"); then
   printf '%s\n' "$forbidden_matches" >&2
   fail 'systemd init package metadata is present; compatibility libraries are allowed'
@@ -511,16 +566,33 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/uwsm-[^/]*/' <<<"$manifest
   printf '%s\n' "$forbidden_matches" >&2
   fail 'uwsm package metadata is present; the DINX Aqueous/Pearl path is direct'
 fi
+for forbidden_path in \
+  etc/systemd \
+  usr/lib/systemd \
+  usr/bin/systemd \
+  usr/bin/systemctl \
+  usr/bin/regreet \
+  etc/uwsm \
+  usr/share/uwsm \
+  usr/bin/uwsm; do
+  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$livefs_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail "forbidden livefs init payload is present: $forbidden_path"
+  fi
+done
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/(systemd-[0-9]|uwsm-|greetd-regreet-)[^/]*/' <<<"$livefs_manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'forbidden livefs init or greeter package metadata is present'
+fi
 
 grep -Fq '/usr/bin/os-prober' <<<"$manifest" || fail 'os-prober is missing from the ISO payload'
 grep -Fq '/usr/bin/mount' <<<"$manifest" || fail 'util-linux mount is missing from the ISO payload'
+grep -Fq '/usr/bin/flock' <<<"$manifest" || fail 'util-linux flock is missing from the ISO payload'
 if grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest"; then
   fail 'optional ntfs-3g write package is present in the live ISO'
 fi
 grep -Eq '/usr/lib/modules/[^/]+/kernel/fs/ntfs3/ntfs3\.ko' <<<"$manifest" || fail 'kernel ntfs3 read/write support is missing from the ISO payload'
 
-labwc_user_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/labwc/rc.xml)
-grep -Fq 'DINX merges user overrides with /etc/xdg/labwc/rc.xml.' <<<"$labwc_user_config" || fail 'labwc user override contract is missing'
 
 calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/settings.conf)
 grep -Fq 'branding: dinx' <<<"$calamares_settings" || fail 'DINX Calamares branding is not selected'
@@ -611,7 +683,7 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 
 live_autologin_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
 grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologin initial session is missing'
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-labwc"' <<<"$live_autologin_wrapper" || fail 'live autologin command is incorrect'
+grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin command is incorrect'
 grep -Fq 'user = "dinx"' <<<"$live_autologin_wrapper" || fail 'live autologin user is incorrect'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin service does not precede greetd'
@@ -619,4 +691,4 @@ grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: labwc with two editable workspaces, top Noctalia bar, bottom Noctalia dock, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center pinned to the dock with a user-session daemon, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, KolourPaint image editing, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, File Roller archive actions, GParted partition editing, wdisplays display configuration, shikane deterministic output profiles, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, Pori dinit storage management, Phyto file management, kernel ntfs3 live read/write support, optional legacy ntfs-3g post-install support, CLI recovery and transfer tools, Nano and dinit payloads.\n'
+printf 'ISO content check passed: Aqueous/Pearl sole user session, Pearl shell, direct Pearl Greeter host under greetd, no systemd/UWSM or legacy X11, hidden manual DINX Gaming launcher, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center with supervised Aqueous/Pearl helper, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, KolourPaint image editing, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, File Roller archive actions, GParted partition editing, wdisplays display configuration, shikane deterministic output profiles, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, Pori dinit storage management, Phyto file management, kernel ntfs3 live read/write support, optional legacy ntfs-3g post-install support, CLI recovery and transfer tools, Nano and dinit payloads.\n'

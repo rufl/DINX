@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+what=${1:-}
+mount_point=${2:-}
+fs_type=${3:-auto}
+options=${4:-}
+
+case "$what" in
+  /*) ;;
+  *) printf 'pori-mount-service: source must be an absolute path\n' >&2; exit 64 ;;
+esac
+case "$mount_point" in
+  /*) ;;
+  *) printf 'pori-mount-service: mount point must be an absolute path\n' >&2; exit 64 ;;
+esac
+[[ "$fs_type" =~ ^[[:alnum:]_.+-]+$ ]] || {
+  printf 'pori-mount-service: invalid filesystem type\n' >&2
+  exit 64
+}
+[[ "$options" != *$'\r'* && "$options" != *$'\n'* ]] || {
+  printf 'pori-mount-service: mount options must be one line\n' >&2
+  exit 64
+}
+
+mount_bin=${PORI_MOUNT_BIN:-/usr/bin/mount}
+umount_bin=${PORI_UMOUNT_BIN:-/usr/bin/umount}
+mountpoint_bin=${PORI_MOUNTPOINT_BIN:-/usr/bin/mountpoint}
+install_bin=${PORI_INSTALL_BIN:-/usr/bin/install}
+sleep_bin=${PORI_SLEEP_BIN:-/usr/bin/sleep}
+
+"$install_bin" -d -m 0755 "$mount_point"
+owned_mount=0
+cleanup() {
+  if [ "$owned_mount" -eq 1 ]; then
+    "$umount_bin" "$mount_point" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+trap 'exit 143' HUP INT TERM
+
+while :; do
+  if "$mountpoint_bin" -q "$mount_point"; then
+    owned_mount=0
+  elif [ -e "$what" ]; then
+    mount_args=(-t "$fs_type")
+    if [ -n "$options" ]; then
+      mount_args+=(-o "$options")
+    fi
+    if "$mount_bin" "${mount_args[@]}" "$what" "$mount_point"; then
+      owned_mount=1
+    else
+      "$sleep_bin" 2
+      continue
+    fi
+  else
+    "$sleep_bin" 2
+    continue
+  fi
+
+  while "$mountpoint_bin" -q "$mount_point"; do
+    "$sleep_bin" 2
+  done
+  if [ "$owned_mount" -eq 1 ]; then
+    printf 'pori-mount-service: owned mount disappeared: %s\n' "$mount_point" >&2
+    exit 1
+  fi
+  exit 0
+done

@@ -1,8 +1,0 @@
-#!/bin/sh
-set -eu
-
-shikane >/dev/null 2>&1 &
-noctalia >/dev/null 2>&1 &
-bc250-control-centerd >/dev/null 2>&1 &
-lxqt-policykit-agent >/dev/null 2>&1 &
-/usr/local/libexec/dinx-idle >/dev/null 2>&1 &

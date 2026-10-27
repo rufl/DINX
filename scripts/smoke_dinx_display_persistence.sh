@@ -36,6 +36,9 @@ case "${1:-}" in
         fi
         ;;
     reload)
+        if [ "${DINX_DISPLAY_SMOKE_MODE:-1}" = 3 ]; then
+            exit 9
+        fi
         : > "$DINX_DISPLAY_SMOKE_STATE/reloaded"
         ;;
     *)
@@ -84,5 +87,12 @@ if "$launcher"; then
 fi
 after=$(sha256sum "$config_home/shikane/config.toml" | cut -d ' ' -f 1)
 test "$before" = "$after"
+export DINX_DISPLAY_SMOKE_FAIL=0
+export DINX_DISPLAY_SMOKE_MODE=3
+if "$saver"; then
+    printf 'smoke: failing Shikane reload unexpectedly succeeded\n' >&2
+    exit 1
+fi
+grep -Fqx 'position = "0,0"' "$config_home/shikane/config.toml"
 
-printf 'dinx_display_persistence_smoke save=true replace=true failure_safe=true reload=true\n'
+printf 'dinx_display_persistence_smoke save=true replace=true failure_safe=true reload=true reload_failure=true\n'

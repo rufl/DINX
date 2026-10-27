@@ -89,7 +89,6 @@ const App = struct {
         appendSectionTitle(content, "DINX services and compositor");
         const services = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(services), makeButton("Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self));
-        c.gtk_box_append(@ptrCast(services), makeButton("Labwc options", "Edit the user labwc configuration in a terminal", &onLabwcClicked, self));
         c.gtk_box_append(@ptrCast(services), makeButton("Firewall", "Open the UFW graphical policy editor", &onFirewallClicked, self));
         c.gtk_box_append(@ptrCast(content), services);
 
@@ -270,14 +269,6 @@ const App = struct {
         self.setStatus("Control panel launched");
     }
 
-    fn launchLabwcOptions(self: *App) void {
-        const path = std.fs.path.join(allocator, &.{ self.home, ".config", "labwc", "rc.xml" }) catch {
-            self.setStatusError("Unable to resolve labwc configuration");
-            return;
-        };
-        defer allocator.free(path);
-        self.launch(&.{ "foot", "--app-id=dinx-labwc-options", "-e", "nano", path });
-    }
 
     fn detectGpu(self: *App) void {
         self.runDinitUi("--gpu-status");
@@ -623,9 +614,6 @@ fn onServicesClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"dinitui"});
 }
 
-fn onLabwcClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launchLabwcOptions();
-}
 
 fn onFirewallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"gufw"});

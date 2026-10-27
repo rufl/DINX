@@ -572,13 +572,16 @@ jobs:
               repo_pid=$!
               trap "kill $repo_pid 2>/dev/null || true" EXIT
 
-              real_mksquashfs=$(readlink -f "$(command -v mksquashfs)")
+              mksquashfs_path=$(command -v mksquashfs)
+              real_mksquashfs=$(readlink -f "$mksquashfs_path")
               test -x "$real_mksquashfs"
               install -D -m 0755 "$real_mksquashfs" /usr/local/libexec/dinx-mksquashfs.real
               install -m 0755 /workspace/scripts/iso-tools/mksquashfs /usr/bin/mksquashfs
               export DINX_MKSQUASHFS_REAL=/usr/local/libexec/dinx-mksquashfs.real
-              command -v mksquashfs | grep -Fqx /usr/bin/mksquashfs
-              printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$(command -v mksquashfs)" "$DINX_MKSQUASHFS_REAL"
+              hash -r
+              mksquashfs_path=$(command -v mksquashfs)
+              test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs
+              printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$mksquashfs_path" "$DINX_MKSQUASHFS_REAL"
               scripts/check-iso-host.sh
               scripts/build-iso.sh
               metadata_path="$DINX_ISO_OUTPUT/dinx/build-metadata.txt"

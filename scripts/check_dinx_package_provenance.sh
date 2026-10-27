@@ -98,11 +98,13 @@ for required in \
   ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"' \
   'printf "noctty_source_env_sha256=%s\n"' \
   '--env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE"' \
-  'real_mksquashfs=$(readlink -f "$(command -v mksquashfs)")' \
+  'mksquashfs_path=$(command -v mksquashfs)' \
+  'real_mksquashfs=$(readlink -f "$mksquashfs_path")' \
   'install -D -m 0755 "$real_mksquashfs" /usr/local/libexec/dinx-mksquashfs.real' \
   'install -m 0755 /workspace/scripts/iso-tools/mksquashfs /usr/bin/mksquashfs' \
   'export DINX_MKSQUASHFS_REAL=/usr/local/libexec/dinx-mksquashfs.real' \
-  'command -v mksquashfs | grep -Fqx /usr/bin/mksquashfs'; do
+  'hash -r' \
+  'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
 done
 for required in \

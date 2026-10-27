@@ -5,6 +5,95 @@ diff --git a/compositor/build.zig b/compositor/build.zig
 -        river.root_module.linkSystemLibrary("libsystemd", .{});
 @@ -718,1 +718,0 @@
 -        keyboard_test.root_module.linkSystemLibrary("libsystemd", .{});
+diff --git a/compositor/build.zig b/compositor/build.zig
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -34,3 +34,3 @@
+-        _ = b.findProgram(&.{"scdoc"}, &.{}) catch |err| switch (err) {
+-            error.FileNotFound => break :scdoc_found false,
++        if (b.findProgram(.{ .names = &.{"scdoc"} }) == null) {
++            break :scdoc_found false;
+-        };
++        }
+diff --git a/compositor/build.zig b/compositor/build.zig
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -60,1 +60,1 @@
+-                &.{ "git", "-C", b.build_root.path orelse ".", "describe", "--long" },
++                &.{ "git", "-C", b.root.root_dir.path orelse ".", "describe", "--long" },
+diff --git a/compositor/build.zig.zon b/compositor/build.zig.zon
+--- a/compositor/build.zig.zon
++++ b/compositor/build.zig.zon
+@@ -18,2 +18,2 @@
+-            .url = "https://codeberg.org/ifreund/zig-wayland/archive/v0.6.0.tar.gz",
+-            .hash = "wayland-0.6.0-lQa1kqz8AQADQmdNJsNhLoNHcnEGEUjrOaPV-dtEnEmX",
++            .url = "git+https://codeberg.org/ifreund/zig-wayland/#94db7ba4e0a6b4780a16dbc74c7a2c88f1ebf502",
++            .hash = "wayland-0.8.0-dev-lQa1kuf8AQCeoam8G-XPyaIYvIOk3_wgsspwi4nT_L5q",
+diff --git a/compositor/build.zig.zon b/compositor/build.zig.zon
+--- a/compositor/build.zig.zon
++++ b/compositor/build.zig.zon
+@@ -22,2 +22,2 @@
+-            .url = "https://codeberg.org/ifreund/zig-wlroots/archive/v0.20.1.tar.gz",
+-            .hash = "wlroots-0.20.1-jmOlcqNVBAB3uB5oqBTzpRlwu-FmMyyZMVAWCe5kmcSt",
++            .url = "git+https://codeberg.org/ifreund/zig-wlroots/#cd0d62bcd20d4ed4f35d5320bf040bb4e35b7da3",
++            .hash = "wlroots-0.20.2-dev-jmOlcgdwBADuxKW_PFUfSPjBaZ34a1fNuBqF8gb2nz6O",
+diff --git a/compositor/build.zig.zon b/compositor/build.zig.zon
+--- a/compositor/build.zig.zon
++++ b/compositor/build.zig.zon
+@@ -30,2 +30,2 @@
+-            .url = "git+https://codeberg.org/ziglang/translate-c/#57c559cf581b1fcad90494eda219f98abeb155ce",
+-            .hash = "translate_c-0.0.0-Q_BUWlX1BgCD1wo6uo97prlp9VJ4gxAjwN_vZ7nsSjGN",
++            .url = "git+https://codeberg.org/ziglang/translate-c/#cfac21f3199b2b02ce3fd7db652aa456421fe4ab",
++            .hash = "translate_c-2.0.2-Q_BUWvBNBwDnyehSiuAJmdFcMYHYGA-Jc3KiYdrV2Dqx",
+diff --git a/compositor/build.zig b/compositor/build.zig
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -366,1 +366,1 @@
+-            \\prefix={s}
++            \\prefix=/usr
+@@ -374,1 +374,1 @@
+-        , .{ b.install_prefix, full_version }));
++        , .{ full_version }));
+diff --git a/compositor/build.zig b/compositor/build.zig
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -231,14 +231,22 @@
+-    const translate_c: Translator = .init(b.dependency("translate_c", .{}), .{
+-        .name = "c",
+-        .c_source_file = b.path("aqueous/c.h"),
+-        .target = target,
+-        .optimize = optimize,
+-    });
+-    translate_c.linkSystemLibrary("libevdev", .{});
+-    translate_c.linkSystemLibrary("libinput", .{});
+-    translate_c.linkSystemLibrary(wlroots_pkgconf, .{});
+-    translate_c.defineCMacro("WLR_USE_UNSTABLE", null);
+-    if (vulkan_effects) {
+-        translate_c.linkSystemLibrary("vulkan", .{});
+-        translate_c.defineCMacro("RIVER_VULKAN_EFFECTS", null);
+-    }
++    const translate_c_link_system_libs: []const Translator.LinkSystemLib = if (vulkan_effects)
++        &.{
++            .{ .name = "libevdev" },
++            .{ .name = "libinput" },
++            .{ .name = wlroots_pkgconf },
++            .{ .name = "vulkan" },
++        }
++    else
++        &.{
++            .{ .name = "libevdev" },
++            .{ .name = "libinput" },
++            .{ .name = wlroots_pkgconf },
++        };
++    const translate_c: Translator = .init(b.dependency("translate_c", .{}), .{
++        .name = "c",
++        .c_source_file = b.path("aqueous/c.h"),
++        .target = target,
++        .optimize = optimize,
++        .link_system_libs = translate_c_link_system_libs,
++    });
++    translate_c.defineCMacro("WLR_USE_UNSTABLE", null);
++    if (vulkan_effects) translate_c.defineCMacro("RIVER_VULKAN_EFFECTS", null);
 diff --git a/compositor/aqueous/activity_bootstrap.c b/compositor/aqueous/activity_bootstrap.c
 --- a/compositor/aqueous/activity_bootstrap.c
 +++ b/compositor/aqueous/activity_bootstrap.c
@@ -74,3 +163,458 @@ diff --git a/compositor/aqueous/activity_bootstrap.c b/compositor/aqueous/activi
      ssize_t n = readlink("/proc/self/exe", b->launcher, sizeof(b->launcher)-1);
      if (n < 0) goto fail;
      b->launcher[n] = 0;
+diff --git a/settingsApplication/src/backend/operations.zig b/settingsApplication/src/backend/operations.zig
+--- a/settingsApplication/src/backend/operations.zig
++++ b/settingsApplication/src/backend/operations.zig
+@@ -545,1 +545,1 @@
+-    var dirty = [_]bool{false} ** schema.file_count;
++    var dirty: [schema.file_count]bool = @splat(false);
+diff --git a/settingsApplication/src/backend/collection_transaction.zig b/settingsApplication/src/backend/collection_transaction.zig
+--- a/settingsApplication/src/backend/collection_transaction.zig
++++ b/settingsApplication/src/backend/collection_transaction.zig
+@@ -50,1 +50,1 @@
+-    var touched = [_]bool{false} ** schema.file_count;
++    var touched: [schema.file_count]bool = @splat(false);
+diff --git a/settingsApplication/src/backend/display_mutations.zig b/settingsApplication/src/backend/display_mutations.zig
+--- a/settingsApplication/src/backend/display_mutations.zig
++++ b/settingsApplication/src/backend/display_mutations.zig
+@@ -101,1 +101,1 @@
+-    var touched = [_]bool{false} ** schema.file_count;
++    var touched: [schema.file_count]bool = @splat(false);
+diff --git a/compositor/aqueous/cursor_config.zig b/compositor/aqueous/cursor_config.zig
+--- a/compositor/aqueous/cursor_config.zig
++++ b/compositor/aqueous/cursor_config.zig
+@@ -20,1 +20,1 @@
+-    theme_buffer: [max_theme_bytes + 1]u8 = [_]u8{0} ** (max_theme_bytes + 1),
++    theme_buffer: [max_theme_bytes + 1]u8 = @splat(0),
+@@ -106,1 +106,1 @@
+-    const overlong = [_]u8{'x'} ** (max_theme_bytes + 1);
++    const overlong: [max_theme_bytes + 1]u8 = @splat('x');
+diff --git a/compositor/aqueous/xwayland_dpi.zig b/compositor/aqueous/xwayland_dpi.zig
+--- a/compositor/aqueous/xwayland_dpi.zig
++++ b/compositor/aqueous/xwayland_dpi.zig
+@@ -261,1 +261,1 @@
+-        var data = [_]u8{0} ** 160; // XSettings LSBFirst
++        var data: [160]u8 = @splat(0); // XSettings LSBFirst
+diff --git a/compositor/aqueous/wm/Aqueous.zig b/compositor/aqueous/wm/Aqueous.zig
+--- a/compositor/aqueous/wm/Aqueous.zig
++++ b/compositor/aqueous/wm/Aqueous.zig
+@@ -128,1 +128,1 @@
+-    zone_ids: [layout_config.max_snap_zones]layout_config.SnapId = [_]layout_config.SnapId{.{}} ** layout_config.max_snap_zones,
++    zone_ids: [layout_config.max_snap_zones]layout_config.SnapId = @splat(.{}),
+@@ -3190,2 +3190,1 @@
+-    var owned_args: [action_config.max_application_args]?[:0]u8 =
+-        [_]?[:0]u8{null} ** action_config.max_application_args;
++    var owned_args: [action_config.max_application_args]?[:0]u8 = @splat(null);
+@@ -3194,1 +3194,1 @@
+-    var argv = [_]?[*:0]const u8{null} ** (action_config.max_application_args + 2);
++    var argv: [action_config.max_application_args + 2]?[*:0]const u8 = @splat(null);
+@@ -3202,2 +3201,1 @@
+-    var owned_env: [action_config.max_application_env]?[:0]u8 =
+-        [_]?[:0]u8{null} ** action_config.max_application_env;
++    var owned_env: [action_config.max_application_env]?[:0]u8 = @splat(null);
+diff --git a/compositor/aqueous/wm/config/layout.zig b/compositor/aqueous/wm/config/layout.zig
+--- a/compositor/aqueous/wm/config/layout.zig
++++ b/compositor/aqueous/wm/config/layout.zig
+@@ -27,1 +27,1 @@
+-    bytes: [32]u8 = [_]u8{0} ** 32,
++    bytes: [32]u8 = @splat(0),
+@@ -47,1 +47,1 @@
+-    bytes: [64]u8 = [_]u8{0} ** 64,
++    bytes: [64]u8 = @splat(0),
+@@ -118,1 +118,1 @@
+-    zones: [max_snap_zones]SnapZone = [_]SnapZone{.{}} ** max_snap_zones,
++    zones: [max_snap_zones]SnapZone = @splat(.{}),
+@@ -136,6 +136,6 @@
+-    options: [layout_count]types.Options = [_]types.Options{.{ .border = .{
+-        .width = 2,
+-        .focused = 0xFF88C0D0,
+-        .normal = 0xFF3B4252,
+-        .urgent = 0xFFBF616A,
+-    } }} ** layout_count,
++    options: [layout_count]types.Options = @splat(.{ .border = .{
++        .width = 2,
++        .focused = 0xFF88C0D0,
++        .normal = 0xFF3B4252,
++        .urgent = 0xFFBF616A,
++    } }),
+@@ -145,1 +145,1 @@
+-    snap_layouts: [max_snap_layouts]SnapLayout = [_]SnapLayout{.{}} ** max_snap_layouts,
++    snap_layouts: [max_snap_layouts]SnapLayout = @splat(.{}),
+diff --git a/compositor/aqueous/wm/layout/composable.zig b/compositor/aqueous/wm/layout/composable.zig
+--- a/compositor/aqueous/wm/layout/composable.zig
++++ b/compositor/aqueous/wm/layout/composable.zig
+@@ -58,1 +58,1 @@
+-    var child_windows = [_]std.ArrayListUnmanaged(types.Window){.empty} ** config.max_composable_regions;
++    var child_windows: [config.max_composable_regions]std.ArrayListUnmanaged(types.Window) = @splat(.empty);
+diff --git a/compositor/aqueous/wm/output/Service.zig b/compositor/aqueous/wm/output/Service.zig
+--- a/compositor/aqueous/wm/output/Service.zig
++++ b/compositor/aqueous/wm/output/Service.zig
+@@ -304,1 +304,1 @@
+-    var address: linux.sockaddr.un = .{ .path = [_]u8{0} ** 108 };
++    var address: linux.sockaddr.un = .{ .path = @splat(0) };
+diff --git a/compositor/aqueousctl/OutputInfo.zig b/compositor/aqueousctl/OutputInfo.zig
+--- a/compositor/aqueousctl/OutputInfo.zig
++++ b/compositor/aqueousctl/OutputInfo.zig
+@@ -16,1 +16,1 @@
+-    var address: linux.sockaddr.un = .{ .path = [_]u8{0} ** 108 };
++    var address: linux.sockaddr.un = .{ .path = @splat(0) };
+diff --git a/compositor/aqueous/ConfigIpcClient.zig b/compositor/aqueous/ConfigIpcClient.zig
+--- a/compositor/aqueous/ConfigIpcClient.zig
++++ b/compositor/aqueous/ConfigIpcClient.zig
+@@ -96,2 +96,2 @@
+-                        inline for (std.meta.fields(@import("display_preview_policy.zig").Reason)) |field| {
+-                            if (std.mem.eql(u8, code.string, field.name)) return @field(anyerror, field.name);
++                        inline for (@typeInfo(@import("display_preview_policy.zig").Reason).@"enum".field_names) |field_name| {
++                            if (std.mem.eql(u8, code.string, field_name)) return @field(anyerror, field_name);
+diff --git a/compositor/aqueous/KeyboardGroup.zig b/compositor/aqueous/KeyboardGroup.zig
+--- a/compositor/aqueous/KeyboardGroup.zig
++++ b/compositor/aqueous/KeyboardGroup.zig
+@@ -53,1 +53,1 @@
+-    assert(pressed_count_max == @typeInfo(std.meta.fieldInfo(wlr.Keyboard, .keycodes).type).array.len);
++    assert(pressed_count_max == @typeInfo(wlr.Keyboard).@"struct".field_types[@intFromEnum(@as(std.meta.FieldEnum(wlr.Keyboard), .keycodes))].array.len);
+diff --git a/compositor/aqueous/Server.zig b/compositor/aqueous/Server.zig
+--- a/compositor/aqueous/Server.zig
++++ b/compositor/aqueous/Server.zig
+@@ -736,2 +736,2 @@
+-    inline for (std.meta.fields(GpuPin)) |field| {
+-        if (@field(server.gpu_pin, field.name)) |value| util.gpa.free(value);
++    inline for (@typeInfo(GpuPin).@"struct".field_names) |field_name| {
++        if (@field(server.gpu_pin, field_name)) |value| util.gpa.free(value);
+diff --git a/compositor/aqueous/ShellManager.zig b/compositor/aqueous/ShellManager.zig
+--- a/compositor/aqueous/ShellManager.zig
++++ b/compositor/aqueous/ShellManager.zig
+@@ -449,1 +449,1 @@
+-            if (@intFromEnum(args.action) >= std.meta.fields(Types.Action).len) {
++            if (@intFromEnum(args.action) >= @typeInfo(Types.Action).@"enum".field_names.len) {
+diff --git a/compositor/aqueous/XwaylandOverrideRedirect.zig b/compositor/aqueous/XwaylandOverrideRedirect.zig
+--- a/compositor/aqueous/XwaylandOverrideRedirect.zig
++++ b/compositor/aqueous/XwaylandOverrideRedirect.zig
+@@ -521,2 +521,3 @@
+-    inline for (std.meta.fields(Rules.X11WindowType)) |field| {
+-        if (wlr_xwayland_surface_has_window_type(popup.xsurface, @enumFromInt(field.value))) mask |= @as(u16, 1) << field.value;
++    const info = @typeInfo(Rules.X11WindowType).@"enum";
++    inline for (info.field_names, info.field_values) |_, field_value| {
++        if (wlr_xwayland_surface_has_window_type(popup.xsurface, @enumFromInt(field_value))) mask |= @as(u16, 1) << field_value;
+@@ -649,2 +650,3 @@
+-    inline for (std.meta.fields(Rules.X11WindowType)) |field| {
+-        if (mask & (@as(u16, 1) << field.value) != 0) try types.append(a, field.name);
++    const info = @typeInfo(Rules.X11WindowType).@"enum";
++    inline for (info.field_names, info.field_values) |field_name, field_value| {
++        if (mask & (@as(u16, 1) << field_value) != 0) try types.append(a, field_name);
+diff --git a/compositor/aqueous/display_preview_policy.zig b/compositor/aqueous/display_preview_policy.zig
+--- a/compositor/aqueous/display_preview_policy.zig
++++ b/compositor/aqueous/display_preview_policy.zig
+@@ -157,2 +157,2 @@
+-    inline for (std.meta.fields(Reason)) |field| {
+-        if (why == @field(Reason, field.name)) return @field(anyerror, field.name);
++    inline for (@typeInfo(Reason).@"enum".field_names) |field_name| {
++        if (why == @field(Reason, field_name)) return @field(anyerror, field_name);
+diff --git a/compositor/aqueous/wm/config/layout.zig b/compositor/aqueous/wm/config/layout.zig
+--- a/compositor/aqueous/wm/config/layout.zig
++++ b/compositor/aqueous/wm/config/layout.zig
+@@ -20,1 +20,1 @@
+-pub const layout_count = std.meta.fields(LayoutId).len;
++pub const layout_count = @typeInfo(LayoutId).@"enum".field_names.len;
+diff --git a/settingsApplication/src/config_main.zig b/settingsApplication/src/config_main.zig
+--- a/settingsApplication/src/config_main.zig
++++ b/settingsApplication/src/config_main.zig
+@@ -130,2 +130,3 @@
+-    inline for (std.meta.fields(Command)) |command_field| {
+-        if (std.mem.eql(u8, value, command_field.name)) return @enumFromInt(command_field.value);
++    const info = @typeInfo(Command).@"enum";
++    inline for (info.field_names, info.field_values) |command_name, command_value| {
++        if (std.mem.eql(u8, value, command_name)) return @enumFromInt(command_value);
+diff --git a/settingsApplication/src/backend/operations.zig b/settingsApplication/src/backend/operations.zig
+--- a/settingsApplication/src/backend/operations.zig
++++ b/settingsApplication/src/backend/operations.zig
+@@ -162,1 +162,1 @@
+-    inline for (std.meta.fields(schema.Category)) |category| try json.write(category.name);
++    inline for (@typeInfo(schema.Category).@"enum".field_names) |category_name| try json.write(category_name);
+diff --git a/settingsApplication/src/backend/schema.zig b/settingsApplication/src/backend/schema.zig
+--- a/settingsApplication/src/backend/schema.zig
++++ b/settingsApplication/src/backend/schema.zig
+@@ -36,3 +36,4 @@
+-        inline for (std.meta.fields(FileId)) |field| {
+-            if (std.mem.eql(u8, value, field.name)) return @enumFromInt(field.value);
++        const info = @typeInfo(FileId).@"enum";
++        inline for (info.field_names, info.field_values) |field_name, field_value| {
++            if (std.mem.eql(u8, value, field_name)) return @enumFromInt(field_value);
+         }
+@@ -43,1 +44,1 @@
+-pub const file_count = std.meta.fields(FileId).len;
++pub const file_count = @typeInfo(FileId).@"enum".field_names.len;
+diff --git a/compositor/aqueous/ShellCommands.zig b/compositor/aqueous/ShellCommands.zig
+--- a/compositor/aqueous/ShellCommands.zig
++++ b/compositor/aqueous/ShellCommands.zig
+@@ -137,1 +137,1 @@
+-            const name = util.gpa.dupeZ(u8, value) catch return .unavailable;
++            const name = util.gpa.dupeSentinel(u8, value, 0) catch return .unavailable;
+diff --git a/compositor/aqueous/ShellManager.zig b/compositor/aqueous/ShellManager.zig
+--- a/compositor/aqueous/ShellManager.zig
++++ b/compositor/aqueous/ShellManager.zig
+@@ -115,1 +115,1 @@
+-    const z = arena.allocator().dupeZ(u8, json) catch {
++    const z = arena.allocator().dupeSentinel(u8, json, 0) catch {
+diff --git a/compositor/aqueous/TabletTest.zig b/compositor/aqueous/TabletTest.zig
+--- a/compositor/aqueous/TabletTest.zig
++++ b/compositor/aqueous/TabletTest.zig
+@@ -66,1 +66,1 @@
+-        s.name = try util.gpa.dupeZ(u8, name.string);
++        s.name = try util.gpa.dupeSentinel(u8, name.string, 0);
+diff --git a/compositor/aqueous/ToplevelTag.zig b/compositor/aqueous/ToplevelTag.zig
+--- a/compositor/aqueous/ToplevelTag.zig
++++ b/compositor/aqueous/ToplevelTag.zig
+@@ -12,1 +12,1 @@
+-    const owned = try allocator.dupeZ(u8, value);
++    const owned = try allocator.dupeSentinel(u8, value, 0);
+diff --git a/compositor/aqueous/WindowInfoManager.zig b/compositor/aqueous/WindowInfoManager.zig
+--- a/compositor/aqueous/WindowInfoManager.zig
++++ b/compositor/aqueous/WindowInfoManager.zig
+@@ -552,1 +552,1 @@
+-    const terminated = util.gpa.dupeZ(u8, pattern) catch {
++    const terminated = util.gpa.dupeSentinel(u8, pattern, 0) catch {
+diff --git a/compositor/aqueous/Workspace.zig b/compositor/aqueous/Workspace.zig
+--- a/compositor/aqueous/Workspace.zig
++++ b/compositor/aqueous/Workspace.zig
+@@ -58,1 +58,1 @@
+-    const owned_name = try util.gpa.dupeZ(u8, name);
++    const owned_name = try util.gpa.dupeSentinel(u8, name, 0);
+@@ -62,1 +62,1 @@
+-        try util.gpa.dupeZ(u8, std.mem.span(wlr_output.name))
++        try util.gpa.dupeSentinel(u8, std.mem.span(wlr_output.name), 0)
+@@ -64,1 +64,1 @@
+-        try util.gpa.dupeZ(u8, "");
++        try util.gpa.dupeSentinel(u8, "", 0);
+diff --git a/compositor/aqueous/WorkspaceManager.zig b/compositor/aqueous/WorkspaceManager.zig
+--- a/compositor/aqueous/WorkspaceManager.zig
++++ b/compositor/aqueous/WorkspaceManager.zig
+@@ -485,1 +485,1 @@
+-            const name = util.gpa.dupeZ(u8, std.mem.span(args.workspace)) catch {
++            const name = util.gpa.dupeSentinel(u8, std.mem.span(args.workspace), 0) catch {
+diff --git a/compositor/aqueous/main.zig b/compositor/aqueous/main.zig
+--- a/compositor/aqueous/main.zig
++++ b/compositor/aqueous/main.zig
+@@ -102,1 +102,1 @@
+-            const display_z = try arena.dupeZ(u8, display);
++            const display_z = try arena.dupeSentinel(u8, display, 0);
+@@ -205,1 +205,1 @@
+-            break :blk try util.gpa.dupeZ(u8, command);
++            break :blk try util.gpa.dupeSentinel(u8, command, 0);
+diff --git a/compositor/aqueous/xwayland_dpi.zig b/compositor/aqueous/xwayland_dpi.zig
+--- a/compositor/aqueous/xwayland_dpi.zig
++++ b/compositor/aqueous/xwayland_dpi.zig
+@@ -50,1 +50,1 @@
+-        self.* = .{ .display = try allocator.dupeZ(u8, std.mem.span(display)) };
++        self.* = .{ .display = try allocator.dupeSentinel(u8, std.mem.span(display), 0) };
+diff --git a/compositor/aqueous/wm/Aqueous.zig b/compositor/aqueous/wm/Aqueous.zig
+--- a/compositor/aqueous/wm/Aqueous.zig
++++ b/compositor/aqueous/wm/Aqueous.zig
+@@ -3161,1 +3161,1 @@
+-    const owned = util.gpa.dupeZ(u8, command) catch return;
++    const owned = util.gpa.dupeSentinel(u8, command, 0) catch return;
+@@ -3187,1 +3187,1 @@
+-    const command = try util.gpa.dupeZ(u8, application.command.slice());
++    const command = try util.gpa.dupeSentinel(u8, application.command.slice(), 0);
+@@ -3196,1 +3196,1 @@
+-        const owned = try util.gpa.dupeZ(u8, arg.slice());
++        const owned = try util.gpa.dupeSentinel(u8, arg.slice(), 0);
+diff --git a/compositor/aqueousctl/main.zig b/compositor/aqueousctl/main.zig
+--- a/compositor/aqueousctl/main.zig
++++ b/compositor/aqueousctl/main.zig
+@@ -383,1 +383,1 @@
+-            const theme_z = try allocator.dupeZ(u8, theme);
++            const theme_z = try allocator.dupeSentinel(u8, theme, 0);
+@@ -440,1 +440,1 @@
+-        const output_z = try allocator.dupeZ(u8, output);
++        const output_z = try allocator.dupeSentinel(u8, output, 0);
+@@ -443,1 +443,1 @@
+-            const layout_z = try allocator.dupeZ(u8, layout);
++            const layout_z = try allocator.dupeSentinel(u8, layout, 0);
+diff --git a/settingsApplication/src/services/process_client.zig b/settingsApplication/src/services/process_client.zig
+--- a/settingsApplication/src/services/process_client.zig
++++ b/settingsApplication/src/services/process_client.zig
+@@ -31,1 +31,1 @@
+-        argv[i] = try a.dupeZ(u8, arg);
++        argv[i] = try a.dupeSentinel(u8, arg, 0);
+diff --git a/settingsApplication/src/backend/toolkit_sync.zig b/settingsApplication/src/backend/toolkit_sync.zig
+--- a/settingsApplication/src/backend/toolkit_sync.zig
++++ b/settingsApplication/src/backend/toolkit_sync.zig
+@@ -570,1 +570,1 @@
+-    return std.ascii.indexOfIgnoreCase(haystack, needle) != null;
++    return std.ascii.findIgnoreCase(haystack, needle) != null;
+diff --git a/compositor/aqueous/c.h b/compositor/aqueous/c.h
+--- a/compositor/aqueous/c.h
++++ b/compositor/aqueous/c.h
+@@ -4,1 +4,10 @@
++#include <xcb/xcb.h>
++#include <errno.h>
++#include <signal.h>
++#include <spawn.h>
++#include <sys/socket.h>
++#include <sys/wait.h>
++#include <time.h>
++#include <unistd.h>
++#include <stdlib.h>
+ #include <linux/input-event-codes.h>
+diff --git a/compositor/aqueous/xwayland_dpi.zig b/compositor/aqueous/xwayland_dpi.zig
+--- a/compositor/aqueous/xwayland_dpi.zig
++++ b/compositor/aqueous/xwayland_dpi.zig
+@@ -4,12 +4,1 @@
+-pub const c = @cImport({
+-    @cDefine("_GNU_SOURCE", "1");
+-    @cInclude("xcb/xcb.h");
+-    @cInclude("errno.h");
+-    @cInclude("signal.h");
+-    @cInclude("spawn.h");
+-    @cInclude("sys/socket.h");
+-    @cInclude("sys/wait.h");
+-    @cInclude("time.h");
+-    @cInclude("unistd.h");
+-    @cInclude("stdlib.h");
+-});
++const c = @import("c");
+diff --git a/compositor/common/flags.zig b/compositor/common/flags.zig
+--- a/compositor/common/flags.zig
++++ b/compositor/common/flags.zig
+@@ -21,1 +21,1 @@
+-                const Attributes = std.builtin.Type.StructField.Attributes;
++                const Attributes = std.builtin.Type.Struct.FieldAttributes;
+diff --git a/compositor/aqueous/main.zig b/compositor/aqueous/main.zig
+--- a/compositor/aqueous/main.zig
++++ b/compositor/aqueous/main.zig
+@@ -505,1 +505,1 @@
+-var log_scopes: std.EnumSet(LogScope) = std.EnumSet(LogScope).initFull();
++var log_scopes: std.EnumSet(LogScope) = std.EnumSet(LogScope).full;
+diff --git a/compositor/aqueous/main.zig b/compositor/aqueous/main.zig
+--- a/compositor/aqueous/main.zig
++++ b/compositor/aqueous/main.zig
+@@ -135,1 +135,1 @@
+-        log_scopes = std.EnumSet(LogScope).initEmpty();
++        log_scopes = std.EnumSet(LogScope).empty;
+@@ -139,1 +139,1 @@
+-                log_scopes = std.EnumSet(LogScope).initFull();
++                log_scopes = std.EnumSet(LogScope).full;
+diff --git a/compositor/aqueous/BellAudio.zig b/compositor/aqueous/BellAudio.zig
+--- a/compositor/aqueous/BellAudio.zig
++++ b/compositor/aqueous/BellAudio.zig
+@@ -18,1 +18,1 @@
+-    const value = std.fmt.bufPrintZ(&volume, "{d:.4}", .{config.volume}) catch return;
++    const value = std.fmt.bufPrintSentinel(&volume, "{d:.4}", .{config.volume}, 0) catch return;
+diff --git a/compositor/aqueous/InputManager.zig b/compositor/aqueous/InputManager.zig
+--- a/compositor/aqueous/InputManager.zig
++++ b/compositor/aqueous/InputManager.zig
+@@ -147,1 +147,1 @@
+-    const size_z = std.fmt.bufPrintZ(&size_buffer, "{d}", .{replacement.size}) catch unreachable;
++    const size_z = std.fmt.bufPrintSentinel(&size_buffer, "{d}", .{replacement.size}, 0) catch unreachable;
+diff --git a/compositor/aqueous/Overview.zig b/compositor/aqueous/Overview.zig
+--- a/compositor/aqueous/Overview.zig
++++ b/compositor/aqueous/Overview.zig
+@@ -491,2 +491,2 @@
+-            return std.fmt.bufPrintZ(buffer, "overview card: {}", .{entry.handle}) catch
++            return std.fmt.bufPrintSentinel(buffer, "overview card: {}", .{entry.handle}, 0) catch
+                 "overview card";
+diff --git a/compositor/aqueous/Server.zig b/compositor/aqueous/Server.zig
+--- a/compositor/aqueous/Server.zig
++++ b/compositor/aqueous/Server.zig
+@@ -205,1 +205,1 @@
+-        const p = std.fmt.bufPrintZ(&buf, "/dev/dri/renderD{d}", .{n}) catch continue;
++        const p = std.fmt.bufPrintSentinel(&buf, "/dev/dri/renderD{d}", .{n}, 0) catch continue;
+@@ -238,1 +238,1 @@
+-    const p = std.fmt.bufPrintZ(&pbuf, "{s}/boot_vga", .{device_dir}) catch return false;
++    const p = std.fmt.bufPrintSentinel(&pbuf, "{s}/boot_vga", .{device_dir}, 0) catch return false;
+@@ -275,1 +275,1 @@
+-            const spath = std.fmt.bufPrintZ(&sbuf, "/sys/class/drm/{s}/status", .{name}) catch continue;
++            const spath = std.fmt.bufPrintSentinel(&sbuf, "/sys/class/drm/{s}/status", .{name}, 0) catch continue;
+@@ -281,1 +281,1 @@
+-            const device_dir = std.fmt.bufPrintZ(&ddbuf, "/sys/class/drm/{s}/device", .{card}) catch continue;
++            const device_dir = std.fmt.bufPrintSentinel(&ddbuf, "/sys/class/drm/{s}/device", .{card}, 0) catch continue;
+@@ -312,1 +312,1 @@
+-    const fdlink = std.fmt.bufPrintZ(&fdlink_buf, "/proc/self/fd/{d}", .{drm_fd}) catch return .{};
++    const fdlink = std.fmt.bufPrintSentinel(&fdlink_buf, "/proc/self/fd/{d}", .{drm_fd}, 0) catch return .{};
+@@ -319,5 +319,6 @@
+-    const device_dir = std.fmt.bufPrintZ(
++    const device_dir = std.fmt.bufPrintSentinel(
+         &dir_buf,
+         "/sys/class/drm/{s}/device",
+         .{node_name},
++        0,
+     ) catch return .{};
+@@ -330,1 +331,1 @@
+-    const vendor_path = std.fmt.bufPrintZ(&path_buf, "{s}/vendor", .{device_dir}) catch return .{};
++    const vendor_path = std.fmt.bufPrintSentinel(&path_buf, "{s}/vendor", .{device_dir}, 0) catch return .{};
+@@ -333,1 +334,1 @@
+-    const device_path = std.fmt.bufPrintZ(&path_buf, "{s}/device", .{device_dir}) catch return .{};
++    const device_path = std.fmt.bufPrintSentinel(&path_buf, "{s}/device", .{device_dir}, 0) catch return .{};
+@@ -350,1 +351,1 @@
+-    const driver_path = std.fmt.bufPrintZ(&driver_path_buf, "{s}/driver", .{device_dir}) catch return .{};
++    const driver_path = std.fmt.bufPrintSentinel(&driver_path_buf, "{s}/driver", .{device_dir}, 0) catch return .{};
+diff --git a/compositor/aqueous/ShellManager.zig b/compositor/aqueous/ShellManager.zig
+--- a/compositor/aqueous/ShellManager.zig
++++ b/compositor/aqueous/ShellManager.zig
+@@ -395,1 +395,1 @@
+-    const sequence = std.fmt.bufPrintZ(&buf, "{d}", .{server.shell_manager.sequence}) catch unreachable;
++    const sequence = std.fmt.bufPrintSentinel(&buf, "{d}", .{server.shell_manager.sequence}, 0) catch unreachable;
+@@ -424,1 +424,1 @@
+-            const id = if (ws) |value| std.fmt.bufPrintZ(&buf, "{d}", .{value.id}) catch unreachable else "";
++            const id = if (ws) |value| std.fmt.bufPrintSentinel(&buf, "{d}", .{value.id}, 0) catch unreachable else "";
+diff --git a/compositor/aqueous/WindowInfoManager.zig b/compositor/aqueous/WindowInfoManager.zig
+--- a/compositor/aqueous/WindowInfoManager.zig
++++ b/compositor/aqueous/WindowInfoManager.zig
+@@ -211,1 +211,1 @@
+-        const label = std.fmt.bufPrintZ(&buffer, "output-retry output={s} pending={} failures={} total_failures={} retries={} deadline_ms={} stage={s} recovery_commit={?} presented_commit={?}", .{ output.policyName(), state.pending, state.failures, state.total_failures, state.retries, state.deadline_ms, @tagName(state.last_stage), state.recovery_commit, state.presented_commit }) catch continue;
++        const label = std.fmt.bufPrintSentinel(&buffer, "output-retry output={s} pending={} failures={} total_failures={} retries={} deadline_ms={} stage={s} recovery_commit={?} presented_commit={?}", .{ output.policyName(), state.pending, state.failures, state.total_failures, state.retries, state.deadline_ms, @tagName(state.last_stage), state.recovery_commit, state.presented_commit }, 0) catch continue;
+@@ -315,5 +315,6 @@
+-                return std.fmt.bufPrintZ(
++                return std.fmt.bufPrintSentinel(
+                     buffer,
+                     "layer surface: {s}",
+                     .{surface.wlr_layer_surface.namespace},
++                    0,
+                 ) catch "layer surface";
+@@ -397,5 +398,6 @@
+-            return std.fmt.bufPrintZ(
++            return std.fmt.bufPrintSentinel(
+                 buffer,
+                 "window: {s} {{state={s} hidden={} overview={} anim={} snapshot={} pos={d:.1},{d:.1} target={d:.1},{d:.1} clip={d},{d},{d},{d} configure={s}}}",
+                 .{ title[0..@min(title.len, 80)], @tagName(window.state), requested.hidden, window.overview_hidden, window.anim_active, window.anim_snapshot, window.anim_x, window.anim_y, window.anim_target_x, window.anim_target_y, requested.clip.x, requested.clip.y, requested.clip.width, requested.clip.height, if (window.impl == .toplevel) @tagName(window.impl.toplevel.configure_state) else "x11" },
++                0,
+             ) catch "window diagnostics overflow";
+@@ -403,1 +405,1 @@
+-        return std.fmt.bufPrintZ(buffer, "window: {s}", .{title}) catch "window";
++        return std.fmt.bufPrintSentinel(buffer, "window: {s}", .{title}, 0) catch "window";
+@@ -421,1 +423,1 @@
+-        return std.fmt.bufPrintZ(buffer, "window surface buffer {{opacity={d:.3}}}", .{scene_buffer.opacity}) catch "window surface buffer";
++        return std.fmt.bufPrintSentinel(buffer, "window surface buffer {{opacity={d:.3}}}", .{scene_buffer.opacity}, 0) catch "window surface buffer";
+diff --git a/compositor/aqueous/WorkspaceManager.zig b/compositor/aqueous/WorkspaceManager.zig
+--- a/compositor/aqueous/WorkspaceManager.zig
++++ b/compositor/aqueous/WorkspaceManager.zig
+@@ -120,1 +120,1 @@
+-                    std.fmt.bufPrintZ(&name_buf, "{d}", .{coordinate + 1}) catch "1";
++                    std.fmt.bufPrintSentinel(&name_buf, "{d}", .{coordinate + 1}, 0) catch "1";
+diff --git a/compositor/aqueous/KeyboardGroup.zig b/compositor/aqueous/KeyboardGroup.zig
+--- a/compositor/aqueous/KeyboardGroup.zig
++++ b/compositor/aqueous/KeyboardGroup.zig
+@@ -53,1 +53,1 @@
+-    assert(pressed_count_max == @typeInfo(wlr.Keyboard).@"struct".field_types[@intFromEnum(@as(std.meta.FieldEnum(wlr.Keyboard), .keycodes))].array.len);
++    assert(pressed_count_max == @typeInfo(@typeInfo(wlr.Keyboard).@"struct".field_types[@intFromEnum(@as(std.meta.FieldEnum(wlr.Keyboard), .keycodes))]).array.len);
+diff --git a/compositor/aqueous/display_preview_policy.zig b/compositor/aqueous/display_preview_policy.zig
+--- a/compositor/aqueous/display_preview_policy.zig
++++ b/compositor/aqueous/display_preview_policy.zig
+@@ -17,2 +17,2 @@
+-    preserve: Features = .initEmpty(),
+-    transition: Features = .initEmpty(),
++    preserve: Features = .empty,
++    transition: Features = .empty,
+diff --git a/compositor/aqueous/input_activity.zig b/compositor/aqueous/input_activity.zig
+--- a/compositor/aqueous/input_activity.zig
++++ b/compositor/aqueous/input_activity.zig
+@@ -82,1 +82,1 @@
+-    down: std.StaticBitSet(768) = .initEmpty(),
++    down: std.StaticBitSet(768) = .empty,
+diff --git a/compositor/aqueous/xwayland_dpi.zig b/compositor/aqueous/xwayland_dpi.zig
+--- a/compositor/aqueous/xwayland_dpi.zig
++++ b/compositor/aqueous/xwayland_dpi.zig
+@@ -66,1 +66,1 @@
+-        if (c.posix_spawn(&self.pid, "/proc/self/exe", &actions, &attr, @ptrCast(@constCast(&argv)), c.environ) != 0) return error.Spawn;
++        if (c.posix_spawn(&self.pid, "/proc/self/exe", &actions, &attr, @ptrCast(@constCast(&argv)), c.__environ) != 0) return error.Spawn;

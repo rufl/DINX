@@ -7,7 +7,7 @@ url='https://github.com/rufl/DINX'
 license=('Apache-2.0')
 depends=('dinit' 'greetd')
 source=('dinx-live-autologin' 'dinx-live-autologin.service')
-sha256sums=('b79c9f2b5abe602968a545e24a7883ca94026d8ec297ad19844b3c026674ddb4' '4146cc3bd56017b716e4d4ab660ec9f80441ecb193c419bfb5868e91e749fe5f')
+sha256sums=('2df952167d0b6c21a4bcf08e593b12e725c290175dbf0d2c2a2f0cda3cc07f25' '4146cc3bd56017b716e4d4ab660ec9f80441ecb193c419bfb5868e91e749fe5f')
 
 package() {
   install -Dm755 "$srcdir/dinx-live-autologin" \

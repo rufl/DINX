@@ -348,7 +348,18 @@ jobs:
               actual_zig_version=$(zig version)
               printf "zig_version=%s\n" "$actual_zig_version"
               test "$actual_zig_version" = "$zig_version"
-              ZIG="/tmp/zig-x86_64-linux-${zig_version}/zig" scripts/smoke_pori_zig.sh
+              source /workspace/distro/packages/pearl/source.env
+              : "${PEARL_ZIG_VERSION:?PEARL_ZIG_VERSION is missing}"
+              : "${PEARL_ZIG_SOURCE_URL:?PEARL_ZIG_SOURCE_URL is missing}"
+              : "${PEARL_ZIG_SOURCE_SHA256:?PEARL_ZIG_SOURCE_SHA256 is missing}"
+              pearl_zig_archive="zig-x86_64-linux-${PEARL_ZIG_VERSION}.tar.xz"
+              curl --fail --silent --show-error --location --retry 3 \
+                --output "/tmp/$pearl_zig_archive" \
+                "$PEARL_ZIG_SOURCE_URL"
+              actual_pearl_zig_sha=$(sha256sum "/tmp/$pearl_zig_archive" | cut -d " " -f 1)
+              printf "pearl_zig_sha256=%s\n" "$actual_pearl_zig_sha"
+              test "$actual_pearl_zig_sha" = "$PEARL_ZIG_SOURCE_SHA256"
+              tar -xJf "/tmp/$pearl_zig_archive" --directory /tmp
 
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_dinx_theme.sh
@@ -414,7 +425,9 @@ jobs:
                 if [[ "$package_name" == noctty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                 fi
-                if [[ "$package_name" == pori || "$package_name" == phyto || "$package_name" == dome || "$package_name" == aqueous || "$package_name" == pearl ]]; then
+                if [[ "$package_name" == pearl ]]; then
+                  extra_env+=("ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig")
+                elif [[ "$package_name" == pori || "$package_name" == phyto || "$package_name" == dome || "$package_name" == aqueous ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")
                 fi
                 (

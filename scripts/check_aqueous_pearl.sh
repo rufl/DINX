@@ -33,6 +33,11 @@ source "$pearl_dir/source.env"
 [[ "$PEARL_VERSION" == 0.3.0 ]] || fail "unexpected Pearl version: $PEARL_VERSION"
 [[ "$PEARL_SOURCE_SHA256" == afb15f5650cdd0aa00a9d6ee697dec1cde2cb9eaa77b1631e4876c125caba24a ]] \
   || fail 'Pearl source checksum changed'
+[[ "$PEARL_ZIG_VERSION" == 0.16.0 ]] || fail "unexpected Pearl Zig version: $PEARL_ZIG_VERSION"
+[[ "$PEARL_ZIG_SOURCE_URL" == https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz ]] \
+  || fail 'Pearl Zig source URL changed'
+[[ "$PEARL_ZIG_SOURCE_SHA256" == 70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00 ]] \
+  || fail 'Pearl Zig source checksum changed'
 
 for package in aqueous pearl; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
@@ -110,6 +115,9 @@ fi
 
 grep -Fq 'build_package aqueous' "$workflow" || fail 'workflow does not build Aqueous'
 grep -Fq 'build_package pearl' "$workflow" || fail 'workflow does not build Pearl'
+grep -Fq 'PEARL_ZIG_SOURCE_SHA256' "$workflow" || fail 'workflow does not verify the pinned Pearl Zig archive'
+grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$workflow" \
+  || fail "workflow does not select Pearl's declared Zig toolchain"
 grep -Fq '                scdoc \' "$workflow" || fail 'workflow does not install Aqueous man-page builder'
 if grep -Fq '                systemd-libs \' "$workflow"; then
   fail 'workflow still installs systemd-libs for Aqueous'

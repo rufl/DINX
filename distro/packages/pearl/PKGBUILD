@@ -44,7 +44,7 @@ depends=(
 )
 makedepends=(
   'git'
-  'zig>=0.17'
+  'zig>=0.16'
   'pkgconf'
   'gcc'
   'qt5-base'
@@ -74,9 +74,15 @@ install=pearl.install
 
 build() {
   cd "$srcdir/pearl-$pkgver"
+  local zig_bin="${ZIG:-zig}"
+  local zig_version="$("$zig_bin" version)"
+  [[ "$zig_version" == "$PEARL_ZIG_VERSION" ]] || {
+    printf 'Pearl %s requires Zig %s, found %s\n' "$pkgver" "$PEARL_ZIG_VERSION" "$zig_version" >&2
+    return 1
+  }
   export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
   export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
-  "${ZIG:-zig}" build install build-greeter -Dqt-themes=true -Doptimize=ReleaseSafe \
+  "$zig_bin" build install build-greeter -Dqt-themes=true -Doptimize=ReleaseSafe \
     -Drelease=true -Dcpu=baseline -Dwasm-plugins=false
 }
 

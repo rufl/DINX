@@ -425,9 +425,9 @@ jobs:
                 if [[ "$package_name" == noctty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                 fi
-                if [[ "$package_name" == pearl || "$package_name" == phyto ]]; then
+                if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig")
-                elif [[ "$package_name" == pori || "$package_name" == dome || "$package_name" == aqueous ]]; then
+                elif [[ "$package_name" == pori || "$package_name" == aqueous ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")
                 fi
                 (

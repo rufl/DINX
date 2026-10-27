@@ -94,15 +94,15 @@ grep -Fq 'zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4
 grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig' "$workflow" \
   || fail 'workflow does not pass Zig 0.17 to Pori'
 grep -Fq 'PEARL_ZIG_VERSION=0.16.0' "$pearl_dir/source.env" \
-  || fail 'Pearl/Phyto toolchain is not pinned to Zig 0.16'
-grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto ]]; then' "$workflow" \
-  || fail 'workflow does not select the Pearl Zig toolchain for Phyto'
+  || fail 'Pearl/Dome/Phyto toolchain is not pinned to Zig 0.16'
+grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$workflow" \
+  || fail 'workflow does not select the Pearl Zig toolchain for Phyto and Dome'
 grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$workflow" \
-  || fail 'workflow does not pass the Pearl Zig toolchain to Phyto'
+  || fail 'workflow does not pass the Pearl Zig toolchain to Phyto and Dome'
 grep -Fq 'scripts/smoke_pori_zig.sh' "$workflow" || fail 'workflow does not run the Pori Zig source smoke'
 grep -Fq 'scripts/check_pori_phyto.sh' "$workflow" || fail 'workflow does not run the Pori/Phyto contract'
 grep -Fq 'ntfs3\.ko' "$iso_check" || fail 'ISO contract does not require the kernel ntfs3 module'
 grep -Fq '/usr/bin/ntfs-3g' "$iso_check" || fail 'ISO contract does not reject the optional ntfs-3g package'
 grep -Fq 'ntfs-3g' "$calamares_check" || fail 'Calamares contract does not document optional NTFS write support'
 
-printf 'pori_phyto_contract pori=true phyto=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false ntfs3_live_rw=true ntfs3_legacy_optional=true pori_zig=0.17.0 phyto_zig=0.16.0\n'
+printf 'pori_phyto_contract pori=true phyto=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false ntfs3_live_rw=true ntfs3_legacy_optional=true pori_zig=0.17.0 dome_zig=0.16.0 phyto_zig=0.16.0\n'

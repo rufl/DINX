@@ -1,0 +1,195 @@
+--- a/Pori.Ui/build.zig
++++ b/Pori.Ui/build.zig
+@@ -1,9 +1,17 @@
+ const std = @import("std");
++const Translator = @import("translate_c").Translator;
+ 
+ pub fn build(b: *std.Build) void {
+     const target = b.standardTargetOptions(.{});
+     const optimize = b.standardOptimizeOption(.{});
+ 
++    const translate_c = b.dependency("translate_c", .{});
++    const translator: Translator = .init(translate_c, .{
++        .c_source_file = b.path("src/helpers/statvfs.h"),
++        .target = target,
++        .optimize = optimize,
++    });
++
+     const gobject = b.dependency("gobject", .{
+         .target = target,
+         .optimize = optimize,
+@@ -15,6 +23,7 @@
+         .optimize = optimize,
+     });
+     mod.addImport("glib2", gobject.module("glib2"));
++    mod.addImport("c", translator.mod);
+     mod.addImport("gobject2", gobject.module("gobject2"));
+     mod.addImport("gio2", gobject.module("gio2"));
+     mod.addImport("gtk4", gobject.module("gtk4"));
+@@ -29,6 +38,7 @@
+             .optimize = optimize,
+             .imports = &.{
+                 .{ .name = "Pori", .module = mod },
++                .{ .name = "c", .module = translator.mod },
+             },
+         }),
+     });
+@@ -41,7 +51,7 @@
+     const run_cmd = b.addRunArtifact(exe);
+     run_step.dependOn(&run_cmd.step);
+     run_cmd.step.dependOn(b.getInstallStep());
+-    if (b.args) |args| run_cmd.addArgs(args);
++    run_cmd.addPassthruArgs();
+ 
+     const mod_tests = b.addTest(.{
+         .root_module = b.createModule(.{
+@@ -50,6 +60,7 @@
+             .optimize = optimize,
+             .imports = &.{
+                 .{ .name = "Pori", .module = mod },
++                .{ .name = "c", .module = translator.mod },
+             },
+         }),
+     });
+--- a/Pori.Ui/build.zig.zon
++++ b/Pori.Ui/build.zig.zon
+@@ -4,9 +4,13 @@
+     .fingerprint = 0x80a59e2b2f41aba3,
+     .minimum_zig_version = "0.16.0",
+     .dependencies = .{
++        .translate_c = .{
++            .url = "git+https://codeberg.org/ziglang/translate-c?ref=zig-0.17.x#cfac21f3199b2b02ce3fd7db652aa456421fe4ab",
++            .hash = "translate_c-2.0.2-Q_BUWvBNBwDnyehSiuAJmdFcMYHYGA-Jc3KiYdrV2Dqx",
++        },
+         .gobject = .{
+-            .url = "https://github.com/ghostty-org/zig-gobject/releases/download/0.9.0-2026-05-22-28-1/ghostty-gobject-0.9.0-2026-05-22-28-1.tar.zst",
+-            .hash = "gobject-0.3.1-Skun7CCNogB9kSZJzqLTf_TwzMPW3-Rqdw86UgxADV-z",
++            .url = "https://github.com/ghostty-org/zig-gobject/releases/download/0.11.0-zig-0.17.0-2026-10-02-38-1/ghostty-gobject-0.11.0-zig-0.17.0-2026-10-02-38-1.tar.zst",
++            .hash = "gobject-0.3.2-Skun7LuIogBbEh-6WrLeEzMaRCnOMB3eOf__RaPYSMCZ",
+         },
+     },
+     .paths = .{
+--- a/Pori.Ui/src/helpers/format.zig
++++ b/Pori.Ui/src/helpers/format.zig
+@@ -1,7 +1,5 @@
+ const std = @import("std");
+-const c = @cImport({
+-    @cInclude("sys/statvfs.h");
+-});
++const c = @import("c");
+ 
+ pub fn humanSize(buf: []u8, bytes: u64) []const u8 {
+     const units = "KMGTPE";
+--- a/Pori.Ui/src/helpers/desktop.zig
++++ b/Pori.Ui/src/helpers/desktop.zig
+@@ -4,7 +4,12 @@
+ pub const Desktop = enum { gnome, other };
+ 
+ fn containsLower(haystack: []const u8, needle: []const u8) bool {
+-    return std.ascii.indexOfIgnoreCase(haystack, needle) != null;
++    if (needle.len == 0) return true;
++    if (needle.len > haystack.len) return false;
++    for (0..haystack.len - needle.len + 1) |i| {
++        if (std.ascii.eqlIgnoreCase(haystack[i .. i + needle.len], needle)) return true;
++    }
++    return false;
+ }
+ 
+ pub fn detect() Desktop {
+--- a/Pori.Ui/src/helpers/ui.zig
++++ b/Pori.Ui/src/helpers/ui.zig
+@@ -28,13 +28,13 @@
+ }
+ 
+ pub fn z(s: []const u8) [:0]const u8 {
+-    return scratchAlloc().dupeZ(u8, s) catch "";
++    return scratchAlloc().dupeSentinel(u8, s, 0) catch "";
+ }
+ 
+ pub fn zFmt(comptime fmt_str: []const u8, args: anytype) [:0]const u8 {
+     const alloc = scratchAlloc();
+     const s = std.fmt.allocPrint(alloc, fmt_str, args) catch "";
+-    return alloc.dupeZ(u8, s) catch "";
++    return alloc.dupeSentinel(u8, s, 0) catch "";
+ }
+ 
+ pub fn idle(comptime T: type, comptime f: fn (*T) void, data: *T) void {
+--- a/Pori.Ui/src/helpers/sysutil.zig
++++ b/Pori.Ui/src/helpers/sysutil.zig
+@@ -52,7 +52,7 @@
+ 
+         const argv_c = arena.alloc(?[*:0]const u8, argv.len + 1) catch std.process.exit(127);
+         for (argv, 0..) |arg, i| {
+-            argv_c[i] = arena.dupeZ(u8, arg) catch std.process.exit(127);
++            argv_c[i] = arena.dupeSentinel(u8, arg, 0) catch std.process.exit(127);
+         }
+         argv_c[argv.len] = null;
+         _ = execv(prog.ptr, argv_c.ptr);
+--- a/Pori.Ui/src/services/blockops.zig
++++ b/Pori.Ui/src/services/blockops.zig
+@@ -27,7 +27,7 @@
+ 
+     var out: std.ArrayList([]const u8) = .empty;
+     for (filesystem_candidates) |fs| {
+-        const z = arena.dupeZ(u8, fs) catch continue;
++        const z = arena.dupeSentinel(u8, fs, 0) catch continue;
+         const res = dbus.call(conn, udisks_name, manager_path, manager_iface, "CanFormat", dbus.stringTuple(z)) orelse continue;
+         defer res.unref();
+ 
+@@ -62,21 +62,21 @@
+     entries.append(arena, dbus.optionEntry("erase", glib.Variant.newBoolean(@as(c_int, @intFromBool(erase))))) catch return failed("out of memory");
+     entries.append(arena, dbus.optionEntry("no-block", glib.Variant.newBoolean(0))) catch return failed("out of memory");
+     if (label.len > 0) {
+-        const z = arena.dupeZ(u8, label) catch return failed("out of memory");
++        const z = arena.dupeSentinel(u8, label, 0) catch return failed("out of memory");
+         entries.append(arena, dbus.optionEntry("label", glib.Variant.newString(z))) catch return failed("out of memory");
+     }
+     if (whole_disk) {
+         entries.append(arena, dbus.optionEntry("update-partition-type", glib.Variant.newBoolean(1))) catch return failed("out of memory");
+     }
+ 
+-    const path_z = arena.dupeZ(u8, path) catch return failed("out of memory");
+-    const fs_z = arena.dupeZ(u8, fs_type) catch return failed("out of memory");
++    const path_z = arena.dupeSentinel(u8, path, 0) catch return failed("out of memory");
++    const fs_z = arena.dupeSentinel(u8, fs_type, 0) catch return failed("out of memory");
+     return call(arena, path_z, block_iface, "Format", tuple2(glib.Variant.newString(fs_z), dbus.optionsArray(entries.items)));
+ }
+ 
+ pub fn createPartitionTable(arena: std.mem.Allocator, path: []const u8, table_type: []const u8) Result {
+-    const path_z = arena.dupeZ(u8, path) catch return failed("out of memory");
+-    const z = arena.dupeZ(u8, table_type) catch return failed("out of memory");
++    const path_z = arena.dupeSentinel(u8, path, 0) catch return failed("out of memory");
++    const z = arena.dupeSentinel(u8, table_type, 0) catch return failed("out of memory");
+     return call(arena, path_z, table_iface, "Create", tuple2(glib.Variant.newString(z), dbus.optionsArray(&.{})));
+ }
+ 
+@@ -89,8 +89,8 @@
+     fs_type: []const u8,
+     label: []const u8,
+ ) Result {
+-    const path_z = arena.dupeZ(u8, disk_path) catch return failed("out of memory");
+-    const name_z = arena.dupeZ(u8, name) catch return failed("out of memory");
++    const path_z = arena.dupeSentinel(u8, disk_path, 0) catch return failed("out of memory");
++    const name_z = arena.dupeSentinel(u8, name, 0) catch return failed("out of memory");
+     var children = [_]*glib.Variant{
+         glib.Variant.newUint64(offset),
+         glib.Variant.newUint64(size),
+@@ -119,12 +119,12 @@
+ }
+ 
+ pub fn deletePartition(arena: std.mem.Allocator, path: []const u8) Result {
+-    const path_z = arena.dupeZ(u8, path) catch return failed("out of memory");
++    const path_z = arena.dupeSentinel(u8, path, 0) catch return failed("out of memory");
+     return call(arena, path_z, partition_iface, "Delete", tuple1(dbus.optionsArray(&.{})));
+ }
+ 
+ pub fn resizePartition(arena: std.mem.Allocator, path: []const u8, size: u64) Result {
+-    const path_z = arena.dupeZ(u8, path) catch return failed("out of memory");
++    const path_z = arena.dupeSentinel(u8, path, 0) catch return failed("out of memory");
+     var children = [_]*glib.Variant{
+         glib.Variant.newUint64(size),
+         dbus.optionsArray(&.{}),
+--- /dev/null
++++ b/Pori.Ui/src/helpers/statvfs.h
+@@ -0,0 +1 @@
++#include <sys/statvfs.h>

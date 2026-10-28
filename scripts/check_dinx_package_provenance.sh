@@ -87,6 +87,7 @@ for required in \
   'dist/dinx-package-repository.tar' \
   'NoExtract = usr/lib/systemd/*' \
   'NoExtract = etc/systemd/*' \
+  'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
   'NoExtract = usr/share/uwsm/*' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'makepkg --clean --nodeps --nocheck --noconfirm' \

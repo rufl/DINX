@@ -557,6 +557,7 @@ jobs:
                   print "NoExtract = usr/share/uwsm/*"
                   print "NoExtract = usr/bin/systemd"
                   print "NoExtract = usr/bin/systemctl"
+                  print "NoExtract = usr/share/wayland-sessions/plasma.desktop"
                   print "NoExtract = usr/bin/uwsm"
                   injected = 1
                   next
@@ -570,6 +571,7 @@ jobs:
               grep -Fqx 'NoExtract = usr/lib/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = etc/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/share/uwsm/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/wayland-sessions/plasma.desktop' "$pacman_conf"
               builder_pacman_conf_sha256=$(sha256sum "$pacman_conf" | cut -d " " -f 1)
               builder_mirrorlist=/etc/pacman.d/mirrorlist
               test -r "$builder_mirrorlist"

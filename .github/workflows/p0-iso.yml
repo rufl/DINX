@@ -211,20 +211,14 @@ jobs:
               DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"
               export DINX_ARTIX_IMAGE
               : "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"
-              artix_mirrorlist_url=https://packages.artixlinux.org/mirrorlist/all/https/
-              artix_mirrorlist_tmp=$(mktemp)
-              curl --fail --silent --show-error --location \
-                --retry 5 --retry-all-errors --connect-timeout 15 --max-time 120 \
-                "$artix_mirrorlist_url" -o "$artix_mirrorlist_tmp"
-              awk '
-                /^#Server = https:\/\// { sub(/^#/, ""); print; next }
-                /^Server = https:\/\// { print; next }
-                { print }
-              ' "$artix_mirrorlist_tmp" > /etc/pacman.d/mirrorlist.dinx
-              grep -Eq '^Server = https://' /etc/pacman.d/mirrorlist.dinx
-              install -m 0644 /etc/pacman.d/mirrorlist.dinx /etc/pacman.d/mirrorlist
-              rm -f /etc/pacman.d/mirrorlist.dinx "$artix_mirrorlist_tmp"
-              builder_mirrorlist_source="$artix_mirrorlist_url"
+              artix_mirrorlist_source=official-artix-https-tier1
+              {
+                printf '%s\n' '# DINX official Artix HTTPS mirrors'
+                printf '%s\n' 'Server = https://mirror2.artixlinux.org/$repo/os/$arch'
+                printf '%s\n' 'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch'
+              } > /etc/pacman.d/mirrorlist
+              grep -Eq '^Server = https://' /etc/pacman.d/mirrorlist
+              builder_mirrorlist_source="$artix_mirrorlist_source"
               pacman_retry() {
                 local attempt
                 for attempt in 1 2 3; do

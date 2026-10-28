@@ -574,7 +574,7 @@ jobs:
               builder_mirrorlist=/etc/pacman.d/mirrorlist
               test -r "$builder_mirrorlist"
               builder_mirrorlist_sha256=$(sha256sum "$builder_mirrorlist" | cut -d " " -f 1)
-              builder_mirrorlist_source="$artix_mirrorlist_url"
+              builder_mirrorlist_source="$artix_mirrorlist_source"
               python -m http.server 8765 \
                 --bind 127.0.0.1 \
                 --directory "$package_repo" \

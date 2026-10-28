@@ -607,6 +607,7 @@ jobs:
                 printf "repository=%s\n" "$DINX_REPOSITORY"
                 printf "commit=%s\n" "$DINX_COMMIT"
                 printf "workflow_run=%s\n" "$DINX_RUN_ID"
+                printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
                 printf "builder_pacman_conf_sha256=%s\n" "$builder_pacman_conf_sha256"
                 printf "builder_mirrorlist_sha256=%s\n" "$builder_mirrorlist_sha256"
                 printf "builder_mirrorlist_source=%s\n" "$builder_mirrorlist_source"

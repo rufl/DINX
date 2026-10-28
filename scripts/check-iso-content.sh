@@ -60,9 +60,6 @@ grep -Fq 'command = /usr/local/libexec/dinx-live-autologin' <<<"$live_autologin_
 grep -Fq 'before = greetd' <<<"$live_autologin_service" \
   || fail 'livefs autologin service does not precede greetd'
 
-[scripts/check-iso-content.sh#6F7C]
-
-[scripts/check-iso-content.sh#8974]
 
 required_paths=(
   etc/calamares/branding/dinx/branding.desc

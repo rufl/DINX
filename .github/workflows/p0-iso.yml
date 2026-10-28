@@ -211,6 +211,20 @@ jobs:
               DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"
               export DINX_ARTIX_IMAGE
               : "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"
+              artix_mirrorlist_url=https://packages.artixlinux.org/mirrorlist/all/https/
+              artix_mirrorlist_tmp=$(mktemp)
+              curl --fail --silent --show-error --location \
+                --retry 5 --retry-all-errors --connect-timeout 15 --max-time 120 \
+                "$artix_mirrorlist_url" -o "$artix_mirrorlist_tmp"
+              awk '
+                /^#Server = https:\/\// { sub(/^#/, ""); print; next }
+                /^Server = https:\/\// { print; next }
+                { print }
+              ' "$artix_mirrorlist_tmp" > /etc/pacman.d/mirrorlist.dinx
+              grep -Eq '^Server = https://' /etc/pacman.d/mirrorlist.dinx
+              install -m 0644 /etc/pacman.d/mirrorlist.dinx /etc/pacman.d/mirrorlist
+              rm -f /etc/pacman.d/mirrorlist.dinx "$artix_mirrorlist_tmp"
+              builder_mirrorlist_source="$artix_mirrorlist_url"
               pacman_retry() {
                 local attempt
                 for attempt in 1 2 3; do
@@ -224,6 +238,7 @@ jobs:
                 return 1
               }
               pacman_retry -Syu --noconfirm
+              pacman_retry -Syy --noconfirm
               pacman_retry -S --needed --noconfirm \
                 artools \
                 iso-profiles \
@@ -565,6 +580,7 @@ jobs:
               builder_mirrorlist=/etc/pacman.d/mirrorlist
               test -r "$builder_mirrorlist"
               builder_mirrorlist_sha256=$(sha256sum "$builder_mirrorlist" | cut -d " " -f 1)
+              builder_mirrorlist_source="$artix_mirrorlist_url"
               python -m http.server 8765 \
                 --bind 127.0.0.1 \
                 --directory "$package_repo" \
@@ -597,9 +613,9 @@ jobs:
                 printf "repository=%s\n" "$DINX_REPOSITORY"
                 printf "commit=%s\n" "$DINX_COMMIT"
                 printf "workflow_run=%s\n" "$DINX_RUN_ID"
-                printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
                 printf "builder_pacman_conf_sha256=%s\n" "$builder_pacman_conf_sha256"
                 printf "builder_mirrorlist_sha256=%s\n" "$builder_mirrorlist_sha256"
+                printf "builder_mirrorlist_source=%s\n" "$builder_mirrorlist_source"
                 printf "buildiso_owner=%s\n" "$buildiso_owner"
                 printf "zig_version=%s\n" "$(zig version)"
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"

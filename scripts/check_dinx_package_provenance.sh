@@ -104,6 +104,9 @@ for required in \
   'install -m 0755 /workspace/scripts/iso-tools/mksquashfs /usr/bin/mksquashfs' \
   'export DINX_MKSQUASHFS_REAL=/usr/local/libexec/dinx-mksquashfs.real' \
   'hash -r' \
+  'artix_mirrorlist_url=https://packages.artixlinux.org/mirrorlist/all/https/' \
+  'pacman_retry -Syy --noconfirm' \
+  'builder_mirrorlist_source=%s' \
   'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
 done

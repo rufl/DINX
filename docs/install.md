@@ -206,13 +206,13 @@ DINX_TERMINAL_FALLBACK=1 dinx-terminal
 ```
 
 `$TERMINAL` points to `dinx-terminal`, which prefers NOCTTY and falls back to `foot` when NOCTTY is not installed. The only user compositor session is Aqueous/Pearl; the dedicated Pearl Greeter host is a greetd login surface, not a user-session configuration.
-Para registrar o estado sem alterar o sistema, execute:
+To record the system state without changing it, run:
 
 ```bash
 dinx-doctor
 ```
 
-O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `missing` ou `unknown`. Para incluir a lista somente leitura dos serviços do dinit de usuário, use `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`. Não use o relatório como prova de compatibilidade de hardware: brilho físico, suspensão, GPU, áudio, NTFS compartilhado e montagem de volumes ainda exigem teste no equipamento.
+The report uses the `dinx-doctor/v1` schema and marks unavailable capabilities as `missing` or `unknown`. To include a read-only list of user dinit services, run `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`. Do not treat the report as proof of hardware compatibility: physical brightness, suspend, GPU, audio, shared NTFS and volume mounting still require testing on the machine.
 
 
 

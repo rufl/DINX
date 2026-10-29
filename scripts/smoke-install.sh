@@ -213,6 +213,7 @@ cat > "$target_dir/etc/dinit.d/dinx-install-smoke-marker" <<'EOF'
 type = scripted
 command = /usr/local/libexec/dinx-install-smoke-marker
 restart = false
+depends-on = early-root-rw.target
 EOF
 ln -sfn ../dinx-install-smoke-marker "$target_dir/etc/dinit.d/boot.d/dinx-install-smoke-marker"
 

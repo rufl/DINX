@@ -169,9 +169,7 @@ Run [38700095287](https://github.com/rufl/DINX/actions/runs/38700095287) on comm
 
 ## Observed development host
 
-The development host is EndeavourOS x86_64. `pacman`, `xorriso` and `zig` are available. `buildiso`, `mkarchiso` and `qemu-system-x86_64` are not installed. QEMU user libraries and `/dev/kvm` are present, but that is not sufficient to run the local smoke test.
-
-Therefore the P0 build must run in the remote workflow until the local dependencies are available.
+The development host is EndeavourOS x86_64. `pacman`, `xorriso`, `zig` and `qemu-system-x86_64` are available; Artix `buildiso` and generic `mkarchiso` are not installed. The P0 build still runs remotely because it uses Artix `buildiso` in a privileged container for chroot and mount operations.
 
 ## Acceptance sequence
 

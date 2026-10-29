@@ -24,7 +24,9 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 A snapshot publicado da Alpha 10 é a [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10), validada pela [execução marcada 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. O build passou os contratos de pacotes/perfil, builds de pacotes Artix, checks de conteúdo/tamanho da ISO, boot e payload gráfico no QEMU, smokes de layout do Calamares, primeiro boot persistente BIOS/UEFI e TTY de recuperação, checks do repositório assinado, vínculo dos metadados, atestação e publicação. A ISO direta tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; snapshot do repositório de pacotes `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
 
-A execução P0 da main [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), no mesmo commit, passou pelo build completo, QEMU, payload gráfico e smokes de instalação persistente/recuperação. Um smoke UEFI anterior revelou uma corrida de gravação do marcador com a remontagem read-only da raiz instalada; o marcador agora depende de `early-root-rw.target`, e o gate BIOS/UEFI corrigido passou.
+A execução P0 da main após a Alpha 10, [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), no commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passou pelo build completo, QEMU, payload gráfico, Calamares e gates de instalação persistente/recuperação BIOS/UEFI, além de metadados, atestação e upload do artefato. É uma validação pós-release da main; a ISO Alpha 10 publicada continua sendo o artefato da execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`.
+
+A próxima etapa de sistema é a qualificação planejada e sem data da Beta 0.1. Ela é separada do gaming P5; veja no [roadmap](roadmap.md) os gates de hardware, instalador, atualização e recuperação.
 
 Alpha 9 e as candidatas anteriores são evidência histórica, não o release atual. O workflow de release recompila o commit marcado e só publica depois que passam as verificações correspondentes de metadados da ISO, repositório assinado, checksum e procedência.
 
@@ -235,7 +237,7 @@ com tag exigem o segredo da chave de produção e publicam os assets do canal `s
 
 O responsável pelo release deve registrar manualmente uma qualificação real de sessão Wayland: `Super+L`, lock após 600 segundos de idle, lock antes da suspensão, desbloqueio após resume e brilho físico para cima/baixo. Uma VM pode qualificar a ordem da sessão; hardware físico é necessário para afirmar suporte a brilho e suspensão.
 
-Atualize o run ID, commit, tamanho/digest do artefato e os links dos releases nos documentos de status em inglês e português somente depois que o novo workflow passar. As afirmações de P5 gaming continuam separadas até passarem os testes de DRM, Steam/jogo, controle/áudio, retorno ao greeter e suspend/GPU físico.
+Atualize IDs de execução, commits, tamanhos/digests de artefato e links de release nos documentos de status em inglês e português somente depois que o workflow correspondente passar. O release planejado Beta 0.1 do sistema não afirma suporte gaming; P5 continua separado até passarem os testes de DRM real, Steam/jogo, controle/áudio, retorno ao greeter e suspend/GPU em hardware físico.
 O caminho de release com tag agora possui atualização assinada e downgrade de pacote
 documentados. Ele não afirma atualização da ISO instalada, rollback do filesystem ou
 recuperação física. WIZP e o CUPS opcional continuam fora das afirmações de payload

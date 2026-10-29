@@ -17,7 +17,7 @@
 <p align="center">
   <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10"><img alt="Latest alpha release" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="P0 validation status" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
-  <img alt="Stage: P5 gaming beta" src="https://img.shields.io/badge/stage-P5%20gaming%20beta-f59e0b">
+  <img alt="Next milestone: planned system Beta 0.1" src="https://img.shields.io/badge/next%20milestone-System%20Beta%200.1-f59e0b">
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
 </p>
 
@@ -65,9 +65,17 @@ BC-250 software is not installed in the generic ISO. Its packages are available 
 |---|---|
 | Published release | `v0.1.0-alpha.10`, direct ISO of 1,862,772,736 bytes |
 | Base | Artix Linux x86_64 with dinit |
-| Stage | P5 — gaming beta; P4 DinitUI qualified for the alpha gate |
+| Next milestone | System Beta 0.1: planned, not released, and undated |
+| Gaming qualification | Separate P5 track; not complete |
 | Published release validation | [Workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` |
-| Latest successful main P0 | [Workflow 40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), including QEMU boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY smokes |
+| Post-Alpha 10 main P0 validation | [Workflow 40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, completed successfully |
+
+## Next milestone: System Beta 0.1
+
+Beta 0.1 is planned, with no release date set. The goal is to qualify the Aqueous/Pearl session on dinit and the installation, update and recovery paths on a declared physical hardware matrix. Release requires physical network, audio, GPU/display and suspend testing, plus installation and recovery on disposable disks, signed updates and documented limits.
+
+The next ISO size target is **at most 1,800,000,000 bytes**; Alpha 10 is currently 1,862,772,736 bytes. P5 gaming remains a separate track: Beta 0.1 will not claim gaming support without real DRM, Steam, controller and audio tests. The session remains Aqueous/Pearl with dinit, without systemd or UWSM. [Full criteria in the roadmap](docs/roadmap.md).
+
 
 The Alpha 10 ISO is a direct GitHub release asset below the 2 GiB per-asset limit. Verify it with the matching `.iso.sha512` file before writing it to a USB drive.
 

@@ -121,9 +121,9 @@ Tagged release run [40879223746](https://github.com/rufl/DINX/actions/runs/40879
 
 This closes the P4 DinitUI and disposable install/recovery path for the system-alpha gate. It does not prove authenticated Steam/game use, real DRM gaming output, controller/audio hardware, physical installation, firmware, upgrades, filesystem rollback, BitLocker/hibernated Windows resizing or long-term hardware health.
 
-## Latest successful main P0 run
+## Successful main P0 validation after Alpha 10
 
-Run [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044) on the same commit passed the build, ISO payload, QEMU boot/graphical capture, Calamares layout transactions, persistent BIOS/UEFI install and recovery-TTY smokes, metadata verification, attestation and artifact upload. A previous UEFI marker write raced the installed root's read-only remount; the marker now depends on `early-root-rw.target`, and the fixed gate passed in both firmware modes.
+Run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on main commit `bf773500965c843e014e3bc3ef8fea685e14b91b` passed the full P0 workflow, including package contracts, Artix build, ISO checks, QEMU graphical boot, Calamares transactions, persistent BIOS/UEFI installation, recovery TTY, metadata, attestation and artifact upload. This post-release main validation followed documentation/contract cleanup; it did not publish or replace the Alpha 10 tagged artifact from run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746).
 
 ## Historical main ISO build before Alpha 10
 

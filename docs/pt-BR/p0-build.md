@@ -123,9 +123,9 @@ A execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/408
 
 Isso encerra o caminho P4 DinitUI e de instalação/recuperação descartáveis para o gate do alpha de sistema. Não prova uso autenticado de Steam/jogo, saída gaming DRM real, hardware de controle/áudio, instalação física, firmware, atualização, rollback do filesystem, redimensionamento de Windows com BitLocker/hibernação nem saúde de hardware por longo prazo.
 
-## Último P0 bem-sucedido da main
+## P0 da main bem-sucedido após a Alpha 10
 
-A execução [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), no mesmo commit, passou pelo build, payload ISO, boot/captura gráfica no QEMU, transações de layout do Calamares, instalação persistente BIOS/UEFI e smokes de TTY de recuperação, verificação dos metadados, atestação e upload do artefato. Uma gravação anterior do marcador UEFI concorreu com a remontagem read-only da raiz instalada; agora ele depende de `early-root-rw.target`, e o gate corrigido passou nos dois modos de firmware.
+A execução [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), no commit da main `bf773500965c843e014e3bc3ef8fea685e14b91b`, passou pelo workflow P0 completo: contratos de pacotes, build Artix, checks da ISO, boot gráfico no QEMU, transações Calamares, instalação persistente BIOS/UEFI, TTY de recuperação, metadados, atestação e upload do artefato. Esta validação da main pós-release veio após ajustes de documentação/contrato; não publicou nem substituiu o artefato marcado da Alpha 10 da execução [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746).
 
 ## Build histórico da main antes da Alpha 10
 

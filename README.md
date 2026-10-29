@@ -17,7 +17,7 @@
 <p align="center">
   <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="Status da validação P0" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
-  <img alt="Estágio: beta de jogos P5" src="https://img.shields.io/badge/estágio-P5%20beta%20de%20jogos-f59e0b">
+  <img alt="Próximo marco: Beta 0.1 do sistema (planejado)" src="https://img.shields.io/badge/pr%C3%B3ximo%20marco-Beta%200.1%20do%20sistema-f59e0b">
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
 </p>
 
@@ -65,9 +65,17 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 |---|---|
 | Release publicado | `v0.1.0-alpha.10`, ISO direta de 1.862.772.736 bytes |
 | Base | Artix Linux x86_64 com dinit |
-| Fase | P5 — beta de jogos; P4 DinitUI qualificada para o gate alpha |
+| Próximo marco | Beta 0.1 do sistema: planejada, ainda não publicada e sem data |
+| Qualificação gaming | P5 separada da beta do sistema; ainda não concluída |
 | Validação da release publicada | [Workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` |
-| Último P0 bem-sucedido da main | [Workflow 40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), com smokes QEMU, payload gráfico, instalação persistente BIOS/UEFI e TTY de recuperação |
+| P0 da main após Alpha 10 | [Workflow 40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, concluído com sucesso |
+
+## Próximo marco: Beta 0.1 do sistema
+
+A Beta 0.1 está planejada, ainda sem data de lançamento. O objetivo é qualificar a sessão Aqueous/Pearl sobre dinit e os caminhos de instalação, atualização e recuperação em uma matriz declarada de hardware físico. A publicação dependerá de testes de rede, áudio, GPU/display e suspensão, além de instalação e recuperação em discos de teste, atualização assinada e documentação dos limites.
+
+A meta de tamanho para a próxima ISO é **até 1.800.000.000 bytes**; a Alpha 10 atual tem 1.862.772.736 bytes. O P5 de jogos permanece uma trilha separada: a Beta 0.1 não alegará suporte gaming sem testes reais de DRM, Steam, controle e áudio. A sessão continuará Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
+
 
 ## Instalação rápida
 

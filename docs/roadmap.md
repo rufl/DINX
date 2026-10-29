@@ -4,20 +4,19 @@
 
 Milestones are capability gates, not calendar promises.
 
-## Current phase
+## Current status
 
-**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and disposable persistent-install/recovery all passed in the Alpha 10 tagged run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. P5 remains active because authenticated Steam/commercial-game launch, controller/PipeWire audio, real DRM output, repeatable gaming-launcher exit with Dinit profile restoration, suspend/resume and physical GPU/update testing are still open.
+**Published system release:** Alpha 10, validated by tagged workflow [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`.
 
-Main P0 run [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044) on the same commit passed the build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY checks; tagged run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) published the validated direct ISO.
+**Next system release:** Beta 0.1 is planned, not released, and has no date. It is a physical-hardware, installation, update and recovery qualification milestone; see the exit gates below. The P5 gaming qualification remains separate and does not imply that Beta 0.1 is gaming-ready.
+
+Main P0 run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) after the Alpha 10 release, on commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passed. It validates main after the Alpha 10 documentation/contract cleanup; it did not replace the tagged release artifact.
 
 ## P0 — foundation
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
 
-**Status:** the ISO/VM foundation gate is complete. Signed custom pacman repository
-publication plus package install/update/downgrade qualification is implemented in CI;
-production key configuration, physical hardware, installed-ISO upgrades, filesystem
-rollback and long-term hardware service health remain release gates.
+**Status:** the ISO/VM foundation gate is complete. Signed custom pacman repository publication and package install/update/downgrade qualification are implemented in CI; production signing-key rotation/revocation, physical hardware, installed-ISO upgrades, filesystem rollback and long-term hardware service health remain release gates.
 
 Implementation delivered:
 
@@ -112,11 +111,11 @@ P3 release gate:
 - DINXPanel with fixed hardware/control-panel shortcuts, the DinitUI GPU backend bridge and a non-removing Artix kernel catalog;
 - package, desktop metadata, license and ISO payload contracts.
 
-## P5 — gaming beta
+## P5 — gaming qualification
 
 **Goal:** make the gaming session repeatably usable.
 
-**Status:** session foundation implemented; the gaming exit criterion is not met.
+**Status:** session foundation implemented; the gaming exit criterion is not met. This track is separate from the planned system Beta 0.1.
 
 **Delivered:**
 
@@ -155,3 +154,22 @@ P3 release gate:
 - complete the physical desktop, laptop and BC-250 matrix;
 - qualify installed-ISO upgrades, filesystem recovery and rollback;
 - close the real DRM, Steam, controller, PipeWire, suspend/resume and GPU-recovery gates.
+
+## Beta 0.1 — system qualification
+
+**Goal:** qualify a useful, installable system for explicitly listed hardware without changing the single-session, dinit-only design.
+
+**Status:** planned. Alpha 10 remains the current public system alpha; Beta 0.1 has no release date.
+
+**Release gates:**
+
+- Publish a physical compatibility matrix with exact hardware and tested firmware, GPU/display, network, audio, Bluetooth and suspend/resume results. Limit support claims to tested machines; qualify BC-250 only on detected, separately tested hardware.
+- Test guided and manual installation on disposable physical disks, including the supported UEFI/BIOS paths, first boot, recovery TTY and interrupted-install recovery. Keep swap optional; never require users to create it manually. Document Windows/BitLocker/hibernation boundaries and make no data-preservation claim beyond tested layouts.
+- Qualify the signed package-repository bootstrap, signature verification, installed-system updates and package recovery. Decide whether installed-ISO upgrades and filesystem rollback are supported; otherwise state that they remain unsupported and document the recovery/reinstall path.
+- Validate the base services and session on the declared machines: network, D-Bus, portals, polkit, PipeWire, GPU acceleration, display persistence, lock/idle and suspend/resume. Keep Aqueous/Pearl as the only session, supervised directly by dinit; install no systemd or UWSM.
+- Pass the existing P0 build, QEMU, Calamares, BIOS/UEFI, recovery, metadata and provenance gates. Keep the direct ISO at or below **1,800,000,000 bytes**; Alpha 10 is 1,862,772,736 bytes, so this size target remains open.
+- Publish matching English and Brazilian Portuguese installation, compatibility, known-issues and recovery guidance with test evidence and explicit unsupported cases.
+
+**Outside the Beta 0.1 claim:** gaming support remains the separate P5 track. Do not claim Steam, commercial-game, controller, real DRM-output or gaming-audio support until its hardware gates pass. Secure Boot and physical recovery are also unclaimed until separately tested.
+
+**Exit criterion:** every hardware class listed as supported passes the documented install, first-boot, core-service, display and recovery checklist; signed updates have a tested recovery path; no release-blocking P0 issue remains; the release ISO meets its size target and passes the tagged release workflow. Untested hardware remains unsupported, not implicitly certified by x86_64 compatibility.

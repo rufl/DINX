@@ -135,6 +135,4 @@ comercial, controle, áudio PipeWire do jogo, suspend/resume, brilho físico,
 recuperação da GPU, firmware ou saúde de hardware em longo prazo. Essas
 afirmações continuam abertas até a matriz manual das três máquinas passar.
 
-O gaming P5 continua sendo um gate separado de beta. A release `v0.1.0-alpha.10`
-é um alpha do sistema; este documento não afirma que o critério de saída do beta
-gaming foi atendido.
+A Beta 0.1 de sistema é um marco de release planejado; seus gates de hardware físico estão no [roadmap](roadmap.md). A qualificação gaming P5 continua separada. A Alpha 10 é um alpha de sistema, e este relatório não afirma suporte a hardware até que as evidências manuais de cada dispositivo sejam registradas.

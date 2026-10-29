@@ -21,7 +21,9 @@ For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. I
 
 The published Alpha 10 snapshot is [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10), validated by [tagged workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. Its build passed the package/profile contracts, Artix package builds, ISO-content and size checks, QEMU boot and graphical payload, Calamares layout smokes, persistent BIOS/UEFI first-boot and recovery-TTY smokes, signed package-repository checks, metadata binding, attestation and publication. The direct ISO is 1,862,772,736 bytes with SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; package repository snapshot `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
 
-Main P0 run [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044) on the same commit passed the full build, QEMU, graphical payload and persistent-install/recovery smokes. An earlier UEFI smoke exposed a marker write racing the installed root's read-only remount; the marker now depends on `early-root-rw.target`, and the fixed BIOS/UEFI gate passed.
+Main P0 run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on commit `bf773500965c843e014e3bc3ef8fea685e14b91b` passed the full build, QEMU, graphical payload, Calamares and persistent BIOS/UEFI installation/recovery gates, plus metadata, attestation and artifact upload. It is a post-release main validation; the published Alpha 10 ISO remains the artifact from tagged run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`.
+
+The next system milestone is the planned, undated Beta 0.1 qualification. It is separate from P5 gaming; see the [roadmap](roadmap.md) for its hardware, installer, update and recovery gates.
 
 Alpha 9 and earlier candidate runs are historical; they are not the current release evidence. The release workflow rebuilds the tagged commit and publishes only after matching ISO metadata, signed-repository, checksum and provenance checks pass.
 
@@ -230,7 +232,7 @@ production key secret and publish the `stable` repository assets described above
 
 The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
 
-Update the run ID, commit, artifact size/digest and release links in the English and Portuguese status documents only after the new workflow is green. P5 gaming claims remain separate until DRM display, Steam/game, controller/audio, return-to-greeter and physical suspend/GPU tests pass.
+Update run IDs, commits, artifact sizes/digests and release links in the English and Portuguese status documents only after the relevant workflow is green. The planned Beta 0.1 system release does not claim gaming support; P5 remains separate until real DRM output, Steam/game, controller/audio, greeter-return and physical suspend/GPU tests pass.
 The tagged release path now has a documented signed package update and package
 downgrade path. It does not claim an installed-ISO upgrade, filesystem rollback or
 physical recovery procedure. WIZP and optional CUPS remain outside ISO payload claims

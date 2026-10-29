@@ -132,6 +132,4 @@ game launch, controller input, PipeWire game audio, suspend/resume, physical
 brightness, GPU recovery, firmware behavior, or long-running hardware health.
 Those claims remain open until the three-machine manual matrix passes.
 
-P5 gaming remains a separate beta gate. The `v0.1.0-alpha.10` release is a
-system alpha; this document does not claim that the gaming beta exit criterion
-has passed.
+System Beta 0.1 is a planned release milestone; its physical-hardware gates are listed in the [roadmap](roadmap.md). P5 gaming qualification remains separate. Alpha 10 is a system alpha, and this report makes no hardware-support claim until a device's manual evidence is recorded.

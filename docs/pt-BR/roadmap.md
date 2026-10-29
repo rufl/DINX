@@ -4,21 +4,19 @@
 
 Os marcos são gates de capacidade, não promessas de calendário.
 
-## Fase atual
+## Estado atual
 
-**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload de pacote/ISO e instalação persistente/recuperação em discos descartáveis passaram na execução marcada Alpha 10 [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. A P5 continua ativa porque launch autenticado de Steam/jogo comercial, controle/áudio PipeWire, saída DRM real, saída repetível do launcher gaming com restauração do perfil Dinit, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
+**Release de sistema publicado:** Alpha 10, validada pela execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`.
 
-O P0 da main [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), no mesmo commit, passou pelos checks de build, boot, payload gráfico, instalação persistente BIOS/UEFI e TTY de recuperação; a execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) publicou a ISO direta validada.
+**Próximo release de sistema:** Beta 0.1 está planejada, ainda não foi publicada e não tem data. É um marco de qualificação de hardware físico, instalação, atualização e recuperação; veja os critérios de saída abaixo. A qualificação gaming P5 continua separada e não significa que a Beta 0.1 esteja pronta para jogos.
+
+A execução P0 da main [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), após o release Alpha 10 e no commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passou. Ela valida a main após os ajustes de documentação/contrato da Alpha 10; não substituiu o artefato publicado com tag.
 
 ## P0 — fundação
 
 **Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
 
-**Status:** o gate da fundação ISO/VM está concluído. A publicação do repositório
-pacman customizado assinado e a qualificação de instalação/atualização/downgrade de
-pacotes estão implementadas no CI; configuração da chave de produção, hardware físico,
-atualizações da ISO instalada, rollback do filesystem e saúde de serviços em hardware
-por longo prazo continuam gates de release.
+**Status:** o gate de fundação ISO/VM está concluído. A publicação do repositório pacman customizado assinado e a qualificação de instalação/atualização/downgrade de pacotes estão implementadas no CI; rotação/revogação da chave de assinatura de produção, hardware físico, upgrades da ISO instalada, rollback do filesystem e saúde de serviços em hardware por longo prazo continuam gates de release.
 
 Implementação entregue:
 
@@ -112,11 +110,11 @@ Gate de release P3:
 - DINXPanel com atalhos fixos de hardware/painéis de controle, ponte para o backend de GPU do DinitUI e catálogo de kernels Artix sem remoção;
 - contratos do pacote, metadados desktop, licença e payload da ISO.
 
-## P5 — beta de jogos
+## P5 — qualificação gaming
 
 **Objetivo:** tornar a sessão de jogos utilizável de forma repetível.
 
-**Status:** fundação da sessão implementada; o critério de saída gaming ainda não foi atendido.
+**Status:** fundação da sessão implementada; o critério de saída gaming não foi atendido. Esta trilha é separada da Beta 0.1 do sistema.
 
 **Entregue:**
 
@@ -155,3 +153,22 @@ Gate de release P3:
 - completar a matriz física de desktop, laptop e BC-250;
 - qualificar upgrades da ISO instalada, recuperação do filesystem e rollback;
 - fechar os gates reais de DRM, Steam, controle, PipeWire, suspensão/retomada e recuperação da GPU.
+
+## Beta 0.1 — qualificação do sistema
+
+**Objetivo:** qualificar um sistema útil e instalável para hardware explicitamente listado, sem alterar o desenho de sessão única e dinit-only.
+
+**Status:** planejada. A Alpha 10 continua sendo o alpha público de sistema; a Beta 0.1 ainda não tem data.
+
+**Gates do release:**
+
+- Publicar uma matriz de compatibilidade física com hardware exato e resultados testados de firmware, GPU/display, rede, áudio, Bluetooth e suspensão/retomada. Limitar as afirmações de suporte às máquinas testadas; qualificar BC-250 somente em hardware detectado e testado separadamente.
+- Testar instalação guiada e manual em discos físicos descartáveis, incluindo os caminhos UEFI/BIOS suportados, primeiro boot, TTY de recuperação e recuperação após instalação interrompida. Manter swap opcional; nunca exigir criação manual pelo usuário. Documentar limites de Windows/BitLocker/hibernação e não prometer preservação de dados além dos layouts testados.
+- Qualificar bootstrap do repositório assinado, verificação de assinaturas, atualizações do sistema instalado e recuperação de pacotes. Decidir se upgrades de ISO instalada e rollback do filesystem serão suportados; caso contrário, declarar que continuam indisponíveis e documentar o caminho de recuperação/reinstalação.
+- Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. Aqueous/Pearl continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
+- Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta em até **1.800.000.000 bytes**; a Alpha 10 tem 1.862.772.736 bytes, portanto a meta de tamanho continua aberta.
+- Publicar guias correspondentes em inglês e português brasileiro para instalação, compatibilidade, problemas conhecidos e recuperação, com evidências de teste e casos explicitamente não suportados.
+
+**Fora da afirmação da Beta 0.1:** suporte gaming permanece na trilha P5 separada. Não afirmar suporte a Steam, jogos comerciais, controles, saída DRM real ou áudio gaming até passar pelos gates de hardware. Secure Boot e recuperação física também não são alegados sem testes próprios.
+
+**Critério de saída:** cada classe de hardware listada como suportada passa pela checklist documentada de instalação, primeiro boot, serviços essenciais, display e recuperação; atualizações assinadas têm caminho de recuperação testado; não há bloqueador P0 de release; a ISO atende à meta de tamanho e passa pelo workflow de release com tag. Hardware não testado continua sem suporte, sem certificação implícita por ser x86_64.

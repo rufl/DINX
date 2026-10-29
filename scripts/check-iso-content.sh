@@ -41,14 +41,17 @@ livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
 for live_path in \
   etc/artools/live.conf \
   etc/dinit.d/dinx-live-autologin \
-  etc/dinit.d/greetd \
+  etc/dinit.d/boot.d/greetd \
   etc/dinit.d/boot.d/dinx-live-autologin \
   etc/dinit.d/root-ro \
   etc/dinit.d/early-root-rw.target \
   usr/local/libexec/dinx-live-autologin; do
-  grep -Fq "/$live_path" <<<"$livefs_manifest" \
+  grep -Fq "squashfs-root/$live_path" <<<"$livefs_manifest" \
     || fail "missing livefs path: $live_path"
 done
+# The livefs is an overlay; greetd's service file is inherited from rootfs.
+grep -Fq 'squashfs-root/etc/dinit.d/boot.d/greetd -> /etc/dinit.d/greetd' <<<"$livefs_manifest" \
+  || fail 'livefs greetd boot link does not target the inherited rootfs service'
 
 if grep -Fq '/etc/dinit.d/root-ro' <<<"$manifest" \
   || grep -Fq '/etc/dinit.d/early-root-rw.target' <<<"$manifest"; then
@@ -77,14 +80,6 @@ grep -Fq 'depends-on      = login.target' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not use the login target'
 if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then
   fail 'live-only autologin dependency leaked into the installed greetd service'
-fi
-live_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
-grep -Fq 'command         = /usr/bin/greetd' <<<"$live_greetd_service" \
-  || fail 'live greetd service command is incorrect'
-grep -Fq 'depends-on      = login.target' <<<"$live_greetd_service" \
-  || fail 'live greetd service does not use the login target'
-if grep -Fq 'dinx-live-autologin' <<<"$live_greetd_service"; then
-  fail 'live greetd service must remain owned by greetd-dinit'
 fi
 
 
@@ -303,7 +298,7 @@ required_paths=(
 )
 
 for path in "${required_paths[@]}"; do
-  grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
+  grep -Fq "squashfs-root/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for bc250_path in \

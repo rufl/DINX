@@ -68,9 +68,9 @@ A imagem Alpha 9 publicada também inclui pacotes específicos da BC-250. O perf
 | Fase | P5 — beta de jogos; P4 DinitUI qualificada para o gate alpha |
 | Validação da release publicada | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
 | Último build ISO bem-sucedido da main | [Workflow 40637700291](https://github.com/rufl/DINX/actions/runs/40637700291), commit `f01f372cc9c93283bbc2a33de24c27aced1428bf`; ISO de 2.065.172.480 bytes, anterior às mudanças candidatas atuais |
-| Tentativa P0 mais recente da main | [Workflow 40805628529](https://github.com/rufl/DINX/actions/runs/40805628529) falhou durante a instalação livefs porque dois pacotes eram donos de `/etc/dinit.d/greetd`; nenhuma ISO foi produzida. A candidata local remove a duplicidade e corrige uma checagem obsoleta do payload BC-250, mas ainda precisa de nova validação P0/QEMU/instalação. |
+| Tentativa P0 mais recente da main | [Workflow 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262) gerou uma ISO de 1.862.776.832 bytes e passou pelo boot/captura QEMU, mas falhou no check de payload: o serviço greetd é herdado da rootfs pelo overlay livefs. Nenhum smoke de instalação ou atestação foi executado. A correção local do check passa nessa ISO; é necessário um novo P0. |
 
-A Alpha 9 continua sendo o release mais recente publicado. Os assets e a execução 39924316082 descrevem somente aquele snapshot. O build ISO bem-sucedido mais recente antecede a candidata atual; as mudanças fonte atuais ainda não são uma Alpha 10 verificada ou publicada.
+A Alpha 9 continua sendo a release mais recente publicada. A ISO candidata do run 40848793262 não é uma release Alpha 10: passou no limite de tamanho e no boot QEMU, mas a validação completa e os smokes de instalação ainda não passaram.
 
 
 ## Instalação rápida

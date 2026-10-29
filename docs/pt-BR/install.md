@@ -7,7 +7,7 @@
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações da ISO instalada, rollback do filesystem ou preservação de dados.
 O projeto está atualmente na **P5 — Beta de jogos**. O workflow de validação com tag [execução 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou o build da ISO, boot e payload gráfico no QEMU, smokes de layouts suportados e de instalação persistente/recuperação do Calamares, verificação dos metadados de build, atestação de procedência e publicação do release. O prerelease público é a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), com uma ISO direta, checksum SHA-512 correspondente e repositório DINX estável assinado. A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
 
-A mudança de autologin direto na live, presente na árvore atual, vale para o próximo build da ISO; ela não está no artefato Alpha 9 publicado até que um novo release seja publicado.
+A candidata fonte agora habilita autologin direto na live, mas sua primeira ISO P0 (execução [40848793262](https://github.com/rufl/DINX/actions/runs/40848793262)) falhou no gate de payload após o boot/captura QEMU. Ela ainda não é um download qualificado. A Alpha 9 continua sendo a release mais recente.
 
 O Pori é a ferramenta gráfica de armazenamento dinit. Use-o para inspecionar discos e criar serviços persistentes de montagem em `/etc/dinit.d`; use o File Roller para abrir, criar e extrair arquivos compactados, o GParted para editar partições fora do instalador e o Calamares para a transação final de particionamento e instalação.
 
@@ -146,7 +146,7 @@ Use um gravador confiável como o Rufus. Selecione a ISO verificada e o pendrive
 2. Reinicie e abra o menu de boot (`F12`, `F11`, `Esc` ou a tecla específica do fabricante).
 3. Selecione a entrada UEFI do USB.
 4. Se o firmware recusar a imagem, desative Secure Boot para este teste; a alpha atual não fornece um caminho Secure Boot assinado.
-5. Na ISO Alpha 9 publicada, siga o fluxo existente do Pearl Greeter para entrar na sessão live. O autologin direto da live existe somente na candidata de código da Alpha 10, ainda não compilada.
+5. A ISO Alpha 9 publicada usa o fluxo do Pearl Greeter. O autologin direto live existe apenas na candidata Alpha 10 não qualificada; sua primeira ISO falhou na validação de payload e precisa de um rebuild bem-sucedido antes do release.
 
 A candidata fonte da Alpha 10 abre diretamente a conta descartável `dinx` no `Aqueous + Pearl (DINX)`, sem solicitar usuário ou senha. Essa mudança vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Ela ainda não está na imagem Alpha 9 publicada. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
 

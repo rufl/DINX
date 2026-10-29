@@ -68,9 +68,9 @@ The published Alpha 9 image also includes BC-250-specific packages. The current 
 | Stage | P5 — gaming beta; P4 DinitUI qualified for the alpha gate |
 | Published release validation | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
 | Last successful main ISO build | [Workflow 40637700291](https://github.com/rufl/DINX/actions/runs/40637700291), commit `f01f372cc9c93283bbc2a33de24c27aced1428bf`; ISO 2,065,172,480 bytes, before the current candidate changes |
-| Latest main P0 attempt | [Workflow 40805628529](https://github.com/rufl/DINX/actions/runs/40805628529) failed during livefs package installation because two packages owned `/etc/dinit.d/greetd`; no ISO was produced. The local candidate removes the duplicate owner and fixes a stale BC-250 payload assertion, but still needs fresh P0/QEMU/install validation. |
+| Latest main P0 attempt | [Workflow 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262) produced a 1,862,776,832-byte ISO and passed QEMU boot/capture, but failed payload validation: the livefs overlay inherits greetd from rootfs. Install smokes and attestation did not run. The local content-check fix passes against this ISO; a fresh P0 run is required. |
 
-Alpha 9 remains the latest published release. Its assets and run 39924316082 describe that snapshot only. The latest successful ISO build predates the current candidate; the current source changes are not a verified or published Alpha 10.
+Alpha 9 remains the latest published release. The ISO from run 40848793262 is not an Alpha 10 release: it met the size limit and booted in QEMU, but full payload validation and installation smokes have not passed.
 
 
 ## Quick install

@@ -126,9 +126,9 @@ This run closes the P4 DinitUI package/ISO/persistent-install path for the alpha
 
 ## Latest main P0 attempt
 
-Run [40805628529](https://github.com/rufl/DINX/actions/runs/40805628529) on commit `33699c797311800e4bdcbf2222f8cf8e504ae27d` failed during livefs package installation because both `dinx-live-autologin` and `greetd-dinit` owned `/etc/dinit.d/greetd`. No ISO was produced; size, QEMU boot, payload and installation checks did not run.
+Run [40848793262](https://github.com/rufl/DINX/actions/runs/40848793262) on commit `bc0fe5920e355d7039fee5df2bf2548ab105166d` built `artix-dinx-dinit-20261029-x86_64.iso` (1,862,776,832 bytes; SHA-512 `3a94630f50e4035542856af9427db603c08b295d72273cabb3c960f9a310fc6dde8ca1daf9b8ce86372f3a82a7ecc9faec57fdff06cb8cb84709270f4e5d2b6e`). QEMU boot/capture passed; `Verify graphical ISO payload` failed because the check tried to read the greetd service from livefs even though it is inherited from the rootfs overlay. Persistent-install and attestation steps did not run.
 
-The full local contract suite, `actionlint`, REUSE lint, package build and package-ownership check pass. The candidate fixes both reported gates, but still has no GitHub P0, QEMU or install evidence.
+The content gate now checks the rootfs greetd service and the livefs boot symlink using exact manifest paths. `scripts/check-iso-content.sh` passes against the uploaded ISO. The full local contract suite, `actionlint`, REUSE lint, package build and package-ownership check also pass; a fresh GitHub P0 must still run the installation smokes and attestation.
 
 ## Most recent successful main ISO build before the candidate
 

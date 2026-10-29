@@ -128,9 +128,9 @@ Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 D
 
 ## Última tentativa P0 da `main`
 
-A execução [40805628529](https://github.com/rufl/DINX/actions/runs/40805628529), no commit `33699c797311800e4bdcbf2222f8cf8e504ae27d`, falhou durante a instalação do livefs porque `dinx-live-autologin` e `greetd-dinit` eram donos de `/etc/dinit.d/greetd`. Nenhuma ISO foi produzida; tamanho, boot QEMU, payload e checks de instalação não foram executados.
+A execução [40848793262](https://github.com/rufl/DINX/actions/runs/40848793262), no commit `bc0fe5920e355d7039fee5df2bf2548ab105166d`, gerou `artix-dinx-dinit-20261029-x86_64.iso` (1.862.776.832 bytes; SHA-512 `3a94630f50e4035542856af9427db603c08b295d72273cabb3c960f9a310fc6dde8ca1daf9b8ce86372f3a82a7ecc9faec57fdff06cb8cb84709270f4e5d2b6e`). O boot/captura QEMU passou; `Verify graphical ISO payload` falhou porque o check tentou ler o serviço greetd diretamente do livefs, embora ele seja herdado da rootfs pelo overlay. As etapas de instalação persistente e atestação não foram executadas.
 
-A suíte local completa de contratos, `actionlint`, REUSE lint, o build do pacote e a verificação de propriedade passam. A candidata corrige os dois gates identificados, mas ainda não tem evidência P0, QEMU ou de instalação no GitHub.
+O gate de conteúdo agora verifica o serviço greetd na rootfs e o link de boot no livefs usando caminhos exatos do manifesto. `scripts/check-iso-content.sh` passa contra a ISO enviada pelo workflow. A suíte local completa de contratos, `actionlint`, REUSE lint, o build do pacote e a verificação de propriedade também passam; ainda é necessário um novo P0 no GitHub para executar os smokes de instalação e a atestação.
 
 ## Build ISO bem-sucedido mais recente antes da candidata
 

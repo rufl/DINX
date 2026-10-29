@@ -26,7 +26,7 @@ A alpha atual não possui bootloader assinado, caminho Secure Boot suportado nem
 
 ## 1. Obter o artefato ISO
 
-Ainda não existe um download estável de release. O artefato do workflow público fica retido por sete dias e é substituído por execuções posteriores.
+A Alpha 10, alpha de sistema publicada, oferece ISO direta e checksum correspondente no [release com tag](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10). Use esse release como download principal. Os artefatos do workflow P0 são alternativas temporárias, retidas por sete dias e substituídas por execuções posteriores.
 
 ### Release alpha com tag
 

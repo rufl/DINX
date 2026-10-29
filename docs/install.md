@@ -26,7 +26,7 @@ The current alpha has no signed bootloader, no supported Secure Boot path and no
 
 ## 1. Obtain the ISO artifact
 
-There is no supported stable release yet. Tagged alpha releases publish a verified ISO and matching checksums; the workflow artifact remains available for seven days as a fallback.
+The published Alpha 10 system alpha has a direct ISO and matching checksum in its [tagged release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10). Use that release as the primary download. P0 workflow artifacts are temporary fallbacks retained for seven days and replaced by later runs.
 
 ### Tagged alpha release
 

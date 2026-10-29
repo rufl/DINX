@@ -22,18 +22,16 @@ Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.
 
 ## Snapshot validado atual
 
-A compilação compacta atual da Alpha 9 é a [execução CI 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) para a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. Ela passou os contratos estáticos/first-party, os builds de pacotes Artix, a criação da ISO compacta, boot e payload gráfico no QEMU, smokes de particionamento e instalação/recuperação persistente do Calamares, verificação dos metadados de build, assinatura persistente de pacotes, atestação de procedência e publicação do release. A ISO direta publicada tem 2.008.801.280 bytes e SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`; o snapshot do repositório estável assinado é `01fc8270e5f0fa0339647c9bbde5934ec247a7c29cf235940d4ea9dcedab5827`.
+A snapshot publicado da Alpha 10 é a [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10), validada pela [execução marcada 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. O build passou os contratos de pacotes/perfil, builds de pacotes Artix, checks de conteúdo/tamanho da ISO, boot e payload gráfico no QEMU, smokes de layout do Calamares, primeiro boot persistente BIOS/UEFI e TTY de recuperação, checks do repositório assinado, vínculo dos metadados, atestação e publicação. A ISO direta tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; snapshot do repositório de pacotes `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
 
-Uma validação pós-release separada na `main`, a [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) no commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, concluiu em 52m02s após passar pelos checks de build, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload. Ela confirma os contratos depois do snapshot publicado, mas não publicou outro asset; a Alpha 9 continua sendo o release atual.
+A execução P0 da main [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), no mesmo commit, passou pelo build completo, QEMU, payload gráfico e smokes de instalação persistente/recuperação. Um smoke UEFI anterior revelou uma corrida de gravação do marcador com a remontagem read-only da raiz instalada; o marcador agora depende de `early-root-rw.target`, e o gate BIOS/UEFI corrigido passou.
 
-A candidata P0 mais recente da `main`, [execução 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262), gerou uma ISO de 1.862.776.832 bytes e passou no boot/captura QEMU, mas falhou no gate de payload gráfico porque greetd é herdado da rootfs pelo overlay livefs. A correção local do check de conteúdo passa nesse artefato; ainda é necessário um novo P0 para executar os smokes de instalação e a atestação. A Alpha 9 continua sendo a release mais recente publicada.
+Alpha 9 e as candidatas anteriores são evidência histórica, não o release atual. O workflow de release recompila o commit marcado e só publica depois que passam as verificações correspondentes de metadados da ISO, repositório assinado, checksum e procedência.
 
-O artefato publicado da Alpha 9 usou o caminho determinístico anterior de ISO
-compacta de `scripts/build-iso.sh`: SquashFS comprimido com xz, filtro BCJ x86,
-blocos de 1 MiB e dicionário de 1 MiB. O caminho atual da `main` usa blocos de
-256 KiB e dicionário de 256 KiB para evitar a falha de verificação do rootfs
-observada com a configuração de blocos maiores; ele mantém o limite estrito de
-ISO abaixo de 2 GiB por asset do GitHub.
+O artefato Alpha 9 usou o caminho determinístico anterior de ISO compacta de
+`scripts/build-iso.sh`: SquashFS com xz, filtro BCJ x86, blocos de 1 MiB e
+dicionário de 1 MiB. A Alpha 10 usa blocos de 256 KiB e dicionário de 256 KiB,
+mantendo a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.
 
 ## Artefatos publicados
@@ -140,8 +138,8 @@ checksum de um pacote ou release anterior:
 
 ```powershell
 $downloadRoot = (Get-Location).Path
-$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.9'
-$zipName = 'dinx-0.1.0-alpha.9-dogfood.1-windows-x86_64.zip'
+$releaseUrl = 'https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.10'
+$zipName = 'dinx-0.1.0-alpha.10-dogfood.1-windows-x86_64.zip'
 $zipPath = Join-Path $downloadRoot $zipName
 $sumPath = Join-Path $downloadRoot 'SHA256SUMS'
 
@@ -202,7 +200,7 @@ Os metadados do pacote apontam para o receptor Windows registrado `ddjarin`. Na 
 do proprietário, faça primeiro o preview da atribuição imutável:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.9
+scripts/deploy-ztash.sh v0.1.0-alpha.10
 ```
 
 O script lê os metadados do release, verifica URL HTTPS, SHA-256, tamanho, target e
@@ -212,7 +210,7 @@ imprime o token e nunca cria credenciais.
 Depois de revisar o preview, aplique explicitamente:
 
 ```bash
-scripts/deploy-ztash.sh v0.1.0-alpha.9 --apply
+scripts/deploy-ztash.sh v0.1.0-alpha.10 --apply
 ```
 
 A operação exige o token privado do proprietário para DDJARIN em `ZEER_TOKEN_FILE`

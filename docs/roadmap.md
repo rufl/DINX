@@ -6,9 +6,9 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Tagged release run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404` is the current P0 evidence, including BIOS and UEFI disposable disks, the Calamares BIOS/UEFI/Btrfs transaction smoke, build-metadata verification, persistent package signing and release publication. P5 remains active because authenticated Steam/commercial-game launch, controller/PipeWire audio, real DRM output, repeatable gaming-launcher exit with Dinit profile restoration, suspend/resume and physical GPU/update testing are still open.
+**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and disposable persistent-install/recovery all passed in the Alpha 10 tagged run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. P5 remains active because authenticated Steam/commercial-game launch, controller/PipeWire audio, real DRM output, repeatable gaming-launcher exit with Dinit profile restoration, suspend/resume and physical GPU/update testing are still open.
 
-The post-release `main` validation, [run 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077), passed the build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY, attestation and upload checks; it did not publish another release. The newer P0 candidate [run 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262) produced a 1,862,776,832-byte ISO and passed QEMU boot/capture but failed the payload gate. The local checker now passes against that artifact; installation smokes and attestation await a fresh P0 run.
+Main P0 run [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044) on the same commit passed the build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY checks; tagged run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) published the validated direct ISO.
 
 ## P0 — foundation
 
@@ -36,7 +36,7 @@ Open foundation release gates:
 
 **Goal:** distribute a known-good snapshot through the public GitHub project.
 
-**Status:** complete for the public alpha snapshot `v0.1.0-alpha.9`.
+**Status:** complete for the public alpha snapshot `v0.1.0-alpha.10`.
 
 Completed:
 

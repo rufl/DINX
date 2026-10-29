@@ -5,9 +5,9 @@
 ## Estado atual da alpha
 
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações da ISO instalada, rollback do filesystem ou preservação de dados.
-O projeto está atualmente na **P5 — Beta de jogos**. O workflow de validação com tag [execução 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou o build da ISO, boot e payload gráfico no QEMU, smokes de layouts suportados e de instalação persistente/recuperação do Calamares, verificação dos metadados de build, atestação de procedência e publicação do release. O prerelease público é a [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), com uma ISO direta, checksum SHA-512 correspondente e repositório DINX estável assinado. A P4 DinitUI está qualificada para o gate alpha; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
+O release atual é o snapshot **P5 — beta de jogos** [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10). O workflow com tag [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`, passou os contratos de pacotes e ISO, o build Artix, boot e payload gráfico no QEMU, layouts do Calamares e smokes de instalação persistente/recuperação, verificação dos metadados, checks do repositório assinado, atestação de procedência e publicação. A ISO direta tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; snapshot do repositório de pacotes assinado `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`. A P4 DinitUI está qualificada para release; a P5 ainda tem limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico.
 
-A candidata fonte agora habilita autologin direto na live, mas sua primeira ISO P0 (execução [40848793262](https://github.com/rufl/DINX/actions/runs/40848793262)) falhou no gate de payload após o boot/captura QEMU. Ela ainda não é um download qualificado. A Alpha 9 continua sendo a release mais recente.
+Um P0 anterior revelou duas lacunas exclusivas do CI: o check de payload esperava o greetd no overlay livefs, e o marcador da instalação persistente podia gravar antes de a raiz instalada ficar gravável. Os checks e a dependência Dinit foram corrigidos. O P0 da main [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044) passou os gates completos de build, gráfico, instalação persistente BIOS/UEFI e TTY de recuperação; o release com tag acima recompilou e publicou o mesmo commit.
 
 O Pori é a ferramenta gráfica de armazenamento dinit. Use-o para inspecionar discos e criar serviços persistentes de montagem em `/etc/dinit.d`; use o File Roller para abrir, criar e extrair arquivos compactados, o GParted para editar partições fora do instalador e o Calamares para a transação final de particionamento e instalação.
 
@@ -146,9 +146,9 @@ Use um gravador confiável como o Rufus. Selecione a ISO verificada e o pendrive
 2. Reinicie e abra o menu de boot (`F12`, `F11`, `Esc` ou a tecla específica do fabricante).
 3. Selecione a entrada UEFI do USB.
 4. Se o firmware recusar a imagem, desative Secure Boot para este teste; a alpha atual não fornece um caminho Secure Boot assinado.
-5. A ISO Alpha 9 publicada usa o fluxo do Pearl Greeter. O autologin direto live existe apenas na candidata Alpha 10 não qualificada; sua primeira ISO falhou na validação de payload e precisa de um rebuild bem-sucedido antes do release.
+5. A imagem Alpha 10 publicada inicia diretamente em `Aqueous + Pearl (DINX)`; a live não solicita usuário nem senha.
 
-A candidata fonte da Alpha 10 abre diretamente a conta descartável `dinx` no `Aqueous + Pearl (DINX)`, sem solicitar usuário ou senha. Essa mudança vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Ela ainda não está na imagem Alpha 9 publicada. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
+A ISO live abre diretamente a conta descartável `dinx` em `Aqueous + Pearl (DINX)`. Isso vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
 
 Quando o desktop aparecer, o estado gráfico testado é Aqueous/Pearl. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
 Pearl é o shell ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o Pearl Greeter lê `/etc/pearl/greeter.json`, usa o tema GTK DINX e força a entrada Aqueous/Pearl sem X11 nem UWSM.
@@ -157,7 +157,7 @@ O runtime base do ZLS é compacto por design: completion e navegação usam a á
 
 ### Suporte opcional à BC-250
 
-A ISO Alpha 9 publicada inclui o BC250 Control Center e o governor Cyan Skillfish. O perfil fonte atual da Alpha 10 os remove da imagem genérica; essa mudança só estará disponível para download depois que o build Alpha 10 passar e for publicado. O comando abaixo é seguro mesmo se a Alpha 9 já tiver os pacotes. Primeiro configure e confie localmente no repositório DINX assinado conforme `release.md`; depois instale ou atualize o suporte BC-250 somente quando o PCI exato estiver presente:
+A ISO genérica da Alpha 10 exclui o BC250 Control Center e o governor Cyan Skillfish. Os pacotes fixados estão disponíveis no repositório DINX assinado; instale-os somente após confirmar o PCI `1002:13fe`. Primeiro configure e confie localmente no repositório assinado conforme `release.md`:
 
 ```bash
 if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
@@ -168,7 +168,7 @@ else
 fi
 ```
 
-O governor verifica o PCI `1002:13fe` antes de aplicar configurações. A proteção acima impede que esse comando de instalação rode em outro hardware. A Alpha 9 pode já conter os pacotes; a presença deles não significa que o suporte BC-250 esteja ativo.
+O governor verifica o PCI `1002:13fe` antes de aplicar configurações. A proteção acima impede que a instalação rode em outro hardware. Nenhum dos pacotes BC-250 vem pré-instalado na ISO genérica.
 
 ## 5. Instalação persistente experimental
 
@@ -187,7 +187,7 @@ A partir do desktop live:
 8. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O Calamares e o GParted podem apagar, formatar ou redimensionar dados. As ações de montagem do Pori não formatam discos, mas confira o dispositivo, o filesystem e o destino de montagem antes de confirmar qualquer ação privilegiada. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
-A qualificação do Calamares da Alpha 9 também cobre um layout GPT típico de Windows: uma ESP FAT32 existente contendo `EFI/Microsoft`, uma partição Windows NTFS e espaço para a raiz DINX criado depois dela. O smoke preserva a partição Windows e o caminho de boot da Microsoft enquanto grava fstab e dados GRUB da DINX tanto no resultado side-by-side quanto em um layout manual explícito. A ISO live e a instalação base usam o driver de kernel `ntfs3` para leitura e escrita NTFS; o `ntfs-3g` legado é opcional após a instalação para compatibilidade e ferramentas de reparo. O perfil inclui `os-prober`, habilita a detecção do Windows pelo GRUB e usa um diretório EFI separado para `DINX`. Uma ESP existente de pelo menos 64 MiB é aceita porque a DINX mantém `/boot` no root filesystem; uma ESP nova é recomendada com 1 GiB. Se a ESP existente for menor ou estiver cheia, crie uma nova ESP FAT32 no espaço livre pelo layout manual em vez de formatar a ESP da Microsoft. Não formate a ESP existente nem as partições Windows/MSR/Recovery. Inicialize a DINX no mesmo modo UEFI do Windows, desligue o Windows completamente, desabilite Fast Startup/hibernação, suspenda o BitLocker mantendo a chave de recuperação disponível e faça backup verificado antes de tentar redimensionar.
+A qualificação do Calamares da Alpha 10 cobre um layout GPT típico de Windows: uma ESP FAT32 existente contendo `EFI/Microsoft`, uma partição Windows NTFS e espaço para a raiz DINX criado depois dela. O smoke preserva a partição Windows e o caminho de boot da Microsoft enquanto grava fstab e dados GRUB da DINX tanto no resultado side-by-side quanto em um layout manual explícito. A ISO live e a instalação base usam o driver de kernel `ntfs3` para leitura e escrita NTFS; o `ntfs-3g` legado é opcional após a instalação para compatibilidade e ferramentas de reparo. O perfil inclui `os-prober`, habilita a detecção do Windows pelo GRUB e usa um diretório EFI separado para `DINX`. Uma ESP existente de pelo menos 64 MiB é aceita porque a DINX mantém `/boot` no root filesystem; uma ESP nova é recomendada com 1 GiB. Se a ESP existente for menor ou estiver cheia, crie uma nova ESP FAT32 no espaço livre pelo layout manual em vez de formatar a ESP da Microsoft. Não formate a ESP existente nem as partições Windows/MSR/Recovery. Inicialize a DINX no mesmo modo UEFI do Windows, desligue o Windows completamente, desabilite Fast Startup/hibernação, suspenda o BitLocker mantendo a chave de recuperação disponível e faça backup verificado antes de tentar redimensionar.
 ### Primeiro boot e TTY de recuperação
 
 O contrato de instalação do CI inicializa o root filesystem copiado em discos BIOS e UEFI descartáveis e habilita `getty@tty2` e `getty@tty3` para recuperação. Esses são smokes em discos QEMU, não uma qualificação de hardware físico. Em uma instalação real, pressione `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` no greeter do sistema instalado para abrir uma TTY e faça login com o usuário criado durante a instalação. Comandos úteis:
@@ -262,7 +262,7 @@ visualização.
 
 ### Pacotes gaming opcionais
 
-A ISO Alpha 9 publicada inclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits. O perfil fonte atual da Alpha 10 move esse conjunto para fora da imagem genérica; ele não estará ausente de um download até que o build da ISO Alpha 10 passe e seja publicado. O comando abaixo é idempotente quando a Alpha 9 já tem esses pacotes. O perfil Alpha 10 mantém RADV e diagnósticos Vulkan para gráficos gerais de 64 bits. Para optar por instalá-los após a instalação:
+A ISO genérica da Alpha 10 exclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits. A base mantém RADV e diagnósticos Vulkan; o usuário pode optar pelo conjunto gaming após a instalação:
 
 1. Em `/etc/pacman.conf`, adicione o repositório oficial Artix somente se `[lib32]` ainda não estiver definido:
 

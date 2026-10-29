@@ -2,9 +2,11 @@
 
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
-## Não lançado
+## v0.1.0-alpha.10 — 2026-10-29
 
-- Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits saíram da ISO base e passaram ao grupo Artix opcional `gaming`. A base mantém RADV/Vulkan de 64 bits; o P0 não habilita mais `[lib32]` durante a montagem. O launcher oculto falha antes de alterar o perfil Dinit se Gamescope ou Steam faltar, e os checks da ISO rejeitam binários/metadata gaming nas imagens rootfs e live. O tamanho da nova ISO depende de um rebuild bem-sucedido.
+- Publicada a [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` pela [execução de release 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746). A ISO direta tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; snapshot do repositório de pacotes assinado `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
+
+- Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits saíram da ISO base e passaram a pacotes opcionais pós-instalação. A base mantém RADV/Vulkan de 64 bits; o P0 não habilita `[lib32]` durante a montagem. Os checks da ISO rejeitam binários/metadata gaming nas imagens rootfs e live. A ISO direta publicada da Alpha 10 tem 1.862.772.736 bytes.
 
 - Removidos o governor BC-250, o serviço dinit e o Control Center dos rootfs live e instalado genéricos. Os pacotes fixados continuam no repositório DINX assinado; o comando documentado de instalação exige o PCI `1002:13fe`.
 
@@ -45,12 +47,12 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Endurecida a persistência de montagens do Pori com um wrapper dinit `process` que espera dispositivos, repete montagens, é dono apenas das montagens que criou, desmonta no encerramento e reinicia após desaparecimento inesperado. Phyto, File Roller, GParted e o `ntfs3` do kernel continuam sendo os caminhos suportados para arquivos, arquivos compactados, partições e NTFS.
 - Serializadas as atualizações wdisplays→Shikane com `flock`; a substituição do perfil continua atômica, e uma falha ao recarregar o Shikane agora falha de forma visível em vez de reportar persistência bem-sucedida.
 - Adicionados inventários exatos das entradas de origem ao `feature-groups.json` e um workflow de contratos sem privilégios para pull requests, verificando drift de pacotes/perfis, contratos de helpers, o smoke da fonte Pori com Zig 0.17 fixado, smokes de fixtures e cobertura REUSE antes do build ISO privilegiado.
-- Aumentado para 120 minutos o timeout do workflow ISO privilegiado e tornado explícito o fallback da imagem Artix fixada, mantendo as asserções de digest e o registro nos metadados.
+- Ordenado o marcador de primeiro boot da instalação persistente depois do `early-root-rw.target`, evitando que a gravação em `/var` concorra com a remontagem read-only da raiz no primeiro boot UEFI.
 
 
 ## v0.1.0-alpha.9 — 2026-10-23
 
-- Publicado o alpha público atual da DINX para Artix Linux x86_64 com dinit: [release no GitHub](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
+- Publicado o alpha público anterior da DINX para Artix Linux x86_64 com dinit: [release no GitHub](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
 - A execução de release [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, passou os contratos de pacotes/perfil, os builds de pacotes Artix, a criação da ISO compacta, boot/payload gráfico no QEMU, smokes BIOS/UEFI/Btrfs do Calamares, instalação persistente/TTY de recuperação em discos descartáveis, verificação dos metadados de build, assinatura persistente de pacotes, atestação de procedência e publicação do release.
 - Publicadas a ISO direta, o checksum SHA-512, os metadados de build, o pacote Windows para QEMU, o repositório DINX assinado e os assets de verificação.
 - Tamanho publicado da ISO: `2.008.801.280` bytes. SHA-512 completo: `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.

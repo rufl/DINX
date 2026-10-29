@@ -2,9 +2,11 @@
 
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
-## Unreleased
+## v0.1.0-alpha.10 — 2026-10-29
 
-- Moved Gamescope, Steam, GameMode, MangoHud, Steam device rules and 32-bit gaming libraries out of the base ISO into an optional Artix `gaming` group. The base keeps 64-bit RADV/Vulkan; P0 no longer enables `[lib32]` during ISO assembly. The hidden launcher now fails before changing the Dinit profile when Gamescope or Steam is missing, and ISO checks reject game binaries/package metadata in both rootfs and livefs. The exact new ISO size awaits a successful rebuild.
+- Published [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) from commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` via [release workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746). The direct ISO is 1,862,772,736 bytes with SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; signed package repository snapshot `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
+
+- Moved Gamescope, Steam, GameMode, MangoHud, Steam device rules and 32-bit gaming libraries out of the base ISO into optional post-install packages. The base keeps 64-bit RADV/Vulkan; P0 no longer enables `[lib32]` during ISO assembly. ISO checks reject game binaries/package metadata in both rootfs and livefs. The published Alpha 10 direct ISO is 1,862,772,736 bytes.
 
 - Removed the BC-250 governor, dinit service and Control Center from generic live and installed roots. Their pinned packages remain in the signed DINX repository; the documented install command is gated on PCI `1002:13fe`.
 
@@ -45,12 +47,12 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Hardened Pori mount persistence with a dinit `process` wrapper that waits for devices, retries mounts, owns only mounts it created, unmounts them on shutdown and restarts after an unexpected disappearance. Phyto, File Roller, GParted and kernel `ntfs3` remain the supported file, archive, partition and NTFS paths.
 - Serialized wdisplays-to-Shikane updates with `flock`; profile replacement remains atomic, and a failed Shikane reload now fails visibly instead of reporting a successful persistence update.
 - Added exact source-input inventories to `feature-groups.json` and an unprivileged pull-request contract workflow so package/profile drift, helper contracts, the pinned Zig 0.17 Pori source smoke, fixture smokes and REUSE coverage are checked before the privileged ISO build.
-- Increased the privileged ISO workflow timeout to 120 minutes and made the pinned Artix image fallback explicit while retaining digest assertions and metadata recording.
+- Ordered the persistent-install first-boot marker after `early-root-rw.target`, preventing its `/var` write from racing the installed root's read-only remount on UEFI first boot.
 
 
 ## v0.1.0-alpha.9 — 2026-10-23
 
-- Published the current public DINX system alpha for x86_64 Artix Linux with dinit: [GitHub release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
+- Published the previous public DINX system alpha for x86_64 Artix Linux with dinit: [GitHub release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
 - Passed tagged release workflow [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) from commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, including package/profile contracts, Artix package builds, compact ISO creation, QEMU boot/graphical payload, Calamares BIOS/UEFI/Btrfs smokes, disposable persistent-install/recovery-TTY smokes, build-metadata verification, persistent package signing, provenance attestation and release publication.
 - Published a direct ISO, SHA-512 checksum, build metadata, Windows QEMU package, signed DINX package repository and verification assets.
 - Published ISO size: `2,008,801,280` bytes. Full ISO SHA-512: `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.

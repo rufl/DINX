@@ -1,7 +1,7 @@
 # Qualificação de hardware da DINX (contrato do relatório Alpha 7)
 
 Os nomes do utilitário e das variáveis da Alpha 7 permanecem por compatibilidade.
-Esta matriz é o limite de hardware manual da release atual `v0.1.0-alpha.9`;
+Esta matriz é o limite de hardware manual da release atual `v0.1.0-alpha.10`;
 ela separa o que o repositório prova do que exige teste manual após a geração da ISO.
 
 ## Gate de build
@@ -105,7 +105,7 @@ registre cada resultado manual somente depois de executar o teste correspondente
 ```bash
 export DINX_ALPHA7_MACHINE_ROLE=desktop   # desktop, laptop ou bc250
 export DINX_ALPHA7_FIRMWARE_MODE=uefi    # bios ou uefi
-export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.9
+export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.10
 export DINX_ALPHA7_BUILD_COMMIT=0123456789012345678901234567890123456789
 export DINX_ALPHA7_PACKAGE_REPOSITORY_SNAPSHOT=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 for result in \
@@ -135,6 +135,6 @@ comercial, controle, áudio PipeWire do jogo, suspend/resume, brilho físico,
 recuperação da GPU, firmware ou saúde de hardware em longo prazo. Essas
 afirmações continuam abertas até a matriz manual das três máquinas passar.
 
-O gaming P5 continua sendo um gate separado de beta. A release `v0.1.0-alpha.9`
+O gaming P5 continua sendo um gate separado de beta. A release `v0.1.0-alpha.10`
 é um alpha do sistema; este documento não afirma que o critério de saída do beta
 gaming foi atendido.

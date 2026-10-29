@@ -6,9 +6,9 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/recuperação em discos descartáveis passaram. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, é a evidência P0 atual e inclui discos BIOS e UEFI descartáveis, o smoke transacional BIOS/UEFI/Btrfs do Calamares, a verificação dos metadados de build, a assinatura persistente de pacotes e a publicação do release. A P5 continua ativa porque launch autenticado de Steam/jogo comercial, controle/áudio PipeWire, saída DRM real, saída repetível do launcher gaming com restauração do perfil Dinit, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
+**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload de pacote/ISO e instalação persistente/recuperação em discos descartáveis passaram na execução marcada Alpha 10 [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. A P5 continua ativa porque launch autenticado de Steam/jogo comercial, controle/áudio PipeWire, saída DRM real, saída repetível do launcher gaming com restauração do perfil Dinit, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
 
-Uma validação pós-release da `main`, [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077), passou pelos checks de build, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload; ela não publicou outro release. A candidata P0 mais recente [execução 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262) gerou uma ISO de 1.862.776.832 bytes e passou no boot/captura QEMU, mas falhou no gate de payload. O check local corrigido passa nesse artefato; os smokes de instalação e a atestação dependem de um novo P0.
+O P0 da main [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), no mesmo commit, passou pelos checks de build, boot, payload gráfico, instalação persistente BIOS/UEFI e TTY de recuperação; a execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) publicou a ISO direta validada.
 
 ## P0 — fundação
 
@@ -37,7 +37,7 @@ Gates de release da fundação ainda abertos:
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
-**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.9`.
+**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.10`.
 
 Concluído:
 

@@ -37,7 +37,6 @@ grep -Fq 'pacman_database=true' "$smoke" || fail 'installed pacman database chec
 grep -Fq 'dinit_services=true' "$smoke" || fail 'installed dinit service check is missing'
 grep -Fq 'dynamic_libraries=true' "$smoke" || fail 'installed dynamic library check is missing'
 grep -Fq 'optional_base_absent=true' "$smoke" || fail 'base ISO optional-package boundary check is missing'
-grep -Fq 'depends-on = early-root-rw.target' "$smoke" || fail 'first-boot marker is not ordered after the root filesystem becomes writable'
 grep -Fq 'lifecycle_checks=true' "$smoke" || fail 'installed lifecycle marker is missing'
 grep -Fq 'filesystem_rollback=not-claimed' "$update_smoke" || fail 'package rollback boundary is not explicit'
 

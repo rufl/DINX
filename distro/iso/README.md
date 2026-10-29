@@ -92,8 +92,8 @@ overrides are not included in the Calamares-installed rootfs. Build-only
 wrapper at `/usr/bin/mksquashfs` after preserving the real binary, because Artix
 `buildiso` may invoke that absolute path. Post-build inspection checks both
 SquashFS superblocks for xz compression and 256 KiB blocks.
-The P0 budget rejects ISOs at or above GitHub's 2 GiB asset limit; Alpha 9 is
-2,008,801,280 bytes.
+The P0 budget rejects ISOs at or above GitHub's 2 GiB asset limit; Alpha 10 is
+1,862,772,736 bytes (284,710,912 bytes below the limit).
 
 ## Graphical profile
 
@@ -150,11 +150,9 @@ In the current source profile, the normal live path is direct autologin; the gre
 
 The repository vendors a compact common package manifest at `iso-profiles/common/common.yaml` instead of relying on the installed `iso-profiles` default. It keeps the DINX foundation and desktop payload while excluding optional gaming and BC-250 packages, generic firmware and `powertop`; build-only kernel headers are excluded from final SquashFS images. Its SHA-256 is recorded in `build-metadata.txt`. `WORKSPACE_DIR` in `scripts/build-iso.sh` selects both local manifests deterministically.
 
-The latest P0 attempt, [run 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262), built a 1,862,776,832-byte ISO, passed QEMU boot/capture and failed the payload gate because the livefs overlay inherits `/etc/dinit.d/greetd` from rootfs. No persistent-install or attestation step ran. The local content-check correction passes on that artifact; a new P0 run must pass before Alpha 10 is qualified. Alpha 9 remains the latest published release.
+The latest successful main P0 run is [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. It passed the build, compact SquashFS payload check, QEMU boot and graphical capture, Calamares partition transaction, and disposable BIOS/UEFI persistent-install and recovery-TTY smokes, followed by metadata verification, attestation and artifact upload. The previous UEFI marker race is fixed by ordering the marker after `early-root-rw.target`.
 
-The current tagged release evidence is [workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) for [v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9), on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`. It passed checksum generation, compact SquashFS payload validation, QEMU boot and graphical capture, Calamares BIOS/UEFI/Btrfs partition transaction smoke, disposable BIOS and UEFI installation/first-boot/recovery-TTY smoke, build-metadata verification, provenance attestation and release publication. The direct ISO is 2,008,801,280 bytes, below the 2 GiB per-asset limit. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
-
-A post-release `main` validation [run 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) on commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb` completed in 52m02s with the build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY, attestation and upload checks. It confirms the contracts after Alpha 9 but does not publish a new release.
+The current tagged release is [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10), validated by [workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on that commit. The published direct ISO is 1,862,772,736 bytes, below GitHub's 2 GiB asset limit, with SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`. Network, audio, authenticated Steam/game use, real DRM gaming output, physical hardware and upgrade/rollback qualification remain outside this result.
 
 ## Build validation
 

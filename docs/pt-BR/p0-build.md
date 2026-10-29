@@ -23,7 +23,7 @@ Os pontos de entrada são:
 - `scripts/check_dinxpanel.sh` — contrato do centro de controle DINXPanel, ponte fixa de GPU e instalador seguro de kernels;
 - `scripts/check_gaming.sh` — launcher manual oculto, limite do grupo opcional, Vulkan base e exclusão do payload gaming da ISO;
 - `scripts/check_alpha7_hardware_report.sh` e `scripts/check_dinx_hardware_evidence.sh` — o schema do relatório de hardware mantém o nome Alpha 7 por compatibilidade; os checks cobrem detecção BC250, limites manuais e evidência de release;
-- `docs/pt-BR/alpha7-qualification.md` — matriz de evidências de hardware para três máquinas e limite de qualificação manual da release Alpha 9;
+- `docs/pt-BR/alpha7-qualification.md` — matriz de evidências de hardware para três máquinas e limite de qualificação manual da release de sistema Alpha 10;
 - `scripts/check_dinx_budget.sh` e `scripts/measure_dinx_session.sh` — tetos de payload/inicialização/binários nativos/janela de boot/ISO e observação de RSS/CPU em runtime;
 - `scripts/gaming_p5_qualification.sh` — qualificação do retorno da sessão por fixture, limpeza do grupo de processos/restauração do perfil durante sinais e launch/exit real headless do Gamescope;
 - `scripts/noctty_p2_qualification.sh` — matriz P2 determinística em ReleaseSafe para allocator/fairness, continuidade de PTY/sessão, ncurses e TUIs do sistema;
@@ -76,7 +76,7 @@ O smoke GTK isolado do Nocted renderiza os fallbacks de ícone para PNG com `rsv
 
 ### Qualificação local P4/P5
 
-Os gates locais passam o contrato do pacote DinitUI, um daemon Dinit de usuário temporário real com o smoke GTK e o fixture da sessão gaming com lançamento/saída headless do Gamescope. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) fornece o repositório estável de pacotes, ISO, QEMU, payload, smoke transacional BIOS/UEFI/Btrfs do Calamares, instalação/primeiro boot/TTY de recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados de build, atestação e assets publicados da Alpha 9. Os limites de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico da P5 continuam abertos.
+Os gates locais passam o contrato do pacote DinitUI, um daemon Dinit de usuário temporário real com o smoke GTK e o fixture da sessão gaming com lançamento/saída headless do Gamescope. O workflow de release Alpha 10 com tag [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) fornece o repositório estável de pacotes, ISO, QEMU, payload gráfico, transação BIOS/UEFI/Btrfs do Calamares, smokes de instalação persistente/recuperação em discos BIOS e UEFI descartáveis, verificação dos metadados, atestação e assets publicados. Os limites P5 de DRM real, Steam/jogo autenticados, controle/áudio e hardware físico continuam abertos.
 
 A verificação de payload da Alpha 9 historicamente confirmou Gamescope, Steam e pacotes gráficos de 32 bits naquele artefato publicado; essas afirmações de presença não descrevem o novo perfil base. Os checks P0 atuais exigem o launcher/entrada gaming ocultos e rejeitam binários e metadata dos pacotes opcionais nas imagens rootfs e livefs. O contrato de armazenamento continua exigindo o serviço dinit do Pori em `/etc/dinit.d`, `ntfs3` para leitura/escrita live, `ntfs-3g` pós-instalação opcional, File Roller e GParted, enquanto rejeita Thunar, GVFS, Tumbler e KDE Partition Manager. Também confirma o agente PolicyKit independente e rejeita metadata/runtime do init systemd mantendo dinit.
 A verificação de payload também prova Firefox, sua entrada desktop, os manipuladores padrão de HTML/XHTML/HTTP/HTTPS e `/etc/firefox/policies/policies.json`. Essa política remove superfícies patrocinadas do navegador, Pocket/Stories, Firefox Studies e telemetria, recomendações do navegador, superfícies de assistente de IA/preview de links/grupos de abas e o IP Protection integrado sem desabilitar atualizações normais ou Firefox Accounts iniciado pelo usuário.
@@ -112,29 +112,24 @@ Para uma segunda captura diagnóstica após o boot, defina `DINX_QEMU_POST_SCREE
 
 ## Última execução de release publicada
 
-A execução [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), para a tag `v0.1.0-alpha.9` no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, concluiu com sucesso todas as etapas do workflow de release, incluindo a verificação dos metadados de build:
+A execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) para `v0.1.0-alpha.10`, no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`, concluiu com sucesso todas as etapas do workflow:
 
-- os contratos estáticos dos pacotes próprios, DinitUI, gaming e payload da ISO passaram antes do build do container;
-- os builds de pacotes Artix e o `buildiso` concluíram, incluindo os pacotes Steam/gráficos de 32 bits resolvidos pelo repositório Artix `lib32` habilitado;
-- o contrato de particionamento do Calamares passou, incluindo round-trips de tabela/filesystem BIOS/UEFI e um volume Btrfs existente com `@` e `@home`;
-- boot e captura gráfica no QEMU passaram;
-- a validação do payload gráfico da ISO passou, incluindo DinitUI, a sessão gaming standalone, Steam e o payload gráfico de 32 bits;
-- os smokes de instalação persistente, primeiro boot e TTY de recuperação em discos descartáveis BIOS e UEFI passaram;
-- geração do SHA-512, atestação de procedência no GitHub, verificação dos metadados de build e upload do artefato passaram;
-- os assets publicados incluem a ISO direta, checksum, repositório estável de pacotes assinado, pacote Windows e metadados de build; a ISO tem 2.008.801.280 bytes e SHA-512 `b3724c82348c229ee897880e03e8adc80d9b5b25588b0aca9dfcfedf0c4744e4e1ae01dcb536f6555502e8fe595f71f06bed599372dffe0e1b0f34b29f3b5b2d`.
+- contratos de pacote/perfil e first-party, incluindo apps nativos e procedência dos pacotes, passaram antes do build Artix;
+- builds dos pacotes e `buildiso` compacto concluíram; conteúdo/tamanho da ISO e vínculo dos metadados/digest passaram;
+- as transações de particionamento Calamares e o boot/captura gráfica no QEMU passaram;
+- smokes de instalação persistente, primeiro boot e TTY de recuperação passaram em discos BIOS e UEFI descartáveis;
+- repositório DINX assinado, preflight do release, SHA-512, atestação de procedência GitHub e publicação passaram;
+- a ISO direta publicada tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; snapshot do repositório assinado `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
 
+Isso encerra o caminho P4 DinitUI e de instalação/recuperação descartáveis para o gate do alpha de sistema. Não prova uso autenticado de Steam/jogo, saída gaming DRM real, hardware de controle/áudio, instalação física, firmware, atualização, rollback do filesystem, redimensionamento de Windows com BitLocker/hibernação nem saúde de hardware por longo prazo.
 
-Essa execução encerra o caminho de pacote/ISO/instalação persistente da P4 DinitUI para o gate alpha. Ela prova os contratos do pacote, da ISO, do boot na VM, do payload gráfico, dos smokes transacionais dos layouts suportados pelo Calamares, dos caminhos persistentes/recuperação em BIOS e UEFI descartáveis e da procedência. Não prova uso autenticado de Steam/jogo, display gaming DRM real, hardware de controle/áudio, firmware ou instalação em hardware físico, atualizações, rollback, redimensionamento de Windows com BitLocker/hibernação ou saúde de serviços em hardware por longo prazo.
+## Último P0 bem-sucedido da main
 
-## Última tentativa P0 da `main`
+A execução [40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), no mesmo commit, passou pelo build, payload ISO, boot/captura gráfica no QEMU, transações de layout do Calamares, instalação persistente BIOS/UEFI e smokes de TTY de recuperação, verificação dos metadados, atestação e upload do artefato. Uma gravação anterior do marcador UEFI concorreu com a remontagem read-only da raiz instalada; agora ele depende de `early-root-rw.target`, e o gate corrigido passou nos dois modos de firmware.
 
-A execução [40848793262](https://github.com/rufl/DINX/actions/runs/40848793262), no commit `bc0fe5920e355d7039fee5df2bf2548ab105166d`, gerou `artix-dinx-dinit-20261029-x86_64.iso` (1.862.776.832 bytes; SHA-512 `3a94630f50e4035542856af9427db603c08b295d72273cabb3c960f9a310fc6dde8ca1daf9b8ce86372f3a82a7ecc9faec57fdff06cb8cb84709270f4e5d2b6e`). O boot/captura QEMU passou; `Verify graphical ISO payload` falhou porque o check tentou ler o serviço greetd diretamente do livefs, embora ele seja herdado da rootfs pelo overlay. As etapas de instalação persistente e atestação não foram executadas.
+## Build histórico da main antes da Alpha 10
 
-O gate de conteúdo agora verifica o serviço greetd na rootfs e o link de boot no livefs usando caminhos exatos do manifesto. `scripts/check-iso-content.sh` passa contra a ISO enviada pelo workflow. A suíte local completa de contratos, `actionlint`, REUSE lint, o build do pacote e a verificação de propriedade também passam; ainda é necessário um novo P0 no GitHub para executar os smokes de instalação e a atestação.
-
-## Build ISO bem-sucedido mais recente antes da candidata
-
-A execução [40637700291](https://github.com/rufl/DINX/actions/runs/40637700291), no commit `f01f372cc9c93283bbc2a33de24c27aced1428bf`, passou o build da ISO, o QEMU e os smokes de instalação BIOS/UEFI descartável. A ISO tinha 2.065.172.480 bytes. Essa execução antecede a candidata atual e não qualifica a Alpha 10.
+A execução [40637700291](https://github.com/rufl/DINX/actions/runs/40637700291), no commit `f01f372cc9c93283bbc2a33de24c27aced1428bf`, passou o build da ISO, o QEMU e os smokes de instalação BIOS/UEFI descartável. A ISO tinha 2.065.172.480 bytes. Esta é uma evidência histórica de comparação; a qualificação da Alpha 10 está documentada na execução de release publicada acima.
 
 ## Validação pós-release anterior bem-sucedida da `main`
 

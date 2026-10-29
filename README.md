@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="Status da validação P0" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
   <img alt="Estágio: beta de jogos P5" src="https://img.shields.io/badge/estágio-P5%20beta%20de%20jogos-f59e0b">
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
@@ -27,7 +27,7 @@
 
 | Você quer… | Vá para |
 |---|---|
-| Baixar a imagem publicada | [DINX v0.1.0-alpha.9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9) |
+| Baixar a imagem publicada | [DINX v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) |
 | Verificar e instalar a ISO | [Guia de instalação](docs/pt-BR/install.md) |
 | Ver o que o CI realmente provou | [Status do build P0](docs/pt-BR/p0-build.md) |
 | Entender compatibilidade e limites | [Compatibilidade](docs/pt-BR/compatibility.md) · [Roadmap](docs/pt-BR/roadmap.md) |
@@ -47,11 +47,11 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
 - **Mesa Lavapipe** (`vulkan-swrast`) continua disponível para aplicativos Vulkan; Aqueous usa uma build Pixman separada, sem efeitos Vulkan, em sistemas sem render node e com GPU Virtio, evitando a falha no QEMU e preservando o compositor completo em hardware;
-- **DINX Gaming** mantém o launcher manual oculto. A ISO Alpha 9 publicada ainda inclui Gamescope, Steam e as bibliotecas de 32 bits; o perfil fonte atual da Alpha 10 os move para pacotes opcionais pós-instalação. O perfil mantém RADV/Vulkan de 64 bits; veja o [guia de instalação](docs/pt-BR/install.md).
+- **DINX Gaming** mantém o launcher manual oculto. A ISO base não inclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam nem bibliotecas gaming de 32 bits; o usuário pode optar por instalar o conjunto gaming após a instalação. A base mantém RADV/Vulkan de 64 bits; veja o [guia de instalação](docs/pt-BR/install.md).
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
 
-A imagem Alpha 9 publicada também inclui pacotes específicos da BC-250. O perfil fonte atual da Alpha 10 os exclui das imagens genéricas, mas essa mudança só estará disponível para download depois que uma nova ISO for compilada e publicada. Instale software BC-250 somente após confirmar o PCI `1002:13fe`.
+O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponíveis no repositório DINX assinado; instale-os somente após confirmar o PCI `1002:13fe`.
 
 ## Seafoam e a sessão única na ISO base
 
@@ -63,27 +63,23 @@ A imagem Alpha 9 publicada também inclui pacotes específicos da BC-250. O perf
 
 | Item | Estado |
 |---|---|
-| Release publicado | `v0.1.0-alpha.9`, ISO direta de 2.008.801.280 bytes |
+| Release publicado | `v0.1.0-alpha.10`, ISO direta de 1.862.772.736 bytes |
 | Base | Artix Linux x86_64 com dinit |
 | Fase | P5 — beta de jogos; P4 DinitUI qualificada para o gate alpha |
-| Validação da release publicada | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
-| Último build ISO bem-sucedido da main | [Workflow 40637700291](https://github.com/rufl/DINX/actions/runs/40637700291), commit `f01f372cc9c93283bbc2a33de24c27aced1428bf`; ISO de 2.065.172.480 bytes, anterior às mudanças candidatas atuais |
-| Tentativa P0 mais recente da main | [Workflow 40848793262](https://github.com/rufl/DINX/actions/runs/40848793262) gerou uma ISO de 1.862.776.832 bytes e passou pelo boot/captura QEMU, mas falhou no check de payload: o serviço greetd é herdado da rootfs pelo overlay livefs. Nenhum smoke de instalação ou atestação foi executado. A correção local do check passa nessa ISO; é necessário um novo P0. |
-
-A Alpha 9 continua sendo a release mais recente publicada. A ISO candidata do run 40848793262 não é uma release Alpha 10: passou no limite de tamanho e no boot QEMU, mas a validação completa e os smokes de instalação ainda não passaram.
-
+| Validação da release publicada | [Workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` |
+| Último P0 bem-sucedido da main | [Workflow 40870759044](https://github.com/rufl/DINX/actions/runs/40870759044), com smokes QEMU, payload gráfico, instalação persistente BIOS/UEFI e TTY de recuperação |
 
 ## Instalação rápida
 
-1. Baixe a ISO e o arquivo `.iso.sha512` da [release Alpha 9](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.9).
+1. Baixe a ISO e o arquivo `.iso.sha512` da [release Alpha 10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10).
 2. No mesmo diretório, verifique o arquivo:
 
    ```bash
-   sha512sum -c dinx-0.1.0-alpha.9-x86_64.iso.sha512
+   sha512sum -c dinx-0.1.0-alpha.10-x86_64.iso.sha512
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
-4. A imagem Alpha 9 publicada segue o snapshot do release. A próxima ISO compilada da `main` abrirá diretamente em `Aqueous + Pearl (DINX)`; nenhum usuário ou senha será solicitado.
+4. A imagem Alpha 10 publicada abre diretamente em `Aqueous + Pearl (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 

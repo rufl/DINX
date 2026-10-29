@@ -64,6 +64,45 @@ case "$1" in
 esac
 EOF
 chmod +x "$tmp/bin/dinitui"
+mkdir -p "$tmp/missing-gamescope-bin" "$tmp/missing-steam-bin"
+for fixture_bin in "$tmp/missing-gamescope-bin" "$tmp/missing-steam-bin"; do
+  cat >"$fixture_bin/dinitui" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$1" >> "$DINX_DINITUI_ARGS"
+EOF
+  chmod +x "$fixture_bin/dinitui"
+done
+cat >"$tmp/missing-steam-bin/gamescope" <<'EOF'
+#!/bin/sh
+printf 'unexpected-gamescope-start' >"$DINX_GAMESCOPE_MARKER"
+exit 99
+EOF
+chmod +x "$tmp/missing-steam-bin/gamescope"
+
+set +e
+PATH="$tmp/missing-gamescope-bin" \
+  DINX_DINITUI_ARGS="$tmp/missing-gamescope-dinitui" \
+  "$launcher" >"$tmp/missing-gamescope.log" 2>&1
+missing_gamescope_status=$?
+set -e
+[[ "$missing_gamescope_status" -eq 127 ]] || fail 'missing Gamescope did not fail before profile changes'
+grep -Fq 'gamescope is not installed' "$tmp/missing-gamescope.log" || fail 'missing Gamescope guidance was not shown'
+[[ ! -e "$tmp/missing-gamescope-dinitui" ]] || fail 'launcher changed the Dinit profile without Gamescope'
+printf 'gaming_missing_package_fixture gamescope=fail_closed=true profile=unchanged=true\n'
+
+set +e
+PATH="$tmp/missing-steam-bin" \
+  DINX_DINITUI_ARGS="$tmp/missing-steam-dinitui" \
+  DINX_GAMESCOPE_MARKER="$tmp/missing-steam-gamescope" \
+  "$launcher" >"$tmp/missing-steam.log" 2>&1
+missing_steam_status=$?
+set -e
+[[ "$missing_steam_status" -eq 127 ]] || fail 'missing Steam did not fail before profile changes'
+grep -Fq 'steam is not installed' "$tmp/missing-steam.log" || fail 'missing Steam guidance was not shown'
+[[ ! -e "$tmp/missing-steam-dinitui" ]] || fail 'launcher changed the Dinit profile without Steam'
+[[ ! -e "$tmp/missing-steam-gamescope" ]] || fail 'launcher started Gamescope without Steam'
+printf 'gaming_missing_package_fixture steam=fail_closed=true profile=unchanged=true\n'
+
 PATH="$tmp/bin:$PATH" \
   DINX_GAMEMODE=auto \
   DINX_DINITUI_ARGS="$tmp/dinitui-args" \

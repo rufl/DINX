@@ -51,15 +51,6 @@ rootfs:
     - networkmanager
     - vulkan-radeon
     - vulkan-swrast
-    - gamescope
-    - gamemode
-    - mangohud
-    - steam
-    - steam-devices
-    - lib32-gamemode
-    - lib32-mesa
-    - lib32-vulkan-radeon
-    - lib32-vulkan-mesa-layers
     - vulkan-tools
     - nano
     - noctty
@@ -102,12 +93,9 @@ rootfs:
     - texinfo
     - tmux
     - vim
-    - bc250-control-center
     - diffutils
     - kmod
     - python-psutil
-    - python-pyqt6
-    - qt6-svg
     - curl
     - git
     - gufw
@@ -141,8 +129,6 @@ rootfs:
     - zathura-pdf-mupdf
     - mkinitcpio-nfs-utils
     - os-prober
-    - cyan-skillfish-governor-smu
-    - cyan-skillfish-governor-smu-dinit
   packages-init:
     dinit:
       - userspawn-dinit
@@ -156,7 +142,6 @@ rootfs:
       - wireplumber-dinit
       - greetd-dinit
       - artix-live-dinit
-      - cyan-skillfish-governor-smu-dinit
 livefs:
   packages:
     - artix-grub-live
@@ -172,4 +157,3 @@ livefs:
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit
-      - cyan-skillfish-governor-smu-dinit

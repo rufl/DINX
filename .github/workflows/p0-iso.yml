@@ -540,10 +540,6 @@ jobs:
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
               test -n "$pacman_conf"
-              if ! grep -Eq '^[[:space:]]*\[lib32\][[:space:]]*$' "$pacman_conf"; then
-                printf "\n[lib32]\nInclude = /etc/pacman.d/mirrorlist\n" \
-                  >> "$pacman_conf"
-              fi
               printf "\n[dinx]\nSigLevel = Required\nServer = http://127.0.0.1:8765\n" \
                 >> "$pacman_conf"
               pacman_options_tmp="$pacman_conf.dinx"

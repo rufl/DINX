@@ -46,13 +46,14 @@ grep -Fq 'ln -s ../cyan-skillfish-governor-smu' distro/packages/cyan-skillfish-g
 grep -Fq '    - linux-firmware-amdgpu' distro/iso/iso-profiles/dinx/profile.yaml || fail 'AMDGPU firmware is missing from the payload'
 grep -Fq '    - vulkan-radeon' distro/iso/iso-profiles/dinx/profile.yaml || fail 'RADV is missing from the payload'
 grep -Fq '    - vulkan-tools' distro/iso/iso-profiles/dinx/profile.yaml || fail 'Vulkan diagnostics are missing from the payload'
-grep -Fq '    - cyan-skillfish-governor-smu' distro/iso/iso-profiles/dinx/profile.yaml || fail 'governor is missing from the payload'
-grep -Fq '    - cyan-skillfish-governor-smu-dinit' distro/iso/iso-profiles/dinx/profile.yaml || fail 'governor dinit integration is missing from the payload'
-root_init_count=$(grep -Fc '      - cyan-skillfish-governor-smu-dinit' distro/iso/iso-profiles/dinx/profile.yaml)
-[[ "$root_init_count" == 2 ]] || fail 'governor is not enabled for rootfs and livefs dinit'
+for package in cyan-skillfish-governor-smu cyan-skillfish-governor-smu-dinit; do
+  if grep -Eq "^[[:space:]]+- ${package}([[:space:]]|$)" distro/iso/iso-profiles/dinx/profile.yaml; then
+    fail "BC-250 governor package must stay out of the generic ISO: $package"
+  fi
+done
 grep -Fq 'build_package cyan-skillfish-governor-smu' .github/workflows/p0-iso.yml || fail 'CI does not build the governor'
 grep -Fq 'build_package cyan-skillfish-governor-smu-dinit' .github/workflows/p0-iso.yml || fail 'CI does not build dinit governor integration'
 grep -Fq '                rust' .github/workflows/p0-iso.yml || fail 'CI does not install Rust for source builds'
 
-printf 'cyan_skillfish_contract pci=1002:13fe firmware=amdgpu vulkan=radv governor=%s dinit=true systemd=false\n' \
+printf 'cyan_skillfish_contract pci=1002:13fe firmware=amdgpu vulkan=radv governor=%s iso=false signed_repository=true dinit=true systemd=false\n' \
   "$CYAN_SKILLFISH_GOVERNOR_VERSION"

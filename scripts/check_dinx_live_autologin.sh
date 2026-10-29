@@ -12,7 +12,6 @@ root_rw="$package_dir/early-root-rw.target"
 pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 service="$package_dir/dinx-live-autologin.service"
-greetd_service="$package_dir/greetd.service"
 workflow="$root/.github/workflows/p0-iso.yml"
 
 fail() {
@@ -20,7 +19,7 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$greetd_service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow"; do
+for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -53,16 +52,12 @@ grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$
   || fail 'live initial Aqueous/Pearl command is missing'
 grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
 grep -Fq 'after = artix-live' "$service" || fail 'live autologin service ordering is incomplete'
-grep -Fq 'command         = /usr/bin/greetd' "$greetd_service" \
-  || fail 'live greetd service command is incorrect'
-grep -Fq 'depends-on      = login.target' "$greetd_service" \
-  || fail 'live greetd service dropped its login target'
-grep -Fq 'depends-on      = dinx-live-autologin' "$greetd_service" \
-  || fail 'live greetd does not require autologin configuration before starting'
-grep -Fq "'greetd.service')" "$pkgbuild" \
-  || fail 'live greetd dependency override is not a package source'
-grep -Fq 'pkgdir/etc/dinit.d/greetd' "$pkgbuild" \
-  || fail 'live greetd dependency override is not installed'
+grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
+grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'
+! grep -Fq 'greetd.service' "$pkgbuild" \
+  || fail 'live autologin package must not replace greetd-dinit service files'
+! grep -Fq 'pkgdir/etc/dinit.d/greetd' "$pkgbuild" \
+  || fail 'live autologin package must not own greetd-dinit service files'
 grep -Fq 'boot.d/dinx-live-autologin' "$pkgbuild" \
   || fail 'live autologin service is not linked into dinit boot'
 
@@ -89,4 +84,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_dependency=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true dinit=true\n'
+printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_ordering=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true dinit=true\n'

@@ -83,8 +83,9 @@ grep -Fq 'command         = /usr/bin/greetd' <<<"$live_greetd_service" \
   || fail 'live greetd service command is incorrect'
 grep -Fq 'depends-on      = login.target' <<<"$live_greetd_service" \
   || fail 'live greetd service does not use the login target'
-grep -Fq 'depends-on      = dinx-live-autologin' <<<"$live_greetd_service" \
-  || fail 'live greetd is not ordered after autologin configuration'
+if grep -Fq 'dinx-live-autologin' <<<"$live_greetd_service"; then
+  fail 'live greetd service must remain owned by greetd-dinit'
+fi
 
 
 required_paths=(
@@ -121,16 +122,12 @@ required_paths=(
   usr/local/bin/dinx-alpha7-hardware-report
   usr/local/bin/dinx-doctor
   usr/share/wayland-sessions/dinx-gaming.desktop
-  usr/bin/gamescope
-  usr/bin/gamemoderun
-  usr/bin/mangohud
   usr/bin/flatpak
   usr/bin/fwupdmgr
   usr/bin/vainfo
   usr/bin/scanimage
   usr/lib/libayatana-appindicator3.so.1
   usr/bin/kolourpaint
-  usr/bin/steam
   etc/dinit.d/bluetoothd
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
@@ -236,25 +233,10 @@ required_paths=(
   usr/bin/shelly-key
   usr/bin/shelly-notifications
   usr/bin/shelly-flatpak-integrate
-  usr/bin/cyan-skillfish-governor-smu
-  usr/bin/bc250-control-center
-  usr/bin/bc250-control-center-cli
-  usr/bin/bc250-control-centerd
-  etc/cyan-skillfish-governor-smu/config.toml
-  etc/dinit.d/cyan-skillfish-governor-smu
-  usr/local/libexec/dinx-cyan-skillfish-governor
   usr/lib/firmware/amdgpu/cyan_skillfish2_pfp.bin.zst
   usr/share/vulkan/icd.d/radeon_icd.json
   usr/share/vulkan/icd.d/lvp_icd.json
   usr/lib/libvulkan_lvp.so
-  usr/libexec/bc250-control-center/bc250-package-maintenance
-  usr/share/bc250-control-center/VERSION
-  usr/share/applications/io.github.movacx.bc250-control-center.desktop
-  usr/share/metainfo/io.github.movacx.bc250-control-center.metainfo.xml
-  usr/share/polkit-1/actions/io.github.movacx.bc250-control-center.policy
-  usr/share/icons/hicolor/256x256/apps/bc250-control-center.png
-  usr/share/pixmaps/bc250-control-center.png
-  usr/share/licenses/bc250-control-center/LICENSE
   usr/bin/vulkaninfo
   etc/paru.conf
   etc/shellybuild.conf
@@ -322,6 +304,47 @@ required_paths=(
 
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
+done
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  for bc250_path in \
+    usr/bin/cyan-skillfish-governor-smu \
+    usr/bin/bc250-control-center \
+    usr/bin/bc250-control-center-cli \
+    usr/bin/bc250-control-centerd \
+    etc/cyan-skillfish-governor-smu/config.toml \
+    etc/dinit.d/cyan-skillfish-governor-smu \
+    etc/dinit.d/boot.d/cyan-skillfish-governor-smu \
+    usr/local/libexec/dinx-cyan-skillfish-governor \
+    usr/libexec/bc250-control-center/bc250-package-maintenance \
+    usr/share/bc250-control-center/VERSION \
+    usr/share/applications/io.github.movacx.bc250-control-center.desktop \
+    usr/share/metainfo/io.github.movacx.bc250-control-center.metainfo.xml \
+    usr/share/polkit-1/actions/io.github.movacx.bc250-control-center.policy \
+    usr/share/icons/hicolor/256x256/apps/bc250-control-center.png \
+    usr/share/pixmaps/bc250-control-center.png \
+    usr/share/licenses/bc250-control-center/LICENSE; do
+    if grep -Fq "/$bc250_path" <<<"$image_manifest"; then
+      fail "BC-250-specific payload is present in the generic ISO: $bc250_path"
+    fi
+  done
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(bc250-control-center|cyan-skillfish-governor-smu(-dinit)?)-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'BC-250 package metadata is present in the generic ISO'
+  fi
+  for gaming_path in \
+    usr/bin/gamescope \
+    usr/bin/gamemoderun \
+    usr/bin/mangohud \
+    usr/bin/steam \
+    usr/share/applications/steam.desktop; do
+    if grep -Fq "/$gaming_path" <<<"$image_manifest"; then
+      fail "optional gaming payload is present in the generic ISO: $gaming_path"
+    fi
+  done
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gamescope|gamemode|mangohud|steam(-devices)?|lib32-(gamemode|mesa|vulkan-radeon|vulkan-mesa-layers))-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'optional gaming package metadata is present in the generic ISO'
+  fi
 done
 dinit_tmpfiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/tmpfiles.d/dinx-dinit.conf)
 grep -Fqx 'd /var/log/dinit 0755 root root -' <<<"$dinit_tmpfiles" \
@@ -489,12 +512,6 @@ for disabled_service in ufw opensnitchd; do
     fail "firewall service is enabled by default: $disabled_service"
   fi
 done
-governor_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/cyan-skillfish-governor-smu/config.toml)
-grep -Fq '[gpu]' <<<"$governor_config" || fail 'Cyan Skillfish governor GPU section is missing'
-grep -Fq 'set-method = "smu"' <<<"$governor_config" || fail 'Cyan Skillfish governor is not configured for SMU control'
-grep -Fq 'min = 1000' <<<"$governor_config" || fail 'Cyan Skillfish governor minimum frequency is not configured'
-grep -Fq 'max = 1850' <<<"$governor_config" || fail 'Cyan Skillfish governor maximum frequency is not configured'
-grep -Fq '/etc/dinit.d/boot.d/cyan-skillfish-governor-smu' <<<"$manifest" || fail 'Cyan Skillfish governor is not enabled in the rootfs dinit boot set'
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
 grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
 
@@ -656,9 +673,6 @@ grep -Fq 'SidebarBackgroundCurrent: "#263249"' <<<"$calamares_branding_desc" || 
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'
-bc250_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/io.github.movacx.bc250-control-center.desktop)
-grep -Fq 'Exec=bc250-control-center' <<<"$bc250_desktop" || fail 'BC250 Control Center desktop launcher command is incorrect'
-grep -Fq 'Icon=bc250-control-center' <<<"$bc250_desktop" || fail 'BC250 Control Center desktop icon is missing'
 noctty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NOCTTY.desktop)
 grep -Fq 'TryExec=noctty' <<<"$noctty_desktop" || fail 'NOCTTY desktop launcher is missing'
 grep -Fq 'Exec=noctty --open-uri %u' <<<"$noctty_desktop" || fail 'NOCTTY desktop command is incorrect'
@@ -699,9 +713,7 @@ livefs_required_paths=(
   etc/artools/live.conf
   etc/dinit.d/boot.d/NetworkManager
   etc/dinit.d/boot.d/artix-live
-  etc/dinit.d/boot.d/cyan-skillfish-governor-smu
   etc/dinit.d/boot.d/dinx-live-autologin
-  etc/dinit.d/dinx-live-autologin
   etc/dinit.d/boot.d/greetd
   etc/dinit.d/boot.d/logind
   etc/dinit.d/boot.d/metalog
@@ -728,4 +740,4 @@ grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: Aqueous/Pearl sole user session, Pearl shell, direct Pearl Greeter host under greetd, no systemd/UWSM or legacy X11, hidden manual DINX Gaming launcher, Noctty terminal contract, Firefox default with pro-user policy, BC250 Control Center with supervised Aqueous/Pearl helper, AMDGPU firmware/RADV/Vulkan diagnostics and Cyan Skillfish governor, btop/nvtop/inxi diagnostics, Zathura PDF and Swayimg image handlers, KolourPaint image editing, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, File Roller archive actions, GParted partition editing, wdisplays display configuration, shikane deterministic output profiles, VLC video playback, Strawberry music playback, pwvucontrol audio mixer, topgrade/paru/Shelly package management, UFW/Gufw and OpenSnitch firewall tools, Qps process manager, NetworkManager/nm-connection-editor, BlueZ/Blueman/UPower, Pori dinit storage management, Phyto file management, kernel ntfs3 live read/write support, optional legacy ntfs-3g post-install support, CLI recovery and transfer tools, Nano and dinit payloads.\n'
+printf 'ISO content check passed: Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'

@@ -43,8 +43,7 @@ marcar um resultado como `pass`.
    depois retorne à sessão gráfica.
 7. Exercite bloqueio, bloqueio por idle, suspensão/retorno, brilho físico,
    áudio, rede e Bluetooth no hardware-alvo.
-8. Para alegações de gaming, autentique o Steam, abra e feche um jogo comercial,
-   teste um controle e verifique o áudio PipeWire do jogo.
+8. Antes dos testes gaming, instale os pacotes opcionais pelo [guia pós-instalação](install.md). O launcher continua oculto no greeter; só registre aprovação se os testes de launch DRM manual, Steam/jogo autenticados, controle e áudio PipeWire realmente passarem.
 
 Evidências de CI/QEMU não substituem os passos 3–8 em hardware físico. Registre
 `fail` ou `blocked`; não infira sucesso apenas pela presença dos pacotes.
@@ -63,7 +62,7 @@ relatório para cada alvo.
 - verificar bloqueio após 600 segundos de idle;
 - suspender, retomar, desbloquear e confirmar que a sessão continua utilizável;
 - testar brilho físico;
-- selecionar `DINX Gaming`, iniciar Steam, abrir e fechar um jogo instalado;
+- instale os pacotes gaming opcionais pelo [guia pós-instalação](install.md) antes da qualificação manual; DINX Gaming continua oculto e não pode ser selecionado no greeter;
 - testar controle e áudio PipeWire do jogo;
 - executar `dinx-alpha7-hardware-report` antes e depois do gaming.
 
@@ -79,13 +78,12 @@ Repetir a matriz do desktop e acrescentar:
 
 ### BC-250
 
-Repetir a matriz do desktop e acrescentar:
+Execute esta seção somente quando `lspci -n -d 1002:13fe` mostrar o PCI exato. Caso contrário, ignore-a e não instale pacotes BC-250. A ISO genérica não os inclui; configure o repositório DINX assinado e siga as etapas de instalação protegidas em `install.md` antes de qualificar:
 
-- detecção `1002:13fe` com `lspci -nn`;
-- status do governor Cyan Skillfish e fallback seguro em hardware não-BC250;
+- status do governor e limites de frequência configurados no hardware detectado;
 - diagnósticos RADV/Vulkan;
-- abertura da GUI e da CLI do BC250 Control Center;
-- telemetria, recuperação e comportamento da GPU após suspend/resume;
+- inicialização da GUI e da CLI do BC250 Control Center;
+- telemetria, controles de recuperação e comportamento da GPU após suspend/resume;
 - uma sessão gaming com observações de frame pacing, temperatura e energia.
 
 ## Relatório de hardware

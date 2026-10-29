@@ -3,3 +3,5 @@ command = /usr/local/libexec/dinx-live-autologin
 restart = false
 depends-on = local.target
 after = artix-live
+before = greetd
+before = login.target

@@ -40,8 +40,7 @@ as `pass`.
    the graphical session.
 7. Exercise lock, idle lock, suspend/resume, physical brightness, audio,
    networking and Bluetooth on the target hardware.
-8. For gaming claims, authenticate Steam, launch and exit one commercial game,
-   test a controller and verify PipeWire game audio.
+8. Before gaming checks, install the optional packages using the [post-install guide](install.md). The launcher remains hidden from the greeter; only record a pass if the manual DRM launch, authenticated Steam/game, controller and PipeWire audio checks actually succeed.
 
 CI/QEMU evidence does not replace steps 3–8 on physical hardware. Record
 `fail` or `blocked` instead of inferring success from package presence.
@@ -60,7 +59,7 @@ resulting report path for each target.
 - verify idle lock at 600 seconds;
 - suspend, resume, unlock and verify the session remains usable;
 - test physical brightness controls;
-- select `DINX Gaming`, launch Steam, launch and exit one installed game;
+- install the optional gaming packages using the [post-install guide](install.md) before attempting the manual qualification; DINX Gaming remains hidden and is not selectable in the greeter;
 - test controller input and PipeWire game audio;
 - run `dinx-alpha7-hardware-report` before and after gaming.
 
@@ -76,10 +75,9 @@ Repeat the desktop matrix, adding:
 
 ### BC-250
 
-Repeat the desktop matrix, adding:
+Run this section only when `lspci -n -d 1002:13fe` reports the exact PCI ID. Otherwise skip it and do not install BC-250 packages. The generic ISO excludes them; configure the signed DINX repository and follow the guarded installation steps in `install.md` before qualifying:
 
-- `lspci -nn` detection of `1002:13fe`;
-- Cyan Skillfish governor status and safe non-BC250 fallback behavior;
+- governor status and configured frequency limits on detected hardware;
 - RADV/Vulkan diagnostics;
 - BC250 Control Center GUI and CLI startup;
 - telemetry, recovery controls and GPU behavior after suspend/resume;

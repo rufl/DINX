@@ -42,7 +42,7 @@ User scope uses `dinitctl --user`. System scope uses `dinitctl --system` and ret
 - Aqueous/Pearl is the only selectable and supported DINX user session.
 - The live ISO opens `dinx` directly through the dinit autologin path; the installed rootfs keeps manual login.
 - Pearl Greeter is the installed greetd login UI, not a second user session; its root-owned config forces `Aqueous + Pearl (DINX)` and has no silent session fallback.
-- `dinx-aqueous-pearl` starts Aqueous directly. The Aqueous init child waits for Wayland and session D-Bus readiness, then `dinx-session-supervisor` starts Shikane, PolicyKit, optional BC250, the required idle helper and Pearl.
+- `dinx-aqueous-pearl` starts Aqueous directly. The init child waits for Wayland and session D-Bus readiness, then the supervisor starts Shikane, PolicyKit, the required idle helper and Pearl. It starts the optional BC-250 daemon only when its separately installed signed package is present; install that package only after PCI `1002:13fe` is detected. The generic ISO omits all BC-250-specific packages.
 - Required-helper or Pearl failure records an explicit failed state and terminates the compositor instead of leaving a blank desktop.
 - The session uses elogind/libseat and direct dinit execution; it does not require systemd, systemctl, uwsm or user units.
 - `swayidle` locks after 600 seconds and on `before-sleep`; `Super+L`, the launcher action and DINXPanel use the same `swaylock` path. `brightnessctl` supplies fixed 5-percent brightness steps.
@@ -55,7 +55,7 @@ Seafoam Settings exposes fixed entry points for wdisplays, the profile saver, Sh
 
 ## Gaming boundary
 
-DINX Gaming is a manual hidden launcher, not a selectable user session. `dinx-gaming` starts the packaged Gamescope/Steam argv through `dbus-run-session`; the base profile carries the required Artix 32-bit Mesa/RADV/Vulkan packages and `steam-devices`. It does not assume a particular shell or compositor configuration underneath.
+DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO includes the launcher/desktop entry, but the Gamescope/Steam binaries and 32-bit libraries belong to the optional Artix `gaming` group, not the base profile. Base 64-bit RADV/Vulkan stays installed. The launcher checks Gamescope and Steam before changing the Dinit profile; missing-package fixtures verify that the transition does not occur. Real DRM output and authenticated gaming remain outside the qualification claim.
 
 ## Compatibility test matrix
 
@@ -75,7 +75,7 @@ DINX Gaming is a manual hidden launcher, not a selectable user session. `dinx-ga
 | Package management | pacman, Shelly, paru and Topgrade use Artix configuration and remain user-invoked |
 | Firewall/process monitoring | Gufw, Qps and OpenSnitch are discoverable; services remain disabled until configured |
 | DinitUI | service discovery and control use validated dinitctl argv with scoped pkexec fallback |
-| Gaming | hidden Gamescope/Steam entry and 32-bit graphics payload launch through the documented boundary |
+| Gaming | hidden launcher retained, optional package group excluded from base, missing Gamescope/Steam fail before profile changes; real gaming remains unqualified |
 | Failure isolation | unavailable optional helpers or D-Bus endpoints produce visible failure without shell-dependent startup |
 | Keyboard access | primary actions work without pointer input |
 

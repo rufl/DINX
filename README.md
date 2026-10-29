@@ -47,9 +47,11 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
 - **Mesa Lavapipe** (`vulkan-swrast`) continua disponível para aplicativos Vulkan; Aqueous usa uma build Pixman separada, sem efeitos Vulkan, em sistemas sem render node e com GPU Virtio, evitando a falha no QEMU e preservando o compositor completo em hardware;
-- um launcher manual **DINX Gaming** com Gamescope, Steam e bibliotecas gráficas de 32 bits; ele fica oculto da lista de sessões do greeter;
+- **DINX Gaming** mantém o launcher manual oculto. A ISO Alpha 9 publicada ainda inclui Gamescope, Steam e as bibliotecas de 32 bits; o perfil fonte atual da Alpha 10 os move para pacotes opcionais pós-instalação. O perfil mantém RADV/Vulkan de 64 bits; veja o [guia de instalação](docs/pt-BR/install.md).
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
+
+A imagem Alpha 9 publicada também inclui pacotes específicos da BC-250. O perfil fonte atual da Alpha 10 os exclui das imagens genéricas, mas essa mudança só estará disponível para download depois que uma nova ISO for compilada e publicada. Instale software BC-250 somente após confirmar o PCI `1002:13fe`.
 
 ## Seafoam e a sessão única na ISO base
 
@@ -64,10 +66,12 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 | Release publicado | `v0.1.0-alpha.9`, ISO direta de 2.008.801.280 bytes |
 | Base | Artix Linux x86_64 com dinit |
 | Fase | P5 — beta de jogos; P4 DinitUI qualificada para o gate alpha |
-| Validação da release | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
-| Validação mais recente da `main` | [Workflow 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077), verde após build, boot, payload gráfico, BIOS/UEFI, TTY, atestação e upload |
+| Validação da release publicada | [Workflow 39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) |
+| Último build ISO bem-sucedido da main | [Workflow 40637700291](https://github.com/rufl/DINX/actions/runs/40637700291), commit `f01f372cc9c93283bbc2a33de24c27aced1428bf`; ISO de 2.065.172.480 bytes, anterior às mudanças candidatas atuais |
+| Tentativa P0 mais recente da main | [Workflow 40805628529](https://github.com/rufl/DINX/actions/runs/40805628529) falhou durante a instalação livefs porque dois pacotes eram donos de `/etc/dinit.d/greetd`; nenhuma ISO foi produzida. A candidata local remove a duplicidade e corrige uma checagem obsoleta do payload BC-250, mas ainda precisa de nova validação P0/QEMU/instalação. |
 
-A release Alpha 9 publica a ISO, checksum SHA-512, metadados, evidências QEMU e o repositório de pacotes DINX assinado. A validação da `main` não cria uma nova release; ela confirma que os contratos continuam verdes depois do snapshot publicado. A mudança de autologin live da `main` vale para o próximo build da ISO; ela não altera retroativamente o artefato Alpha 9 já publicado.
+A Alpha 9 continua sendo o release mais recente publicado. Os assets e a execução 39924316082 descrevem somente aquele snapshot. O build ISO bem-sucedido mais recente antecede a candidata atual; as mudanças fonte atuais ainda não são uma Alpha 10 verificada ou publicada.
+
 
 ## Instalação rápida
 

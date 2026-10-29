@@ -55,6 +55,13 @@ if [ "${DINX_GAMING_CHILD_MODE:-0}" = 1 ]; then
     exit $?
 fi
 
+for required in gamescope steam; do
+    command -v "$required" >/dev/null 2>&1 || {
+        printf 'dinx-gaming: %s is not installed; install the optional DINX gaming packages first\n' "$required" >&2
+        exit 127
+    }
+done
+
 command -v setsid >/dev/null 2>&1 || {
     printf 'dinx-gaming: setsid is required for signal-safe Gamescope cleanup\n' >&2
     exit 127

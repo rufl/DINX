@@ -6,7 +6,7 @@ Milestones are capability gates, not calendar promises.
 
 ## Current phase
 
-**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Tagged release run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404` is the current P0 evidence, including BIOS and UEFI disposable disks, the Calamares BIOS/UEFI/Btrfs transaction smoke, build-metadata verification, persistent package signing and release publication. P5 remains active because authenticated Steam/game/controller/audio, gaming-session greeter selection, a real DRM display session, greeter return after a real session, suspend/resume and physical GPU/update testing are still open.
+**P5 — gaming beta (in progress).** P4 DinitUI is release-qualified end to end: implementation, local daemon/GTK qualification, package/ISO payload and the disposable persistent-install/recovery gate passed. Tagged release run [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082) on commit `0d1698a462d5d5486871a7aa17e9b97352ee9404` is the current P0 evidence, including BIOS and UEFI disposable disks, the Calamares BIOS/UEFI/Btrfs transaction smoke, build-metadata verification, persistent package signing and release publication. P5 remains active because authenticated Steam/commercial-game launch, controller/PipeWire audio, real DRM output, repeatable gaming-launcher exit with Dinit profile restoration, suspend/resume and physical GPU/update testing are still open.
 
 A post-release `main` validation, [run 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) on commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, completed in 52m02s with the same build, boot, graphical payload, BIOS/UEFI persistent-install and recovery-TTY, attestation and upload checks; it did not publish another release.
 
@@ -120,22 +120,18 @@ P3 release gate:
 
 **Delivered:**
 
-- standalone `DINX Gaming` Wayland session with `dbus-run-session`, Gamescope DRM backend and Steam `-tenfoot`;
-- Steam device package plus 32-bit Mesa/RADV/Vulkan payload entries;
+- standalone `DINX Gaming` launcher and hidden Wayland desktop entry remain available; Gamescope, Steam, Steam device rules and 32-bit Mesa/RADV/Vulkan dependencies are in the optional Artix `gaming` group, not the base ISO;
 - safe Normal/Lite/Gaming service semantics, profile enter/restore with failure propagation around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the YaST-inspired DINXPanel with fixed control-panel shortcuts, Shelly/Topgrade upgrade actions, optional fwupd discovery and a non-removing Artix kernel installer;
 - fixed launcher argv/return fixture and real headless Gamescope child launch/exit qualification;
-- ISO payload and static contract checks for the session entry and binaries;
-- GameMode and MangoHud are included in the gaming payload; `dinx-gaming`
-  supports `DINX_GAMEMODE=auto|on|off` and optional `DINX_MANGOHUD=on|off`
-  without weakening the normal launcher fallback.
+- ISO checks require the hidden launcher and entry while rejecting optional game binaries and package metadata from rootfs/livefs;
+- GameMode and MangoHud are optional group members; `dinx-gaming` supports `DINX_GAMEMODE=auto|on|off` and optional `DINX_MANGOHUD=on|off` without weakening the normal launcher fallback.
 - The ISO includes `dinx-alpha7-hardware-report` for read-only desktop, laptop,
   and BC-250 qualification evidence; real hardware claims remain manual.
 
 **Remaining release gates:**
 
-- a real DRM display session and gaming-session selection from the greeter;
+- real DRM output and repeatable `dinx-gaming` launch/exit with Dinit profile restoration;
 - authenticated Steam startup, commercial game launch/exit, controller input and PipeWire audio;
-- return to the greeter after an actual session exit;
 - suspend/resume, GPU recovery and update testing on physical hardware.
 
 **Exit criterion:** a game can be launched and exited repeatedly without leaving the desktop in a broken state. The current fixtures do not claim that criterion.

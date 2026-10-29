@@ -4,6 +4,9 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits saíram da ISO base e passaram ao grupo Artix opcional `gaming`. A base mantém RADV/Vulkan de 64 bits; o P0 não habilita mais `[lib32]` durante a montagem. O launcher oculto falha antes de alterar o perfil Dinit se Gamescope ou Steam faltar, e os checks da ISO rejeitam binários/metadata gaming nas imagens rootfs e live. O tamanho da nova ISO depende de um rebuild bem-sucedido.
+
+- Removidos o governor BC-250, o serviço dinit e o Control Center dos rootfs live e instalado genéricos. Os pacotes fixados continuam no repositório DINX assinado; o comando documentado de instalação exige o PCI `1002:13fe`.
 
 - Adicionada uma página bilíngue de opções do Calamares antes do particionamento. Ela explica apagar o disco inteiro, instalação ao lado quando disponível, substituição de partição e layout manual; opções destrutivas continuam sem seleção prévia e swap permanece opcional, sem swap por padrão.
 
@@ -11,7 +14,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Corrigido o aviso de diretório XDG ausente no desktop live: o launcher Aqueous/Pearl executa `xdg-user-dirs-update` antes do compositor, criando os diretórios padrão para contas novas da live e do sistema instalado.
 
-- Restaurado o boot Dinit live após a compactação SquashFS: tmpfiles no rootfs recria `/var/log/dinit`; o pacote `dinx-live-autologin`, exclusivo do livefs, substitui remontagens da raiz para o overlay gravável sem alterar as unidades do sistema instalado.
+- Corrigido o conflito da transação livefs no P0: `dinx-live-autologin` não empacota mais uma cópia de `/etc/dinit.d/greetd`; seu serviço Dinit habilitado no boot ordena o gravador da configuração única da sessão antes de greetd e `login.target`, mantendo intacto o arquivo do serviço upstream `greetd-dinit`.
+- Removida uma exigência obsoleta do governor BC-250 no gate do payload genérico da ISO após o pacote específico de hardware sair do perfil base; agora o gate verifica a ausência do payload opcional. Ainda é necessário um build P0 bem-sucedido para validar a ISO resultante.
 - Fortalecido o smoke QEMU da ISO: captura e analisa por OCR a tela selecionada da sessão live, aceita os marcadores de desktop/relógio/layout do painel Pearl quando o nome do produto não aparece e rejeita greeter, TTY, prompts de login, diretório XDG ausente e falhas visíveis do Dinit. O P0 instala o Tesseract com dados em inglês para esse gate.
 - Mesa Lavapipe (`vulkan-swrast`) continua na ISO base para aplicativos Vulkan, mas deixou de ser forçada pelo Aqueous: QEMU e sistemas sem render node usam o compositor Pixman de compatibilidade, não o caminho de apresentação llvmpipe que falhou.
 

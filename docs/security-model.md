@@ -27,7 +27,7 @@ DinitUI and DINXPanel MUST:
 DINXPanel's GPU bridge and kernel installer MUST use fixed argv plans. Kernel actions MAY install packages and matching headers, MUST NOT remove any package or the running kernel, and MUST report reboot required after kernel or driver changes.
 
 The interface must distinguish a service that is stopped, failed, unknown or inaccessible. It must never report success based only on process launch.
-The gaming session is also a fixed boundary: its root overlay launcher starts only the packaged Gamescope/Steam argv, with no shell interpolation or systemd service. Steam's 32-bit/systemd compatibility libraries are payload dependencies, not an init runtime; the ISO content gate rejects the systemd daemon/runtime and systemctl. Controller devices, game content, Steam credentials and network services remain user-controlled inputs outside the alpha fixture qualification.
+The gaming session is a fixed boundary: its root-overlay launcher starts only the packaged Gamescope/Steam argv, with no shell interpolation or systemd service. Steam's 32-bit runtime libraries are optional post-install packages, not base ISO payload or an init runtime; the ISO content gate rejects the systemd daemon/runtime and systemctl. Controller devices, game content, Steam credentials and network services remain user-controlled inputs outside the alpha fixture qualification.
 
 Performance profiles are an explicit policy boundary, not an automatic service classifier. Built-in `normal`, `lite` and `gaming` lists touch only optional daemons; custom profiles accept only validated profile/service identifiers, persist under the user's XDG config, and apply system actions through the same `dinitctl`/`pkexec` path. No shell plugin or private IPC is required.
 

@@ -31,6 +31,8 @@
         "pipewire-pulse",
         "polkit",
         "seatd",
+        "vulkan-radeon",
+        "vulkan-tools",
         "vulkan-swrast",
         "wayland",
         "wireplumber",
@@ -91,10 +93,8 @@
         "pciutils",
         "procps-ng",
         "python-psutil",
-        "python-pyqt6",
         "pwvucontrol",
         "qps",
-        "qt6-svg",
         "qt6-wayland",
         "qt6ct",
         "rsync",
@@ -126,8 +126,9 @@
       ]
     },
     "gaming": {
-      "description": "Gamescope, Steam, controller support, and 32-bit Vulkan/runtime dependencies.",
-      "iso": true,
+      "description": "Optional Gamescope/Steam session and 32-bit gaming dependencies from Artix repositories; installed after the system only when wanted.",
+      "iso": false,
+      "external": true,
       "packages": [
         "gamescope",
         "gamemode",
@@ -137,14 +138,13 @@
         "lib32-gamemode",
         "lib32-mesa",
         "lib32-vulkan-radeon",
-        "lib32-vulkan-mesa-layers",
-        "vulkan-radeon",
-        "vulkan-tools"
+        "lib32-vulkan-mesa-layers"
       ]
     },
     "hardware": {
-      "description": "DINX hardware-specific control and dinit integration.",
-      "iso": true,
+      "description": "BC-250-specific packages, kept in the signed repository for systems with PCI 1002:13fe.",
+      "iso": false,
+      "external": true,
       "packages": [
         "bc250-control-center",
         "cyan-skillfish-governor-smu",
@@ -248,7 +248,6 @@
     "profile_init": [
       "artix-live-dinit",
       "bluez-dinit",
-      "cyan-skillfish-governor-smu-dinit",
       "dbus-dinit",
       "elogind-dinit",
       "greetd-dinit",
@@ -262,7 +261,6 @@
     "livefs": [
       "artix-grub-live",
       "artix-live-dinit",
-      "cyan-skillfish-governor-smu-dinit",
       "dbus-dinit",
       "dinx-live-autologin",
       "elogind-dinit",

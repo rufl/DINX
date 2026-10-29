@@ -6,7 +6,7 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Fase atual
 
-**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/recuperação em discos descartáveis passaram. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, é a evidência P0 atual e inclui discos BIOS e UEFI descartáveis, o smoke transacional BIOS/UEFI/Btrfs do Calamares, a verificação dos metadados de build, a assinatura persistente de pacotes e a publicação do release. A P5 continua ativa porque Steam/jogo/controle/áudio autenticados, seleção da sessão gaming no greeter, sessão DRM real, retorno ao greeter após uma sessão real, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
+**P5 — beta de jogos (em andamento).** A P4 DinitUI está qualificada end-to-end: implementação, qualificação local de daemon/GTK, payload do pacote/ISO e gate de instalação persistente/recuperação em discos descartáveis passaram. A execução de release com tag [39924316082](https://github.com/rufl/DINX/actions/runs/39924316082), no commit `0d1698a462d5d5486871a7aa17e9b97352ee9404`, é a evidência P0 atual e inclui discos BIOS e UEFI descartáveis, o smoke transacional BIOS/UEFI/Btrfs do Calamares, a verificação dos metadados de build, a assinatura persistente de pacotes e a publicação do release. A P5 continua ativa porque launch autenticado de Steam/jogo comercial, controle/áudio PipeWire, saída DRM real, saída repetível do launcher gaming com restauração do perfil Dinit, suspensão/retomada e testes de GPU/atualização em hardware físico continuam abertos.
 
 Uma validação pós-release da `main`, [execução 39934458077](https://github.com/rufl/DINX/actions/runs/39934458077) no commit `eb9a0c143c06d9c1939f9d88684d164d8e2384fb`, concluiu em 52m02s com os mesmos checks de build, boot, payload gráfico, instalação persistente/TTY de recuperação em BIOS e UEFI, atestação e upload; ela não publicou outro release.
 
@@ -120,22 +120,18 @@ Gate de release P3:
 
 **Entregue:**
 
-- sessão Wayland standalone `DINX Gaming` com `dbus-run-session`, backend DRM do Gamescope e Steam `-tenfoot`;
-- pacote de dispositivos Steam e entradas de payload Mesa/RADV/Vulkan de 32 bits;
+- launcher standalone `DINX Gaming` e entrada Wayland oculta continuam disponíveis; Gamescope, Steam, regras de dispositivos Steam e dependências Mesa/RADV/Vulkan de 32 bits ficam no grupo Artix opcional `gaming`, fora da ISO base;
 - semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração do perfil com propagação de falhas ao redor do launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel inspirada no YaST, com atalhos fixos para painéis de controle, ações de upgrade Shelly/Topgrade, descoberta opcional de fwupd e instalador de kernels Artix sem remoção;
 - fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
-- checks de payload da ISO e contrato estático da entrada da sessão e dos binários.
-- GameMode e MangoHud estão no payload gaming; `dinx-gaming` suporta
-  `DINX_GAMEMODE=auto|on|off` e `DINX_MANGOHUD=on|off` opcional sem remover o
-  fallback do launcher normal.
+- checks da ISO exigem launcher/entrada ocultos e rejeitam binários e metadata dos pacotes gaming opcionais no rootfs/livefs;
+- GameMode e MangoHud são membros opcionais do grupo; `dinx-gaming` suporta `DINX_GAMEMODE=auto|on|off` e `DINX_MANGOHUD=on|off` opcional sem remover o fallback normal do launcher.
 - A ISO inclui `dinx-alpha7-hardware-report` para evidências somente de leitura
   no desktop, laptop e BC-250; as afirmações de hardware continuam manuais.
 
 **Gates de release restantes:**
 
-- uma sessão DRM real e a seleção da sessão gaming pelo greeter;
-- inicialização Steam autenticada, launch/exit de jogo comercial, controles e áudio PipeWire;
-- retorno ao greeter depois da saída de uma sessão real;
+- saída DRM real e launch/exit repetível de `dinx-gaming` com restauração do perfil Dinit;
+- inicialização autenticada do Steam, launch/exit de jogo comercial, entrada de controle e áudio PipeWire;
 - suspensão/retomada, recuperação da GPU e testes de atualização em hardware físico.
 
 **Critério de saída:** um jogo pode ser iniciado e encerrado repetidamente sem deixar o desktop quebrado. Os fixtures atuais não alegam esse critério.

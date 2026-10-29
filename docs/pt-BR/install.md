@@ -146,18 +146,29 @@ Use um gravador confiável como o Rufus. Selecione a ISO verificada e o pendrive
 2. Reinicie e abra o menu de boot (`F12`, `F11`, `Esc` ou a tecla específica do fabricante).
 3. Selecione a entrada UEFI do USB.
 4. Se o firmware recusar a imagem, desative Secure Boot para este teste; a alpha atual não fornece um caminho Secure Boot assinado.
-5. Aguarde o desktop live; a sessão descartável abre diretamente no `Aqueous + Pearl (DINX)`.
+5. Na ISO Alpha 9 publicada, siga o fluxo existente do Pearl Greeter para entrar na sessão live. O autologin direto da live existe somente na candidata de código da Alpha 10, ainda não compilada.
 
-A sessão live abre automaticamente a conta descartável `dinx` no `Aqueous + Pearl (DINX)`; nenhum usuário ou senha é solicitado. Isso é intencional: quem consegue inicializar a ISO já controla a máquina live. O login instalado/manual usa o Pearl Greeter pelo greetd e pela conta dedicada `pearl-greeter`. A senha pública `dinx` fica apenas como fallback diagnóstico se a sessão live for iniciada manualmente; nunca a reutilize em outro sistema ou rede.
+A candidata fonte da Alpha 10 abre diretamente a conta descartável `dinx` no `Aqueous + Pearl (DINX)`, sem solicitar usuário ou senha. Essa mudança vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Ela ainda não está na imagem Alpha 9 publicada. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
 
 Quando o desktop aparecer, o estado gráfico testado é Aqueous/Pearl. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
 Pearl é o shell ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o Pearl Greeter lê `/etc/pearl/greeter.json`, usa o tema GTK DINX e força a entrada Aqueous/Pearl sem X11 nem UWSM.
 O Phyto é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes. `Dome`, `Seafoam Settings` e `zls` vêm na ISO base assinada. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings agrupa os pontos documentados de configuração de display/sessão; o Nocted usa o ZLS incluído para projetos Zig.
 O runtime base do ZLS é compacto por design: completion e navegação usam a árvore `lib/std` correspondente incluída pela ISO por meio de `/usr/lib/zls/zig-env`; um compilador Zig completo é opcional e não faz parte do payload da ISO.
 
-### BC250 Control Center
+### Suporte opcional à BC-250
 
-Com o desktop aberto, abra o **BC250 Control Center** pelo launcher ou dock do Pearl. O supervisor da sessão Aqueous/Pearl inicia `bc250-control-centerd` uma vez quando o helper da BC-250 está disponível; o host restrito Aqueous do greeter não é fallback de sessão. O daemon não exige unidade systemd nem serviço root dinit. Ele fornece telemetria da BC-250 e os controles upstream protegidos por polkit quando o hardware e as permissões estão disponíveis. No dinit, a persistência de serviços upstream é somente detecção; essa limitação não impede a GUI nem as leituras ao vivo.
+A ISO Alpha 9 publicada inclui o BC250 Control Center e o governor Cyan Skillfish. O perfil fonte atual da Alpha 10 os remove da imagem genérica; essa mudança só estará disponível para download depois que o build Alpha 10 passar e for publicado. O comando abaixo é seguro mesmo se a Alpha 9 já tiver os pacotes. Primeiro configure e confie localmente no repositório DINX assinado conforme `release.md`; depois instale ou atualize o suporte BC-250 somente quando o PCI exato estiver presente:
+
+```bash
+if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
+  sudo pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
+else
+  printf 'PCI 1002:13fe não detectado; os pacotes BC-250 não foram instalados.\n' >&2
+  exit 1
+fi
+```
+
+O governor verifica o PCI `1002:13fe` antes de aplicar configurações. A proteção acima impede que esse comando de instalação rode em outro hardware. A Alpha 9 pode já conter os pacotes; a presença deles não significa que o suporte BC-250 esteja ativo.
 
 ## 5. Instalação persistente experimental
 
@@ -248,6 +259,27 @@ Flatpak para fontes de aplicativos escolhidas pelo usuário e o KolourPaint como
 editor de imagens Qt simples. O Swayimg continua sendo o visualizador padrão;
 o KolourPaint fica disponível no launcher e não substitui esse default de
 visualização.
+
+### Pacotes gaming opcionais
+
+A ISO Alpha 9 publicada inclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits. O perfil fonte atual da Alpha 10 move esse conjunto para fora da imagem genérica; ele não estará ausente de um download até que o build da ISO Alpha 10 passe e seja publicado. O comando abaixo é idempotente quando a Alpha 9 já tem esses pacotes. O perfil Alpha 10 mantém RADV e diagnósticos Vulkan para gráficos gerais de 64 bits. Para optar por instalá-los após a instalação:
+
+1. Em `/etc/pacman.conf`, adicione o repositório oficial Artix somente se `[lib32]` ainda não estiver definido:
+
+   ```ini
+   [lib32]
+   Include = /etc/pacman.d/mirrorlist
+   ```
+
+2. Instale os pacotes gaming opcionais:
+
+   ```bash
+   sudo pacman -Syu --needed \
+     gamescope gamemode mangohud steam steam-devices \
+     lib32-gamemode lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers
+   ```
+
+Não é necessário adicionar repositórios Arch. A entrada DINX Gaming continua oculta no greeter; o launcher informa se Gamescope ou Steam estiver faltando antes de alterar o perfil Dinit. Gaming DRM real, Steam autenticado, jogos comerciais, controles e áudio do jogo continuam sem qualificação.
 
 O Flatpak é instalado sem aplicativos Flatpak pré-instalados. Adicionar um
 remote e instalar um aplicativo continuam sendo ações explícitas do usuário; a

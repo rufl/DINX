@@ -81,7 +81,7 @@ Aqueous 1.0.5 e Pearl 0.3.0 são a única sessão de usuário selecionável e a 
 
 Antes de iniciar o compositor, `dinx-aqueous-pearl` executa `xdg-user-dirs-update` como o usuário da sessão. Contas novas da live e do sistema instalado recebem os diretórios XDG padrão, incluindo `~/Desktop`, antes do Pearl iniciar.
 
-Aqueous chama `dinx-aqueous-init`, que espera Wayland e D-Bus da sessão e inicia sob supervisão Shikane, PolicyKit, BC250 opcional, idle obrigatório e Pearl. `dinx-session-supervisor` registra `starting`, `ready`, `failed` e `exited`; encerra o compositor quando um componente obrigatório falha e encerra o processo pai monitorado quando o supervisor para.
+Aqueous chama `dinx-aqueous-init`, que espera Wayland e D-Bus da sessão e inicia sob supervisão Shikane, PolicyKit, o idle obrigatório e Pearl. Se os pacotes BC-250 forem instalados separadamente do repositório assinado em uma máquina com PCI `1002:13fe`, o supervisor inicia o daemon opcional do Control Center. A ISO genérica não inclui esses pacotes. `dinx-session-supervisor` registra `starting`, `ready`, `failed` e `exited`; encerra o compositor quando um componente obrigatório falha e encerra o processo pai monitorado quando o supervisor para.
 
 A sessão usa execução direta sobre dinit e não exige systemd, systemctl, uwsm ou unidades de usuário. O login instalado/manual usa o Pearl Greeter: o greetd inicia o host dedicado pela conta `pearl-greeter`, e `/etc/pearl/greeter.json` força a mesma entrada Aqueous/Pearl com X11 e UWSM desativados. O Pearl Greeter não é uma segunda sessão de usuário nem fallback silencioso.
 
@@ -102,7 +102,7 @@ O tema DINX v1 é estático em `/usr/share/dinx/theme/DINX.json`, com papéis de
 
 ## Sessão gaming
 
-DINX Gaming é um launcher manual oculto, não uma sessão selecionável. `dinx-gaming` inicia Gamescope/Steam por uma entrada Wayland com `dbus-run-session`, usando apenas o argv empacotado. O perfil inclui Mesa/RADV/Vulkan de 32 bits e `steam-devices` do Artix. A qualificação prova argv, retorno, limpeza de processos e filho headless; não afirma Steam autenticado, jogo comercial, hardware de controle/áudio ou display DRM.
+DINX Gaming é um launcher manual oculto, não uma sessão selecionável. A ISO base mantém apenas o launcher e a entrada desktop; Gamescope, Steam, regras de dispositivos Steam, GameMode, MangoHud e bibliotecas de 32 bits ficam no grupo opcional `gaming` (`iso:false`) e vêm do Artix após a instalação. A base mantém RADV e ferramentas Vulkan de 64 bits. O builder P0 instala Gamescope somente para a qualificação headless; não habilita `[lib32]` nem inclui esses pacotes na ISO. O launcher verifica Gamescope e Steam antes de alterar o perfil Dinit; o fixture confirma falha fechada se faltar qualquer um. Saída DRM real e gaming autenticado continuam sem qualificação.
 
 ## Armazenamento, NTFS e display
 

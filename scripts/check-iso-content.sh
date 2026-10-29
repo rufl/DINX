@@ -41,10 +41,23 @@ livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
 for live_path in \
   etc/artools/live.conf \
   etc/dinit.d/dinx-live-autologin \
+  etc/dinit.d/greetd \
   etc/dinit.d/boot.d/dinx-live-autologin \
+  etc/dinit.d/root-ro \
+  etc/dinit.d/early-root-rw.target \
   usr/local/libexec/dinx-live-autologin; do
   grep -Fq "/$live_path" <<<"$livefs_manifest" \
     || fail "missing livefs path: $live_path"
+done
+
+if grep -Fq '/etc/dinit.d/root-ro' <<<"$manifest" \
+  || grep -Fq '/etc/dinit.d/early-root-rw.target' <<<"$manifest"; then
+  fail 'live-only root remount overrides leaked into the installed rootfs'
+fi
+for target in root-ro early-root-rw.target; do
+  live_root_mount=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" "etc/dinit.d/$target")
+  grep -Fqx 'command = /bin/true' <<<"$live_root_mount" \
+    || fail "livefs does not bypass the overlay remount in $target"
 done
 live_conf=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/artools/live.conf)
 grep -Eq '^AUTOLOGIN=true$' <<<"$live_conf" \
@@ -57,15 +70,29 @@ grep -Fq 'user = "dinx"' <<<"$live_autologin" \
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'command = /usr/local/libexec/dinx-live-autologin' <<<"$live_autologin_service" \
   || fail 'livefs autologin service command is incorrect'
-grep -Fq 'before = greetd' <<<"$live_autologin_service" \
-  || fail 'livefs autologin service does not precede greetd'
+root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
+grep -Fq 'command         = /usr/bin/greetd' <<<"$root_greetd_service" \
+  || fail 'installed greetd service command is incorrect'
+grep -Fq 'depends-on      = login.target' <<<"$root_greetd_service" \
+  || fail 'installed greetd service does not use the login target'
+if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then
+  fail 'live-only autologin dependency leaked into the installed greetd service'
+fi
+live_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
+grep -Fq 'command         = /usr/bin/greetd' <<<"$live_greetd_service" \
+  || fail 'live greetd service command is incorrect'
+grep -Fq 'depends-on      = login.target' <<<"$live_greetd_service" \
+  || fail 'live greetd service does not use the login target'
+grep -Fq 'depends-on      = dinx-live-autologin' <<<"$live_greetd_service" \
+  || fail 'live greetd is not ordered after autologin configuration'
 
 
 required_paths=(
   etc/calamares/branding/dinx/branding.desc
+  etc/calamares/branding/dinx/notesqml.qml
   etc/calamares/branding/dinx/stylesheet.qss
+  etc/calamares/modules/notesqml.conf
   etc/calamares/modules/packages.conf
-  etc/calamares/modules/partition.conf
   etc/calamares/modules/mount.conf
   etc/calamares/modules/bootloader.conf
   etc/calamares/modules/postcfg.conf
@@ -77,6 +104,7 @@ required_paths=(
   etc/default/grub.d/40-dinx-windows.cfg
   etc/dinit.d/greetd
   etc/greetd/config.toml
+  etc/tmpfiles.d/dinx-dinit.conf
   usr/bin/reboot
   usr/bin/poweroff
   usr/bin/dinitui
@@ -104,7 +132,6 @@ required_paths=(
   usr/bin/kolourpaint
   usr/bin/steam
   etc/dinit.d/bluetoothd
-  etc/dinit.d/root-ro
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
   usr/lib/pearl/pearl-greeter-host
@@ -133,7 +160,9 @@ required_paths=(
   usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
   usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
   usr/bin/foot
+  usr/bin/xdg-user-dirs-update
   usr/bin/aqueous
+  usr/bin/aqueous-cpu
   usr/bin/aqueousctl
   usr/bin/aqueous-config
   usr/bin/pearl
@@ -216,6 +245,8 @@ required_paths=(
   usr/local/libexec/dinx-cyan-skillfish-governor
   usr/lib/firmware/amdgpu/cyan_skillfish2_pfp.bin.zst
   usr/share/vulkan/icd.d/radeon_icd.json
+  usr/share/vulkan/icd.d/lvp_icd.json
+  usr/lib/libvulkan_lvp.so
   usr/libexec/bc250-control-center/bc250-package-maintenance
   usr/share/bc250-control-center/VERSION
   usr/share/applications/io.github.movacx.bc250-control-center.desktop
@@ -292,6 +323,11 @@ required_paths=(
 for path in "${required_paths[@]}"; do
   grep -Fq "/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
+dinit_tmpfiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/tmpfiles.d/dinx-dinit.conf)
+grep -Fqx 'd /var/log/dinit 0755 root root -' <<<"$dinit_tmpfiles" \
+  || fail 'ISO does not recreate the Dinit service log directory at boot'
+
+
 if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
   fail 'retired Labwc user session remains in the ISO payload'
 fi
@@ -340,9 +376,12 @@ grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" |
 aqueous_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not launch the direct init child'
-grep -Fq 'LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not select the elogind/libseat backend'
-grep -Fq 'WLR_RENDERER_ALLOW_SOFTWARE=1' <<<"$aqueous_launcher" || fail 'DINX Aqueous software-render fallback is missing'
+grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous CPU renderer selection is missing'
+grep -Fq '0x1af4' <<<"$aqueous_launcher" || fail 'DINX Aqueous Virtio GPU detection is missing'
+grep -Fq 'export WLR_RENDERER=pixman' <<<"$aqueous_launcher" || fail 'DINX Aqueous Pixman fallback is missing'
+grep -Fq 'export GSK_RENDERER=cairo' <<<"$aqueous_launcher" || fail 'DINX GTK4 Cairo fallback is missing'
+grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
+grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell pearl' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch Pearl'
 grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate Wayland readiness'
@@ -460,7 +499,7 @@ topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" 
 grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
 
 aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
-grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
+grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'Aqueous init supervisor command is missing'
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
@@ -683,6 +722,7 @@ grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologi
 grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin command is incorrect'
 grep -Fq 'user = "dinx"' <<<"$live_autologin_wrapper" || fail 'live autologin user is incorrect'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
+grep -Fq 'before = login.target' <<<"$live_autologin_service" || fail 'live autologin service does not precede the login target'
 grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin service does not precede greetd'
 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)

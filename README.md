@@ -46,6 +46,7 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **Phyto** como gerenciador de arquivos padrão e **File Roller** para abrir, criar e extrair arquivos compactados;
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
+- **Mesa Lavapipe** (`vulkan-swrast`) continua disponível para aplicativos Vulkan; Aqueous usa uma build Pixman separada, sem efeitos Vulkan, em sistemas sem render node e com GPU Virtio, evitando a falha no QEMU e preservando o compositor completo em hardware;
 - um launcher manual **DINX Gaming** com Gamescope, Steam e bibliotecas gráficas de 32 bits; ele fica oculto da lista de sessões do greeter;
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.

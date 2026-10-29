@@ -7,7 +7,12 @@ root_greetd="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.t
 users_conf="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/modules/users.conf"
 package_dir="$root/distro/packages/dinx-live-autologin"
 wrapper="$package_dir/dinx-live-autologin"
+root_ro="$package_dir/root-ro"
+root_rw="$package_dir/early-root-rw.target"
+pkgbuild="$package_dir/PKGBUILD"
+root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 service="$package_dir/dinx-live-autologin.service"
+greetd_service="$package_dir/greetd.service"
 workflow="$root/.github/workflows/p0-iso.yml"
 
 fail() {
@@ -15,7 +20,7 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$workflow"; do
+for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$greetd_service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -47,10 +52,35 @@ grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure
 grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
   || fail 'live initial Aqueous/Pearl command is missing'
 grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
-grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'after = artix-live' "$service" || fail 'live autologin service ordering is incomplete'
-grep -Fq 'boot.d/dinx-live-autologin' "$package_dir/PKGBUILD" \
+grep -Fq 'command         = /usr/bin/greetd' "$greetd_service" \
+  || fail 'live greetd service command is incorrect'
+grep -Fq 'depends-on      = login.target' "$greetd_service" \
+  || fail 'live greetd service dropped its login target'
+grep -Fq 'depends-on      = dinx-live-autologin' "$greetd_service" \
+  || fail 'live greetd does not require autologin configuration before starting'
+grep -Fq "'greetd.service')" "$pkgbuild" \
+  || fail 'live greetd dependency override is not a package source'
+grep -Fq 'pkgdir/etc/dinit.d/greetd' "$pkgbuild" \
+  || fail 'live greetd dependency override is not installed'
+grep -Fq 'boot.d/dinx-live-autologin' "$pkgbuild" \
   || fail 'live autologin service is not linked into dinit boot'
+
+grep -Fq "'root-ro' 'early-root-rw.target'" "$pkgbuild" \
+  || fail 'live root remount overrides are not package sources'
+grep -Fq 'pkgdir/etc/dinit.d/root-ro' "$pkgbuild" \
+  || fail 'live root-ro override is not installed by the package'
+grep -Fq 'pkgdir/etc/dinit.d/early-root-rw.target' "$pkgbuild" \
+  || fail 'live early-root-rw override is not installed by the package'
+for unit in "$root_ro" "$root_rw"; do
+  grep -Fqx 'command = /bin/true' "$unit" \
+    || fail "live overlay remount is not bypassed in $unit"
+done
+for unit in "$root_overlay/etc/dinit.d/root-ro" "$root_overlay/etc/dinit.d/early-root-rw.target"; do
+  [[ ! -e "$unit" ]] || fail "live-only override leaked into installed rootfs overlay: $unit"
+done
+[[ ! -e "$root_overlay/etc/dinit.d/greetd" ]] \
+  || fail 'live greetd dependency override leaked into installed rootfs overlay'
 
 grep -Fq 'build_package dinx-live-autologin' "$workflow" \
   || fail 'CI does not build the live autologin package'
@@ -59,4 +89,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true fallback_pearl_greeter=true installed_autologin=false dinit=true\n'
+printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_dependency=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true dinit=true\n'

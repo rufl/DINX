@@ -58,7 +58,7 @@ done
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
 [[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
 
-for package in greetd brightnessctl swayidle swaylock fish aqueous pearl; do
+for package in greetd brightnessctl swayidle swaylock fish aqueous pearl vulkan-swrast; do
   grep -Fq "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in labwc noctalia aqueous-core aqueous-session uwsm greetd-regreet; do
@@ -140,12 +140,27 @@ if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_install"; then
   fail 'Pearl Greeter install hook contains a systemd integration'
 fi
 
-grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
-  || fail 'Aqueous wrapper does not launch the direct DINX init child'
-grep -Fq 'LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' "$aqueous_wrapper" \
-  || fail 'Aqueous does not select the elogind/libseat backend'
-grep -Fq 'WLR_RENDERER_ALLOW_SOFTWARE=1' "$aqueous_wrapper" \
-  || fail 'Aqueous software-render fallback is missing'
+grep -Fq 'compositor=/usr/bin/aqueous' "$aqueous_wrapper" \
+  || fail 'Aqueous hardware compositor selection is missing'
+grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
+  || fail 'Aqueous CPU compositor selection is missing'
+grep -Fq '0x1af4' "$aqueous_wrapper" \
+  || fail 'Virtio GPU detection is missing'
+grep -Fq 'if [ "$has_render_node" = false ]; then' "$aqueous_wrapper" \
+  || fail 'Aqueous no-render-node detection is missing'
+grep -Fq 'export WLR_RENDERER=pixman' "$aqueous_wrapper" \
+  || fail 'Aqueous CPU branch does not select Pixman'
+grep -Fq 'export GSK_RENDERER=cairo' "$aqueous_wrapper" \
+  || fail 'GTK4 Cairo fallback is missing from the CPU branch'
+grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
+  || fail 'Aqueous wrapper does not launch the selected compositor'
+if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
+  fail 'Aqueous session still forces the failing Lavapipe compositor path'
+fi
+[[ $(grep -Fc 'export GSK_RENDERER=cairo' "$aqueous_wrapper") -eq 1 ]] \
+  || fail 'GTK4 Cairo fallback is duplicated or overrides the hardware path'
+grep -Fq 'xdg-user-dirs-update' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not initialize XDG user directories'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
   || fail 'Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell pearl' "$supervisor" || fail 'session supervisor does not own Pearl'

@@ -52,14 +52,17 @@ tools. The disks are temporary and deleted after the smoke; this is not a substi
 for hardware qualification.
 
 
-The workflow also captures the QEMU VGA surface through its monitor. To request the same evidence locally:
+The workflow's QEMU boot smoke captures the VGA surface and uses Tesseract OCR to require a Pearl/Aqueous/DINX desktop marker while rejecting Pearl Greeter, login prompts and visible Dinit failures. Local smoke runs need `qemu-system-x86_64`, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`:
 
 ```bash
+DINX_QEMU_TIMEOUT=90 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/graphical-screen.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
+
+The smoke also checks the captured session frame. Without `DINX_QEMU_SCREENSHOT`, it saves the checked PPM beside the QEMU log as `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` selects another installed Tesseract model.
 
 
 Check the graphical payload inside the root SquashFS image:
@@ -80,18 +83,22 @@ The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. 
 The build wrapper prepends `scripts/iso-tools/mksquashfs` to the builder `PATH`.
 It forces xz-compressed SquashFS images with the tool's supported xz preset,
 x86 BCJ, 256 KiB blocks and a 256 KiB dictionary. Kernel sources, pacman package
-caches and build logs are excluded from the final image; build-only `squashfs-tools`
-remains in the builder environment rather than the runtime payload. CI also installs
-the wrapper at `/usr/bin/mksquashfs` after preserving the real binary, because Artix
-`buildiso` may invoke that absolute path directly. The post-build ISO contract inspects
-both generated SquashFS superblocks and rejects any image that is not xz-compressed with
-256 KiB blocks. The P0 budget rejects a built ISO at or above GitHub's 2 GiB per-asset
-limit; Alpha 9 meets this target with one direct ISO asset at 2,008,801,280 bytes.
+caches and build logs are excluded from the final image. The root overlay recreates
+`/var/log/dinit` through tmpfiles before Dinit services start, and the ISO-content
+check requires that rule. The livefs-only `dinx-live-autologin` package supplies
+no-op `root-ro` and `early-root-rw.target` units for its writable overlay; these
+overrides are not included in the Calamares-installed rootfs. Build-only
+`squashfs-tools` stays in the builder, not the runtime payload. CI installs the
+wrapper at `/usr/bin/mksquashfs` after preserving the real binary, because Artix
+`buildiso` may invoke that absolute path. Post-build inspection checks both
+SquashFS superblocks for xz compression and 256 KiB blocks.
+The P0 budget rejects ISOs at or above GitHub's 2 GiB asset limit; Alpha 9 is
+2,008,801,280 bytes.
 
 ## Graphical profile
 
 `iso-profiles/dinx/profile.yaml` includes Aqueous, Pearl, greetd and the native `noctty` package. The Pearl package supplies the Pearl Greeter; the `noctty` package installs NOCTTY and NoctEd, including desktop files, icons, language specifications and the dark editor style. CI consumes the committed source archive generated from the exact NOCTTY repository commit and SHA-256 contract declared in `distro/packages/noctty/source.env`. The root overlay supplies `/etc/greetd/config.toml`, `/etc/pearl/greeter.json` and hidden session metadata; Aqueous + Pearl is the only user-session entry.
-The livefs adds the live-only `dinx-live-autologin` dinit package. It enables greetd's one-time `initial_session` for `dinx` with Aqueous + Pearl without changing the installed rootfs configuration; if that session exits, greetd's default Pearl Greeter host is the fallback.
+The livefs adds the live-only `dinx-live-autologin` dinit package. It enables greetd's one-time `initial_session` for `dinx` with Aqueous + Pearl and supplies no-op root-remount units for the already-writable live overlay. These overrides stay in `livefs`; Calamares installs `rootfs.img`, which retains Artix's generic root-remount units.
 
 `iso-profiles/dinx/feature-groups.json` records the foundation, desktop, gaming, hardware and optional package groups without replacing Artix's `profile.yaml`. The CI builder signs every locally built package and the temporary `dinx` repository database with an ephemeral key, checks package signatures and duplicate archive paths, and records the immutable package snapshot in `build-metadata.txt`. This is build qualification only; the production pacman repository key and installed-system update channel remain separate release prerequisites.
 

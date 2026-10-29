@@ -50,6 +50,7 @@ rootfs:
     - mesa
     - networkmanager
     - vulkan-radeon
+    - vulkan-swrast
     - gamescope
     - gamemode
     - mangohud

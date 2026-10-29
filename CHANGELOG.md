@@ -4,6 +4,17 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+
+- Added a bilingual Calamares install-choice page before partitioning. It explains whole-disk erasure, supported alongside installs, partition replacement and manual layouts; destructive choices remain unselected, and swap stays optional with no swap as the default.
+
+- Changed the local guidance smoke to render the QML page with Qt Quick on Arch-based hosts. EndeavourOS's Calamares fork omits `notesqml` and Artix-specific modules, so full installer integration remains verified by the Artix ISO build.
+
+- Fixed the live desktop's missing XDG Desktop directory warning: the Aqueous/Pearl launcher runs `xdg-user-dirs-update` before the compositor, creating the standard directories for fresh live and installed accounts.
+
+- Restored live Dinit boot after SquashFS compaction: rootfs tmpfiles recreates `/var/log/dinit`; the livefs-only `dinx-live-autologin` package overrides root remounts for the writable overlay without changing installed-system units.
+- Strengthened the QEMU ISO smoke: it captures and OCR-checks the selected live-session screen, accepts the Pearl panel's desktop/clock/layout markers when no product name is visible, and rejects the greeter, TTY, login prompts, missing XDG Desktop directory and visible Dinit failures. P0 installs Tesseract with English data for this gate.
+- Kept Mesa Lavapipe (`vulkan-swrast`) in the base ISO for Vulkan applications, but stopped forcing it for Aqueous: QEMU and no-render-node sessions use the Pixman compatibility compositor instead of the failing llvmpipe presentation path.
+
 - Strengthened deterministic ISO compaction: the SquashFS wrapper now uses the tool's supported xz preset, x86 BCJ, 256 KiB blocks and a 256 KiB dictionary, while excluding kernel sources, pacman package caches and build logs. The base runtime no longer carries build-only `squashfs-tools`; the builder keeps it in its host toolchain.
 - Hardened the Artix builder contract: the pinned image digest is asserted before package/build work, forwarded explicitly into the container, and recorded safely in build metadata.
 - Closed the absolute-path compression gap: CI preserves the real `mksquashfs` binary, installs the DINX wrapper at `/usr/bin/mksquashfs`, and the post-build ISO check verifies that both rootfs/livefs superblocks are xz-compressed with 256 KiB blocks. The wrapper also rejects self-recursion.

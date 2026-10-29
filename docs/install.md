@@ -167,9 +167,15 @@ From the live desktop:
 
 1. Open the application launcher and choose **Instalar DINX**.
 2. If the launcher entry is unavailable, run `pkexec calamares` from a terminal.
-3. Choose automatic or manual partitioning and verify the target disk, firmware mode and mount points before continuing.
-4. For advanced storage operations, open **Pori** from the Pearl launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
-5. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
+3. Read **Install choices / Opções de instalação** before choosing partitions.
+4. Choose the layout that matches your intent:
+   - **Erase disk** creates the layout automatically and erases all data on the selected disk. Choose it only if intended; verify the disk model and size.
+   - **Install alongside** keeps another system when Calamares offers the option.
+   - **Replace a partition** erases the selected partition. **Manual partitioning** is for advanced users; it requires `/` and, in UEFI, a FAT32 EFI partition mounted at `/boot/efi`.
+5. Swap is optional. The default is no swap; DINX installs and boots without a swap partition.
+6. Review the target disk, firmware mode, mount points and planned changes on the summary page before confirming.
+7. For advanced storage operations, open **Pori** from the Pearl launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
+8. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
 Calamares and GParted can erase, format or resize data. Pori mount actions do not format disks, but verify the device, filesystem and mount target before confirming any privileged action. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
 The Alpha 9 Calamares qualification also covers a Windows-style GPT layout: an existing FAT32 ESP containing `EFI/Microsoft`, an NTFS Windows partition and DINX root space created after it. The smoke preserves the Windows partition and Microsoft boot path while writing DINX fstab and GRUB data for both a side-by-side outcome and an explicit manual layout. The live ISO and installed base use the kernel `ntfs3` driver for NTFS read/write; legacy `ntfs-3g` is optional after installation for compatibility and repair tools. The profile includes `os-prober`, enables GRUB's Windows detection and uses a separate `DINX` EFI directory. An existing ESP of at least 64 MiB is accepted because DINX keeps `/boot` on the root filesystem; a new ESP is recommended at 1 GiB. If the existing ESP is smaller or full, create a new FAT32 ESP in free space through the manual layout instead of formatting the Microsoft ESP. Do not format the existing ESP or Windows/MSR/recovery partitions. Boot DINX in the same UEFI mode as Windows, fully shut Windows down, disable Fast Startup/hibernation, suspend BitLocker with its recovery key available, and leave a verified backup before attempting a resize.
@@ -232,17 +238,11 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The screen is blank
 
-The software-rendering fallback is designed for the headless QEMU path. Hardware graphics support is not yet fully qualified. Record the GPU model, firmware mode and kernel/guest behavior before filing a report.
+DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. For the Aqueous/Pearl session in QEMU and on systems without a DRM render node, the wrapper uses `aqueous-cpu`, built without Vulkan effects, with Pixman and Cairo rendering. It also detects Virtio GPUs (`0x1af4`) when they expose a render node, avoiding the llvmpipe presentation failure. This slower path omits compositor Vulkan effects such as blur and rounded corners; other systems with a render node use the full compositor and retain normal driver selection. Hardware graphics support is not yet fully qualified. Record the GPU model, firmware mode and kernel/guest behavior before filing a report.
 
 ### Graphics, drivers and media
 
-DINX ships Mesa/RADV, Vulkan diagnostics, FFmpeg and VLC for the supported
-open-source media path. If hardware acceleration or a proprietary GPU driver is
-missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix
-package plan, and reboot when it reports that a kernel or driver change requires
-it. DINX does not silently install proprietary drivers or claim unsupported
-hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting
-blank video, rendering fallback or game-launch failures.
+DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and VLC for the supported open-source media path. The Aqueous/Pearl session uses Pixman/Cairo on Virtio GPUs and systems without a DRM render node; it does not select Lavapipe to render the desktop. If hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected

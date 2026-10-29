@@ -46,6 +46,7 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 - **Phyto** as the default file manager and **File Roller** for opening, creating and extracting archives;
 - **wdisplays + Shikane** for configuring Wayland displays and reapplying the layout across sessions;
 - the kernel **ntfs3** module for NTFS read/write support in the live ISO and installed system;
+- **Mesa Lavapipe** (`vulkan-swrast`) remains available to Vulkan apps; Aqueous uses a separate Pixman build without Vulkan effects on no-render-node and Virtio GPU systems, avoiding the QEMU crash while preserving the full-effects hardware compositor;
 - a manual **DINX Gaming** launcher with Gamescope, Steam and 32-bit graphics libraries; it is hidden from the greeter session list;
 
 `dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket.

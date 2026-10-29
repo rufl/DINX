@@ -165,9 +165,15 @@ A partir do desktop live:
 
 1. Abra o launcher de aplicativos e escolha **Instalar DINX**.
 2. Se a entrada não estiver disponível, execute `pkexec calamares` em um terminal.
-3. Escolha o particionamento automático ou manual e confira o disco-alvo, o modo de firmware e os pontos de montagem antes de continuar.
-4. Para operações avançadas de armazenamento, abra o **Pori** pelo launcher do Pearl. Ele descobre dispositivos de bloco pelo UDisks2 e persiste as montagens escolhidas pelo usuário como serviços dinit em `/etc/dinit.d`; use o **GParted** para editar partições fora do Calamares, o **File Roller** para trabalhar com arquivos compactados, o `dinx-wdisplays` para configurar saídas interativamente e persistir automaticamente o perfil Shikane.
-5. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
+3. Leia **Opções de instalação / Install choices** antes de escolher as partições.
+4. Escolha o layout adequado à sua intenção:
+   - **Apagar disco** cria o layout automaticamente e apaga todos os dados do disco selecionado. Escolha somente se essa for sua intenção; confira o modelo e o tamanho do disco.
+   - **Instalar ao lado** mantém outro sistema quando o Calamares oferece essa opção.
+   - **Substituir uma partição** apaga a partição selecionada. **Particionamento manual** é para usuários avançados; exige `/` e, em UEFI, uma partição EFI FAT32 montada em `/boot/efi`.
+5. Swap é opcional. O padrão é sem swap; a DINX instala e inicia sem uma partição de swap.
+6. Confira o disco-alvo, o modo do firmware, os pontos de montagem e as alterações previstas na página de resumo antes de confirmar.
+7. Para operações avançadas de armazenamento, abra o **Pori** pelo launcher do Pearl. Ele descobre dispositivos de bloco pelo UDisks2 e persiste as montagens escolhidas pelo usuário como serviços dinit em `/etc/dinit.d`; use o **GParted** para editar partições fora do Calamares, o **File Roller** para trabalhar com arquivos compactados, o `dinx-wdisplays` para configurar saídas interativamente e persistir automaticamente o perfil Shikane.
+8. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O Calamares e o GParted podem apagar, formatar ou redimensionar dados. As ações de montagem do Pori não formatam discos, mas confira o dispositivo, o filesystem e o destino de montagem antes de confirmar qualquer ação privilegiada. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
 A qualificação do Calamares da Alpha 9 também cobre um layout GPT típico de Windows: uma ESP FAT32 existente contendo `EFI/Microsoft`, uma partição Windows NTFS e espaço para a raiz DINX criado depois dela. O smoke preserva a partição Windows e o caminho de boot da Microsoft enquanto grava fstab e dados GRUB da DINX tanto no resultado side-by-side quanto em um layout manual explícito. A ISO live e a instalação base usam o driver de kernel `ntfs3` para leitura e escrita NTFS; o `ntfs-3g` legado é opcional após a instalação para compatibilidade e ferramentas de reparo. O perfil inclui `os-prober`, habilita a detecção do Windows pelo GRUB e usa um diretório EFI separado para `DINX`. Uma ESP existente de pelo menos 64 MiB é aceita porque a DINX mantém `/boot` no root filesystem; uma ESP nova é recomendada com 1 GiB. Se a ESP existente for menor ou estiver cheia, crie uma nova ESP FAT32 no espaço livre pelo layout manual em vez de formatar a ESP da Microsoft. Não formate a ESP existente nem as partições Windows/MSR/Recovery. Inicialize a DINX no mesmo modo UEFI do Windows, desligue o Windows completamente, desabilite Fast Startup/hibernação, suspenda o BitLocker mantendo a chave de recuperação disponível e faça backup verificado antes de tentar redimensionar.
@@ -230,18 +236,11 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A tela fica vazia
 
-O fallback de renderização por software foi projetado para o caminho QEMU headless. O suporte gráfico em hardware ainda não está totalmente qualificado. Registre o modelo da GPU, o modo do firmware e o comportamento do kernel/guest antes de abrir um relatório.
+DINX inclui Mesa Lavapipe (`vulkan-swrast`) para aplicativos Vulkan. Para a sessão Aqueous/Pearl em QEMU e sistemas sem render node DRM, o wrapper usa `aqueous-cpu`, compilado sem efeitos Vulkan, com renderização Pixman e Cairo. A detecção também cobre GPUs Virtio (`0x1af4`) mesmo quando elas expõem um render node, evitando a falha de apresentação observada com llvmpipe. Esse caminho é mais lento e não oferece efeitos Vulkan do compositor, como blur e cantos arredondados; em outros sistemas com render node, a sessão usa o compositor completo e mantém a seleção normal de driver. O suporte gráfico em hardware ainda não está totalmente qualificado. Registre o modelo da GPU, o modo do firmware e o comportamento do kernel/guest antes de abrir um relatório.
 
 ### Gráficos, drivers e mídia
 
-A DINX fornece Mesa/RADV, diagnóstico Vulkan, FFmpeg e VLC para o caminho de
-mídia open source suportado. Se a aceleração de hardware ou um driver
-proprietário de GPU faltar, abra **DINXPanel → GPU drivers**, execute a detecção,
-revise o plano fixo de pacotes Artix e reinicie quando for informada uma mudança
-de kernel ou driver. A DINX não instala drivers proprietários silenciosamente
-nem afirma que hardware não suportado está funcionando. Anexe a saída de
-`dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou
-falha ao iniciar um jogo.
+A DINX fornece Mesa/RADV para hardware, Lavapipe para aplicativos Vulkan por CPU, diagnóstico Vulkan, FFmpeg e VLC para o caminho de mídia open source suportado. A sessão Aqueous/Pearl usa Pixman/Cairo em GPUs Virtio e sistemas sem render node DRM, e não seleciona Lavapipe para compor a área de trabalho. Se a aceleração de hardware ou um driver proprietário de GPU faltar, abra **DINXPanel → GPU drivers**, execute a detecção, revise o plano fixo de pacotes Artix e reinicie quando for informada uma mudança de kernel ou driver. A DINX não instala drivers proprietários silenciosamente nem afirma que hardware não suportado está funcionando. Anexe a saída de `dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou falha ao iniciar um jogo.
 
 A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,

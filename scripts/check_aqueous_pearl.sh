@@ -50,6 +50,7 @@ fi
 
 for required in \
   '  usr/bin/aqueous' \
+  '  usr/bin/aqueous-cpu' \
   '  usr/bin/aqueousctl' \
   '  usr/bin/aqueous-config' \
   '  usr/bin/pearl' \
@@ -71,6 +72,10 @@ grep -Fq '$AQUEOUS_SOURCE_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous sourc
 grep -Fq '$AQUEOUS_WLROOTS_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous wlroots checksum is not wired to source.env'
 grep -Fq 'settingsApplication/build.zig' "$aqueous_dir/PKGBUILD" || fail 'Aqueous config helper is not built'
 grep -Fq 'aqueous-config' "$aqueous_dir/PKGBUILD" || fail 'Aqueous config helper is not packaged'
+grep -Fq -- '-Dvulkan-effects=false' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous CPU compatibility compositor does not disable Vulkan effects'
+grep -Fq 'aqueous-cpu-dist/bin/aqueous' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous CPU compatibility compositor is not built'
 if grep -Fq "'systemd-libs'" "$aqueous_dir/PKGBUILD"; then
   fail 'Aqueous must not depend on systemd-libs'
 fi
@@ -125,9 +130,19 @@ fi
 grep -Fq 'scripts/check_aqueous_pearl.sh' "$workflow" || fail 'workflow does not run the Aqueous/Pearl contract'
 grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not run the session contract'
 
-grep -Fq 'exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init' \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" \
-  || fail 'direct Aqueous wrapper command is missing'
+aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
+grep -Fq 'compositor=/usr/bin/aqueous' "$aqueous_wrapper" \
+  || fail 'hardware Aqueous compositor selection is missing'
+grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
+  || fail 'CPU Aqueous compositor selection is missing'
+grep -Fq '0x1af4' "$aqueous_wrapper" \
+  || fail 'Virtio GPU detection is missing'
+grep -Fq 'export WLR_RENDERER=pixman' "$aqueous_wrapper" \
+  || fail 'Aqueous CPU renderer is not set to Pixman'
+grep -Fq 'export GSK_RENDERER=cairo' "$aqueous_wrapper" \
+  || fail 'GTK4 Cairo renderer is missing from the CPU branch'
+grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
+  || fail 'Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init" \
   || fail 'Aqueous init does not delegate to the supervised dinit session'
@@ -138,5 +153,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true pixman_qemu=true systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

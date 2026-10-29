@@ -4,6 +4,8 @@ set -euo pipefail
 repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 calamares_root="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares"
 partition_conf="$calamares_root/modules/partition.conf"
+notes_conf="$calamares_root/modules/notesqml.conf"
+notes_qml="$calamares_root/branding/dinx/notesqml.qml"
 mount_conf="$calamares_root/modules/mount.conf"
 bootloader_conf="$calamares_root/modules/bootloader.conf"
 grub_windows_conf="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/grub.d/40-dinx-windows.cfg"
@@ -34,7 +36,7 @@ require_text() {
   grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
 }
 
-for path in "$partition_conf" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset"; do
+for path in "$partition_conf" "$notes_conf" "$notes_qml" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset"; do
   require_file "$path"
 done
 
@@ -42,6 +44,8 @@ require_text 'recommendedSize: 1GiB' "$partition_conf"
 require_text 'minimumSize: 64MiB' "$partition_conf"
 require_text 'allowManualPartitioning: true' "$partition_conf"
 require_text 'initialPartitioningChoice: none' "$partition_conf"
+require_text '    - none' "$partition_conf"
+require_text 'initialSwapChoice: none' "$partition_conf"
 require_text 'availableFileSystemTypes: ["ext4", "btrfs"]' "$partition_conf"
 require_text 'directory: "/"' "$partition_conf"
 require_text 'allowedFilesystemTypes: ["ext4", "btrfs"]' "$partition_conf"
@@ -88,6 +92,10 @@ mapfile -t partition_lines < <(grep -nE '^[[:space:]]+- partition$' "$settings_c
 [[ "${#partition_lines[@]}" -eq 2 ]] || fail 'partition module must be shown and executed exactly once'
 partition_show_line=${partition_lines[0]%%:*}
 partition_exec_line=${partition_lines[1]%%:*}
+mapfile -t guidance_lines < <(grep -nE '^[[:space:]]+- notesqml$' "$settings_conf")
+[[ "${#guidance_lines[@]}" -eq 1 ]] || fail 'install guidance page must be shown exactly once'
+guidance_line=${guidance_lines[0]%%:*}
+[[ "$guidance_line" -lt "$partition_show_line" ]] || fail 'install guidance must appear before partition choices'
 mount_line=$(grep -nE '^[[:space:]]+- mount$' "$settings_conf" | cut -d: -f1)
 unpackfs_line=$(grep -nE '^[[:space:]]+- unpackfs$' "$settings_conf" | cut -d: -f1)
 fstab_line=$(grep -nE '^[[:space:]]+- fstab$' "$settings_conf" | cut -d: -f1)
@@ -108,4 +116,4 @@ if grep -R -nF 'update-mirrorlist' "$calamares_root" >/dev/null; then
 fi
 require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
 
-printf 'calamares_partition_contract=layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true ntfs3_base_rw=true ntfs3_legacy_optional=true startup_smoke=true\n'
+printf 'calamares_partition_contract=guided_choices=true no_swap_default=true safe_partition_default=true layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true ntfs3_base_rw=true ntfs3_legacy_optional=true startup_smoke=true\n'

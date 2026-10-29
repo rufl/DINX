@@ -88,10 +88,16 @@ build() {
     "${ZIG:-zig}" build -Dcpu="$zig_cpu" -Doptimize=ReleaseSafe \
     -Dxwayland -Dllvm -Dman-pages=true -Dversion-string="$pkgver" \
     --prefix "$srcdir/aqueous-dist" install
+  PKG_CONFIG_PATH="$PWD/.deps/wlroots-render-hook/lib/pkgconfig" \
+    "${ZIG:-zig}" build -Dcpu="$zig_cpu" -Doptimize=ReleaseSafe \
+    -Dxwayland -Dllvm -Dvulkan-effects=false -Dman-pages=false -Dversion-string="$pkgver" \
+    --prefix "$srcdir/aqueous-cpu-dist" install
+
 }
 
 check() {
   "$srcdir/aqueous-dist/bin/aqueous" -version
+  "$srcdir/aqueous-cpu-dist/bin/aqueous" -version
   test -x "$srcdir/aqueous-dist/bin/aqueousctl"
   test -x "$srcdir/aqueous-config-dist/bin/aqueous-config"
   cmp "$srcdir/aqueous-dist/lib/aqueous/libwlroots-0.20.so" \
@@ -104,6 +110,7 @@ package() {
   local compositor="$srcdir/aqueous-dist"
 
   install -Dm755 "$compositor/bin/aqueous" "$pkgdir/usr/bin/aqueous"
+  install -Dm755 "$srcdir/aqueous-cpu-dist/bin/aqueous" "$pkgdir/usr/bin/aqueous-cpu"
   install -Dm755 "$compositor/bin/aqueousctl" "$pkgdir/usr/bin/aqueousctl"
   if [[ -x "$compositor/bin/aqueous-activity-launch" ]]; then
     install -Dm755 "$compositor/bin/aqueous-activity-launch" \

@@ -4,6 +4,17 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+
+- Adicionada uma página bilíngue de opções do Calamares antes do particionamento. Ela explica apagar o disco inteiro, instalação ao lado quando disponível, substituição de partição e layout manual; opções destrutivas continuam sem seleção prévia e swap permanece opcional, sem swap por padrão.
+
+- Adaptado o smoke local para renderizar a página QML com Qt Quick em hosts baseados em Arch. O fork do Calamares do EndeavourOS omite `notesqml` e módulos específicos do Artix; a integração completa do instalador continua sendo verificada no build da ISO Artix.
+
+- Corrigido o aviso de diretório XDG ausente no desktop live: o launcher Aqueous/Pearl executa `xdg-user-dirs-update` antes do compositor, criando os diretórios padrão para contas novas da live e do sistema instalado.
+
+- Restaurado o boot Dinit live após a compactação SquashFS: tmpfiles no rootfs recria `/var/log/dinit`; o pacote `dinx-live-autologin`, exclusivo do livefs, substitui remontagens da raiz para o overlay gravável sem alterar as unidades do sistema instalado.
+- Fortalecido o smoke QEMU da ISO: captura e analisa por OCR a tela selecionada da sessão live, aceita os marcadores de desktop/relógio/layout do painel Pearl quando o nome do produto não aparece e rejeita greeter, TTY, prompts de login, diretório XDG ausente e falhas visíveis do Dinit. O P0 instala o Tesseract com dados em inglês para esse gate.
+- Mesa Lavapipe (`vulkan-swrast`) continua na ISO base para aplicativos Vulkan, mas deixou de ser forçada pelo Aqueous: QEMU e sistemas sem render node usam o compositor Pixman de compatibilidade, não o caminho de apresentação llvmpipe que falhou.
+
 - Reforçada a compactação determinística da ISO: o wrapper SquashFS agora usa o preset xz suportado pela ferramenta, BCJ x86, blocos de 256 KiB e dicionário de 256 KiB, excluindo fontes do kernel, caches de pacotes pacman e logs de build. O runtime base não carrega mais o `squashfs-tools` exclusivo do build; o builder mantém a ferramenta em seu toolchain.
 - Endurecido o contrato do builder Artix: o digest fixado da imagem é validado antes do trabalho de pacotes/build, encaminhado explicitamente ao container e registrado com segurança nos metadados.
 - Fechado o gap de invocação absoluta da compactação: o CI preserva o binário real de `mksquashfs`, instala o wrapper DINX em `/usr/bin/mksquashfs` e o check pós-build verifica que os superblocos de rootfs/livefs usam xz com blocos de 256 KiB. O wrapper também rejeita recursão para si próprio.

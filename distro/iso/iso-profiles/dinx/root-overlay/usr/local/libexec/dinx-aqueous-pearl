@@ -17,6 +17,10 @@ export DINX_DISPLAY_AUTHORITY=shikane
 export DINX_SESSION_COMPOSITOR_PID=$$
 unset DISPLAY
 
+xdg-user-dirs-update
+
+compositor=/usr/bin/aqueous
+use_cpu_renderer=false
 has_render_node=false
 for render_node in /dev/dri/renderD*; do
   if [ -e "$render_node" ]; then
@@ -25,7 +29,24 @@ for render_node in /dev/dri/renderD*; do
   fi
 done
 if [ "$has_render_node" = false ]; then
-  export WLR_RENDERER_ALLOW_SOFTWARE=1
+  use_cpu_renderer=true
+fi
+for drm_card in /sys/class/drm/card[0-9]*; do
+  case "${drm_card##*/}" in
+    card[0-9]|card[0-9][0-9]*) ;;
+    *) continue ;;
+  esac
+  drm_vendor=
+  if IFS= read -r drm_vendor < "$drm_card/device/vendor" 2>/dev/null \
+    && [ "$drm_vendor" = "0x1af4" ]; then
+    use_cpu_renderer=true
+    break
+  fi
+done
+if [ "$use_cpu_renderer" = true ]; then
+  compositor=/usr/bin/aqueous-cpu
+  export WLR_RENDERER=pixman
+  export GSK_RENDERER=cairo
 fi
 
 if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
@@ -46,4 +67,4 @@ if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xd
   install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
 fi
 
-exec /usr/bin/aqueous -c /usr/local/libexec/dinx-aqueous-init
+exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init

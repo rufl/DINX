@@ -1,0 +1,4 @@
+# The live overlay is already writable; do not remount it during early boot.
+type = scripted
+command = /bin/true
+restart = false

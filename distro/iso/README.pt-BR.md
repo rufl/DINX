@@ -52,14 +52,17 @@ OVMF, QEMU e ferramentas SquashFS. Os discos são apagados ao fim do smoke; isso
 substitui a qualificação em hardware.
 
 
-A execução remota também captura a superfície VGA do QEMU pelo monitor. Para solicitar a mesma evidência localmente:
+A smoke de boot no QEMU captura a superfície VGA e usa OCR do Tesseract para exigir um marcador da área de trabalho Pearl/Aqueous/DINX, rejeitando Pearl Greeter, prompts de login e falhas visíveis do Dinit. Smokes locais exigem `qemu-system-x86_64`, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`:
 
 ```bash
+DINX_QEMU_TIMEOUT=90 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/tela-grafica.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
 scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
+
+O smoke também verifica o quadro capturado da sessão. Sem `DINX_QEMU_SCREENSHOT`, salva o PPM verificado ao lado do log QEMU como `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` seleciona outro modelo de idioma Tesseract instalado.
 
 
 Verifique o payload gráfico dentro da imagem SquashFS do root:
@@ -78,20 +81,24 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 ## Meta de tamanho da ISO
 
 O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
-do builder. Ele força imagens SquashFS com o preset xz suportado pela ferramenta, BCJ x86,
-blocos de 256 KiB e dicionário de 256 KiB. Fontes do kernel, caches de pacotes pacman e logs de
-build ficam fora da imagem final; o `squashfs-tools` exclusivo do build permanece no ambiente
-do builder, não no payload de runtime. O CI também instala o wrapper em `/usr/bin/mksquashfs`
-depois de preservar o binário real, porque o `buildiso` do Artix pode invocar esse caminho
-absoluto diretamente. O contrato pós-build da ISO inspeciona os superblocos das duas imagens
-SquashFS e rejeita qualquer imagem que não use xz com blocos de 256 KiB. O orçamento P0 rejeita
-uma ISO construída com tamanho igual ou maior que o limite de 2 GiB por asset do GitHub; a Alpha
-9 atende a essa meta com uma ISO direta de 2.008.801.280 bytes.
+do builder. Ele força imagens SquashFS com preset xz suportado pela ferramenta,
+BCJ x86, blocos de 256 KiB e dicionário de 256 KiB. Fontes do kernel, caches de
+pacotes pacman e logs de build ficam fora da imagem final. O root overlay recria
+`/var/log/dinit` por tmpfiles antes de os serviços Dinit iniciarem, e o check de
+conteúdo da ISO exige essa regra. O pacote `dinx-live-autologin`, exclusivo do
+livefs, fornece unidades no-op `root-ro` e `early-root-rw.target` para seu overlay
+gravável; essas substituições não entram no rootfs instalado pelo Calamares. O
+`squashfs-tools` exclusivo do build permanece no builder, não no payload de runtime.
+O CI instala o wrapper em `/usr/bin/mksquashfs` após preservar o binário real,
+pois o `buildiso` do Artix pode invocar esse caminho absoluto. A inspeção
+pós-build verifica xz e blocos de 256 KiB nos dois superblocos SquashFS.
+O orçamento P0 rejeita ISOs no limite ou acima de 2 GiB por asset do GitHub; a
+Alpha 9 tem 2.008.801.280 bytes.
 
 ## Perfil gráfico
 
 `iso-profiles/dinx/profile.yaml` inclui Aqueous, Pearl, greetd e o pacote nativo `noctty`. O pacote Pearl fornece o Pearl Greeter; o pacote `noctty` instala NOCTTY e NoctEd, incluindo arquivos desktop, ícones, especificações de linguagem e o estilo escuro do editor. O CI consome o archive versionado gerado a partir do commit exato do repositório NOCTTY e do contrato SHA-256 em `distro/packages/noctty/source.env`. O root overlay fornece `/etc/greetd/config.toml`, `/etc/pearl/greeter.json` e metadados de sessão oculta; Aqueous + Pearl é a única entrada de sessão do usuário.
-O livefs adiciona o pacote dinit `dinx-live-autologin`, exclusivo da sessão live. Ele habilita o `initial_session` de uma execução do greetd para `dinx` com Aqueous + Pearl sem alterar a configuração do rootfs instalado; se essa sessão terminar, o host padrão do Pearl Greeter no greetd é o fallback.
+O livefs adiciona o pacote dinit `dinx-live-autologin`, exclusivo da sessão live. Ele habilita o `initial_session` único do greetd para `dinx` com Aqueous + Pearl e fornece unidades no-op de remontagem da raiz, pois o overlay live já é gravável. Essas substituições ficam no `livefs`; o Calamares instala `rootfs.img`, que mantém as unidades genéricas de remontagem do Artix.
 
 `iso-profiles/dinx/feature-groups.json` registra os grupos foundation, desktop, gaming, hardware e opcional sem substituir o `profile.yaml` do Artix. O builder do CI assina cada pacote customizado e o banco temporário do repositório `dinx` com uma chave efêmera, verifica assinaturas e caminhos duplicados dos archives e registra o snapshot imutável dos pacotes em `build-metadata.txt`. Isso é qualificação do build; a chave do repositório pacman de produção e o canal de atualização do sistema instalado continuam sendo pré-requisitos separados do release.
 

@@ -5,15 +5,15 @@
 <h1 align="center">DINX</h1>
 
 <p align="center">
-  <strongSpin Lean and Mean - focada em ser estoica, leve e sem frescura, o mínimo para você fazer o máximo. ;)
+  <strong>Spin Lean and Mean - focada em ser estoica, leve e sem frescura, o mínimo para você fazer o máximo. ;)
 Arch-Based, Artix Based, Kernels Recentes, Drivers e Tooling para Gaming e Dev, Dinit como supervisor de serviços, Seafoam Apps.
 
 Paineis gráficos diretos ao assunto. 
-Tweakable e extendable via CLI sim, sem Purismo desnecessário.
+Tweakable e extendable via CLI sim, sem purismo desnecessário.
 
 Rápida, Leve e Focada em Produzir
 Sem Gnome, Sem KDE, Sem Systemd.
-Ecossistema de tools com foco em aumentar seu roster de Zig-Heavy com menos serviços e clutter possíveis.
+Ecossistema de tools com foco em aumentar seu roster de Zig-Heavy com menos serviços e clutter possíveis.</strong>
 </p>
 
 <p align="center">

@@ -2,6 +2,10 @@
 
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
+## Unreleased
+
+- Added a rolling direct-download alias and matching SHA-512 checksum for the latest alpha ISO. The tagged release workflow refreshes it, and both GitHub landing pages link to it.
+
 ## v0.1.0-alpha.10 — 2026-10-29
 
 - Published [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) from commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` via [release workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746). The direct ISO is 1,862,772,736 bytes with SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; signed package repository snapshot `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.

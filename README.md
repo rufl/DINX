@@ -17,7 +17,8 @@ Roster com foco em Zig-Heavy apps/tools, menos serviços, dependencias e clutter
 </p>
 
 <p align="center">
-  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso"><img alt="Baixar ISO alpha mais recente" src="https://img.shields.io/badge/baixar-ISO%20alpha%20mais%20recente-ef3340?logo=linux&amp;logoColor=white"></a>
+  <a href="https://github.com/rufl/DINX/releases/tag/alpha-latest"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="Status da validação P0" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
   <img alt="Próximo marco: Beta 0.1 do sistema (planejado)" src="https://img.shields.io/badge/pr%C3%B3ximo%20marco-Beta%200.1%20do%20sistema-f59e0b">
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
@@ -29,7 +30,7 @@ Roster com foco em Zig-Heavy apps/tools, menos serviços, dependencias e clutter
 
 | Você quer… | Vá para |
 |---|---|
-| Baixar a imagem publicada | [DINX v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) |
+| Baixar a ISO alpha mais recente | [ISO direta](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Outras releases](https://github.com/rufl/DINX/releases) |
 | Verificar e instalar a ISO | [Guia de instalação](docs/pt-BR/install.md) |
 | Ver o que o CI realmente provou | [Status do build P0](docs/pt-BR/p0-build.md) |
 | Entender compatibilidade e limites | [Compatibilidade](docs/pt-BR/compatibility.md) · [Roadmap](docs/pt-BR/roadmap.md) |
@@ -81,11 +82,11 @@ A meta de tamanho para a próxima ISO é **até 1.800.000.000 bytes**; a Alpha 1
 
 ## Instalação rápida
 
-1. Baixe a ISO e o arquivo `.iso.sha512` da [release Alpha 10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10).
+1. Baixe a [ISO alpha mais recente](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) e seu [arquivo SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
 2. No mesmo diretório, verifique o arquivo:
 
    ```bash
-   sha512sum -c dinx-0.1.0-alpha.10-x86_64.iso.sha512
+   sha512sum -c dinx-latest-x86_64.iso.sha512
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.

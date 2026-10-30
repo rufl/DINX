@@ -7,6 +7,8 @@ The release workflow is triggered by a `v*` tag and reuses the P0 Artix build, p
 check, SHA-512 generation and QEMU smoke path before publishing assets.
 Build metadata is bound to the exact ISO artifact in both the P0 and tagged release paths: CI recomputes the ISO byte count and SHA-512 and rejects metadata that does not match the downloaded file.
 
+The release workflow maintains a rolling `alpha-latest` prerelease with `dinx-latest-x86_64.iso` and its SHA-512 checksum. Tagged releases refresh it; use `workflow_dispatch` with `release_tag` only to seed or resync it. GitHub's 2 GiB per-asset limit means the alias is available only when the latest alpha is a single ISO asset; use the versioned release page when an ISO is split.
+
 
 The P0 build verifies the committed NOCTTY/NoctEd source archive against the exact
 repository commit and SHA-256 contract in `distro/packages/noctty/source.env`, builds
@@ -39,6 +41,7 @@ Each alpha release contains:
 
 - `dinx-<version>-x86_64.iso` when it fits GitHub's per-asset limit; older releases that exceed it use ordered `.iso.part-*` files plus `.iso.parts.json`;
 - the matching `.iso.sha512` file;
+- a rolling direct-download alias, `dinx-latest-x86_64.iso`, and its matching `.sha512` checksum under the `alpha-latest` prerelease; the workflow refreshes it from the newest published alpha with a single ISO asset below GitHub's 2 GiB per-asset limit, which requires a second copy of the ISO;
 - Linux QEMU boot-menu, graphical and post-session PPM captures plus the serial log;
 - `dinx-<version>-dogfood.1-windows-x86_64.zip` — a small Windows launcher package;
 - the Windows package metadata, ZTASH deployment manifest and `SHA256SUMS`;

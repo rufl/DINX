@@ -13,7 +13,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10"><img alt="Latest alpha release" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso"><img alt="Download latest alpha ISO" src="https://img.shields.io/badge/download-latest%20alpha%20ISO-ef3340?logo=linux&amp;logoColor=white"></a>
+  <a href="https://github.com/rufl/DINX/releases/tag/alpha-latest"><img alt="Latest alpha release" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="P0 validation status" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
   <img alt="Next milestone: planned system Beta 0.1" src="https://img.shields.io/badge/next%20milestone-System%20Beta%200.1-f59e0b">
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
@@ -25,7 +26,7 @@
 
 | If you want to… | Go to |
 |---|---|
-| Download the published image | [DINX v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) |
+| Download the latest alpha ISO | [Direct ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Other releases](https://github.com/rufl/DINX/releases) |
 | Verify and install the ISO | [Installation guide](docs/install.md) |
 | See what CI actually proved | [P0 build status](docs/p0-build.md) |
 | Understand compatibility and limits | [Compatibility](docs/compatibility.md) · [Roadmap](docs/roadmap.md) |
@@ -80,11 +81,11 @@ The Alpha 10 ISO is a direct GitHub release asset below the 2 GiB per-asset limi
 
 ## Quick install
 
-1. Download the ISO and `.iso.sha512` file from the [Alpha 10 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10).
+1. Download the [latest alpha ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) and its [SHA-512 file](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
 2. In the same directory, verify the file:
 
    ```bash
-   sha512sum -c dinx-0.1.0-alpha.10-x86_64.iso.sha512
+   sha512sum -c dinx-latest-x86_64.iso.sha512
    ```
 
 3. Write the verified ISO to the whole USB device — not a partition — and boot in UEFI mode.

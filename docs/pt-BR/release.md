@@ -7,6 +7,8 @@ instalação persistente suportados. O workflow de release é acionado por uma t
 e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e o
 smoke test no QEMU antes de publicar os artefatos.
 
+O workflow mantém o pré-release móvel `alpha-latest` com `dinx-latest-x86_64.iso` e seu checksum SHA-512. Releases por tag o atualizam; use `workflow_dispatch` com `release_tag` somente para inicializar ou resincronizar o alias. O limite de 2 GiB por asset do GitHub permite o alias apenas quando a alpha mais recente tem uma ISO única; use a página da release versionada quando a imagem estiver dividida.
+
 A metadata do build fica vinculada ao artefato exato da ISO nos caminhos P0 e de
 release com tag: o CI recalcula o tamanho em bytes e o SHA-512 da ISO e rejeita
 metadados que não correspondam ao arquivo baixado.
@@ -42,6 +44,7 @@ Cada release alpha contém:
 
 - `dinx-<versão>-x86_64.iso` quando ela couber no limite por arquivo do GitHub; releases antigos que excedam o limite usam arquivos ordenados `.iso.part-*` mais `.iso.parts.json`;
 - o arquivo `.iso.sha512` correspondente;
+- um alias de download direto, `dinx-latest-x86_64.iso`, e seu checksum `.sha512` no pré-release `alpha-latest`; o workflow o atualiza a partir do alpha publicado mais recente com ISO única abaixo do limite de 2 GiB por asset do GitHub, o que mantém uma segunda cópia da imagem;
 - capturas PPM do menu de boot, gráficas e da sessão posterior do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;
 - metadados do pacote Windows, manifesto de deploy ZTASH e `SHA256SUMS`;

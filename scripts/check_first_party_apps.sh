@@ -43,6 +43,20 @@ tar -tzf "$archive" | grep -F 'noctty-'"$version"'/build.zig' >/dev/null ||
   fail 'source archive does not contain build.zig'
 tar -tzf "$archive" | grep -F 'noctty-'"$version"'/src/main.zig' >/dev/null ||
   fail 'source archive does not contain src/main.zig'
+for qualification_script in \
+  nocted_core_stability_qualification.sh \
+  nocted_core_endurance_qualification.sh \
+  nocted_project_index_qualification.sh \
+  nocted_worker_qualification.sh \
+  nocted_state_recovery_qualification.sh \
+  nocted_task_smoke.sh \
+  nocted_lsp_smoke.sh \
+  nocted_native_smoke.sh \
+  require_isolated_display.sh; do
+  tar -tzf "$archive" |
+    grep -Fx "noctty-$version/scripts/$qualification_script" >/dev/null ||
+    fail "source archive is missing qualification script: $qualification_script"
+done
 
 grep -Fqx 'pkgname=deetty' "$pkgbuild" || fail 'PKGBUILD package name is not deetty'
 grep -Fq "provides=('dintor' 'terminal-emulator')" "$pkgbuild" || fail 'PKGBUILD does not provide Dintor'

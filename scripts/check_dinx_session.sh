@@ -8,6 +8,7 @@ pearl_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.
 pearl_pkg="$root/distro/packages/pearl/PKGBUILD"
 pearl_install="$root/distro/packages/pearl/pearl.install"
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
+aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
 aqueous_init="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init"
 supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
 aqueous_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-aqueous-pearl.desktop"
@@ -33,7 +34,7 @@ fail() {
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
   "$aqueous_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
-  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
+  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" "$aqueous_layout" \
   "$useradd_defaults" "$users_conf"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
@@ -161,6 +162,14 @@ fi
   || fail 'GTK4 Cairo fallback is duplicated or overrides the hardware path'
 grep -Fq 'xdg-user-dirs-update' "$aqueous_wrapper" \
   || fail 'Aqueous session does not initialize XDG user directories'
+grep -Fq 'export GTK_THEME="DINX:dark"' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not force the DINX dark GTK theme'
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not force the Qt6ct platform theme'
+grep -Fq 'default = "stacking"' "$aqueous_layout" \
+  || fail 'Aqueous live and installed sessions do not default to floating windows'
+grep -Fq 'aqueous/layout.toml' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not seed the DINX floating layout'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
   || fail 'Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell pearl' "$supervisor" || fail 'session supervisor does not own Pearl'
@@ -190,4 +199,4 @@ if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true theme_env=gtk+qt=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

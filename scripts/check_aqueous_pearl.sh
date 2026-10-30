@@ -89,6 +89,8 @@ grep -Fq '@@ -718,1 +718,0 @@' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous keyboard test still links systemd'
 grep -Fq 'compositor/aqueous/activity_bootstrap.c' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous activity bootstrap is not patched for dinit'
+grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' "$aqueous_dir/dinit.patch" \
+  || fail 'Aqueous floating layout cannot be restored from the keyboard'
 if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$aqueous_dir/PKGBUILD" \
   || grep -Eiq '(^|[[:space:]])(systemctl|uwsm)([[:space:]]|$)' "$aqueous_dir/PKGBUILD"; then
   fail 'Aqueous recipe contains a systemd init, systemctl or uwsm dependency/command'

@@ -10,6 +10,10 @@ export SDL_VIDEODRIVER='wayland,x11'
 export CLUTTER_BACKEND=wayland
 export MOZ_ENABLE_WAYLAND=1
 export _JAVA_AWT_WM_NONREPARENTING=1
+export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"
+export NOCTED_THEME="${NOCTED_THEME:-prefer-dark}"
+export GTK_THEME="DINX:dark"
+export QT_QPA_PLATFORMTHEME=qt6ct
 export AQUEOUS_MOD="${AQUEOUS_MOD:-Super}"
 export AQUEOUS_NESTED=0
 export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"
@@ -65,6 +69,22 @@ chmod 0700 "$XDG_RUNTIME_DIR"
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then
   install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
+fi
+if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/layout.toml" ] && [ -r /etc/xdg/aqueous/layout.toml ]; then
+  install -Dm644 /etc/xdg/aqueous/layout.toml "$config_home/aqueous/layout.toml"
+fi
+if [ -n "${HOME:-}" ] && [ ! -e "$config_home/qt6ct/qt6ct.conf" ] && [ -r /etc/skel/.config/qt6ct/qt6ct.conf ]; then
+  install -Dm644 /etc/skel/.config/qt6ct/qt6ct.conf "$config_home/qt6ct/qt6ct.conf"
+fi
+if [ -n "${HOME:-}" ] && [ ! -e "$config_home/qt6ct/colors/DINX.conf" ] && [ -r /etc/skel/.config/qt6ct/colors/DINX.conf ]; then
+  install -Dm644 /etc/skel/.config/qt6ct/colors/DINX.conf "$config_home/qt6ct/colors/DINX.conf"
+fi
+
+if [ -n "${HOME:-}" ] \
+  && [ ! -e "$config_home/pearl/preferences.json" ] \
+  && [ ! -e "$config_home/pearl/last-good.json" ] \
+  && [ -r /etc/skel/.config/pearl/preferences.json ]; then
+  install -Dm600 /etc/skel/.config/pearl/preferences.json "$config_home/pearl/preferences.json"
 fi
 
 exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init

@@ -104,10 +104,29 @@ The livefs adds the live-only `dinx-live-autologin` dinit package. It enables gr
 
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and Noto Sans 10 are installed for the corresponding consumers, matching CachyOS's default GTK typography; Noto Sans Mono is used for fixed-width fields. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 
+The DINX Linux wordmark and matching D-ray mark are used in the Pearl Greeter, GRUB, Calamares and the initial desktop wallpaper. App and desktop-launcher icons remain their existing upstream/Adwaita choices; the DINX mark is not applied to desktop icons.
+The ASCII D-ray at `/usr/share/dinx/branding/dinx-ray-mark.txt` is density-mapped from DINX's source SVG and works as a plain-text logo:
+```sh
+fastfetch --logo-type file --logo /usr/share/dinx/branding/dinx-ray-mark.txt
+```
+Areofyl's [`fetch`](https://github.com/areofyl/fetch) also accepts it as a custom logo:
+```sh
+mkdir -p ~/.config/fetch
+cp /usr/share/dinx/branding/dinx-ray-mark.txt ~/.config/fetch/logo.txt
+```
+Add these lines to `~/.config/fetch/config` for DINX coral:
+```ini
+logo_outer=38;2;244;81;91
+logo_inner=38;2;244;81;91
+```
+Fastfetch and Areofyl's `fetch` are optional and are not included in the base ISO.
+
 The profile includes the experimental Calamares installer and GParted for standalone partition editing. Calamares copies the ISO root filesystem offline, keeps dinit as the installed init system, and removes the live-only Artix packages during installation. The base image carries the kernel `ntfs3` driver for NTFS read/write access and `os-prober` for Windows discovery; legacy `ntfs-3g` remains an optional post-install package in the signed extra channel. Existing Windows ESP/NTFS layouts are preserved by the installer and use a separate DINX EFI directory.
 
 Pearl Greeter, Aqueous/Pearl and the installer receive DINX defaults from the root overlay. Pearl Greeter uses the installed GTK DINX theme and the root-owned greeter JSON; Calamares uses the same surface/text/primary/error tokens in its Qt stylesheet. Pearl is the active user shell. The dedicated Aqueous host runs only Pearl Greeter and is not exposed as a user-session fallback. The Calamares dependency chain retains only installer components, unsupported session entries remain hidden, and `Aqueous + Pearl (DINX)` is the live session. The live session exposes `Instalar DINX` through the launcher.
 The live path uses `Aqueous + Pearl (DINX)` without a credential prompt: a live-only dinit service prepares greetd before it starts. The installed rootfs keeps manual login and Calamares keeps both autologin flags disabled.
+GTK 3/4 system defaults at `/etc/xdg/gtk-3.0/settings.ini` and `/etc/xdg/gtk-4.0/settings.ini` select DINX dark styling, including for GTK tools launched with elevated privileges. Because greetd starts the live session without shell profiles, the Aqueous launcher exports `GTK_THEME=DINX:dark` and `QT_QPA_PLATFORMTHEME=qt6ct` directly and seeds the DINX Qt6ct config/palette when an existing home lacks them. Aqueous starts in its freeform `stacking` layout; `Alt+Shift+F` selects it from another layout, and `Super+Shift+Space` toggles floating for the focused window.
+
 The runtime payload is Wayland/XWayland only: legacy Xorg/XLibre servers, drivers and Plasma session entries are omitted. Xvfb remains builder-only for package qualification.
 For storage, Pori is the DINX disk/mount manager and Phyto is the default file manager. File Roller provides graphical archive actions and GParted provides standalone partition editing outside Calamares. Pori uses UDisks2 for block-device discovery and creates persistent scripted mount services under `/etc/dinit.d`; it does not use systemd units. The base image does not install Thunar, GVFS, Tumbler or KDE Partition Manager. Phyto handles directory browsing; the standalone LXQt PolicyKit agent remains for privileged actions, and Pearl remains the active shell.
 For display setup, DINX's `dinx-wdisplays` wrapper opens the interactive Wayland editor; closing it atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the Shikane user daemon. Shikane starts inside Aqueous/Pearl and reapplies matching profiles when outputs change. `Dome`, `Seafoam Settings` and `zls` are part of the base ISO and the signed DINX package repository. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings is the fixed-argv native Zig/GTK4 launcher for the display/session entry points; ZLS is the bundled Zig language server used by Nocted with its matching `lib/std` tree and metadata-only shim, so the full Zig compiler remains optional. Aqueous 1.0.5 and Pearl 0.3.0 are the only selectable session components.
@@ -143,7 +162,7 @@ The payload contract also requires `wdisplays`, `shikane` and the DINX display p
 
 The workflow stores a separate `dinx-boot-screen.ppm` capture taken before the boot-menu keys are sent. Review this frame when qualifying the GRUB kernel-selection surface; it is the regression evidence for the removed opaque menu panel.
 
-GRUB uses the DINX surface, foreground and primary selection colors while retaining the Artix logo/font assets. The opaque menu textures are disabled, so the boot menu, greeter, installer and desktop share the same flat visual hierarchy.
+GRUB uses the DINX surface, foreground and primary selection colors with the DINX D-ray instead of the Artix logo; Artix font assets remain in use. The opaque menu textures are disabled. The Pearl Greeter and desktop wallpaper use the DINX Linux wordmark, while Calamares uses the wordmark plus D-ray mark. Desktop launcher icons remain upstream/Adwaita icons, not DINX branding.
 In the current source profile, the normal live path is direct autologin; the greeter remains a fallback surface rather than a required boot step.
 
 ## Profile boundary

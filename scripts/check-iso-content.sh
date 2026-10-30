@@ -295,6 +295,15 @@ required_paths=(
   usr/share/applications/gparted.desktop
   usr/share/applications/network.cycles.wdisplays.desktop
   usr/share/grub/themes/artix/theme.txt
+  etc/pearl/greeter.json
+  etc/skel/.config/pearl/preferences.json
+  etc/calamares/branding/dinx/dinx.svg
+  etc/calamares/branding/dinx/dinx-ray-mark.svg
+  usr/share/dinx/branding/dinx-linux-logo.svg
+  usr/share/dinx/branding/dinx-ray-mark.svg
+  usr/share/dinx/branding/dinx-wallpaper.png
+  usr/share/dinx/branding/dinx-ray-mark.txt
+  usr/share/grub/themes/artix/logo.png
 )
 
 for path in "${required_paths[@]}"; do
@@ -354,6 +363,15 @@ grep -Fq '"theme": "gtk"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter GTK 
 grep -Fq '"gtk_theme": "DINX"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter DINX theme is not enabled'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
+grep -Fq '"wallpaper": "/usr/share/dinx/branding/dinx-wallpaper.png"' <<<"$pearl_greeter_config" \
+  || fail 'Pearl Greeter DINX wallpaper is missing'
+grep -Fq '"wallpaper_fit": "cover"' <<<"$pearl_greeter_config" \
+  || fail 'Pearl Greeter wallpaper fit is not cover'
+pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
+grep -Fq '"path": "/usr/share/dinx/branding/dinx-wallpaper.png"' <<<"$pearl_preferences" \
+  || fail 'fresh user Pearl preferences do not use the DINX wallpaper'
+grep -Fq '"enabled": true' <<<"$pearl_preferences" \
+  || fail 'Pearl default desktop icons are no longer enabled'
 grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter allows an unexpected user session'
 grep -Fq '"allow_uwsm": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter UWSM integration is enabled'
@@ -432,6 +450,7 @@ if grep -Eq '^[[:space:]]*(menu_pixmap_style|selected_item_pixmap_style)[[:space
 fi
 grep -Fq 'desktop-color: "#0b0d12"' <<<"$grub_theme" || fail 'DINX GRUB background color is missing'
 grep -Fq 'selected_item_color = "#8fb8ff"' <<<"$grub_theme" || fail 'DINX GRUB accent color is missing'
+grep -Fq 'file = "logo.png"' <<<"$grub_theme" || fail 'GRUB theme does not display its DINX logo'
 
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)
 grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general section is missing'
@@ -456,8 +475,10 @@ grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette 
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
 gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
+grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 desktop icons do not retain Adwaita'
 gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
+grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 desktop icons do not retain Adwaita'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
 grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
@@ -488,6 +509,8 @@ fi
 qt6ct_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/qt6ct.conf)
 grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' <<<"$qt6ct_config" || fail 'Qt6ct DINX color path is missing'
 grep -Fq 'general="Noto Sans,10' <<<"$qt6ct_config" || fail 'Qt6ct Noto Sans font contract is missing'
+qt6ct_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/colors/DINX.conf)
+grep -Fq 'active_colors=#ff0b0d12, #ffd7dde8' <<<"$qt6ct_palette" || fail 'Qt6ct DINX palette omits dark surfaces or foreground text'
 swayimg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/swayimg/init.lua)
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' <<<"$swayimg_config" || fail 'DINX Swayimg surface is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' <<<"$swayimg_config" || fail 'Swayimg font contract is missing'
@@ -500,6 +523,16 @@ grep -Fqx '@import url("gtk.css");' <<<"$gtk3_dark_theme" || fail 'DINX GTK3 dar
 gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk-dark.css)
 grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dark bridge is missing'
 
+gtk3_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-3.0/settings.ini)
+grep -Fq 'gtk-theme-name=DINX' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is missing'
+grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 desktop icons do not retain Adwaita'
+grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk3_system_settings" || fail 'System GTK3 dark preference is missing'
+gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-4.0/settings.ini)
+grep -Fq 'gtk-theme-name=DINX' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is missing'
+grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
+grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 desktop icons do not retain Adwaita'
+aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
+grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floating layout default is missing'
 ufw_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/ufw/ufw.conf)
 grep -Fq 'ENABLED=no' <<<"$ufw_config" || fail 'UFW is not disabled by default for safe manual configuration'
 for disabled_service in ufw opensnitchd; do
@@ -512,6 +545,19 @@ grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgra
 
 aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
+grep -Fq 'export GTK_THEME="DINX:dark"' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force DINX dark GTK theme'
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force Qt6ct'
+grep -Fq 'pearl/preferences.json' <<<"$aqueous_wrapper" \
+  || fail 'Aqueous session does not seed the DINX Pearl wallpaper preference'
+grep -Fq '[ ! -e "$config_home/pearl/preferences.json" ]' <<<"$aqueous_wrapper" \
+  || fail 'Aqueous session may overwrite saved Pearl preferences'
+grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' <<<"$aqueous_wrapper" \
+  || fail 'Aqueous session may overwrite Pearl recovery state'
+grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed Qt6ct for existing users'
+grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
+grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
+aqueous_wm_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/wm.toml)
+grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' <<<"$aqueous_wm_config" || fail 'Aqueous stacking layout keyboard binding is missing'
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'Aqueous init supervisor command is missing'
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
@@ -665,6 +711,12 @@ calamares_branding_desc=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/root
 grep -Fq 'SidebarBackground: "#11151d"' <<<"$calamares_branding_desc" || fail 'DINX Calamares sidebar panel is missing'
 grep -Fq 'SidebarText: "#7f8a9c"' <<<"$calamares_branding_desc" || fail 'DINX Calamares sidebar text is missing'
 grep -Fq 'SidebarBackgroundCurrent: "#263249"' <<<"$calamares_branding_desc" || fail 'DINX Calamares sidebar selection is missing'
+grep -Fq 'productIcon: "dinx-ray-mark.svg"' <<<"$calamares_branding_desc" \
+  || fail 'Calamares product icon does not use the DINX D-ray mark'
+grep -Fq 'productLogo: "dinx.svg"' <<<"$calamares_branding_desc" \
+  || fail 'Calamares product logo does not use the DINX Linux wordmark'
+grep -Fq 'productWelcome: "dinx.svg"' <<<"$calamares_branding_desc" \
+  || fail 'Calamares welcome does not use the DINX Linux wordmark'
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'
@@ -735,4 +787,4 @@ grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'
+printf 'ISO content check passed: DINX wordmark/D-ray branding is present in GRUB, greeter, Calamares and desktop wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'

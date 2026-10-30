@@ -1,0 +1,149 @@
+<!-- SPDX-FileCopyrightText: 2026 DINX Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1120" viewBox="0 0 1480 1120" role="img" aria-labelledby="title desc">
+  <title id="title">DINX — estudo de cores do wordmark compacto</title>
+  <desc id="desc">Doze versões de cor do wordmark compacto DINX, comparadas em superfícies claras e escuras com suas relações de contraste medidas.</desc>
+  <defs>
+    <g id="compact-mark" fill="none" stroke="currentColor" stroke-width="29" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M100 242 C100 188 101 120 102 66 C150 76 201 107 234 145 C260 174 261 197 239 218 C211 245 153 263 101 272"/>
+      <path d="M294 145 L294 242"/>
+      <path d="M342 272 C343 202 343 132 342 66 C379 101 420 174 457 272 C456 202 456 132 457 66"/>
+      <path d="M500 96 C535 145 571 196 606 248"/>
+      <path d="M606 96 C571 145 535 196 500 248"/>
+      <circle cx="294" cy="83" r="17" fill="currentColor" stroke="none"/>
+    </g>
+  </defs>
+  <rect width="1480" height="1120" fill="#05070b"/>
+  <text x="40" y="62" fill="#F6F7F9" font-family="Noto Sans, sans-serif" font-size="34" font-weight="700">DINX · wordmark compacto</text>
+  <text x="42" y="96" fill="#AAB4C3" font-family="Noto Sans, sans-serif" font-size="17">Opção 03 refinada · espaço horizontal reduzido · variações de cor do tema DINX</text>
+  <text x="40" y="145" fill="#D7DDE8" font-family="Noto Sans, sans-serif" font-size="20" font-weight="700">SUPERFÍCIES ESCURAS</text>
+  <text x="40" y="166" fill="#7F8A9C" font-family="Noto Sans, sans-serif" font-size="13">Cada marca aparece sobre #0B0D12 e #11151D; os índices abaixo mostram os dois contrastes.</text>
+  <g font-family="Noto Sans, sans-serif">
+    <g transform="translate(40 180)">
+      <rect width="450" height="172" rx="14" fill="#222A38"/>
+      <text x="14" y="23" fill="#D7DDE8" font-size="14" font-weight="700">Coral · #F4515B</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#0B0D12"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#11151D"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#F4515B"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#F4515B"/>
+      <text x="14" y="158" fill="#D7DDE8" font-size="11">#0B0D12 · 5.71:1</text>
+      <text x="230" y="158" fill="#D7DDE8" font-size="11">#11151D · 5.37:1</text>
+    </g>
+    <g transform="translate(515 180)">
+      <rect width="450" height="172" rx="14" fill="#222A38"/>
+      <text x="14" y="23" fill="#D7DDE8" font-size="14" font-weight="700">Azul primário · #8FB8FF</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#0B0D12"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#11151D"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#8FB8FF"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#8FB8FF"/>
+      <text x="14" y="158" fill="#D7DDE8" font-size="11">#0B0D12 · 9.69:1</text>
+      <text x="230" y="158" fill="#D7DDE8" font-size="11">#11151D · 9.11:1</text>
+    </g>
+    <g transform="translate(990 180)">
+      <rect width="450" height="172" rx="14" fill="#222A38"/>
+      <text x="14" y="23" fill="#D7DDE8" font-size="14" font-weight="700">Seafoam · #9FE5D0</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#0B0D12"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#11151D"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#9FE5D0"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#9FE5D0"/>
+      <text x="14" y="158" fill="#D7DDE8" font-size="11">#0B0D12 · 13.51:1</text>
+      <text x="230" y="158" fill="#D7DDE8" font-size="11">#11151D · 12.70:1</text>
+    </g>
+    <g transform="translate(40 362)">
+      <rect width="450" height="172" rx="14" fill="#222A38"/>
+      <text x="14" y="23" fill="#D7DDE8" font-size="14" font-weight="700">Verde · #9ECE6A</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#0B0D12"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#11151D"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#9ECE6A"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#9ECE6A"/>
+      <text x="14" y="158" fill="#D7DDE8" font-size="11">#0B0D12 · 10.63:1</text>
+      <text x="230" y="158" fill="#D7DDE8" font-size="11">#11151D · 10.00:1</text>
+    </g>
+    <g transform="translate(515 362)">
+      <rect width="450" height="172" rx="14" fill="#222A38"/>
+      <text x="14" y="23" fill="#D7DDE8" font-size="14" font-weight="700">Lavanda · #BB9AF7</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#0B0D12"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#11151D"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#BB9AF7"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#BB9AF7"/>
+      <text x="14" y="158" fill="#D7DDE8" font-size="11">#0B0D12 · 8.40:1</text>
+      <text x="230" y="158" fill="#D7DDE8" font-size="11">#11151D · 7.90:1</text>
+    </g>
+    <g transform="translate(990 362)">
+      <rect width="450" height="172" rx="14" fill="#222A38"/>
+      <text x="14" y="23" fill="#D7DDE8" font-size="14" font-weight="700">Rosa de erro · #F7768E</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#0B0D12"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#11151D"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#F7768E"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#F7768E"/>
+      <text x="14" y="158" fill="#D7DDE8" font-size="11">#0B0D12 · 7.35:1</text>
+      <text x="230" y="158" fill="#D7DDE8" font-size="11">#11151D · 6.91:1</text>
+    </g>
+  </g>
+  <text x="40" y="590" fill="#D7DDE8" font-family="Noto Sans, sans-serif" font-size="20" font-weight="700">SUPERFÍCIES CLARAS</text>
+  <text x="40" y="611" fill="#7F8A9C" font-family="Noto Sans, sans-serif" font-size="13">A paleta clara usa tons escuros do tema; os fundos comparados são #F7F8FA e #EEF1F6.</text>
+  <g font-family="Noto Sans, sans-serif">
+    <g transform="translate(40 625)">
+      <rect width="450" height="172" rx="14" fill="#D9DEE8"/>
+      <text x="14" y="23" fill="#202631" font-size="14" font-weight="700">Azul primário · #2859A8</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#F7F8FA"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#EEF1F6"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#2859A8"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#2859A8"/>
+      <text x="14" y="158" fill="#202631" font-size="11">#F7F8FA · 6.41:1</text>
+      <text x="230" y="158" fill="#202631" font-size="11">#EEF1F6 · 6.01:1</text>
+    </g>
+    <g transform="translate(515 625)">
+      <rect width="450" height="172" rx="14" fill="#D9DEE8"/>
+      <text x="14" y="23" fill="#202631" font-size="14" font-weight="700">Verde secundário · #1B7F5A</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#F7F8FA"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#EEF1F6"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#1B7F5A"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#1B7F5A"/>
+      <text x="14" y="158" fill="#202631" font-size="11">#F7F8FA · 4.67:1</text>
+      <text x="230" y="158" fill="#202631" font-size="11">#EEF1F6 · 4.38:1</text>
+    </g>
+    <g transform="translate(990 625)">
+      <rect width="450" height="172" rx="14" fill="#D9DEE8"/>
+      <text x="14" y="23" fill="#202631" font-size="14" font-weight="700">Violeta terciário · #7048A8</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#F7F8FA"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#EEF1F6"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#7048A8"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#7048A8"/>
+      <text x="14" y="158" fill="#202631" font-size="11">#F7F8FA · 6.21:1</text>
+      <text x="230" y="158" fill="#202631" font-size="11">#EEF1F6 · 5.83:1</text>
+    </g>
+    <g transform="translate(40 807)">
+      <rect width="450" height="172" rx="14" fill="#D9DEE8"/>
+      <text x="14" y="23" fill="#202631" font-size="14" font-weight="700">Rosa de erro · #B4235A</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#F7F8FA"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#EEF1F6"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#B4235A"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#B4235A"/>
+      <text x="14" y="158" fill="#202631" font-size="11">#F7F8FA · 5.94:1</text>
+      <text x="230" y="158" fill="#202631" font-size="11">#EEF1F6 · 5.57:1</text>
+    </g>
+    <g transform="translate(515 807)">
+      <rect width="450" height="172" rx="14" fill="#D9DEE8"/>
+      <text x="14" y="23" fill="#202631" font-size="14" font-weight="700">Ciano · #286F82</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#F7F8FA"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#EEF1F6"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#286F82"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#286F82"/>
+      <text x="14" y="158" fill="#202631" font-size="11">#F7F8FA · 5.36:1</text>
+      <text x="230" y="158" fill="#202631" font-size="11">#EEF1F6 · 5.03:1</text>
+    </g>
+    <g transform="translate(990 807)">
+      <rect width="450" height="172" rx="14" fill="#D9DEE8"/>
+      <text x="14" y="23" fill="#202631" font-size="14" font-weight="700">Âmbar · #8A5A00</text>
+      <rect x="10" y="34" width="214" height="104" rx="8" fill="#F7F8FA"/>
+      <rect x="226" y="34" width="214" height="104" rx="8" fill="#EEF1F6"/>
+      <use href="#compact-mark" transform="translate(13 43) scale(0.29)" style="color:#8A5A00"/>
+      <use href="#compact-mark" transform="translate(229 43) scale(0.29)" style="color:#8A5A00"/>
+      <text x="14" y="158" fill="#202631" font-size="11">#F7F8FA · 5.58:1</text>
+      <text x="230" y="158" fill="#202631" font-size="11">#EEF1F6 · 5.24:1</text>
+    </g>
+  </g>
+  <text x="40" y="1032" fill="#D7DDE8" font-family="Noto Sans, sans-serif" font-size="14" font-weight="700">Referência visual: 3:1 para contraste gráfico; os pares exibidos passam nos dois fundos do respectivo tema.</text>
+  <text x="40" y="1058" fill="#7F8A9C" font-family="Noto Sans, sans-serif" font-size="13">Os tons claros não foram aprovados para superfícies claras. O coral #F4515B passa em #FFFFFF (3.40:1), mas cai para 2.84:1 em #E7EBF1.</text>
+</svg>

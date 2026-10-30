@@ -19,6 +19,9 @@ end
 if not set -q NOCTED_THEME
     set -gx NOCTED_THEME prefer-dark
 end
+if not set -q GTK_THEME
+    set -gx GTK_THEME DINX:dark
+end
 if not set -q QT_QPA_PLATFORMTHEME
     set -gx QT_QPA_PLATFORMTHEME qt6ct
 end

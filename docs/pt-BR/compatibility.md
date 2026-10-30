@@ -64,11 +64,11 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 | Descoberta do terminal | `$TERMINAL` inicia o Noctty com shell e diretório solicitado |
 | Metadados desktop | entradas `.desktop` são válidas e descobertas |
 | Argumentos de inicialização | comportamento de arquivo, linha e diretório é determinístico |
-| Contrato de tema | paleta DINX estática, tema GTK, cores Qt6ct e `DINX_COLOR_SCHEME` estão presentes |
+| Contrato de tema | paleta DINX estática, defaults escuros GTK 3/4 no sistema, seleção GTK escura na sessão e paleta DINX do Qt6ct estão configurados |
 | Greeter/instalador/boot | Pearl Greeter, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
 | Firefox padrão | Firefox trata HTML/XHTML/HTTP/HTTPS por default |
 | Armazenamento e arquivos | persistência dinit do Pori, diretórios no Phyto, arquivos compactados no File Roller e edição no GParted estão presentes |
-| Layout do desktop | Aqueous/Pearl é a única sessão de usuário; Pearl Greeter é a interface de login dedicada do greetd |
+| Layout do desktop | Aqueous/Pearl é a única sessão de usuário; stacking livre é o padrão, `Alt+Shift+F` o seleciona e `Super+Shift+Space` alterna o modo flutuante por janela |
 | Segurança da sessão | lock por idle, lock antes de suspend, lock explícito e brilho usam caminhos fixos |
 | Persistência de display | mudanças do wdisplays atualizam atomicamente e recarregam o perfil nomeado do Shikane |
 | ZLS | Nocted encontra a biblioteca Zig correspondente sem compilador completo |

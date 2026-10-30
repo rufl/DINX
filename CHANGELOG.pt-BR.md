@@ -2,6 +2,14 @@
 
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
+## Não lançado
+
+- Definido o tema escuro DINX como padrão global do GTK 3/4 e exportada a seleção GTK/Qt6ct pelo launcher direto da sessão Aqueous. Pastas home existentes recebem a configuração e a paleta DINX do Qt6ct quando ainda não existem.
+- A sessão live e instalada do Aqueous inicia no layout livre `stacking`; `Alt+Shift+F` restaura esse layout e `Super+Shift+Space` continua alternando o modo flutuante por janela.
+
+- Aplicadas a marca DINX Linux e a marca D com raio correspondente no GRUB, Pearl Greeter, Calamares e no wallpaper inicial da área de trabalho. Os ícones de aplicativos e da área de trabalho do upstream/Adwaita permanecem inalterados.
+- Substituída a primeira aproximação ASCII por uma conversão por densidade do SVG original do D-ray DINX. O asset em ASCII puro funciona com o Fastfetch e com o formato de logo personalizado do `fetch` opcional de Areofyl.
+
 ## v0.1.0-alpha.10 — 2026-10-29
 
 - Publicada a [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` pela [execução de release 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746). A ISO direta tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; snapshot do repositório de pacotes assinado `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.

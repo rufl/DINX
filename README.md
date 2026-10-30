@@ -6,7 +6,6 @@
 
 <p align="center">
   <strongSpin Lean and Mean - focada em ser estoica, leve e sem frescura, o mínimo para você fazer o máximo. ;)
-
 Arch-Based, Artix Based, Kernels Recentes, Drivers e Tooling para Gaming e Dev, Dinit como supervisor de serviços, Seafoam Apps.
 
 Paineis gráficos diretos ao assunto. 

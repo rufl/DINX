@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx.svg" alt="DINX logo" width="180">
-</p>
-
-<h1 align="center">DINX</h1>
+<h1 align="center">
+  <img src="distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg" alt="DINX Linux" width="420">
+</h1>
 
 <p align="center">
   <strong>Artix Linux + dinit, with a small and explicit Wayland desktop.</strong><br>

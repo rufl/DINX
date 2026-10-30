@@ -91,7 +91,7 @@ for required in \
   'run: scripts/build-iso-docker.sh' \
   'run: ./scripts/check_first_party_apps.sh' \
   'ref: ${{ steps.deetty-source.outputs.ref }}' \
-  'DEETTY_SOURCE_READ_TOKEN' \
+  'token: ${{ github.token }}' \
   'repository: rufl/NOCTTY' \
   'path: third_party/noctty' \
   'persist-credentials: false' \
@@ -101,19 +101,21 @@ for required in \
 done
 for required in \
   'repository: rufl/NOCTTY' \
-  'token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN }}' \
+  'ref: ${{ steps.deetty-source.outputs.ref }}' \
+  'token: ${{ github.token }}' \
   'path: third_party/noctty' \
-  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty' \
-  'DINX_SKIP_PRIVATE_SOURCE_CHECKS'; do
+  'persist-credentials: false' \
+  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty'; do
   grep -Fq -- "$required" "$contracts_workflow" \
-    || fail "contracts workflow is missing private-source handling: $required"
+    || fail "contracts workflow is missing public-source handling: $required"
 done
 grep -Fq 'secrets: inherit' "$release_workflow" \
-  || fail 'release workflow does not pass the private-source checkout secret to P0'
-grep -Fq 'checks=("${checks[@]:2}")' scripts/check_dinx_contracts.sh \
-  || fail 'fork contracts do not skip exactly the two private-source checks'
+  || fail 'release workflow does not pass package-signing secrets to P0'
+if grep -Fq 'DEETTY_SOURCE_READ_TOKEN' "$workflow" "$contracts_workflow"; then
+  fail 'public NOCTTY source checkout unexpectedly requires an Actions secret'
+fi
 grep -Fq '/third_party/noctty/' .gitignore \
-  || fail 'private Deetty/Dintor source checkout is not Git-ignored'
+  || fail 'public Deetty/Dintor source checkout is not Git-ignored'
 for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \

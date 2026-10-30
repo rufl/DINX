@@ -8,10 +8,10 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Corrigidos os contratos P0 para verificar os smokes Seafoam/ZLS e a qualificação de Gamescope, exclusiva do builder Artix, em vez de exigir essas etapas no workflow executado no host.
 - Fixados os arquivos de configuração e desktop AUR do Shelly na revisão imutável `f89d773125357baaa1d2fae715286ce9e00e2cb4`; a branch móvel `shelly-bin` havia alterado `shellybuild.conf` e feito a verificação de checksum do build da ISO falhar.
 - O build do pacote Deetty limpa a árvore de fontes anterior antes de aplicar patches, evitando que uma tentativa com falha faça a próxima reaplicar patches de criação sobre fontes já modificadas.
-- Atualizado o smoke upstream de tarefas do Dintor para executar o binário renomeado `dintor`; o contrato do pacote agora detecta referências ao caminho antigo `nocted`.
-- Adicionado `scripts/build-iso-docker.sh`: usa o mesmo builder Artix privilegiado e fixado por digest do P0 CI, gera o archive ignorado de Deetty/Dintor a partir de um checkout autenticado no commit privado fixado quando necessário e produz metadados locais vinculados à fonte e bundle de pacotes com chave efêmera.
+- Atualizados os smokes upstream de tarefa e LSP do `clangd` do Dintor para executar o binário renomeado `dintor`; o contrato do pacote rejeita caminhos antigos do executável `nocted`.
+- Adicionado `scripts/build-iso-docker.sh`: usa o mesmo builder Artix privilegiado e fixado por digest do P0 CI, gera o archive ignorado de Deetty/Dintor a partir de um checkout local no commit público fixado do NOCTTY quando necessário e produz metadados locais vinculados à fonte e bundle de pacotes com chave efêmera.
 
-- Corrigidos os filtros de push P0 para os pontos de entrada Docker/container e restaurada a propriedade do host nos arquivos de pacotes montados pelo builder Artix. P0 e execuções confiáveis do workflow de contratos agora baixam a fonte privada NOCTTY fixada usando `DEETTY_SOURCE_READ_TOKEN` e geram seu archive ignorado; configure esse secret do repositório com acesso somente de leitura a `rufl/NOCTTY`. O workflow de contratos em PRs de forks pula somente os dois checks dependentes da fonte.
+- Corrigidos os filtros de push P0 para os pontos de entrada Docker/container e restaurada a propriedade do host nos arquivos de pacotes montados pelo builder Artix. Os workflows P0 e de contratos fazem checkout da fonte pública NOCTTY fixada com o `GITHUB_TOKEN` integrado ao workflow e geram seu archive ignorado; agora o workflow de contratos também executa esses checks nos PRs de forks. Nenhum secret Actions adicional é necessário.
 
 - Saídas novas do Aqueous agora começam com dois workspaces, em vez dos nove workspaces iniciais do upstream.
 

@@ -31,7 +31,7 @@ Options are controlled through environment variables:
   DINX_KEEP_CHROOTS=1        Keep the temporary chroot after a successful build.
   DINX_LOCAL_QEMU_SMOKE=1    Also boot and capture the ISO with scripts/smoke-iso.sh.
   DINX_SKIP_CONTRACTS=1      Skip local static/fixture contracts.
-  DEETTY_SOURCE_CHECKOUT   Authenticated local checkout of pinned private NOCTTY source.
+  DEETTY_SOURCE_CHECKOUT   Local checkout of the pinned public NOCTTY source.
 USAGE
 }
 

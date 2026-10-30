@@ -8,10 +8,10 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Corrected P0 contract checks to verify Seafoam/ZLS smokes and builder-only Gamescope qualification in the Artix container builder, rather than expecting those steps in the host workflow.
 - Pinned Shelly's AUR desktop/config payload to immutable revision `f89d773125357baaa1d2fae715286ce9e00e2cb4`; the mutable `shelly-bin` branch had changed `shellybuild.conf`, causing the ISO package build's existing checksum verification to fail.
 - Make the Deetty package build discard its previous source tree before patching, so failed builds cannot make retries apply file-creation patches to already-modified sources.
-- Updated the upstream Dintor task-probe smoke to invoke the renamed `dintor` binary; the package integration contract now guards against a stale `nocted` path.
-- Added `scripts/build-iso-docker.sh`, which runs the same digest-pinned privileged Artix container builder used by P0 CI, generates the ignored Deetty/Dintor archive from an authenticated checkout at the pinned private commit when needed, and emits local source-bound metadata and an ephemeral-key package bundle.
+- Updated both upstream Dintor task-probe and clangd LSP smokes to invoke the renamed `dintor` binary; the package integration contract rejects stale `nocted` executable paths.
+- Added `scripts/build-iso-docker.sh`, which runs the same digest-pinned privileged Artix container builder used by P0 CI, generates the ignored Deetty/Dintor archive from a local checkout at the pinned public NOCTTY commit when needed, and emits local source-bound metadata and an ephemeral-key package bundle.
 
-- Fixed P0 push-trigger coverage for the Docker/container build entrypoints and restored host ownership of bind-mounted package sources after the Artix builder exits. P0 and trusted contract runs now fetch the pinned private NOCTTY source using `DEETTY_SOURCE_READ_TOKEN` and generate its ignored archive; configure that repository secret with read-only access to `rufl/NOCTTY`. Fork PR contracts skip only the two source-dependent checks.
+- Fixed P0 push-trigger coverage for the Docker/container build entrypoints and restored host ownership of bind-mounted package sources after the Artix builder exits. P0 and contracts runs check out the pinned public NOCTTY source with the workflow's built-in `GITHUB_TOKEN` and generate its ignored archive; the contracts workflow now runs these source-dependent checks on fork PRs too. No extra Actions secret is needed.
 
 - Seed fresh Aqueous outputs with two workspaces instead of the upstream nine-workspace startup set.
 

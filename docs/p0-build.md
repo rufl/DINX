@@ -41,18 +41,18 @@ The entry points are:
 
 ## Remote build
 
-The separate `DINX contracts` workflow runs static/fixture checks and REUSE lint on every pull request and push to `main`. Trusted runs check out the pinned private NOCTTY source using the `DEETTY_SOURCE_READ_TOKEN` Actions secret, then generate the ignored source archive. Fork pull requests cannot access repository secrets, so only the two source-dependent checks are skipped there; the remaining contracts and REUSE lint still run.
+The separate `DINX contracts` workflow runs all static/fixture checks and REUSE lint on every pull request and push to `main`. `rufl/NOCTTY` is public, so trusted runs and fork pull requests check out the pinned source commit with the workflow's built-in `GITHUB_TOKEN`, then generate the ignored source archive; no extra Actions secret is required.
 
 The `P0 ISO foundation` workflow runs manually or when profile/build files change. It:
 
 1. checks out DINX;
-2. reads the pinned source commit from `distro/packages/deetty/source.env`, checks out private `rufl/NOCTTY`, generates the git-ignored Deetty/Dintor source archive and verifies it against the pinned SHA-256;
+2. reads the pinned source commit from `distro/packages/deetty/source.env`, checks out public `rufl/NOCTTY`, generates the git-ignored Deetty/Dintor source archive and verifies it against the pinned SHA-256;
 3. installs QEMU, ISO inspection tools and Tesseract's English OCR data on the Ubuntu runner;
 4. runs Artix in a privileged container;
 5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb and VTE 2.91 (`vte3`) for Deetty's headless smoke. The full Ghostty application is installed temporarily in the builder only as the extraction source for `ghostty-vt-runtime`; that package contains the VT library, headers and license, after which the full application is removed before ISO assembly. The DINX Aqueous/Pearl packages and their direct Wayland dependencies are built from the configured package inputs.
 Pearl 0.3.0 follows its upstream `.zigversion` and is built with the exact Zig 0.16.0 archive verified by the workflow; DINX-native Zig packages remain on the verified Zig 0.17.0 toolchain.
 6. builds pinned DINX packages, including topgrade, paru and Shelly plus the BC250 Control Center v1.21.1 and Cyan Skillfish governor; hardware-specific packages are marked `iso:false` and remain absent from both generic rootfs profiles. It builds and installs Deetty/Dintor against the VT-only runtime before DINXPanel and the Aqueous/Pearl session packages, then packages Seafoam Settings; all DINX terminal launch paths use Deetty. The Deetty package build runs the pinned PTY/VT/session smoke markers, allocator-accounted terminal-session qualification, protocol/Unicode qualification, `scripts/deetty_p2_qualification.sh` and `scripts/dintor_p3_qualification.sh` in ReleaseSafe. The P3 matrix proves the native editor path in both packaged schemes, a real `clangd` symbol response and bounded Git status/diff markers. It uses real tmux plus a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP and the Dintor project/editor qualification.
-The product-identity patch also updates the upstream task-probe smoke to launch the renamed `zig-out/bin/dintor`; the package integration contract verifies that no stale `nocted` binary path remains.
+The product-identity patch updates the upstream task-probe and clangd LSP smokes to launch the renamed `zig-out/bin/dintor`; the package integration contract verifies neither smoke uses the old `nocted` executable path.
 
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
@@ -188,7 +188,7 @@ Run from the DINX checkout:
 bash scripts/build-iso-docker.sh
 ```
 
-If the ignored Deetty archive is absent, the script prepares it from an authenticated checkout at the pinned private NOCTTY commit. Set `DEETTY_SOURCE_CHECKOUT` to that checkout; the commit and generated archive SHA-256 are verified.
+If the ignored Deetty archive is absent, the script prepares it from a checkout at the pinned public NOCTTY commit. Set `DEETTY_SOURCE_CHECKOUT` to that checkout; the commit and generated archive SHA-256 are verified.
 
 ```sh
 DEETTY_SOURCE_CHECKOUT=/path/to/NOCTTY bash scripts/build-iso-docker.sh

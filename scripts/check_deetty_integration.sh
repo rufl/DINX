@@ -111,6 +111,11 @@ grep -Fq './zig-out/bin/dintor' "$task_smoke" || fail 'Dintor task smoke uses th
 if grep -Fq './zig-out/bin/nocted' "$task_smoke"; then
   fail 'Dintor task smoke still references the old executable'
 fi
+lsp_smoke="$patched_source/scripts/nocted_lsp_smoke.sh"
+grep -Fq './zig-out/bin/dintor --lsp-probe' "$lsp_smoke" || fail 'Dintor LSP smoke uses the old executable path'
+if grep -Fq './zig-out/bin/nocted' "$lsp_smoke"; then
+  fail 'Dintor LSP smoke still references the old executable'
+fi
 patched_desktop=$(<"$patched_source/resources/com.noctty.NOCTTY.desktop")
 grep -Fqx 'Name=Deetty' <<<"$patched_desktop" || fail 'Deetty desktop name is incorrect'
 grep -Fqx 'TryExec=deetty' <<<"$patched_desktop" || fail 'Deetty desktop command is incorrect'

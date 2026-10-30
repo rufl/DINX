@@ -695,3 +695,8 @@
 @@ -65,1 +65,1 @@
 -  output=$(timeout 30 ./zig-out/bin/nocted \
 +  output=$(timeout 30 ./zig-out/bin/dintor \
+--- a/scripts/nocted_lsp_smoke.sh
++++ b/scripts/nocted_lsp_smoke.sh
+@@ -17,1 +17,1 @@
+-output=$(timeout 30 ./zig-out/bin/nocted --lsp-probe "$scratch/probe.c")
++output=$(timeout 30 ./zig-out/bin/dintor --lsp-probe "$scratch/probe.c")

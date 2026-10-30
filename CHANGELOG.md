@@ -5,6 +5,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Added a rolling direct-download alias and matching SHA-512 checksum for the latest alpha ISO. The tagged release workflow refreshes it, and both GitHub landing pages link to it.
+- Fixed the P0 ISO build failure caused by omitting the pinned Gapless package from the signed local repository. The Artix builder now installs Vala and GStreamer build dependencies, packages Gapless before composing the rootfs, and checks this wiring in the provenance contract.
 - Corrected P0 contract checks to verify Seafoam/ZLS smokes and builder-only Gamescope qualification in the Artix container builder, rather than expecting those steps in the host workflow.
 - Pinned Shelly's AUR desktop/config payload to immutable revision `f89d773125357baaa1d2fae715286ce9e00e2cb4`; the mutable `shelly-bin` branch had changed `shellybuild.conf`, causing the ISO package build's existing checksum verification to fail.
 - Make the Deetty package build discard its previous source tree before patching, so failed builds cannot make retries apply file-creation patches to already-modified sources.

@@ -127,6 +127,8 @@ for required in \
   'local -a makepkg_options=(--clean --nodeps --nocheck --noconfirm)' \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
+  'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \
+  'build_package gapless' \
   '--sign --key' \
   'pacman-key --init' \
   'SigLevel = Required' \

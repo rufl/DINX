@@ -5,6 +5,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Adicionado um alias de download direto e um checksum SHA-512 persistentes para a ISO alpha mais recente. O workflow de release por tag atualiza o alias, e as duas páginas iniciais do GitHub apontam para ele.
+- Corrigida a falha do build P0 causada pela ausência do pacote Gapless fixado no repositório local assinado. O builder Artix agora instala Vala e as dependências de build do GStreamer, empacota o Gapless antes de montar a rootfs e verifica essa configuração no contrato de proveniência.
 - Corrigidos os contratos P0 para verificar os smokes Seafoam/ZLS e a qualificação de Gamescope, exclusiva do builder Artix, em vez de exigir essas etapas no workflow executado no host.
 - Fixados os arquivos de configuração e desktop AUR do Shelly na revisão imutável `f89d773125357baaa1d2fae715286ce9e00e2cb4`; a branch móvel `shelly-bin` havia alterado `shellybuild.conf` e feito a verificação de checksum do build da ISO falhar.
 - O build do pacote Deetty limpa a árvore de fontes anterior antes de aplicar patches, evitando que uma tentativa com falha faça a próxima reaplicar patches de criação sobre fontes já modificadas.

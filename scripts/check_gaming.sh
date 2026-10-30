@@ -8,6 +8,7 @@ profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 manifest="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 smoke="$root/scripts/gaming_p5_qualification.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 iso_check="$root/scripts/check-iso-content.sh"
 
 fail() {
@@ -15,7 +16,7 @@ fail() {
   exit 1
 }
 
-for path in "$session" "$desktop" "$profile" "$manifest" "$smoke" "$workflow" "$iso_check"; do
+for path in "$session" "$desktop" "$profile" "$manifest" "$smoke" "$workflow" "$builder" "$iso_check"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -79,7 +80,7 @@ grep -Fqx '    - vulkan-tools' "$profile" || fail 'base Vulkan diagnostics were 
 
 grep -Fq 'scripts/check_gaming.sh' "$workflow" || fail 'workflow does not run the gaming contract gate'
 grep -Fq 'scripts/gaming_p5_qualification.sh' "$workflow" || fail 'workflow trigger does not include gaming qualification changes'
-grep -Fq "gamescope \\" "$workflow" || fail 'ISO builder does not install Gamescope for qualification'
+grep -Fq "gamescope \\" "$builder" || fail 'Artix builder does not install Gamescope for qualification'
 if grep -Fq '[lib32]' "$workflow"; then
   fail 'ISO builder still enables Artix lib32 for the base image'
 fi

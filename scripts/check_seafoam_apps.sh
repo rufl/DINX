@@ -110,7 +110,7 @@ grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$packag
   || fail 'ISO builder does not select the Pearl Zig toolchain for Dome'
 grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
   || fail 'ISO builder does not pass Pearl Zig toolchain to Dome'
-grep -Fq 'scripts/smoke_zls.sh' "$workflow" || fail 'workflow does not smoke-test ZLS'
+grep -Fq 'ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh' "$builder" || fail 'Artix builder does not smoke-test ZLS'
 grep -Fq 'scripts/check_seafoam_apps.sh' "$workflow" || fail 'workflow does not run the Seafoam app contract'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
 "$settings_contract"

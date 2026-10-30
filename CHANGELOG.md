@@ -4,7 +4,10 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Corrected P0 contract checks to verify Seafoam/ZLS smokes and builder-only Gamescope qualification in the Artix container builder, rather than expecting those steps in the host workflow.
 - Added `scripts/build-iso-docker.sh`, which runs the same digest-pinned privileged Artix container builder used by P0 CI, generates the ignored Deetty/Dintor archive from an authenticated checkout at the pinned private commit when needed, and emits local source-bound metadata and an ephemeral-key package bundle.
+
+- Fixed P0 push-trigger coverage for the Docker/container build entrypoints and restored host ownership of bind-mounted package sources after the Artix builder exits. P0 and trusted contract runs now fetch the pinned private NOCTTY source using `DEETTY_SOURCE_READ_TOKEN` and generate its ignored archive; configure that repository secret with read-only access to `rufl/NOCTTY`. Fork PR contracts skip only the two source-dependent checks.
 
 - Seed fresh Aqueous outputs with two workspaces instead of the upstream nine-workspace startup set.
 

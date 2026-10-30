@@ -35,8 +35,20 @@ checks=(
   check_gaming.sh
   check_alpha7_hardware_report.sh
 )
+all_checks=("${checks[@]}")
+case "${DINX_SKIP_PRIVATE_SOURCE_CHECKS:-false}" in
+  true)
+    printf 'dinx_contracts: private_source_checks=skipped\n'
+    checks=("${checks[@]:2}")
+    ;;
+  false) ;;
+  *)
+    printf 'dinx_contracts: DINX_SKIP_PRIVATE_SOURCE_CHECKS must be true or false\n' >&2
+    exit 1
+    ;;
+esac
 
-for check in "${checks[@]}"; do
+for check in "${all_checks[@]}"; do
   path="$root/scripts/$check"
   [[ -x "$path" ]] || { printf 'dinx_contracts: missing executable: %s\n' "$check" >&2; exit 1; }
   bash -n "$path"

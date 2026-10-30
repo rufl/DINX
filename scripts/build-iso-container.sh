@@ -7,9 +7,12 @@ finish() {
   local status=$?
   trap - EXIT
   if [[ "$host_uid" =~ ^[0-9]+$ && "$host_gid" =~ ^[0-9]+$ ]]; then
-    for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso; do
+    for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso /workspace/distro/packages; do
       [[ -n "$path" && -e "$path" ]] || continue
-      chown -R -- "$host_uid:$host_gid" "$path" || true
+      if ! chown -R -- "$host_uid:$host_gid" "$path"; then
+        printf 'build-iso-container: failed to restore ownership of %s\n' "$path" >&2
+        (( status != 0 )) || status=1
+      fi
     done
   fi
   exit "$status"

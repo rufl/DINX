@@ -23,6 +23,34 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Read pinned Deetty/Dintor source revision
+        id: deetty-source
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          ref=$(awk -F= '$1 == "DEETTY_REF" { print $2; exit }' distro/packages/deetty/source.env)
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { printf 'Invalid DEETTY_REF in source.env\n' >&2; exit 1; }
+          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
+      - name: Require private Deetty/Dintor source access
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          DEETTY_SOURCE_READ_TOKEN: ${{ secrets.DEETTY_SOURCE_READ_TOKEN }}
+        run: |
+          if [[ -z "${DEETTY_SOURCE_READ_TOKEN:-}" ]]; then
+            printf 'Configure the DEETTY_SOURCE_READ_TOKEN Actions secret with read-only access to rufl/NOCTTY.\n' >&2
+            exit 1
+          fi
+      - name: Checkout pinned private NOCTTY source
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: rufl/NOCTTY
+          ref: ${{ steps.deetty-source.outputs.ref }}
+          token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN }}
+          path: third_party/noctty
+          persist-credentials: false
+      - name: Prepare pinned Deetty/Dintor source archive
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: ./scripts/prepare_first_party_apps.sh third_party/noctty
       - name: Install contract tools
         run: |
           sudo apt-get update
@@ -40,6 +68,8 @@ jobs:
           echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
 
       - name: Run DINX static and fixture contracts
+        env:
+          DINX_SKIP_PRIVATE_SOURCE_CHECKS: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: ./scripts/check_dinx_contracts.sh
       - name: Verify REUSE metadata
         run: |

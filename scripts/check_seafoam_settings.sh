@@ -21,6 +21,7 @@ fail() {
 
 for path in "$pkgbuild" "$build_file" "$source_file" "$desktop" "$icon" "$package_dir/README.md" \
   "$groups" "$workflow" "$builder" "$smoke_script" "$zls_smoke"; do
+  [[ -r "$path" ]] || fail "required input is missing or unreadable: $path"
 done
 
 grep -Fqx 'pkgname=seafoam-settings' "$pkgbuild" || fail 'package name is not seafoam-settings'
@@ -70,8 +71,10 @@ fi
 grep -Fq 'build_package seafoam-settings' "$builder" || fail 'ISO builder does not build Seafoam Settings'
 grep -Fq 'build_package zls' "$builder" || fail 'ISO builder does not build ZLS'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
-grep -Fq 'scripts/seafoam_settings_smoke.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings smoke'
-grep -Fq 'scripts/smoke_zls.sh' "$workflow" || fail 'workflow does not run the ZLS smoke'
+grep -Fq 'SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh' "$builder" \
+  || fail 'Artix builder does not run the Seafoam Settings smoke after package installation'
+grep -Fq 'ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh' "$builder" \
+  || fail 'Artix builder does not smoke-test the installed ZLS package'
 grep -Fq '"$package_repo"/zls-*.pkg.tar.zst' "$builder" || fail 'ISO builder does not install ZLS before the Seafoam smoke'
 grep -Fq '"$package_repo"/dome-*.pkg.tar.zst' "$builder" || fail 'ISO builder does not install Dome before the Seafoam Settings smoke'
 

@@ -75,7 +75,7 @@ done
 workflow=.github/workflows/p0-iso.yml
 builder=scripts/build-iso-container.sh
 docker_builder=scripts/build-iso-docker.sh
-release_workflow=.github/workflows/release.yml
+contracts_workflow=.github/workflows/contracts.yml
 update_smoke=scripts/smoke_dinx_update.sh
 for required in \
   'scripts/check_dinx_package_provenance.sh' \
@@ -89,6 +89,11 @@ for required in \
   'DINX_SKIP_POSTBUILD_CHECKS: '\''true'\''' \
   'run: scripts/build-iso-docker.sh' \
   'run: ./scripts/check_first_party_apps.sh' \
+  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty' \
+  'DEETTY_SOURCE_READ_TOKEN' \
+  'repository: rufl/NOCTTY' \
+  'path: third_party/noctty' \
+  'persist-credentials: false' \
   'Bundle signed package repository for artifact portability' \
   'dist/dinx-package-repository.tar'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
@@ -131,6 +136,14 @@ for required in \
   'bash /workspace/scripts/build-iso-container.sh'; do
   grep -Fq -- "$required" "$docker_builder" || fail "Docker wrapper is missing container wiring: $required"
 done
+for required in \
+  '- "scripts/build-iso-docker.sh"' \
+  '- "scripts/build-iso-container.sh"'; do
+  grep -Fq -- "$required" "$workflow" \
+    || fail "P0 push path filters are missing build input: $required"
+done
+grep -Fq '/workspace/distro/packages' "$builder" \
+  || fail 'Artix builder cleanup does not restore ownership of bind-mounted package sources'
 for required in \
   'Unpack signed package repository artifact' \
   'tar -xf "$repository_archive" -C dist/release-input' \

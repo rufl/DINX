@@ -4,10 +4,38 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
-- Set DINX dark as the system GTK 3/4 default and export GTK/Qt6ct theme selection from the direct Aqueous session launcher. Existing user homes receive the Qt6ct DINX configuration and palette when missing.
-- Start Aqueous in its freeform `stacking` layout for live and installed sessions; add `Alt+Shift+F` to restore that layout and retain `Super+Shift+Space` for per-window floating.
+- Export `GTK_CSD=0` from the Aqueous/Pearl session and request server-side decorations so standard GTK and protocol-capable Wayland apps use the compositor titlebar. Document the remaining boundary for apps that hard-code custom client-side chrome.
 
-- Applied the DINX Linux wordmark and matching D-ray mark to GRUB, Pearl Greeter, Calamares and the initial desktop wallpaper. Existing upstream/Adwaita desktop and application icons remain unchanged.
+- Run the non-privileged DINX contracts and REUSE workflow on every pull request and every push to `main`, including documentation and license-only changes. Keep the privileged ISO build on its selected build-related triggers.
+
+- Correct the Beta 0.1 ISO gate to GitHub's actual per-release-asset limit: strictly under 2 GiB, with no arbitrary 1.8-billion-byte target. Alpha 10 remains within the cap.
+
+- Complete REUSE coverage for the GPL-3.0-only DINX decoration helpers and exclude the retained local Aqueous source checkout from project scans.
+
+- Updated the English and pt-BR GitHub landing pages to use the DINX Linux wordmark already shipped in the ISO branding assets.
+
+- Made Deetty the sole terminal emulator in the live ISO and fresh installation; DINX shell defaults, Aqueous terminal action and DINX launcher calls target it directly. Nano remains the recovery editor. The ISO ships only `ghostty-vt-runtime` (VT library, headers and license); full Ghostty is builder-only and removed before ISO assembly.
+
+- Renamed the DINX-owned terminal/editor package and applications to `deetty` (Deetty) and Dintor, including the `dintor` command, `DINTOR_THEME`, desktop IDs `org.dinx.Deetty` / `org.dinx.Dintor`, package path and qualification-script names. The pinned upstream remains NOCTTY at its existing URL, commit and checksum; archive provenance and internal source paths are unchanged.
+
+- Added concise launcher names: Dintor is labeled “Editor” in the default and pt-BR desktop entries; Seafoam Settings, DINXPanel and File Roller use “Ajustes do Desktop,” “Central de Controle” and “Descompactador” in pt-BR. File Roller’s localized desktop-ID override and MIME cache live under `/usr/local/share`, outside package-owned files, preserving the label and archive associations across package upgrades.
+
+- Set the Gufw and Qps launcher labels to “Firewall” and “Process Manager” in English, and “Firewall” and “Processos” in pt-BR. Their executable commands remain unchanged.
+
+- Set the OpenSnitch launcher label to “Traffic Monitor” in English and “Monitor de Tráfego” in pt-BR. Its `opensnitch-ui` command and upstream autostart metadata remain unchanged; the System category prevents duplicate menu placement.
+
+- Standardized English and pt-BR launcher labels for the base desktop apps. File Roller now appears as “Archive Manager” / “Descompactador” without changing its archive MIME handling. Hid the package-provided Artix Calamares alias; the DINX `Install DINX` / `Instalar DINX` entry remains the sole installer shortcut.
+
+- Replaced Strawberry with Gapless (G4Music) in the base ISO. DINX builds pinned upstream v4.6.2 as a signed `gapless` package, includes GStreamer base/good codec support, enables gapless playback by default, and assigns common audio MIME types to Gapless.
+
+- Added Galculator, a compact GTK 3 calculator from Artix's signed `world` repository, to the base desktop roster. It uses the existing GTK stack and adds no separate GUI toolkit.
+
+- Set DINX dark as the system GTK 3/4 default and export GTK/Qt6ct theme selection from the direct Aqueous session launcher. Existing user homes receive the Qt6ct DINX configuration and palette when missing.
+- Seed fresh Aqueous user profiles with floating `stacking` on every workspace. The shipped WM config disables the default tile, scrolling, monocle and grid shortcuts (`Super+T/F/M/G`); `Alt+Shift+F` selects stacking and `Super+Shift+Space` toggles floating per window. Dragging a floating window to the left/right/bottom edge snaps it to a half, corners to quarters, and the top-center edge maximizes it (24 px threshold, no gap). Existing user configs remain untouched.
+- Give every Aqueous top-level window a compositor-drawn DINX titlebar with its title and minimize, maximize/restore and close controls, including GTK and Pearl clients. Long titles ellipsize before the controls. Dragging an unobstructed part of the bar moves the window and uses the existing floating snap behavior; fullscreen hides the bar. Client-drawn chrome within the top 36 logical pixels can be obscured.
+- Fixed stale Aqueous titlebar text when Wayland or XWayland clients change their title. The Aqueous/Pearl gate now applies DINX patches to the pinned upstream source, tests titlebar hit zones and floating snap geometry, and asserts title notifications invalidate the text cache.
+
+- Added the reduced D-and-ray symbol as a transparent canonical SVG at `design/brand/dinx-ray-mark.svg`; GRUB uses its RGBA rendering and Calamares uses it as the product icon. The full wordmark remains on the greeter/desktop wallpaper and Calamares logo/welcome surfaces; upstream/Adwaita app and desktop icons remain unchanged.
 - Replaced the first ASCII approximation with a density-mapped rendering of the DINX D-ray source SVG. The plain-ASCII asset works with Fastfetch and Areofyl's optional `fetch` custom-logo format.
 
 ## v0.1.0-alpha.10 — 2026-10-29
@@ -44,7 +72,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Restored File Roller for graphical archive open/create/extract actions and GParted for standalone partition editing, while retaining the removal of Thunar, GVFS, Tumbler and KDE Partition Manager. The kernel `ntfs3` driver supplies NTFS read/write support in the live ISO and installed system; legacy `ntfs-3g` is optional after installation.
 
 - Added `wdisplays` and `shikane` to the base desktop payload for interactive and deterministic Wayland display setup. Added Dome 0.1.1 as a source-pinned base Seafoam package from Pearl v0.3.0; its resource/process views are dinit-safe and the package installs no systemd or uwsm integration. Coral is intentionally not included.
-- Added the base Seafoam Settings native Zig/GTK4 launcher for wdisplays, Shikane, DinitUI, DINXPanel, Qt6ct and Dome entry points. Added the source-pinned official ZLS 0.16.0 package for Nocted's Zig LSP path; all three are included in the base ISO. ZLS carries only the matching Zig `lib/std` tree plus a metadata-only shim, so completion/navigation work without a full compiler or systemd; the shim delegates to an optional Artix `zig` installation for compiler commands.
+- Added the base Seafoam Settings native Zig/GTK4 launcher for wdisplays, Shikane, DinitUI, DINXPanel, Qt6ct and Dome entry points. Added the source-pinned official ZLS 0.16.0 package for Dintor's Zig LSP path; all three are included in the base ISO. ZLS carries only the matching Zig `lib/std` tree plus a metadata-only shim, so completion/navigation work without a full compiler or systemd; the shim delegates to an optional Artix `zig` installation for compiler commands.
 - Kept the upstream compiler boundary explicit: Pearl 0.3.0, including the source used by Dome, and Phyto's bundled Pearl 0.2.8 source use their pinned Zig 0.16.0 toolchain, which P0 downloads and verifies; Pori, Aqueous and other DINX-native Zig packages outside that upstream Pearl tree remain on the verified Zig 0.17.0 toolchain.
 - Added the DINX display persistence bridge: the wdisplays desktop entry, DINXPanel and Seafoam Settings use `dinx-wdisplays`; closing the editor atomically replaces the `DINX wdisplays` profile, reloads Shikane and keeps the layout across sessions.
 - Added the read-only `dinx-doctor` report for session, dinit, storage, display and package evidence; it never performs service, mount, package or network mutations.

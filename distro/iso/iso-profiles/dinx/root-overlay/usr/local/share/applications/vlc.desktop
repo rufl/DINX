@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Name=Media Player
+Name[pt_BR]=Tocador de Mídia
+GenericName=Media Player
+GenericName[pt_BR]=Tocador de Mídia
+Comment=Read, capture, broadcast your multimedia streams
+Exec=/usr/bin/vlc --started-from-file %U
+TryExec=/usr/bin/vlc
+Icon=vlc
+Terminal=false
+Type=Application
+Categories=AudioVideo;Player;Recorder;
+MimeType=application/ogg;application/x-cd-image;audio/aac;audio/flac;audio/mpeg;audio/ogg;audio/vnd.rn-realaudio;audio/x-aac;audio/x-flac;audio/x-m4a;audio/x-mpeg;audio/x-mp3;audio/x-vorbis;audio/x-wav;video/3gpp;video/dv;video/mpeg;video/mp4;video/quicktime;video/vnd.avi;video/webm;video/x-flv;video/x-matroska;video/x-msvideo;
+X-KDE-Protocols=ftp,http,https,mms,rtmp,rtsp,sftp,smb
+Keywords=Player;Capture;DVD;Audio;Video;Server;Broadcast;

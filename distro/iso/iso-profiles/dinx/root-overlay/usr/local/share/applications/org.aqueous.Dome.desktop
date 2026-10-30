@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=System Monitor
+Name[pt_BR]=Monitor do Sistema
+GenericName=System Monitor
+GenericName[pt_BR]=Monitor do Sistema
+Comment=Monitor system resources, processes and services
+Exec=dome
+TryExec=dome
+Icon=org.aqueous.Dome
+Terminal=false
+Categories=System;Monitor;GTK;
+Keywords=CPU;Memory;GPU;Processes;System;Monitor;
+StartupNotify=true

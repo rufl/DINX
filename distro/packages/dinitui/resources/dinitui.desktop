@@ -1,5 +1,6 @@
 [Desktop Entry]
-Name=DinitUI
+Name=Services
+Name[pt_BR]=Serviços
 GenericName=Dinit service manager
 Comment=Inspect and control Dinit services
 Exec=dinitui

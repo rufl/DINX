@@ -6,6 +6,13 @@ fail() {
   exit 1
 }
 
+assert_desktop_entry() {
+  local path=$1 contents=$2 english=$3 portuguese=$4 command=$5
+  grep -Fqx "Name=$english" <<<"$contents" || fail "$path has the wrong English launcher name"
+  grep -Fqx "Name[pt_BR]=$portuguese" <<<"$contents" || fail "$path has the wrong Portuguese launcher name"
+  grep -Fqx "$command" <<<"$contents" || fail "$path has the wrong launch command"
+}
+
 iso_path=${1:-}
 [[ -n "$iso_path" ]] || fail "usage: $0 ISO"
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
@@ -151,7 +158,6 @@ required_paths=(
   usr/bin/qt6ct
   usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
   usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
-  usr/bin/foot
   usr/bin/xdg-user-dirs-update
   usr/bin/aqueous
   usr/bin/aqueous-cpu
@@ -179,6 +185,7 @@ required_paths=(
   usr/share/doc/zls/README.md
   etc/zls.json
   etc/xdg/zls.json
+  etc/xdg/aqueous/wm.toml
   usr/lib/zls/zig-env
   usr/lib/zls/zig-env.zon
   usr/lib/zls/zig/std/std.zig
@@ -201,7 +208,7 @@ required_paths=(
   usr/bin/vim
   usr/bin/watch
   usr/bin/whiptail
-  usr/share/kio/servicemenus/nocttyhere.desktop
+  usr/share/kio/servicemenus/deettyhere.desktop
   usr/lib/ssh/sftp-server
   usr/bin/nvtop
   usr/bin/zathura
@@ -220,7 +227,8 @@ required_paths=(
   usr/bin/swayimg
   usr/bin/vlc
   usr/bin/qvlc
-  usr/bin/strawberry
+  usr/bin/g4music
+  usr/bin/galculator
   usr/bin/topgrade
   usr/bin/paru
   usr/bin/shelly
@@ -237,7 +245,11 @@ required_paths=(
   etc/shellybuild.conf
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
   usr/share/applications/vlc.desktop
-  usr/share/applications/org.strawberrymusicplayer.strawberry.desktop
+  usr/share/applications/com.github.neithern.g4music.desktop
+  usr/share/applications/galculator.desktop
+  usr/share/licenses/gapless/COPYING
+  usr/share/dbus-1/services/com.github.neithern.g4music.service
+  usr/share/glib-2.0/schemas/com.github.neithern.g4music.gschema.xml
   usr/share/applications/swayimg.desktop
   usr/share/applications/org.kde.kolourpaint.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
@@ -252,6 +264,9 @@ required_paths=(
   etc/dinit.d/opensnitchd
   usr/share/applications/gufw.desktop
   usr/share/applications/qps.desktop
+  usr/local/share/applications/gufw.desktop
+  usr/local/share/applications/qps.desktop
+  usr/local/share/applications/opensnitch_ui.desktop
   usr/share/applications/opensnitch_ui.desktop
   usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/bin/wl-copy
@@ -261,18 +276,23 @@ required_paths=(
   usr/share/applications/org.pwmt.zathura.desktop
   usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
-  usr/bin/noctty
-  usr/bin/nocted
+  usr/lib/libghostty-vt.so.0
+  usr/include/ghostty/vt.h
+  usr/share/licenses/ghostty-vt-runtime/LICENSE
+  usr/bin/deetty
+  usr/bin/dintor
   usr/bin/clangd
-  usr/share/applications/com.noctty.NOCTTY.desktop
-  usr/share/applications/com.noctty.NoctEd.desktop
-  usr/share/icons/hicolor/scalable/apps/com.noctty.NOCTTY.svg
-  usr/share/icons/hicolor/scalable/apps/com.noctty.NoctEd.svg
-  usr/share/nocted/language-specs/zig.lang
-  usr/share/nocted/language-specs/svelte.lang
-  usr/share/nocted/language-specs/kof.lang
-  usr/share/nocted/styles/nocted-dark.xml
-  usr/share/nocted/styles/nocted-light.xml
+  usr/share/applications/org.dinx.Deetty.desktop
+  usr/share/applications/org.dinx.Dintor.desktop
+  usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg
+  usr/share/icons/hicolor/scalable/apps/org.dinx.Dintor.svg
+  usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
+  usr/share/kio/servicemenus/deettyhere.desktop
+  usr/share/dintor/language-specs/zig.lang
+  usr/share/dintor/language-specs/svelte.lang
+  usr/share/dintor/language-specs/kof.lang
+  usr/share/dintor/styles/dintor-dark.xml
+  usr/share/dintor/styles/dintor-light.xml
   usr/bin/calamares
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
   usr/local/libexec/dinx-idle
@@ -284,6 +304,7 @@ required_paths=(
   usr/bin/lxqt-policykit-agent
   usr/bin/ps
   usr/share/applications/dinx-installer.desktop
+  usr/share/applications/calamares.desktop
   usr/local/bin/dinx-save-shikane-profile
   usr/local/bin/dinx-wdisplays
   usr/bin/brightnessctl
@@ -292,6 +313,22 @@ required_paths=(
   usr/share/applications/com.pori.app.desktop
   usr/share/applications/org.aqueous.Phyto.desktop
   usr/share/applications/org.gnome.FileRoller.desktop
+  usr/local/share/applications/org.gnome.FileRoller.desktop
+  usr/local/share/applications/org.aqueous.Dome.desktop
+  usr/local/share/applications/org.aqueous.Phyto.desktop
+  usr/local/share/applications/com.shellyorg.shelly.desktop
+  usr/local/share/applications/galculator.desktop
+  usr/local/share/applications/gparted.desktop
+  usr/local/share/applications/org.kde.kolourpaint.desktop
+  usr/local/share/applications/swayimg.desktop
+  usr/local/share/applications/org.pwmt.zathura.desktop
+  usr/local/share/applications/com.github.neithern.g4music.desktop
+  usr/local/share/applications/vlc.desktop
+  usr/local/share/applications/blueman-manager.desktop
+  usr/local/share/applications/nm-connection-editor.desktop
+  usr/local/share/applications/com.saivert.pwvucontrol.desktop
+  usr/local/share/applications/calamares.desktop
+  usr/local/share/applications/mimeinfo.cache
   usr/share/applications/gparted.desktop
   usr/share/applications/network.cycles.wdisplays.desktop
   usr/share/grub/themes/artix/theme.txt
@@ -310,6 +347,15 @@ for path in "${required_paths[@]}"; do
   grep -Fq "squashfs-root/$path" <<<"$manifest" || fail "missing ISO path: $path"
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
+  for strawberry_path in usr/bin/strawberry usr/share/applications/org.strawberrymusicplayer.strawberry.desktop; do
+    if grep -Fq "/$strawberry_path" <<<"$image_manifest"; then
+      fail "retired Strawberry payload remains in the ISO: $strawberry_path"
+    fi
+  done
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/strawberry-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'retired Strawberry package metadata remains in the ISO'
+  fi
   for bc250_path in \
     usr/bin/cyan-skillfish-governor-smu \
     usr/bin/bc250-control-center \
@@ -349,7 +395,36 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'optional gaming package metadata is present in the generic ISO'
   fi
+  terminal_binary_matches=$(grep -E '/squashfs-root/(usr/bin|usr/local/bin)/(foot|ghostty|kitty|alacritty|konsole|xterm|xfce4-terminal|gnome-terminal|wezterm|tilix)([[:space:]]|$)' <<<"$image_manifest" || true)
+  if [[ -n "$terminal_binary_matches" ]]; then
+    printf '%s\n' "$terminal_binary_matches" >&2
+    fail 'an alternative terminal emulator executable is present in the ISO'
+  fi
+  terminal_desktop_matches=$(grep -E '/squashfs-root/usr/share/applications/[^[:space:]]*(foot|ghostty|kitty|alacritty|konsole|xterm|xfce4-terminal|gnome-terminal|wezterm|tilix)[^[:space:]]*\.desktop([[:space:]]|$)' <<<"$image_manifest" || true)
+  if [[ -n "$terminal_desktop_matches" ]]; then
+    printf '%s\n' "$terminal_desktop_matches" >&2
+    fail 'an alternative terminal emulator desktop launcher is present in the ISO'
+  fi
+  terminal_package_matches=$(grep -E '/var/lib/pacman/local/(foot|ghostty|kitty|alacritty|konsole|xterm|xfce4-terminal|gnome-terminal|wezterm|tilix)-[0-9][^/]*/' <<<"$image_manifest" || true)
+  if [[ -n "$terminal_package_matches" ]]; then
+    printf '%s\n' "$terminal_package_matches" >&2
+    fail 'an alternative terminal emulator package is installed in the ISO'
+  fi
 done
+terminal_desktops=$(grep -oE 'squashfs-root/usr/share/applications/[^[:space:]]+\.desktop' <<<"$manifest" | sort -u || true)
+while IFS= read -r desktop_path; do
+  [[ -n "$desktop_path" ]] || continue
+  desktop_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "${desktop_path#squashfs-root/}")
+  if grep -Eq '^Categories=.*TerminalEmulator(;|$)' <<<"$desktop_config" \
+    && ! grep -Eq '^(Exec|TryExec)=(deetty|/usr/bin/deetty)([[:space:]]|$)' <<<"$desktop_config"; then
+    fail "terminal-emulator desktop entry does not launch Deetty: ${desktop_path#squashfs-root/}"
+  fi
+done <<<"$terminal_desktops"
+grep -Fq '/var/lib/pacman/local/deetty-' <<<"$manifest" || fail 'Deetty package metadata is missing from the installed rootfs'
+grep -Fq '/var/lib/pacman/local/ghostty-vt-runtime-' <<<"$manifest" || fail 'Ghostty VT-only runtime package metadata is missing from the installed rootfs'
+if grep -Eq '/var/lib/pacman/local/ghostty-[0-9][^/]*/' <<<"$manifest"; then
+  fail 'full Ghostty terminal package metadata is present in the installed rootfs'
+fi
 dinit_tmpfiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/tmpfiles.d/dinx-dinit.conf)
 grep -Fqx 'd /var/log/dinit 0755 root root -' <<<"$dinit_tmpfiles" \
   || fail 'ISO does not recreate the Dinit service log directory at boot'
@@ -468,7 +543,8 @@ fi
 
 grep -Fq '/usr/share/applications/swayimg.desktop' <<<"$manifest" || fail 'Swayimg desktop entry is not in the ISO payload'
 grep -Fq 'vlc.desktop' <<<"$manifest" || fail 'VLC desktop entry is not in the ISO payload'
-grep -Fq 'org.strawberrymusicplayer.strawberry.desktop' <<<"$manifest" || fail 'Strawberry desktop entry is not in the ISO payload'
+grep -Fq 'com.github.neithern.g4music.desktop' <<<"$manifest" || fail 'Gapless desktop entry is not in the ISO payload'
+grep -Fq 'galculator.desktop' <<<"$manifest" || fail 'Galculator desktop entry is not in the ISO payload'
 grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
 theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
@@ -557,6 +633,7 @@ grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed se
 grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
 grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
 aqueous_wm_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/wm.toml)
+grep -Fqx 'spawn_terminal = "deetty"' <<<"$aqueous_wm_config" || fail 'Aqueous terminal action does not launch Deetty'
 grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' <<<"$aqueous_wm_config" || fail 'Aqueous stacking layout keyboard binding is missing'
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'Aqueous init supervisor command is missing'
@@ -575,13 +652,15 @@ grep -Fq 'before-sleep /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 
 lock_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-lock.desktop)
 grep -Fq 'Exec=/usr/local/libexec/dinx-lock' <<<"$lock_desktop" || fail 'DINX lock launcher is missing'
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
-grep -Fq 'TERMINAL=' <<<"$shell_config" || fail 'DINX shell terminal default is missing'
+grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' <<<"$shell_config" || fail 'DINX shell does not default to Deetty'
+grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' <<<"$aqueous_wrapper" || fail 'Aqueous session does not default to Deetty'
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 grep -Fq 'QT_QPA_PLATFORMTHEME=' <<<"$shell_config" || fail 'Qt6ct session integration is missing'
 grep -Fq 'DINX_COLOR_SCHEME=' <<<"$shell_config" || fail 'DINX color scheme session integration is missing'
 grep -Fq 'export SHELL=/bin/fish' <<<"$shell_config" || fail 'DINX POSIX shell default is not Fish'
 fish_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/fish/config.fish)
 grep -Fq 'set -gx SHELL /bin/fish' <<<"$fish_config" || fail 'DINX Fish shell default is missing'
+grep -Fq 'set -gx TERMINAL deetty' <<<"$fish_config" || fail 'DINX Fish does not default to Deetty'
 useradd_defaults=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/default/useradd)
 grep -Fq 'SHELL=/bin/fish' <<<"$useradd_defaults" || fail 'new-user shell default is not Fish'
 users_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/users.conf)
@@ -594,7 +673,19 @@ grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail
 grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fail 'Zathura is not the default PDF handler'
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
 grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
-grep -Fq 'audio/flac=org.strawberrymusicplayer.strawberry.desktop;' <<<"$mimeapps_config" || fail 'Strawberry is not the default FLAC handler'
+for audio_mime in audio/mpeg audio/x-mpeg audio/x-mp3 audio/ogg audio/x-vorbis audio/x-vorbis+ogg audio/x-opus+ogg audio/flac audio/x-flac audio/wav audio/x-wav; do
+  grep -Fq "$audio_mime=com.github.neithern.g4music.desktop;" <<<"$mimeapps_config" \
+    || fail "Gapless is not the default audio handler for $audio_mime"
+done
+if grep -Fq 'strawberry' <<<"$mimeapps_config"; then
+  fail 'retired Strawberry handlers remain in the ISO'
+fi
+gapless_schema=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/glib-2.0/schemas/com.github.neithern.g4music.gschema.xml)
+grep -A2 -F '<key name="gapless-playback" type="b">' <<<"$gapless_schema" \
+  | grep -Fq '<default>true</default>' || fail 'Gapless gapless playback is not enabled by default'
+gapless_dbus=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dbus-1/services/com.github.neithern.g4music.service)
+grep -Fq 'Name=com.github.neithern.g4music' <<<"$gapless_dbus" || fail 'Gapless D-Bus activation name is missing'
+grep -Fq 'Exec=/usr/bin/g4music --gapplication-service' <<<"$gapless_dbus" || fail 'Gapless D-Bus activation command is missing'
 for archive_mime in application/zip application/x-7z-compressed application/vnd.rar application/x-tar application/gzip application/x-bzip2 application/x-xz application/zstd; do
   grep -Fq "$archive_mime=org.gnome.FileRoller.desktop;" <<<"$mimeapps_config" || fail "File Roller is not the default archive handler for $archive_mime"
 done
@@ -617,6 +708,16 @@ for forbidden_path in \
   usr/local/libexec/dinx-labwc \
   etc/xdg/labwc \
   etc/xdg/labwc-greeter \
+  usr/bin/noctty \
+  usr/bin/nocted \
+  usr/share/applications/com.noctty.NOCTTY.desktop \
+  usr/share/applications/com.noctty.NoctEd.desktop \
+  usr/share/icons/hicolor/scalable/apps/com.noctty.NOCTTY.svg \
+  usr/share/icons/hicolor/scalable/apps/com.noctty.NoctEd.svg \
+  usr/share/kio/servicemenus/nocttyhere.desktop \
+  usr/share/nocted \
+  usr/share/licenses/noctty \
+  usr/share/deetty/noctalia \
   usr/share/noctty/noctalia \
   usr/bin/xfce4-session \
   usr/bin/xfdesktop \
@@ -719,26 +820,80 @@ grep -Fq 'productWelcome: "dinx.svg"' <<<"$calamares_branding_desc" \
   || fail 'Calamares welcome does not use the DINX Linux wordmark'
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
-grep -Fq 'Exec=pkexec calamares' <<<"$installer_desktop" || fail 'DINX installer launcher is missing'
-noctty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NOCTTY.desktop)
-grep -Fq 'TryExec=noctty' <<<"$noctty_desktop" || fail 'NOCTTY desktop launcher is missing'
-grep -Fq 'Exec=noctty --open-uri %u' <<<"$noctty_desktop" || fail 'NOCTTY desktop command is incorrect'
+grep -Fq 'Name=Install DINX' <<<"$installer_desktop" || fail 'DINX installer English desktop name is missing'
+grep -Fq 'Name[pt_BR]=Instalar DINX' <<<"$installer_desktop" || fail 'DINX installer Portuguese desktop name is missing'
+if grep -Eq '^(Hidden|NoDisplay)=true$' <<<"$installer_desktop"; then
+  fail 'DINX installer launcher is hidden'
+fi
+artix_package_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/calamares.desktop)
+grep -Fq 'Name=Install Artix' <<<"$artix_package_desktop" || fail 'Calamares package still has an Artix-branded installer entry'
+grep -Fq 'Name[pt_BR]=Instalar Artix' <<<"$artix_package_desktop" || fail 'Calamares package Artix installer localization is missing'
+artix_installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/calamares.desktop)
+grep -Fq 'Name=Install Artix' <<<"$artix_installer_desktop" || fail 'Artix installer alias is missing'
+grep -Fq 'Name[pt_BR]=Instalar Artix' <<<"$artix_installer_desktop" || fail 'Artix installer alias Portuguese name is missing'
+grep -Fqx 'Hidden=true' <<<"$artix_installer_desktop" || fail 'Artix installer alias is not hidden'
+grep -Fqx 'NoDisplay=true' <<<"$artix_installer_desktop" || fail 'Artix installer alias is not suppressed from menus'
+deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
+grep -Fq 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop launcher is missing'
+grep -Fq 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty desktop URI command is incorrect'
 
-nocted_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/com.noctty.NoctEd.desktop)
-grep -Fq 'Exec=nocted %F' <<<"$nocted_desktop" || fail 'NoctEd desktop launcher is missing'
-grep -Fq 'Icon=com.noctty.NoctEd' <<<"$nocted_desktop" || fail 'NoctEd desktop icon is missing'
+dintor_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Dintor.desktop)
+grep -Fq 'Exec=dintor %F' <<<"$dintor_desktop" || fail 'Dintor desktop launcher is missing'
+grep -Fq 'Icon=org.dinx.Dintor' <<<"$dintor_desktop" || fail 'Dintor desktop icon is missing'
+grep -Fq 'Name=Editor' <<<"$dintor_desktop" || fail 'Dintor English desktop name is missing'
+grep -Fq 'Name[pt_BR]=Editor' <<<"$dintor_desktop" || fail 'Dintor Portuguese desktop name is missing'
 dinitui_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinitui.desktop)
 grep -Fq 'Exec=dinitui' <<<"$dinitui_desktop" || fail 'DinitUI desktop launcher is missing'
+grep -Fq 'Name=Services' <<<"$dinitui_desktop" || fail 'DinitUI English desktop name is missing'
+grep -Fq 'Name[pt_BR]=Serviços' <<<"$dinitui_desktop" || fail 'DinitUI Portuguese desktop name is missing'
 grep -Fq 'Icon=org.dinx.DinitUI' <<<"$dinitui_desktop" || fail 'DinitUI desktop icon contract is missing'
 dinxpanel_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinxpanel.desktop)
 grep -Fq 'Exec=dinxpanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop launcher is missing'
 grep -Fq 'Icon=org.dinx.DinxPanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop icon contract is missing'
-dome_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.aqueous.Dome.desktop)
+grep -Fq 'Name=Control Center' <<<"$dinxpanel_desktop" || fail 'DINXPanel English desktop name is missing'
+grep -Fq 'Name[pt_BR]=Central de Controle' <<<"$dinxpanel_desktop" || fail 'DINXPanel Portuguese desktop name is missing'
+dome_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/org.aqueous.Dome.desktop)
 grep -Fq 'Exec=dome' <<<"$dome_desktop" || fail 'Dome desktop launcher is missing'
+grep -Fq 'Name=System Monitor' <<<"$dome_desktop" || fail 'Dome English desktop name is missing'
+grep -Fq 'Name[pt_BR]=Monitor do Sistema' <<<"$dome_desktop" || fail 'Dome Portuguese desktop name is missing'
 grep -Fq 'Icon=org.aqueous.Dome' <<<"$dome_desktop" || fail 'Dome desktop icon contract is missing'
 settings_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/seafoam-settings.desktop)
 grep -Fq 'Exec=seafoam-settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop launcher is missing'
 grep -Fq 'Icon=org.seafoam.Settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop icon contract is missing'
+grep -Fq 'Name=Desktop Settings' <<<"$settings_desktop" || fail 'Seafoam Settings English desktop name is missing'
+grep -Fq 'Name[pt_BR]=Ajustes do Desktop' <<<"$settings_desktop" || fail 'Seafoam Settings Portuguese desktop name is missing'
+file_roller_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/org.gnome.FileRoller.desktop)
+grep -Fq 'Name[pt_BR]=Descompactador' <<<"$file_roller_override" || fail 'File Roller Portuguese desktop name is missing'
+grep -Fq 'Name=Archive Manager' <<<"$file_roller_override" || fail 'File Roller English desktop name is missing'
+grep -Fq 'Exec=file-roller %U' <<<"$file_roller_override" || fail 'localized File Roller launcher command is incorrect'
+while IFS='|' read -r path english portuguese command; do
+  launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
+  assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"
+done <<'EOF'
+usr/local/share/applications/org.aqueous.Dome.desktop|System Monitor|Monitor do Sistema|dome
+usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
+usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
+usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
+usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
+usr/local/share/applications/org.kde.kolourpaint.desktop|Drawing|Desenho|kolourpaint %u
+usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
+usr/local/share/applications/org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
+usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
+usr/local/share/applications/vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
+usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|blueman-manager
+usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
+usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
+usr/local/share/applications/org.gnome.FileRoller.desktop|Archive Manager|Descompactador|file-roller %U
+usr/local/share/applications/calamares.desktop|Install Artix|Instalar Artix|pkexec calamares
+usr/share/applications/network.cycles.wdisplays.desktop|Display Settings|Ajustes de Tela|dinx-wdisplays
+usr/share/applications/com.pori.app.desktop|Disks & Mounts|Discos e Montagens|/usr/bin/pori
+EOF
+swayimg_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/swayimg.desktop)
+grep -Fqx 'NoDisplay=true' <<<"$swayimg_desktop" || fail 'Swayimg is unexpectedly exposed in the app menu'
+file_roller_mime_cache=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/mimeinfo.cache)
+for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
+  grep -Fqx "$mime=org.gnome.FileRoller.desktop;" <<<"$file_roller_mime_cache" || fail "File Roller MIME cache is missing $mime"
+done
 zls_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/zls.json)
 zls_xdg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/zls.json)
 [[ "$zls_config" == "$zls_xdg_config" ]] || fail 'ZLS XDG configuration alias is not identical'
@@ -753,7 +908,7 @@ grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is mi
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
 grep -Fq '/usr/bin/clangd' <<<"$manifest" || fail 'clangd runtime is missing'
-grep -Fq '/usr/share/nocted/styles/nocted-light.xml' <<<"$manifest" || fail 'NoctEd light scheme is missing'
+grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Dintor light scheme is missing'
 
 
 livefs_required_paths=(

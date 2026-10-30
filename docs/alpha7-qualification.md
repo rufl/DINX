@@ -28,7 +28,7 @@ as `pass`.
 
 1. Verify the ISO SHA-512 and build metadata, then boot the normal DINX session.
 2. After a Calamares install, confirm the first boot reaches Pearl Greeter and then the Aqueous/Pearl session; `dinitctl status greetd NetworkManager` must report the expected services.
-3. Open **DINX Display Setup**, arrange the outputs, close it, and confirm the
+3. Open **Display Settings**, arrange the outputs, close it, and confirm the
    `DINX wdisplays` profile exists in
    `~/.config/shikane/config.toml`; log out and back in to confirm it reapplies.
 4. On a disposable NTFS volume, mount it through Pori or UDisks2, create and

@@ -1,2 +1,15 @@
 [layout]
 default = "stacking"
+force_ssd = true
+
+[layout.slots]
+primary = "stacking"
+secondary = "stacking"
+tertiary = "stacking"
+quaternary = "stacking"
+
+[layout.options.float]
+snap_gap = 0
+snap_threshold = 24
+resistance = 12
+top_edge_maximize = true

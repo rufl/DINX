@@ -41,7 +41,7 @@ Completed:
 
 - published the ISO/parts, checksums, installation instructions, known issues and release metadata;
 - qualified the experimental persistent installer and first-boot recovery path in CI on disposable BIOS and UEFI disks;
-- provided the minimal terminal fallback and working shell configuration;
+- made Deetty the sole terminal emulator in the live ISO and fresh installation, with working shell defaults;
 - recorded the production-key prerequisite, hardware boundary and recovery limitations in the release documentation;
 
 Deferred release gates:
@@ -50,13 +50,13 @@ Deferred release gates:
 
 **Exit criterion:** met. An invited tester can install the alpha snapshot from the public release and documentation without reconstructing the development environment.
 
-## P2 — Noctty
+## P2 — Deetty
 
 **Status:** complete. P2 closed with the final green P0 workflow run recorded in [P0 build status](p0-build.md).
 
 P2 exit evidence:
 
-- the exact NOCTTY/NoctEd source archive is SHA-256 pinned, archive-verified and built into the Artix package;
+- the exact pinned upstream archive that supplies Deetty and Dintor is SHA-256 verified and built into the Artix `deetty` package;
 - the native Zig core qualifies PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, protocol/Unicode compatibility, allocator-accounted lifecycle and fairness under 30 panes with an 8 MiB paste;
 - the ReleaseSafe matrix qualifies actual tmux, a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP, real Vim/btop, and the installed `info` command or its deterministic styled fallback for minimal/non-TTY surfaces;
 - the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, Aqueous/Pearl discovery and package-runtime contracts are verified;
@@ -71,9 +71,9 @@ Boundaries retained after P2:
 
 Tabs, panes, transparency and URL detection follow the core terminal semantics.
 
-## P3 — Nocted
+## P3 — Dintor
 
-**Status:** complete. P3 closes with the pinned Nocted source, the DINX compatibility patch, the package/ISO payload, the P3 qualification gate, and the editor integration contract.
+**Status:** complete. P3 closes with the pinned NOCTTY source, the DINX compatibility patch, the `deetty` package/ISO payload, the Dintor P3 qualification gate, and the editor integration contract.
 
 Delivered:
 
@@ -84,12 +84,12 @@ Delivered:
 - bounded LSP process/client management with diagnostics, completion, hover, definitions, references, rename, symbols and formatting;
 - Git status, unified diffs and change markers exposed from the editor's Tools menu and the headless `--git-probe`;
 
-- DINX static light/dark editor schemes through the documented `DINX_COLOR_SCHEME`/`NOCTED_THEME` environment contract, with useful operation independent of a desktop shell;
+- DINX static light/dark editor schemes through the documented `DINTOR_THEME` environment contract, with useful operation independent of a desktop shell;
 
 P3 release gate:
 
-- `scripts/nocted_p3_qualification.sh` runs core endurance, project-index scale/delta, worker, state-recovery, task, real `clangd`, native X11 GTK smoke in dark/light modes and a real Git fixture;
-- `PKGBUILD`, the ISO profile, `check_noctty_integration.sh` and `check-iso-content.sh` carry the same Nocted/LSP/Git/theme contract;
+- `scripts/dintor_p3_qualification.sh` runs core endurance, project-index scale/delta, worker, state-recovery, task, real `clangd`, native X11 GTK smoke in dark/light modes and a real Git fixture;
+- `PKGBUILD`, the ISO profile, `check_deetty_integration.sh` and `check-iso-content.sh` carry the same Dintor/LSP/Git/theme contract;
 - the P0 workflow remains the required package, ISO, QEMU, persistent-install, recovery and attestation gate.
 
 **Exit criterion:** met. A developer can work on a Zig or C/C++ project, inspect diagnostics and Git changes, and edit without a second editor.
@@ -167,7 +167,8 @@ P3 release gate:
 - Test guided and manual installation on disposable physical disks, including the supported UEFI/BIOS paths, first boot, recovery TTY and interrupted-install recovery. Keep swap optional; never require users to create it manually. Document Windows/BitLocker/hibernation boundaries and make no data-preservation claim beyond tested layouts.
 - Qualify the signed package-repository bootstrap, signature verification, installed-system updates and package recovery. Decide whether installed-ISO upgrades and filesystem rollback are supported; otherwise state that they remain unsupported and document the recovery/reinstall path.
 - Validate the base services and session on the declared machines: network, D-Bus, portals, polkit, PipeWire, GPU acceleration, display persistence, lock/idle and suspend/resume. Keep Aqueous/Pearl as the only session, supervised directly by dinit; install no systemd or UWSM.
-- Pass the existing P0 build, QEMU, Calamares, BIOS/UEFI, recovery, metadata and provenance gates. Keep the direct ISO at or below **1,800,000,000 bytes**; Alpha 10 is 1,862,772,736 bytes, so this size target remains open.
+- Verify GTK 3/4, Qt 6 and XWayland apps in the Aqueous session: titlebar visibility, minimize/maximize/close, dragging, snapping and custom-titlebar overlap. Record app-specific exceptions instead of claiming uniform behavior without evidence.
+- Pass the existing P0 build, QEMU, Calamares, BIOS/UEFI, recovery, metadata and provenance gates. Keep the direct ISO below GitHub's [2 GiB release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2,147,483,648` bytes); Alpha 10 is 1,862,772,736 bytes and is within the limit.
 - Publish matching English and Brazilian Portuguese installation, compatibility, known-issues and recovery guidance with test evidence and explicit unsupported cases.
 
 **Outside the Beta 0.1 claim:** gaming support remains the separate P5 track. Do not claim Steam, commercial-game, controller, real DRM-output or gaming-audio support until its hardware gates pass. Secure Boot and physical recovery are also unclaimed until separately tested.

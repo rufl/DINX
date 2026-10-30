@@ -21,12 +21,13 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
-grep -Fq 'depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq "cups-dinit: optional CUPS printing support; downloads cups and dinit service files after installation" "$pkgbuild" || fail 'optional CUPS package metadata is missing'
 if grep -Fq 'wdisplays: Wayland display control panel' "$pkgbuild"; then
   fail 'wdisplays must be a runtime dependency now that the display control is in the base ISO'
 fi
 grep -Fq 'Exec=dinxpanel' "$desktop" || fail 'desktop launcher is incorrect'
+grep -Fqx 'Name[pt_BR]=Central de Controle' "$desktop" || fail 'localized desktop name is incorrect'
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
 grep -Fq 'build_package dinxpanel' "$workflow" || fail 'ISO workflow does not build dinxpanel'
@@ -47,6 +48,16 @@ grep -Fq '"shelly", "upgrade", "all"' "$frontend" || fail 'Shelly upgrade action
 grep -Fq '"fwupdmgr", "refresh"' "$frontend" || fail 'fwupd metadata refresh is missing'
 grep -Fq '"fwupdmgr", "get-updates"' "$frontend" || fail 'firmware update discovery is missing'
 grep -Fq '"topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux"' "$frontend" || fail 'Topgrade preview is missing'
+for terminal_call in \
+  '"deetty", "-e", "topgrade", "--dry-run"' \
+  '"deetty", "-e", "topgrade"' \
+  '"deetty", "-e", "shelly", "upgrade", "all"' \
+  '"deetty", "-e", "inxi", "-GSC"'; do
+  grep -Fq "$terminal_call" "$frontend" || fail "terminal action does not use Deetty with fixed argv: $terminal_call"
+done
+if grep -Eq '"(foot|ghostty)"' "$frontend"; then
+  fail 'DINXPanel launches a removed terminal emulator'
+fi
 grep -Fq 'optional_packages.install' "$frontend" || fail 'CUPS download is not wired to the optional package installer'
 grep -Fq 'optional_package_install' "$frontend" || fail 'CUPS installation is not isolated in the asynchronous package task'
 grep -Fq 'pub const cups_user_install_argv' "$optional_packages" || fail 'CUPS non-root package argv is missing'

@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-local_packages=(dinitui dinxpanel seafoam-settings wizp)
+local_packages=(dinitui dinxpanel ghostty-vt-runtime seafoam-settings wizp)
 contains_local_package() {
   local candidate=$1
   local package
@@ -38,6 +38,7 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
       dinxpanel) contract=scripts/check_dinxpanel.sh ;;
       seafoam-settings) contract=scripts/check_seafoam_settings.sh ;;
       wizp) contract=scripts/check_wizp_package.sh ;;
+      ghostty-vt-runtime) contract=scripts/check_ghostty_vt_runtime.sh ;;
     esac
     [[ -x "$contract" ]] || fail "$package is missing its executable qualification contract: $contract"
   else
@@ -97,7 +98,7 @@ for required in \
   'DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507' \
   ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE must be set before the builder starts}"' \
   ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"' \
-  'printf "noctty_source_env_sha256=%s\n"' \
+  'printf "deetty_source_env_sha256=%s\n"' \
   '--env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE"' \
   'mksquashfs_path=$(command -v mksquashfs)' \
   'real_mksquashfs=$(readlink -f "$mksquashfs_path")' \

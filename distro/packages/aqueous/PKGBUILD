@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${AQUEOUS_SOURCE_SHA256:?missing AQUEOUS_SOURCE_SHA256}"
 : "${AQUEOUS_WLROOTS_SHA256:?missing AQUEOUS_WLROOTS_SHA256}"
 pkgver="$AQUEOUS_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Aqueous Wayland compositor and control clients for DINX'
 arch=('x86_64')
 url="$AQUEOUS_SOURCE_URL"
@@ -24,6 +24,8 @@ depends=(
   'pipewire'
   'glib2'
   'fontconfig'
+  'cairo'
+  'pango'
   'mesa'
   'seatd'
   'libdisplay-info'
@@ -70,6 +72,10 @@ sha256sums=("$AQUEOUS_SOURCE_SHA256" "$AQUEOUS_WLROOTS_SHA256")
 prepare() {
   cd "$srcdir/Aqueous-$pkgver"
   patch --forward --fuzz=0 -Np1 < "$startdir/dinit.patch"
+  patch --forward --fuzz=0 -Np1 < "$startdir/server-decorations.patch"
+  patch --forward --fuzz=0 -Np1 < "$startdir/titlebar-text.patch"
+  install -Dm644 "$startdir/titlebar_text.c" compositor/aqueous/titlebar_text.c
+  install -Dm644 "$startdir/titlebar_text.zig" compositor/aqueous/titlebar_text.zig
 }
 
 build() {
@@ -103,6 +109,12 @@ check() {
   cmp "$srcdir/aqueous-dist/lib/aqueous/libwlroots-0.20.so" \
     "$srcdir/Aqueous-$pkgver/compositor/.deps/wlroots-render-hook/lib/libwlroots-0.20.so"
   readelf -d "$srcdir/aqueous-dist/bin/aqueous" | grep -F '$ORIGIN/../lib/aqueous' >/dev/null
+  cc -std=c11 -Wall -Wextra -Werror \
+    "$startdir/titlebar_text_test.c" \
+    "$srcdir/Aqueous-$pkgver/compositor/aqueous/titlebar_text.c" \
+    $(pkg-config --cflags --libs pangocairo) \
+    -o "$srcdir/titlebar-text-test"
+  "$srcdir/titlebar-text-test"
 }
 
 package() {

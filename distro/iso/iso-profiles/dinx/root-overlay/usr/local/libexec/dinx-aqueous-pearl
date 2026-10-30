@@ -3,6 +3,7 @@ set -eu
 
 export XDG_CURRENT_DESKTOP=Aqueous
 export XDG_SESSION_DESKTOP=Aqueous
+export TERMINAL="${TERMINAL:-deetty}"
 export XDG_SESSION_TYPE=wayland
 export QT_QPA_PLATFORM='wayland;xcb'
 export GDK_BACKEND='wayland,x11'
@@ -11,8 +12,9 @@ export CLUTTER_BACKEND=wayland
 export MOZ_ENABLE_WAYLAND=1
 export _JAVA_AWT_WM_NONREPARENTING=1
 export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"
-export NOCTED_THEME="${NOCTED_THEME:-prefer-dark}"
+export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"
 export GTK_THEME="DINX:dark"
+export GTK_CSD=0
 export QT_QPA_PLATFORMTHEME=qt6ct
 export AQUEOUS_MOD="${AQUEOUS_MOD:-Super}"
 export AQUEOUS_NESTED=0

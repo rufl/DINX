@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Firewall
+Name[pt_BR]=Firewall
+GenericName=Firewall
+GenericName[pt_BR]=Firewall
+Comment=Configure firewall rules
+Comment[pt_BR]=Configure as regras do firewall
+TryExec=gufw
+Exec=gufw
+Terminal=false
+Type=Application
+Icon=gufw
+StartupNotify=true
+Categories=System;Security;

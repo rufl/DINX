@@ -2,8 +2,8 @@
 set -euo pipefail
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-source_env="$repo_root/distro/packages/noctty/source.env"
-package_dir="$repo_root/distro/packages/noctty"
+source_env="$repo_root/distro/packages/deetty/source.env"
+package_dir="$repo_root/distro/packages/deetty"
 source_dir=${1:-"$repo_root/third_party/noctty"}
 
 fail() {
@@ -22,9 +22,9 @@ command -v git >/dev/null 2>&1 || fail 'git is required'
 command -v gzip >/dev/null 2>&1 || fail 'gzip is required'
 command -v sha256sum >/dev/null 2>&1 || fail 'sha256sum is required'
 
-version=$(read_source_value NOCTTY_VERSION)
-ref=$(read_source_value NOCTTY_REF)
-expected_sha=$(read_source_value NOCTTY_SOURCE_SHA256)
+version=$(read_source_value DEETTY_VERSION)
+ref=$(read_source_value DEETTY_REF)
+expected_sha=$(read_source_value DEETTY_SOURCE_SHA256)
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "invalid version: $version"
 [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || fail "invalid source ref: $ref"
 [[ "$expected_sha" =~ ^[0-9a-f]{64}$ ]] || fail "invalid source sha256: $expected_sha"
@@ -37,7 +37,7 @@ git -C "$source_dir" diff --quiet HEAD -- ||
   fail "source checkout has tracked changes: $source_dir"
 
 archive="$package_dir/noctty-$version.tar.gz"
-tmp_archive=$(mktemp "$package_dir/.noctty-source.XXXXXX")
+tmp_archive=$(mktemp "$package_dir/.deetty-source.XXXXXX")
 cleanup() {
   [[ -z "$tmp_archive" ]] || rm -f -- "$tmp_archive"
 }
@@ -53,5 +53,5 @@ actual_sha=$(sha256sum "$tmp_archive" | awk '{print $1}')
 mv -f -- "$tmp_archive" "$archive"
 tmp_archive=
 
-printf 'first_party_apps source=noctty version=%s ref=%s sha256=%s archive=%s nocted_included=true\n' \
+printf 'first_party_apps package=deetty source=NOCTTY version=%s ref=%s sha256=%s archive=%s dintor_included=true\n' \
   "$version" "$ref" "$actual_sha" "$archive"

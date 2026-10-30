@@ -152,7 +152,7 @@ A ISO live abre diretamente a conta descartável `dinx` em `Aqueous + Pearl (DIN
 
 Quando o desktop aparecer, o estado gráfico testado é Aqueous/Pearl. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
 Pearl é o shell ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o Pearl Greeter lê `/etc/pearl/greeter.json`, usa o tema GTK DINX e força a entrada Aqueous/Pearl sem X11 nem UWSM.
-O Phyto é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes. `Dome`, `Seafoam Settings` e `zls` vêm na ISO base assinada. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings agrupa os pontos documentados de configuração de display/sessão; o Nocted usa o ZLS incluído para projetos Zig.
+O Phyto é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes. `Dome`, `Seafoam Settings` e `zls` vêm na ISO base assinada. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings agrupa os pontos documentados de configuração de display/sessão; o Dintor usa o ZLS incluído para projetos Zig.
 O runtime base do ZLS é compacto por design: completion e navegação usam a árvore `lib/std` correspondente incluída pela ISO por meio de `/usr/lib/zls/zig-env`; um compilador Zig completo é opcional e não faz parte do payload da ISO.
 
 ### Suporte opcional à BC-250
@@ -197,12 +197,7 @@ dinitctl status greetd
 dinitctl restart greetd
 ```
 
-Se a sessão gráfica não estiver disponível, use o fallback Wayland independente:
-
-```bash
-DINX_TERMINAL_FALLBACK=1 dinx-terminal
-```
-A combinação Aqueous/Pearl inicia `dinx-terminal` pelo launcher do Pearl. `$TERMINAL` aponta para `dinx-terminal`, que prefere o NOCTTY e usa `foot` quando o NOCTTY não está instalado. Não há outra sessão de usuário suportada; o host dedicado do Pearl Greeter é uma superfície de login do greetd, não uma configuração de sessão do usuário.
+Deetty é o único emulador de terminal da ISO live e da instalação nova. As sessões live e instalada definem `$TERMINAL` como `deetty`; Nano continua disponível como editor de recuperação. O Pearl Greeter é uma superfície de login do greetd, não uma configuração de sessão do usuário.
 
 Para registrar o estado sem alterar o sistema, execute:
 

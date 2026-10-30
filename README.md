@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx.svg" alt="Logotipo DINX" width="180">
-</p>
-
-<h1 align="center">DINX</h1>
+<h1 align="center">
+  <img src="distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg" alt="Logotipo DINX Linux" width="420">
+</h1>
 
 <p align="center">
   <strong>Artix Linux + dinit, com um desktop Wayland enxuto e explícito.</strong><br>
@@ -55,7 +53,7 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 ## Seafoam e a sessão única na ISO base
 
-**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. O Pearl 0.3.0, inclusive a fonte upstream usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream usam o Zig 0.17.0 verificado.
+**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Dintor com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. O Pearl 0.3.0, inclusive a fonte upstream usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream usam o Zig 0.17.0 verificado.
 
 **Aqueous 1.0.5** e **Pearl 0.3.0** vêm na ISO base. `Aqueous + Pearl (DINX)` é a única sessão de usuário selecionável e a sessão inicial da live: a DINX inicia o Aqueous diretamente, executa os helpers supervisionados de Shikane/PolicyKit/idle e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O login instalado/manual usa o **Pearl Greeter**, iniciado diretamente pelo greetd através da conta dedicada `pearl-greeter`; o Greeter força a mesma entrada Aqueous/Pearl e não expõe X11 nem UWSM. Se a sessão Aqueous/Pearl da live terminar, o greetd retorna ao Pearl Greeter em vez de trocar de sessão silenciosamente.
 
@@ -74,7 +72,7 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 A Beta 0.1 está planejada, ainda sem data de lançamento. O objetivo é qualificar a sessão Aqueous/Pearl sobre dinit e os caminhos de instalação, atualização e recuperação em uma matriz declarada de hardware físico. A publicação dependerá de testes de rede, áudio, GPU/display e suspensão, além de instalação e recuperação em discos de teste, atualização assinada e documentação dos limites.
 
-A meta de tamanho para a próxima ISO é **até 1.800.000.000 bytes**; a Alpha 10 atual tem 1.862.772.736 bytes. O P5 de jogos permanece uma trilha separada: a Beta 0.1 não alegará suporte gaming sem testes reais de DRM, Steam, controle e áudio. A sessão continuará Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
+O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **menor que 2 GiB** (`2.147.483.648` bytes); a DINX não tem uma meta menor de 1,8 bilhão de bytes. A Alpha 10, com 1.862.772.736 bytes, está dentro do limite. A ISO futura precisa continuar abaixo dele para ser publicada como arquivo direto. O P5 gaming segue separado: a Beta 0.1 não alegará suporte sem testes reais de DRM, Steam, controle e áudio. A sessão continua Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
 
 
 ## Instalação rápida
@@ -116,7 +114,7 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer 
 
 ## Código, contratos e licença
 
-Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O archive versionado do Noctty é uma fonte upstream separada sob MIT; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
+Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O pacote DINX `deetty` fornece os aplicativos Deetty/Dintor a partir de um archive upstream separado sob MIT, cuja URL e identidade NOCTTY permanecem inalteradas; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
 
 - [Código no GitHub](https://github.com/rufl/DINX)
 - [Issues](https://github.com/rufl/DINX/issues)

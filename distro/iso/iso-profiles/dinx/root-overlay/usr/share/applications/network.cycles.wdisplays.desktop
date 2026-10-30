@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=DINX Display Setup
-Name[pt_BR]=Configuração de display DINX
+Name=Display Settings
+Name[pt_BR]=Ajustes de Tela
 Comment=Arrange Wayland outputs and save the layout as a Shikane profile
 Comment[pt_BR]=Organize as saídas Wayland e salve o layout como perfil Shikane
 Exec=dinx-wdisplays

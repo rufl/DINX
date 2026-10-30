@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PDF Reader
+Name[pt_BR]=Leitor de PDF
+GenericName=PDF Reader
+GenericName[pt_BR]=Leitor de PDF
+Comment=Minimalistic document viewer
+Exec=zathura %U
+TryExec=zathura
+Icon=org.pwmt.zathura
+Terminal=false
+Categories=Office;Viewer;
+Keywords=PDF;PS;PostScript;DjVU;document;presentation;viewer;

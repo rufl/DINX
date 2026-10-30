@@ -13,6 +13,10 @@ dist/
 /distro/packages/noctty/*.pkg.tar.zst
 /distro/packages/noctty/src/
 /distro/packages/noctty/pkg/
+/distro/packages/deetty/*.tar.gz
+/distro/packages/deetty/*.pkg.tar.zst
+/distro/packages/deetty/src/
+/distro/packages/deetty/pkg/
 # Test output
 test-results/
 coverage/
@@ -22,6 +26,7 @@ coverage/
 .env.*
 !.env.example
 
+/.tmp-aqueous-decoration-source/
 # Local credentials and private signing material
 *.key
 *.pem

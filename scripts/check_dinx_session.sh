@@ -9,6 +9,11 @@ pearl_pkg="$root/distro/packages/pearl/PKGBUILD"
 pearl_install="$root/distro/packages/pearl/pearl.install"
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
+aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
+gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
+gtk3_skel="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/gtk-3.0/settings.ini"
+gtk4_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.0/settings.ini"
+gtk4_skel="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/gtk-4.0/settings.ini"
 aqueous_init="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init"
 supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
 aqueous_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-aqueous-pearl.desktop"
@@ -34,8 +39,9 @@ fail() {
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
   "$aqueous_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
-  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" "$aqueous_layout" \
-  "$useradd_defaults" "$users_conf"; do
+  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" "$aqueous_layout" "$aqueous_patch" \
+  "$useradd_defaults" "$users_conf" "$gtk3_system" "$gtk3_skel" \
+  "$gtk4_system" "$gtk4_skel"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 for retired in \
@@ -168,6 +174,23 @@ grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$aqueous_wrapper" \
   || fail 'Aqueous session does not force the Qt6ct platform theme'
 grep -Fq 'default = "stacking"' "$aqueous_layout" \
   || fail 'Aqueous live and installed sessions do not default to floating windows'
+for slot in primary secondary tertiary quaternary; do
+  grep -Fq "$slot = \"stacking\"" "$aqueous_layout" \
+    || fail "Aqueous $slot layout slot does not resolve to floating stacking"
+done
+for binding in set_layout_primary set_layout_secondary set_layout_tertiary set_layout_quaternary; do
+  grep -Eq "^\+${binding}[[:space:]]*=[[:space:]]*\[\]$" "$aqueous_patch" \
+    || fail "Aqueous $binding shortcut remains bound to a non-floating layout"
+done
+for setting in 'snap_gap = 0' 'snap_threshold = 24' 'resistance = 12' 'top_edge_maximize = true'; do
+  grep -Fq "$setting" "$aqueous_layout" || fail "Aqueous floating snap config is missing $setting"
+done
+grep -Fq 'force_ssd = true' "$aqueous_layout" \
+  || fail 'Aqueous must enable server-side decorations for consistent DINX window controls'
+for gtk_settings in "$gtk3_system" "$gtk3_skel" "$gtk4_system" "$gtk4_skel"; do
+  grep -Fq 'gtk-decoration-layout=:minimize,maximize,close' "$gtk_settings" \
+    || fail "GTK fallback window controls are incomplete in ${gtk_settings#$root/}"
+done
 grep -Fq 'aqueous/layout.toml' "$aqueous_wrapper" \
   || fail 'Aqueous session does not seed the DINX floating layout'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
@@ -199,4 +222,4 @@ if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true theme_env=gtk+qt=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true server_decorations=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

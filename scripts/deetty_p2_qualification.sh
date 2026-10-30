@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_dir=${1:?usage: noctty_p2_qualification.sh SOURCE_DIR}
+source_dir=${1:?usage: deetty_p2_qualification.sh SOURCE_DIR}
 source_dir=$(CDPATH= cd -- "$source_dir" && pwd -P)
-require_real_tui=${NOCTTY_QUALIFICATION_REQUIRE_REAL_TUI:-0}
+require_real_tui=${DEETTY_QUALIFICATION_REQUIRE_REAL_TUI:-0}
 
 fail() {
-  printf 'noctty_p2_qualification: %s\n' "$*" >&2
+  printf 'deetty_p2_qualification: %s\n' "$*" >&2
   exit 1
 }
 
@@ -40,7 +40,7 @@ grep -Fq 'large_paste_bytes=8388608' <<<"$fairness_output"
 grep -Fq 'paste_queue_exercised=true paste_pending_teardown=true' <<<"$fairness_output"
 grep -Fq 'allocator_leak_free=true allocator_residual_bytes=0 process_residual=0 assertions=true' <<<"$fairness_output"
 
-work_dir=$(mktemp -d "${TMPDIR:-/tmp}/noctty-p2.XXXXXX")
+work_dir=$(mktemp -d "${TMPDIR:-/tmp}/deetty-p2.XXXXXX")
 tmux_path=''
 cleanup() {
   if [[ -n "$tmux_path" ]]; then
@@ -269,4 +269,4 @@ else
   printf 'terminal_real_tui_qualification skipped=true reason=vim-btop-not-installed\n'
 fi
 
-printf 'noctty_p2_qualification terminal_fairness=true launch_continuity=true ncurses=true system_tui=true real_tui=%s info_surface=%s codex_surface=%s release_safe=true\n' "$real_tui" "$info_surface" "$codex_surface"
+printf 'deetty_p2_qualification terminal_fairness=true launch_continuity=true ncurses=true system_tui=true real_tui=%s info_surface=%s codex_surface=%s release_safe=true\n' "$real_tui" "$info_surface" "$codex_surface"

@@ -4,10 +4,38 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
-- Definido o tema escuro DINX como padrão global do GTK 3/4 e exportada a seleção GTK/Qt6ct pelo launcher direto da sessão Aqueous. Pastas home existentes recebem a configuração e a paleta DINX do Qt6ct quando ainda não existem.
-- A sessão live e instalada do Aqueous inicia no layout livre `stacking`; `Alt+Shift+F` restaura esse layout e `Super+Shift+Space` continua alternando o modo flutuante por janela.
+- A sessão Aqueous/Pearl exporta `GTK_CSD=0` e solicita decorações do servidor para que janelas GTK padrão e clientes Wayland compatíveis usem a barra do compositor. A documentação registra o limite restante para aplicativos com chrome CSD próprio.
 
-- Aplicadas a marca DINX Linux e a marca D com raio correspondente no GRUB, Pearl Greeter, Calamares e no wallpaper inicial da área de trabalho. Os ícones de aplicativos e da área de trabalho do upstream/Adwaita permanecem inalterados.
+- O workflow DINX de contratos e REUSE, sem build privilegiado, agora roda em todo pull request e push para `main`, inclusive alterações somente de documentação ou licenças. O build privilegiado da ISO mantém seus gatilhos próprios por caminhos de build selecionados.
+
+- Corrigido o gate da ISO Beta 0.1 para refletir o limite real por arquivo de release do GitHub: estritamente abaixo de 2 GiB, sem a meta arbitrária de 1,8 bilhão de bytes. A Alpha 10 continua dentro do limite.
+
+- Completada a cobertura REUSE dos helpers DINX sob GPL-3.0-only e excluída das varreduras do projeto a cópia local retida da fonte Aqueous.
+
+- Atualizadas as páginas iniciais do GitHub em inglês e pt-BR para usar o wordmark DINX Linux já incluído nos assets de marca da ISO.
+
+- Deetty passou a ser o único emulador de terminal da ISO live e da instalação nova; os defaults de shell, a ação de terminal do Aqueous e os launchers DINX usam esse aplicativo diretamente. Nano permanece como editor de recuperação. A ISO inclui somente `ghostty-vt-runtime` (biblioteca VT, headers e licença); o Ghostty completo fica restrito ao builder e é removido antes da montagem da ISO.
+
+- Renomeados os aplicativos DINX Noctty/Nocted para Deetty/Dintor, o pacote para `deetty`, os comandos para `deetty`/`dintor`, a variável de tema para `DINTOR_THEME` e os IDs desktop para `org.dinx.Deetty`/`org.dinx.Dintor`. A origem continua sendo o upstream NOCTTY fixado, sem alteração da URL ou da identidade do archive.
+
+- Nomes concisos nos atalhos: Dintor aparece como “Editor” nas entradas desktop padrão e pt-BR; Seafoam Settings, DINXPanel e File Roller usam “Ajustes do Desktop”, “Central de Controle” e “Descompactador” em pt-BR. O override localizado do ID desktop do File Roller e o cache MIME ficam em `/usr/local/share`, fora dos arquivos do pacote, preservando o nome e as associações de arquivos compactados após atualizações.
+
+- Os atalhos do Gufw e Qps agora aparecem como “Firewall” e “Process Manager” em inglês, e como “Firewall” e “Processos” em pt-BR. Os comandos dos executáveis permanecem inalterados.
+
+- O atalho do OpenSnitch agora aparece como “Traffic Monitor” em inglês e “Monitor de Tráfego” em pt-BR. O comando `opensnitch-ui` e os metadados upstream de inicialização automática permanecem inalterados; a categoria System evita entradas duplicadas no menu.
+
+- Padronizados os nomes dos launchers dos aplicativos base em inglês e pt-BR. O File Roller agora aparece como “Archive Manager” / “Descompactador”, sem alterar os handlers de arquivos compactados. O alias do Calamares com nome Artix foi ocultado; o atalho `Install DINX` / `Instalar DINX` é a única entrada do instalador.
+
+- Substituído o Strawberry pelo Gapless (G4Music) na ISO base. A DINX compila a versão upstream v4.6.2 fixada como pacote `gapless` assinado, inclui codecs GStreamer base/good, mantém a reprodução sem intervalos ativada por padrão e define o Gapless como handler padrão dos MIME types de áudio comuns.
+
+- Adicionado Galculator, uma calculadora compacta em GTK 3 do repositório `world` assinado do Artix, à lista de aplicativos da ISO base. Ele usa a pilha GTK existente e não adiciona outro toolkit gráfico.
+
+- Definido o tema escuro DINX como padrão global do GTK 3/4 e exportada a seleção GTK/Qt6ct pelo launcher direto da sessão Aqueous. Pastas home existentes recebem a configuração e a paleta DINX do Qt6ct quando ainda não existem.
+- Novos perfis de usuário do Aqueous recebem `stacking` flutuante em todos os workspaces. A configuração WM distribuída desativa os atalhos padrão de mosaico, rolagem, monocle e grade (`Super+T/F/M/G`); `Alt+Shift+F` seleciona stacking e `Super+Shift+Space` alterna o modo flutuante por janela. Ao arrastar uma janela flutuante até a borda esquerda/direita/inferior, ela encaixa em uma metade; nos cantos, em um quarto; no centro da borda superior, maximiza (limite de 24 px, sem espaço). Configurações existentes não são alteradas.
+- Todas as janelas de nível superior do Aqueous exibem uma barra DINX desenhada pelo compositor, com título e controles para minimizar, maximizar/restaurar e fechar, inclusive em clientes GTK e Pearl. Títulos longos são truncados com reticências antes dos controles. Arrastar uma área livre da barra move a janela e usa o encaixe flutuante existente; tela cheia oculta a barra. O chrome do cliente nos 36 pixels lógicos superiores pode ficar encoberto.
+- Corrigido o texto desatualizado na barra do Aqueous quando clientes Wayland ou XWayland alteram o título. O gate Aqueous/Pearl agora aplica os patches DINX à fonte upstream fixada, testa zonas dos controles e geometria de encaixe flutuante, e verifica que notificações de título invalidam o cache.
+
+- Adicionado o símbolo reduzido D com raio como SVG canônico transparente em `design/brand/dinx-ray-mark.svg`; o GRUB usa sua versão RGBA e o Calamares usa-o como ícone do produto. O wordmark completo permanece no wallpaper do greeter/desktop e nas superfícies de logo/boas-vindas do Calamares; ícones upstream/Adwaita de aplicativos e da área de trabalho permanecem inalterados.
 - Substituída a primeira aproximação ASCII por uma conversão por densidade do SVG original do D-ray DINX. O asset em ASCII puro funciona com o Fastfetch e com o formato de logo personalizado do `fetch` opcional de Areofyl.
 
 ## v0.1.0-alpha.10 — 2026-10-29
@@ -44,7 +72,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Restaurados o File Roller para abrir, criar e extrair arquivos compactados graficamente e o GParted para particionamento gráfico independente, mantendo a remoção de Thunar, GVFS, Tumbler e KDE Partition Manager. O driver de kernel `ntfs3` fornece leitura e escrita NTFS na ISO live e no sistema instalado; o `ntfs-3g` legado é opcional após a instalação.
 
 - Adicionados `wdisplays` e `shikane` ao payload desktop base para configuração Wayland interativa e determinística. Adicionado o Dome 0.1.1 como pacote Seafoam base com fonte fixada no Pearl v0.3.0; suas telas de recursos/processos são compatíveis com dinit e o pacote não instala integração com systemd ou uwsm. O Coral não foi incluído intencionalmente.
-- Adicionado o launcher base Seafoam Settings em Zig/GTK4 para os pontos de entrada do wdisplays, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Adicionado o pacote oficial ZLS 0.16.0 com fonte fixada para o caminho LSP Zig do Nocted; os três agora fazem parte da ISO base. O ZLS carrega apenas a árvore `lib/std` correspondente do Zig e um shim de metadados, portanto completion/navegação funcionam sem compilador completo ou systemd; o shim delega comandos de compilação para uma instalação opcional do `zig` do Artix.
+- Adicionado o launcher base Seafoam Settings em Zig/GTK4 para os pontos de entrada do wdisplays, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Adicionado o pacote oficial ZLS 0.16.0 com fonte fixada para o caminho LSP Zig do Dintor; os três agora fazem parte da ISO base. O ZLS carrega apenas a árvore `lib/std` correspondente do Zig e um shim de metadados, portanto completion/navegação funcionam sem compilador completo ou systemd; o shim delega comandos de compilação para uma instalação opcional do `zig` do Artix.
 - Mantido explícito o limite do compilador upstream: o Pearl 0.3.0, inclusive a fonte usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado, baixado e verificado pelo P0; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream continuam no toolchain Zig 0.17.0 verificado.
 - Adicionada a ponte de persistência de display da DINX: a entrada desktop do wdisplays, a DINXPanel e o Seafoam Settings usam `dinx-wdisplays`; ao fechar o editor, o perfil `DINX wdisplays` é substituído atomicamente, o Shikane é recarregado e o layout permanece entre sessões.
 - Adicionado o relatório somente leitura `dinx-doctor` para evidências de sessão, dinit, armazenamento, display e pacotes; ele nunca executa mutações de serviços, montagem, pacotes ou rede.

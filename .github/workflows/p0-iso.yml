@@ -38,9 +38,10 @@ on:
       - "scripts/smoke_build_metadata.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/check_dinx_theme.sh"
-      - "scripts/check_noctty_integration.sh"
-      - "scripts/nocted_p3_qualification.sh"
-      - "scripts/noctty_p2_qualification.sh"
+      - "scripts/check_deetty_integration.sh"
+      - "scripts/check_ghostty_vt_runtime.sh"
+      - "scripts/dintor_p3_qualification.sh"
+      - "scripts/deetty_p2_qualification.sh"
       - "scripts/prepare_first_party_apps.sh"
       - "scripts/check_first_party_apps.sh"
       - "scripts/smoke-iso.sh"
@@ -106,10 +107,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify pinned NOCTTY and NoctEd source archive
+      - name: Verify pinned NOCTTY source archive for Deetty and Dintor
         run: ./scripts/check_first_party_apps.sh
-      - name: Verify Noctty desktop and shell integration
-        run: ./scripts/check_noctty_integration.sh
+      - name: Verify Deetty and Dintor desktop and shell integration
+        run: ./scripts/check_deetty_integration.sh
+      - name: Verify VT-only runtime packaging and sole-terminal build order
+        run: ./scripts/check_ghostty_vt_runtime.sh
       - name: Verify Firefox defaults and pro-user policy
         run: ./scripts/check_firefox.sh
 
@@ -432,7 +435,7 @@ jobs:
                 local package_name="$1"
                 local package_dir="/workspace/distro/packages/$package_name"
                 local -a extra_env=()
-                if [[ "$package_name" == noctty ]]; then
+                if [[ "$package_name" == deetty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                 fi
                 if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then
@@ -451,6 +454,26 @@ jobs:
                   \( -name "*.pkg.tar.zst" -o -name "*.pkg.tar.zst.sig" \) \
                   -exec cp -- {} "$package_repo/" \;
               }
+              build_package ghostty-vt-runtime
+              ghostty_vt_package=$(find "$package_repo" -maxdepth 1 -type f -name 'ghostty-vt-runtime-*.pkg.tar.zst' -print -quit)
+              [[ -n "$ghostty_vt_package" ]]
+              pacman -Rdd --noconfirm ghostty
+              pacman -U --noconfirm "$ghostty_vt_package"
+              scripts/check_ghostty_vt_runtime.sh "$ghostty_vt_package"
+              source /workspace/distro/packages/deetty/source.env
+              [[ -n "$DEETTY_VERSION" ]]
+              icon_svg=/tmp/dinx-dintor-icon.svg
+              icon_png=/usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
+              tar -xOf \
+                "/workspace/distro/packages/deetty/noctty-${DEETTY_VERSION}.tar.gz" \
+                "noctty-${DEETTY_VERSION}/resources/com.noctty.NoctEd.svg" \
+                > "$icon_svg"
+              mkdir -p "$(dirname "$icon_png")"
+              rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"
+              gtk-update-icon-cache -f /usr/share/icons/hicolor
+              rm -f "$icon_svg"
+              build_package deetty
+              pacman -U --noconfirm "$package_repo"/deetty-*.pkg.tar.zst
               build_package opensnitch-dinit
               build_package cyan-skillfish-governor-smu
               build_package cyan-skillfish-governor-smu-dinit
@@ -488,20 +511,6 @@ jobs:
                 "$package_repo"/zls-*.pkg.tar.zst
               SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
-              source /workspace/distro/packages/noctty/source.env
-              [[ -n "$NOCTTY_VERSION" ]]
-              icon_svg=/tmp/dinx-nocted-icon.svg
-              icon_png=/usr/share/icons/hicolor/128x128/apps/com.noctty.NoctEd.png
-              tar -xOf \
-                "/workspace/distro/packages/noctty/noctty-${NOCTTY_VERSION}.tar.gz" \
-                "noctty-${NOCTTY_VERSION}/resources/com.noctty.NoctEd.svg" \
-                > "$icon_svg"
-              mkdir -p "$(dirname "$icon_png")"
-              rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"
-              gtk-update-icon-cache -f /usr/share/icons/hicolor
-              rm -f "$icon_svg"
-              build_package noctty
-              pacman -U --noconfirm "$package_repo"/noctty-*.pkg.tar.zst
               build_package dinx-live-autologin
               build_package swayimg
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
@@ -615,7 +624,7 @@ jobs:
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
                 printf "common_profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/common/common.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
-                printf "noctty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/noctty/source.env | cut -d " " -f 1)"
+                printf "deetty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/deetty/source.env | cut -d " " -f 1)"
                 printf "compression_schema=dinx-squashfs/v1\n"
                 printf "compression_algorithm=xz\n"
                 printf "compression_level=tool-default\n"

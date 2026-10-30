@@ -13,6 +13,7 @@ calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/cal
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 qt_palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/colors/DINX.conf"
 brand_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg"
+brand_ray_source="$repo_root/design/brand/dinx-ray-mark.svg"
 brand_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.svg"
 fastfetch_logo="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.txt"
 brand_wallpaper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-wallpaper.png"
@@ -41,7 +42,7 @@ fail() {
 
 for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg" \
   "$grub" "$grub_logo" "$calamares" "$calamares_branding" "$calamares_wordmark" \
-  "$calamares_ray" "$brand_wordmark" "$brand_ray" "$brand_wallpaper" "$pearl_preferences" "$fastfetch_logo" \
+  "$calamares_ray" "$brand_wordmark" "$brand_ray" "$brand_ray_source" "$brand_wallpaper" "$pearl_preferences" "$fastfetch_logo" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper"; do
@@ -79,7 +80,7 @@ for mode in ("dark", "light"):
         raise SystemExit(f"{mode} palette is missing bright ANSI colors")
 PY
 
-python - "$repo_root" "$pearl_greeter" "$pearl_preferences" "$brand_wordmark" "$brand_ray" \
+python - "$repo_root" "$brand_ray_source" "$pearl_greeter" "$pearl_preferences" "$brand_wordmark" "$brand_ray" \
   "$calamares_wordmark" "$calamares_ray" "$brand_wallpaper" "$grub_logo" "$fastfetch_logo" <<'PY'
 import json
 import pathlib
@@ -87,8 +88,8 @@ import struct
 import sys
 import xml.etree.ElementTree as ET
 
-(root, greeter_path, prefs_path, wordmark_path, ray_path, cal_wordmark_path, cal_ray_path,
- wallpaper_path, grub_logo_path, fastfetch_logo_path) = map(pathlib.Path, sys.argv[1:])
+(root, ray_source_path, greeter_path, prefs_path, wordmark_path, ray_path,
+ cal_wordmark_path, cal_ray_path, wallpaper_path, grub_logo_path, fastfetch_logo_path) = map(pathlib.Path, sys.argv[1:])
 brand = root / "design/brand/dinx-wordmark-compact.svg"
 ns = "{http://www.w3.org/2000/svg}"
 accent = "#F4515B"
@@ -118,8 +119,12 @@ def d_path(path):
     return svg
 
 wordmark = d_path(wordmark_path)
+ray_source = d_path(ray_source_path)
 ray = d_path(ray_path)
-assert ray.find(f".//{ns}path[@fill='{accent}']") is not None, "D-ray mark has no DINX coral ray"
+assert ray_source.find(f".//{ns}path[@fill='{accent}']") is not None, "reduced D-ray source has no DINX coral bolt"
+assert not ray_source.findall(f".//{ns}rect"), "reduced D-ray source paints an opaque background"
+assert all(node.attrib.get("fill") != "#000000" for node in ray_source.iter()), "reduced D-ray source contains a black background fill"
+assert ray_source_path.read_bytes() == ray_path.read_bytes(), "installed reduced mark differs from canonical DINX artwork"
 assert cal_wordmark_path.read_bytes() == wordmark_path.read_bytes(), "Calamares wordmark diverges from DINX Linux artwork"
 assert cal_ray_path.read_bytes() == ray_path.read_bytes(), "Calamares D-ray mark diverges from DINX artwork"
 ascii_logo_lines = fastfetch_logo_path.read_text(encoding="ascii").splitlines()
@@ -140,14 +145,14 @@ assert desktop_icons.get("enabled") is True, "DINX wallpaper seed unexpectedly d
 assert not {"icon", "icons", "icon_theme", "iconTheme"} & desktop_icons.keys(), "desktop icon preferences contain a branding override"
 assert not {"icon_theme", "iconTheme"} & preferences.keys(), "DINX preferences override the desktop icon theme"
 
-def png_dimensions(path):
+def png_info(path):
     data = path.read_bytes()
     assert data[:8] == bytes([137, 80, 78, 71, 13, 10, 26, 10]), f"{path} is not PNG"
     width, height = struct.unpack(">II", data[16:24])
-    return width, height
+    return width, height, data[25]
 
-assert png_dimensions(wallpaper_path) == (1920, 1080), "DINX wallpaper has unexpected dimensions"
-assert png_dimensions(grub_logo_path) == (512, 512), "GRUB D-ray logo has unexpected dimensions"
+assert png_info(wallpaper_path) == (1920, 1080, 2), "DINX wallpaper has unexpected dimensions or color format"
+assert png_info(grub_logo_path) == (512, 512, 6), "GRUB D-ray logo must be 512x512 RGBA"
 PY
 
 

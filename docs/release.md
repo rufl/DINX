@@ -8,14 +8,17 @@ check, SHA-512 generation and QEMU smoke path before publishing assets.
 Build metadata is bound to the exact ISO artifact in both the P0 and tagged release paths: CI recomputes the ISO byte count and SHA-512 and rejects metadata that does not match the downloaded file.
 
 
-The P0 build verifies the committed NOCTTY/NoctEd source archive against the exact
-repository commit and SHA-256 contract in `distro/packages/noctty/source.env`, builds
-the native `noctty` package with Zig 0.17.0, and verifies that both applications and
-their desktop/editor resources are in the ISO. The release path does not clone NOCTTY
-or require a repository secret; update the archive and contract together when changing
-the pinned source.
+The P0 build verifies the committed upstream source archive for Deetty and Dintor against the exact
+repository commit and SHA-256 contract in `distro/packages/deetty/source.env`, builds
+the native `deetty` package with Zig 0.17.0, and verifies that Deetty, Dintor and
+their desktop/editor resources are in the ISO. The release path does not clone the
+pinned upstream NOCTTY repository or require a repository secret; update the archive
+and contract together when changing the pinned source.
 
-For P3, the same package build also runs `scripts/nocted_p3_qualification.sh`. It qualifies the Nocted editor core, real `clangd` diagnostics/navigation, native GTK/X11 dark and light schemes, and bounded Git status/diff markers before the package is eligible for the ISO payload and P0 QEMU/install gate.
+For P3, the same package build also runs `scripts/dintor_p3_qualification.sh`. It
+qualifies the Dintor editor core, real `clangd` diagnostics/navigation, native GTK/X11
+dark and light schemes, and bounded Git status/diff markers before the package is
+eligible for the ISO payload and P0 QEMU/install gate.
 
 ## Current validated snapshot
 

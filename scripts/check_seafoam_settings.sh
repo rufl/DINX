@@ -25,11 +25,12 @@ done
 
 grep -Fqx 'pkgname=seafoam-settings' "$pkgbuild" || fail 'package name is not seafoam-settings'
 grep -Fqx 'source=()' "$pkgbuild" || fail 'Seafoam Settings must be a local staged package'
-grep -Fq 'depends=(gtk4 libadwaita glibc foot nano dinitui dinxpanel qt6ct wdisplays shikane dome)' "$pkgbuild" \
-  || fail 'package does not bundle Dome in the base runtime'
+grep -Fq 'depends=(gtk4 libadwaita glibc deetty dintor dinitui dinxpanel qt6ct wdisplays shikane dome)' "$pkgbuild" \
+  || fail 'package dependencies do not use the sole Deetty terminal and Dintor editor'
 grep -Fq 'zig build -Doptimize=ReleaseSafe' "$pkgbuild" || fail 'package does not use the release-safe Zig build'
 grep -Fq 'install -Dm755 "$srcdir/stage/bin/seafoam-settings"' "$pkgbuild" || fail 'package does not install the binary'
-grep -Fq 'Name=Seafoam Settings' "$desktop" || fail 'desktop name is missing'
+grep -Fq 'Name=Desktop Settings' "$desktop" || fail 'desktop name is missing'
+grep -Fqx 'Name[pt_BR]=Ajustes do Desktop' "$desktop" || fail 'localized desktop name is missing'
 grep -Fq 'Exec=seafoam-settings' "$desktop" || fail 'desktop executable is missing'
 grep -Fq 'Icon=org.seafoam.Settings' "$desktop" || fail 'desktop icon is missing'
 grep -Fq 'seafoam-settings' "$build_file" || fail 'build file does not name the app'
@@ -47,6 +48,13 @@ for required in \
   'seafoam_settings_smoke'; do
   grep -Fq -- "$required" "$source_file" || fail "source is missing fixed action or smoke marker: $required"
 done
+grep -Fq '"deetty", "-e", "dinx-save-shikane-profile"' "$source_file" \
+  || fail 'Shikane export does not use Deetty as its terminal'
+grep -Fq 'self.launch(&.{ "dintor", path })' "$source_file" \
+  || fail 'configuration files do not open directly in Dintor'
+if grep -Eiq '"(foot|ghostty|nano)"' "$source_file" "$pkgbuild"; then
+  fail 'Seafoam Settings references a removed terminal/editor fallback'
+fi
 if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)|g_spawn_command_line|/bin/sh' "$source_file"; then
   fail 'source contains a systemd, uwsm, shell or arbitrary command-launch path'
 fi

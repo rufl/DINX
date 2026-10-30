@@ -9,6 +9,7 @@ aqueous_dir="$root/distro/packages/aqueous"
 pearl_dir="$root/distro/packages/pearl"
 iso_check="$root/scripts/check-iso-content.sh"
 session_check="$root/scripts/check_dinx_session.sh"
+wm_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/wm.toml"
 
 fail() {
   printf 'aqueous_pearl_contract: %s\n' "$*" >&2
@@ -16,9 +17,10 @@ fail() {
 }
 
 for path in \
-  "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
+  "$profile" "$groups" "$workflow" "$iso_check" "$session_check" "$wm_config" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
-  "$aqueous_dir/dinit.patch" \
+  "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
+  "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/window_policy_test.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
@@ -38,6 +40,44 @@ source "$pearl_dir/source.env"
   || fail 'Pearl Zig source URL changed'
 [[ "$PEARL_ZIG_SOURCE_SHA256" == 70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00 ]] \
   || fail 'Pearl Zig source checksum changed'
+aqueous_archive="$aqueous_dir/Aqueous-$AQUEOUS_VERSION.tar.gz"
+[[ -r "$aqueous_archive" ]] || fail "missing pinned Aqueous source archive: ${aqueous_archive#$root/}"
+for command_name in tar patch; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command not found: $command_name"
+done
+zig_bin="${ZIG:-zig}"
+command -v "$zig_bin" >/dev/null 2>&1 || fail "required Zig compiler not found: $zig_bin"
+window_test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/dinx-aqueous-window-tests.XXXXXX")
+trap 'rm -rf "$window_test_tmp"' EXIT
+source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
+tar -xzf "$aqueous_archive" -C "$window_test_tmp"
+for patch_file in dinit.patch server-decorations.patch titlebar-text.patch; do
+  patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
+    -i "$aqueous_dir/$patch_file" >/dev/null \
+    || fail "pinned Aqueous source rejects ${patch_file}"
+done
+if ! awk '
+  /^pub fn notifyTitle\(window: \*Window\) void \{/ { in_notify_title = 1; next }
+  in_notify_title && /window\.title_text_dirty = true;/ { invalidated = 1 }
+  in_notify_title && /window\.wm_scheduled\.dirty_title = true;/ {
+    valid = invalidated
+    exit
+  }
+  in_notify_title && /^pub fn / { exit }
+  END { exit !valid }
+' "$source_root/compositor/aqueous/Window.zig"; then
+  fail 'Aqueous title changes do not invalidate the compositor title cache'
+fi
+cp "$aqueous_dir/window_policy_test.zig" \
+  "$source_root/compositor/aqueous/wm/dinx_window_policy_test.zig"
+(
+  cd "$source_root/compositor/aqueous/wm"
+  ZIG_GLOBAL_CACHE_DIR="$window_test_tmp/zig-global-cache" \
+    ZIG_LOCAL_CACHE_DIR="$window_test_tmp/zig-local-cache" \
+    "$zig_bin" test dinx_window_policy_test.zig
+)
+printf 'aqueous_window_policy_smoke source_pinned=true patches_apply=true titlebar_zones=true floating_snap_geometry=true\n'
+
 
 for package in aqueous pearl; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
@@ -66,6 +106,11 @@ for required in \
   '  usr/local/libexec/dinx-aqueous-init'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
+grep -Fq 'spawn_terminal = "deetty"' "$wm_config" \
+  || fail 'Aqueous Super+Return is not configured to launch the sole terminal'
+if grep -Eiq 'foot|ghostty' "$wm_config"; then
+  fail 'Aqueous default config references a terminal not shipped in the ISO'
+fi
 
 grep -Fq 'pkgver="$AQUEOUS_VERSION"' "$aqueous_dir/PKGBUILD" || fail 'Aqueous package version is not pinned'
 grep -Fq '$AQUEOUS_SOURCE_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous source checksum is not wired to source.env'
@@ -83,6 +128,12 @@ grep -Fq 'dinit.patch' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous dinit patch is not applied'
 grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous dinit patch is not applied reproducibly'
+grep -Fq 'server-decorations.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous compositor decorations are not applied reproducibly'
+for decoration in drawTitlebar decorationActionAt toggleMaximized move_floating; do
+  grep -Fq "$decoration" "$aqueous_dir/server-decorations.patch" \
+    || fail "Aqueous compositor decoration patch is missing $decoration"
+done
 grep -Fq '@@ -292,1 +292,0 @@' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous build still links systemd'
 grep -Fq '@@ -718,1 +718,0 @@' "$aqueous_dir/dinit.patch" \

@@ -16,7 +16,7 @@
 
 ```text
 Aplicativos DINX
-  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS
+  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS
 
 Contratos compartilhados
   Tema DINX estático · XDG · .desktop · $TERMINAL · D-Bus padrão
@@ -49,11 +49,11 @@ Pacotes upstream são preferidos. Pacotes e patches específicos da DINX permane
 
 ## Limites dos aplicativos
 
-### Noctty e Nocted
+### Deetty e Dintor
 
-Noctty é responsável pela janela, preferências, atalhos, abas/painéis e sessões de terminal. Seu núcleo Zig possui parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção, paste e ciclo de vida PTY; Ghostty permanece um adaptador isolado.
+Deetty é responsável pela janela, preferências, atalhos, abas/painéis e sessões de terminal. Seu núcleo Zig possui parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção, paste e ciclo de vida PTY. O pacote `ghostty-vt-runtime` fornece somente o adaptador VT público do Ghostty; o aplicativo de terminal Ghostty não faz parte do payload da DINX.
 
-Nocted é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. Zig usa o ZLS incluído; C/C++ usa `clangd`. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `NOCTED_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
+Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. Zig usa o ZLS incluído; C/C++ usa `clangd`. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `DINTOR_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
 
 ### DinitUI
 
@@ -71,9 +71,9 @@ CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuár
 
 `Dome` é um monitor nativo Zig/GTK4 incluído na ISO e no repositório DINX assinado. Suas telas de recursos/processos são dinit-safe; o pacote não instala integração com systemd, systemctl ou uwsm.
 
-`Seafoam Settings` é um launcher Zig/GTK4 para `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Usa vetores de argumentos fixos e abre somente os arquivos documentados de Aqueous/Pearl e Shikane em Foot/Nano; não interpreta comandos arbitrários.
+`Seafoam Settings` é um launcher base nativo em Zig/GTK4 para as superfícies de display/sessão DINX: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Usa vetores de argumentos fixos, abre diretamente no Dintor os arquivos documentados de configuração do Aqueous/Pearl e do Shikane e executa o exportador de perfil de display no Deetty. Deetty é o único emulador de terminal da ISO; Nano continua como editor de recuperação.
 
-`zls` é o pacote oficial Zig Language Server 0.16.0 com fonte fixada. Carrega a árvore `lib/std` correspondente e o shim de metadados `/usr/lib/zls/zig-env`; completion e navegação do Nocted funcionam sem compilador Zig completo. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; a árvore 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP. Um pacote Artix `zig` opcional habilita comandos de compilação pelo mesmo shim.
+`zls` é o pacote oficial Zig Language Server 0.16.0 com fonte fixada. Carrega a árvore `lib/std` correspondente e o shim de metadados `/usr/lib/zls/zig-env`; completion e navegação do Dintor funcionam sem compilador Zig completo. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; a árvore 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP. Um pacote Artix `zig` opcional habilita comandos de compilação pelo mesmo shim.
 
 ### Aqueous, Pearl e o limite dinit
 

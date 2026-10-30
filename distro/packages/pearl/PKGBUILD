@@ -41,6 +41,7 @@ depends=(
   'dbus'
   'elogind'
   'greetd'
+  'deetty'
 )
 makedepends=(
   'git'
@@ -53,7 +54,6 @@ makedepends=(
   'librsvg'
 )
 optdepends=(
-  'foot: terminal for interactive assistant runtime installation'
   'file-roller: archive context menu actions in Phyto'
   'poppler: PDF first-page previews in Phyto'
   'ffmpeg: video still previews in Phyto'
@@ -67,9 +67,14 @@ optdepends=(
 provides=('pearl-capture-picker=0.3.0' 'pearl-greeter=0.3.0')
 conflicts=('pearl-git')
 options=('!strip' '!debug')
-source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}")
-sha256sums=("$PEARL_SOURCE_SHA256")
+source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch")
+sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4')
 install=pearl.install
+
+prepare() {
+  cd "$srcdir/pearl-$pkgver"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal.patch"
+}
 
 
 build() {

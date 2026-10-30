@@ -1,0 +1,691 @@
+--- a/build.zig
++++ b/build.zig
+@@ -206,7 +206,7 @@
+     exe_mod.linkSystemLibrary("dl", .{});
+ 
+     const exe = b.addExecutable(.{
+-        .name = "noctty",
++        .name = "deetty",
+         .root_module = exe_mod,
+         .use_llvm = true,
+     });
+@@ -229,7 +229,7 @@
+     nocted_mod.linkSystemLibrary("gtk+-3.0", .{ .use_pkg_config = .force });
+     nocted_mod.linkSystemLibrary("gtksourceview-4", .{ .use_pkg_config = .force });
+     const nocted_exe = b.addExecutable(.{
+-        .name = "nocted",
++        .name = "dintor",
+         .root_module = nocted_mod,
+         .use_llvm = true,
+     });
+@@ -571,35 +571,35 @@
+     terminal_system_tui_qualification_binary_step.dependOn(
+         &install_terminal_system_tui_qualification.step,
+     );
+-    b.installFile("resources/com.noctty.NOCTTY.desktop", "share/applications/com.noctty.NOCTTY.desktop");
+-    b.installFile("resources/nocttyhere.desktop", "share/kio/servicemenus/nocttyhere.desktop");
+-    b.installFile("resources/com.noctty.NOCTTY.metainfo.xml", "share/metainfo/com.noctty.NOCTTY.metainfo.xml");
+-    b.installFile("resources/com.noctty.NOCTTY.svg", "share/icons/hicolor/scalable/apps/com.noctty.NOCTTY.svg");
+-    b.installFile("resources/com.noctty.NoctEd.desktop", "share/applications/com.noctty.NoctEd.desktop");
+-    b.installFile("resources/com.noctty.NoctEd.metainfo.xml", "share/metainfo/com.noctty.NoctEd.metainfo.xml");
+-    b.installFile("resources/com.noctty.NoctEd.svg", "share/icons/hicolor/scalable/apps/com.noctty.NoctEd.svg");
+-    b.installFile("resources/nocted/language-specs/zig.lang", "share/nocted/language-specs/zig.lang");
+-    b.installFile("resources/nocted/language-specs/svelte.lang", "share/nocted/language-specs/svelte.lang");
+-    b.installFile("resources/nocted/language-specs/kof.lang", "share/nocted/language-specs/kof.lang");
+-    b.installFile("resources/nocted/language-specs/kof.tmLanguage.json", "share/nocted/language-specs/kof.tmLanguage.json");
+-    b.installFile("resources/nocted/styles/nocted-dark.xml", "share/nocted/styles/nocted-dark.xml");
+-    b.installFile("resources/icons/48x48/com.noctty.NOCTTY.png", "share/icons/hicolor/48x48/apps/com.noctty.NOCTTY.png");
+-    b.installFile("resources/icons/128x128/com.noctty.NOCTTY.png", "share/icons/hicolor/128x128/apps/com.noctty.NOCTTY.png");
+-    b.installFile("resources/noctalia/niri.kdl", "share/noctty/noctalia/niri.kdl");
+-    b.installFile("resources/noctalia/hyprland.lua", "share/noctty/noctalia/hyprland.lua");
+-    b.installFile("resources/noctalia/hyprland.conf", "share/noctty/noctalia/hyprland.conf");
+-    b.installFile("resources/noctalia/sway.conf", "share/noctty/noctalia/sway.conf");
+-    b.installFile("resources/noctalia/scroll.conf", "share/noctty/noctalia/scroll.conf");
+-    b.installFile("resources/noctalia/labwc-rc.xml", "share/noctty/noctalia/labwc-rc.xml");
+-    b.installFile("resources/noctalia/labwc-autostart", "share/noctty/noctalia/labwc-autostart");
+-    b.installFile("resources/noctalia/mango.conf", "share/noctty/noctalia/mango.conf");
+-    b.installFile("resources/noctalia/noctalia-v5-widget.toml", "share/noctty/noctalia/noctalia-v5-widget.toml");
+-    b.installFile("LICENSE", "share/licenses/noctty/LICENSE");
++    b.installFile("resources/com.noctty.NOCTTY.desktop", "share/applications/org.dinx.Deetty.desktop");
++    b.installFile("resources/nocttyhere.desktop", "share/kio/servicemenus/deettyhere.desktop");
++    b.installFile("resources/com.noctty.NOCTTY.metainfo.xml", "share/metainfo/org.dinx.Deetty.metainfo.xml");
++    b.installFile("resources/com.noctty.NOCTTY.svg", "share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg");
++    b.installFile("resources/com.noctty.NoctEd.desktop", "share/applications/org.dinx.Dintor.desktop");
++    b.installFile("resources/com.noctty.NoctEd.metainfo.xml", "share/metainfo/org.dinx.Dintor.metainfo.xml");
++    b.installFile("resources/com.noctty.NoctEd.svg", "share/icons/hicolor/scalable/apps/org.dinx.Dintor.svg");
++    b.installFile("resources/nocted/language-specs/zig.lang", "share/dintor/language-specs/zig.lang");
++    b.installFile("resources/nocted/language-specs/svelte.lang", "share/dintor/language-specs/svelte.lang");
++    b.installFile("resources/nocted/language-specs/kof.lang", "share/dintor/language-specs/kof.lang");
++    b.installFile("resources/nocted/language-specs/kof.tmLanguage.json", "share/dintor/language-specs/kof.tmLanguage.json");
++    b.installFile("resources/nocted/styles/nocted-dark.xml", "share/dintor/styles/dintor-dark.xml");
++    b.installFile("resources/icons/48x48/com.noctty.NOCTTY.png", "share/icons/hicolor/48x48/apps/org.dinx.Deetty.png");
++    b.installFile("resources/icons/128x128/com.noctty.NOCTTY.png", "share/icons/hicolor/128x128/apps/org.dinx.Deetty.png");
++    b.installFile("resources/noctalia/niri.kdl", "share/deetty/noctalia/niri.kdl");
++    b.installFile("resources/noctalia/hyprland.lua", "share/deetty/noctalia/hyprland.lua");
++    b.installFile("resources/noctalia/hyprland.conf", "share/deetty/noctalia/hyprland.conf");
++    b.installFile("resources/noctalia/sway.conf", "share/deetty/noctalia/sway.conf");
++    b.installFile("resources/noctalia/scroll.conf", "share/deetty/noctalia/scroll.conf");
++    b.installFile("resources/noctalia/labwc-rc.xml", "share/deetty/noctalia/labwc-rc.xml");
++    b.installFile("resources/noctalia/labwc-autostart", "share/deetty/noctalia/labwc-autostart");
++    b.installFile("resources/noctalia/mango.conf", "share/deetty/noctalia/mango.conf");
++    b.installFile("resources/noctalia/noctalia-v5-widget.toml", "share/deetty/noctalia/noctalia-v5-widget.toml");
++    b.installFile("LICENSE", "share/licenses/deetty/LICENSE");
+     b.installFile(
+         "THIRD_PARTY_NOTICES.md",
+-        "share/licenses/noctty/THIRD_PARTY_NOTICES.md",
+-    );
+-    b.installFile("dependencies/UNICODE-LICENSE.txt", "share/licenses/noctty/UNICODE-LICENSE.txt");
++        "share/licenses/deetty/THIRD_PARTY_NOTICES.md",
++    );
++    b.installFile("dependencies/UNICODE-LICENSE.txt", "share/licenses/deetty/UNICODE-LICENSE.txt");
+     for ([_][]const u8{
+         "tree-sitter",
+         "tree-sitter-json",
+@@ -610,12 +610,12 @@
+     }) |component| {
+         b.installFile(
+             b.fmt("vendor/{s}/LICENSE", .{component}),
+-            b.fmt("share/licenses/noctty/vendor/{s}/LICENSE", .{component}),
++            b.fmt("share/licenses/deetty/vendor/{s}/LICENSE", .{component}),
+         );
+     }
+     b.installFile(
+         "vendor/tree-sitter/lib/src/unicode/LICENSE",
+-        "share/licenses/noctty/vendor/tree-sitter/lib/src/unicode/LICENSE",
++        "share/licenses/deetty/vendor/tree-sitter/lib/src/unicode/LICENSE",
+     );
+ 
+     const run_cmd = b.addRunArtifact(exe);
+@@ -896,7 +896,7 @@
+     windows_mod.linkSystemLibrary("bcrypt", .{});
+ 
+     const executable = b.addExecutable(.{
+-        .name = "noctty",
++        .name = "deetty",
+         .root_module = windows_mod,
+     });
+     executable.subsystem = .windows;
+@@ -904,7 +904,7 @@
+     b.installArtifact(executable);
+ 
+     const nocted_executable = b.addExecutable(.{
+-        .name = "nocted",
++        .name = "dintor",
+         .root_module = nocted_windows_mod,
+     });
+     nocted_executable.subsystem = .windows;
+@@ -935,12 +935,12 @@
+         nocted_host_qualification_executable,
+         .{},
+     );
+-    b.installFile("LICENSE", "share/licenses/noctty/LICENSE");
++    b.installFile("LICENSE", "share/licenses/deetty/LICENSE");
+     b.installFile(
+         "THIRD_PARTY_NOTICES.md",
+-        "share/licenses/noctty/THIRD_PARTY_NOTICES.md",
+-    );
+-    b.installFile("dependencies/UNICODE-LICENSE.txt", "share/licenses/noctty/UNICODE-LICENSE.txt");
++        "share/licenses/deetty/THIRD_PARTY_NOTICES.md",
++    );
++    b.installFile("dependencies/UNICODE-LICENSE.txt", "share/licenses/deetty/UNICODE-LICENSE.txt");
+ 
+     const check_step = b.step(
+         "check",
+
+--- a/resources/com.noctty.NOCTTY.desktop
++++ b/resources/com.noctty.NOCTTY.desktop
+@@ -1,29 +1,29 @@
+ [Desktop Entry]
+ Type=Application
+-Name=NOCTTY
++Name=Deetty
+ GenericName=Terminal Workspace
+-Comment=Native terminal workspace for Plasma and Noctalia Wayland
+-TryExec=noctty
+-Exec=noctty --open-uri %u
+-Icon=com.noctty.NOCTTY
++Comment=Native terminal workspace for DINX Aqueous and Pearl
++TryExec=deetty
++Exec=deetty --open-uri %u
++Icon=org.dinx.Deetty
+ Terminal=false
+ Categories=System;TerminalEmulator;
+-MimeType=x-scheme-handler/noctty;
++MimeType=x-scheme-handler/deetty;
+ Keywords=terminal;console;shell;command;command-line;tty;pty;workspace;split;tabs;agent;
+ StartupNotify=true
+ X-KDE-StartupNotify=true
+-StartupWMClass=com.noctty.NOCTTY
++StartupWMClass=org.dinx.Deetty
+ Actions=Show;NewWorkspace;Toggle;
+ 
+ [Desktop Action Show]
+-Name=Show NOCTTY
+-Exec=noctty --show
++Name=Show Deetty
++Exec=deetty --show
+ 
+ [Desktop Action NewWorkspace]
+ Name=Open New Workspace Window
+ Icon=window-new
+-Exec=noctty --new-window
++Exec=deetty --new-window
+ 
+ [Desktop Action Toggle]
+-Name=Show or Hide NOCTTY
+-Exec=noctty --toggle
++Name=Show or Hide Deetty
++Exec=deetty --toggle
+
+--- a/resources/com.noctty.NoctEd.desktop
++++ b/resources/com.noctty.NoctEd.desktop
+@@ -1,10 +1,11 @@
+ [Desktop Entry]
+ Type=Application
+-Name=NoctEd
++Name=Editor
++Name[pt_BR]=Editor
+ GenericName=Text Editor
+ Comment=Native project editor with a project tree and minimap
+-Exec=nocted %F
+-Icon=com.noctty.NoctEd
++Exec=dintor %F
++Icon=org.dinx.Dintor
+ Terminal=false
+ Categories=Utility;TextEditor;
+ MimeType=text/plain;text/x-c;text/x-c++;text/x-python;application/json;
+
+--- a/resources/nocttyhere.desktop
++++ b/resources/nocttyhere.desktop
+@@ -1,14 +1,14 @@
+ [Desktop Entry]
+ Type=Service
+-Name=NOCTTY Service Menu
+-TryExec=noctty
++Name=Deetty Service Menu
++TryExec=deetty
+ MimeType=inode/directory;
+-Actions=OpenNOCTTYHere;
++Actions=OpenDeettyHere;
+ X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+ X-KDE-MaxNumberOfUrls=1
+ X-KDE-Priority=TopLevel
+ 
+-[Desktop Action OpenNOCTTYHere]
+-Name=Open NOCTTY Here
+-Icon=com.noctty.NOCTTY
+-Exec=noctty --new-window --working-directory %f
++[Desktop Action OpenDeettyHere]
++Name=Open Deetty Here
++Icon=org.dinx.Deetty
++Exec=deetty --new-window --working-directory %f
+
+--- a/resources/com.noctty.NoctEd.metainfo.xml
++++ b/resources/com.noctty.NoctEd.metainfo.xml
+@@ -1,16 +1,16 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <component type="desktop-application">
+-  <id>com.noctty.NoctEd</id>
+-  <name>NoctEd</name>
++  <id>org.dinx.Dintor</id>
++  <name>Dintor</name>
+   <summary>Native project editor with a project tree and minimap</summary>
+   <metadata_license>CC0-1.0</metadata_license>
+   <project_license>MIT</project_license>
+-  <launchable type="desktop-id">com.noctty.NoctEd.desktop</launchable>
++  <launchable type="desktop-id">org.dinx.Dintor.desktop</launchable>
+   <description>
+-    <p>NoctEd is the standalone native editor companion for NOCTTY.</p>
++    <p>Dintor is the standalone native editor companion for Deetty.</p>
+   </description>
+   <provides>
+-    <binary>nocted</binary>
++    <binary>dintor</binary>
+   </provides>
+   <categories>
+     <category>Utility</category>
+@@ -19,7 +19,7 @@
+   <releases>
+     <release version="0.1.0" date="2026-07-14">
+       <description>
+-        <p>Initial standalone native NoctEd foundation.</p>
++        <p>Initial standalone native Dintor foundation.</p>
+       </description>
+     </release>
+   </releases>
+
+--- a/resources/com.noctty.NOCTTY.metainfo.xml
++++ b/resources/com.noctty.NOCTTY.metainfo.xml
+@@ -1,14 +1,14 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <component type="desktop-application">
+-  <id>com.noctty.NOCTTY</id>
+-  <name>NOCTTY</name>
+-  <summary>Native terminal workspace for Plasma and Noctalia Wayland</summary>
++  <id>org.dinx.Deetty</id>
++  <name>Deetty</name>
++  <summary>Native terminal workspace for DINX Aqueous and Pearl</summary>
+   <metadata_license>CC0-1.0</metadata_license>
+   <project_license>MIT</project_license>
+   <description>
+-    <p>A native Zig terminal workspace targeting KDE Plasma, Noctalia Shell, Wayland, and X11, with validated local workspace links and GUI-managed recent workspaces.</p>
++    <p>A native terminal workspace for DINX, with validated local workspace links and GUI-managed recent workspaces.</p>
+   </description>
+-  <launchable type="desktop-id">com.noctty.NOCTTY.desktop</launchable>
++  <launchable type="desktop-id">org.dinx.Deetty.desktop</launchable>
+   <categories>
+     <category>System</category>
+     <category>TerminalEmulator</category>
+
+--- a/resources/nocted/styles/nocted-dark.xml
++++ b/resources/nocted/styles/nocted-dark.xml
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+-<style-scheme id="nocted-dark" _name="NoctEd Dark" version="1.0">
+-  <author>NOCTTY contributors</author>
+-  <_description>NOCTTY-aligned compact dark editor palette</_description>
++<style-scheme id="dintor-dark" _name="Dintor Dark" version="1.0">
++  <author>Deetty contributors</author>
++  <_description>Deetty-aligned compact dark editor palette</_description>
+   <color name="background" value="#0B0D12"/>
+   <color name="foreground" value="#D7DDE8"/>
+   <color name="muted" value="#7F8A9C"/>
+
+--- a/src/nocted/main.zig
++++ b/src/nocted/main.zig
+@@ -1,4 +1,4 @@
+-//! Standalone NoctEd GTK application and UI-thread lifecycle owner.
++//! Standalone Dintor GTK application and UI-thread lifecycle owner.
+ //!
+ //! Reusable document, indexing, search, session, and worker behavior belongs in
+ //! sibling modules. This file coordinates widgets and callbacks; worker jobs
+@@ -1171,7 +1171,7 @@
+ 
+     fn showUiFontSettings(self: *App) void {
+         const dialog = c.gtk_dialog_new_with_buttons(
+-            "NoctEd Settings",
++            "Dintor Settings",
+             asWindow(self.window),
+             c.GTK_DIALOG_MODAL | c.GTK_DIALOG_DESTROY_WITH_PARENT,
+             "Cancel",
+@@ -1544,11 +1544,11 @@
+         installCss();
+         self.window = c.gtk_window_new(c.GTK_WINDOW_TOPLEVEL) orelse
+             return error.WindowCreationFailed;
+-        c.gtk_window_set_title(asWindow(self.window), "NoctEd");
++        c.gtk_window_set_title(asWindow(self.window), "Dintor");
+         c.gtk_window_set_default_size(asWindow(self.window), 1220, 760);
+-        c.gtk_window_set_icon_name(asWindow(self.window), "com.noctty.NoctEd");
++        c.gtk_window_set_icon_name(asWindow(self.window), "org.dinx.Dintor");
+         c.gtk_widget_set_name(self.window, "nocted-window");
+-        setAccessibleName(self.window, "NoctEd editor window");
++        setAccessibleName(self.window, "Dintor editor window");
+         connect(self.window, "delete-event", @ptrCast(&onWindowDelete), self);
+         connect(self.window, "destroy", @ptrCast(&onWindowDestroy), self);
+         connect(self.window, "key-press-event", @ptrCast(&onWindowKeyPress), self);
+@@ -1746,7 +1746,7 @@
+         appendMenuRoot(bar, "Tools", tools_menu);
+ 
+         const help_menu = c.gtk_menu_new() orelse unreachable;
+-        appendMenuAction(help_menu, "About NoctEd", &onAbout, self);
++        appendMenuAction(help_menu, "About Dintor", &onAbout, self);
+         appendMenuRoot(bar, "Help", help_menu);
+         return bar;
+     }
+@@ -2516,7 +2516,7 @@
+         const root_name = std.fs.path.basename(self.project_root.?);
+         const title = std.fmt.allocPrintSentinel(
+             self.allocator,
+-            "NOCTED - {s}",
++            "DINTOR - {s}",
+             .{root_name},
+             0,
+         ) catch null;
+@@ -3066,7 +3066,7 @@
+         c.gtk_source_buffer_set_highlight_matching_brackets(buffer, 1);
+         c.gtk_source_buffer_set_max_undo_levels(buffer, 128);
+         c.gtk_source_buffer_set_implicit_trailing_newline(buffer, 0);
+-        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, "nocted-dark")) |scheme|
++        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, "dintor-dark")) |scheme|
+             c.gtk_source_buffer_set_style_scheme(buffer, scheme);
+         c.gtk_source_buffer_begin_not_undoable_action(buffer);
+         c.gtk_text_buffer_set_text(
+@@ -6499,7 +6499,7 @@
+         {
+             if (!build_options.enable_smoke) return error.SmokeModeUnavailable;
+         } else if (std.mem.startsWith(u8, arg, "-")) {
+-            std.debug.print("Unknown option: {s}\nRun 'nocted --help' for usage.\n", .{arg});
++            std.debug.print("Unknown option: {s}\nRun 'dintor --help' for usage.\n", .{arg});
+             return error.UnknownArgument;
+         }
+     }
+@@ -6579,7 +6579,7 @@
+     }
+     const formatted = Compat.bufPrintZ(
+         buffer,
+-        "com.noctty.NoctEd.n{x}",
++        "org.dinx.Dintor.n{x}",
+         .{hash},
+     ) catch unreachable;
+     return formatted.ptr;
+@@ -6629,15 +6629,15 @@
+         var buffer: [2048]u8 = undefined;
+         var writer: std.Io.File.Writer = .init(.stdout(), init.io, &buffer);
+         if (std.mem.eql(u8, args[1], "--version")) {
+-            try writer.interface.print("nocted {s}\n", .{version});
++            try writer.interface.print("dintor {s}\n", .{version});
+         } else {
+             try writer.interface.writeAll(
+-                \\Usage: nocted [OPTIONS] [FILE ...]
++                \\Usage: dintor [OPTIONS] [FILE ...]
+                 \\
+                 \\  -h, --help         Show this help without opening a window
+                 \\  --version          Print the version
+                 \\  --open FILE        Open a file (repeatable)
+-                \\  --project FILE.npr Open a saved NoctEd project
++                \\  --project FILE.npr Open a saved Dintor project
+                 \\  --                 Treat remaining arguments as file paths
+                 \\
+                 \\With no files, restore the previous session or open an untitled
+@@ -6903,10 +6903,10 @@
+     c.gtk_main();
+     if (build_options.enable_smoke and app.smoke and
+         !app.project_lifecycle_smoke and !app.smoke_passed)
+-        return error.NoctEdNativeSmokeFailed;
++        return error.DintorNativeSmokeFailed;
+     if (build_options.enable_smoke and app.project_lifecycle_smoke and
+         !app.project_lifecycle_passed)
+-        return error.NoctEdProjectLifecycleSmokeFailed;
++        return error.DintorProjectLifecycleSmokeFailed;
+ }
+ 
+ fn elapsedNanoseconds(started: std.Io.Timestamp, io: std.Io) u64 {
+@@ -6932,8 +6932,8 @@
+     const exe_dir = try std.process.executableDirPathAlloc(io, allocator);
+     defer allocator.free(exe_dir);
+     const candidates = [_][]const []const u8{
+-        &.{ exe_dir, "../share/nocted" },
+-        &.{ exe_dir, "../../share/nocted" },
++        &.{ exe_dir, "../share/dintor" },
++        &.{ exe_dir, "../../share/dintor" },
+         &.{"resources/nocted"},
+     };
+     for (candidates) |parts| {
+@@ -6949,7 +6949,7 @@
+             allocator.free(candidate);
+         }
+     }
+-    return error.NoctEdResourcesUnavailable;
++    return error.DintorResourcesUnavailable;
+ }
+ 
+ fn installCss() void {
+@@ -7804,7 +7804,7 @@
+ fn onOpenFolder(_: ?*c.GtkWidget, data: ?*anyopaque) callconv(.c) void {
+     const app: *App = @ptrCast(@alignCast(data.?));
+     const dialog = c.gtk_file_chooser_dialog_new(
+-        "Create NoctEd Project",
++        "Create Dintor Project",
+         asWindow(app.window),
+         c.GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+         "Cancel",
+@@ -7828,7 +7828,7 @@
+ fn onOpenProject(_: ?*c.GtkWidget, data: ?*anyopaque) callconv(.c) void {
+     const app: *App = @ptrCast(@alignCast(data.?));
+     const dialog = c.gtk_file_chooser_dialog_new(
+-        "Open NoctEd Project",
++        "Open Dintor Project",
+         asWindow(app.window),
+         c.GTK_FILE_CHOOSER_ACTION_OPEN,
+         "Cancel",
+@@ -8183,7 +8183,7 @@
+ 
+ fn runAboutDialog(app: *App, auto_close: bool) bool {
+     const dialog = c.gtk_dialog_new_with_buttons(
+-        "About NoctEd",
++        "About Dintor",
+         asWindow(app.window),
+         c.GTK_DIALOG_MODAL | c.GTK_DIALOG_DESTROY_WITH_PARENT,
+         "Close",
+@@ -8199,7 +8199,7 @@
+     c.gtk_widget_set_margin_end(body, 32);
+     c.gtk_widget_set_margin_top(body, 24);
+     c.gtk_widget_set_margin_bottom(body, 24);
+-    const title = c.gtk_label_new("NoctEd") orelse return false;
++    const title = c.gtk_label_new("Dintor") orelse return false;
+     c.gtk_widget_set_name(title, "nocted-about-title");
+     const version_label = c.gtk_label_new(version) orelse return false;
+     const comments = c.gtk_label_new(
+@@ -8218,8 +8218,8 @@
+     ) orelse return false;
+     c.gtk_widget_set_name(close_button, "nocted-about-close");
+     c.gtk_widget_set_size_request(close_button, 88, 36);
+-    c.gtk_widget_set_tooltip_text(close_button, "Close About NoctEd");
+-    setAccessibleName(close_button, "Close About NoctEd");
++    c.gtk_widget_set_tooltip_text(close_button, "Close About Dintor");
++    setAccessibleName(close_button, "Close About Dintor");
+     c.gtk_widget_show_all(dialog);
+     const close_visible = c.gtk_widget_get_visible(close_button) != 0 and
+         c.gtk_widget_get_sensitive(close_button) != 0;
+
+--- a/src/workspace/Activation.zig
++++ b/src/workspace/Activation.zig
+@@ -80,8 +80,8 @@
+ }
+ 
+ pub fn parseWorkspaceUri(uri: []const u8) !WorkspacePath {
+-    const encoded = if (std.mem.startsWith(u8, uri, "noctty://"))
+-        uri["noctty://".len..]
++    const encoded = if (std.mem.startsWith(u8, uri, "deetty://"))
++        uri["deetty://".len..]
+     else if (std.mem.startsWith(u8, uri, "file://"))
+         uri["file://".len..]
+     else
+@@ -122,20 +122,20 @@
+ }
+ 
+ test "workspace URI activation accepts only bounded local snapshot paths" {
+-    const noctty = try parseWorkspaceUri("noctty:///tmp/Release%20Ops.nocttyws");
+-    try std.testing.expectEqualStrings("/tmp/Release Ops.nocttyws", noctty.slice());
++    const deetty = try parseWorkspaceUri("deetty:///tmp/Release%20Ops.nocttyws");
++    try std.testing.expectEqualStrings("/tmp/Release Ops.nocttyws", deetty.slice());
+     const file = try parseWorkspaceUri("file:///home/alice/project.nocttyws");
+     try std.testing.expectEqualStrings("/home/alice/project.nocttyws", file.slice());
+ 
+     try std.testing.expectError(error.UnsupportedWorkspaceUriScheme, parseWorkspaceUri("https:///tmp/project.nocttyws"));
+     try std.testing.expectError(error.WorkspaceUriAuthorityForbidden, parseWorkspaceUri("file://host/tmp/project.nocttyws"));
+     try std.testing.expectError(error.WorkspaceNetworkPathForbidden, parseWorkspaceUri("file:////host/project.nocttyws"));
+-    try std.testing.expectError(error.WorkspaceUriSuffixForbidden, parseWorkspaceUri("noctty:///tmp/project.nocttyws?mode=replace"));
+-    try std.testing.expectError(error.WorkspaceUriSuffixForbidden, parseWorkspaceUri("noctty:///tmp/project.nocttyws#tab-1"));
+-    try std.testing.expectError(error.InvalidWorkspaceUriEscape, parseWorkspaceUri("noctty:///tmp/%zz.nocttyws"));
+-    try std.testing.expectError(error.InvalidWorkspacePathControl, parseWorkspaceUri("noctty:///tmp/a%00.nocttyws"));
+-    try std.testing.expectError(error.UnescapedWorkspaceUriSpace, parseWorkspaceUri("noctty:///tmp/a b.nocttyws"));
+-    try std.testing.expectError(error.InvalidWorkspacePathExtension, parseWorkspaceUri("noctty:///tmp/project.json"));
++    try std.testing.expectError(error.WorkspaceUriSuffixForbidden, parseWorkspaceUri("deetty:///tmp/project.nocttyws?mode=replace"));
++    try std.testing.expectError(error.WorkspaceUriSuffixForbidden, parseWorkspaceUri("deetty:///tmp/project.nocttyws#tab-1"));
++    try std.testing.expectError(error.InvalidWorkspaceUriEscape, parseWorkspaceUri("deetty:///tmp/%zz.nocttyws"));
++    try std.testing.expectError(error.InvalidWorkspacePathControl, parseWorkspaceUri("deetty:///tmp/a%00.nocttyws"));
++    try std.testing.expectError(error.UnescapedWorkspaceUriSpace, parseWorkspaceUri("deetty:///tmp/a b.nocttyws"));
++    try std.testing.expectError(error.InvalidWorkspacePathExtension, parseWorkspaceUri("deetty:///tmp/project.json"));
+ }
+ 
+ test "recent workspaces are a fixed deduplicating most-recent-first library" {
+
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -3698,9 +3698,9 @@
+         const cmd = args[1];
+         if (std.mem.eql(u8, cmd, "--help") or std.mem.eql(u8, cmd, "-h")) {
+             try stdout.writeAll(
+-                \\Usage: noctty [OPTION]
++                \\Usage: deetty [OPTION]
+                 \\
+-                \\With no option, show the existing workspace or start NOCTTY.
++                \\With no option, show the existing workspace or start Deetty.
+                 \\  -h, --help                 Show this help without opening a window
+                 \\  --version                  Print the version
+                 \\  --package-smoke             Run the headless deployment smoke
+@@ -3713,7 +3713,7 @@
+                 \\  --native-grid-windowed     Open in decorated window mode
+                 \\  --native-grid-zen          Open in fullscreen mode
+                 \\  --open-workspace PATH      Restore a saved workspace
+-                \\  --open-uri URI             Open a noctty workspace URI
++                \\  --open-uri URI             Open a deetty workspace URI
+                 \\
+                 \\Settings, shortcuts, themes and launch profiles are configurable in
+                 \\the native Settings window. See docs/INSTALL.md for desktop setup.
+@@ -3722,7 +3722,7 @@
+             return;
+         }
+         if (std.mem.eql(u8, cmd, "--version")) {
+-            try stdout.writeAll("noctty " ++ noctty.release.version ++ "\n");
++            try stdout.writeAll("deetty " ++ noctty.release.version ++ "\n");
+             return;
+         }
+         if (std.mem.eql(u8, cmd, "--package-smoke")) {
+@@ -8527,7 +8527,7 @@
+         .use_layer_shell = 0,
+     });
+     if (status != 0) return error.NativeGridNoctaliaIpcSmokeFailed;
+-    try out.print("native_grid_noctalia_ipc_smoke dbus=true layer_shell=false toplevel_fallback=true app_id=com.noctty.NOCTTY title_prefix=true hidden_start=true status=true show=true hide=true toggle=true single_instance=true dropdown_dragger=2px side_border=2 exited=true\n", .{});
++    try out.print("native_grid_noctalia_ipc_smoke dbus=true layer_shell=false toplevel_fallback=true app_id=org.dinx.Deetty title_prefix=true hidden_start=true status=true show=true hide=true toggle=true single_instance=true dropdown_dragger=2px side_border=2 exited=true\n", .{});
+ }
+ 
+ fn nativeGridWorkspaceActivationSmoke(
+@@ -8536,7 +8536,7 @@
+     out: anytype,
+ ) !void {
+     const workspace_path = "/tmp/noctty workspace activation.nocttyws";
+-    const workspace_uri = "noctty:///tmp/noctty%20workspace%20activation.nocttyws";
++    const workspace_uri = "deetty:///tmp/noctty%20workspace%20activation.nocttyws";
+     const config_path = "/tmp/noctty-workspace-activation.nocttycfg";
+     std.Io.Dir.cwd().deleteFile(io, workspace_path) catch {};
+     std.Io.Dir.cwd().deleteFile(io, config_path) catch {};
+
+--- a/src/gui/native_grid_host.c
++++ b/src/gui/native_grid_host.c
+@@ -3648,7 +3648,7 @@
+ 
+ static const char noctty_control_xml[] =
+     "<node>"
+-    " <interface name='com.noctty.NOCTTY.Control'>"
++    " <interface name='org.dinx.Deetty.Control'>"
+     "  <method name='Toggle'><arg type='b' name='visible' direction='out'/></method>"
+     "  <method name='ToggleWithActivation'><arg type='s' name='token' direction='in'/><arg type='b' name='visible' direction='out'/></method>"
+     "  <method name='Show'><arg type='b' name='visible' direction='out'/></method>"
+@@ -3787,8 +3787,8 @@
+     noctty_grid_error_clear(&error);
+     if (root->control_name_conflict && root->show_on_control_conflict) {
+         GVariant *forwarded = g_dbus_connection_call_sync(
+-            root->control_bus, "com.noctty.NOCTTY", "/com/noctty/NOCTTY",
+-            "com.noctty.NOCTTY.Control", "Show", NULL,
++            root->control_bus, "org.dinx.Deetty", "/org/dinx/Deetty",
++            "org.dinx.Deetty.Control", "Show", NULL,
+             G_VARIANT_TYPE("(b)"), G_DBUS_CALL_FLAGS_NONE,
+             timing.dbus_call_timeout_ms, NULL, NULL);
+         if (forwarded != NULL) {
+@@ -3816,14 +3816,14 @@
+                                                        &error);
+     if (root->control_node == NULL) goto failed;
+     root->control_object_id = g_dbus_connection_register_object(
+-        root->control_bus, "/com/noctty/NOCTTY",
++        root->control_bus, "/org/dinx/Deetty",
+         root->control_node->interfaces[0], &noctty_control_vtable, root, NULL,
+         &error);
+     if (root->control_object_id == 0) goto failed;
+     g_dbus_connection_call(
+         root->control_bus, "org.freedesktop.DBus", "/org/freedesktop/DBus",
+         "org.freedesktop.DBus", "RequestName",
+-        g_variant_new("(su)", "com.noctty.NOCTTY", 4u),
++        g_variant_new("(su)", "org.dinx.Deetty", 4u),
+         G_VARIANT_TYPE("(u)"), G_DBUS_CALL_FLAGS_NONE,
+         timing.dbus_call_timeout_ms,
+         root->dbus_cancellable, on_grid_control_name_requested, root);
+@@ -3847,7 +3847,7 @@
+     g_dbus_connection_call(
+         root->control_bus, "org.freedesktop.DBus", "/org/freedesktop/DBus",
+         "org.freedesktop.DBus", "ReleaseName",
+-        g_variant_new("(s)", "com.noctty.NOCTTY"), G_VARIANT_TYPE("(u)"),
++        g_variant_new("(s)", "org.dinx.Deetty"), G_VARIANT_TYPE("(u)"),
+         G_DBUS_CALL_FLAGS_NONE, timing.dbus_call_timeout_ms,
+         NULL, NULL, NULL);
+     g_clear_pointer(&root->control_node, g_dbus_node_info_unref);
+@@ -4184,9 +4184,9 @@
+     if (g_strcmp0(property_name, "Category") == 0)
+         return g_variant_new_string("ApplicationStatus");
+     if (g_strcmp0(property_name, "Id") == 0)
+-        return g_variant_new_string("noctty");
++        return g_variant_new_string("deetty");
+     if (g_strcmp0(property_name, "Title") == 0)
+-        return g_variant_new_string("NOCTTY");
++        return g_variant_new_string("Deetty");
+     if (g_strcmp0(property_name, "Status") == 0)
+         return g_variant_new_string("Active");
+     if (g_strcmp0(property_name, "WindowId") == 0)
+@@ -4198,7 +4198,7 @@
+     if (g_strcmp0(property_name, "ItemIsMenu") == 0)
+         return g_variant_new_boolean(FALSE);
+     if (g_strcmp0(property_name, "IconName") == 0)
+-        return g_variant_new_string("com.noctty.NOCTTY");
++        return g_variant_new_string("org.dinx.Deetty");
+     if (g_strcmp0(property_name, "IconPixmap") == 0)
+         return root->tray_icon_pixmaps != NULL
+             ? noctty_grid_variant_ref(root->tray_icon_pixmaps)
+@@ -4215,7 +4215,7 @@
+             ? noctty_grid_variant_ref(root->tray_icon_pixmaps)
+             : new_empty_grid_tray_pixmaps();
+         return g_variant_new(
+-            "(s@a(iiay)ss)", "com.noctty.NOCTTY", pixmaps, "NOCTTY",
++            "(s@a(iiay)ss)", "org.dinx.Deetty", pixmaps, "Deetty",
+             root->window_presented
+                 ? "Terminal window is visible"
+                 : "Click to show the terminal window");
+@@ -6293,8 +6293,8 @@
+         bus, "org.freedesktop.Notifications",
+         "/org/freedesktop/Notifications", "org.freedesktop.Notifications",
+         "Notify",
+-        g_variant_new("(susss@as@a{sv}i)", "NOCTTY", 0u,
+-                      "com.lichforge.NOCTTY",
++        g_variant_new("(susss@as@a{sv}i)", "Deetty", 0u,
++                      "org.dinx.Deetty",
+                       request->attention ? "Terminal needs attention" :
+                                            "Terminal finished",
+                       body,
+@@ -10416,7 +10416,7 @@
+          noctty_grid_widget_get_app_paintable(window));
+     root->application_icon_ready = g_strcmp0(
+         noctty_grid_window_get_icon_name(GTK_WINDOW(window)),
+-        "com.noctty.NOCTTY") == 0;
++        "org.dinx.Deetty") == 0;
+     set_grid_window_title(
+         root,
+         window,
+@@ -11632,7 +11632,7 @@
+         return;
+     }
+     GtkWidget *dialog = noctty_dialog_new(
+-        GTK_WIDGET(context->window), "Configure NOCTTY",
++        GTK_WIDGET(context->window), "Configure Deetty",
+         GTK_DIALOG_DESTROY_WITH_PARENT, "_Close", GTK_RESPONSE_CLOSE,
+         NULL, 0);
+     (void)configure_overlay_window_stacking(
+@@ -17290,8 +17290,8 @@
+     if (workspace_smoke >= 0) return -3;
+     workspace_smoke = -1;
+ #endif
+-    g_set_prgname("com.noctty.NOCTTY");
+-    g_set_application_name("NOCTTY");
++    g_set_prgname("org.dinx.Deetty");
++    g_set_application_name("Deetty");
+     if (!noctty_grid_gtk_init_check()) {
+         g_printerr("native_grid_gtk_init_failed display=%s wayland_display=%s gdk_backend=%s\n",
+                    g_getenv("DISPLAY") != NULL ? g_getenv("DISPLAY") : "",
+@@ -17299,7 +17299,7 @@
+                    g_getenv("GDK_BACKEND") != NULL ? g_getenv("GDK_BACKEND") : "");
+         return -1;
+     }
+-    noctty_grid_window_set_default_icon_name("com.noctty.NOCTTY");
++    noctty_grid_window_set_default_icon_name("org.dinx.Deetty");
+     NocttyGridContext context = {0};
+     NocttyGridNativeHostPolicy policy = {0};
+     noctty_grid_native_host_policy(&policy);

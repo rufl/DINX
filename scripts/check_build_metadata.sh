@@ -49,7 +49,7 @@ require_value zig_version '^0\.17\.0$'
 require_value profile_sha256 '^[0-9a-f]{64}$'
 require_value common_profile_sha256 '^[0-9a-f]{64}$'
 require_value feature_groups_sha256 '^[0-9a-f]{64}$'
-require_value noctty_source_env_sha256 '^[0-9a-f]{64}$'
+require_value deetty_source_env_sha256 '^[0-9a-f]{64}$'
 require_value iso_name '^[^/[:space:]]+\.iso$'
 require_value iso_bytes '^[1-9][0-9]*$'
 require_value iso_sha512 '^[0-9a-f]{128}$'
@@ -85,8 +85,8 @@ common_profile_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/common/common
 [[ "$(read_value common_profile_sha256)" == "$common_profile_sha" ]] || fail 'common profile checksum does not match the checked-out source'
 feature_groups_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json" | cut -d ' ' -f 1)
 [[ "$(read_value feature_groups_sha256)" == "$feature_groups_sha" ]] || fail 'feature-group checksum does not match the checked-out source'
-source_env_sha=$(sha256sum "$repo_root/distro/packages/noctty/source.env" | cut -d ' ' -f 1)
-[[ "$(read_value noctty_source_env_sha256)" == "$source_env_sha" ]] || fail 'Noctty source.env checksum does not match the checked-out source'
+source_env_sha=$(sha256sum "$repo_root/distro/packages/deetty/source.env" | cut -d ' ' -f 1)
+[[ "$(read_value deetty_source_env_sha256)" == "$source_env_sha" ]] || fail 'Deetty source.env checksum does not match the checked-out source'
 compression_wrapper_sha=$(sha256sum "$repo_root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 [[ "$(read_value compression_wrapper_sha256)" == "$compression_wrapper_sha" ]] \
   || fail 'compression wrapper checksum does not match the checked-out source'

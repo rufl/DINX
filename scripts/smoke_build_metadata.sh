@@ -14,7 +14,7 @@ iso_sha512=$(sha512sum "$iso" | cut -d ' ' -f 1)
 profile_sha=$(sha256sum "$root/distro/iso/iso-profiles/dinx/profile.yaml" | cut -d ' ' -f 1)
 common_profile_sha=$(sha256sum "$root/distro/iso/iso-profiles/common/common.yaml" | cut -d ' ' -f 1)
 feature_groups_sha=$(sha256sum "$root/distro/iso/iso-profiles/dinx/feature-groups.json" | cut -d ' ' -f 1)
-noctty_source_env_sha=$(sha256sum "$root/distro/packages/noctty/source.env" | cut -d ' ' -f 1)
+deetty_source_env_sha=$(sha256sum "$root/distro/packages/deetty/source.env" | cut -d ' ' -f 1)
 compression_wrapper_sha=$(sha256sum "$root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 
 fixture_commit=$(git -C "$root" rev-parse HEAD)
@@ -32,7 +32,7 @@ zig_version=0.17.0
 profile_sha256=$profile_sha
 common_profile_sha256=$common_profile_sha
 feature_groups_sha256=$feature_groups_sha
-noctty_source_env_sha256=$noctty_source_env_sha
+deetty_source_env_sha256=$deetty_source_env_sha
 compression_schema=dinx-squashfs/v1
 compression_algorithm=xz
 compression_level=tool-default

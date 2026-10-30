@@ -53,8 +53,8 @@ rootfs:
     - vulkan-swrast
     - vulkan-tools
     - nano
-    - noctty
-    - foot
+    - deetty
+    - ghostty-vt-runtime
     - qt6-wayland
     - qt6ct
     - shikane
@@ -98,6 +98,7 @@ rootfs:
     - python-psutil
     - curl
     - git
+    - galculator
     - gufw
     - inxi
     - jq
@@ -113,7 +114,7 @@ rootfs:
     - rsync
     - sane
     - shelly
-    - strawberry
+    - gapless
     - swayimg
     - topgrade
     - swayidle

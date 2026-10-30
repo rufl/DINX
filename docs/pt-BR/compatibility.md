@@ -8,9 +8,9 @@ Os aplicativos da DINX integram-se por metadados XDG, protocolos Wayland, D-Bus,
 
 Obrigatório para a ISO base:
 
-- O Noctty é descoberto por `$TERMINAL`, aceita os argumentos documentados de inicialização e respeita um diretório de trabalho quando fornecido.
-- O Nocted possui uma entrada `.desktop` válida, abre arquivos e diretórios por launchers XDG padrão e aceita argumentos de arquivo/linha suportados.
-- O Nocted inicia o LSP documentado para cada tipo de arquivo. Zig usa o ZLS 0.16.0 incluído; C/C++ usa `clangd`.
+- O Deetty é descoberto por `$TERMINAL`, aceita os argumentos documentados de inicialização e respeita um diretório de trabalho quando fornecido.
+- O Dintor possui uma entrada `.desktop` válida, abre arquivos e diretórios por launchers XDG padrão e aceita argumentos de arquivo/linha suportados.
+- O Dintor inicia o LSP documentado para cada tipo de arquivo. Zig usa o ZLS 0.16.0 incluído; C/C++ usa `clangd`.
 - O Firefox é o manipulador padrão de HTML, XHTML, HTTP e HTTPS.
 - O Phyto é o manipulador padrão de diretórios; o File Roller cuida de abrir/criar/extrair arquivos compactados; o GParted cuida do particionamento independente.
 - O Pori descobre dispositivos de bloco pelo UDisks2 e persiste montagens do usuário por serviços dinit em `/etc/dinit.d`.
@@ -21,15 +21,15 @@ Obrigatório para a ISO base:
 O contrato do tema estático DINX é a fonte de verdade:
 
 - paleta: `/usr/share/dinx/theme/DINX.json`;
-- escolha de cor do usuário: `DINX_COLOR_SCHEME=light|dark`, com `NOCTED_THEME=prefer-light` aceito pelo Nocted;
+- escolha de cor do usuário: `DINX_COLOR_SCHEME=light|dark`, com `DINTOR_THEME=prefer-light` aceito pelo Dintor;
 - cores Qt6ct: `~/.config/qt6ct/colors/DINX.conf`;
 - tema GTK: tema instalado `DINX` com Noto Sans 10;
 - texto de largura fixa: Noto Sans Mono 10 quando exigido pelo aplicativo;
 - bridges gráficas: estados DINX de superfície, controle, hover, primário e erro, com ícones Adwaita quando disponíveis.
 
-`DINX_COLOR_SCHEME=light` ou `NOCTED_THEME=prefer-light` seleciona o esquema claro empacotado do editor. Os demais valores usam o esquema escuro DINX. O Nocted não interpreta arquivos privados de shell e continua funcional sem nenhuma variável.
+`DINX_COLOR_SCHEME=light` ou `DINTOR_THEME=prefer-light` seleciona o esquema claro empacotado do editor. Os demais valores usam o esquema escuro DINX. O Dintor não interpreta arquivos privados de shell e continua funcional sem nenhuma variável.
 
-Pearl Greeter, Calamares e GRUB usam bridges estáticas DINX porque executam antes ou fora da sessão do usuário. O Pearl Greeter lê `/etc/pearl/greeter.json`, roda pela conta dedicada `pearl-greeter` e força a única entrada Aqueous/Pearl com X11 e UWSM desativados. Swayimg, btop, Foot, Ghostty, GTK e Qt usam seus caminhos DINX versionados. `scripts/check_dinx_theme.sh` valida paleta, tipografia, estados e bridges; `scripts/check-iso-content.sh` repete os checks dentro do SquashFS.
+Pearl Greeter, Calamares e GRUB usam bridges estáticas DINX porque executam antes ou fora da sessão do usuário. O Pearl Greeter lê `/etc/pearl/greeter.json`, roda pela conta dedicada `pearl-greeter` e força a única entrada Aqueous/Pearl com X11 e UWSM desativados. Deetty, Swayimg, btop, GTK e Qt usam seus caminhos DINX versionados. `ghostty-vt-runtime` fornece somente a biblioteca VT e os headers do Ghostty necessários ao Deetty; não instala o terminal Ghostty. `scripts/check_dinx_theme.sh` valida paleta, tipografia, estados e bridges; `scripts/check-iso-content.sh` repete os checks dentro do SquashFS.
 
 ## Contrato do gerenciador de serviços DinitUI
 
@@ -39,12 +39,15 @@ O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --
 
 ## Contrato da sessão Aqueous/Pearl
 
+Todas as janelas de nível superior do Aqueous exibem uma barra DINX desenhada pelo compositor, com título e botões para minimizar, maximizar/restaurar e fechar, inclusive clientes GTK e Pearl. Títulos longos são truncados com reticências antes dos controles. A sessão define `GTK_CSD=0` e o Aqueous solicita decorações do servidor; janelas GTK padrão usam a barra do compositor, e clientes Wayland que respeitam xdg-decoration recebem a mesma solicitação. Arrastar qualquer área livre da barra move a janela e usa o encaixe do Aqueous para janelas flutuantes: bordas laterais/inferior encaixam em metades, cantos em quartos e a borda superior maximiza. Janelas em tela cheia ocultam a barra. Aplicativos que definem barras de título próprias e ignoram a solicitação de decoração do servidor ainda podem desenhar conteúdo por baixo da barra do compositor; o Wayland não oferece um mecanismo genérico para o compositor remover conteúdo renderizado pelo cliente. Menus e popups não são janelas de nível superior e mantêm o comportamento próprio.
+
 - Aqueous/Pearl é a única sessão de usuário selecionável e suportada da DINX.
 - A ISO live abre `dinx` diretamente pelo autologin dinit; o rootfs instalado mantém login manual.
 - O Pearl Greeter é a interface de login instalada do greetd, não uma segunda sessão de usuário; sua configuração pertencente ao root força `Aqueous + Pearl (DINX)` e não há fallback silencioso.
 - `dinx-aqueous-pearl` inicia o Aqueous diretamente. O filho init espera o Wayland e o D-Bus da sessão; então o supervisor inicia Shikane, PolicyKit, o idle obrigatório e Pearl. O daemon opcional da BC-250 só inicia quando o pacote assinado é instalado separadamente; instale-o somente após detectar o PCI `1002:13fe`. A ISO genérica omite todos os pacotes específicos da BC-250.
 - Falha de helper obrigatório ou do Pearl registra estado explícito e encerra o compositor, em vez de deixar um desktop vazio.
 - A sessão usa elogind/libseat e execução direta sobre dinit; não exige systemd, systemctl, uwsm ou unidades de usuário.
+
 - `swayidle` bloqueia após 600 segundos e em `before-sleep`; `Super+L`, a ação do launcher e a DINXPanel usam o mesmo caminho `swaylock`. `brightnessctl` fornece passos fixos de 5% para brilho.
 
 ## Integração de display e Seafoam
@@ -61,17 +64,18 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 
 | Área | Critério de aceitação |
 | --- | --- |
-| Descoberta do terminal | `$TERMINAL` inicia o Noctty com shell e diretório solicitado |
+| Descoberta do terminal | `$TERMINAL` inicia o Deetty com shell e diretório solicitado |
 | Metadados desktop | entradas `.desktop` são válidas e descobertas |
 | Argumentos de inicialização | comportamento de arquivo, linha e diretório é determinístico |
-| Contrato de tema | paleta DINX estática, defaults escuros GTK 3/4 no sistema, seleção GTK escura na sessão e paleta DINX do Qt6ct estão configurados |
+| Contrato de tema | paleta DINX estática, defaults escuros GTK 3/4 no sistema, seleção GTK escura na sessão, paleta DINX do Qt6ct e controles de fallback na barra de título GTK 3/4 estão configurados |
 | Greeter/instalador/boot | Pearl Greeter, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
 | Firefox padrão | Firefox trata HTML/XHTML/HTTP/HTTPS por default |
 | Armazenamento e arquivos | persistência dinit do Pori, diretórios no Phyto, arquivos compactados no File Roller e edição no GParted estão presentes |
-| Layout do desktop | Aqueous/Pearl é a única sessão de usuário; stacking livre é o padrão, `Alt+Shift+F` o seleciona e `Super+Shift+Space` alterna o modo flutuante por janela |
+| Layout do desktop | Aqueous/Pearl é a única sessão de usuário; perfis novos iniciam em stacking flutuante em todos os workspaces. Os atalhos padrão de mosaico, rolagem, monocle e grade (`Super+T/F/M/G`) ficam desativados; arrastar até as bordas esquerda/direita/inferior encaixa em metades, os cantos em quartos, e o centro da borda superior maximiza (limite de 24 px, sem espaço). Configurações existentes são preservadas |
+| Decorações das janelas | Patches Aqueous e smoke da fonte fixada verificam a invalidação do cache de título Wayland/XWayland, áreas clicáveis dos controles e geometria de encaixe flutuante em metade/quarto |
 | Segurança da sessão | lock por idle, lock antes de suspend, lock explícito e brilho usam caminhos fixos |
 | Persistência de display | mudanças do wdisplays atualizam atomicamente e recarregam o perfil nomeado do Shikane |
-| ZLS | Nocted encontra a biblioteca Zig correspondente sem compilador completo |
+| ZLS | Dintor encontra a biblioteca Zig correspondente sem compilador completo |
 | Gerenciamento de pacotes | pacman, Shelly, paru e Topgrade usam a configuração Artix e são executados pelo usuário |
 | Firewall/monitoramento | Gufw, Qps e OpenSnitch são descobertos; serviços ficam desabilitados até configuração |
 | DinitUI | descoberta e controle usam argv validado do dinitctl com fallback pkexec restrito |
@@ -81,4 +85,4 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 
 ## Gates de release
 
-`scripts/check_noctty_integration.sh`, `scripts/nocted_p3_qualification.sh`, `scripts/check_dinitui.sh`, `scripts/check_dinx_session.sh`, `scripts/check_dinx_display_persistence.sh`, `scripts/check_dinx_theme.sh`, `scripts/check_pori_phyto.sh` e `scripts/check-iso-content.sh` verificam os contratos de pacote, sessão e ISO. O workflow P0 continua sendo o gate de criação dos pacotes, montagem da ISO, boot QEMU, instalação Calamares, TTY de recuperação, atestação e publicação.
+`scripts/check_deetty_integration.sh`, `scripts/dintor_p3_qualification.sh`, `scripts/check_dinitui.sh`, `scripts/check_dinx_session.sh`, `scripts/check_dinx_display_persistence.sh`, `scripts/check_dinx_theme.sh`, `scripts/check_pori_phyto.sh`, `scripts/check_aqueous_pearl.sh` e `scripts/check-iso-content.sh` verificam os contratos de pacote, sessão e ISO. O workflow P0 continua sendo o gate de criação dos pacotes, montagem da ISO, boot QEMU, instalação Calamares, TTY de recuperação, atestação e publicação.

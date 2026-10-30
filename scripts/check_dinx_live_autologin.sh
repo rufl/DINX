@@ -45,12 +45,18 @@ grep -Fq 'displayAutologin: false' "$users_conf" \
   || fail 'Calamares display autologin must remain disabled'
 grep -Fq 'doAutologin: false' "$users_conf" \
   || fail 'Calamares user autologin must remain disabled'
+grep -Fqx '    - render' "$users_conf" \
+  || fail 'installed users are missing DRM render-node access'
 
 grep -Fq "AUTOLOGIN=true" "$wrapper" || fail 'live wrapper does not guard on AUTOLOGIN=true'
 grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure greetd initial_session'
 grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
   || fail 'live initial Aqueous/Pearl command is missing'
 grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
+grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
+  || fail 'live user is missing DRM render-node access'
+grep -Fq 'getent group render' "$wrapper" \
+  || fail 'live autologin does not guard render-group enrollment'
 grep -Fq 'after = artix-live' "$service" || fail 'live autologin service ordering is incomplete'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'

@@ -77,7 +77,7 @@ CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuár
 
 ### Aqueous, Pearl e o limite dinit
 
-Aqueous 1.0.5 e Pearl 0.3.0 são a única sessão de usuário selecionável e a sessão inicial da live. `dinx-aqueous-pearl` seleciona elogind/libseat e inicia Aqueous diretamente. O pacote inclui o compositor completo com efeitos Vulkan e `aqueous-cpu`, compilado sem esses efeitos. O wrapper usa Pixman/Cairo quando não há render node DRM ou quando o dispositivo é uma GPU Virtio (`0x1af4`), evitando a falha de apresentação QEMU/llvmpipe. Esse modo é mais lento e não oferece efeitos Vulkan do compositor, como blur e cantos arredondados; os demais sistemas com render node mantêm o compositor completo e a seleção normal de driver.
+Aqueous 1.0.5 e Pearl 0.3.0 são a única sessão de usuário selecionável e a sessão inicial da live. `dinx-aqueous-pearl` seleciona elogind/libseat e inicia Aqueous diretamente. Saídas novas do Aqueous começam com dois workspaces; isso define o estado inicial, não um limite máximo nem uma alteração da configuração pessoal existente. O helper gráfico seleciona `aqueous-cpu` com GLES2/GL quando `virtio_gpu` (QEMU/virgl) ou `vmwgfx` (VirtualBox VMSVGA) tem um render node acessível. Sem render node acessível ou em adaptadores 2D como `vboxvideo`/QXL, usa Pixman/Cairo; outros render nodes usam a build completa. Os usuários live/instalados e o Pearl Greeter recebem acesso ao grupo `render`. A aceleração depende também da configuração 3D do hypervisor/host; não há dependência de systemd.
 
 Antes de iniciar o compositor, `dinx-aqueous-pearl` executa `xdg-user-dirs-update` como o usuário da sessão. Contas novas da live e do sistema instalado recebem os diretórios XDG padrão, incluindo `~/Desktop`, antes do Pearl iniciar.
 

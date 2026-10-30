@@ -244,11 +244,21 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The screen is blank
 
-DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. For the Aqueous/Pearl session in QEMU and on systems without a DRM render node, the wrapper uses `aqueous-cpu`, built without Vulkan effects, with Pixman and Cairo rendering. It also detects Virtio GPUs (`0x1af4`) when they expose a render node, avoiding the llvmpipe presentation failure. This slower path omits compositor Vulkan effects such as blur and rounded corners; other systems with a render node use the full compositor and retain normal driver selection. Hardware graphics support is not yet fully qualified. Record the GPU model, firmware mode and kernel/guest behavior before filing a report.
+DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. Graphics selection requires a readable and writable DRM render node: QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) use `aqueous-cpu` with wlroots GLES2 and GTK4 GL; this build omits Aqueous's Vulkan effects. If the render node is missing/inaccessible, or a 2D-only adapter such as `vboxvideo` or QXL is active, the session uses Pixman/Cairo instead. Other render-node hardware uses the full Aqueous build. The live user, Pearl Greeter and new Calamares users receive `render` group access. This selects a guest rendering path; it does not prove that host-side 3D acceleration is enabled.
 
 ### Graphics, drivers and media
 
-DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and VLC for the supported open-source media path. The Aqueous/Pearl session uses Pixman/Cairo on Virtio GPUs and systems without a DRM render node; it does not select Lavapipe to render the desktop. If hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
+DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and VLC for the supported open-source media path. If other hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
+
+For QEMU virgl, use a host QEMU build with GTK/OpenGL and virgl support, then request `virtio-vga-gl`, for example:
+
+```sh
+DINX_QEMU_DISPLAY=gtk,gl=on \
+DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
+scripts/smoke-iso.sh /path/to/dinx.iso
+```
+
+For VirtualBox, select **VMSVGA** and enable **3D Acceleration** in the VM display settings. The guest falls back to Pixman/Cairo when the host does not expose a usable render node. These paths are not a claim that every host GPU/driver combination is qualified; include the hypervisor, host renderer, guest DRM driver and `dinx-alpha7-hardware-report` output in bug reports.
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected

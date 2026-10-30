@@ -164,6 +164,9 @@ required_paths=(
   usr/bin/aqueousctl
   usr/bin/aqueous-config
   usr/bin/pearl
+  usr/local/libexec/dinx-graphics-profile
+  usr/lib/dri/virgl_dri.so
+  usr/lib/dri/svga_dri.so
   usr/share/dinx/theme/DINX.json
   usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy
   usr/bin/phyto
@@ -241,6 +244,8 @@ required_paths=(
   usr/share/vulkan/icd.d/lvp_icd.json
   usr/lib/libvulkan_lvp.so
   usr/bin/vulkaninfo
+  usr/lib/dri/virgl_dri.so
+  usr/lib/dri/vmwgfx_dri.so
   etc/paru.conf
   etc/shellybuild.conf
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
@@ -487,10 +492,20 @@ grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" |
 aqueous_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous CPU renderer selection is missing'
-grep -Fq '0x1af4' <<<"$aqueous_launcher" || fail 'DINX Aqueous Virtio GPU detection is missing'
-grep -Fq 'export WLR_RENDERER=pixman' <<<"$aqueous_launcher" || fail 'DINX Aqueous Pixman fallback is missing'
+grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
+aqueous_graphics_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-profile)
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$aqueous_launcher" || fail 'DINX Aqueous graphics-profile selection is missing'
+grep -Fq 'virtual-gl)' <<<"$aqueous_launcher" || fail 'DINX Aqueous VM GLES renderer selection is missing'
+grep -Fq 'export WLR_RENDERER=gles2' <<<"$aqueous_launcher" || fail 'DINX Aqueous VM renderer is not set to GLES2'
+grep -Fq 'export GSK_RENDERER=gl' <<<"$aqueous_launcher" || fail 'DINX GTK4 VM renderer is not set to GL'
+grep -Fq 'export WLR_RENDERER=pixman' <<<"$aqueous_launcher" || fail 'DINX Aqueous CPU fallback is missing'
 grep -Fq 'export GSK_RENDERER=cairo' <<<"$aqueous_launcher" || fail 'DINX GTK4 Cairo fallback is missing'
+grep -Fq 'virtio_gpu|vmwgfx)' <<<"$aqueous_graphics_helper" || fail 'QEMU/VirtualBox accelerated DRM drivers are not detected'
+grep -Fq 'vboxvideo|qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail '2D virtual display fallback drivers are not detected'
+for graphics_module in virtio_gpu vmwgfx; do
+  grep -Eq "/usr/lib/modules/[^[:space:]]*/kernel/drivers/gpu/drm/.*/${graphics_module}\\.ko(\\.(zst|xz|gz))?([[:space:]]|$)" <<<"$manifest" \
+    || fail "ISO kernel module is missing for VM acceleration: $graphics_module"
+done
 grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
@@ -665,6 +680,7 @@ useradd_defaults=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img"
 grep -Fq 'SHELL=/bin/fish' <<<"$useradd_defaults" || fail 'new-user shell default is not Fish'
 users_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/users.conf)
 grep -Fq 'shell: /bin/fish' <<<"$users_config" || fail 'Calamares user shell is not Fish'
+grep -Fq '    - render' <<<"$users_config" || fail 'Calamares users are missing DRM render-node access'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || fail 'Phyto is not the default directory handler'
 grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
@@ -787,6 +803,10 @@ if grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest"; then
   fail 'optional ntfs-3g write package is present in the live ISO'
 fi
 grep -Eq '/usr/lib/modules/[^/]+/kernel/fs/ntfs3/ntfs3\.ko' <<<"$manifest" || fail 'kernel ntfs3 read/write support is missing from the ISO payload'
+grep -Eq '/usr/lib/modules/[^/]+/kernel/drivers/gpu/drm/virtio/virtio-gpu\.ko(\.(zst|xz|gz))?$' <<<"$manifest" || fail 'QEMU virtio-gpu DRM module is missing from the ISO payload'
+grep -Eq '/usr/lib/modules/[^/]+/kernel/drivers/gpu/drm/vmwgfx/vmwgfx\.ko(\.(zst|xz|gz))?$' <<<"$manifest" || fail 'VirtualBox VMSVGA vmwgfx module is missing from the ISO payload'
+grep -Eq '/usr/lib/modules/[^/]+/kernel/drivers/gpu/drm/vboxvideo/vboxvideo\.ko(\.(zst|xz|gz))?$' <<<"$manifest" || fail 'VirtualBox vboxvideo DRM module is missing from the ISO payload'
+grep -Eq '/usr/lib/modules/[^/]+/kernel/drivers/gpu/drm/qxl/qxl\.ko(\.(zst|xz|gz))?$' <<<"$manifest" || fail 'QEMU QXL DRM module is missing from the ISO payload'
 
 
 calamares_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/settings.conf)

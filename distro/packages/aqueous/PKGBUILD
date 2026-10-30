@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${AQUEOUS_SOURCE_SHA256:?missing AQUEOUS_SOURCE_SHA256}"
 : "${AQUEOUS_WLROOTS_SHA256:?missing AQUEOUS_WLROOTS_SHA256}"
 pkgver="$AQUEOUS_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Aqueous Wayland compositor and control clients for DINX'
 arch=('x86_64')
 url="$AQUEOUS_SOURCE_URL"
@@ -74,6 +74,7 @@ prepare() {
   patch --forward --fuzz=0 -Np1 < "$startdir/dinit.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/server-decorations.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/titlebar-text.patch"
+  patch --forward --fuzz=0 -Np1 < "$startdir/two-default-workspaces.patch"
   install -Dm644 "$startdir/titlebar_text.c" compositor/aqueous/titlebar_text.c
   install -Dm644 "$startdir/titlebar_text.zig" compositor/aqueous/titlebar_text.zig
 }

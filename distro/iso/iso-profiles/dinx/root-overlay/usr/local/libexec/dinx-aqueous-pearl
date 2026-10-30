@@ -26,34 +26,25 @@ unset DISPLAY
 xdg-user-dirs-update
 
 compositor=/usr/bin/aqueous
-use_cpu_renderer=false
-has_render_node=false
-for render_node in /dev/dri/renderD*; do
-  if [ -e "$render_node" ]; then
-    has_render_node=true
-    break
-  fi
-done
-if [ "$has_render_node" = false ]; then
-  use_cpu_renderer=true
-fi
-for drm_card in /sys/class/drm/card[0-9]*; do
-  case "${drm_card##*/}" in
-    card[0-9]|card[0-9][0-9]*) ;;
-    *) continue ;;
-  esac
-  drm_vendor=
-  if IFS= read -r drm_vendor < "$drm_card/device/vendor" 2>/dev/null \
-    && [ "$drm_vendor" = "0x1af4" ]; then
-    use_cpu_renderer=true
-    break
-  fi
-done
-if [ "$use_cpu_renderer" = true ]; then
-  compositor=/usr/bin/aqueous-cpu
-  export WLR_RENDERER=pixman
-  export GSK_RENDERER=cairo
-fi
+graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
+case "$graphics_profile" in
+  cpu)
+    compositor=/usr/bin/aqueous-cpu
+    export WLR_RENDERER=pixman
+    export GSK_RENDERER=cairo
+    ;;
+  virtual-gl)
+    compositor=/usr/bin/aqueous-cpu
+    export WLR_RENDERER=gles2
+    export GSK_RENDERER=gl
+    ;;
+  hardware)
+    ;;
+  *)
+    printf 'dinx-aqueous-pearl: unknown graphics profile: %s\n' "$graphics_profile" >&2
+    exit 1
+    ;;
+esac
 
 if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
   XDG_RUNTIME_DIR="/run/user/$(id -u)"

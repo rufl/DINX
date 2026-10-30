@@ -99,6 +99,8 @@ Aqueous invokes `dinx-aqueous-init`; that child waits for the Wayland socket and
 
 Before the compositor starts, `dinx-aqueous-pearl` runs `xdg-user-dirs-update` as the session user. Fresh live and installed accounts get the standard XDG directories, including `~/Desktop`, before Pearl starts.
 
+Fresh Aqueous outputs start with two workspaces. This changes the startup default, not the maximum workspace count and not an existing user's saved configuration. Live and newly installed session accounts plus Pearl Greeter receive `render` group access. With an accessible DRM render node, the graphics helper selects reduced-effects GLES2 for QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`); absent/inaccessible render nodes and 2D-only virtual adapters use Pixman/Cairo. Other render-node hardware keeps the full Aqueous build. Host-side 3D enablement remains a separate hypervisor setting and is not proven by the static contract.
+
 `dinx-doctor` is the read-only evidence surface for the current session, dinit, storage, display and package paths. It does not start services, mount devices, modify Shikane, run package transactions or contact a network. `DINX_DOCTOR_QUERY_DINIT=1` opts into a read-only user-dinit list query.
 
 

@@ -4,6 +4,10 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Seed fresh Aqueous outputs with two workspaces instead of the upstream nine-workspace startup set.
+
+- Add a graphics profile for accelerated-capable QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) render nodes, with Pixman/Cairo fallback for absent, inaccessible or 2D-only virtual devices. Grant the live user, Pearl Greeter and new installed accounts `render` access. Host-side 3D remains an explicit hypervisor setting; no systemd packages or services are added.
+
 - Export `GTK_CSD=0` from the Aqueous/Pearl session and request server-side decorations so standard GTK and protocol-capable Wayland apps use the compositor titlebar. Document the remaining boundary for apps that hard-code custom client-side chrome.
 
 - Run the non-privileged DINX contracts and REUSE workflow on every pull request and every push to `main`, including documentation and license-only changes. Keep the privileged ISO build on its selected build-related triggers.

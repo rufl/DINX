@@ -71,7 +71,8 @@ DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO 
 | Greeter/installer/boot | Pearl Greeter, Calamares and GRUB expose DINX surface, text, selection and focus states |
 | Firefox default | Firefox handles HTML/XHTML/HTTP/HTTPS by default |
 | Storage and files | Pori dinit persistence, Phyto directory handling, File Roller archives and GParted partition editing are present |
-| Desktop layout | Aqueous/Pearl owns the only user session; fresh profiles start in floating stacking on every workspace. Default tile, scrolling, monocle and grid layout shortcuts (`Super+T/F/M/G`) are disabled; dragging to left/right/bottom edges snaps to halves, corners to quarters, top-center maximizes (24 px threshold, no gap). Existing user config is preserved |
+| Desktop layout | Aqueous/Pearl owns the only user session; fresh outputs start with two workspaces and floating stacking. Default tile, scrolling, monocle and grid layout shortcuts (`Super+T/F/M/G`) are disabled; dragging to left/right/bottom edges snaps to halves, corners to quarters, top-center maximizes (24 px threshold, no gap). Existing user config is preserved |
+| VM graphics | Accessible DRM render nodes select GLES2 for QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`); missing/inaccessible nodes and 2D-only virtual adapters use Pixman/Cairo. Host-side 3D acceleration is configured separately and is not implied by guest detection |
 | Window chrome | Pinned Aqueous patches and source smoke verify Wayland/XWayland title-cache invalidation, titlebar control hit zones, and floating half/quarter snap geometry |
 | Session safety | idle lock, suspend lock, explicit lock and brightness actions use fixed paths |
 | Display persistence | wdisplays changes atomically update and reload the named Shikane profile |

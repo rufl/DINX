@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PEARL_SOURCE_URL:?missing PEARL_SOURCE_URL}"
 : "${PEARL_SOURCE_SHA256:?missing PEARL_SOURCE_SHA256}"
 pkgver="$PEARL_VERSION"
-pkgrel=1
+pkgrel=2
 epoch=1
 pkgdesc='Pearl GTK desktop shell and Pearl Greeter for direct Aqueous sessions on DINX'
 arch=('x86_64')

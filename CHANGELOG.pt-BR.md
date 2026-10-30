@@ -4,6 +4,10 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Saídas novas do Aqueous agora começam com dois workspaces, em vez dos nove workspaces iniciais do upstream.
+
+- Adicionado um perfil gráfico para render nodes com capacidade de aceleração no QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`), com fallback Pixman/Cairo para dispositivos virtuais ausentes, inacessíveis ou somente 2D. O usuário live, o Pearl Greeter e novas contas instaladas recebem acesso ao grupo `render`. A aceleração 3D do host continua sendo uma configuração explícita do hypervisor; nenhum pacote ou serviço systemd foi adicionado.
+
 - A sessão Aqueous/Pearl exporta `GTK_CSD=0` e solicita decorações do servidor para que janelas GTK padrão e clientes Wayland compatíveis usem a barra do compositor. A documentação registra o limite restante para aplicativos com chrome CSD próprio.
 
 - O workflow DINX de contratos e REUSE, sem build privilegiado, agora roda em todo pull request e push para `main`, inclusive alterações somente de documentação ou licenças. O build privilegiado da ISO mantém seus gatilhos próprios por caminhos de build selecionados.

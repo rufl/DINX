@@ -8,6 +8,7 @@ pearl_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.
 pearl_pkg="$root/distro/packages/pearl/PKGBUILD"
 pearl_install="$root/distro/packages/pearl/pearl.install"
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
+graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
@@ -39,7 +40,8 @@ fail() {
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
   "$aqueous_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
-  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" "$aqueous_layout" "$aqueous_patch" \
+  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
+  "$aqueous_layout" "$aqueous_patch" "$graphics_helper" \
   "$useradd_defaults" "$users_conf" "$gtk3_system" "$gtk3_skel" \
   "$gtk4_system" "$gtk4_skel"; do
   [[ -r "$path" ]] || fail "missing $path"
@@ -63,6 +65,7 @@ done
 [[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
+[[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
 [[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
 
 for package in greetd brightnessctl swayidle swaylock fish aqueous pearl vulkan-swrast; do
@@ -141,8 +144,11 @@ if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$pearl_pkg" \
 fi
 grep -Fq 'useradd --system --gid pearl-greeter' "$pearl_install" \
   || fail 'Pearl Greeter account is not provisioned by the package hook'
-grep -Fq 'usermod --append --groups video pearl-greeter' "$pearl_install" \
-  || fail 'Pearl Greeter account is missing video access'
+grep -Fq 'usermod --append --groups video,render pearl-greeter' "$pearl_install" \
+  || fail 'Pearl Greeter account is missing video/render access'
+grep -Fq '    - render' "$users_conf" || fail 'Calamares users are missing render-node access'
+grep -Fq 'two-default-workspaces.patch' "$root/distro/packages/aqueous/PKGBUILD" \
+  || fail 'Aqueous package does not apply the two-workspace default'
 if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_install"; then
   fail 'Pearl Greeter install hook contains a systemd integration'
 fi
@@ -150,15 +156,19 @@ fi
 grep -Fq 'compositor=/usr/bin/aqueous' "$aqueous_wrapper" \
   || fail 'Aqueous hardware compositor selection is missing'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
-  || fail 'Aqueous CPU compositor selection is missing'
-grep -Fq '0x1af4' "$aqueous_wrapper" \
-  || fail 'Virtio GPU detection is missing'
-grep -Fq 'if [ "$has_render_node" = false ]; then' "$aqueous_wrapper" \
-  || fail 'Aqueous no-render-node detection is missing'
+  || fail 'Aqueous compatibility compositor selection is missing'
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueous_wrapper" \
+  || fail 'Aqueous wrapper does not select the graphics profile'
+grep -Fq 'virtual-gl)' "$aqueous_wrapper" \
+  || fail 'Aqueous VM GLES branch is missing'
+grep -Fq 'export WLR_RENDERER=gles2' "$aqueous_wrapper" \
+  || fail 'Aqueous VM branch does not use GLES2'
+grep -Fq 'export GSK_RENDERER=gl' "$aqueous_wrapper" \
+  || fail 'GTK4 VM branch does not use GL'
 grep -Fq 'export WLR_RENDERER=pixman' "$aqueous_wrapper" \
-  || fail 'Aqueous CPU branch does not select Pixman'
+  || fail 'Aqueous no-render-node branch does not use Pixman'
 grep -Fq 'export GSK_RENDERER=cairo' "$aqueous_wrapper" \
-  || fail 'GTK4 Cairo fallback is missing from the CPU branch'
+  || fail 'GTK4 CPU fallback is missing'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not launch the selected compositor'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then

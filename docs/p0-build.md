@@ -95,12 +95,22 @@ Tagged releases reuse the same build artifact through `.github/workflows/release
 
 The livefs-only `dinx-live-autologin` package replaces `root-ro` and `early-root-rw.target` with no-ops for the already-writable overlay. Its boot-enabled Dinit service writes the one-time Aqueous/Pearl initial-session config and declares `before = greetd` and `before = login.target`; because both services are activated for the live boot, Dinit starts the config writer before the upstream `greetd-dinit` service without shipping a second owner for `/etc/dinit.d/greetd`. Calamares installs `rootfs.img`, so the installed system retains Artix's generic root-remount units and manual-login greetd service.
 
-The Aqueous/Pearl wrapper selects `/usr/bin/aqueous-cpu` and exports `WLR_RENDERER=pixman` plus GTK4's `GSK_RENDERER=cairo` when `/dev/dri/renderD*` is absent or a DRM card reports Virtio vendor `0x1af4`. This binary is built with `-Dvulkan-effects=false`, so Aqueous delegates renderer selection to wlroots instead of forcing Vulkan; the fallback preserves a usable desktop in QEMU without changing the full-effects binary or normal hardware driver defaults.
+The live graphics helper selects `aqueous-cpu` with `WLR_RENDERER=gles2` and `GSK_RENDERER=gl` only when the active QEMU `virtio_gpu` or VirtualBox VMSVGA `vmwgfx` driver has a readable and writable render node. This preserves Mesa virgl/SVGA rendering without enabling Aqueous's Vulkan effects. Missing/inaccessible nodes and 2D-only adapters use `WLR_RENDERER=pixman` with `GSK_RENDERER=cairo`; other render-node hardware uses full Aqueous. The live account, Pearl Greeter and new Calamares accounts receive `render` group access. The ISO contract checks the kernel guest modules and Mesa `virgl_dri.so`/`svga_dri.so` payloads.
 
 The profile owns the DINX visual contract at `/usr/share/dinx/theme/DINX.json`. `scripts/check_dinx_theme.sh` validates the static palette, `DINX_COLOR_SCHEME`, GTK/Qt bridges, Pearl Greeter, Calamares and GRUB before `buildiso`; `scripts/check-iso-content.sh` verifies the same files inside the root SquashFS image.
 The profile also owns the Artix GRUB theme configuration at `root-overlay/usr/share/grub/themes/artix/theme.txt`. It keeps the upstream logo, icons and font assets, uses the DINX surface/text/primary colors, and omits the opaque `menu_pixmap_style` and `selected_item_pixmap_style` textures that produced a black panel on the graphical kernel-selection screen.
 For a local graphical capture, install QEMU, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`, then set `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` and optionally `DINX_QEMU_SCREENSHOT_DELAY` before running `scripts/smoke-iso.sh`. Set `DINX_QEMU_TIMEOUT` longer than the screenshot delay; the workflow uses the same boot keys, a 60-second delay and a 90-second QEMU window.
 Without `DINX_QEMU_SCREENSHOT`, the smoke saves its checked frame beside the QEMU log as `<iso>.qemu.log.session.ppm`. `DINX_QEMU_OCR_LANG` selects another installed Tesseract language model when needed.
+
+To request host-side virgl in a local graphical QEMU smoke, the host QEMU must support GTK/OpenGL and virgl:
+
+```sh
+DINX_QEMU_DISPLAY=gtk,gl=on \
+DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
+scripts/smoke-iso.sh /path/to/dinx.iso
+```
+
+VirtualBox testing requires the VMSVGA controller and **Enable 3D Acceleration**. The normal CI VGA smoke does not verify host-side 3D acceleration, and neither path is considered hardware-qualified until observed on that hypervisor.
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 

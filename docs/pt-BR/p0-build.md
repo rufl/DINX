@@ -194,6 +194,8 @@ Se o archive ignorado de Deetty estiver ausente, o script o prepara a partir de 
 DEETTY_SOURCE_CHECKOUT=/caminho/para/NOCTTY bash scripts/build-iso-docker.sh
 ```
 
+O build do pacote Deetty limpa a árvore de fontes em cache antes de aplicar patches. Uma tentativa com falha não deixa fontes modificadas que quebrem a próxima execução.
+
 Requisitos: Docker rootful acessível, suporte a `--privileged` e dispositivos loop, rede para baixar pacotes/fontes e espaço livre suficiente para o rootfs temporário e a ISO. A verificação QEMU é opcional:
 
 ```sh

@@ -246,8 +246,10 @@ trap finish EXIT
                 local package_name="$1"
                 local package_dir="/workspace/distro/packages/$package_name"
                 local -a extra_env=()
+                local -a makepkg_options=(--clean --nodeps --nocheck --noconfirm)
                 if [[ "$package_name" == deetty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
+                  makepkg_options+=(--cleanbuild)
                 fi
                 if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig")
@@ -259,7 +261,7 @@ trap finish EXIT
                   runuser -u dinxbuild -- env "${extra_env[@]}" \
                     MAKEPKG_CONF="$makepkg_conf" \
                     GNUPGHOME="$signing_home" \
-                    makepkg --clean --nodeps --nocheck --noconfirm \
+                    makepkg "${makepkg_options[@]}" \
                     --sign --key "$signing_key"
                 )
               }

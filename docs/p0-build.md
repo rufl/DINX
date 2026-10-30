@@ -193,6 +193,8 @@ If the ignored Deetty archive is absent, the script prepares it from an authenti
 DEETTY_SOURCE_CHECKOUT=/path/to/NOCTTY bash scripts/build-iso-docker.sh
 ```
 
+The Deetty package build clears its cached source tree before applying patches. A failed build therefore cannot leave patched source that breaks the next retry.
+
 Requirements: reachable rootful Docker, `--privileged` and loop-device support, network access for package/source downloads, and sufficient free disk for the temporary rootfs and ISO. QEMU verification is optional:
 
 ```sh

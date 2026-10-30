@@ -75,6 +75,7 @@ done
 workflow=.github/workflows/p0-iso.yml
 builder=scripts/build-iso-container.sh
 docker_builder=scripts/build-iso-docker.sh
+release_workflow=.github/workflows/release.yml
 contracts_workflow=.github/workflows/contracts.yml
 update_smoke=scripts/smoke_dinx_update.sh
 for required in \
@@ -89,7 +90,7 @@ for required in \
   'DINX_SKIP_POSTBUILD_CHECKS: '\''true'\''' \
   'run: scripts/build-iso-docker.sh' \
   'run: ./scripts/check_first_party_apps.sh' \
-  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty' \
+  'ref: ${{ steps.deetty-source.outputs.ref }}' \
   'DEETTY_SOURCE_READ_TOKEN' \
   'repository: rufl/NOCTTY' \
   'path: third_party/noctty' \
@@ -99,6 +100,21 @@ for required in \
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
 done
 for required in \
+  'repository: rufl/NOCTTY' \
+  'token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN }}' \
+  'path: third_party/noctty' \
+  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty' \
+  'DINX_SKIP_PRIVATE_SOURCE_CHECKS'; do
+  grep -Fq -- "$required" "$contracts_workflow" \
+    || fail "contracts workflow is missing private-source handling: $required"
+done
+grep -Fq 'secrets: inherit' "$release_workflow" \
+  || fail 'release workflow does not pass the private-source checkout secret to P0'
+grep -Fq 'checks=("${checks[@]:2}")' scripts/check_dinx_contracts.sh \
+  || fail 'fork contracts do not skip exactly the two private-source checks'
+grep -Fq '/third_party/noctty/' .gitignore \
+  || fail 'private Deetty/Dintor source checkout is not Git-ignored'
+for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
   'NoExtract = usr/lib/systemd/*' \
@@ -106,7 +122,9 @@ for required in \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
   'NoExtract = usr/share/uwsm/*' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
-  'makepkg --clean --nodeps --nocheck --noconfirm' \
+  'local -a makepkg_options=(--clean --nodeps --nocheck --noconfirm)' \
+  'makepkg_options+=(--cleanbuild)' \
+  'makepkg "${makepkg_options[@]}"' \
   '--sign --key' \
   'pacman-key --init' \
   'SigLevel = Required' \

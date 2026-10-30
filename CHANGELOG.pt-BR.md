@@ -5,6 +5,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Corrigidos os contratos P0 para verificar os smokes Seafoam/ZLS e a qualificação de Gamescope, exclusiva do builder Artix, em vez de exigir essas etapas no workflow executado no host.
+- Fixados os arquivos de configuração e desktop AUR do Shelly na revisão imutável `f89d773125357baaa1d2fae715286ce9e00e2cb4`; a branch móvel `shelly-bin` havia alterado `shellybuild.conf` e feito a verificação de checksum do build da ISO falhar.
 - O build do pacote Deetty limpa a árvore de fontes anterior antes de aplicar patches, evitando que uma tentativa com falha faça a próxima reaplicar patches de criação sobre fontes já modificadas.
 - Adicionado `scripts/build-iso-docker.sh`: usa o mesmo builder Artix privilegiado e fixado por digest do P0 CI, gera o archive ignorado de Deetty/Dintor a partir de um checkout autenticado no commit privado fixado quando necessário e produz metadados locais vinculados à fonte e bundle de pacotes com chave efêmera.
 

@@ -5,6 +5,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Corrected P0 contract checks to verify Seafoam/ZLS smokes and builder-only Gamescope qualification in the Artix container builder, rather than expecting those steps in the host workflow.
+- Pinned Shelly's AUR desktop/config payload to immutable revision `f89d773125357baaa1d2fae715286ce9e00e2cb4`; the mutable `shelly-bin` branch had changed `shellybuild.conf`, causing the ISO package build's existing checksum verification to fail.
 - Make the Deetty package build discard its previous source tree before patching, so failed builds cannot make retries apply file-creation patches to already-modified sources.
 - Added `scripts/build-iso-docker.sh`, which runs the same digest-pinned privileged Artix container builder used by P0 CI, generates the ignored Deetty/Dintor archive from an authenticated checkout at the pinned private commit when needed, and emits local source-bound metadata and an ephemeral-key package bundle.
 

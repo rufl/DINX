@@ -38,6 +38,19 @@ grep -Fq "$PARU_SOURCE_SHA256" distro/packages/paru/PKGBUILD || fail 'paru sourc
 [[ "$SHELLY_SOURCE_URL" == *"Seafoam-Labs/Shelly-ALPM/releases/download/v${SHELLY_VERSION}/Shelly-ALPM-linux-x64.tar.gz" ]] || fail 'shelly release source is not pinned'
 grep -Fq "pkgver=${SHELLY_VERSION}" distro/packages/shelly/PKGBUILD || fail 'shelly PKGBUILD version is not pinned'
 grep -Fq "$SHELLY_SOURCE_SHA256" distro/packages/shelly/PKGBUILD || fail 'shelly release source checksum is not pinned'
+aur_sources=(
+  'shellybuild.conf'
+  'com.shellyorg.shelly.desktop'
+  'com.shellyorg.shelly-notifications.desktop'
+  'shelly-flatpak-integrate'
+)
+shelly_pkgbuild=distro/packages/shelly/PKGBUILD
+shelly_aur_revision=f89d773125357baaa1d2fae715286ce9e00e2cb4
+grep -Fq "_aur_revision='${shelly_aur_revision}'" "$shelly_pkgbuild" || fail 'shelly AUR sources are not pinned to the verified revision'
+resolved_shelly_sources=$(bash -c 'source "$1"; printf "%s\n" "${source[@]}"' _ "$shelly_pkgbuild")
+for source_file in "${aur_sources[@]}"; do
+  grep -Fq "${source_file}?h=${shelly_aur_revision}" <<<"$resolved_shelly_sources" || fail "shelly source is not pinned to the verified AUR revision: $source_file"
+done
 
 for package in topgrade paru shelly; do
   if grep -Eiq '(^|[^[:alnum:]_])systemd([^[:alnum:]_]|$)' "distro/packages/$package/PKGBUILD"; then

@@ -8,7 +8,7 @@ Arch-Based, Artix Based, Drivers e Kernels recentes, Drivers e Tooling para Gami
 Rápida, Leve e Focada em Produzir - Sem Gnome, Sem KDE, Sem SystemD.<p></p><p align="center">
 Dinit como supervisor de serviços, Seafoam Apps, Paineis gráficos diretos ao assunto.<br>
 Tweakable e extendable via CLI sim, sem purismo desnecessário.</p><p align="center">
-Foco em aumentar seu roster de Zig-Heavy apps/tools com menos serviços, dependencias e clutter possíveis.</strong>
+Roster com foco em Zig-Heavy apps/tools, menos serviços, dependencias e clutter possíveis.</strong>
 </p>
 
 <p align="center">

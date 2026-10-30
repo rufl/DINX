@@ -9,9 +9,9 @@ Lean and Mean - focada em ser estoica, leve e sem frescura, o mínimo para você
   <p></p><p align="center">
 Arch-Based, Artix Based, Drivers e Kernels recentes, Drivers e Tooling para Gaming e Dev, Dinit como supervisor de serviços, Seafoam Apps.<br>
 Paineis gráficos diretos ao assunto. 
-Tweakable e extendable via CLI sim, sem purismo desnecessário.<br>
+Tweakable e extendable via CLI sim, sem purismo desnecessário.  <p></p><p align="center">
 Rápida, Leve e Focada em Produzir
-Sem Gnome, Sem KDE, Sem Systemd.
+Sem Gnome, Sem KDE, Sem Systemd.<br>
 Ecossistema de tools com foco em aumentar seu roster de Zig-Heavy com menos serviços e clutter possíveis.</strong>
 </p>
 

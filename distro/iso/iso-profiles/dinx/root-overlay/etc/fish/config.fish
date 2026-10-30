@@ -2,10 +2,10 @@
 set -gx SHELL /bin/fish
 
 if not set -q TERMINAL
-    set -gx TERMINAL dinx-terminal
+    set -gx TERMINAL deetty
 end
 if not set -q EDITOR
-    set -gx EDITOR nocted
+    set -gx EDITOR dintor
 end
 if not set -q VISUAL
     set -gx VISUAL $EDITOR
@@ -16,8 +16,11 @@ end
 if not set -q DINX_COLOR_SCHEME
     set -gx DINX_COLOR_SCHEME dark
 end
-if not set -q NOCTED_THEME
-    set -gx NOCTED_THEME prefer-dark
+if not set -q DINTOR_THEME
+    set -gx DINTOR_THEME prefer-dark
+end
+if not set -q GTK_THEME
+    set -gx GTK_THEME DINX:dark
 end
 if not set -q QT_QPA_PLATFORMTHEME
     set -gx QT_QPA_PLATFORMTHEME qt6ct

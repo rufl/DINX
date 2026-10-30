@@ -1,0 +1,39 @@
+pkgname=ghostty-vt-runtime
+_ghostty_version=$(pacman -Q ghostty | awk '{ print $2 }')
+[[ -n "$_ghostty_version" ]] || { printf 'PKGBUILD: Ghostty is required to extract its VT runtime\n' >&2; exit 1; }
+epoch=0
+if [[ "$_ghostty_version" == *:* ]]; then
+  epoch=${_ghostty_version%%:*}
+  _ghostty_version=${_ghostty_version#*:}
+fi
+pkgver=${_ghostty_version%-*}
+pkgrel=${_ghostty_version##*-}
+epoch=$epoch
+pkgdesc='Ghostty VT shared library and headers for Deetty; no Ghostty terminal executable'
+arch=('x86_64')
+url='https://github.com/ghostty-org/ghostty'
+license=('MIT')
+depends=('bzip2' 'fontconfig' 'freetype2' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'harfbuzz' 'libadwaita' 'libglvnd' 'libpng' 'libx11' 'oniguruma' 'pixman' 'wayland' 'zlib')
+makedepends=('ghostty')
+provides=('libghostty-vt')
+conflicts=('ghostty')
+source=()
+
+package() {
+  local library
+  install -d -m755 "$pkgdir/usr/lib" "$pkgdir/usr/include"
+  for library in /usr/lib/libghostty-vt.so*; do
+    [[ -e "$library" || -L "$library" ]] || continue
+    cp -a "$library" "$pkgdir/usr/lib/"
+  done
+  [[ -e "$pkgdir/usr/lib/libghostty-vt.so.0" ]] || {
+    printf 'PKGBUILD: libghostty-vt.so.0 is missing from the installed Ghostty package\n' >&2
+    return 1
+  }
+  [[ -f /usr/include/ghostty/vt.h ]] || {
+    printf 'PKGBUILD: Ghostty VT headers are missing\n' >&2
+    return 1
+  }
+  cp -a /usr/include/ghostty "$pkgdir/usr/include/"
+  install -Dm644 /usr/share/licenses/ghostty/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

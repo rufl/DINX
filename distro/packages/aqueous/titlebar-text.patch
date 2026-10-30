@@ -1,0 +1,89 @@
+--- a/compositor/build.zig
++++ b/compositor/build.zig
+@@ -298,0 +299,1 @@
++        river.root_module.linkSystemLibrary("pangocairo", .{ .use_pkg_config = .force });
+@@ -301,0 +303,1 @@
++        river.root_module.addCSourceFile(.{ .file = b.path("aqueous/titlebar_text.c"), .flags = &.{ "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror" } });
+--- a/compositor/aqueous/Window.zig
++++ b/compositor/aqueous/Window.zig
+@@ -23,0 +24,1 @@
++const titlebar_text = @import("titlebar_text.zig");
+@@ -109,0 +111,1 @@
++    title_text: *wlr.SceneBuffer,
+@@ -350,0 +353,4 @@
++title_text_dirty: bool = true,
++title_text_capacity: i32 = -1,
++title_text_width: i32 = 0,
++
+@@ -815,0 +822,1 @@
++        .title_text = try tree.createSceneBuffer(null),
+@@ -837,0 +845,1 @@
++    nodes.title_text.point_accepts_input = rejectAnimationBufferInput;
+@@ -2733,0 +2742,46 @@
++fn drawClippedTitleText(
++    text: *wlr.SceneBuffer,
++    box: wlr.Box,
++    clip: *const wlr.Box,
++    content_clip: *const wlr.Box,
++) void {
++    var visible = box;
++    if ((box.width <= 0 or box.height <= 0) or
++        (!clip.empty() and !visible.intersection(&visible, clip)) or
++        (!content_clip.empty() and !visible.intersection(&visible, content_clip)))
++    {
++        text.node.setEnabled(false);
++        return;
++    }
++    text.node.setPosition(visible.x, visible.y);
++    const source: wlr.FBox = .{
++        .x = @floatFromInt(visible.x - box.x),
++        .y = @floatFromInt(visible.y - box.y),
++        .width = @floatFromInt(visible.width),
++        .height = @floatFromInt(visible.height),
++    };
++    text.setSourceBox(&source);
++    text.setDestSize(visible.width, visible.height);
++    text.node.setEnabled(true);
++}
++
++fn updateTitleText(window: *Window, max_width: i32) void {
++    if (!window.title_text_dirty and window.title_text_capacity == max_width) return;
++    window.title_text_dirty = false;
++    window.title_text_capacity = max_width;
++    window.title_text_width = 0;
++    window.border.title_text.setBuffer(null);
++    window.anim_border.title_text.setBuffer(null);
++    if (max_width <= 0) return;
++    const title = window.getTitle() orelse return;
++    const rendered = titlebar_text.render(title, max_width, 20) catch {
++        log.err("unable to render window titlebar text", .{});
++        return;
++    };
++    const text = rendered orelse return;
++    defer text.buffer.drop();
++    window.border.title_text.setBuffer(text.buffer);
++    window.anim_border.title_text.setBuffer(text.buffer);
++    window.title_text_width = text.width;
++}
++
+@@ -2782,0 +2837,12 @@
++    const title_max_width = @min(@max(0, first_button_x - 24), 2048);
++    updateTitleText(window, title_max_width);
++    if (height_i >= 20 and window.title_text_width > 0) {
++        drawClippedTitleText(nodes.title_text, .{
++            .x = 16,
++            .y = @divTrunc(height_i - 20, 2),
++            .width = window.title_text_width,
++            .height = 20,
++        }, clip, &requested.content_clip);
++    } else {
++        nodes.title_text.node.setEnabled(false);
++    }
+@@ -2834,0 +2901,1 @@
++        "title_text",
+@@ -3244,2 +3244,3 @@
+ pub fn notifyTitle(window: *Window) void {
++    window.title_text_dirty = true;
+     window.wm_scheduled.dirty_title = true;
+@@ -3425,0 +3494,1 @@
++    window.title_text_dirty = true;

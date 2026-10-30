@@ -30,7 +30,7 @@ marcar um resultado como `pass`.
 1. Verifique o SHA-512 da ISO e o metadata do build; depois inicialize a sessão
    DINX normal.
 2. Após uma instalação pelo Calamares, confirme que o primeiro boot chega ao Pearl Greeter e depois à sessão Aqueous/Pearl; `dinitctl status greetd NetworkManager` deve mostrar os serviços esperados.
-3. Abra a **Configuração de display DINX**, organize as saídas, feche-a e
+3. Abra **Ajustes de Tela**, organize as saídas, feche-a e
    confirme que o perfil `DINX wdisplays` existe em
    `~/.config/shikane/config.toml`; saia e entre novamente para confirmar a
    reaplicação.

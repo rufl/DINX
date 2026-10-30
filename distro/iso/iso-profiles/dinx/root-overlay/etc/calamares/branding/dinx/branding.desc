@@ -24,7 +24,7 @@ strings:
     releaseNotesUrl: ""
     donateUrl: ""
 images:
-    productIcon: "dinx.svg"
+    productIcon: "dinx-ray-mark.svg"
     productLogo: "dinx.svg"
     productWelcome: "dinx.svg"
 

@@ -16,7 +16,7 @@
 
 ```text
 DINX applications
-  Noctty · Nocted · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (base ISO)
+  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (base ISO)
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · standard D-Bus adapters
@@ -47,23 +47,23 @@ Upstream-compatible packages are preferred. DINX-specific packages and patches s
 
 ## Application boundaries
 
-### Noctty
+### Deetty
 
-Noctty owns the window, preferences, keybindings, tabs/panes and theme integration. The P2 terminal boundary is the native Zig `Vt.Grid` and `TerminalSession`: it owns VT parsing, Unicode cells, cursor/modes, bounded scrollback, selection and paste, while Ghostty's public VT/runtime surface remains an isolated adapter.
+Deetty owns the window, preferences, keybindings, tabs/panes and theme integration. The P2 terminal boundary is the native Zig `Vt.Grid` and `TerminalSession`: it owns VT parsing, Unicode cells, cursor/modes, bounded scrollback, selection and paste. The `ghostty-vt-runtime` package supplies Ghostty's public VT adapter only; the Ghostty terminal application is not part of the DINX payload.
 
 The P2 core decision is fixed by the deterministic protocol/Unicode corpus, allocator-accounted PTY lifecycle, fairness/large-paste lane and installed-application matrix for Vim, nano, less, dialog, tmux/Zellij launch profiles, SSH/SFTP and common TUIs. Replacing that core is a separate compatibility and migration decision, not an implicit P2 dependency.
 
-### Nocted
+### Dintor
 
-Nocted is a lightweight code editor, not a full IDE. Its boundaries are:
+Dintor is a lightweight code editor, not a full IDE. Its boundaries are:
 
 - Zig application state and UI;
 - an editor-engine adapter for buffers, selections, undo/redo and incremental updates;
 - a proven syntax parser such as Tree-sitter;
 - an LSP process/client layer;
 - Git status, bounded unified diff output and per-file change markers are exposed through the editor's Tools action; Git is an optional project capability and never blocks opening or editing a file outside a repository.
-- Nocted's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses the bundled `zls`; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a shell dependency.
-- The editor selects its documented light/dark scheme from `DINX_COLOR_SCHEME` or `NOCTED_THEME` and falls back to the DINX dark scheme.
+- Dintor's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses the bundled `zls`; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a shell dependency.
+- The editor selects its documented light/dark scheme from `DINTOR_THEME` and falls back to the DINX dark scheme.
 
 The editor remains useful without a shell session service or private IPC. Presentation and launcher integration are optional and use standard XDG/Wayland boundaries.
 
@@ -90,14 +90,16 @@ The standalone Gamescope session is independent of the Aqueous/Pearl session sup
 
 ### Seafoam Settings and ZLS
 
-`Seafoam Settings` is a base native Zig/GTK4 launcher for the DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Dome. It launches fixed argument vectors and opens only the documented Aqueous/Pearl and Shikane configuration files in Foot/Nano; it does not interpret arbitrary shell commands or expose a compositor or greeter-session editor.
+`Seafoam Settings` is a base native Zig/GTK4 launcher for DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Dome. It uses fixed argument vectors, opens the documented Aqueous/Pearl and Shikane config files directly in Dintor, and runs the display-profile exporter in Deetty. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
 
-`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Nocted completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0; the 0.16.0 tree here is only the ZLS/LSP compatibility runtime. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
+`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Dintor completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0; the 0.16.0 tree here is only the ZLS/LSP compatibility runtime. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
 ### Aqueous, Pearl and the dinit session boundary
 
 Aqueous invokes `dinx-aqueous-init`; that child waits for the Wayland socket and session D-Bus, then starts supervised Shikane, PolicyKit, the required idle helper and Pearl. If BC-250 packages are separately installed from the signed repository on a machine with PCI `1002:13fe`, the supervisor starts the optional Control Center daemon. The generic ISO does not include those packages. `dinx-session-supervisor` records `starting`, `ready`, `failed` and `exited` state and terminates the compositor when a required helper or Pearl exits; if the supervisor itself is stopped, its cleanup path terminates the tracked compositor parent too. DINX removes upstream `uwsm` and systemd user-unit payloads. Installed/manual login uses Pearl Greeter: greetd launches its dedicated host through the `pearl-greeter` account, and `/etc/pearl/greeter.json` forces the same Aqueous/Pearl entry with X11 and UWSM disabled. Pearl Greeter is not a user-session fallback and never performs a silent session switch.
 
 Before the compositor starts, `dinx-aqueous-pearl` runs `xdg-user-dirs-update` as the session user. Fresh live and installed accounts get the standard XDG directories, including `~/Desktop`, before Pearl starts.
+
+Fresh Aqueous outputs start with two workspaces. This changes the startup default, not the maximum workspace count and not an existing user's saved configuration. Live and newly installed session accounts plus Pearl Greeter receive `render` group access. With an accessible DRM render node, the graphics helper selects reduced-effects GLES2 for QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`); absent/inaccessible render nodes and 2D-only virtual adapters use Pixman/Cairo. Other render-node hardware keeps the full Aqueous build. Host-side 3D enablement remains a separate hypervisor setting and is not proven by the static contract.
 
 `dinx-doctor` is the read-only evidence surface for the current session, dinit, storage, display and package paths. It does not start services, mount devices, modify Shikane, run package transactions or contact a network. `DINX_DOCTOR_QUERY_DINIT=1` opts into a read-only user-dinit list query.
 

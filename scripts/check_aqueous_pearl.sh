@@ -5,10 +5,13 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 aqueous_dir="$root/distro/packages/aqueous"
 pearl_dir="$root/distro/packages/pearl"
+graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
 iso_check="$root/scripts/check-iso-content.sh"
 session_check="$root/scripts/check_dinx_session.sh"
+wm_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/wm.toml"
 
 fail() {
   printf 'aqueous_pearl_contract: %s\n' "$*" >&2
@@ -16,10 +19,13 @@ fail() {
 }
 
 for path in \
-  "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
+  "$profile" "$groups" "$workflow" "$iso_check" "$session_check" "$wm_config" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
-  "$aqueous_dir/dinit.patch" \
-  "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install"; do
+  "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
+  "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
+  "$aqueous_dir/window_policy_test.zig" \
+  "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
+  "$graphics_helper" "$root/scripts/check_dinx_graphics_profile.sh"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -38,6 +44,50 @@ source "$pearl_dir/source.env"
   || fail 'Pearl Zig source URL changed'
 [[ "$PEARL_ZIG_SOURCE_SHA256" == 70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00 ]] \
   || fail 'Pearl Zig source checksum changed'
+aqueous_archive="$aqueous_dir/Aqueous-$AQUEOUS_VERSION.tar.gz"
+[[ -r "$aqueous_archive" ]] || fail "missing pinned Aqueous source archive: ${aqueous_archive#$root/}"
+for command_name in tar patch; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command not found: $command_name"
+done
+zig_bin="${ZIG:-zig}"
+command -v "$zig_bin" >/dev/null 2>&1 || fail "required Zig compiler not found: $zig_bin"
+window_test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/dinx-aqueous-window-tests.XXXXXX")
+trap 'rm -rf "$window_test_tmp"' EXIT
+source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
+tar -xzf "$aqueous_archive" -C "$window_test_tmp"
+for patch_file in dinit.patch server-decorations.patch titlebar-text.patch two-default-workspaces.patch; do
+  patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
+    -i "$aqueous_dir/$patch_file" >/dev/null \
+    || fail "pinned Aqueous source rejects ${patch_file}"
+done
+workspace_source="$source_root/compositor/aqueous/Output.zig"
+grep -Fq 'while (i <= 2)' "$workspace_source" \
+  || fail 'fresh Aqueous outputs do not start with two pinned workspaces'
+if grep -Fq 'while (i <= 9)' "$workspace_source"; then
+  fail 'Aqueous still creates nine initial pinned workspaces'
+fi
+if ! awk '
+  /^pub fn notifyTitle\(window: \*Window\) void \{/ { in_notify_title = 1; next }
+  in_notify_title && /window\.title_text_dirty = true;/ { invalidated = 1 }
+  in_notify_title && /window\.wm_scheduled\.dirty_title = true;/ {
+    valid = invalidated
+    exit
+  }
+  in_notify_title && /^pub fn / { exit }
+  END { exit !valid }
+' "$source_root/compositor/aqueous/Window.zig"; then
+  fail 'Aqueous title changes do not invalidate the compositor title cache'
+fi
+cp "$aqueous_dir/window_policy_test.zig" \
+  "$source_root/compositor/aqueous/wm/dinx_window_policy_test.zig"
+(
+  cd "$source_root/compositor/aqueous/wm"
+  ZIG_GLOBAL_CACHE_DIR="$window_test_tmp/zig-global-cache" \
+    ZIG_LOCAL_CACHE_DIR="$window_test_tmp/zig-local-cache" \
+    "$zig_bin" test dinx_window_policy_test.zig
+)
+printf 'aqueous_window_policy_smoke source_pinned=true patches_apply=true titlebar_zones=true floating_snap_geometry=true\n'
+
 
 for package in aqueous pearl; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
@@ -66,6 +116,11 @@ for required in \
   '  usr/local/libexec/dinx-aqueous-init'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
+grep -Fq 'spawn_terminal = "deetty"' "$wm_config" \
+  || fail 'Aqueous Super+Return is not configured to launch the sole terminal'
+if grep -Eiq 'foot|ghostty' "$wm_config"; then
+  fail 'Aqueous default config references a terminal not shipped in the ISO'
+fi
 
 grep -Fq 'pkgver="$AQUEOUS_VERSION"' "$aqueous_dir/PKGBUILD" || fail 'Aqueous package version is not pinned'
 grep -Fq '$AQUEOUS_SOURCE_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous source checksum is not wired to source.env'
@@ -81,14 +136,24 @@ if grep -Fq "'systemd-libs'" "$aqueous_dir/PKGBUILD"; then
 fi
 grep -Fq 'dinit.patch' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous dinit patch is not applied'
+grep -Fq 'two-default-workspaces.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous does not apply the two-workspace startup default'
 grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
-  || fail 'Aqueous dinit patch is not applied reproducibly'
+  || fail 'Aqueous patches are not applied reproducibly'
+grep -Fq 'server-decorations.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous compositor decorations are not applied reproducibly'
+for decoration in drawTitlebar decorationActionAt toggleMaximized move_floating; do
+  grep -Fq "$decoration" "$aqueous_dir/server-decorations.patch" \
+    || fail "Aqueous compositor decoration patch is missing $decoration"
+done
 grep -Fq '@@ -292,1 +292,0 @@' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous build still links systemd'
 grep -Fq '@@ -718,1 +718,0 @@' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous keyboard test still links systemd'
 grep -Fq 'compositor/aqueous/activity_bootstrap.c' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous activity bootstrap is not patched for dinit'
+grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' "$aqueous_dir/dinit.patch" \
+  || fail 'Aqueous floating layout cannot be restored from the keyboard'
 if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$aqueous_dir/PKGBUILD" \
   || grep -Eiq '(^|[[:space:]])(systemctl|uwsm)([[:space:]]|$)' "$aqueous_dir/PKGBUILD"; then
   fail 'Aqueous recipe contains a systemd init, systemctl or uwsm dependency/command'
@@ -112,20 +177,20 @@ if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$pearl_dir/PKGBUILD" \
 fi
 grep -Fq 'useradd --system --gid pearl-greeter' "$pearl_dir/pearl.install" \
   || fail 'Pearl Greeter account is not provisioned by the package hook'
-grep -Fq 'usermod --append --groups video pearl-greeter' "$pearl_dir/pearl.install" \
-  || fail 'Pearl Greeter account is missing video access'
+grep -Fq 'usermod --append --groups video,render pearl-greeter' "$pearl_dir/pearl.install" \
+  || fail 'Pearl Greeter account is missing video/render access'
 if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_dir/pearl.install"; then
   fail 'Pearl Greeter install hook contains a systemd integration'
 fi
 
-grep -Fq 'build_package aqueous' "$workflow" || fail 'workflow does not build Aqueous'
-grep -Fq 'build_package pearl' "$workflow" || fail 'workflow does not build Pearl'
-grep -Fq 'PEARL_ZIG_SOURCE_SHA256' "$workflow" || fail 'workflow does not verify the pinned Pearl Zig archive'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$workflow" \
-  || fail "workflow does not select Pearl's declared Zig toolchain"
-grep -Fq '                scdoc \' "$workflow" || fail 'workflow does not install Aqueous man-page builder'
-if grep -Fq '                systemd-libs \' "$workflow"; then
-  fail 'workflow still installs systemd-libs for Aqueous'
+grep -Fq 'build_package aqueous' "$builder" || fail 'ISO builder does not build Aqueous'
+grep -Fq 'build_package pearl' "$builder" || fail 'ISO builder does not build Pearl'
+grep -Fq 'PEARL_ZIG_SOURCE_SHA256' "$builder" || fail 'ISO builder does not verify the pinned Pearl Zig archive'
+grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+  || fail "ISO builder does not select Pearl's declared Zig toolchain"
+grep -Fq '                scdoc \' "$builder" || fail 'builder does not install Aqueous man-page builder'
+if grep -Fq '                systemd-libs \' "$builder"; then
+  fail 'builder still installs systemd-libs for Aqueous'
 fi
 grep -Fq 'scripts/check_aqueous_pearl.sh' "$workflow" || fail 'workflow does not run the Aqueous/Pearl contract'
 grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not run the session contract'
@@ -134,15 +199,25 @@ aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libex
 grep -Fq 'compositor=/usr/bin/aqueous' "$aqueous_wrapper" \
   || fail 'hardware Aqueous compositor selection is missing'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
-  || fail 'CPU Aqueous compositor selection is missing'
-grep -Fq '0x1af4' "$aqueous_wrapper" \
-  || fail 'Virtio GPU detection is missing'
+  || fail 'compatibility Aqueous compositor selection is missing'
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not select the detected graphics profile'
+grep -Fq 'virtual-gl)' "$aqueous_wrapper" \
+  || fail 'Aqueous session has no VM GLES renderer path'
+grep -Fq 'export WLR_RENDERER=gles2' "$aqueous_wrapper" \
+  || fail 'Aqueous VM renderer is not set to GLES2'
+grep -Fq 'export GSK_RENDERER=gl' "$aqueous_wrapper" \
+  || fail 'GTK4 VM renderer is not set to GL'
 grep -Fq 'export WLR_RENDERER=pixman' "$aqueous_wrapper" \
   || fail 'Aqueous CPU renderer is not set to Pixman'
 grep -Fq 'export GSK_RENDERER=cairo' "$aqueous_wrapper" \
-  || fail 'GTK4 Cairo renderer is missing from the CPU branch'
+  || fail 'GTK4 Cairo fallback is missing from the CPU branch'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not execute the selected compositor'
+grep -Fq 'virtio_gpu|vmwgfx)' "$graphics_helper" \
+  || fail 'QEMU/VirtualBox render-node drivers are not detected'
+grep -Fq 'vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
+  || fail '2D virtual display drivers do not use the safe fallback'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init" \
   || fail 'Aqueous init does not delegate to the supervised dinit session'
@@ -153,5 +228,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true pixman_qemu=true systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 qemu_virgl=true virtualbox_vmsvga=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

@@ -623,18 +623,18 @@ fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 }
 
 fn onTopgradePreviewClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "foot", "--app-id=dinx-topgrade-preview", "-e", "topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux" });
+    asApp(data).launch(&.{ "deetty", "-e", "topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux" });
 }
 
 fn onTopgradeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "foot", "--app-id=dinx-topgrade", "-e", "topgrade" });
+    asApp(data).launch(&.{ "deetty", "-e", "topgrade" });
 }
 fn onCupsInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).installCups();
 }
 
 fn onShellyClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "foot", "--app-id=dinx-shelly", "-e", "shelly", "upgrade", "all" });
+    asApp(data).launch(&.{ "deetty", "-e", "shelly", "upgrade", "all" });
 }
 
 fn onDisplayClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
@@ -642,7 +642,7 @@ fn onDisplayClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 }
 
 fn onHardwareClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "foot", "--app-id=dinx-hardware", "-e", "inxi", "-GSC" });
+    asApp(data).launch(&.{ "deetty", "-e", "inxi", "-GSC" });
 }
 
 fn onKernelInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

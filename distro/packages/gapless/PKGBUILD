@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+pkgname=gapless
+pkgver=4.6.2
+pkgrel=1
+pkgdesc="Lightweight, adaptive GTK4 music player (G4Music)"
+arch=('x86_64')
+url="https://gitlab.gnome.org/neithern/g4music"
+license=('GPL-3.0-only')
+depends=(
+  dconf
+  gdk-pixbuf2
+  glib2
+  glibc
+  graphene
+  gst-plugins-base-libs
+  gst-plugins-base
+  gst-plugins-good
+  gstreamer
+  gtk4
+  hicolor-icon-theme
+  libadwaita
+  pango
+)
+makedepends=(
+  meson
+  vala
+)
+optdepends=(
+  'gst-plugins-bad: additional audio format support'
+  'gst-plugins-ugly: additional audio format support'
+)
+provides=('g4music')
+conflicts=('g4music')
+source=("g4music-v${pkgver}.tar.gz::${url}/-/archive/v${pkgver}/g4music-v${pkgver}.tar.gz")
+b2sums=('db8a9b96a47d3c7b394589ae41add66aaed2822855561c10b266a102bfe00d82d3343a6f8aeb01c0c8f83d6fadf92139fe2aee6cd23147a2c48205bd14da2178')
+
+build() {
+  meson setup --prefix=/usr --buildtype=plain build "${srcdir}/g4music-v${pkgver}"
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir="${pkgdir}"
+  install -Dm644 "${srcdir}/g4music-v${pkgver}/COPYING" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

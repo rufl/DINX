@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install Artix
+Name[pt_BR]=Instalar Artix
+GenericName=System Installer
+TryExec=calamares
+Exec=pkexec calamares
+Icon=calamares
+Terminal=false
+StartupNotify=true
+Categories=Qt;System;
+Hidden=true
+NoDisplay=true
+X-AppStream-Ignore=true

@@ -1,0 +1,450 @@
+--- a/compositor/aqueous/Cursor.zig
++++ b/compositor/aqueous/Cursor.zig
+@@ -18,6 +18,7 @@
+ const scene_surface_projection = @import("scene_surface_projection.zig");
+ const cursor_lock_restore = @import("cursor_lock_restore.zig");
+ const cursor_config = @import("cursor_config.zig");
++const pointer_drag = @import("wm/input/drag.zig");
+ 
+ const DragIcon = @import("DragIcon.zig");
+ const InputDevice = @import("InputDevice.zig");
+@@ -840,6 +841,48 @@
+     }, !cursor.hasActivePointerConstraint());
+ }
+ 
++fn handleDecorationAction(cursor: *Cursor, window: *Window, action: pointer_drag.DecorationAction) void {
++    const handle = @as(@TypeOf(server.aqueous.api.focusedWindow().?), @bitCast(window.ref));
++    server.aqueous.handleWindowInteraction(handle);
++    switch (action) {
++        .move => {
++            server.aqueous.drag = server.aqueous.createClientDrag(
++                handle,
++                .{
++                    .seat = @intFromPtr(cursor.seat),
++                    .x = cursor.wlr_cursor.x,
++                    .y = cursor.wlr_cursor.y,
++                },
++                .move_floating,
++                .{},
++                true,
++            );
++        },
++        .minimize => {
++            if (server.aqueous.window_states.get(handle)) |state| state.overrideFullscreen();
++            server.aqueous.api.clearFullscreen(handle);
++            _ = server.aqueous.window_states.minimize(handle) catch |err| {
++                log.err("unable to minimize window from decoration: {}", .{err});
++                return;
++            };
++            server.aqueous.api.requestManageCycle();
++        },
++        .maximize => {
++            _ = server.aqueous.window_states.toggleMaximized(handle) orelse return;
++            server.aqueous.api.requestManageCycle();
++        },
++        .close => window.close(),
++    }
++}
++
++fn consumeDecorationPress(cursor: *Cursor, window: *Window, surface: ?*wlr.Surface) bool {
++    const action = window.decorationActionAt(surface, cursor.wlr_cursor.x, cursor.wlr_cursor.y) orelse return false;
++    cursor.handleDecorationAction(window, action);
++    cursor.mode = .ignore;
++    cursor.clearFocus();
++    return true;
++}
++
+ pub fn processButton(cursor: *Cursor, event: *const Seat.Event.PointerButton) void {
+     if (event.state == .pressed) server.window_switcher.pointerIntent(cursor.seat);
+     if (event.state == .pressed and server.window_switcher.output != null) {
+@@ -867,6 +910,19 @@
+             _ = cursor.seat.wlr_seat.pointerNotifyButton(event.time_msec, event.button, event.state);
+             return;
+         }
++        if (cursor.seat.drag == .none and event.button == 0x110) {
++            if (server.scene.at(cursor.wlr_cursor.x, cursor.wlr_cursor.y)) |at| {
++                switch (at.data) {
++                    .window => |window| {
++                        if (cursor.consumeDecorationPress(window, at.surface)) {
++                            result.value_ptr.* = null;
++                            return;
++                        }
++                    },
++                    else => {},
++                }
++            }
++        }
+         const modifiers: u32 = if (cursor.seat.wlr_seat.getKeyboard()) |keyboard| @bitCast(keyboard.getModifiers()) else 0;
+         if (cursor.seat.drag == .none and server.aqueous.handlePointerButton(event.button, modifiers, true, cursor.wlr_cursor.x, cursor.wlr_cursor.y, event.time_msec)) {
+             result.value_ptr.* = null;
+--- a/compositor/aqueous/Window.zig
++++ b/compositor/aqueous/Window.zig
+@@ -4,6 +4,7 @@
+ const Window = @This();
+ 
+ const build_options = @import("build_options");
++const c = @import("c");
+ const std = @import("std");
+ const assert = std.debug.assert;
+ const math = std.math;
+@@ -19,6 +20,7 @@
+ const server = &@import("main.zig").server;
+ const util = @import("util.zig");
+ const scaling = @import("scaling");
++const pointer_drag = @import("wm/input/drag.zig");
+ const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
+ 
+ extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
+@@ -97,6 +99,14 @@
+     right: *wlr.SceneRect,
+     top: *wlr.SceneRect,
+     bottom: *wlr.SceneRect,
++    titlebar: *wlr.SceneRect,
++    accent: *wlr.SceneRect,
++    minimize: *wlr.SceneRect,
++    maximize: *wlr.SceneRect,
++    close_button: *wlr.SceneRect,
++    minimize_glyph: *wlr.SceneRect,
++    maximize_glyph: [4]*wlr.SceneRect,
++    close_glyph: [9]*wlr.SceneRect,
+ };
+ 
+ /// Windowing state requested by the wm.
+@@ -787,14 +797,47 @@
+     hasher.update(std.mem.asBytes(&workspace_id));
+ }
+ 
+-fn createBorderNodes(tree: *wlr.SceneTree) !BorderNodes {
+-    return .{
++fn setDecorationRectInput(rect: *wlr.SceneRect, enabled: bool) void {
++    c.wlr_scene_rect_set_input_enabled(@ptrCast(rect), @intFromBool(enabled));
++}
++
++fn createBorderNodes(tree: *wlr.SceneTree, interactive: bool) !BorderNodes {
++    var nodes: BorderNodes = .{
+         .rounded_outline = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+         .left = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+         .right = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+         .top = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+         .bottom = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
++        .titlebar = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
++        .accent = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
++        .minimize = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
++        .maximize = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
++        .close_button = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
++        .minimize_glyph = undefined,
++        .maximize_glyph = undefined,
++        .close_glyph = undefined,
+     };
++    nodes.minimize_glyph = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 });
++    for (&nodes.maximize_glyph) |*rect| rect.* = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 });
++    for (&nodes.close_glyph) |*rect| rect.* = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 });
++    inline for (.{
++        "rounded_outline",
++        "left",
++        "right",
++        "top",
++        "bottom",
++        "accent",
++        "minimize_glyph",
++    }) |field| {
++        setDecorationRectInput(@field(nodes, field), false);
++    }
++    setDecorationRectInput(nodes.titlebar, interactive);
++    setDecorationRectInput(nodes.minimize, interactive);
++    setDecorationRectInput(nodes.maximize, interactive);
++    setDecorationRectInput(nodes.close_button, interactive);
++    for (nodes.maximize_glyph) |rect| setDecorationRectInput(rect, false);
++    for (nodes.close_glyph) |rect| setDecorationRectInput(rect, false);
++    return nodes;
+ }
+ 
+ pub fn create(impl: Impl) error{OutOfMemory}!*Window {
+@@ -820,9 +863,16 @@
+         try anim_tree.createSceneRect(0, 0, &.{ 0, 0, 0, 1.0 / 255.0 });
+     const anim_surfaces_tree = try anim_tree.createSceneTree();
+     const anim_border_tree = try anim_tree.createSceneTree();
+-    const anim_border = try createBorderNodes(anim_border_tree);
++    const anim_border = try createBorderNodes(anim_border_tree, false);
+ 
+     const backdrop_blur = fx.createWindowBlur(tree);
++    const fullscreen_background = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 1 });
++    const blur_marker = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 1.0 / 255.0 });
++    const decorations_below_tree = try tree.createSceneTree();
++    const surfaces = try Scene.SaveableSurfaces.init(tree);
++    const border = try createBorderNodes(tree, true);
++    const decorations_above_tree = try tree.createSceneTree();
++    const capture_scene = try wlr.Scene.create();
+ 
+     window.* = .{
+         .ref = .{ .key = key },
+@@ -830,28 +880,22 @@
+         .impl = impl,
+         .tree = tree,
+         .backdrop_blur = backdrop_blur,
+-        .fullscreen_background = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 1 }),
+-        .blur_marker = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 1.0 / 255.0 }),
++        .fullscreen_background = fullscreen_background,
++        .blur_marker = blur_marker,
+         .anim_blur_marker = anim_blur_marker,
+         .decorations_below = undefined,
+-        .decorations_below_tree = try tree.createSceneTree(),
+-        .surfaces = try Scene.SaveableSurfaces.init(tree),
+-        .border = .{
+-            .rounded_outline = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+-            .left = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+-            .right = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+-            .top = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+-            .bottom = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 }),
+-        },
++        .decorations_below_tree = decorations_below_tree,
++        .surfaces = surfaces,
++        .border = border,
+         .decorations_above = undefined,
+-        .decorations_above_tree = try tree.createSceneTree(),
++        .decorations_above_tree = decorations_above_tree,
+         .popup_tree = popup_tree,
+         .anim_tree = anim_tree,
+         .anim_fullscreen_background = anim_fullscreen_background,
+         .anim_surfaces_tree = anim_surfaces_tree,
+         .anim_border_tree = anim_border_tree,
+         .anim_border = anim_border,
+-        .capture_scene = try wlr.Scene.create(),
++        .capture_scene = capture_scene,
+         .workspace_link = undefined,
+     };
+ 
+@@ -2666,6 +2710,115 @@
+     } };
+ }
+ 
++fn drawClippedDecorationRect(
++    rect: *wlr.SceneRect,
++    box: wlr.Box,
++    clip: *const wlr.Box,
++    content_clip: *const wlr.Box,
++    color: *const [4]f32,
++) void {
++    var visible = box;
++    if ((box.width <= 0 or box.height <= 0) or
++        (!clip.empty() and !visible.intersection(&visible, clip)) or
++        (!content_clip.empty() and !visible.intersection(&visible, content_clip)))
++    {
++        rect.node.setEnabled(false);
++        return;
++    }
++    rect.node.setPosition(visible.x, visible.y);
++    rect.setSize(visible.width, visible.height);
++    rect.setColor(color);
++    rect.node.setEnabled(true);
++}
++
++fn drawTitlebar(window: *Window, nodes: *const BorderNodes, clip: *const wlr.Box) void {
++    const requested = &window.rendering_requested;
++    if (window.box.width <= 0 or window.box.height <= 0 or window.wm_requested.fullscreen != null) return;
++    const height_i: i32 = @min(@as(i32, @intCast(pointer_drag.titlebar_height)), window.box.height);
++    const width_i: i32 = window.box.width;
++    const active_color: [4]f32 = .{ 0.09, 0.11, 0.15, 1 };
++    const inactive_color: [4]f32 = .{ 0.13, 0.14, 0.17, 1 };
++    const accent_color: [4]f32 = .{ 0.94, 0.16, 0.30, 1 };
++    const control_color: [4]f32 = if (window.isFocused()) active_color else inactive_color;
++    const icon_color: [4]f32 = .{ 0.94, 0.95, 0.98, 1 };
++    const close_color: [4]f32 = .{ 0.78, 0.13, 0.21, 1 };
++
++    drawClippedDecorationRect(
++        nodes.titlebar,
++        .{ .x = 0, .y = 0, .width = width_i, .height = height_i },
++        clip,
++        &requested.content_clip,
++        &control_color,
++    );
++    const accent_height = @min(2, height_i);
++    drawClippedDecorationRect(
++        nodes.accent,
++        .{ .x = 0, .y = height_i - accent_height, .width = width_i, .height = accent_height },
++        clip,
++        &requested.content_clip,
++        &accent_color,
++    );
++
++    if (width_i < 3) return;
++    const button_width_i: i32 = @min(@as(i32, @intCast(pointer_drag.decoration_control_width)), @divTrunc(width_i, 3));
++    const first_button_x: i32 = width_i - button_width_i * 3;
++    const button_rects = [_]struct {
++        node: *wlr.SceneRect,
++        x: i32,
++        color: *const [4]f32,
++    }{
++        .{ .node = nodes.minimize, .x = first_button_x, .color = &control_color },
++        .{ .node = nodes.maximize, .x = first_button_x + button_width_i, .color = &control_color },
++        .{ .node = nodes.close_button, .x = first_button_x + button_width_i * 2, .color = &close_color },
++    };
++    for (button_rects) |button| {
++        drawClippedDecorationRect(
++            button.node,
++            .{ .x = button.x, .y = 0, .width = button_width_i, .height = height_i },
++            clip,
++            &requested.content_clip,
++            button.color,
++        );
++    }
++    if (button_width_i < 14 or height_i < 14) return;
++
++    const icon_y = @divTrunc(height_i, 2) - 5;
++    const minimize_x = first_button_x + @divTrunc(button_width_i, 2) - 5;
++    drawClippedDecorationRect(
++        nodes.minimize_glyph,
++        .{ .x = minimize_x, .y = icon_y + 4, .width = 10, .height = 2 },
++        clip,
++        &requested.content_clip,
++        &icon_color,
++    );
++
++    const maximize_x = first_button_x + button_width_i + @divTrunc(button_width_i, 2) - 5;
++    const maximize_parts = [_]wlr.Box{
++        .{ .x = maximize_x, .y = icon_y, .width = 10, .height = 1 },
++        .{ .x = maximize_x, .y = icon_y + 9, .width = 10, .height = 1 },
++        .{ .x = maximize_x, .y = icon_y, .width = 1, .height = 10 },
++        .{ .x = maximize_x + 9, .y = icon_y, .width = 1, .height = 10 },
++    };
++    for (nodes.maximize_glyph, maximize_parts) |rect, box| {
++        drawClippedDecorationRect(rect, box, clip, &requested.content_clip, &icon_color);
++    }
++
++    const close_x = first_button_x + button_width_i * 2 + @divTrunc(button_width_i, 2) - 5;
++    const close_pixels = [_][2]i32{
++        .{ 0, 0 }, .{ 2, 2 }, .{ 4, 4 }, .{ 6, 6 }, .{ 8, 8 },
++        .{ 8, 0 }, .{ 6, 2 }, .{ 2, 6 }, .{ 0, 8 },
++    };
++    for (nodes.close_glyph, close_pixels) |rect, pixel| {
++        drawClippedDecorationRect(
++            rect,
++            .{ .x = close_x + pixel[0], .y = icon_y + pixel[1], .width = 2, .height = 2 },
++            clip,
++            &requested.content_clip,
++            &icon_color,
++        );
++    }
++}
++
+ fn disableBorderNodes(nodes: *const BorderNodes) void {
+     inline for (.{
+         "rounded_outline",
+@@ -2673,9 +2826,17 @@
+         "right",
+         "top",
+         "bottom",
++        "titlebar",
++        "accent",
++        "minimize",
++        "maximize",
++        "close_button",
++        "minimize_glyph",
+     }) |part| {
+         @field(nodes, part).node.setEnabled(false);
+     }
++    for (nodes.maximize_glyph) |rect| rect.node.setEnabled(false);
++    for (nodes.close_glyph) |rect| rect.node.setEnabled(false);
+ }
+ 
+ fn drawBorderNodes(
+@@ -2693,6 +2854,7 @@
+     };
+     if (!requested.content_clip.empty() and
+         !content.intersection(&content, &requested.content_clip)) return;
++    drawTitlebar(window, nodes, clip);
+ 
+     // f32 cannot represent all u32 values exactly, therefore we must initially use f64
+     // (which can) and then cast to f32, potentially losing precision.
+@@ -2843,6 +3005,24 @@
+ /// Returns null if the window is currently being destroyed and no longer has
+ /// an associated surface.
+ /// May also return null for Xwayland windows that are not currently mapped.
++pub fn decorationActionAt(
++    window: *const Window,
++    surface: ?*wlr.Surface,
++    x: f64,
++    y: f64,
++) ?pointer_drag.DecorationAction {
++    if (surface) |hit_surface| {
++        const root = window.rootSurface() orelse return null;
++        if (hit_surface.getRootSurface() != root) return null;
++    }
++    return pointer_drag.decorationActionAt(
++        window.box.width,
++        window.box.height,
++        x - @as(f64, @floatFromInt(window.box.x)),
++        y - @as(f64, @floatFromInt(window.box.y)),
++    );
++}
++
+ pub fn rootSurface(window: Window) ?*wlr.Surface {
+     return switch (window.impl) {
+         .toplevel => |toplevel| toplevel.wlr_toplevel.base.surface,
+--- a/compositor/aqueous/wm/input/drag.zig
++++ b/compositor/aqueous/wm/input/drag.zig
+@@ -10,6 +10,64 @@
+ pub const ResizeAxis = enum { horizontal, vertical };
+ 
+ pub const ResizeEdges = geometry_policy.ResizeEdges;
++pub const DecorationAction = enum { move, minimize, maximize, close };
++pub const titlebar_height: u31 = 36;
++pub const decoration_control_width: u31 = 40;
++
++/// Match the compositor-owned titlebar's three right-aligned controls. Narrow
++/// windows divide their width equally so no control extends beyond the frame.
++pub fn decorationActionAt(width: i32, height: i32, x: f64, y: f64) ?DecorationAction {
++    if (width < 3 or height <= 0 or x < 0 or x >= @as(f64, @floatFromInt(width))) return null;
++    const visible_height = @min(@as(i32, @intCast(titlebar_height)), height);
++    if (y < 0 or y >= @as(f64, @floatFromInt(visible_height))) return null;
++    const button_width: i32 = @min(@as(i32, @intCast(decoration_control_width)), @divTrunc(width, 3));
++    const width_f: f64 = @floatFromInt(width);
++    const button_width_f: f64 = @floatFromInt(button_width);
++    if (x >= width_f - button_width_f) return .close;
++    if (x >= width_f - button_width_f * 2) return .maximize;
++    if (x >= width_f - button_width_f * 3) return .minimize;
++    return .move;
++}
++
++test "server titlebar action zones stay inside the window" {
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .move),
++        decorationActionAt(800, 600, 20, 18),
++    );
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .minimize),
++        decorationActionAt(800, 600, 681, 18),
++    );
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .maximize),
++        decorationActionAt(800, 600, 721, 18),
++    );
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .close),
++        decorationActionAt(800, 600, 761, 18),
++    );
++    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(800, 600, 800, 18));
++    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(800, 600, 20, 36));
++    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(-1, 20, 0, 10));
++    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(90, 0, 0, 0));
++}
++
++test "server titlebar controls adapt to narrow windows and short heights" {
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .minimize),
++        decorationActionAt(90, 20, 29, 19),
++    );
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .maximize),
++        decorationActionAt(90, 20, 30, 19),
++    );
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .close),
++        decorationActionAt(90, 20, 89, 19),
++    );
++    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(90, 20, 40, 20));
++    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(2, 20, 1, 10));
++}
+ 
+ /// The layout dispatcher selects this path for every non-stacking layout.
+ pub fn tiledMoveAllowed(kind: PolicyState.Kind, fixed: bool, fullscreen: bool) bool {

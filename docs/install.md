@@ -154,7 +154,7 @@ The live ISO opens the disposable `dinx` account directly in `Aqueous + Pearl (D
 
 Once the desktop appears, the tested graphical state is Aqueous/Pearl. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
 Pearl is the active shell. The static DINX theme is applied through the checked-in GTK/Qt bridges; Pearl Greeter reads `/etc/pearl/greeter.json`, uses the GTK DINX theme and forces the Aqueous/Pearl entry without X11 or UWSM.
-Phyto is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts inside Aqueous/Pearl and reapplies matching profiles. `Dome`, `Seafoam Settings` and `zls` are bundled in the signed base ISO. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings groups the documented display/session configuration entry points; Nocted uses the bundled ZLS for Zig projects.
+Phyto is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts inside Aqueous/Pearl and reapplies matching profiles. `Dome`, `Seafoam Settings` and `zls` are bundled in the signed base ISO. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings groups the documented display/session configuration entry points; Dintor uses the bundled ZLS for Zig projects.
 The base ZLS runtime is compact by design: completion and navigation use the bundled matching `lib/std` tree through `/usr/lib/zls/zig-env`; a full Zig compiler is optional and is not part of the ISO payload.
 
 ### Optional BC-250 support
@@ -199,13 +199,8 @@ dinitctl status greetd
 dinitctl restart greetd
 ```
 
-If the graphical session is unavailable, use the independent Wayland fallback:
+Deetty is the sole terminal emulator in the live ISO and fresh installation. The live and installed sessions set `$TERMINAL` to `deetty`; Nano remains available as a recovery editor. Pearl Greeter is a greetd login surface, not a user-session configuration.
 
-```bash
-DINX_TERMINAL_FALLBACK=1 dinx-terminal
-```
-
-`$TERMINAL` points to `dinx-terminal`, which prefers NOCTTY and falls back to `foot` when NOCTTY is not installed. The only user compositor session is Aqueous/Pearl; the dedicated Pearl Greeter host is a greetd login surface, not a user-session configuration.
 To record the system state without changing it, run:
 
 ```bash
@@ -249,11 +244,21 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The screen is blank
 
-DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. For the Aqueous/Pearl session in QEMU and on systems without a DRM render node, the wrapper uses `aqueous-cpu`, built without Vulkan effects, with Pixman and Cairo rendering. It also detects Virtio GPUs (`0x1af4`) when they expose a render node, avoiding the llvmpipe presentation failure. This slower path omits compositor Vulkan effects such as blur and rounded corners; other systems with a render node use the full compositor and retain normal driver selection. Hardware graphics support is not yet fully qualified. Record the GPU model, firmware mode and kernel/guest behavior before filing a report.
+DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. Graphics selection requires a readable and writable DRM render node: QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) use `aqueous-cpu` with wlroots GLES2 and GTK4 GL; this build omits Aqueous's Vulkan effects. If the render node is missing/inaccessible, or a 2D-only adapter such as `vboxvideo` or QXL is active, the session uses Pixman/Cairo instead. Other render-node hardware uses the full Aqueous build. The live user, Pearl Greeter and new Calamares users receive `render` group access. This selects a guest rendering path; it does not prove that host-side 3D acceleration is enabled.
 
 ### Graphics, drivers and media
 
-DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and VLC for the supported open-source media path. The Aqueous/Pearl session uses Pixman/Cairo on Virtio GPUs and systems without a DRM render node; it does not select Lavapipe to render the desktop. If hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
+DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and VLC for the supported open-source media path. If other hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
+
+For QEMU virgl, use a host QEMU build with GTK/OpenGL and virgl support, then request `virtio-vga-gl`, for example:
+
+```sh
+DINX_QEMU_DISPLAY=gtk,gl=on \
+DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
+scripts/smoke-iso.sh /path/to/dinx.iso
+```
+
+For VirtualBox, select **VMSVGA** and enable **3D Acceleration** in the VM display settings. The guest falls back to Pixman/Cairo when the host does not expose a usable render node. These paths are not a claim that every host GPU/driver combination is qualified; include the hypervisor, host renderer, guest DRM driver and `dinx-alpha7-hardware-report` output in bug reports.
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected

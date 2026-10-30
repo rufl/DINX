@@ -2,13 +2,9 @@
   <img src="distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg" alt="Logotipo DINX Linux" width="420">
 </h1>
 
-<p align="center"><strong>
-Lean and Mean - estoica, leve e sem frescura, o mínimo para você fazer o máximo. ;)</p><p align="center">
-Arch-Based, Artix Based, Drivers e Kernels recentes, Drivers e Tooling para Gaming e Dev.<br>
-Rápida, Leve e Focada em Produzir - Sem Gnome, Sem KDE, Sem SystemD.<p></p><p align="center">
-Dinit como supervisor de serviços, Seafoam Apps, Paineis gráficos diretos ao assunto.<br>
-Tweakable e extendable via CLI sim, sem purismo desnecessário.</p><p align="center">
-Roster com foco em Zig-Heavy apps/tools, menos serviços, dependencias e clutter possíveis.</strong>
+<p align="center">
+  <strong>Artix Linux + dinit, com um desktop Wayland enxuto e explícito.</strong><br>
+  Um alpha público para testar a base, os limites e o caminho de instalação — sem esconder o que ainda falta.
 </p>
 
 <p align="center">
@@ -49,7 +45,7 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **Phyto** como gerenciador de arquivos padrão e **File Roller** para abrir, criar e extrair arquivos compactados;
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
-- **Mesa Lavapipe** (`vulkan-swrast`) continua disponível para aplicativos Vulkan; Aqueous usa uma build Pixman separada, sem efeitos Vulkan, em sistemas sem render node e com GPU Virtio, evitando a falha no QEMU e preservando o compositor completo em hardware;
+- **Mesa/RADV e gráficos em VM:** novas saídas do Aqueous começam com dois workspaces. Render nodes acessíveis de QEMU `virtio_gpu`/virgl ou VirtualBox VMSVGA (`vmwgfx`) usam Mesa GLES2 com a build do Aqueous sem efeitos Vulkan; nodes ausentes/inacessíveis e adaptadores virtuais somente 2D usam Pixman/Cairo. A aceleração 3D também precisa estar habilitada no host; veja o [guia gráfico](docs/pt-BR/install.md).
 - **DINX Gaming** mantém o launcher manual oculto. A ISO base não inclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam nem bibliotecas gaming de 32 bits; o usuário pode optar por instalar o conjunto gaming após a instalação. A base mantém RADV/Vulkan de 64 bits; veja o [guia de instalação](docs/pt-BR/install.md).
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
@@ -58,7 +54,7 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 ## Seafoam e a sessão única na ISO base
 
-**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. O Pearl 0.3.0, inclusive a fonte upstream usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream usam o Zig 0.17.0 verificado.
+**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Dintor com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. O Pearl 0.3.0, inclusive a fonte upstream usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream usam o Zig 0.17.0 verificado.
 
 **Aqueous 1.0.5** e **Pearl 0.3.0** vêm na ISO base. `Aqueous + Pearl (DINX)` é a única sessão de usuário selecionável e a sessão inicial da live: a DINX inicia o Aqueous diretamente, executa os helpers supervisionados de Shikane/PolicyKit/idle e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O login instalado/manual usa o **Pearl Greeter**, iniciado diretamente pelo greetd através da conta dedicada `pearl-greeter`; o Greeter força a mesma entrada Aqueous/Pearl e não expõe X11 nem UWSM. Se a sessão Aqueous/Pearl da live terminar, o greetd retorna ao Pearl Greeter em vez de trocar de sessão silenciosamente.
 
@@ -77,7 +73,7 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 A Beta 0.1 está planejada, ainda sem data de lançamento. O objetivo é qualificar a sessão Aqueous/Pearl sobre dinit e os caminhos de instalação, atualização e recuperação em uma matriz declarada de hardware físico. A publicação dependerá de testes de rede, áudio, GPU/display e suspensão, além de instalação e recuperação em discos de teste, atualização assinada e documentação dos limites.
 
-A meta de tamanho para a próxima ISO é **até 1.800.000.000 bytes**; a Alpha 10 atual tem 1.862.772.736 bytes. O P5 de jogos permanece uma trilha separada: a Beta 0.1 não alegará suporte gaming sem testes reais de DRM, Steam, controle e áudio. A sessão continuará Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
+O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **menor que 2 GiB** (`2.147.483.648` bytes); a DINX não tem uma meta menor de 1,8 bilhão de bytes. A Alpha 10, com 1.862.772.736 bytes, está dentro do limite. A ISO futura precisa continuar abaixo dele para ser publicada como arquivo direto. O P5 gaming segue separado: a Beta 0.1 não alegará suporte sem testes reais de DRM, Steam, controle e áudio. A sessão continua Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
 
 
 ## Instalação rápida
@@ -119,7 +115,7 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer 
 
 ## Código, contratos e licença
 
-Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O archive versionado do Noctty é uma fonte upstream separada sob MIT; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
+Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O pacote DINX `deetty` fornece os aplicativos Deetty/Dintor a partir de um archive upstream separado sob MIT, cuja URL e identidade NOCTTY permanecem inalteradas; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
 
 - [Código no GitHub](https://github.com/rufl/DINX)
 - [Issues](https://github.com/rufl/DINX/issues)

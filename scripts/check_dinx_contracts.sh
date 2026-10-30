@@ -5,7 +5,8 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 
 checks=(
   check_first_party_apps.sh
-  check_noctty_integration.sh
+  check_deetty_integration.sh
+  check_ghostty_vt_runtime.sh
   check_firefox.sh
   check_swayimg.sh
   check_package_managers.sh
@@ -24,6 +25,7 @@ checks=(
   check_dinitui.sh
   check_dinxpanel.sh
   check_dinx_session.sh
+  check_dinx_graphics_profile.sh
   check_dinx_live_autologin.sh
   check_dinx_doctor.sh
   check_install_lifecycle.sh
@@ -33,8 +35,20 @@ checks=(
   check_gaming.sh
   check_alpha7_hardware_report.sh
 )
+all_checks=("${checks[@]}")
+case "${DINX_SKIP_PRIVATE_SOURCE_CHECKS:-false}" in
+  true)
+    printf 'dinx_contracts: private_source_checks=skipped\n'
+    checks=("${checks[@]:2}")
+    ;;
+  false) ;;
+  *)
+    printf 'dinx_contracts: DINX_SKIP_PRIVATE_SOURCE_CHECKS must be true or false\n' >&2
+    exit 1
+    ;;
+esac
 
-for check in "${checks[@]}"; do
+for check in "${all_checks[@]}"; do
   path="$root/scripts/$check"
   [[ -x "$path" ]] || { printf 'dinx_contracts: missing executable: %s\n' "$check" >&2; exit 1; }
   bash -n "$path"

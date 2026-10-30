@@ -48,9 +48,9 @@
      const terminal_system_tui_qualification_exe = b.addExecutable(.{
          .name = "noctty-terminal-system-tui-qualification",
          .root_module = terminal_system_tui_qualification_mod,
-@@ -585,1 +585,2 @@
-     b.installFile("resources/nocted/styles/nocted-dark.xml", "share/nocted/styles/nocted-dark.xml");
-+    b.installFile("resources/nocted/styles/nocted-light.xml", "share/nocted/styles/nocted-light.xml");
+@@ -586,1 +592,2 @@
++    b.installFile("resources/nocted/styles/nocted-light.xml", "share/dintor/styles/dintor-light.xml");
+     b.installFile("resources/icons/48x48/com.noctty.NOCTTY.png", "share/icons/hicolor/48x48/apps/org.dinx.Deetty.png");
 --- a/src/terminal/RealTuiQualification.zig
 +++ b/src/terminal/RealTuiQualification.zig
 @@ -339,6 +339,6 @@
@@ -268,9 +268,9 @@
 +++ b/resources/nocted/styles/nocted-light.xml
 @@ -0,0 +1,37 @@
 +<?xml version="1.0" encoding="UTF-8"?>
-+<style-scheme id="nocted-light" _name="NoctEd Light" version="1.0">
-+  <author>NOCTTY contributors</author>
-+  <_description>NOCTTY-aligned compact light editor palette</_description>
++<style-scheme id="dintor-light" _name="Dintor Light" version="1.0">
++  <author>DINX contributors</author>
++  <_description>DINX-aligned compact light editor palette</_description>
 +  <color name="background" value="#F7F8FA"/>
 +  <color name="foreground" value="#202631"/>
 +  <color name="muted" value="#687386"/>
@@ -313,13 +313,9 @@
  pub const ignore = @import("Ignore.zig");
  pub const lsp = @import("Lsp.zig");
  pub const multi_selection = @import("MultiSelection.zig");
-@@ -16,5 +16,6 @@
- test {
-     _ = document;
-     _ = folding;
+@@ -19,1 +20,2 @@
 +    _ = git;
      _ = ignore;
-     _ = lsp;
 --- a/src/nocted/main.zig
 +++ b/src/nocted/main.zig
 @@ -1732,1 +1732,7 @@
@@ -331,8 +327,8 @@
 +        );
          appendMenuSeparator(tools_menu);
 @@ -3069,2 +3069,3 @@
--        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, "nocted-dark")) |scheme|
-+        const style_scheme = if (lightThemeRequested(self.environ_map)) "nocted-light" else "nocted-dark";
+-        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, "dintor-dark")) |scheme|
++        const style_scheme = if (lightThemeRequested(self.environ_map)) "dintor-light" else "dintor-dark";
 +        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, style_scheme)) |scheme|
              c.gtk_source_buffer_set_style_scheme(buffer, scheme);
 @@ -4793,1 +4793,49 @@
@@ -385,10 +381,7 @@
 +    }
 +
      fn importSyntaxDirectory(self: *App, path: []const u8) void {
-@@ -6715,4 +6715,28 @@
-         try writer.interface.flush();
-         return;
-     }
+@@ -6718,1 +6773,25 @@
 +    if (args.len > 2 and std.mem.eql(u8, args[1], "--git-probe")) {
 +        var snapshot = try core.git.snapshotAlloc(allocator, init.io, args[2]);
 +        defer snapshot.deinit(allocator);
@@ -414,22 +407,21 @@
 +        return;
 +    }
      if (args.len > 1 and std.mem.eql(u8, args[1], "--runtime-contract")) {
-@@ -6955,2 +6955,7 @@
+@@ -6954,2 +7033,7 @@
 +fn lightThemeRequested(environ_map: *const std.process.Environ.Map) bool {
 +    const value = environ_map.get("DINX_COLOR_SCHEME") orelse
-+        environ_map.get("NOCTED_THEME") orelse return false;
++        environ_map.get("DINTOR_THEME") orelse return false;
 +    return std.mem.eql(u8, value, "light") or std.mem.eql(u8, value, "prefer-light");
 +}
 
  fn installCss() void {
-@@ -8118,2 +8118,7 @@
-     app.showUiFontSettings();
- }
+@@ -8120,1 +8204,6 @@
 +
 +fn onShowGitStatus(_: ?*c.GtkWidget, data: ?*anyopaque) callconv(.c) void {
 +    const app: *App = @ptrCast(@alignCast(data.?));
 +    app.showGitStatus();
 +}
+ fn onImportSyntax(_: ?*c.GtkWidget, data: ?*anyopaque) callconv(.c) void {
 --- a/src/nocted/ProjectIndexQualification.zig
 +++ b/src/nocted/ProjectIndexQualification.zig
 @@ -127,3 +127,3 @@

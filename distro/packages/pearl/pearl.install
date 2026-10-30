@@ -10,7 +10,7 @@ ensure_pearl_greeter_account() {
       --home-dir /var/empty/pearl-greeter \
       --shell /usr/bin/nologin --no-create-home pearl-greeter
   fi
-  usermod --append --groups video pearl-greeter
+  usermod --append --groups video,render pearl-greeter
   install -d -o root -g root -m 0755 /var/empty/pearl-greeter
   install -d -o pearl-greeter -g pearl-greeter -m 0700 \
     /var/lib/pearl-greeter /var/cache/pearl-greeter

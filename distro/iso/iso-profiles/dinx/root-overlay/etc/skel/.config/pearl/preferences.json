@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "theme": {
+    "mode": "gtk",
+    "variant": "dark",
+    "seed": "#F4515B",
+    "source": "seed",
+    "gtk_name": "DINX"
+  },
+  "wallpaper": {
+    "mode": "cover",
+    "path": "/usr/share/dinx/branding/dinx-wallpaper.png",
+    "color": "#0b0d12",
+    "crops": [],
+    "slideshow": {
+      "enabled": false,
+      "folder": "",
+      "interval_seconds": 900,
+      "order": "sequential",
+      "transition": "fade",
+      "transition_ms": 420
+    }
+  },
+  "desktop_icons": {
+    "enabled": true,
+    "output": "",
+    "icon_size": 48,
+    "show_hidden": false,
+    "arrangement": "automatic"
+  }
+}

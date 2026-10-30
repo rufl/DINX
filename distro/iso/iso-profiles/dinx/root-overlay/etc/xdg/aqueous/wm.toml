@@ -1,0 +1,3 @@
+# DINX's only graphical terminal.
+[actions]
+spawn_terminal = "deetty"

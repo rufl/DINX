@@ -45,7 +45,7 @@ Reprodutibilidade é um critério de aceitação. Um build que não identifica s
 
 ## Isolamento dos aplicativos
 
-Noctty e Nocted não devem exigir privilégios elevados. Arquivos de projeto, plugins do editor e comandos de terminal são entradas não confiáveis. Os aplicativos devem seguir os limites normais de permissões XDG e não podem executar código do projeto silenciosamente.
+Deetty e Dintor não devem exigir privilégios elevados. Arquivos de projeto, plugins do editor e comandos de terminal são entradas não confiáveis. Os aplicativos devem seguir os limites normais de permissões XDG e não podem executar código do projeto silenciosamente.
 
 Integrações opcionais usam limites padrão de XDG, Wayland e D-Bus. A forma das mensagens deve ser validada, endpoints indisponíveis devem ser tratados e a inicialização deve ser independente de serviços opcionais.
 

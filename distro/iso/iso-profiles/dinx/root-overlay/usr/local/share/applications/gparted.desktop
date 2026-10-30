@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Partition Editor
+Name[pt_BR]=Particionador
+GenericName=Partition Editor
+GenericName[pt_BR]=Particionador
+X-GNOME-FullName=GParted Partition Editor
+Comment=Create, reorganize, and delete partitions
+Exec=/usr/bin/gparted %f
+TryExec=/usr/bin/gparted
+Icon=gparted
+Terminal=false
+Type=Application
+Categories=GTK;GNOME;System;Filesystem;
+Keywords=Partition;
+StartupNotify=true

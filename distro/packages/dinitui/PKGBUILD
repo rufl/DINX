@@ -1,6 +1,6 @@
 pkgname=dinitui
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Native desktop manager for Dinit services'
 arch=(x86_64)
 url='https://github.com/rufl/DINX'

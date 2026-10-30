@@ -20,6 +20,7 @@ startup_smoke="$repo_root/scripts/smoke_calamares_startup.sh"
 branding_conf="$calamares_root/branding/dinx/branding.desc"
 slideshow_qml="$calamares_root/branding/dinx/show.qml"
 branding_asset="$calamares_root/branding/dinx/dinx.svg"
+branding_mark_asset="$calamares_root/branding/dinx/dinx-ray-mark.svg"
 
 fail() {
   printf 'calamares_partition_contract: %s\n' "$*" >&2
@@ -36,7 +37,7 @@ require_text() {
   grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
 }
 
-for path in "$partition_conf" "$notes_conf" "$notes_qml" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset"; do
+for path in "$partition_conf" "$notes_conf" "$notes_qml" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset" "$branding_mark_asset"; do
   require_file "$path"
 done
 
@@ -76,7 +77,7 @@ require_text 'slideshow: "show.qml"' "$branding_conf"
 require_text 'slideshowAPI: 2' "$branding_conf"
 require_text 'import calamares.slideshow 1.0' "$slideshow_qml"
 require_text 'images:' "$branding_conf"
-require_text 'productIcon: "dinx.svg"' "$branding_conf"
+require_text 'productIcon: "dinx-ray-mark.svg"' "$branding_conf"
 require_text 'productLogo: "dinx.svg"' "$branding_conf"
 require_text 'productWelcome: "dinx.svg"' "$branding_conf"
 

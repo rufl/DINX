@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_dir=${1:?usage: nocted_p3_qualification.sh SOURCE_DIR}
+source_dir=${1:?usage: dintor_p3_qualification.sh SOURCE_DIR}
 source_dir=$(CDPATH= cd -- "$source_dir" && pwd -P)
 cd "$source_dir"
 
 fail() {
-  printf 'nocted_p3_qualification: %s\n' "$*" >&2
+  printf 'dintor_p3_qualification: %s\n' "$*" >&2
   exit 1
 }
 
@@ -19,12 +19,12 @@ for command_name in bwrap git clangd dbus-run-session gtk-update-icon-cache rsvg
   require_command "$command_name"
 done
 
-[[ -f resources/nocted/styles/nocted-dark.xml ]] || fail 'dark NoctEd scheme is missing'
-[[ -f resources/nocted/styles/nocted-light.xml ]] || fail 'light NoctEd scheme is missing'
-grep -Fq 'DINX_COLOR_SCHEME' src/nocted/main.zig || fail 'DINX color-scheme contract is missing'
-grep -Fq 'Git Status and Diff...' src/nocted/main.zig || fail 'Git editor action is missing'
+[[ -f resources/nocted/styles/nocted-dark.xml ]] || fail 'Dintor dark source scheme is missing'
+[[ -f resources/nocted/styles/nocted-light.xml ]] || fail 'Dintor light source scheme is missing'
+grep -Fq 'DINTOR_THEME' src/nocted/main.zig || fail 'Dintor color-scheme contract is missing'
+grep -Fq 'Git Status and Diff...' src/nocted/main.zig || fail 'Dintor Git action is missing'
 
-echo 'nocted_p3_gate source_contract=true git_action=true dark_scheme=true light_scheme=true dinx_scheme=true'
+echo 'dintor_p3_gate source_contract=true git_action=true dark_scheme=true light_scheme=true dinx_scheme=true'
 
 ./scripts/nocted_core_endurance_qualification.sh
 ./scripts/nocted_project_index_qualification.sh
@@ -40,29 +40,29 @@ grep -Fq 'nocted_lsp_smoke client=true server=true' <<<"$lsp_output" || fail 'LS
 
 zig build -Doptimize=ReleaseSafe nocted-smoke-binary
 smoke_binary="$source_dir/zig-out/bin/nocted-smoke"
-[[ -x "$smoke_binary" ]] || fail "missing NoctEd smoke binary: $smoke_binary"
+[[ -x "$smoke_binary" ]] || fail "missing Dintor smoke binary: $smoke_binary"
 
 run_native_smoke() {
   local theme=$1
   local icon_home
   local data_dirs
   local output
-  icon_home=$(mktemp -d "${TMPDIR:-/tmp}/nocted-p3-icon.XXXXXX")
+  icon_home=$(mktemp -d "${TMPDIR:-/tmp}/dintor-p3-icon.XXXXXX")
   data_dirs=${XDG_DATA_DIRS:-/usr/local/share:/usr/share}
   mkdir -p \
-    "$icon_home/icons/NoctedSmoke" \
-    "$icon_home/icons/NoctedSmoke/16x16/apps" \
-    "$icon_home/icons/NoctedSmoke/16x16/status" \
-    "$icon_home/icons/NoctedSmoke/22x22/apps" \
-    "$icon_home/icons/NoctedSmoke/24x24/apps" \
-    "$icon_home/icons/NoctedSmoke/32x32/apps" \
-    "$icon_home/icons/NoctedSmoke/48x48/apps" \
-    "$icon_home/icons/NoctedSmoke/64x64/apps" \
-    "$icon_home/icons/NoctedSmoke/128x128/apps" \
-    "$icon_home/icons/NoctedSmoke/256x256/apps"
-  cat >"$icon_home/icons/NoctedSmoke/index.theme" <<'EOF'
+    "$icon_home/icons/DintorSmoke" \
+    "$icon_home/icons/DintorSmoke/16x16/apps" \
+    "$icon_home/icons/DintorSmoke/16x16/status" \
+    "$icon_home/icons/DintorSmoke/22x22/apps" \
+    "$icon_home/icons/DintorSmoke/24x24/apps" \
+    "$icon_home/icons/DintorSmoke/32x32/apps" \
+    "$icon_home/icons/DintorSmoke/48x48/apps" \
+    "$icon_home/icons/DintorSmoke/64x64/apps" \
+    "$icon_home/icons/DintorSmoke/128x128/apps" \
+    "$icon_home/icons/DintorSmoke/256x256/apps"
+  cat >"$icon_home/icons/DintorSmoke/index.theme" <<'EOF'
 [Icon Theme]
-Name=NoctedSmoke
+Name=DintorSmoke
 Comment=DINX smoke fallback
 Inherits=hicolor
 Directories=16x16/apps,16x16/status,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,128x128/apps,256x256/apps
@@ -114,7 +114,7 @@ Type=Threshold
 EOF
   # Render the harness icon to PNG: GTK3 recognizes it in every supported
   # icon-theme path, independently of the container's SVG loader setup.
-  cat >"$icon_home/nocted.svg" <<'EOF'
+  cat >"$icon_home/dintor.svg" <<'EOF'
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
   <rect width="16" height="16" rx="2" fill="#0b0d12"/>
   <path d="M4 3h8v2H6v2h5v2H6v4H4z" fill="#8fb8ff"/>
@@ -122,12 +122,12 @@ EOF
 EOF
   for size in 16 22 24 32 48 64 128 256; do
     rsvg-convert -w "$size" -h "$size" \
-      -o "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/com.noctty.NoctEd.png" \
-      "$icon_home/nocted.svg"
+      -o "$icon_home/icons/DintorSmoke/${size}x${size}/apps/org.dinx.Dintor.png" \
+      "$icon_home/dintor.svg"
   done
   rsvg-convert -w 16 -h 16 \
-    -o "$icon_home/icons/NoctedSmoke/16x16/status/image-missing.png" \
-    "$icon_home/nocted.svg"
+    -o "$icon_home/icons/DintorSmoke/16x16/status/image-missing.png" \
+    "$icon_home/dintor.svg"
   for icon_name in \
     view-list-symbolic \
     view-list \
@@ -188,17 +188,18 @@ EOF
     caps-lock-symbolic; do
     for size in 16 22 24 32 48 64 128 256; do
       rsvg-convert -w "$size" -h "$size" \
-        -o "$icon_home/icons/NoctedSmoke/${size}x${size}/apps/${icon_name}.png" \
-        "$icon_home/nocted.svg"
+        -o "$icon_home/icons/DintorSmoke/${size}x${size}/apps/${icon_name}.png" \
+        "$icon_home/dintor.svg"
     done
   done
-  gtk-update-icon-cache -f "$icon_home/icons/NoctedSmoke" >/dev/null
+  gtk-update-icon-cache -f "$icon_home/icons/DintorSmoke" >/dev/null
   output=$(
     NOCTTY_DEDICATED_DISPLAY=1 \
     NOCTTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
     DINX_COLOR_SCHEME="$theme" \
-    GTK_ICON_THEME=NoctedSmoke \
+    DINTOR_THEME="$theme" \
+    GTK_ICON_THEME=DintorSmoke \
     WAYLAND_DISPLAY= \
     XDG_DATA_HOME="$icon_home" \
     XDG_DATA_DIRS="$icon_home:$data_dirs" \
@@ -221,7 +222,7 @@ EOF
 run_native_smoke dark
 run_native_smoke light
 
-fixture=$(mktemp -d "${TMPDIR:-/tmp}/nocted-p3-git.XXXXXX")
+fixture=$(mktemp -d "${TMPDIR:-/tmp}/dintor-p3-git.XXXXXX")
 cleanup() {
   if [[ -n "${fixture:-}" && -d "$fixture" ]]; then
     find "$fixture" -depth -delete 2>/dev/null || true
@@ -237,11 +238,11 @@ git -C "$fixture" add main.zig
 git -C "$fixture" commit -q -m initial
 printf 'const original = false;\nconst changed = true;\n' >"$fixture/main.zig"
 printf 'untracked\n' >"$fixture/notes.txt"
-git_output=$(./zig-out/bin/nocted --git-probe "$fixture")
+git_output=$(./zig-out/bin/dintor --git-probe "$fixture")
 printf '%s\n' "$git_output"
 grep -Fq 'nocted_git_probe changed=2' <<<"$git_output" || fail 'Git changed-file marker count is wrong'
 grep -Fq 'unstaged=1 untracked=1' <<<"$git_output" || fail 'Git status markers are wrong'
 grep -Fq 'modified=1' <<<"$git_output" || fail 'Git modified marker is missing'
 grep -E 'diff_bytes=[1-9][0-9]* markers=true' <<<"$git_output" >/dev/null || fail 'Git diff marker is missing'
 
-echo 'nocted_p3_qualification core=true project_index=true workers=true state_recovery=true tasks=true lsp=true native_x11_dark=true native_x11_light=true git_status=true git_diff=true change_markers=true scratch_clean=true'
+echo 'dintor_p3_qualification core=true project_index=true workers=true state_recovery=true tasks=true lsp=true native_x11_dark=true native_x11_light=true git_status=true git_diff=true change_markers=true scratch_clean=true'

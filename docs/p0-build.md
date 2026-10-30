@@ -10,7 +10,7 @@ The entry points are:
 
 - `scripts/check-iso-host.sh` — prerequisite probe;
 - `scripts/build-iso.sh` — root-aware build wrapper;
-- `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned NOCTTY/NoctEd source;
+- `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned upstream source that supplies Deetty and Dintor;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
 - `scripts/check_build_metadata.sh` — validates builder provenance, package snapshots, builder pacman-configuration hashes, source checksums and the emitted ISO digest, and can recompute the ISO byte count and SHA-512 against the downloaded artifact;
 - `scripts/check_dinx_package_repository.sh` — verifies repository snapshot metadata, package/database signatures, key fingerprint and duplicate archive paths;
@@ -25,31 +25,34 @@ The entry points are:
 - `docs/alpha7-qualification.md` — three-machine hardware evidence matrix and manual qualification boundary for the Alpha 10 system release;
 - `scripts/check_dinx_budget.sh` and `scripts/measure_dinx_session.sh` — payload/startup/native-binary/boot-window/ISO ceilings and runtime RSS/CPU observation;
 - `scripts/gaming_p5_qualification.sh` — fixture session return, signal-time process-group cleanup/profile restoration and real headless Gamescope launch/exit qualification;
-- `scripts/noctty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
-- `scripts/nocted_p3_qualification.sh` — deterministic P3 matrix for Nocted core/index/workers/state/tasks, real `clangd`, native GTK/X11 dark/light smoke and Git status/diff;
+- `scripts/deetty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
+- `scripts/dintor_p3_qualification.sh` — deterministic P3 matrix for Dintor core/index/workers/state/tasks, real `clangd`, native GTK/X11 dark/light smoke and Git status/diff;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
 - `scripts/dinitui_dinit_qualification.sh` — real temporary Dinit daemon, service lifecycle and GTK smoke;
 - `scripts/smoke_calamares_startup.sh` — bounded Calamares startup smoke against the shipped configuration;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
 - `.github/workflows/release.yml` — tagged pre-release publication and Windows QEMU package assembly;
-- `distro/packages/noctty/PKGBUILD` — native Zig package that installs NOCTTY and NoctEd;
-- `distro/packages/noctty/qualification-compat.patch` — packaging patch that wires the pinned source's PTY qualification target to its existing compatibility module and adds the Nocted P3 Git/theme/package contract;
+- `distro/packages/deetty/PKGBUILD` — native Zig package that installs Deetty and Dintor;
+- `distro/packages/deetty/qualification-compat.patch` — packaging patch that wires the pinned source's PTY qualification target to its existing compatibility module and adds the Dintor P3 Git/theme/package contract;
 - `distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml` and `distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.json` — checked-in Pearl Greeter configuration; greetd launches the dedicated host directly without systemd or UWSM;
 - `distro/packages/wizp/PKGBUILD` — package boundary for the exact self-contained WIZP Linux directory; it requires `WIZP_PACKAGE_DIR` instead of rebuilding an unpinned source tree.
 - `distro/iso/iso-profiles/dinx/feature-groups.json` — foundation, desktop, gaming, hardware and optional package-group metadata; optional groups are outside the base ISO.
 
 ## Remote build
 
+The separate `DINX contracts` workflow runs static/fixture checks and REUSE lint on every pull request and push to `main`. Trusted runs check out the pinned private NOCTTY source using the `DEETTY_SOURCE_READ_TOKEN` Actions secret, then generate the ignored source archive. Fork pull requests cannot access repository secrets, so only the two source-dependent checks are skipped there; the remaining contracts and REUSE lint still run.
+
 The `P0 ISO foundation` workflow runs manually or when profile/build files change. It:
 
 1. checks out DINX;
-2. verifies the committed NOCTTY/NoctEd source archive against `distro/packages/noctty/source.env` and validates the package/profile contract;
+2. reads the pinned source commit from `distro/packages/deetty/source.env`, checks out private `rufl/NOCTTY`, generates the git-ignored Deetty/Dintor source archive and verifies it against the pinned SHA-256;
 3. installs QEMU, ISO inspection tools and Tesseract's English OCR data on the Ubuntu runner;
 4. runs Artix in a privileged container;
-5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb, VTE 2.91 (`vte3`) for the headless Noctty smoke binary and Ghostty's `libghostty-vt.so` runtime; the DINX Aqueous/Pearl packages and their direct Wayland dependencies are built from the configured package inputs;
+5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb and VTE 2.91 (`vte3`) for Deetty's headless smoke. The full Ghostty application is installed temporarily in the builder only as the extraction source for `ghostty-vt-runtime`; that package contains the VT library, headers and license, after which the full application is removed before ISO assembly. The DINX Aqueous/Pearl packages and their direct Wayland dependencies are built from the configured package inputs.
 Pearl 0.3.0 follows its upstream `.zigversion` and is built with the exact Zig 0.16.0 archive verified by the workflow; DINX-native Zig packages remain on the verified Zig 0.17.0 toolchain.
-6. builds pinned Artix packages for topgrade, paru and Shelly plus the BC250 Control Center v1.21.1 and Cyan Skillfish governor packages for the signed DINX repository; those hardware-specific packages are marked `iso:false` and are absent from both generic rootfs profiles. It then builds the native `noctty` package containing NOCTTY and NoctEd plus Aqueous/Pearl, running the pinned PTY/VT/session smoke markers, allocator-accounted terminal-session qualification, protocol/Unicode qualification, `scripts/noctty_p2_qualification.sh` and `scripts/nocted_p3_qualification.sh` in ReleaseSafe. The P3 matrix proves the native editor path in both packaged schemes, a real `clangd` symbol response and bounded Git status/diff markers. It uses real tmux plus a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP and the Nocted project/editor qualification;
+6. builds pinned DINX packages, including topgrade, paru and Shelly plus the BC250 Control Center v1.21.1 and Cyan Skillfish governor; hardware-specific packages are marked `iso:false` and remain absent from both generic rootfs profiles. It builds and installs Deetty/Dintor against the VT-only runtime before DINXPanel and the Aqueous/Pearl session packages, then packages Seafoam Settings; all DINX terminal launch paths use Deetty. The Deetty package build runs the pinned PTY/VT/session smoke markers, allocator-accounted terminal-session qualification, protocol/Unicode qualification, `scripts/deetty_p2_qualification.sh` and `scripts/dintor_p3_qualification.sh` in ReleaseSafe. The P3 matrix proves the native editor path in both packaged schemes, a real `clangd` symbol response and bounded Git status/diff markers. It uses real tmux plus a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP and the Dintor project/editor qualification.
+The product-identity patch also updates the upstream task-probe smoke to launch the renamed `zig-out/bin/dintor`; the package integration contract verifies that no stale `nocted` binary path remains.
 
 7. runs the prerequisite probe;
 8. builds the ISO with `buildiso`;
@@ -72,7 +75,7 @@ The DINXPanel upgrade report uses Shelly's read-only `sync`/`list-updates all` p
 `scripts/dinitui_dinit_qualification.sh` drives a temporary real Dinit user daemon, validates `list`/`status`/`stop` and runs the production DinitUI GTK smoke against that socket. It requires Dinit binaries and `xvfb-run`; it is intentionally separate from the privileged ISO container gate. The DinitUI package and its direct profile-state contract are checked without a shell plugin or private shell configuration.
 
 The gaming service profile preserves Bluetooth/controller and firewall/process-policy services by default; it does not trade security for an unmeasured benchmark gain. The hidden standalone `dinx-gaming` launcher uses the native Gamescope DRM backend. Gamescope, Steam, Steam device rules, GameMode, MangoHud and 32-bit libraries are in the optional `gaming` feature group, excluded from rootfs and livefs; 64-bit RADV and Vulkan tools remain in the base. Users can opt in after installation using the Artix `[lib32]` setup in `docs/install.md`. P0 installs Gamescope only inside the builder for headless qualification, does not enable `[lib32]` or add Arch repositories, and retains a launcher preflight that checks Gamescope/Steam before profile changes. DINXPanel owns visible GPU actions and delegates to DinitUI's fixed `lspci -nnk` detection and vendor plans; its kernel installer offers only `linux`, `linux-lts`, `linux-zen` and `linux-hardened` with matching headers, never removes packages, protects the running kernel and requires a reboot. `scripts/check_gaming.sh` runs before the container build, while `scripts/gaming_p5_qualification.sh` remains the local/runtime gate; its fixture path does not authenticate Steam or claim a commercial game, controller/audio hardware, DRM output or suspend/resume.
-The isolated NoctEd GTK smoke renders its fallback icons to PNG with `rsvg-convert` and uses a self-contained `NoctedSmoke` theme with only the standard `hicolor` fallback: GTK3 does not need the container's inherited Adwaita SVG assets, legacy XPM loaders or external theme loader setup. The Artix container explicitly installs Glycin, bubblewrap and shared-mime-info, rebuilds the MIME database, and refreshes the GdkPixbuf cache before the package build. The build-only Noctty qualification disables Glycin's nested sandbox because it already runs inside the privileged build container; the packaged runtime keeps the bubblewrap dependency and does not inherit that setting. The fixture therefore does not turn that packaging difference into a false release failure.
+The isolated Dintor GTK smoke renders its fallback icons to PNG with `rsvg-convert` and uses a self-contained `DintorSmoke` theme with only the standard `hicolor` fallback: GTK3 does not need the container's inherited Adwaita SVG assets, legacy XPM loaders or external theme loader setup. The Artix container explicitly installs Glycin, bubblewrap and shared-mime-info, rebuilds the MIME database, and refreshes the GdkPixbuf cache before the package build. The build-only Deetty qualification disables Glycin's nested sandbox because it already runs inside the privileged build container; the packaged runtime keeps the bubblewrap dependency and does not inherit that setting. The fixture therefore does not turn that packaging difference into a false release failure.
 
 ### Local P4/P5 qualification
 
@@ -80,11 +83,12 @@ The local gates pass the DinitUI package contract, a real temporary user-Dinit d
 
 The published Alpha 9 payload check historically confirmed that Gamescope, Steam and 32-bit graphics packages were present in that release artifact; those package-presence claims do not describe the new base profile. Current P0 checks require the hidden gaming launcher and desktop entry while rejecting optional game binaries and package metadata in both rootfs and livefs. The storage contract still requires Pori's dinit service path under `/etc/dinit.d`, kernel `ntfs3` live read/write, optional post-install `ntfs-3g`, File Roller and GParted, while rejecting Thunar, GVFS, Tumbler and KDE Partition Manager. It also confirms the standalone PolicyKit agent and rejects systemd init package metadata/runtime while retaining dinit.
 The payload check also proves Firefox, its desktop entry, the default HTML/XHTML/HTTP/HTTPS handlers and `/etc/firefox/policies/policies.json`. That policy removes sponsored browser surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection without disabling normal browser updates or user-initiated Firefox Accounts.
-The same contract proves the expanded desktop payload: btop/nvtop/inxi, PCI/USB diagnostics, Git/curl/less/jq/rsync, Zathura with MuPDF, Swayimg, VLC with its Qt GUI/CLI split, Strawberry, pwvucontrol, BlueZ/Blueman/UPower, `nm-connection-editor`, `wl-clipboard`, SANE's `scanimage` backend, `fwupdmgr`, the Flatpak runtime and KolourPaint. It also verifies Pearl shell surfaces, the Pearl Greeter host, DINX MIME handlers and VLC/Strawberry handlers. Swayimg remains the default image viewer; KolourPaint provides simple image editing without changing that default. The visual contract is static DINX GTK/Qt configuration rather than a shell plugin.
+The same contract proves the expanded desktop payload: btop/nvtop/inxi, PCI/USB diagnostics, Git/curl/less/jq/rsync, Zathura with MuPDF, Swayimg, VLC with its Qt GUI/CLI split, Gapless (G4Music), Galculator, pwvucontrol, BlueZ/Blueman/UPower, `nm-connection-editor`, `wl-clipboard`, SANE's `scanimage` backend, `fwupdmgr`, the Flatpak runtime and KolourPaint. The ISO contract requires Galculator's binary and desktop entry; Galculator is a compact GTK 3 calculator on the existing GTK stack. It verifies Gapless's pinned v4.6.2 package, GStreamer base/good codec dependencies, gapless playback default, D-Bus activation metadata, and audio MIME handlers; the upstream application exposes MPRIS media controls. The check also rejects Strawberry binaries, desktop entries and package metadata. It verifies Pearl shell surfaces, the Pearl Greeter host and DINX MIME handlers. Swayimg remains the default image viewer; KolourPaint provides simple image editing without changing that default. The visual contract is static DINX GTK/Qt configuration rather than a shell plugin.
 
-The display contract also requires bundled `wdisplays` and `shikane` binaries plus DINX's `dinx-wdisplays` persistence wrapper and named-profile saver. The base Seafoam payload includes Seafoam Settings, a fixed-argv native Zig/GTK4 settings launcher, Dome source-pinned to Pearl v0.3.0 and the source-pinned official ZLS 0.16.0 package used by Nocted for Zig LSP. DINX native Zig packages are built with Zig 0.17.0; the ZLS package carries only the matching Zig `lib/std` tree plus its metadata-only shim, so the base ISO does not install a full Zig compiler or systemd; the workflow smoke-tests real completion/navigation before ISO assembly. The workflow builds all three into the signed DINX package repository, and the ISO profile requires their binaries, desktop metadata, icons and documentation.
+The display contract also requires bundled `wdisplays` and `shikane` binaries plus DINX's `dinx-wdisplays` persistence wrapper and named-profile saver. The base Seafoam payload includes Seafoam Settings, a fixed-argv native Zig/GTK4 settings launcher, Dome source-pinned to Pearl v0.3.0 and the source-pinned official ZLS 0.16.0 package used by Dintor for Zig LSP. DINX native Zig packages are built with Zig 0.17.0; the ZLS package carries only the matching Zig `lib/std` tree plus its metadata-only shim, so the base ISO does not install a full Zig compiler or systemd; the workflow smoke-tests real completion/navigation before ISO assembly. The workflow builds all three into the signed DINX package repository, and the ISO profile requires their binaries, desktop metadata, icons and documentation.
+The Seafoam smoke commands run inside the Artix builder after package installation; they are not separate host-run workflow steps.
 The session contract builds and installs Aqueous 1.0.5 and Pearl 0.3.0, checks that `Aqueous + Pearl (DINX)` is the only selectable greeter entry and verifies the direct dinit lifecycle: Aqueous launches the DINX init child, which waits for Wayland and session D-Bus readiness, then the supervisor starts Shikane, PolicyKit, the required idle helper and Pearl. The optional BC-250 daemon is started only when a user separately installs the signed package after detecting PCI `1002:13fe`; BC-250 packages are not in the generic ISO. The recipes remove upstream `uwsm` and systemd user units; the Aqueous build removes its systemd library and activity-bootstrap D-Bus checks, replacing them with pidfd, executable and environment checks for direct dinit launches. The Pearl Greeter host runs only Pearl Greeter, and no legacy Xorg/XLibre server, driver or Plasma X11 payload is accepted in the runtime ISO; XWayland and builder-only Xvfb remain available where needed.
-The package-management contract also proves `topgrade`, `paru`, and Shelly. Topgrade uses a pinned upstream release binary with DINX's Artix pacman configuration; paru is built from its pinned source release against Artix ALPM; Shelly delegates to Artix's `pacman` configuration. Their package metadata contains no `systemd` dependency or unit, no Arch repository is added, and all AUR recipes remain subject to explicit user review. They remain user-invoked; the ISO does not auto-run package upgrades.
+The package-management contract also proves `topgrade`, `paru`, and Shelly. Topgrade uses a pinned upstream release binary with DINX's Artix pacman configuration; paru is built from its pinned source release against Artix ALPM; Shelly delegates to Artix's `pacman` configuration. Shelly's AUR desktop/config payload is pinned to immutable AUR revision `f89d773125357baaa1d2fae715286ce9e00e2cb4`, with checksums retained; the moving `shelly-bin` branch is not used. Their package metadata contains no `systemd` dependency or unit, no Arch repository is added, and all AUR recipes remain subject to explicit user review. They remain user-invoked; the ISO does not auto-run package upgrades.
 The hardware contract confirms that generic AMDGPU firmware, Mesa RADV and Vulkan diagnostics stay in the base ISO. The Cyan Skillfish governor and BC250 Control Center remain pinned, buildable packages in the signed DINX repository, but the `hardware` group has `iso:false` and the ISO-content check rejects their binaries, service files and pacman metadata in both generic images. Install them only after confirming PCI `1002:13fe`; their runtime behavior remains a physical-hardware qualification.
 The same ISO contract proves UFW, Gufw, Qps, OpenSnitch and the `ufw`/`opensnitchd` dinit service files. It asserts the safe default (`ENABLED=no` and no boot links for either firewall service), so network policy changes require explicit user configuration.
 A QEMU smoke captures a post-boot VGA PPM and checks it with Tesseract: the frame must contain a Pearl/Aqueous/DINX marker and reject Pearl Greeter, TTY consoles, login prompts, password/sign-in fields and visible Dinit failures. A visible DINX label on the greeter is not session evidence. This proves that the captured frame reached the expected graphical-session surface; it does not prove networking, audio or long-term service health.
@@ -93,12 +97,22 @@ Tagged releases reuse the same build artifact through `.github/workflows/release
 
 The livefs-only `dinx-live-autologin` package replaces `root-ro` and `early-root-rw.target` with no-ops for the already-writable overlay. Its boot-enabled Dinit service writes the one-time Aqueous/Pearl initial-session config and declares `before = greetd` and `before = login.target`; because both services are activated for the live boot, Dinit starts the config writer before the upstream `greetd-dinit` service without shipping a second owner for `/etc/dinit.d/greetd`. Calamares installs `rootfs.img`, so the installed system retains Artix's generic root-remount units and manual-login greetd service.
 
-The Aqueous/Pearl wrapper selects `/usr/bin/aqueous-cpu` and exports `WLR_RENDERER=pixman` plus GTK4's `GSK_RENDERER=cairo` when `/dev/dri/renderD*` is absent or a DRM card reports Virtio vendor `0x1af4`. This binary is built with `-Dvulkan-effects=false`, so Aqueous delegates renderer selection to wlroots instead of forcing Vulkan; the fallback preserves a usable desktop in QEMU without changing the full-effects binary or normal hardware driver defaults.
+The live graphics helper selects `aqueous-cpu` with `WLR_RENDERER=gles2` and `GSK_RENDERER=gl` only when the active QEMU `virtio_gpu` or VirtualBox VMSVGA `vmwgfx` driver has a readable and writable render node. This preserves Mesa virgl/SVGA rendering without enabling Aqueous's Vulkan effects. Missing/inaccessible nodes and 2D-only adapters use `WLR_RENDERER=pixman` with `GSK_RENDERER=cairo`; other render-node hardware uses full Aqueous. The live account, Pearl Greeter and new Calamares accounts receive `render` group access. The ISO contract checks the kernel guest modules and Mesa `virgl_dri.so`/`svga_dri.so` payloads.
 
 The profile owns the DINX visual contract at `/usr/share/dinx/theme/DINX.json`. `scripts/check_dinx_theme.sh` validates the static palette, `DINX_COLOR_SCHEME`, GTK/Qt bridges, Pearl Greeter, Calamares and GRUB before `buildiso`; `scripts/check-iso-content.sh` verifies the same files inside the root SquashFS image.
 The profile also owns the Artix GRUB theme configuration at `root-overlay/usr/share/grub/themes/artix/theme.txt`. It keeps the upstream logo, icons and font assets, uses the DINX surface/text/primary colors, and omits the opaque `menu_pixmap_style` and `selected_item_pixmap_style` textures that produced a black panel on the graphical kernel-selection screen.
 For a local graphical capture, install QEMU, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`, then set `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` and optionally `DINX_QEMU_SCREENSHOT_DELAY` before running `scripts/smoke-iso.sh`. Set `DINX_QEMU_TIMEOUT` longer than the screenshot delay; the workflow uses the same boot keys, a 60-second delay and a 90-second QEMU window.
 Without `DINX_QEMU_SCREENSHOT`, the smoke saves its checked frame beside the QEMU log as `<iso>.qemu.log.session.ppm`. `DINX_QEMU_OCR_LANG` selects another installed Tesseract language model when needed.
+
+To request host-side virgl in a local graphical QEMU smoke, the host QEMU must support GTK/OpenGL and virgl:
+
+```sh
+DINX_QEMU_DISPLAY=gtk,gl=on \
+DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
+scripts/smoke-iso.sh /path/to/dinx.iso
+```
+
+VirtualBox testing requires the VMSVGA controller and **Enable 3D Acceleration**. The normal CI VGA smoke does not verify host-side 3D acceleration, and neither path is considered hardware-qualified until observed on that hypervisor.
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 
@@ -164,7 +178,31 @@ Run [38700095287](https://github.com/rufl/DINX/actions/runs/38700095287) on comm
 
 ## Observed development host
 
-The development host is EndeavourOS x86_64. `pacman`, `xorriso`, `zig` and `qemu-system-x86_64` are available; Artix `buildiso` and generic `mkarchiso` are not installed. The P0 build still runs remotely because it uses Artix `buildiso` in a privileged container for chroot and mount operations.
+The development host is EndeavourOS x86_64. The Artix `buildiso` toolchain runs only in the digest-pinned container; do not install Artix build packages or `mkinitcpio` on the host. The local build requires an accessible rootful Docker Engine with privileged-container and loop-device support.
+
+## Local Docker build
+
+Run from the DINX checkout:
+
+```sh
+bash scripts/build-iso-docker.sh
+```
+
+If the ignored Deetty archive is absent, the script prepares it from an authenticated checkout at the pinned private NOCTTY commit. Set `DEETTY_SOURCE_CHECKOUT` to that checkout; the commit and generated archive SHA-256 are verified.
+
+```sh
+DEETTY_SOURCE_CHECKOUT=/path/to/NOCTTY bash scripts/build-iso-docker.sh
+```
+
+The Deetty package build clears its cached source tree before applying patches. A failed build therefore cannot leave patched source that breaks the next retry.
+
+Requirements: reachable rootful Docker, `--privileged` and loop-device support, network access for package/source downloads, and sufficient free disk for the temporary rootfs and ISO. QEMU verification is optional:
+
+```sh
+DINX_LOCAL_QEMU_SMOKE=1 bash scripts/build-iso-docker.sh
+```
+
+This needs the local QEMU smoke dependencies (`qemu-system-x86_64`, `socat`, and Tesseract). The build fails before starting if Docker cannot reach its daemon. `DINX_LOCAL_BUILD_DIR` may select a new empty output directory under `dist`; existing outputs are never overwritten.
 
 ## Acceptance sequence
 

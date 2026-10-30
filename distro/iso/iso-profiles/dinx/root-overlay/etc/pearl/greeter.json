@@ -3,6 +3,8 @@
   "theme": "gtk",
   "gtk_theme": "DINX",
   "wallpaper_color": "#0b0d12",
+  "wallpaper": "/usr/share/dinx/branding/dinx-wallpaper.png",
+  "wallpaper_fit": "cover",
   "font_size": 16,
   "reduced_motion": true,
   "high_contrast": false,

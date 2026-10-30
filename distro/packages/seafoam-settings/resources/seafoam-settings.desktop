@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Seafoam Settings
+Name=Desktop Settings
+Name[pt_BR]=Ajustes do Desktop
 Comment=DINX desktop settings and tools
 Exec=seafoam-settings
 TryExec=seafoam-settings

@@ -689,3 +689,9 @@
      NocttyGridContext context = {0};
      NocttyGridNativeHostPolicy policy = {0};
      noctty_grid_native_host_policy(&policy);
+
+--- a/scripts/nocted_task_smoke.sh
++++ b/scripts/nocted_task_smoke.sh
+@@ -65,1 +65,1 @@
+-  output=$(timeout 30 ./zig-out/bin/nocted \
++  output=$(timeout 30 ./zig-out/bin/dintor \

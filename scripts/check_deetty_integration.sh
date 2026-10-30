@@ -18,9 +18,10 @@ source_env="$repo_root/distro/packages/deetty/source.env"
 pkgbuild="$repo_root/distro/packages/deetty/PKGBUILD"
 archive="$repo_root/distro/packages/deetty/noctty-0.1.0.tar.gz"
 exec_patch="$repo_root/distro/packages/deetty/deetty-terminal-exec.patch"
+identity_patch="$repo_root/distro/packages/deetty/product-identity.patch"
 
 for path in "$profile" "$groups" "$fish_profile" "$shell_profile" "$session_launcher" \
-  "$wm_config" "$source_env" "$pkgbuild" "$archive" "$exec_patch"; do
+  "$wm_config" "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 
@@ -65,6 +66,8 @@ grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal-exec.pat
   || fail 'Deetty execute-argv patch is not applied without fuzz'
 exec_patch_sha=$(sha256sum "$exec_patch" | cut -d ' ' -f 1)
 grep -Fq "'$exec_patch_sha'" "$pkgbuild" || fail 'Deetty execute-argv patch checksum is not pinned'
+identity_patch_sha=$(sha256sum "$identity_patch" | cut -d ' ' -f 1)
+grep -Fq "'$identity_patch_sha'" "$pkgbuild" || fail 'Deetty product identity patch checksum is not pinned'
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
@@ -92,7 +95,7 @@ grep -Fqx 'Exec=noctty --new-window --working-directory %f' <<<"$service_menu" |
 patched_source="$scratch/patched-source"
 mkdir -p "$patched_source"
 tar -xzf "$archive" -C "$patched_source" --strip-components=1
-patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$repo_root/distro/packages/deetty/product-identity.patch"
+patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$identity_patch"
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$repo_root/distro/packages/deetty/qualification-compat.patch"
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$exec_patch"
 grep -Fq 'std.mem.eql(u8, cmd, "--execute")' "$patched_source/src/main.zig" || fail 'Deetty -e/--execute option is missing'
@@ -103,6 +106,11 @@ grep -Fq '.name = "dintor"' "$patched_source/build.zig" || fail 'Dintor executab
 grep -Fq 'share/applications/org.dinx.Deetty.desktop' "$patched_source/build.zig" || fail 'Deetty desktop output path is missing'
 grep -Fq 'share/applications/org.dinx.Dintor.desktop' "$patched_source/build.zig" || fail 'Dintor desktop output path is missing'
 grep -Fq 'share/kio/servicemenus/deettyhere.desktop' "$patched_source/build.zig" || fail 'Deetty service-menu output path is missing'
+task_smoke="$patched_source/scripts/nocted_task_smoke.sh"
+grep -Fq './zig-out/bin/dintor' "$task_smoke" || fail 'Dintor task smoke uses the old executable path'
+if grep -Fq './zig-out/bin/nocted' "$task_smoke"; then
+  fail 'Dintor task smoke still references the old executable'
+fi
 patched_desktop=$(<"$patched_source/resources/com.noctty.NOCTTY.desktop")
 grep -Fqx 'Name=Deetty' <<<"$patched_desktop" || fail 'Deetty desktop name is incorrect'
 grep -Fqx 'TryExec=deetty' <<<"$patched_desktop" || fail 'Deetty desktop command is incorrect'

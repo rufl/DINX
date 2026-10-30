@@ -16,7 +16,7 @@ provides=('dintor' 'terminal-emulator')
 conflicts=('noctty')
 replaces=('noctty')
 source=("noctty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
-sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' '7389836b3c33bd289c0545211c2413e6bb07aca5a0a6b7911acbcdff1b354399' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
+sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' 'c8b79c65778dba3220a9011fb18610d001e1844163330db11f68d137734f33da' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
 
 prepare() {
   cd "$srcdir/noctty-$pkgver"

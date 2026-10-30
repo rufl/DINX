@@ -51,9 +51,10 @@ for package in cyan-skillfish-governor-smu cyan-skillfish-governor-smu-dinit; do
     fail "BC-250 governor package must stay out of the generic ISO: $package"
   fi
 done
-grep -Fq 'build_package cyan-skillfish-governor-smu' .github/workflows/p0-iso.yml || fail 'CI does not build the governor'
-grep -Fq 'build_package cyan-skillfish-governor-smu-dinit' .github/workflows/p0-iso.yml || fail 'CI does not build dinit governor integration'
-grep -Fq '                rust' .github/workflows/p0-iso.yml || fail 'CI does not install Rust for source builds'
+builder=scripts/build-iso-container.sh
+grep -Fq 'build_package cyan-skillfish-governor-smu' "$builder" || fail 'ISO builder does not build the governor'
+grep -Fq 'build_package cyan-skillfish-governor-smu-dinit' "$builder" || fail 'ISO builder does not build dinit governor integration'
+grep -Fq '                rust' "$builder" || fail 'ISO builder does not install Rust for source builds'
 
 printf 'cyan_skillfish_contract pci=1002:13fe firmware=amdgpu vulkan=radv governor=%s iso=false signed_repository=true dinit=true systemd=false\n' \
   "$CYAN_SKILLFISH_GOVERNOR_VERSION"

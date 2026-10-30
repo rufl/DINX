@@ -54,8 +54,9 @@ grep -Fq '    - topgrade' distro/iso/iso-profiles/dinx/profile.yaml || fail 'top
 grep -Fq '    - paru' distro/iso/iso-profiles/dinx/profile.yaml || fail 'paru is missing from the DINX payload'
 grep -Fq '    - shelly' distro/iso/iso-profiles/dinx/profile.yaml || fail 'shelly is missing from the DINX payload'
 
-grep -Fq 'build_package topgrade' .github/workflows/p0-iso.yml || fail 'CI does not build topgrade'
-grep -Fq 'build_package paru' .github/workflows/p0-iso.yml || fail 'CI does not build paru'
-grep -Fq 'build_package shelly' .github/workflows/p0-iso.yml || fail 'CI does not build shelly'
+builder=scripts/build-iso-container.sh
+grep -Fq 'build_package topgrade' "$builder" || fail 'ISO builder does not build topgrade'
+grep -Fq 'build_package paru' "$builder" || fail 'ISO builder does not build paru'
+grep -Fq 'build_package shelly' "$builder" || fail 'ISO builder does not build shelly'
 printf 'package_managers_contract topgrade=%s paru=%s shelly=%s artix_policy=true pinned_payload=true systemd_dependencies=false\n' \
   "$TOPGRADE_VERSION" "$PARU_VERSION" "$SHELLY_VERSION"

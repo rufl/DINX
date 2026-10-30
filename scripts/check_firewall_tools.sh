@@ -22,7 +22,7 @@ grep -Fq "    - qps" distro/iso/iso-profiles/dinx/profile.yaml || fail 'qps is m
 grep -Fq "    - opensnitch" distro/iso/iso-profiles/dinx/profile.yaml || fail 'opensnitch is missing from the DINX payload'
 grep -Fq "    - opensnitch-dinit" distro/iso/iso-profiles/dinx/profile.yaml || fail 'opensnitch-dinit is missing from the DINX payload'
 
-grep -Fq 'build_package opensnitch-dinit' .github/workflows/p0-iso.yml || fail 'CI does not build opensnitch-dinit'
+grep -Fq 'build_package opensnitch-dinit' scripts/build-iso-container.sh || fail 'ISO builder does not build opensnitch-dinit'
 grep -Fq 'type               = process' distro/packages/opensnitch-dinit/opensnitchd || fail 'OpenSnitch dinit service is not a process service'
 grep -Fq 'command            = /usr/bin/opensnitchd' distro/packages/opensnitch-dinit/opensnitchd || fail 'OpenSnitch dinit command is incorrect'
 grep -Fq 'depends-on         = dbus' distro/packages/opensnitch-dinit/opensnitchd || fail 'OpenSnitch dinit service does not wait for D-Bus'

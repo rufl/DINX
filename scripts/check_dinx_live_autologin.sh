@@ -13,6 +13,7 @@ pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 service="$package_dir/dinx-live-autologin.service"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 
 fail() {
   printf 'check_dinx_live_autologin: %s\n' "$*" >&2
@@ -83,8 +84,8 @@ done
 [[ ! -e "$root_overlay/etc/dinit.d/greetd" ]] \
   || fail 'live greetd dependency override leaked into installed rootfs overlay'
 
-grep -Fq 'build_package dinx-live-autologin' "$workflow" \
-  || fail 'CI does not build the live autologin package'
+grep -Fq 'build_package dinx-live-autologin' "$builder" \
+  || fail 'ISO builder does not build the live autologin package'
 grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
   || fail 'CI dropped the existing DINX session contract'
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \

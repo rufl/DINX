@@ -6,13 +6,14 @@ pkgbuild="$root/distro/packages/ghostty-vt-runtime/PKGBUILD"
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 
 fail() {
   printf 'ghostty_vt_runtime_contract: %s\n' "$*" >&2
   exit 1
 }
 
-for path in "$pkgbuild" "$profile" "$groups" "$workflow"; do
+for path in "$pkgbuild" "$profile" "$groups" "$workflow" "$builder"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -44,19 +45,19 @@ for required in \
   'pacman -Rdd --noconfirm ghostty' \
   'pacman -U --noconfirm "$ghostty_vt_package"' \
   'scripts/check_ghostty_vt_runtime.sh "$ghostty_vt_package"'; do
-  grep -Fq -- "$required" "$workflow" || fail "workflow is missing runtime-package wiring: $required"
+  grep -Fq -- "$required" "$builder" || fail "ISO builder is missing runtime-package wiring: $required"
 done
-runtime_build_line=$(grep -nF 'build_package ghostty-vt-runtime' "$workflow" | cut -d: -f1)
-remove_ghostty_line=$(grep -nF 'pacman -Rdd --noconfirm ghostty' "$workflow" | cut -d: -f1)
-install_runtime_line=$(grep -nF 'pacman -U --noconfirm "$ghostty_vt_package"' "$workflow" | cut -d: -f1)
-deetty_build_line=$(grep -nF 'build_package deetty' "$workflow" | cut -d: -f1)
-dinxpanel_build_line=$(grep -nF 'build_package dinxpanel' "$workflow" | cut -d: -f1)
+runtime_build_line=$(grep -nF 'build_package ghostty-vt-runtime' "$builder" | cut -d: -f1)
+remove_ghostty_line=$(grep -nF 'pacman -Rdd --noconfirm ghostty' "$builder" | cut -d: -f1)
+install_runtime_line=$(grep -nF 'pacman -U --noconfirm "$ghostty_vt_package"' "$builder" | cut -d: -f1)
+deetty_build_line=$(grep -nF 'build_package deetty' "$builder" | cut -d: -f1)
+dinxpanel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | cut -d: -f1)
 [[ -n "$runtime_build_line" && -n "$remove_ghostty_line" && -n "$install_runtime_line" && -n "$deetty_build_line" && -n "$dinxpanel_build_line" ]] \
-  || fail 'workflow package ordering markers are incomplete'
+  || fail 'container builder package ordering markers are incomplete'
 (( runtime_build_line < remove_ghostty_line && remove_ghostty_line < install_runtime_line \
   && install_runtime_line < deetty_build_line && deetty_build_line < dinxpanel_build_line )) \
   || fail 'Ghostty runtime must replace the full app before Deetty and dependent desktop packages are built'
-grep -Fq '                ghostty \' "$workflow" || fail 'builder does not install the full Ghostty build-only extraction source'
+grep -Fq '                ghostty \' "$builder" || fail 'builder does not install the full Ghostty build-only extraction source'
 
 if [[ $# -gt 1 ]]; then
   fail 'usage: check_ghostty_vt_runtime.sh [PACKAGE]'

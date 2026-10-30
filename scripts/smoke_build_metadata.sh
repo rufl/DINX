@@ -18,11 +18,14 @@ deetty_source_env_sha=$(sha256sum "$root/distro/packages/deetty/source.env" | cu
 compression_wrapper_sha=$(sha256sum "$root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 
 fixture_commit=$(git -C "$root" rev-parse HEAD)
+source_tree_sha=$("$root/scripts/hash-dinx-source-tree.sh" "$root")
 zero_sha=0000000000000000000000000000000000000000
 cat >"$metadata" <<EOF
 schema=dinx-build-metadata/v1
 repository=rufl/DINX
 commit=$fixture_commit
+build_context=local-docker
+source_tree_sha256=$source_tree_sha
 workflow_run=1
 artix_image=artixlinux/artixlinux@sha256:0000000000000000000000000000000000000000000000000000000000000000
 builder_pacman_conf_sha256=0000000000000000000000000000000000000000000000000000000000000000
@@ -65,6 +68,15 @@ verified=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$meta
 grep -Fq 'iso_binding=verified' <<<"$verified"
 unchecked=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$metadata")
 grep -Fq 'iso_binding=not-checked' <<<"$unchecked"
+bad_metadata="$tmp_dir/bad-source-metadata.txt"
+awk -v zero_sha="$zero_sha" '
+  /^source_tree_sha256=/ { sub(/=.*/, "=" zero_sha) }
+  { print }
+' "$metadata" > "$bad_metadata"
+if GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$bad_metadata" >/dev/null 2>&1; then
+  printf 'smoke_build_metadata: changed source tree unexpectedly passed metadata validation\n' >&2
+  exit 1
+fi
 
 printf 'corrupt fixture\n' >>"$iso"
 if $root/scripts/check_build_metadata.sh "$metadata" "$iso" >/dev/null 2>&1; then
@@ -72,4 +84,4 @@ if $root/scripts/check_build_metadata.sh "$metadata" "$iso" >/dev/null 2>&1; the
   exit 1
 fi
 
-printf 'build_metadata_smoke binding=true optional=true mismatch_rejected=true\n'
+printf 'build_metadata_smoke binding=true local_source=true source_mismatch_rejected=true iso_mismatch_rejected=true\n'

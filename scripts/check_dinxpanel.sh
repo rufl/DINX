@@ -11,6 +11,7 @@ desktop="$pkg_dir/resources/dinxpanel.desktop"
 readme="$pkg_dir/README.md"
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 fail() {
   printf 'check_dinxpanel: %s\n' "$*" >&2
   exit 1
@@ -30,7 +31,7 @@ grep -Fq 'Exec=dinxpanel' "$desktop" || fail 'desktop launcher is incorrect'
 grep -Fqx 'Name[pt_BR]=Central de Controle' "$desktop" || fail 'localized desktop name is incorrect'
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
-grep -Fq 'build_package dinxpanel' "$workflow" || fail 'ISO workflow does not build dinxpanel'
+grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
 for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done

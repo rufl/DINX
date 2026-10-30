@@ -6,6 +6,7 @@ source_env="$repo_root/distro/packages/deetty/source.env"
 pkgbuild="$repo_root/distro/packages/deetty/PKGBUILD"
 profile="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
 workflow="$repo_root/.github/workflows/p0-iso.yml"
+builder="$repo_root/scripts/build-iso-container.sh"
 
 fail() {
   printf 'check_first_party_apps: %s\n' "$*" >&2
@@ -47,8 +48,9 @@ grep -Fqx 'pkgname=deetty' "$pkgbuild" || fail 'PKGBUILD package name is not dee
 grep -Fq "provides=('dintor' 'terminal-emulator')" "$pkgbuild" || fail 'PKGBUILD does not provide Dintor'
 grep -Fq "'gtksourceview4'" "$pkgbuild" || fail 'Dintor runtime dependency is missing'
 grep -Fq '  - deetty' "$profile" || fail 'DINX profile does not install Deetty'
-grep -Fq 'source /workspace/distro/packages/deetty/source.env' "$workflow" || fail 'P0 build does not load the pinned Deetty source before asset extraction'
-grep -Fq 'build-metadata.txt' "$workflow" || fail 'P0 build does not emit build metadata'
+grep -Fq 'run: ./scripts/check_first_party_apps.sh' "$workflow" || fail 'P0 workflow does not run the Deetty source and package contract'
+grep -Fq 'source /workspace/distro/packages/deetty/source.env' "$builder" || fail 'P0 builder does not load the pinned Deetty source before asset extraction'
+grep -Fq 'build-metadata.txt' "$builder" || fail 'P0 builder does not emit build metadata'
 
 printf 'first_party_apps_contract repository=%s ref=%s version=%s deetty=true dintor=true upstream_source_pinned=true archive_verified=true profile_entry=true\n' \
   "$repository" "$ref" "$version"

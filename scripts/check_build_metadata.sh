@@ -98,6 +98,21 @@ metadata_commit=$(read_value commit)
 if [[ -n "${GITHUB_SHA:-}" && "$GITHUB_SHA" != "$checkout_commit" && "$GITHUB_SHA" != "$(printf '%040d' 0)" ]]; then
   fail "GITHUB_SHA does not match checked-out source: $GITHUB_SHA != $checkout_commit"
 fi
+build_context=$(read_value build_context)
+[[ -n "$build_context" ]] || build_context=github-actions
+case "$build_context" in
+  github-actions)
+    [[ -z "$(read_value source_tree_sha256)" ]] \
+      || fail 'GitHub build metadata unexpectedly contains a local source-tree checksum'
+    ;;
+  local-docker)
+    require_value source_tree_sha256 '^[0-9a-f]{64}$'
+    actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root")
+    [[ "$(read_value source_tree_sha256)" == "$actual_source_tree_sha" ]] \
+      || fail 'metadata source-tree checksum does not match the current local source'
+    ;;
+  *) fail "unsupported build context: $build_context" ;;
+esac
 
 printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true repository_inputs=true signed_package_repository=true source_checksums=true iso_binding=%s\n' \
   "$(read_value commit)" "$(read_value iso_name)" "$iso_binding"

@@ -4,6 +4,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Added `scripts/build-iso-docker.sh`, which runs the same digest-pinned privileged Artix container builder used by P0 CI, generates the ignored Deetty/Dintor archive from an authenticated checkout at the pinned private commit when needed, and emits local source-bound metadata and an ephemeral-key package bundle.
+
 - Seed fresh Aqueous outputs with two workspaces instead of the upstream nine-workspace startup set.
 
 - Add a graphics profile for accelerated-capable QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) render nodes, with Pixman/Cairo fallback for absent, inaccessible or 2D-only virtual devices. Grant the live user, Pearl Greeter and new installed accounts `render` access. Host-side 3D remains an explicit hypervisor setting; no systemd packages or services are added.

@@ -54,8 +54,8 @@ if grep -Fq '    - qt6-svg' distro/iso/iso-profiles/dinx/profile.yaml; then
   fail 'BC250-only Qt SVG runtime must not be explicitly installed in the base profile'
 fi
 for package in bc250-control-center cyan-skillfish-governor-smu cyan-skillfish-governor-smu-dinit; do
-  grep -Fq "build_package $package" .github/workflows/p0-iso.yml \
-    || fail "CI does not build the optional signed package: $package"
+  grep -Fq "build_package $package" scripts/build-iso-container.sh \
+    || fail "ISO builder does not build the optional signed package: $package"
 done
 grep -Fq 'start_optional bc250 bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor \
   || fail 'session daemon is not supervised when installed on detected hardware'

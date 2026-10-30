@@ -5,6 +5,7 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 aqueous_dir="$root/distro/packages/aqueous"
 pearl_dir="$root/distro/packages/pearl"
 graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
@@ -182,14 +183,14 @@ if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_dir/pearl.install"; then
   fail 'Pearl Greeter install hook contains a systemd integration'
 fi
 
-grep -Fq 'build_package aqueous' "$workflow" || fail 'workflow does not build Aqueous'
-grep -Fq 'build_package pearl' "$workflow" || fail 'workflow does not build Pearl'
-grep -Fq 'PEARL_ZIG_SOURCE_SHA256' "$workflow" || fail 'workflow does not verify the pinned Pearl Zig archive'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$workflow" \
-  || fail "workflow does not select Pearl's declared Zig toolchain"
-grep -Fq '                scdoc \' "$workflow" || fail 'workflow does not install Aqueous man-page builder'
-if grep -Fq '                systemd-libs \' "$workflow"; then
-  fail 'workflow still installs systemd-libs for Aqueous'
+grep -Fq 'build_package aqueous' "$builder" || fail 'ISO builder does not build Aqueous'
+grep -Fq 'build_package pearl' "$builder" || fail 'ISO builder does not build Pearl'
+grep -Fq 'PEARL_ZIG_SOURCE_SHA256' "$builder" || fail 'ISO builder does not verify the pinned Pearl Zig archive'
+grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+  || fail "ISO builder does not select Pearl's declared Zig toolchain"
+grep -Fq '                scdoc \' "$builder" || fail 'builder does not install Aqueous man-page builder'
+if grep -Fq '                systemd-libs \' "$builder"; then
+  fail 'builder still installs systemd-libs for Aqueous'
 fi
 grep -Fq 'scripts/check_aqueous_pearl.sh' "$workflow" || fail 'workflow does not run the Aqueous/Pearl contract'
 grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not run the session contract'

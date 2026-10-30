@@ -4,6 +4,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Adicionado `scripts/build-iso-docker.sh`: usa o mesmo builder Artix privilegiado e fixado por digest do P0 CI, gera o archive ignorado de Deetty/Dintor a partir de um checkout autenticado no commit privado fixado quando necessário e produz metadados locais vinculados à fonte e bundle de pacotes com chave efêmera.
+
 - Saídas novas do Aqueous agora começam com dois workspaces, em vez dos nove workspaces iniciais do upstream.
 
 - Adicionado um perfil gráfico para render nodes com capacidade de aceleração no QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`), com fallback Pixman/Cairo para dispositivos virtuais ausentes, inacessíveis ou somente 2D. O usuário live, o Pearl Greeter e novas contas instaladas recebem acesso ao grupo `render`. A aceleração 3D do host continua sendo uma configuração explícita do hypervisor; nenhum pacote ou serviço systemd foi adicionado.

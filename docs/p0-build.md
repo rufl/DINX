@@ -176,7 +176,29 @@ Run [38700095287](https://github.com/rufl/DINX/actions/runs/38700095287) on comm
 
 ## Observed development host
 
-The development host is EndeavourOS x86_64. `pacman`, `xorriso`, `zig` and `qemu-system-x86_64` are available; Artix `buildiso` and generic `mkarchiso` are not installed. The P0 build still runs remotely because it uses Artix `buildiso` in a privileged container for chroot and mount operations.
+The development host is EndeavourOS x86_64. The Artix `buildiso` toolchain runs only in the digest-pinned container; do not install Artix build packages or `mkinitcpio` on the host. The local build requires an accessible rootful Docker Engine with privileged-container and loop-device support.
+
+## Local Docker build
+
+Run from the DINX checkout:
+
+```sh
+bash scripts/build-iso-docker.sh
+```
+
+If the ignored Deetty archive is absent, the script prepares it from an authenticated checkout at the pinned private NOCTTY commit. Set `DEETTY_SOURCE_CHECKOUT` to that checkout; the commit and generated archive SHA-256 are verified.
+
+```sh
+DEETTY_SOURCE_CHECKOUT=/path/to/NOCTTY bash scripts/build-iso-docker.sh
+```
+
+Requirements: reachable rootful Docker, `--privileged` and loop-device support, network access for package/source downloads, and sufficient free disk for the temporary rootfs and ISO. QEMU verification is optional:
+
+```sh
+DINX_LOCAL_QEMU_SMOKE=1 bash scripts/build-iso-docker.sh
+```
+
+This needs the local QEMU smoke dependencies (`qemu-system-x86_64`, `socat`, and Tesseract). The build fails before starting if Docker cannot reach its daemon. `DINX_LOCAL_BUILD_DIR` may select a new empty output directory under `dist`; existing outputs are never overwritten.
 
 ## Acceptance sequence
 

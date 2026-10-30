@@ -8,6 +8,7 @@ groups="$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json"
 mimeapps="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 iso_check="$repo_root/scripts/check-iso-content.sh"
 workflow="$repo_root/.github/workflows/p0-iso.yml"
+builder="$repo_root/scripts/build-iso-container.sh"
 calamares_check="$repo_root/scripts/check_calamares_partitioning.sh"
 pori_dir="$repo_root/distro/packages/pori"
 phyto_dir="$repo_root/distro/packages/phyto"
@@ -23,7 +24,7 @@ require_file() {
 }
 
 for path in \
-  "$profile" "$common" "$groups" "$mimeapps" "$iso_check" "$workflow" "$calamares_check" \
+  "$profile" "$common" "$groups" "$mimeapps" "$iso_check" "$workflow" "$builder" "$calamares_check" \
   "$pori_dir/PKGBUILD" "$pori_dir/source.env" \
   "$pori_dir/units-dinit.zig" "$pori_dir/privops-dinit.zig" \
   "$pori_dir/watch-dinit.zig" "$pori_dir/pori-dinit.patch" \
@@ -84,21 +85,21 @@ for required in \
   '  usr/share/applications/gparted.desktop'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
-grep -Fq 'build_package phyto' "$workflow" || fail 'workflow does not build Phyto'
-grep -Fq 'build_package pori' "$workflow" || fail 'workflow does not build Pori'
+grep -Fq 'build_package phyto' "$builder" || fail 'ISO builder does not build Phyto'
+grep -Fq 'build_package pori' "$builder" || fail 'ISO builder does not build Pori'
 grep -Fq '"${ZIG:-zig}" build' "$pori_dir/PKGBUILD" || fail 'Pori package does not honor the selected Zig toolchain'
 grep -Fq '"${ZIG:-zig}" build' "$phyto_dir/PKGBUILD" || fail 'Phyto package does not honor the selected Zig toolchain'
-grep -Fq 'zig_version=0.17.0' "$workflow" || fail 'workflow does not pin Zig 0.17 for Pori'
-grep -Fq 'zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026' "$workflow" \
-  || fail 'workflow does not verify the Zig 0.17 archive'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig' "$workflow" \
-  || fail 'workflow does not pass Zig 0.17 to Pori'
+grep -Fq 'zig_version=0.17.0' "$builder" || fail 'ISO builder does not pin Zig 0.17 for Pori'
+grep -Fq 'zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026' "$builder" \
+  || fail 'ISO builder does not verify the Zig 0.17 archive'
+grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig' "$builder" \
+  || fail 'ISO builder does not pass Zig 0.17 to Pori'
 grep -Fq 'PEARL_ZIG_VERSION=0.16.0' "$pearl_dir/source.env" \
   || fail 'Pearl/Dome/Phyto toolchain is not pinned to Zig 0.16'
-grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$workflow" \
-  || fail 'workflow does not select the Pearl Zig toolchain for Phyto and Dome'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$workflow" \
-  || fail 'workflow does not pass the Pearl Zig toolchain to Phyto and Dome'
+grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$builder" \
+  || fail 'ISO builder does not select Pearl Zig toolchain for Phyto and Dome'
+grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+  || fail 'ISO builder does not pass Pearl Zig toolchain to Phyto and Dome'
 grep -Fq 'scripts/smoke_pori_zig.sh' "$workflow" || fail 'workflow does not run the Pori Zig source smoke'
 grep -Fq 'scripts/check_pori_phyto.sh' "$workflow" || fail 'workflow does not run the Pori/Phyto contract'
 grep -Fq 'ntfs3\.ko' "$iso_check" || fail 'ISO contract does not require the kernel ntfs3 module'

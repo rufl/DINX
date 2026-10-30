@@ -73,6 +73,8 @@ for source_env in distro/packages/*/source.env; do
 done
 
 workflow=.github/workflows/p0-iso.yml
+builder=scripts/build-iso-container.sh
+docker_builder=scripts/build-iso-docker.sh
 release_workflow=.github/workflows/release.yml
 update_smoke=scripts/smoke_dinx_update.sh
 for required in \
@@ -82,10 +84,18 @@ for required in \
   'scripts/smoke_dinx_update.sh' \
   'DINX_PACKAGE_SIGNING_KEY' \
   'DINX_PACKAGE_SIGNING_FINGERPRINT' \
+  'DINX_BUILD_CONTEXT: github-actions' \
+  'DINX_SKIP_CONTRACTS: '\''true'\''' \
+  'DINX_SKIP_POSTBUILD_CHECKS: '\''true'\''' \
+  'run: scripts/build-iso-docker.sh' \
+  'run: ./scripts/check_first_party_apps.sh' \
+  'Bundle signed package repository for artifact portability' \
+  'dist/dinx-package-repository.tar'; do
+  grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
+done
+for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
-  'Bundle signed package repository for artifact portability' \
-  'dist/dinx-package-repository.tar' \
   'NoExtract = usr/lib/systemd/*' \
   'NoExtract = etc/systemd/*' \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
@@ -95,11 +105,9 @@ for required in \
   '--sign --key' \
   'pacman-key --init' \
   'SigLevel = Required' \
-  'DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507' \
-  ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE must be set before the builder starts}"' \
+  'DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"' \
   ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"' \
   'printf "deetty_source_env_sha256=%s\n"' \
-  '--env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE"' \
   'mksquashfs_path=$(command -v mksquashfs)' \
   'real_mksquashfs=$(readlink -f "$mksquashfs_path")' \
   'install -D -m 0755 "$real_mksquashfs" /usr/local/libexec/dinx-mksquashfs.real' \
@@ -109,8 +117,19 @@ for required in \
   'artix_mirrorlist_source=official-artix-https-tier1' \
   'Server = https://mirror2.artixlinux.org/$repo/os/$arch' \
   'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch' \
-  'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs'; do
-  grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
+  'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs' \
+  '"PKGDEST=$package_repo"' \
+  'MAKEPKG_CONF="$makepkg_conf"'; do
+  grep -Fq -- "$required" "$builder" \
+    || fail "Artix container builder is missing provenance/build wiring: $required"
+done
+for required in \
+  '--privileged' \
+  '--env DINX_BUILD_CONTEXT="$build_context"' \
+  '--env DINX_SOURCE_TREE_SHA256="$source_tree_sha256"' \
+  '--env DINX_ARTIX_IMAGE="$image"' \
+  'bash /workspace/scripts/build-iso-container.sh'; do
+  grep -Fq -- "$required" "$docker_builder" || fail "Docker wrapper is missing container wiring: $required"
 done
 for required in \
   'Unpack signed package repository artifact' \

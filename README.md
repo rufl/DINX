@@ -5,8 +5,9 @@
 <h1 align="center">DINX</h1>
 
 <p align="center"><strong>
-Spin Lean and Mean - focada em ser estoica, leve e sem frescura, o mínimo para você fazer o máximo. ;)
-Arch-Based, Artix Based, Kernels Recentes, Drivers e Tooling para Gaming e Dev, Dinit como supervisor de serviços, Seafoam Apps.
+Lean and Mean - focada em ser estoica, leve e sem frescura, o mínimo para você fazer o máximo. ;)
+  <p></p><p align="center">
+Arch-Based, Artix Based, Drivers e Kernels recentes, Drivers e Tooling para Gaming e Dev, Dinit como supervisor de serviços, Seafoam Apps.
 <p></p><p align="center">
 Paineis gráficos diretos ao assunto. 
 Tweakable e extendable via CLI sim, sem purismo desnecessário.

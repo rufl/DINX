@@ -9,7 +9,7 @@ DINX is a mixed-content repository. The repository-owned DINX code, configuratio
 - `LICENSE` contains the full Apache-2.0 text for DINX-owned work.
 - `REUSE.toml` declares the SPDX license and copyright metadata for tracked files.
 - `LICENSES/` contains the canonical license texts used by the REUSE metadata.
-- `distro/packages/deetty/noctty-0.1.0.tar.gz` is a verbatim upstream archive. It remains under its upstream MIT license; its internal `LICENSE` and notices are not replaced by DINX's repository license. Although the supplier remains https://github.com/rufl/NOCTTY.git and the archive/internal source paths retain their NOCTTY identity, the DINX package and applications are named `deetty` (Deetty) and Dintor.
+- `distro/packages/deetty/noctty-0.1.0.tar.gz` is generated locally during builds from the exact upstream commit pinned in `source.env`; it is git-ignored, not vendored in the repository, and outside the tracked-file REUSE inventory. Its contents remain under the upstream MIT license, with the internal `LICENSE` and notices preserved in the built package. Although the supplier remains https://github.com/rufl/NOCTTY.git and the archive/internal source paths retain their NOCTTY identity, the DINX package and applications are named `deetty` (Deetty) and Dintor.
 
 Do not relicense or rewrite third-party source, archives or notices to make them match the repository default. Add a specific REUSE annotation when a new vendored artifact uses another license.
 

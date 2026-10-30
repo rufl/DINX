@@ -176,8 +176,8 @@ if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$pearl_dir/PKGBUILD" \
 fi
 grep -Fq 'useradd --system --gid pearl-greeter' "$pearl_dir/pearl.install" \
   || fail 'Pearl Greeter account is not provisioned by the package hook'
-grep -Fq 'usermod --append --groups video pearl-greeter' "$pearl_dir/pearl.install" \
-  || fail 'Pearl Greeter account is missing video access'
+grep -Fq 'usermod --append --groups video,render pearl-greeter' "$pearl_dir/pearl.install" \
+  || fail 'Pearl Greeter account is missing video/render access'
 if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_dir/pearl.install"; then
   fail 'Pearl Greeter install hook contains a systemd integration'
 fi

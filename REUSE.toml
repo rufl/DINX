@@ -6,9 +6,3 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 DINX Contributors"
 SPDX-License-Identifier = "Apache-2.0"
 
-[[annotations]]
-path = "distro/packages/deetty/noctty-0.1.0.tar.gz"
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 LichForge"
-SPDX-License-Identifier = "MIT"
-

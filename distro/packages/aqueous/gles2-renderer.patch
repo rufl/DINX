@@ -1,0 +1,23 @@
+--- a/compositor/scripts/build-wlroots-render-hook.sh
++++ b/compositor/scripts/build-wlroots-render-hook.sh
+@@ -1 +1 @@
+-    -Drenderers=vulkan \
++    -Drenderers=gles2,vulkan \
+@@ -1 +1,16 @@
+-meson compile -C "$build_dir"
++python3 - "$build_dir" <<'PY'
++import json
++import subprocess
++import sys
++
++options = json.loads(
++    subprocess.check_output(
++        ["meson", "introspect", "--buildoptions", sys.argv[1]], text=True
++    )
++)
++renderers = next(option["value"] for option in options if option["name"] == "renderers")
++missing = sorted({"gles2", "vulkan"}.difference(renderers))
++if missing:
++    raise SystemExit(f"required wlroots renderers are missing: {', '.join(missing)}")
++PY
++meson compile -C "$build_dir"

@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${AQUEOUS_SOURCE_SHA256:?missing AQUEOUS_SOURCE_SHA256}"
 : "${AQUEOUS_WLROOTS_SHA256:?missing AQUEOUS_WLROOTS_SHA256}"
 pkgver="$AQUEOUS_VERSION"
-pkgrel=4
+pkgrel=5
 pkgdesc='Aqueous Wayland compositor and control clients for DINX'
 arch=('x86_64')
 url="$AQUEOUS_SOURCE_URL"
@@ -27,6 +27,7 @@ depends=(
   'cairo'
   'pango'
   'mesa'
+  'libglvnd'
   'seatd'
   'libdisplay-info'
   'libliftoff'
@@ -72,6 +73,7 @@ sha256sums=("$AQUEOUS_SOURCE_SHA256" "$AQUEOUS_WLROOTS_SHA256")
 prepare() {
   cd "$srcdir/Aqueous-$pkgver"
   patch --forward --fuzz=0 -Np1 < "$startdir/dinit.patch"
+  patch --forward --fuzz=0 -Np1 < "$startdir/gles2-renderer.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/server-decorations.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/titlebar-text.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/two-default-workspaces.patch"

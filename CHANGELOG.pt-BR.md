@@ -9,6 +9,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Corrigido o cleanup EXIT do builder Artix para encerrar o servidor temporário do repositório e restaurar a propriedade do host nos diretórios de saída da ISO e dos pacotes, permitindo gerar o checksum e executar as verificações locais pós-build.
 - Atualizadas as verificações do payload gráfico para os nomes dos módulos DRI Mesa presentes na ISO (`virtio_gpu_dri.so` e `vmwgfx_dri.so`). Os nomes antigos `virgl_dri.so` e `svga_dri.so` causavam uma falha falsa apesar dos dois drivers virtuais exigidos estarem presentes.
 - Removida da verificação da ISO a expectativa por um PNG 128×128 do Dintor que o pacote não instala; o ícone empacotado é o SVG escalável.
+- Ajustado o check do módulo de kernel QEMU ao nome empacotado `virtio-gpu.ko.zst`; o módulo estava presente, mas a grafia com underscore fazia a verificação reportá-lo como ausente.
 - Corrigidos os contratos P0 para verificar os smokes Seafoam/ZLS e a qualificação de Gamescope, exclusiva do builder Artix, em vez de exigir essas etapas no workflow executado no host.
 - Fixados os arquivos de configuração e desktop AUR do Shelly na revisão imutável `f89d773125357baaa1d2fae715286ce9e00e2cb4`; a branch móvel `shelly-bin` havia alterado `shellybuild.conf` e feito a verificação de checksum do build da ISO falhar.
 - O build do pacote Deetty limpa a árvore de fontes anterior antes de aplicar patches, evitando que uma tentativa com falha faça a próxima reaplicar patches de criação sobre fontes já modificadas.

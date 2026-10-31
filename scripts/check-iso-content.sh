@@ -501,7 +501,7 @@ grep -Fq 'export WLR_RENDERER=pixman' <<<"$aqueous_launcher" || fail 'DINX Aqueo
 grep -Fq 'export GSK_RENDERER=cairo' <<<"$aqueous_launcher" || fail 'DINX GTK4 Cairo fallback is missing'
 grep -Fq 'virtio_gpu|vmwgfx)' <<<"$aqueous_graphics_helper" || fail 'QEMU/VirtualBox accelerated DRM drivers are not detected'
 grep -Fq 'vboxvideo|qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail '2D virtual display fallback drivers are not detected'
-for graphics_module in virtio_gpu vmwgfx; do
+for graphics_module in virtio-gpu vmwgfx; do
   grep -Eq "/usr/lib/modules/[^[:space:]]*/kernel/drivers/gpu/drm/.*/${graphics_module}\\.ko(\\.(zst|xz|gz))?([[:space:]]|$)" <<<"$manifest" \
     || fail "ISO kernel module is missing for VM acceleration: $graphics_module"
 done

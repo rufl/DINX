@@ -116,6 +116,19 @@ if grep -Fq 'DEETTY_SOURCE_READ_TOKEN' "$workflow" "$contracts_workflow"; then
 fi
 grep -Fq '/third_party/noctty/' .gitignore \
   || fail 'public Deetty/Dintor source checkout is not Git-ignored'
+local_package_installer=scripts/lib/pacman-local-install.sh
+[[ -r "$local_package_installer" ]] || fail 'local package retry helper is missing'
+for required in \
+  'pacman_install_local() {' \
+  'if pacman -U --noconfirm "$@"; then' \
+  'pacman_retry -Syy --noconfirm' \
+  'sleep 15'; do
+  grep -Fq -- "$required" "$local_package_installer" \
+    || fail "local package retry helper is missing: $required"
+done
+if grep -Fq 'pacman -U --noconfirm' "$builder"; then
+  fail 'Artix builder bypasses the retry-safe local package installer'
+fi
 for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
@@ -124,7 +137,10 @@ for required in \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
   'NoExtract = usr/share/uwsm/*' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
-  'local -a makepkg_options=(--clean --nodeps --nocheck --noconfirm)' \
+  'local -a makepkg_options=(--nodeps --nocheck --noconfirm)' \
+  'dinitui|dinxpanel|seafoam-settings)' \
+  'makepkg_options+=(--clean)' \
+  'source /workspace/scripts/lib/pacman-local-install.sh' \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
   'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \

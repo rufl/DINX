@@ -46,6 +46,7 @@ trap finish EXIT
                 done
                 return 1
               }
+              source /workspace/scripts/lib/pacman-local-install.sh
               pacman_retry -Syu --noconfirm
               pacman_retry -Syy --noconfirm
               pacman_retry -S --needed --noconfirm \
@@ -250,7 +251,15 @@ trap finish EXIT
                 local package_name="$1"
                 local package_dir="/workspace/distro/packages/$package_name"
                 local -a extra_env=()
-                local -a makepkg_options=(--clean --nodeps --nocheck --noconfirm)
+                local -a makepkg_options=(--nodeps --nocheck --noconfirm)
+                case "$package_name" in
+                  dinitui|dinxpanel|seafoam-settings)
+                    # These packages build directly from checked-in source trees.
+                    ;;
+                  *)
+                    makepkg_options+=(--clean)
+                    ;;
+                esac
                 if [[ "$package_name" == deetty ]]; then
                   extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                   makepkg_options+=(--cleanbuild)
@@ -273,7 +282,7 @@ trap finish EXIT
               ghostty_vt_package=$(find "$package_repo" -maxdepth 1 -type f -name 'ghostty-vt-runtime-*.pkg.tar.zst' -print -quit)
               [[ -n "$ghostty_vt_package" ]]
               pacman -Rdd --noconfirm ghostty
-              pacman -U --noconfirm "$ghostty_vt_package"
+              pacman_install_local "$ghostty_vt_package"
               scripts/check_ghostty_vt_runtime.sh "$ghostty_vt_package"
               source /workspace/distro/packages/deetty/source.env
               [[ -n "$DEETTY_VERSION" ]]
@@ -288,7 +297,7 @@ trap finish EXIT
               gtk-update-icon-cache -f /usr/share/icons/hicolor
               rm -f "$icon_svg"
               build_package deetty
-              pacman -U --noconfirm "$package_repo"/deetty-*.pkg.tar.zst
+              pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
               build_package opensnitch-dinit
               build_package cyan-skillfish-governor-smu
               build_package cyan-skillfish-governor-smu-dinit
@@ -296,23 +305,23 @@ trap finish EXIT
               build_package topgrade
               build_package paru
               build_package shelly
-              pacman -U --noconfirm \
+              pacman_install_local \
                 "$package_repo"/topgrade-*.pkg.tar.zst \
                 "$package_repo"/shelly-*.pkg.tar.zst
               build_package dinitui
-              pacman -U --noconfirm "$package_repo"/dinitui-*.pkg.tar.zst
+              pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
               scripts/smoke_calamares_startup.sh
               build_package dinxpanel
-              pacman -U --noconfirm "$package_repo"/dinxpanel-*.pkg.tar.zst
+              pacman_install_local "$package_repo"/dinxpanel-*.pkg.tar.zst
               build_package shikane
-              pacman -U --noconfirm "$package_repo"/shikane-*.pkg.tar.zst
+              pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
               build_package matugen
-              pacman -U --noconfirm "$package_repo"/matugen-*.pkg.tar.zst
+              pacman_install_local "$package_repo"/matugen-*.pkg.tar.zst
               build_package aqueous
               build_package pearl
-              pacman -U --noconfirm \
+              pacman_install_local \
                 "$package_repo"/aqueous-*.pkg.tar.zst \
                 "$package_repo"/pearl-*.pkg.tar.zst
               build_package pori
@@ -320,7 +329,7 @@ trap finish EXIT
               build_package dome
               build_package zls
               build_package seafoam-settings
-              pacman -U --noconfirm \
+              pacman_install_local \
                 "$package_repo"/dome-*.pkg.tar.zst \
                 "$package_repo"/seafoam-settings-*.pkg.tar.zst \
                 "$package_repo"/zls-*.pkg.tar.zst

@@ -844,14 +844,14 @@ grep -Fq 'Name[pt_BR]=Instalar DINX' <<<"$installer_desktop" || fail 'DINX insta
 if grep -Eq '^(Hidden|NoDisplay)=true$' <<<"$installer_desktop"; then
   fail 'DINX installer launcher is hidden'
 fi
-artix_package_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/calamares.desktop)
-grep -Fq 'Name=Install Artix' <<<"$artix_package_desktop" || fail 'Calamares package still has an Artix-branded installer entry'
-grep -Fq 'Name[pt_BR]=Instalar Artix' <<<"$artix_package_desktop" || fail 'Calamares package Artix installer localization is missing'
-artix_installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/calamares.desktop)
-grep -Fq 'Name=Install Artix' <<<"$artix_installer_desktop" || fail 'Artix installer alias is missing'
-grep -Fq 'Name[pt_BR]=Instalar Artix' <<<"$artix_installer_desktop" || fail 'Artix installer alias Portuguese name is missing'
-grep -Fqx 'Hidden=true' <<<"$artix_installer_desktop" || fail 'Artix installer alias is not hidden'
-grep -Fqx 'NoDisplay=true' <<<"$artix_installer_desktop" || fail 'Artix installer alias is not suppressed from menus'
+calamares_package_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/calamares.desktop)
+grep -Fqx 'Type=Application' <<<"$calamares_package_desktop" || fail 'Calamares package desktop entry is missing or invalid'
+calamares_hidden_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/calamares.desktop)
+grep -Fqx 'Name=Install Artix' <<<"$calamares_hidden_override" || fail 'Calamares hidden installer override identity is missing'
+grep -Fqx 'Name[pt_BR]=Instalar Artix' <<<"$calamares_hidden_override" || fail 'Calamares hidden installer override localization is missing'
+grep -Fqx 'Exec=pkexec calamares' <<<"$calamares_hidden_override" || fail 'Calamares installer override does not target the installer'
+grep -Fqx 'Hidden=true' <<<"$calamares_hidden_override" || fail 'Artix installer alias is not hidden'
+grep -Fqx 'NoDisplay=true' <<<"$calamares_hidden_override" || fail 'Artix installer alias is not suppressed from menus'
 deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
 grep -Fq 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop launcher is missing'
 grep -Fq 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty desktop URI command is incorrect'

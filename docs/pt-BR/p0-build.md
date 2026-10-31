@@ -205,6 +205,9 @@ DINX_LOCAL_QEMU_SMOKE=1 bash scripts/build-iso-docker.sh
 
 Ela exige as dependências locais do smoke QEMU (`qemu-system-x86_64`, `socat` e Tesseract). O build para antes de começar se não conseguir acessar o daemon Docker. `DINX_LOCAL_BUILD_DIR` pode selecionar um diretório de saída novo e vazio dentro de `dist`; resultados existentes nunca são sobrescritos.
 
+Ao sair do container, o builder encerra o servidor temporário do repositório e restaura a propriedade do host nos diretórios montados da ISO, dos pacotes, da árvore de build e das fontes de pacotes. Assim, a etapa P0 de checksum e as verificações locais pós-build conseguem gravar nos diretórios de saída.
+
+
 ## Sequência de aceitação
 
 1. `scripts/check-iso-host.sh` termina com sucesso no container Artix.

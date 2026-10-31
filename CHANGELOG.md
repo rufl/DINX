@@ -10,6 +10,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Updated the ISO graphics payload checks to the Mesa DRI filenames actually shipped in the built image (`virtio_gpu_dri.so` and `vmwgfx_dri.so`). The previous `virgl_dri.so` and `svga_dri.so` names caused a false missing-file failure despite both required virtual-GPU drivers being present.
 - Removed the ISO-content expectation for a Dintor 128×128 PNG the package does not install; its scalable SVG is the packaged icon.
 - Matched the QEMU kernel-module check to the packaged `virtio-gpu.ko.zst` filename; the module was present, but the underscore spelling made verification report it missing.
+- Preserved Aqueous' full patched WM defaults in the ISO; a three-line root overlay had replaced them, dropping Deetty and the layout-shortcut disables. The package patch now sets Deetty while keeping freeform `stacking` as the default.
 - Corrected P0 contract checks to verify Seafoam/ZLS smokes and builder-only Gamescope qualification in the Artix container builder, rather than expecting those steps in the host workflow.
 - Pinned Shelly's AUR desktop/config payload to immutable revision `f89d773125357baaa1d2fae715286ce9e00e2cb4`; the mutable `shelly-bin` branch had changed `shellybuild.conf`, causing the ISO package build's existing checksum verification to fail.
 - Make the Deetty package build discard its previous source tree before patching, so failed builds cannot make retries apply file-creation patches to already-modified sources.

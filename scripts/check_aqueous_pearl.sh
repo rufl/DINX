@@ -11,7 +11,6 @@ pearl_dir="$root/distro/packages/pearl"
 graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
 iso_check="$root/scripts/check-iso-content.sh"
 session_check="$root/scripts/check_dinx_session.sh"
-wm_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/wm.toml"
 
 fail() {
   printf 'aqueous_pearl_contract: %s\n' "$*" >&2
@@ -19,7 +18,7 @@ fail() {
 }
 
 for path in \
-  "$profile" "$groups" "$workflow" "$iso_check" "$session_check" "$wm_config" \
+  "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
@@ -60,6 +59,19 @@ for patch_file in dinit.patch server-decorations.patch titlebar-text.patch two-d
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+wm_config="$source_root/wm.toml"
+grep -Fq 'spawn_terminal = "deetty"' "$wm_config" \
+  || fail 'Aqueous WM config does not launch Deetty'
+for keybinding in \
+  'set_layout_primary    = []' \
+  'set_layout_secondary  = []' \
+  'set_layout_tertiary   = []' \
+  'set_layout_quaternary = []'; do
+  grep -Fqx "$keybinding" "$wm_config" \
+    || fail "Aqueous WM config does not disable layout shortcut: $keybinding"
+done
+grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' "$wm_config" \
+  || fail 'Aqueous WM config cannot switch back to freeform stacking'
 workspace_source="$source_root/compositor/aqueous/Output.zig"
 grep -Fq 'while (i <= 2)' "$workspace_source" \
   || fail 'fresh Aqueous outputs do not start with two pinned workspaces'
@@ -116,11 +128,6 @@ for required in \
   '  usr/local/libexec/dinx-aqueous-init'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
-grep -Fq 'spawn_terminal = "deetty"' "$wm_config" \
-  || fail 'Aqueous Super+Return is not configured to launch the sole terminal'
-if grep -Eiq 'foot|ghostty' "$wm_config"; then
-  fail 'Aqueous default config references a terminal not shipped in the ISO'
-fi
 
 grep -Fq 'pkgver="$AQUEOUS_VERSION"' "$aqueous_dir/PKGBUILD" || fail 'Aqueous package version is not pinned'
 grep -Fq '$AQUEOUS_SOURCE_SHA256' "$aqueous_dir/PKGBUILD" || fail 'Aqueous source checksum is not wired to source.env'

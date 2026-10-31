@@ -43,13 +43,13 @@ for required in \
   'scripts/check_ghostty_vt_runtime.sh' \
   'build_package ghostty-vt-runtime' \
   'pacman -Rdd --noconfirm ghostty' \
-  'pacman -U --noconfirm "$ghostty_vt_package"' \
+  'pacman_install_local "$ghostty_vt_package"' \
   'scripts/check_ghostty_vt_runtime.sh "$ghostty_vt_package"'; do
   grep -Fq -- "$required" "$builder" || fail "ISO builder is missing runtime-package wiring: $required"
 done
 runtime_build_line=$(grep -nF 'build_package ghostty-vt-runtime' "$builder" | cut -d: -f1)
 remove_ghostty_line=$(grep -nF 'pacman -Rdd --noconfirm ghostty' "$builder" | cut -d: -f1)
-install_runtime_line=$(grep -nF 'pacman -U --noconfirm "$ghostty_vt_package"' "$builder" | cut -d: -f1)
+install_runtime_line=$(grep -nF 'pacman_install_local "$ghostty_vt_package"' "$builder" | cut -d: -f1)
 deetty_build_line=$(grep -nF 'build_package deetty' "$builder" | cut -d: -f1)
 dinxpanel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | cut -d: -f1)
 [[ -n "$runtime_build_line" && -n "$remove_ghostty_line" && -n "$install_runtime_line" && -n "$deetty_build_line" && -n "$dinxpanel_build_line" ]] \

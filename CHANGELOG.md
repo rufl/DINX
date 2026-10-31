@@ -3,9 +3,13 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Restored the DinitUI and DINXPanel Zig sources required by their in-tree packages; their removal made clean CI checkouts fail source contracts and left package builds without their entry points.
 
+- Made ISO validation independent of the upstream Calamares desktop name; it now requires the package entry and verifies the same-ID DINX override hides it, leaving only the Install DINX launcher visible.
+- Fix the Alpha 11 VirtualBox VMSVGA login loop: the session requested wlroots GLES2, but its renderer library had been built with Vulkan only. The Aqueous recipe now requests both GLES2 and Vulkan and verifies Meson's configured renderer list; `libglvnd` is declared for EGL/GLES2 build and runtime dependencies. The Alpha 11 ISO is unchanged until a new image is published.
 - Added a rolling direct-download alias and matching SHA-512 checksum for the latest alpha ISO. The tagged release workflow refreshes it, and both GitHub landing pages link to it.
 - Fixed the P0 ISO build failure caused by omitting the pinned Gapless package from the signed local repository. The Artix builder now installs Vala and GStreamer build dependencies, packages Gapless before composing the rootfs, and checks this wiring in the provenance contract.
+- Made local package installation retry after refreshing pacman databases when mirror metadata drifts. Preserved checked-in Zig sources by skipping `makepkg --clean` for DinitUI, DINXPanel and Seafoam Settings; added a recovery smoke.
 - Fixed the Artix builder's EXIT cleanup to stop the temporary package-repository server and restore host ownership of ISO and package outputs, allowing checksum generation and local post-build checks to write to the mounted directories.
 - Updated the ISO graphics payload checks to the Mesa DRI filenames actually shipped in the built image (`virtio_gpu_dri.so` and `vmwgfx_dri.so`). The previous `virgl_dri.so` and `svga_dri.so` names caused a false missing-file failure despite both required virtual-GPU drivers being present.
 - Removed the ISO-content expectation for a Dintor 128×128 PNG the package does not install; its scalable SVG is the packaged icon.

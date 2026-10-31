@@ -291,7 +291,6 @@ required_paths=(
   usr/share/applications/org.dinx.Dintor.desktop
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg
   usr/share/icons/hicolor/scalable/apps/org.dinx.Dintor.svg
-  usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
   usr/share/kio/servicemenus/deettyhere.desktop
   usr/share/dintor/language-specs/zig.lang
   usr/share/dintor/language-specs/svelte.lang

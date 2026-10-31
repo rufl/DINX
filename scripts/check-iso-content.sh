@@ -165,8 +165,8 @@ required_paths=(
   usr/bin/aqueous-config
   usr/bin/pearl
   usr/local/libexec/dinx-graphics-profile
-  usr/lib/dri/virgl_dri.so
-  usr/lib/dri/svga_dri.so
+  usr/lib/dri/virtio_gpu_dri.so
+  usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
   usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy
   usr/bin/phyto
@@ -244,7 +244,7 @@ required_paths=(
   usr/share/vulkan/icd.d/lvp_icd.json
   usr/lib/libvulkan_lvp.so
   usr/bin/vulkaninfo
-  usr/lib/dri/virgl_dri.so
+  usr/lib/dri/virtio_gpu_dri.so
   usr/lib/dri/vmwgfx_dri.so
   etc/paru.conf
   etc/shellybuild.conf
@@ -291,7 +291,6 @@ required_paths=(
   usr/share/applications/org.dinx.Dintor.desktop
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg
   usr/share/icons/hicolor/scalable/apps/org.dinx.Dintor.svg
-  usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
   usr/share/kio/servicemenus/deettyhere.desktop
   usr/share/dintor/language-specs/zig.lang
   usr/share/dintor/language-specs/svelte.lang
@@ -502,7 +501,7 @@ grep -Fq 'export WLR_RENDERER=pixman' <<<"$aqueous_launcher" || fail 'DINX Aqueo
 grep -Fq 'export GSK_RENDERER=cairo' <<<"$aqueous_launcher" || fail 'DINX GTK4 Cairo fallback is missing'
 grep -Fq 'virtio_gpu|vmwgfx)' <<<"$aqueous_graphics_helper" || fail 'QEMU/VirtualBox accelerated DRM drivers are not detected'
 grep -Fq 'vboxvideo|qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail '2D virtual display fallback drivers are not detected'
-for graphics_module in virtio_gpu vmwgfx; do
+for graphics_module in virtio-gpu vmwgfx; do
   grep -Eq "/usr/lib/modules/[^[:space:]]*/kernel/drivers/gpu/drm/.*/${graphics_module}\\.ko(\\.(zst|xz|gz))?([[:space:]]|$)" <<<"$manifest" \
     || fail "ISO kernel module is missing for VM acceleration: $graphics_module"
 done

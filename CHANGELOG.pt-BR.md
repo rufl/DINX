@@ -3,7 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
-- Corrigidas falhas no alias de releases por tag causadas pelo atraso de visibilidade do GitHub. O publicador tenta novamente erros 404 transitórios com limite fixo, aguarda a listagem de releases, impede que alphas antigas revertam o alias e identifica a etapa que falhou; smokes cobrem recuperação e esgotamento das tentativas.
+- Corrigidas falhas no alias de releases por tag causadas pelo atraso de visibilidade do GitHub. O publicador tenta novamente erros 404 transitórios de metadados, arquivos e uploads do alias com limite fixo, aguarda a listagem de releases, impede que alphas antigas revertam o alias e identifica a etapa que falhou; smokes cobrem recuperação e esgotamento das tentativas.
 - Restaurados os fontes Zig do DinitUI e do DINXPanel exigidos pelos pacotes no repositório; a remoção fazia contratos falharem em checkouts limpos e deixava os builds sem os pontos de entrada.
 
 - A validação da ISO não depende mais do nome upstream da entrada Calamares; exige o arquivo do pacote e verifica se o override DINX de mesmo ID o oculta, deixando visível apenas o launcher Instalar DINX.

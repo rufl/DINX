@@ -95,13 +95,35 @@ if [[ "$1" == release ]]; then
       ;;
     upload)
       shift 3
+      asset_path=''
       while (($#)); do
         case "$1" in
           --repo) shift 2 ;;
           --clobber) shift ;;
-          *) [[ -s "$1" ]] || { printf 'missing upload asset: %s\n' "$1" >&2; exit 2; }; shift ;;
+          *)
+            [[ -s "$1" ]] || { printf 'missing upload asset: %s\n' "$1" >&2; exit 2; }
+            asset_path=$1
+            shift
+            ;;
         esac
       done
+      [[ -n "$asset_path" ]] || { printf 'missing upload asset path\n' >&2; exit 2; }
+      if [[ "$asset_path" == *.iso ]]; then
+        upload_kind=iso
+        upload_404s=${MOCK_UPLOAD_ISO_404S:-0}
+      else
+        upload_kind=sha512
+        upload_404s=${MOCK_UPLOAD_SHA512_404S:-0}
+      fi
+      upload_count_file="$MOCK_STATE_DIR/upload-$upload_kind-attempts"
+      upload_count=0
+      [[ ! -f "$upload_count_file" ]] || read -r upload_count <"$upload_count_file"
+      upload_count=$((upload_count + 1))
+      printf '%s\n' "$upload_count" >"$upload_count_file"
+      if (( upload_count <= upload_404s )); then
+        printf 'gh: Not Found (HTTP 404)\n' >&2
+        exit 1
+      fi
       ;;
     *)
       printf 'mock gh: unexpected release action: %s\n' "$action" >&2
@@ -147,6 +169,8 @@ successful="$tmp_dir/success"
 mkdir -p "$successful/tmp" "$successful/state"
 if output=$(run_helper "$successful" \
   MOCK_RELEASE_404S=2 \
+  MOCK_UPLOAD_ISO_404S=2 \
+  MOCK_UPLOAD_SHA512_404S=1 \
   MOCK_LATEST_OLD_QUERIES=2 \
   MOCK_PREVIOUS_RELEASES_JSON="$old_releases" \
   MOCK_LATEST_RELEASES_JSON="$current_releases" \
@@ -158,12 +182,14 @@ else
 fi
 [[ $(<"$successful/state/release-attempts") == 3 ]]
 [[ $(<"$successful/state/list-attempts") == 3 ]]
+[[ $(<"$successful/state/upload-iso-attempts") == 3 ]]
+[[ $(<"$successful/state/upload-sha512-attempts") == 2 ]]
 grep -Fq 'retrying in 5s' <<<"$output"
 alias_dir="$successful/tmp/dinx-latest-alpha"
 [[ -s "$alias_dir/dinx-latest-x86_64.iso" ]]
 (cd "$alias_dir" && sha512sum --check dinx-latest-x86_64.iso.sha512 >/dev/null)
 grep -Fq 'release upload' "$successful/gh.log"
-printf 'latest_alpha_alias_smoke publication_retry=true listing_retry=true checksum=true upload=true\n'
+printf 'latest_alpha_alias_smoke publication_retry=true listing_retry=true upload_retry=true checksum=true upload=true\n'
 
 stale="$tmp_dir/stale"
 mkdir -p "$stale/tmp" "$stale/state"
@@ -196,6 +222,23 @@ fi
 grep -Fq 'api --method POST' "$missing/gh.log"
 grep -Fq 'release create alpha-latest' "$missing/gh.log"
 printf 'latest_alpha_alias_smoke missing_alias_create=true\n'
+
+upload_unavailable="$tmp_dir/upload-unavailable"
+mkdir -p "$upload_unavailable/tmp" "$upload_unavailable/state"
+if output=$(run_helper "$upload_unavailable" \
+  MOCK_RELEASE_404S=0 \
+  MOCK_UPLOAD_ISO_404S=99 \
+  MOCK_LATEST_OLD_QUERIES=0 \
+  MOCK_PREVIOUS_RELEASES_JSON="$current_releases" \
+  MOCK_LATEST_RELEASES_JSON="$current_releases" \
+  MOCK_ALIAS_MISSING=false 2>&1); then
+  printf 'smoke_latest_alpha_alias: permanently missing alias release unexpectedly uploaded\n' >&2
+  exit 1
+fi
+grep -Fq 'remained unavailable for dinx-latest-x86_64.iso after 6 attempts' <<<"$output"
+[[ $(<"$upload_unavailable/state/upload-iso-attempts") == 6 ]]
+[[ ! -f "$upload_unavailable/state/upload-sha512-attempts" ]]
+printf 'latest_alpha_alias_smoke upload_retry_bound=true permanent_404_rejected=true\n'
 
 unavailable="$tmp_dir/unavailable"
 mkdir -p "$unavailable/tmp" "$unavailable/state"

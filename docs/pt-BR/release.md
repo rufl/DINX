@@ -7,7 +7,7 @@ instalação persistente suportados. O workflow de release é acionado por uma t
 e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e o
 smoke test no QEMU antes de publicar os artefatos.
 
-O workflow mantém o pré-release móvel `alpha-latest` com `dinx-latest-x86_64.iso` e seu checksum SHA-512. Releases por tag o atualizam; use `workflow_dispatch` com `release_tag` somente para inicializar ou resincronizar o alias. O limite de 2 GiB por asset do GitHub permite o alias apenas quando a alpha mais recente tem uma ISO única; use a página da release versionada quando a imagem estiver dividida. O publicador tenta novamente erros 404 transitórios de release/asset com limite fixo, espera a listagem de releases alcançar a publicação e impede que uma alpha antiga reverta o alias.
+O workflow mantém o pré-release móvel `alpha-latest` com `dinx-latest-x86_64.iso` e seu checksum SHA-512. Releases por tag o atualizam; use `workflow_dispatch` com `release_tag` somente para inicializar ou resincronizar o alias. O limite de 2 GiB por asset do GitHub permite o alias apenas quando a alpha mais recente tem uma ISO única; use a página da release versionada quando a imagem estiver dividida. O publicador tenta novamente erros 404 transitórios enquanto metadados, arquivos e uploads do alias ficam disponíveis, aguarda a listagem de releases e impede que uma alpha antiga reverta o alias.
 
 A metadata do build fica vinculada ao artefato exato da ISO nos caminhos P0 e de
 release com tag: o CI recalcula o tamanho em bytes e o SHA-512 da ISO e rejeita

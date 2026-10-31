@@ -203,9 +203,42 @@ else
   fi
 fi
 rm -f "$release_error_file"
-echo "Uploading $alias_iso and its SHA-512 checksum to $alias_tag."
-gh release upload "$alias_tag" \
-  --repo "$GITHUB_REPOSITORY" \
-  --clobber \
-  "$alias_dir/$alias_iso" \
-  "$alias_dir/$alias_iso.sha512"
+upload_asset_with_retry() {
+  local asset_path=$1
+  local asset_name=$2
+  local error_file attempt status
+  error_file=$(mktemp "$RUNNER_TEMP/dinx-release-upload.XXXXXX")
+  for attempt in 1 2 3 4 5 6; do
+    echo "Uploading $asset_name (attempt $attempt/6)."
+    if gh release upload "$alias_tag" \
+      --repo "$GITHUB_REPOSITORY" \
+      --clobber \
+      "$asset_path" 2>"$error_file"; then
+      [[ ! -s "$error_file" ]] || cat "$error_file" >&2
+      rm -f "$error_file"
+      return 0
+    else
+      status=$?
+    fi
+    if ! grep -Fq '(HTTP 404)' "$error_file"; then
+      cat "$error_file" >&2
+      rm -f "$error_file"
+      return "$status"
+    fi
+    if (( attempt == 6 )); then
+      printf 'publish_latest_alpha_alias: alias release remained unavailable for %s after %s attempts\n' \
+        "$asset_name" "$attempt" >&2
+      cat "$error_file" >&2
+      rm -f "$error_file"
+      return "$status"
+    fi
+    printf 'publish_latest_alpha_alias: alias release is not visible for %s (404, attempt %s/6); retrying in 5s\n' \
+      "$asset_name" "$attempt" >&2
+    sleep 5
+  done
+  rm -f "$error_file"
+  return 1
+}
+
+upload_asset_with_retry "$alias_dir/$alias_iso" "$alias_iso"
+upload_asset_with_retry "$alias_dir/$alias_iso.sha512" "$alias_iso.sha512"

@@ -3,7 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
-- Fixed tagged-release alias failures caused by GitHub's delayed release visibility. The publisher retries transient 404s with a fixed limit, waits for the release listing to catch up, prevents stale alphas from rolling back the alias, and reports stage-specific failures; fixture smokes cover recovery and exhaustion.
+- Fixed tagged-release alias failures caused by GitHub's delayed release visibility. The publisher retries transient 404s for release metadata, assets and alias uploads with a fixed limit, waits for the release listing to catch up, prevents stale alphas from rolling back the alias, and reports stage-specific failures; fixture smokes cover recovery and exhaustion.
 - Restored the DinitUI and DINXPanel Zig sources required by their in-tree packages; their removal made clean CI checkouts fail source contracts and left package builds without their entry points.
 
 - Made ISO validation independent of the upstream Calamares desktop name; it now requires the package entry and verifies the same-ID DINX override hides it, leaving only the Install DINX launcher visible.

@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  <strong>Artix Linux + dinit, with a small and explicit Wayland desktop.</strong><br>
+  <strong>Artix Linux + dinit, with a lean, simple, easy-to-use Wayland desktop.</strong><br>
   A public alpha for testing the base system, its limits and the installation path — without hiding what is unfinished.
 </p>
 

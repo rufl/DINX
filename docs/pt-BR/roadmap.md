@@ -6,23 +6,34 @@ Os marcos são gates de capacidade, não promessas de calendário.
 
 ## Estado atual
 
-**Release de sistema publicado:** Alpha 10, validada pela execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) no commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`.
+**Release de sistema publicado:** [DINX v0.1.0-alpha.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), gerada a partir de `56a814575e33bfae6215993972784f11b7dae215` pelo [workflow de release #41197618617](https://github.com/rufl/DINX/actions/runs/41197618617). A ISO medida tem 1.836.830.720 bytes (abaixo do limite de 2 GiB por arquivo do GitHub); [baixe a ISO pelo link permanente](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) e o [checksum SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
 
 **Próximo release de sistema:** Beta 0.1 está planejada, ainda não foi publicada e não tem data. É um marco de qualificação de hardware físico, instalação, atualização e recuperação; veja os critérios de saída abaixo. A qualificação gaming P5 continua separada e não significa que a Beta 0.1 esteja pronta para jogos.
 
-A execução P0 da main [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), após o release Alpha 10 e no commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passou. Ela valida a main após os ajustes de documentação/contrato da Alpha 10; não substituiu o artefato publicado com tag.
+As tags `v0.1.0-alpha.12` e `alpha-latest` apontam para o mesmo commit-fonte, e os arquivos ISO e checksums SHA-512 são iguais. O workflow com tag é a evidência do artefato publicado; commits posteriores somente de documentação na `main` não alteram esse artefato.
+
+## Objetivo do produto
+
+A DINX busca ser um desktop Artix Linux amigável para iniciantes e pensado para iniciar pela sessão live: entrar direto em Aqueous/Pearl sem pedir login na live; oferecer janelas flutuantes familiares, com barra de título, controles e encaixe nas bordas/cantos; incluir um conjunto focado de aplicativos cotidianos; e simplificar a instalação pelo Calamares, com opções de instalação guiada ou manual e swap opcional. O desenho permanece de sessão única e somente dinit: sem systemd ou UWSM. A distribuição é entregue em uma ISO x86_64 para download direto, abaixo do limite de 2 GiB por arquivo do GitHub.
+
+A Alpha 12 é um marco experimental, não uma afirmação geral de suporte a hardware. O CI verificou a sessão gráfica no QEMU e os caminhos de instalação/recuperação do workflow; a cobertura em máquinas físicas e o boot direto no VirtualBox VMSVGA continuam sem qualificação. O comportamento entre todos os toolkits também é um gate da Beta, não uma garantia universal.
 
 ## P0 — fundação
 
 **Objetivo:** produzir uma sessão live Artix+dinit reproduzível e definir o caminho de instalação persistente.
 
-**Status:** o gate de fundação ISO/VM está concluído. A publicação do repositório pacman customizado assinado e a qualificação de instalação/atualização/downgrade de pacotes estão implementadas no CI; rotação/revogação da chave de assinatura de produção, hardware físico, upgrades da ISO instalada, rollback do filesystem e saúde de serviços em hardware por longo prazo continuam gates de release.
+**Status:** o gate de fundação ISO/VM está concluído e foi exercitado pelo workflow de release marcado da Alpha 12: passaram as verificações de pacote/repositório assinado, build da ISO e metadados de tamanho/checksum, boot gráfico no QEMU, transações do Calamares e verificações de instalação persistente/recuperação em BIOS/UEFI descartáveis. Rotação/revogação da chave de assinatura de produção, hardware físico, boot direto no VirtualBox, upgrades da ISO instalada, rollback do filesystem e saúde de serviços em hardware por longo prazo continuam gates de release.
 
 Implementação entregue:
 
 - o gate da fundação ISO/VM P0, o caminho de transações de pacotes assinados e o contrato de TTY de recuperação;
 - a sessão Aqueous/Pearl direta, o Pearl Greeter pelo greetd e o runtime somente dinit, sem systemd/UWSM;
-- os defaults Fish, o limite do payload base e os smokes de build limpo/VM.
+- os defaults Fish, o limite do payload base e os smokes de build limpo/VM;
+- A sessão live inicia Aqueous/Pearl sem pedir credenciais; sistemas instalados usam Pearl Greeter e não habilitam autologin. Aqueous/Pearl é a única sessão, iniciada e supervisionada diretamente pelo dinit, sem payload de systemd ou UWSM.
+- Novos perfis começam com dois workspaces e janelas flutuantes/stacking. O compositor fornece barras DINX, controles de minimizar/maximizar/fechar, arraste pela barra e encaixe nas bordas/cantos; a compatibilidade com todos os aplicativos GTK, Qt e XWayland ainda precisa ser qualificada.
+- Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, Phyto, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Dome, Seafoam Settings e ZLS, além das ferramentas DINX de controle/diagnóstico.
+- GTK 3/4 usa o tema escuro DINX por padrão; a identidade visual do sistema não substitui ícones de aplicativos nem da área de trabalho. Os sistemas live e instalado usam o `ntfs3` do kernel para leitura e escrita em NTFS, e as alterações de configuração dos monitores podem ser salvas em perfis do Shikane.
+- O Calamares oferece particionamento guiado e manual, mantém opções destrutivas desmarcadas e deixa swap opcional. O CI cobre transações do instalador, mas a instalação em discos físicos e alegações de preservação de dados ainda exigem qualificação em hardware.
 
 Gates de release da fundação ainda abertos:
 
@@ -31,17 +42,17 @@ Gates de release da fundação ainda abertos:
 
 **Critério de saída:** um boot live limpo abre uma sessão gráfica, fornece os serviços base necessários e permite recuperação por TTY. O CI executa o contrato de instalação persistente em discos BIOS e UEFI descartáveis e o caminho transacional de pacotes assinados; atualizações da ISO instalada, rollback do filesystem e preservação de dados continuam gates de release.
 
-## P1 — alpha pública 0.1
+## P1 — alpha pública
 
 **Objetivo:** distribuir um snapshot conhecido como funcional através do projeto público no GitHub.
 
-**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.10`.
+**Status:** concluída para o snapshot alpha público `v0.1.0-alpha.12`.
 
 Concluído:
 
-- publicação da ISO/partes, checksums, instruções de instalação, problemas conhecidos e metadados de release;
+- publicação da ISO direta, SHA-512 correspondente, metadados de build, repositório DINX assinado, assets de procedência/verificação e link permanente de download `alpha-latest`;
 - qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em discos BIOS e UEFI descartáveis;
-- definido o Deetty como único emulador de terminal na ISO live e na instalação nova, com defaults funcionais de shell;
+- definido o Deetty como único emulador de terminal na ISO live e na instalação nova, com defaults funcionais de Fish e dos aplicativos;
 - registro explícito do pré-requisito da chave de produção, do limite de hardware e das limitações de recuperação na documentação do release;
 
 Gates de release adiados:
@@ -148,7 +159,7 @@ Gate de release P3:
 
 **Gates de release restantes:**
 
-- executar e guardar uma medição completa da ISO após mudanças de pacotes;
+- repetir a medição completa da ISO a cada candidata a release; a Alpha 12 estabelece a linha de base medida atual de 1.836.830.720 bytes;
 - completar a matriz física de desktop, laptop e BC-250;
 - qualificar upgrades da ISO instalada, recuperação do filesystem e rollback;
 - fechar os gates reais de DRM, Steam, controle, PipeWire, suspensão/retomada e recuperação da GPU.
@@ -157,7 +168,7 @@ Gate de release P3:
 
 **Objetivo:** qualificar um sistema útil e instalável para hardware explicitamente listado, sem alterar o desenho de sessão única e dinit-only.
 
-**Status:** planejada. A Alpha 10 continua sendo o alpha público de sistema; a Beta 0.1 ainda não tem data.
+**Status:** planejada. A Alpha 12 é o alpha público de sistema atual; a Beta 0.1 ainda não tem data.
 
 **Gates do release:**
 
@@ -166,7 +177,7 @@ Gate de release P3:
 - Qualificar bootstrap do repositório assinado, verificação de assinaturas, atualizações do sistema instalado e recuperação de pacotes. Decidir se upgrades de ISO instalada e rollback do filesystem serão suportados; caso contrário, declarar que continuam indisponíveis e documentar o caminho de recuperação/reinstalação.
 - Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. Aqueous/Pearl continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
 - Verificar aplicativos GTK 3/4, Qt 6 e XWayland na sessão Aqueous: barra de título, minimizar/maximizar/fechar, arrastar, encaixar e sobreposição de barras próprias. Registrar exceções por aplicativo em vez de alegar comportamento uniforme sem evidência.
-- Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta abaixo do [limite de 2 GiB por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2.147.483.648` bytes); a Alpha 10 tem 1.862.772.736 bytes e está dentro do limite.
+- Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta abaixo do [limite de 2 GiB por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2.147.483.648` bytes); a Alpha 12 mede 1.836.830.720 bytes. Os gráficos no QEMU passaram; o boot direto no VirtualBox VMSVGA ainda não foi qualificado.
 - Publicar guias correspondentes em inglês e português brasileiro para instalação, compatibilidade, problemas conhecidos e recuperação, com evidências de teste e casos explicitamente não suportados.
 
 **Fora da afirmação da Beta 0.1:** suporte gaming permanece na trilha P5 separada. Não afirmar suporte a Steam, jogos comerciais, controles, saída DRM real ou áudio gaming até passar pelos gates de hardware. Secure Boot e recuperação física também não são alegados sem testes próprios.

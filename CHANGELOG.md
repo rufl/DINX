@@ -7,6 +7,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## DINX v0.1.0-alpha.12 — 2026-10-31
 
 - Published from `56a814575e33bfae6215993972784f11b7dae215` after release workflow [#41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) passed ISO build, QEMU graphical boot, Calamares transactions and persistent BIOS/UEFI installation and recovery checks. The 1,836,830,720-byte ISO is below GitHub's 2 GiB asset limit; `alpha-latest` now points to this release with the matching SHA-512 checksum.
+- Alpha 12 advances DINX's live-first goal: the live image opens Aqueous/Pearl without a credential prompt; Calamares offers guided and manual install paths with optional swap; the default desktop uses floating, decorated windows with titlebar controls and edge/corner snapping; and the base includes everyday file, archive, partition, storage, display and media tools. The runtime remains dinit-only, without systemd or UWSM. It is an experimental x86_64 image, not a claim of broad hardware support.
 - Fixed tagged-release alias failures caused by GitHub's delayed release visibility. The publisher retries transient 404s for release metadata, assets and alias uploads with a fixed limit, waits for the release listing to catch up, prevents stale alphas from rolling back the alias, and reports stage-specific failures; fixture smokes cover recovery and exhaustion.
 - Restored the DinitUI and DINXPanel Zig sources required by their in-tree packages; their removal made clean CI checkouts fail source contracts and left package builds without their entry points.
 
@@ -36,7 +37,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 - Run the non-privileged DINX contracts and REUSE workflow on every pull request and every push to `main`, including documentation and license-only changes. Keep the privileged ISO build on its selected build-related triggers.
 
-- Correct the Beta 0.1 ISO gate to GitHub's actual per-release-asset limit: strictly under 2 GiB, with no arbitrary 1.8-billion-byte target. Alpha 10 remains within the cap.
+- Corrected the Beta 0.1 ISO gate to GitHub's actual per-file release limit: strictly below 2 GiB, with no arbitrary 1.8-billion-byte target. Alpha 12 is 1,836,830,720 bytes and remains below the cap.
 
 - Complete REUSE coverage for the GPL-3.0-only DINX decoration helpers and exclude the retained local Aqueous source checkout from project scans.
 

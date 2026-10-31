@@ -6,23 +6,34 @@ Milestones are capability gates, not calendar promises.
 
 ## Current status
 
-**Published system release:** Alpha 10, validated by tagged workflow [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`.
+**Published system release:** [DINX v0.1.0-alpha.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), built from `56a814575e33bfae6215993972784f11b7dae215` by [release workflow #41197618617](https://github.com/rufl/DINX/actions/runs/41197618617). The measured ISO is 1,836,830,720 bytes (below GitHub's 2 GiB per-asset limit); [download the rolling ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) and [SHA-512 checksum](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
 
 **Next system release:** Beta 0.1 is planned, not released, and has no date. It is a physical-hardware, installation, update and recovery qualification milestone; see the exit gates below. The P5 gaming qualification remains separate and does not imply that Beta 0.1 is gaming-ready.
 
-Main P0 run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) after the Alpha 10 release, on commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passed. It validates main after the Alpha 10 documentation/contract cleanup; it did not replace the tagged release artifact.
+Tags `v0.1.0-alpha.12` and `alpha-latest` point to the same source commit, and their ISO assets and SHA-512 checksums match. The tagged workflow is the evidence for the published artifact; subsequent documentation-only commits on `main` do not change it.
+
+## Product objective
+
+DINX aims to be a beginner-friendly, live-first Artix Linux desktop: boot straight into a usable Aqueous/Pearl session without a live login prompt; provide a familiar floating-window desktop with titlebars, window controls and edge/corner snapping; include a focused set of everyday apps; and make installation approachable through Calamares guided/manual choices with swap optional. The design stays single-session and dinit-only: no systemd or UWSM. The distribution is delivered as one directly downloadable x86_64 ISO below GitHub's 2 GiB per-file limit.
+
+Alpha 12 is an experimental milestone, not a blanket hardware-support claim. CI verified the graphical session in QEMU and the release workflow's install/recovery paths; physical-machine coverage and direct VirtualBox VMSVGA boot remain unqualified. Cross-toolkit window behavior is also a Beta gate, not a universal guarantee.
 
 ## P0 — foundation
 
 **Goal:** produce a reproducible, bootable Artix+dinit live system and define the persistent installation path.
 
-**Status:** the ISO/VM foundation gate is complete. Signed custom pacman repository publication and package install/update/downgrade qualification are implemented in CI; production signing-key rotation/revocation, physical hardware, installed-ISO upgrades, filesystem rollback and long-term hardware service health remain release gates.
+**Status:** the ISO/VM foundation gate is complete and exercised by the Alpha 12 tagged release workflow: signed package/repository checks, ISO build and size/checksum metadata, QEMU graphical boot, Calamares transactions, and disposable BIOS/UEFI persistent-install and recovery checks passed. Production signing-key rotation/revocation, physical hardware, direct VirtualBox boot, installed-ISO upgrades, filesystem rollback and long-term hardware service health remain release gates.
 
 Implementation delivered:
 
 - the P0 ISO/VM foundation gate, signed package transaction path and recovery-TTY contract;
 - the direct Aqueous/Pearl session, Pearl Greeter through greetd, and dinit-only runtime with no systemd/UWSM;
-- the Fish defaults, base package boundary and clean-build/VM smoke paths.
+- the Fish defaults, base package boundary and clean-build/VM smoke paths;
+- The live session starts Aqueous/Pearl without asking for live credentials; installed systems use Pearl Greeter and do not enable autologin. Aqueous/Pearl is the only session, launched and supervised directly by dinit, with no systemd or UWSM payload.
+- New user profiles start with two workspaces and floating/stacking windows. The compositor provides DINX titlebars, minimize/maximize/close controls, titlebar dragging and edge/corner snapping; compatibility with every GTK, Qt and XWayland app remains to be qualified.
+- Fish is the default shell and Deetty the only terminal emulator. The base roster includes Dintor, Phyto, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Dome, Seafoam Settings and ZLS, alongside the DINX control/diagnostic tools.
+- GTK 3/4 defaults to the DINX dark theme; system branding is applied without replacing application or desktop icons. The live and installed systems use kernel `ntfs3` for NTFS read/write, and display changes can persist to Shikane profiles.
+- Calamares offers guided and manual partitioning, keeps destructive choices unselected and makes swap optional. CI covers installer transactions, but physical-disk installation and data-preservation claims still require hardware qualification.
 
 Open foundation release gates:
 
@@ -31,17 +42,17 @@ Open foundation release gates:
 
 **Exit criterion:** a clean live boot opens a graphical session, provides the required base services and can recover through a TTY. CI exercises the persistent-install contract on disposable BIOS and UEFI disks and the signed package transaction path; installed-ISO upgrades, filesystem rollback and data preservation remain release gates.
 
-## P1 — public alpha 0.1
+## P1 — public alpha release
 
 **Goal:** distribute a known-good snapshot through the public GitHub project.
 
-**Status:** complete for the public alpha snapshot `v0.1.0-alpha.10`.
+**Status:** complete for the public alpha snapshot `v0.1.0-alpha.12`.
 
 Completed:
 
-- published the ISO/parts, checksums, installation instructions, known issues and release metadata;
+- published the direct ISO, matching SHA-512, build metadata, signed DINX package repository, provenance/verification assets and the rolling `alpha-latest` download;
 - qualified the experimental persistent installer and first-boot recovery path in CI on disposable BIOS and UEFI disks;
-- made Deetty the sole terminal emulator in the live ISO and fresh installation, with working shell defaults;
+- made Deetty the sole terminal emulator in the live ISO and fresh installation, with working Fish and application shell defaults;
 - recorded the production-key prerequisite, hardware boundary and recovery limitations in the release documentation;
 
 Deferred release gates:
@@ -150,7 +161,7 @@ P3 release gate:
 
 **Remaining release gates:**
 
-- run and retain a fresh full ISO measurement after package changes;
+- repeat a full ISO measurement for each release candidate; Alpha 12 establishes the current measured baseline of 1,836,830,720 bytes;
 - complete the physical desktop, laptop and BC-250 matrix;
 - qualify installed-ISO upgrades, filesystem recovery and rollback;
 - close the real DRM, Steam, controller, PipeWire, suspend/resume and GPU-recovery gates.
@@ -159,7 +170,7 @@ P3 release gate:
 
 **Goal:** qualify a useful, installable system for explicitly listed hardware without changing the single-session, dinit-only design.
 
-**Status:** planned. Alpha 10 remains the current public system alpha; Beta 0.1 has no release date.
+**Status:** planned. Alpha 12 is the current public system alpha; Beta 0.1 has no release date.
 
 **Release gates:**
 
@@ -168,7 +179,7 @@ P3 release gate:
 - Qualify the signed package-repository bootstrap, signature verification, installed-system updates and package recovery. Decide whether installed-ISO upgrades and filesystem rollback are supported; otherwise state that they remain unsupported and document the recovery/reinstall path.
 - Validate the base services and session on the declared machines: network, D-Bus, portals, polkit, PipeWire, GPU acceleration, display persistence, lock/idle and suspend/resume. Keep Aqueous/Pearl as the only session, supervised directly by dinit; install no systemd or UWSM.
 - Verify GTK 3/4, Qt 6 and XWayland apps in the Aqueous session: titlebar visibility, minimize/maximize/close, dragging, snapping and custom-titlebar overlap. Record app-specific exceptions instead of claiming uniform behavior without evidence.
-- Pass the existing P0 build, QEMU, Calamares, BIOS/UEFI, recovery, metadata and provenance gates. Keep the direct ISO below GitHub's [2 GiB release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2,147,483,648` bytes); Alpha 10 is 1,862,772,736 bytes and is within the limit.
+- Pass the existing P0 build, QEMU, Calamares, BIOS/UEFI, recovery, metadata and provenance gates. Keep the direct ISO below GitHub's [2 GiB release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2,147,483,648` bytes); Alpha 12 measures 1,836,830,720 bytes. QEMU graphics passed; direct VirtualBox VMSVGA boot is not yet qualified.
 - Publish matching English and Brazilian Portuguese installation, compatibility, known-issues and recovery guidance with test evidence and explicit unsupported cases.
 
 **Outside the Beta 0.1 claim:** gaming support remains the separate P5 track. Do not claim Steam, commercial-game, controller, real DRM-output or gaming-audio support until its hardware gates pass. Secure Boot and physical recovery are also unclaimed until separately tested.

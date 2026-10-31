@@ -7,6 +7,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## DINX v0.1.0-alpha.12 — 2026-10-31
 
 - Release publicado a partir do commit `56a814575e33bfae6215993972784f11b7dae215` após o workflow [#41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) passar pelo build da ISO, boot gráfico no QEMU, transações Calamares e verificações de instalação persistente BIOS/UEFI e TTY de recuperação. A ISO de 1.836.830.720 bytes fica abaixo do limite de 2 GiB por arquivo do GitHub; `alpha-latest` agora aponta para este release com o SHA-512 correspondente.
+- A Alpha 12 avança o objetivo live-first da DINX: a ISO inicia Aqueous/Pearl sem pedir credenciais; o Calamares oferece instalação guiada e manual com swap opcional; o desktop padrão usa janelas flutuantes decoradas, controles na barra de título e encaixe nas bordas/cantos; e a base inclui ferramentas cotidianas de arquivos, compactação, partições, armazenamento, displays e mídia. O runtime continua somente dinit, sem systemd ou UWSM. É uma ISO experimental x86_64, não uma afirmação de suporte amplo a hardware.
 - Corrigidas falhas no alias de releases por tag causadas pelo atraso de visibilidade do GitHub. O publicador tenta novamente erros 404 transitórios de metadados, arquivos e uploads do alias com limite fixo, aguarda a listagem de releases, impede que alphas antigas revertam o alias e identifica a etapa que falhou; smokes cobrem recuperação e esgotamento das tentativas.
 - Restaurados os fontes Zig do DinitUI e do DINXPanel exigidos pelos pacotes no repositório; a remoção fazia contratos falharem em checkouts limpos e deixava os builds sem os pontos de entrada.
 
@@ -36,7 +37,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - O workflow DINX de contratos e REUSE, sem build privilegiado, agora roda em todo pull request e push para `main`, inclusive alterações somente de documentação ou licenças. O build privilegiado da ISO mantém seus gatilhos próprios por caminhos de build selecionados.
 
-- Corrigido o gate da ISO Beta 0.1 para refletir o limite real por arquivo de release do GitHub: estritamente abaixo de 2 GiB, sem a meta arbitrária de 1,8 bilhão de bytes. A Alpha 10 continua dentro do limite.
+- Corrigido o gate da ISO Beta 0.1 para refletir o limite real por arquivo de release do GitHub: estritamente abaixo de 2 GiB, sem a meta arbitrária de 1,8 bilhão de bytes. A Alpha 12 tem 1.836.830.720 bytes e continua abaixo do limite.
 
 - Completada a cobertura REUSE dos helpers DINX sob GPL-3.0-only e excluída das varreduras do projeto a cópia local retida da fonte Aqueous.
 

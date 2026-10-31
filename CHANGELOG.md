@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Made ISO validation independent of the upstream Calamares desktop name; it now requires the package entry and verifies the same-ID DINX override hides it, leaving only the Install DINX launcher visible.
 - Added a rolling direct-download alias and matching SHA-512 checksum for the latest alpha ISO. The tagged release workflow refreshes it, and both GitHub landing pages link to it.
 - Fixed the P0 ISO build failure caused by omitting the pinned Gapless package from the signed local repository. The Artix builder now installs Vala and GStreamer build dependencies, packages Gapless before composing the rootfs, and checks this wiring in the provenance contract.
 - Made local package installation retry after refreshing pacman databases when mirror metadata drifts. Preserved checked-in Zig sources by skipping `makepkg --clean` for DinitUI, DINXPanel and Seafoam Settings; added a recovery smoke.

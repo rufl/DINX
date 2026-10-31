@@ -61,6 +61,7 @@ for smoke in \
   smoke_dinx_session_supervisor.sh \
   smoke_pori_mount_service.sh \
   smoke_pori_zig.sh \
+  smoke_latest_alpha_alias.sh \
   smoke_pacman_local_install.sh; do
   "$root/scripts/$smoke"
 done

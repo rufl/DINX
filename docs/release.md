@@ -7,7 +7,7 @@ The release workflow is triggered by a `v*` tag and reuses the P0 Artix build, p
 check, SHA-512 generation and QEMU smoke path before publishing assets.
 Build metadata is bound to the exact ISO artifact in both the P0 and tagged release paths: CI recomputes the ISO byte count and SHA-512 and rejects metadata that does not match the downloaded file.
 
-The release workflow maintains a rolling `alpha-latest` prerelease with `dinx-latest-x86_64.iso` and its SHA-512 checksum. Tagged releases refresh it; use `workflow_dispatch` with `release_tag` only to seed or resync it. GitHub's 2 GiB per-asset limit means the alias is available only when the latest alpha is a single ISO asset; use the versioned release page when an ISO is split.
+The release workflow maintains a rolling `alpha-latest` prerelease with `dinx-latest-x86_64.iso` and its SHA-512 checksum. Tagged releases refresh it; use `workflow_dispatch` with `release_tag` only to seed or resync it. GitHub's 2 GiB per-asset limit means the alias is available only when the latest alpha is a single ISO asset; use the versioned release page when an ISO is split. The publisher retries transient 404s while release metadata, assets and alias uploads become visible, waits for the release listing to catch up, and refuses to let an older alpha roll back the alias.
 
 
 The P0 build verifies the committed upstream source archive for Deetty and Dintor against the exact

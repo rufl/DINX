@@ -9,6 +9,7 @@ pearl_pkg="$root/distro/packages/pearl/PKGBUILD"
 pearl_install="$root/distro/packages/pearl/pearl.install"
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
 graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
+graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
@@ -41,7 +42,7 @@ for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
   "$aqueous_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
-  "$aqueous_layout" "$aqueous_patch" "$graphics_helper" \
+  "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
   "$useradd_defaults" "$users_conf" "$gtk3_system" "$gtk3_skel" \
   "$gtk4_system" "$gtk4_skel"; do
   [[ -r "$path" ]] || fail "missing $path"
@@ -98,8 +99,8 @@ done
 grep -Fq '[general]' "$greetd_config" || fail 'greetd general section is missing'
 grep -Fq 'source_profile = false' "$greetd_config" \
   || fail 'greetd must not source the greeter account profile'
-grep -Fq 'command = "/usr/lib/pearl/pearl-greeter-host"' "$greetd_config" \
-  || fail 'greetd does not launch the Pearl Greeter host'
+grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' "$greetd_config" \
+  || fail 'greetd does not launch the graphics-safe Pearl Greeter wrapper'
 grep -Fq 'user = "pearl-greeter"' "$greetd_config" \
   || fail 'greetd does not use the dedicated Pearl Greeter account'
 if grep -Fq '[initial_session]' "$greetd_config"; then
@@ -161,21 +162,25 @@ grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueou
   || fail 'Aqueous wrapper does not select the graphics profile'
 grep -Fq 'virtual-gl)' "$aqueous_wrapper" \
   || fail 'Aqueous VM GLES branch is missing'
-grep -Fq 'export WLR_RENDERER=gles2' "$aqueous_wrapper" \
-  || fail 'Aqueous VM branch does not use GLES2'
-grep -Fq 'export GSK_RENDERER=gl' "$aqueous_wrapper" \
-  || fail 'GTK4 VM branch does not use GL'
-grep -Fq 'export WLR_RENDERER=pixman' "$aqueous_wrapper" \
-  || fail 'Aqueous no-render-node branch does not use Pixman'
-grep -Fq 'export GSK_RENDERER=cairo' "$aqueous_wrapper" \
-  || fail 'GTK4 CPU fallback is missing'
+grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' "$aqueous_wrapper" \
+  || fail 'Aqueous wrapper does not load the shared renderer policy'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper" \
+  || fail 'Aqueous wrapper does not apply the selected renderer policy'
+grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
+  || fail 'Aqueous VM renderer policy does not use GLES2'
+grep -Fq 'export GSK_RENDERER=gl' "$graphics_environment" \
+  || fail 'GTK4 VM renderer policy does not use GL'
+grep -Fq 'export WLR_RENDERER=pixman' "$graphics_environment" \
+  || fail 'Aqueous CPU fallback policy does not use Pixman'
+grep -Fq 'export GSK_RENDERER=cairo' "$graphics_environment" \
+  || fail 'GTK4 CPU fallback policy is missing'
+[[ $(grep -Fc 'export GSK_RENDERER=cairo' "$graphics_environment") -eq 1 ]] \
+  || fail 'GTK4 Cairo fallback is duplicated or overrides the hardware path'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not launch the selected compositor'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
   fail 'Aqueous session still forces the failing Lavapipe compositor path'
 fi
-[[ $(grep -Fc 'export GSK_RENDERER=cairo' "$aqueous_wrapper") -eq 1 ]] \
-  || fail 'GTK4 Cairo fallback is duplicated or overrides the hardware path'
 grep -Fq 'xdg-user-dirs-update' "$aqueous_wrapper" \
   || fail 'Aqueous session does not initialize XDG user directories'
 grep -Fq 'export GTK_THEME="DINX:dark"' "$aqueous_wrapper" \
@@ -232,4 +237,4 @@ if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true server_decorations=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true vm_gles=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true server_decorations=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_virgl_gles=true virtualbox_vmsvga_pixman=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

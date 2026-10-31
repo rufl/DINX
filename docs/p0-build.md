@@ -22,7 +22,7 @@ The entry points are:
 - `scripts/check_dinxpanel.sh` — DINXPanel control-center, fixed GPU bridge and safe kernel-installer contract;
 - `scripts/check_gaming.sh` — hidden manual launcher, optional package-group boundary, base Vulkan retention, and ISO payload exclusions;
 - `scripts/check_alpha7_hardware_report.sh` and `scripts/check_dinx_hardware_evidence.sh` — the hardware-report schema retains the Alpha 7 name for compatibility; the checks cover BC250 detection, manual boundaries and release evidence;
-- `docs/alpha7-qualification.md` — three-machine hardware evidence matrix and manual qualification boundary for the Alpha 10 system release;
+- `docs/alpha7-qualification.md` — three-machine hardware evidence matrix and manual qualification boundary for the current Alpha 12 system release;
 - `scripts/check_dinx_budget.sh` and `scripts/measure_dinx_session.sh` — payload/startup/native-binary/boot-window/ISO ceilings and runtime RSS/CPU observation;
 - `scripts/gaming_p5_qualification.sh` — fixture session return, signal-time process-group cleanup/profile restoration and real headless Gamescope launch/exit qualification;
 - `scripts/deetty_p2_qualification.sh` — deterministic ReleaseSafe P2 matrix for allocator/fairness, PTY/session continuity, ncurses and system TUIs;
@@ -80,7 +80,7 @@ The isolated Dintor GTK smoke renders its fallback icons to PNG with `rsvg-conve
 
 ### Local P4/P5 qualification
 
-The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Alpha 10's tagged release workflow [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) supplies the matching stable package repository, ISO, QEMU, graphical payload, Calamares BIOS/UEFI/Btrfs transaction, disposable BIOS and UEFI persistent-install/recovery-TTY smokes, build-metadata verification, provenance attestation and published release assets. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
+The local gates pass the DinitUI package contract, a real temporary user-Dinit daemon plus GTK smoke, and the gaming session fixture plus headless Gamescope launch/exit. Tagged release workflow [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) published Alpha 12 after the package/profile contracts, Artix build, QEMU graphical capture using default VGA, Calamares BIOS/UEFI/Btrfs transactions, disposable BIOS/UEFI install/recovery smokes, metadata binding, provenance attestation and release publication passed. That run did not exercise VMware-SVGA or VirtualBox VMSVGA. Current main configures a separate VMware-SVGA QEMU boot smoke, not yet run; direct VirtualBox boot remains unqualified. P5's real DRM, authenticated Steam/game, controller/audio and physical-hardware boundaries remain open.
 
 The published Alpha 9 payload check historically confirmed that Gamescope, Steam and 32-bit graphics packages were present in that release artifact; those package-presence claims do not describe the new base profile. Current P0 checks require the hidden gaming launcher and desktop entry while rejecting optional game binaries and package metadata in both rootfs and livefs. The storage contract still requires Pori's dinit service path under `/etc/dinit.d`, kernel `ntfs3` live read/write, optional post-install `ntfs-3g`, File Roller and GParted, while rejecting Thunar, GVFS, Tumbler and KDE Partition Manager. It also confirms the standalone PolicyKit agent and rejects systemd init package metadata/runtime while retaining dinit.
 The payload check also proves Firefox, its desktop entry, the default HTML/XHTML/HTTP/HTTPS handlers and `/etc/firefox/policies/policies.json`. That policy removes sponsored browser surfaces, Pocket/Stories, Firefox Studies and telemetry, browser recommendations, AI assistant/link-preview/tab-group surfaces and built-in IP Protection without disabling normal browser updates or user-initiated Firefox Accounts.
@@ -98,7 +98,7 @@ Tagged releases reuse the same build artifact through `.github/workflows/release
 
 The livefs-only `dinx-live-autologin` package replaces `root-ro` and `early-root-rw.target` with no-ops for the already-writable overlay. Its boot-enabled Dinit service writes the one-time Aqueous/Pearl initial-session config and declares `before = greetd` and `before = login.target`; because both services are activated for the live boot, Dinit starts the config writer before the upstream `greetd-dinit` service without shipping a second owner for `/etc/dinit.d/greetd`. Calamares installs `rootfs.img`, so the installed system retains Artix's generic root-remount units and manual-login greetd service.
 
-The live graphics helper selects `aqueous-cpu` with `WLR_RENDERER=gles2` and `GSK_RENDERER=gl` only when the active QEMU `virtio_gpu` or VirtualBox VMSVGA `vmwgfx` driver has a readable and writable render node. This preserves Mesa virgl/SVGA rendering without enabling Aqueous's Vulkan effects. Missing/inaccessible nodes and 2D-only adapters use `WLR_RENDERER=pixman` with `GSK_RENDERER=cairo`; other render-node hardware uses full Aqueous. The live account, Pearl Greeter and new Calamares accounts receive `render` group access. The ISO contract checks the kernel guest modules and Mesa DRI modules `virtio_gpu_dri.so` and `vmwgfx_dri.so`.
+The live and greeter graphics wrappers share one profile policy. Each accessible DRM render node is associated with its own sysfs driver, avoiding assumptions about DRM card order. QEMU `virtio_gpu` with a readable/writable render node selects `aqueous-cpu`, wlroots GLES2 and GTK4 GL; `vmwgfx` and other 2D virtual adapters use Pixman/Cairo in both the Aqueous session and Pearl Greeter fallback. Other hardware render nodes use full Aqueous. Alpha 12's release QEMU smoke used default VGA; current main adds a VMware-SVGA guest boot/capture smoke, not yet run. The live account, Pearl Greeter and new Calamares accounts receive `render` group access. Static ISO checks validate package/module presence and wrapper wiring, not actual VirtualBox boot.
 
 The profile owns the DINX visual contract at `/usr/share/dinx/theme/DINX.json`. `scripts/check_dinx_theme.sh` validates the static palette, `DINX_COLOR_SCHEME`, GTK/Qt bridges, Pearl Greeter, Calamares and GRUB before `buildiso`; `scripts/check-iso-content.sh` verifies the same files inside the root SquashFS image.
 The profile also owns the Artix GRUB theme configuration at `root-overlay/usr/share/grub/themes/artix/theme.txt`. It keeps the upstream logo, icons and font assets, uses the DINX surface/text/primary colors, and omits the opaque `menu_pixmap_style` and `selected_item_pixmap_style` textures that produced a black panel on the graphical kernel-selection screen.
@@ -113,7 +113,7 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /path/to/dinx.iso
 ```
 
-VirtualBox testing requires the VMSVGA controller and **Enable 3D Acceleration**. The normal CI VGA smoke does not verify host-side 3D acceleration, and neither path is considered hardware-qualified until observed on that hypervisor.
+The VirtualBox compatibility profile uses VMSVGA and Pixman/Cairo in both the Aqueous session and Pearl Greeter fallback; 3D acceleration is not required by the source policy. The published Alpha 12 predates this fallback and may return to Pearl Greeter with either 3D setting. Current P0 configures a QEMU VMware-SVGA boot/capture smoke, but it has not run; direct VirtualBox boot remains unqualified.
 
 The workflow also captures `dinx-boot-screen.ppm` three seconds after QEMU opens and before sending the boot-menu keys. This provides direct visual regression evidence for the GRUB kernel-selection screen.
 
@@ -125,20 +125,20 @@ For a second diagnostic capture after boot, set `DINX_QEMU_POST_SCREENSHOT` and 
 
 ## Latest published release run
 
-Tagged release run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) for `v0.1.0-alpha.10`, on commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`, completed every workflow step successfully:
+Tagged release run [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) for `v0.1.0-alpha.12`, on commit `56a814575e33bfae6215993972784f11b7dae215`, completed every workflow step successfully:
 
 - package/profile and first-party contracts, including native application and package-provenance checks, passed before the Artix build;
 - package builds and compact `buildiso` completed; ISO content, size and build-metadata/digest binding passed;
-- Calamares partition transactions and QEMU boot/graphical-session capture passed;
+- Calamares partition transactions and QEMU boot/graphical-session capture using the default VGA device passed; this run did not exercise VMware-SVGA or VirtualBox VMSVGA;
 - persistent-install, first-boot and recovery-TTY smokes passed on disposable BIOS and UEFI disks;
 - the signed DINX repository, release preflight, SHA-512, GitHub provenance attestation and release publication passed;
-- the published direct ISO is 1,862,772,736 bytes with SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`; signed repository snapshot `b0015a0655d7d56a4949731d1a4f33cb2cc8daa55d4ec77df6d1a22161d2f5fd`.
+- the published direct ISO is 1,836,830,720 bytes with SHA-512 `ac1dbd237e484f8d61aab5438185218b13d9e23824ce671440ff67ed275ce7073b90dbcc14bc8d8f7008b2422d66e2756f1b3a88a0d5c21d8c7bbc67c9d60bf9`; signed repository snapshot `37dfe99d5e4003e217e786ef82c8ea29562693db2d44b996a9624a68f31c490d`.
 
 This closes the P4 DinitUI and disposable install/recovery path for the system-alpha gate. It does not prove authenticated Steam/game use, real DRM gaming output, controller/audio hardware, physical installation, firmware, upgrades, filesystem rollback, BitLocker/hibernated Windows resizing or long-term hardware health.
 
-## Successful main P0 validation after Alpha 10
+## Historical main P0 validation after Alpha 10
 
-Run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on main commit `bf773500965c843e014e3bc3ef8fea685e14b91b` passed the full P0 workflow, including package contracts, Artix build, ISO checks, QEMU graphical boot, Calamares transactions, persistent BIOS/UEFI installation, recovery TTY, metadata, attestation and artifact upload. This post-release main validation followed documentation/contract cleanup; it did not publish or replace the Alpha 10 tagged artifact from run [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746).
+Run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on main commit `bf773500965c843e014e3bc3ef8fea685e14b91b` passed the full P0 workflow, including package contracts, Artix build, ISO checks, QEMU graphical boot, Calamares transactions, persistent BIOS/UEFI installation, recovery TTY, metadata, attestation and artifact upload. This was an earlier post-Alpha-10 main validation; it neither exercised VMware-SVGA nor published or replaced the later Alpha 12 artifact from tagged run [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617).
 
 ## Historical main ISO build before Alpha 10
 

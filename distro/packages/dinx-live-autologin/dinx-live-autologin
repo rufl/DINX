@@ -35,8 +35,7 @@ vt = 1
 source_profile = false
 
 [default_session]
-command = "/usr/lib/pearl/pearl-greeter-host"
-user = "pearl-greeter"
+command = "/usr/local/libexec/dinx-pearl-greeter-host"
 
 [initial_session]
 command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"

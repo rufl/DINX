@@ -6,36 +6,43 @@ set -eu
 drm_root=${1:-/sys/class/drm}
 dri_root=${2:-/dev/dri}
 has_render_node=false
+has_virtual_gl=false
+has_software_display=false
+has_hardware=false
 
 for render_node in "$dri_root"/renderD*; do
-  if [ -r "$render_node" ] && [ -w "$render_node" ]; then
-    has_render_node=true
-    break
+  if [ ! -r "$render_node" ] || [ ! -w "$render_node" ]; then
+    continue
   fi
+  has_render_node=true
+
+  render_name=${render_node##*/}
+  driver_path=$(readlink "$drm_root/$render_name/device/driver" 2>/dev/null) || {
+    has_hardware=true
+    continue
+  }
+  driver=${driver_path##*/}
+  case "$driver" in
+    virtio_gpu)
+      has_virtual_gl=true
+      ;;
+    vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)
+      has_software_display=true
+      ;;
+    *)
+      has_hardware=true
+      ;;
+  esac
 done
 
 if [ "$has_render_node" = false ]; then
   printf '%s\n' cpu
-  exit 0
+elif [ "$has_hardware" = true ]; then
+  printf '%s\n' hardware
+elif [ "$has_virtual_gl" = true ]; then
+  printf '%s\n' virtual-gl
+elif [ "$has_software_display" = true ]; then
+  printf '%s\n' cpu
+else
+  printf '%s\n' hardware
 fi
-
-for drm_card in "$drm_root"/card[0-9]*; do
-  case "${drm_card##*/}" in
-    card[0-9]|card[0-9][0-9]*) ;;
-    *) continue ;;
-  esac
-  driver_path=$(readlink "$drm_card/device/driver" 2>/dev/null) || continue
-  driver=${driver_path##*/}
-  case "$driver" in
-    virtio_gpu|vmwgfx)
-      printf '%s\n' virtual-gl
-      exit 0
-      ;;
-    vboxvideo|qxl|bochs|simpledrm|cirrus)
-      printf '%s\n' cpu
-      exit 0
-      ;;
-  esac
-done
-
-printf '%s\n' hardware

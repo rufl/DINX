@@ -9,6 +9,8 @@ builder="$root/scripts/build-iso-container.sh"
 aqueous_dir="$root/distro/packages/aqueous"
 pearl_dir="$root/distro/packages/pearl"
 graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
+graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
+greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
 iso_check="$root/scripts/check-iso-content.sh"
 session_check="$root/scripts/check_dinx_session.sh"
 
@@ -25,7 +27,8 @@ for path in \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
   "$aqueous_dir/window_policy_test.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
-  "$graphics_helper" "$root/scripts/check_dinx_graphics_profile.sh"; do
+  "$graphics_helper" "$graphics_environment" "$greeter_wrapper" \
+  "$root/scripts/check_dinx_graphics_profile.sh"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -135,7 +138,9 @@ for required in \
   '  usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy' \
   '  usr/share/wayland-sessions/dinx-aqueous-pearl.desktop' \
   '  usr/local/libexec/dinx-aqueous-pearl' \
-  '  usr/local/libexec/dinx-aqueous-init'; do
+  '  usr/local/libexec/dinx-aqueous-init' \
+  '  usr/local/libexec/dinx-graphics-environment.sh' \
+  '  usr/local/libexec/dinx-pearl-greeter-host'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
 
@@ -219,22 +224,31 @@ grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
   || fail 'compatibility Aqueous compositor selection is missing'
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueous_wrapper" \
   || fail 'Aqueous session does not select the detected graphics profile'
-grep -Fq 'virtual-gl)' "$aqueous_wrapper" \
-  || fail 'Aqueous session has no VM GLES renderer path'
-grep -Fq 'export WLR_RENDERER=gles2' "$aqueous_wrapper" \
-  || fail 'Aqueous VM renderer is not set to GLES2'
-grep -Fq 'export GSK_RENDERER=gl' "$aqueous_wrapper" \
-  || fail 'GTK4 VM renderer is not set to GL'
-grep -Fq 'export WLR_RENDERER=pixman' "$aqueous_wrapper" \
-  || fail 'Aqueous CPU renderer is not set to Pixman'
-grep -Fq 'export GSK_RENDERER=cairo' "$aqueous_wrapper" \
-  || fail 'GTK4 Cairo fallback is missing from the CPU branch'
-grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
-  || fail 'Aqueous wrapper does not execute the selected compositor'
-grep -Fq 'virtio_gpu|vmwgfx)' "$graphics_helper" \
-  || fail 'QEMU/VirtualBox render-node drivers are not detected'
-grep -Fq 'vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
-  || fail '2D virtual display drivers do not use the safe fallback'
+grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not load the shared graphics environment policy'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not apply the selected renderer policy'
+grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
+  || fail 'QEMU renderer policy is not set to GLES2'
+grep -Fq 'export GSK_RENDERER=gl' "$graphics_environment" \
+  || fail 'GTK4 QEMU renderer policy is not set to GL'
+grep -Fq 'export WLR_RENDERER=pixman' "$graphics_environment" \
+  || fail 'CPU compatibility renderer policy is not set to Pixman'
+grep -Fq 'export GSK_RENDERER=cairo' "$graphics_environment" \
+  || fail 'GTK4 Cairo fallback policy is missing'
+sh -n "$greeter_wrapper" "$aqueous_wrapper" || fail 'graphics wrapper shell syntax is invalid'
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not select the detected graphics profile'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not apply the shared renderer policy'
+grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' "$greeter_wrapper" \
+  || fail 'Pearl Greeter wrapper does not execute the packaged host'
+grep -Fq 'DINX_QEMU_VIDEO_DEVICE: vmware-svga' "$workflow" \
+  || fail 'P0 does not boot the ISO with a VMware SVGA device'
+grep -Fq 'virtio_gpu)' "$graphics_helper" \
+  || fail 'QEMU virtio-gpu render-node driver is not detected'
+grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
+  || fail 'VirtualBox and 2D virtual display drivers do not use the safe fallback'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init" \
   || fail 'Aqueous init does not delegate to the supervised dinit session'
@@ -245,5 +259,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 qemu_virgl=true virtualbox_vmsvga=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 qemu_virgl_gles=true virtualbox_vmsvga_pixman=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

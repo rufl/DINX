@@ -280,6 +280,15 @@ jobs:
           DINX_QEMU_POST_SCREENSHOT: dist/iso/dinx/dinx-session-screen.ppm
           DINX_QEMU_POST_SCREENSHOT_DELAY: 10
         run: scripts/smoke-iso.sh "$DINX_ISO"
+      - name: Boot smoke with VMware SVGA graphics
+        env:
+          DINX_QEMU_TIMEOUT: 90
+          DINX_QEMU_VIDEO_DEVICE: vmware-svga
+          DINX_QEMU_LOG: dist/iso/dinx/dinx-vmware-svga.qemu.log
+          DINX_QEMU_SCREENSHOT: dist/iso/dinx/dinx-vmware-svga-session.ppm
+          DINX_QEMU_SCREENSHOT_DELAY: 60
+          DINX_QEMU_BOOT_KEYS: down,down,ret
+        run: scripts/smoke-iso.sh "$DINX_ISO"
 
       - name: Verify graphical ISO payload
         run: scripts/check-iso-content.sh "$DINX_ISO"

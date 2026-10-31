@@ -107,6 +107,8 @@ required_paths=(
   etc/default/grub.d/40-dinx-windows.cfg
   etc/dinit.d/greetd
   etc/greetd/config.toml
+  usr/local/libexec/dinx-graphics-environment.sh
+  usr/local/libexec/dinx-pearl-greeter-host
   etc/tmpfiles.d/dinx-dinit.conf
   usr/bin/reboot
   usr/bin/poweroff
@@ -491,19 +493,27 @@ grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" |
 aqueous_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
+grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$aqueous_launcher" \
+  || fail 'DINX Aqueous does not load the shared graphics environment policy'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$aqueous_launcher" \
+  || fail 'DINX Aqueous does not apply the selected renderer policy'
 aqueous_graphics_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-profile)
-grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$aqueous_launcher" || fail 'DINX Aqueous graphics-profile selection is missing'
-grep -Fq 'virtual-gl)' <<<"$aqueous_launcher" || fail 'DINX Aqueous VM GLES renderer selection is missing'
-grep -Fq 'export WLR_RENDERER=gles2' <<<"$aqueous_launcher" || fail 'DINX Aqueous VM renderer is not set to GLES2'
-grep -Fq 'export GSK_RENDERER=gl' <<<"$aqueous_launcher" || fail 'DINX GTK4 VM renderer is not set to GL'
-grep -Fq 'export WLR_RENDERER=pixman' <<<"$aqueous_launcher" || fail 'DINX Aqueous CPU fallback is missing'
-grep -Fq 'export GSK_RENDERER=cairo' <<<"$aqueous_launcher" || fail 'DINX GTK4 Cairo fallback is missing'
-grep -Fq 'virtio_gpu|vmwgfx)' <<<"$aqueous_graphics_helper" || fail 'QEMU/VirtualBox accelerated DRM drivers are not detected'
-grep -Fq 'vboxvideo|qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail '2D virtual display fallback drivers are not detected'
+graphics_environment=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-environment.sh)
+grep -Fq 'export WLR_RENDERER=gles2' <<<"$graphics_environment" || fail 'DINX QEMU renderer policy is not set to GLES2'
+grep -Fq 'export GSK_RENDERER=gl' <<<"$graphics_environment" || fail 'DINX GTK4 QEMU renderer policy is not set to GL'
+grep -Fq 'export WLR_RENDERER=pixman' <<<"$graphics_environment" || fail 'DINX CPU compatibility renderer policy is missing'
+grep -Fq 'export GSK_RENDERER=cairo' <<<"$graphics_environment" || fail 'DINX GTK4 Cairo fallback policy is missing'
+greeter_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-pearl-greeter-host)
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not detect the graphics profile'
+grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not load the shared renderer policy'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not apply the selected renderer'
+grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' <<<"$greeter_wrapper" || fail 'Pearl Greeter wrapper does not execute its packaged host'
+grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
+grep -Fq 'virtio_gpu)' <<<"$aqueous_graphics_helper" || fail 'QEMU virtio-gpu render-node driver is not detected'
+grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail 'VirtualBox and 2D virtual display fallback drivers are not detected'
 for graphics_module in virtio-gpu vmwgfx; do
   grep -Eq "/usr/lib/modules/[^[:space:]]*/kernel/drivers/gpu/drm/.*/${graphics_module}\\.ko(\\.(zst|xz|gz))?([[:space:]]|$)" <<<"$manifest" \
-    || fail "ISO kernel module is missing for VM acceleration: $graphics_module"
+    || fail "ISO kernel DRM module is missing for VM compatibility: $graphics_module"
 done
 grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
@@ -544,8 +554,8 @@ grep -Fq 'file = "logo.png"' <<<"$grub_theme" || fail 'GRUB theme does not displ
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)
 grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general section is missing'
 grep -Fq 'source_profile = false' <<<"$root_greetd_config" || fail 'installed greetd sources the greeter profile'
-grep -Fq 'command = "/usr/lib/pearl/pearl-greeter-host"' <<<"$root_greetd_config" \
-  || fail 'installed greetd does not launch Pearl Greeter'
+grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not launch the graphics-safe Pearl Greeter wrapper'
 grep -Fq 'user = "pearl-greeter"' <<<"$root_greetd_config" \
   || fail 'installed greetd does not use the Pearl Greeter account'
 if grep -Fq '[initial_session]' <<<"$root_greetd_config"; then

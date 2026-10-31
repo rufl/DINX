@@ -1,7 +1,7 @@
 # DINX hardware qualification (Alpha 7 report contract)
 
 The Alpha 7 report utility and environment names are retained for compatibility.
-This matrix is the manual hardware boundary for the current `v0.1.0-alpha.10`
+This matrix is the manual hardware boundary for the current `v0.1.0-alpha.12`
 release; it separates repository evidence from manual hardware testing after the ISO is generated.
 
 ## Build gate
@@ -102,7 +102,7 @@ each manual result only after running the corresponding test:
 ```bash
 export DINX_ALPHA7_MACHINE_ROLE=desktop   # desktop, laptop or bc250
 export DINX_ALPHA7_FIRMWARE_MODE=uefi    # bios or uefi
-export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.10
+export DINX_ALPHA7_RELEASE_TAG=v0.1.0-alpha.12
 export DINX_ALPHA7_BUILD_COMMIT=0123456789012345678901234567890123456789
 export DINX_ALPHA7_PACKAGE_REPOSITORY_SNAPSHOT=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 for result in \
@@ -132,4 +132,4 @@ game launch, controller input, PipeWire game audio, suspend/resume, physical
 brightness, GPU recovery, firmware behavior, or long-running hardware health.
 Those claims remain open until the three-machine manual matrix passes.
 
-System Beta 0.1 is a planned release milestone; its physical-hardware gates are listed in the [roadmap](roadmap.md). P5 gaming qualification remains separate. Alpha 10 is a system alpha, and this report makes no hardware-support claim until a device's manual evidence is recorded.
+System Beta 0.1 is a planned release milestone; its physical-hardware gates are listed in the [roadmap](roadmap.md). P5 gaming qualification remains separate. Alpha 12 is a system alpha, and this report makes no hardware-support claim until a device's manual evidence is recorded.

@@ -6,8 +6,9 @@
 
 A imagem atual da DINX é uma **ISO live de validação com um instalador de disco experimental**. O Calamares instala a partir do root filesystem da ISO sem exigir rede; cria o usuário, configura o dinit e o GRUB e remove os pacotes exclusivos da sessão live. Este guia cobre os caminhos seguros de download, verificação, boot e instalação experimental. Ele não promete suporte de hardware de produção, atualizações da ISO instalada, rollback do filesystem ou preservação de dados.
 
-O release publicado é o **alpha de sistema Alpha 10**, não um beta gaming: [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10), publicada pela execução marcada [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) a partir do commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. A ISO direta tem 1.862.772.736 bytes e SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`. A Beta 0.1 é um marco planejado e sem data para qualificação do sistema; veja o [roadmap](roadmap.md).
-As lacunas anteriores do payload livefs e do marcador do primeiro boot foram corrigidas. O P0 da main após a Alpha 10, [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), no commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passou pelos gates completos de build, gráfico, instalação persistente BIOS/UEFI e TTY de recuperação. Esta validação separada da main não alterou o artefato marcado da Alpha 10.
+O release publicado é o **alpha de sistema Alpha 12**, não um beta gaming: [v0.1.0-alpha.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), publicado pela execução marcada [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) a partir do commit `56a814575e33bfae6215993972784f11b7dae215`. A ISO direta tem 1.836.830.720 bytes e SHA-512 `ac1dbd237e484f8d61aab5438185218b13d9e23824ce671440ff67ed275ce7073b90dbcc14bc8d8f7008b2422d66e2756f1b3a88a0d5c21d8c7bbc67c9d60bf9`. A Beta 0.1 é um marco planejado e sem data para qualificação do sistema; veja o [roadmap](roadmap.md).
+
+O P0 da main após a Alpha 10, [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), passou pelos gates de build, QEMU, instalação e recuperação, mas não alterou a ISO marcada. A Alpha 12 foi publicada depois; seu smoke QEMU usou VGA padrão, não VMware-SVGA. A main atual configura um smoke adicional de guest VMware-SVGA, ainda não executado.
 
 O Pori é a ferramenta gráfica de armazenamento dinit. Use-o para inspecionar discos e criar serviços persistentes de montagem em `/etc/dinit.d`; use o File Roller para abrir, criar e extrair arquivos compactados, o GParted para editar partições fora do instalador e o Calamares para a transação final de particionamento e instalação.
 
@@ -26,7 +27,7 @@ A alpha atual não possui bootloader assinado, caminho Secure Boot suportado nem
 
 ## 1. Obter o artefato ISO
 
-A Alpha 10, alpha de sistema publicada, oferece ISO direta e checksum correspondente no [release com tag](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10). Use esse release como download principal. Os artefatos do workflow P0 são alternativas temporárias, retidas por sete dias e substituídas por execuções posteriores.
+A Alpha 12, alpha de sistema publicada, oferece ISO direta e checksum correspondente no [release com tag](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12). Use esse release como download principal. Os artefatos do workflow P0 são alternativas temporárias, retidas por sete dias e substituídas por execuções posteriores.
 
 ### Release alpha com tag
 
@@ -146,7 +147,7 @@ Use um gravador confiável como o Rufus. Selecione a ISO verificada e o pendrive
 2. Reinicie e abra o menu de boot (`F12`, `F11`, `Esc` ou a tecla específica do fabricante).
 3. Selecione a entrada UEFI do USB.
 4. Se o firmware recusar a imagem, desative Secure Boot para este teste; a alpha atual não fornece um caminho Secure Boot assinado.
-5. A imagem Alpha 10 publicada inicia diretamente em `Aqueous + Pearl (DINX)`; a live não solicita usuário nem senha.
+5. A imagem Alpha 12 publicada inicia diretamente em `Aqueous + Pearl (DINX)`; a live não solicita usuário nem senha.
 
 A ISO live abre diretamente a conta descartável `dinx` em `Aqueous + Pearl (DINX)`. Isso vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
 
@@ -157,7 +158,7 @@ O runtime base do ZLS é compacto por design: completion e navegação usam a á
 
 ### Suporte opcional à BC-250
 
-A ISO genérica da Alpha 10 exclui o BC250 Control Center e o governor Cyan Skillfish. Os pacotes fixados estão disponíveis no repositório DINX assinado; instale-os somente após confirmar o PCI `1002:13fe`. Primeiro configure e confie localmente no repositório assinado conforme `release.md`:
+A ISO genérica da Alpha 12 exclui o BC250 Control Center e o governor Cyan Skillfish. Os pacotes fixados estão disponíveis no repositório DINX assinado; instale-os somente após confirmar o PCI `1002:13fe`. Primeiro configure e confie localmente no repositório assinado conforme `release.md`:
 
 ```bash
 if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
@@ -187,7 +188,7 @@ A partir do desktop live:
 8. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O Calamares e o GParted podem apagar, formatar ou redimensionar dados. As ações de montagem do Pori não formatam discos, mas confira o dispositivo, o filesystem e o destino de montagem antes de confirmar qualquer ação privilegiada. A confirmação final não protege contra a seleção do disco errado. Faça backup e confira modelo, tamanho e informações de série do dispositivo-alvo.
-A qualificação do Calamares da Alpha 10 cobre um layout GPT típico de Windows: uma ESP FAT32 existente contendo `EFI/Microsoft`, uma partição Windows NTFS e espaço para a raiz DINX criado depois dela. O smoke preserva a partição Windows e o caminho de boot da Microsoft enquanto grava fstab e dados GRUB da DINX tanto no resultado side-by-side quanto em um layout manual explícito. A ISO live e a instalação base usam o driver de kernel `ntfs3` para leitura e escrita NTFS; o `ntfs-3g` legado é opcional após a instalação para compatibilidade e ferramentas de reparo. O perfil inclui `os-prober`, habilita a detecção do Windows pelo GRUB e usa um diretório EFI separado para `DINX`. Uma ESP existente de pelo menos 64 MiB é aceita porque a DINX mantém `/boot` no root filesystem; uma ESP nova é recomendada com 1 GiB. Se a ESP existente for menor ou estiver cheia, crie uma nova ESP FAT32 no espaço livre pelo layout manual em vez de formatar a ESP da Microsoft. Não formate a ESP existente nem as partições Windows/MSR/Recovery. Inicialize a DINX no mesmo modo UEFI do Windows, desligue o Windows completamente, desabilite Fast Startup/hibernação, suspenda o BitLocker mantendo a chave de recuperação disponível e faça backup verificado antes de tentar redimensionar.
+A qualificação do Calamares da Alpha 12 cobre um layout GPT típico de Windows: uma ESP FAT32 existente contendo `EFI/Microsoft`, uma partição Windows NTFS e espaço para a raiz DINX criado depois dela. O smoke preserva a partição Windows e o caminho de boot da Microsoft enquanto grava fstab e dados GRUB da DINX tanto no resultado side-by-side quanto em um layout manual explícito. A ISO live e a instalação base usam o driver de kernel `ntfs3` para leitura e escrita NTFS; o `ntfs-3g` legado é opcional após a instalação para compatibilidade e ferramentas de reparo. O perfil inclui `os-prober`, habilita a detecção do Windows pelo GRUB e usa um diretório EFI separado para `DINX`. Uma ESP existente de pelo menos 64 MiB é aceita porque a DINX mantém `/boot` no root filesystem; uma ESP nova é recomendada com 1 GiB. Se a ESP existente for menor ou estiver cheia, crie uma nova ESP FAT32 no espaço livre pelo layout manual em vez de formatar a ESP da Microsoft. Não formate a ESP existente nem as partições Windows/MSR/Recovery. Inicialize a DINX no mesmo modo UEFI do Windows, desligue o Windows completamente, desabilite Fast Startup/hibernação, suspenda o BitLocker mantendo a chave de recuperação disponível e faça backup verificado antes de tentar redimensionar.
 ### Primeiro boot e TTY de recuperação
 
 O contrato de instalação do CI inicializa o root filesystem copiado em discos BIOS e UEFI descartáveis e habilita `getty@tty2` e `getty@tty3` para recuperação. Esses são smokes em discos QEMU, não uma qualificação de hardware físico. Em uma instalação real, pressione `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` no greeter do sistema instalado para abrir uma TTY e faça login com o usuário criado durante a instalação. Comandos úteis:
@@ -242,7 +243,7 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A tela fica vazia
 
-A DINX inclui Mesa Lavapipe (`vulkan-swrast`) para aplicativos Vulkan. QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`) devem usar `aqueous-cpu` com GLES2 no wlroots e GL no GTK4, sem os efeitos Vulkan do Aqueous; render nodes ausentes/inacessíveis e adaptadores 2D `vboxvideo`/QXL usam Pixman/Cairo. A ISO Alpha 12 inclui wlroots compilado com GLES2 + Vulkan; o CI do release validou a imagem, o boot e a captura gráfica no QEMU. O boot direto no VirtualBox VMSVGA ainda não foi qualificado. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso a `render`. A seleção do renderer não comprova que a aceleração 3D do host esteja ativa.
+A Aqueous escolhe o perfil gráfico pelo driver sysfs de cada render node DRM acessível, não pela ordem dos dispositivos DRM. QEMU `virtio_gpu`/virgl usa `aqueous-cpu` com GLES2 no wlroots e GL no GTK4 quando seu render node é legível e gravável, sem os efeitos Vulkan do Aqueous. `vmwgfx` e outros adaptadores virtuais 2D usam Pixman/Cairo; a mesma política vale para a sessão Aqueous e o fallback do Pearl Greeter. O smoke QEMU da Alpha 12 usou VGA padrão; o workflow P0 atual adiciona boot/captura guest com VMware-SVGA, ainda não executado. A Alpha 12 é anterior à correção, e o boot direto no VirtualBox continua sem qualificação. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso a `render`.
 
 ### Gráficos, drivers e mídia
 
@@ -256,7 +257,7 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /caminho/para/dinx.iso
 ```
 
-No VirtualBox, selecione **VMSVGA** e habilite **Aceleração 3D** nas configurações de vídeo da VM. O guest usa Pixman/Cairo se o host não expuser um render node utilizável. Esses caminhos não significam que todas as combinações de host/GPU/driver estejam qualificadas; ao relatar bugs, informe o hypervisor, renderer do host, driver DRM do guest e a saída de `dinx-alpha7-hardware-report`.
+Na próxima ISO DINX, use **VMSVGA** no VirtualBox; o código seleciona Pixman/Cairo para `vmwgfx` tanto na sessão Aqueous quanto no fallback Pearl Greeter, independentemente do render node ou da aceleração 3D. A Alpha 12 publicada pode falhar com qualquer configuração 3D porque o caminho GLES2 está desabilitado no build do guest; mudar essa opção não corrige o binário. O smoke QEMU VMware-SVGA está configurado no P0, mas ainda não foi executado; o boot direto no VirtualBox também continua sem qualificação. Ao relatar falha numa ISO reconstruída, informe hypervisor, renderer do host, driver DRM do guest e a saída de `dinx-alpha7-hardware-report`.
 
 A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,
@@ -267,7 +268,7 @@ visualização.
 
 ### Pacotes gaming opcionais
 
-A ISO genérica da Alpha 10 exclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits. A base mantém RADV e diagnósticos Vulkan; o usuário pode optar pelo conjunto gaming após a instalação:
+A ISO genérica da Alpha 12 exclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam e bibliotecas gaming de 32 bits. A base mantém RADV e diagnósticos Vulkan; o usuário pode optar pelo conjunto gaming após a instalação:
 
 1. Em `/etc/pacman.conf`, adicione o repositório oficial Artix somente se `[lib32]` ainda não estiver definido:
 

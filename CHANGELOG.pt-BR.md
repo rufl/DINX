@@ -4,6 +4,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Direciona VirtualBox VMSVGA (`vmwgfx`) para o compositor de compatibilidade Pixman/Cairo, com ou sem render node e independentemente da opção 3D do host. O runtime da Alpha 12 publicada informa que GLES2 está desabilitado na compilação apesar da configuração da receita, causando o loop relatado no startup do desktop. QEMU `virtio_gpu`/virgl mantém o caminho GLES2; fixtures cobrem VMSVGA com e sem render node. Ainda são necessárias uma nova ISO e validação direta no VirtualBox.
+
 ## DINX v0.1.0-alpha.12 — 2026-10-31
 
 - Release publicado a partir do commit `56a814575e33bfae6215993972784f11b7dae215` após o workflow [#41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) passar pelo build da ISO, boot gráfico no QEMU, transações Calamares e verificações de instalação persistente BIOS/UEFI e TTY de recuperação. A ISO de 1.836.830.720 bytes fica abaixo do limite de 2 GiB por arquivo do GitHub; `alpha-latest` agora aponta para este release com o SHA-512 correspondente.
@@ -12,7 +14,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Restaurados os fontes Zig do DinitUI e do DINXPanel exigidos pelos pacotes no repositório; a remoção fazia contratos falharem em checkouts limpos e deixava os builds sem os pontos de entrada.
 
 - A validação da ISO não depende mais do nome upstream da entrada Calamares; exige o arquivo do pacote e verifica se o override DINX de mesmo ID o oculta, deixando visível apenas o launcher Instalar DINX.
-- Incluída na Alpha 12 a correção do loop de login da Alpha 11 no VirtualBox VMSVGA: o Aqueous solicita GLES2 ao wlroots, mas a biblioteca da Alpha 11 foi compilada somente com Vulkan. A receita agora solicita e verifica GLES2 + Vulkan; `libglvnd` fornece as dependências de build e runtime EGL/GLES2. O CI do release validou gráficos no QEMU; o boot direto no VirtualBox ainda não foi qualificado.
+- A Alpha 12 tentou corrigir o loop de login da Alpha 11 no VirtualBox VMSVGA solicitando e verificando GLES2 + Vulkan na receita wlroots; `libglvnd` fornece as dependências EGL/GLES2. O guest publicado ainda informa que GLES2 está desabilitado na compilação quando o VMSVGA seleciona esse caminho, então o desktop pode retornar ao greeter. O CI da release validou somente os gráficos no QEMU; o boot direto no VirtualBox continua sem qualificação.
 - Adicionado um alias de download direto e um checksum SHA-512 persistentes para a ISO alpha mais recente. O workflow de release por tag atualiza o alias, e as duas páginas iniciais do GitHub apontam para ele.
 - Corrigida a falha do build P0 causada pela ausência do pacote Gapless fixado no repositório local assinado. O builder Artix agora instala Vala e as dependências de build do GStreamer, empacota o Gapless antes de montar a rootfs e verifica essa configuração no contrato de proveniência.
 - As instalações de pacotes locais agora atualizam os bancos pacman e tentam novamente quando os metadados dos mirrors divergem. As árvores Zig versionadas de DinitUI, DINXPanel e Seafoam Settings são preservadas ao omitir `makepkg --clean` nesses builds; smoke de recuperação adicionado.
@@ -31,7 +33,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Saídas novas do Aqueous agora começam com dois workspaces, em vez dos nove workspaces iniciais do upstream.
 
-- Adicionado um perfil gráfico para render nodes com capacidade de aceleração no QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`), com fallback Pixman/Cairo para dispositivos virtuais ausentes, inacessíveis ou somente 2D. O usuário live, o Pearl Greeter e novas contas instaladas recebem acesso ao grupo `render`. A aceleração 3D do host continua sendo uma configuração explícita do hypervisor; nenhum pacote ou serviço systemd foi adicionado.
+- Adicionados perfis gráficos para QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`). A Alpha 12 inicialmente selecionava GLES2 para ambos com render nodes acessíveis; o runtime publicado expôs o gap de build GLES2 no VirtualBox. A correção em Não lançado direciona `vmwgfx` para Pixman/Cairo. O usuário live, o Pearl Greeter e novas contas instaladas recebem acesso ao grupo `render`; nenhum pacote ou serviço systemd foi adicionado.
 
 - A sessão Aqueous/Pearl exporta `GTK_CSD=0` e solicita decorações do servidor para que janelas GTK padrão e clientes Wayland compatíveis usem a barra do compositor. A documentação registra o limite restante para aplicativos com chrome CSD próprio.
 

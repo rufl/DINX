@@ -1,0 +1,10 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: © 2026 Seafoam Labs
+# SPDX-License-Identifier: GPL-3.0-only
+set -eu
+
+graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
+. /usr/local/libexec/dinx-graphics-environment.sh
+dinx_apply_graphics_environment "$graphics_profile"
+
+exec /usr/lib/pearl/pearl-greeter-host "$@"

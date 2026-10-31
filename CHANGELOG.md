@@ -4,6 +4,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Route both the Aqueous/Pearl session and the Pearl Greeter fallback through the detected graphics profile. Bind each DRM render node to its own sysfs driver rather than assuming `card0` order; `vmwgfx` and other 2D virtual adapters use Pixman/Cairo, while accessible QEMU `virtio_gpu` keeps GLES2. Regression contracts cover the driver mapping, multi-GPU ordering, CPU fallback and both launch paths. The P0 workflow now configures an additional VMware-SVGA QEMU boot/capture smoke, but it has not run yet. The published Alpha 12 predates this fix; a new ISO and direct VirtualBox boot are still required.
+
 ## DINX v0.1.0-alpha.12 — 2026-10-31
 
 - Published from `56a814575e33bfae6215993972784f11b7dae215` after release workflow [#41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) passed ISO build, QEMU graphical boot, Calamares transactions and persistent BIOS/UEFI installation and recovery checks. The 1,836,830,720-byte ISO is below GitHub's 2 GiB asset limit; `alpha-latest` now points to this release with the matching SHA-512 checksum.
@@ -12,7 +14,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Restored the DinitUI and DINXPanel Zig sources required by their in-tree packages; their removal made clean CI checkouts fail source contracts and left package builds without their entry points.
 
 - Made ISO validation independent of the upstream Calamares desktop name; it now requires the package entry and verifies the same-ID DINX override hides it, leaving only the Install DINX launcher visible.
-- Shipped the Alpha 11 VirtualBox VMSVGA login-loop fix in Alpha 12: Aqueous requests wlroots GLES2, but Alpha 11's library was built with Vulkan only. The recipe now requests and verifies GLES2 + Vulkan; `libglvnd` supplies EGL/GLES2 build and runtime dependencies. Release CI verified QEMU graphics; direct VirtualBox boot remains unqualified.
+- Alpha 12 attempted to fix the Alpha 11 VirtualBox VMSVGA login loop by requesting and checking GLES2 + Vulkan in the wlroots recipe; `libglvnd` supplies EGL/GLES2 dependencies. The published guest still reports GLES2 disabled at compile time when VMSVGA selects it, so the desktop can return to the greeter. Release CI verified QEMU graphics only; direct VirtualBox boot remains unqualified.
 - Added a rolling direct-download alias and matching SHA-512 checksum for the latest alpha ISO. The tagged release workflow refreshes it, and both GitHub landing pages link to it.
 - Fixed the P0 ISO build failure caused by omitting the pinned Gapless package from the signed local repository. The Artix builder now installs Vala and GStreamer build dependencies, packages Gapless before composing the rootfs, and checks this wiring in the provenance contract.
 - Made local package installation retry after refreshing pacman databases when mirror metadata drifts. Preserved checked-in Zig sources by skipping `makepkg --clean` for DinitUI, DINXPanel and Seafoam Settings; added a recovery smoke.
@@ -31,7 +33,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 - Seed fresh Aqueous outputs with two workspaces instead of the upstream nine-workspace startup set.
 
-- Add a graphics profile for accelerated-capable QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) render nodes, with Pixman/Cairo fallback for absent, inaccessible or 2D-only virtual devices. Grant the live user, Pearl Greeter and new installed accounts `render` access. Host-side 3D remains an explicit hypervisor setting; no systemd packages or services are added.
+- Added graphics profiles for QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`). Alpha 12 initially selected GLES2 for both when render nodes were accessible; its published runtime exposed the VirtualBox GLES2 build gap. The Unreleased fix routes `vmwgfx` to Pixman/Cairo. The live user, Pearl Greeter and new installed accounts receive `render` access; no systemd packages or services are added.
 
 - Export `GTK_CSD=0` from the Aqueous/Pearl session and request server-side decorations so standard GTK and protocol-capable Wayland apps use the compositor titlebar. Document the remaining boundary for apps that hard-code custom client-side chrome.
 

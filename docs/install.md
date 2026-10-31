@@ -6,8 +6,9 @@
 
 The current DINX image is a **live validation ISO with an experimental disk installer**. Calamares installs from the ISO root filesystem without requiring a network connection; it creates the user, configures dinit and GRUB, and removes the live-only packages. This guide covers the safe download, verification, boot and experimental installation paths. It does not promise production hardware support, installed-ISO upgrades, filesystem rollback or data preservation.
 
-The published release is the **Alpha 10 system alpha**, not a gaming beta: [v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10), published by tagged workflow [40879223746](https://github.com/rufl/DINX/actions/runs/40879223746) from commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e`. Its direct ISO is 1,862,772,736 bytes with SHA-512 `5f49a65eac1481c01555a8f44b049c9a06e75ec7270ac3cdef97cc5e0b051d4b3c48a200542a36ec1832700accbc5509e3c314726c2f747530095eba4112219a`. Beta 0.1 is a planned, undated system-qualification milestone; see the [roadmap](roadmap.md).
-The earlier livefs payload and first-boot marker gaps are fixed. Post-release main P0 run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on commit `bf773500965c843e014e3bc3ef8fea685e14b91b` passed the full build, graphical, BIOS/UEFI persistent-install and recovery-TTY gates. This separate main validation did not change the tagged Alpha 10 release artifact.
+The published release is the **Alpha 12 system alpha**, not a gaming beta: [v0.1.0-alpha.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), published by tagged workflow [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) from commit `56a814575e33bfae6215993972784f11b7dae215`. Its direct ISO is 1,836,830,720 bytes with SHA-512 `ac1dbd237e484f8d61aab5438185218b13d9e23824ce671440ff67ed275ce7073b90dbcc14bc8d8f7008b2422d66e2756f1b3a88a0d5c21d8c7bbc67c9d60bf9`. Beta 0.1 is a planned, undated system-qualification milestone; see the [roadmap](roadmap.md).
+
+The earlier post-Alpha-10 main P0 run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) passed its build, QEMU, installation and recovery gates but did not change the tagged ISO. Alpha 12 was published later; its release QEMU smoke used default VGA, not VMware-SVGA. Current main configures an additional VMware-SVGA guest smoke, which has not run yet.
 
 Pori is the dinit storage tool. Use it to inspect disks and create persistent mount services under `/etc/dinit.d`; use File Roller to open, create and extract archives, GParted to edit partitions outside the installer, and Calamares for the final partitioning and installation transaction.
 
@@ -26,7 +27,7 @@ The current alpha has no signed bootloader, no supported Secure Boot path and no
 
 ## 1. Obtain the ISO artifact
 
-The published Alpha 10 system alpha has a direct ISO and matching checksum in its [tagged release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10). Use that release as the primary download. P0 workflow artifacts are temporary fallbacks retained for seven days and replaced by later runs.
+The published Alpha 12 system alpha has a direct ISO and matching checksum in its [tagged release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12). Use that release as the primary download. P0 workflow artifacts are temporary fallbacks retained for seven days and replaced by later runs.
 
 ### Tagged alpha release
 
@@ -148,7 +149,7 @@ Use a trusted image writer such as Rufus. Select the verified ISO and the correc
 2. Reboot and open the one-time boot menu (`F12`, `F11`, `Esc` or the vendor-specific key).
 3. Select the UEFI entry for the USB.
 4. If the firmware refuses the image, disable Secure Boot for this test; the current alpha does not provide a signed Secure Boot path.
-5. The published Alpha 10 image starts directly in `Aqueous + Pearl (DINX)`; no live username or password prompt is required.
+5. The published Alpha 12 image starts directly in `Aqueous + Pearl (DINX)`; no live username or password prompt is required.
 
 The live ISO opens the disposable `dinx` account directly in `Aqueous + Pearl (DINX)`. This is live-only; installed login and Calamares autologin remain disabled. Anyone who can boot the ISO already controls the live machine; never reuse the public `dinx` password elsewhere.
 
@@ -159,7 +160,7 @@ The base ZLS runtime is compact by design: completion and navigation use the bun
 
 ### Optional BC-250 support
 
-The Alpha 10 generic ISO excludes the BC250 Control Center and Cyan Skillfish governor. Their pinned packages are available in the signed DINX repository; install them only after confirming PCI ID `1002:13fe`. First configure and locally trust the signed repository as documented in [`release.md`](release.md):
+The Alpha 12 generic ISO excludes the BC250 Control Center and Cyan Skillfish governor. Their pinned packages are available in the signed DINX repository; install them only after confirming PCI ID `1002:13fe`. First configure and locally trust the signed repository as documented in [`release.md`](release.md):
 
 ```bash
 if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
@@ -189,7 +190,7 @@ From the live desktop:
 8. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
 Calamares and GParted can erase, format or resize data. Pori mount actions do not format disks, but verify the device, filesystem and mount target before confirming any privileged action. The final confirmation is not a safety net for selecting the wrong disk. Back up the machine and verify the model, size and serial information of the target device.
-The Alpha 10 Calamares qualification covers a Windows-style GPT layout: an existing FAT32 ESP containing `EFI/Microsoft`, an NTFS Windows partition and DINX root space created after it. The smoke preserves the Windows partition and Microsoft boot path while writing DINX fstab and GRUB data for both a side-by-side outcome and an explicit manual layout. The live ISO and installed base use the kernel `ntfs3` driver for NTFS read/write; legacy `ntfs-3g` is optional after installation for compatibility and repair tools. The profile includes `os-prober`, enables GRUB's Windows detection and uses a separate `DINX` EFI directory. An existing ESP of at least 64 MiB is accepted because DINX keeps `/boot` on the root filesystem; a new ESP is recommended at 1 GiB. If the existing ESP is smaller or full, create a new FAT32 ESP in free space through the manual layout instead of formatting the Microsoft ESP. Do not format the existing ESP or Windows/MSR/recovery partitions. Boot DINX in the same UEFI mode as Windows, fully shut Windows down, disable Fast Startup/hibernation, suspend BitLocker with its recovery key available, and leave a verified backup before attempting a resize.
+The Alpha 12 Calamares qualification covers a Windows-style GPT layout: an existing FAT32 ESP containing `EFI/Microsoft`, an NTFS Windows partition and DINX root space created after it. The smoke preserves the Windows partition and Microsoft boot path while writing DINX fstab and GRUB data for both a side-by-side outcome and an explicit manual layout. The live ISO and installed base use the kernel `ntfs3` driver for NTFS read/write; legacy `ntfs-3g` is optional after installation for compatibility and repair tools. The profile includes `os-prober`, enables GRUB's Windows detection and uses a separate `DINX` EFI directory. An existing ESP of at least 64 MiB is accepted because DINX keeps `/boot` on the root filesystem; a new ESP is recommended at 1 GiB. If the existing ESP is smaller or full, create a new FAT32 ESP in free space through the manual layout instead of formatting the Microsoft ESP. Do not format the existing ESP or Windows/MSR/recovery partitions. Boot DINX in the same UEFI mode as Windows, fully shut Windows down, disable Fast Startup/hibernation, suspend BitLocker with its recovery key available, and leave a verified backup before attempting a resize.
 ### First boot and recovery TTY
 
 The CI installation contract boots the copied root filesystem from disposable BIOS and UEFI disks and enables `getty@tty2` and `getty@tty3` for recovery. These are QEMU disk smokes, not physical hardware qualification. On a real installation, press `Ctrl+Alt+F2` or `Ctrl+Alt+F3` at the installed system's greeter to open a TTY and log in with the user created during installation. Useful recovery commands:
@@ -244,7 +245,7 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The screen is blank
 
-A DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) are intended to use `aqueous-cpu` with wlroots GLES2 and GTK4 GL, without Aqueous Vulkan effects; absent/inaccessible render nodes and 2D-only `vboxvideo`/QXL use Pixman/Cairo. The Alpha 12 ISO includes wlroots built with GLES2 + Vulkan; release CI verified the built image, QEMU boot and graphical-session capture. Direct VirtualBox VMSVGA boot remains unqualified. The live user, Pearl Greeter and new Calamares users receive `render` access. Renderer selection does not prove host-side 3D acceleration is enabled.
+Aqueous chooses the graphics profile from each accessible DRM render node's sysfs driver, not DRM card order. QEMU `virtio_gpu`/virgl uses `aqueous-cpu` with wlroots GLES2 and GTK4 GL when its render node is readable and writable, without Aqueous Vulkan effects. `vmwgfx` and other 2D virtual adapters use Pixman/Cairo; both the Aqueous session and Pearl Greeter fallback receive this policy. Alpha 12's release QEMU smoke used default VGA; the current P0 workflow adds a VMware-SVGA guest boot/capture smoke, not yet run. Alpha 12 predates the source fix, and direct VirtualBox boot remains unqualified. The live user, Pearl Greeter and new Calamares users receive `render` access.
 
 ### Graphics, drivers and media
 
@@ -258,7 +259,7 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /path/to/dinx.iso
 ```
 
-For VirtualBox, select **VMSVGA** and enable **3D Acceleration** in the VM display settings. The guest falls back to Pixman/Cairo when the host does not expose a usable render node. These paths are not a claim that every host GPU/driver combination is qualified; include the hypervisor, host renderer, guest DRM driver and `dinx-alpha7-hardware-report` output in bug reports.
+For the next DINX ISO, use **VMSVGA** in VirtualBox; the source selects Pixman/Cairo for `vmwgfx` in both the Aqueous session and Pearl Greeter fallback, regardless of render-node visibility or 3D acceleration. The published Alpha 12 can fail with either 3D setting because its GLES2 path is disabled in the guest build; changing that setting does not repair the binary. The VMware-SVGA QEMU smoke is configured in P0 but has not run; direct VirtualBox boot also remains unqualified. When reporting a failure on a rebuilt ISO, include the hypervisor, host renderer, guest DRM driver and `dinx-alpha7-hardware-report` output.
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected
@@ -268,7 +269,7 @@ and does not replace that viewer default.
 
 ### Optional gaming stack
 
-The Alpha 10 generic ISO excludes Gamescope, Steam, GameMode, MangoHud, Steam device rules and 32-bit gaming libraries. The base retains 64-bit RADV and Vulkan diagnostics; users can opt into the gaming stack after installation:
+The Alpha 12 generic ISO excludes Gamescope, Steam, GameMode, MangoHud, Steam device rules and 32-bit gaming libraries. The base retains 64-bit RADV and Vulkan diagnostics; users can opt into the gaming stack after installation:
 
 1. In `/etc/pacman.conf`, add the official Artix repository only if `[lib32]` is not already defined:
 

@@ -36,8 +36,8 @@ livefs_packages=$(awk '
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
 
-grep -Fq 'command = "/usr/lib/pearl/pearl-greeter-host"' "$root_greetd" \
-  || fail 'installed greetd fallback does not launch Pearl Greeter'
+grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' "$root_greetd" \
+  || fail 'installed greetd fallback does not launch the graphics-safe Pearl Greeter wrapper'
 grep -Fq 'user = "pearl-greeter"' "$root_greetd" \
   || fail 'installed greetd fallback user is not the dedicated Pearl Greeter account'
 ! grep -Fq '[initial_session]' "$root_greetd" \

@@ -27,16 +27,11 @@ xdg-user-dirs-update
 
 compositor=/usr/bin/aqueous
 graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
+. /usr/local/libexec/dinx-graphics-environment.sh
+dinx_apply_graphics_environment "$graphics_profile"
 case "$graphics_profile" in
-  cpu)
+  cpu|virtual-gl)
     compositor=/usr/bin/aqueous-cpu
-    export WLR_RENDERER=pixman
-    export GSK_RENDERER=cairo
-    ;;
-  virtual-gl)
-    compositor=/usr/bin/aqueous-cpu
-    export WLR_RENDERER=gles2
-    export GSK_RENDERER=gl
     ;;
   hardware)
     ;;

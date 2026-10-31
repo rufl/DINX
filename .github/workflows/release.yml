@@ -409,8 +409,9 @@ jobs:
 
           commit_sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_TAG}" --jq .sha)
           alias_ref="repos/${GITHUB_REPOSITORY}/git/ref/tags/${alias_tag}"
+          alias_update_ref="repos/${GITHUB_REPOSITORY}/git/refs/tags/${alias_tag}"
           if gh api "$alias_ref" >/dev/null 2>&1; then
-            gh api --method PATCH "$alias_ref" \
+            gh api --method PATCH "$alias_update_ref" \
               --field "sha=$commit_sha" \
               --field force=true >/dev/null
           else

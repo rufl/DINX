@@ -2,16 +2,10 @@ name: DINX contracts
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
   pull_request:
-    paths:
-      - ".github/workflows/**"
-      - "distro/**"
-      - "scripts/**"
-      - "docs/**"
-      - "CHANGELOG*"
-      - "LICENSE"
-      - "REUSE.toml"
-
 permissions:
   contents: read
 
@@ -33,6 +27,27 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes curl jq python3-venv
+      - name: Verify REUSE metadata
+        run: |
+          python3 -m venv "$RUNNER_TEMP/reuse"
+          "$RUNNER_TEMP/reuse/bin/pip" install --quiet reuse
+          "$RUNNER_TEMP/reuse/bin/reuse" lint
+      - name: Read pinned Deetty/Dintor source revision
+        id: deetty-source
+        run: |
+          ref=$(awk -F= '$1 == "DEETTY_REF" { print $2; exit }' distro/packages/deetty/source.env)
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { printf 'Invalid DEETTY_REF in source.env\n' >&2; exit 1; }
+          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
+      - name: Checkout pinned public NOCTTY source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: rufl/NOCTTY
+          ref: ${{ steps.deetty-source.outputs.ref }}
+          token: ${{ github.token }}
+          path: third_party/noctty
+          persist-credentials: false
+      - name: Prepare pinned Deetty/Dintor source archive
+        run: ./scripts/prepare_first_party_apps.sh third_party/noctty
       - name: Install pinned Zig for source smokes
         run: |
           zig_version=0.17.0
@@ -47,8 +62,3 @@ jobs:
 
       - name: Run DINX static and fixture contracts
         run: ./scripts/check_dinx_contracts.sh
-      - name: Verify REUSE metadata
-        run: |
-          python3 -m venv "$RUNNER_TEMP/reuse"
-          "$RUNNER_TEMP/reuse/bin/pip" install --quiet reuse
-          "$RUNNER_TEMP/reuse/bin/reuse" lint

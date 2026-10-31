@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-local_packages=(dinitui dinxpanel seafoam-settings wizp)
+local_packages=(dinitui dinxpanel ghostty-vt-runtime seafoam-settings wizp)
 contains_local_package() {
   local candidate=$1
   local package
@@ -38,6 +38,7 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
       dinxpanel) contract=scripts/check_dinxpanel.sh ;;
       seafoam-settings) contract=scripts/check_seafoam_settings.sh ;;
       wizp) contract=scripts/check_wizp_package.sh ;;
+      ghostty-vt-runtime) contract=scripts/check_ghostty_vt_runtime.sh ;;
     esac
     [[ -x "$contract" ]] || fail "$package is missing its executable qualification contract: $contract"
   else
@@ -72,7 +73,10 @@ for source_env in distro/packages/*/source.env; do
 done
 
 workflow=.github/workflows/p0-iso.yml
+builder=scripts/build-iso-container.sh
+docker_builder=scripts/build-iso-docker.sh
 release_workflow=.github/workflows/release.yml
+contracts_workflow=.github/workflows/contracts.yml
 update_smoke=scripts/smoke_dinx_update.sh
 for required in \
   'scripts/check_dinx_package_provenance.sh' \
@@ -81,24 +85,56 @@ for required in \
   'scripts/smoke_dinx_update.sh' \
   'DINX_PACKAGE_SIGNING_KEY' \
   'DINX_PACKAGE_SIGNING_FINGERPRINT' \
+  'DINX_BUILD_CONTEXT: github-actions' \
+  'DINX_SKIP_CONTRACTS: '\''true'\''' \
+  'DINX_SKIP_POSTBUILD_CHECKS: '\''true'\''' \
+  'run: scripts/build-iso-docker.sh' \
+  'run: ./scripts/check_first_party_apps.sh' \
+  'ref: ${{ steps.deetty-source.outputs.ref }}' \
+  'token: ${{ github.token }}' \
+  'repository: rufl/NOCTTY' \
+  'path: third_party/noctty' \
+  'persist-credentials: false' \
+  'Bundle signed package repository for artifact portability' \
+  'dist/dinx-package-repository.tar'; do
+  grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
+done
+for required in \
+  'repository: rufl/NOCTTY' \
+  'ref: ${{ steps.deetty-source.outputs.ref }}' \
+  'token: ${{ github.token }}' \
+  'path: third_party/noctty' \
+  'persist-credentials: false' \
+  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty'; do
+  grep -Fq -- "$required" "$contracts_workflow" \
+    || fail "contracts workflow is missing public-source handling: $required"
+done
+grep -Fq 'secrets: inherit' "$release_workflow" \
+  || fail 'release workflow does not pass package-signing secrets to P0'
+if grep -Fq 'DEETTY_SOURCE_READ_TOKEN' "$workflow" "$contracts_workflow"; then
+  fail 'public NOCTTY source checkout unexpectedly requires an Actions secret'
+fi
+grep -Fq '/third_party/noctty/' .gitignore \
+  || fail 'public Deetty/Dintor source checkout is not Git-ignored'
+for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
-  'Bundle signed package repository for artifact portability' \
-  'dist/dinx-package-repository.tar' \
   'NoExtract = usr/lib/systemd/*' \
   'NoExtract = etc/systemd/*' \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
   'NoExtract = usr/share/uwsm/*' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
-  'makepkg --clean --nodeps --nocheck --noconfirm' \
+  'local -a makepkg_options=(--clean --nodeps --nocheck --noconfirm)' \
+  'makepkg_options+=(--cleanbuild)' \
+  'makepkg "${makepkg_options[@]}"' \
+  'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \
+  'build_package gapless' \
   '--sign --key' \
   'pacman-key --init' \
   'SigLevel = Required' \
-  'DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507' \
-  ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE must be set before the builder starts}"' \
+  'DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"' \
   ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"' \
-  'printf "noctty_source_env_sha256=%s\n"' \
-  '--env DINX_ARTIX_IMAGE="$DINX_ARTIX_IMAGE"' \
+  'printf "deetty_source_env_sha256=%s\n"' \
   'mksquashfs_path=$(command -v mksquashfs)' \
   'real_mksquashfs=$(readlink -f "$mksquashfs_path")' \
   'install -D -m 0755 "$real_mksquashfs" /usr/local/libexec/dinx-mksquashfs.real' \
@@ -108,9 +144,28 @@ for required in \
   'artix_mirrorlist_source=official-artix-https-tier1' \
   'Server = https://mirror2.artixlinux.org/$repo/os/$arch' \
   'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch' \
-  'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs'; do
-  grep -Fq -- "$required" "$workflow" || fail "workflow is missing package provenance wiring: $required"
+  'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs' \
+  '"PKGDEST=$package_repo"' \
+  'MAKEPKG_CONF="$makepkg_conf"'; do
+  grep -Fq -- "$required" "$builder" \
+    || fail "Artix container builder is missing provenance/build wiring: $required"
 done
+for required in \
+  '--privileged' \
+  '--env DINX_BUILD_CONTEXT="$build_context"' \
+  '--env DINX_SOURCE_TREE_SHA256="$source_tree_sha256"' \
+  '--env DINX_ARTIX_IMAGE="$image"' \
+  'bash /workspace/scripts/build-iso-container.sh'; do
+  grep -Fq -- "$required" "$docker_builder" || fail "Docker wrapper is missing container wiring: $required"
+done
+for required in \
+  '- "scripts/build-iso-docker.sh"' \
+  '- "scripts/build-iso-container.sh"'; do
+  grep -Fq -- "$required" "$workflow" \
+    || fail "P0 push path filters are missing build input: $required"
+done
+grep -Fq '/workspace/distro/packages' "$builder" \
+  || fail 'Artix builder cleanup does not restore ownership of bind-mounted package sources'
 for required in \
   'Unpack signed package repository artifact' \
   'tar -xf "$repository_archive" -C dist/release-input' \

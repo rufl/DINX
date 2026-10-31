@@ -1,0 +1,79 @@
+<!-- SPDX-FileCopyrightText: 2026 DINX Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="900" viewBox="0 0 1480 900" role="img" aria-labelledby="title desc">
+  <title id="title">DINX wordmark studies</title>
+  <desc id="desc">Three coral DINX wordmarks compared on light and dark surfaces, with a small-size preview.</desc>
+  <defs>
+    <g id="flow-logo" fill="none" stroke="#F4515B" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M105 238 C103 184 109 110 117 58 C158 87 218 125 255 158 C280 181 279 201 252 220 C220 245 163 266 116 274 C108 265 105 252 105 238"/>
+      <path d="M326 142 C325 174 324 209 324 244"/>
+      <path d="M390 244 C392 204 394 162 395 132 C396 117 405 117 420 126 C454 146 488 191 515 244"/>
+      <path d="M579 116 C617 161 654 210 693 261"/>
+      <path d="M608 197 C654 156 702 105 753 64"/>
+      <circle cx="326" cy="83" r="13" fill="#F4515B" stroke="none"/>
+    </g>
+    <g id="clear-logo" fill="none" stroke="#F4515B" stroke-width="19" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M108 247 C108 192 109 119 110 61 C160 73 218 108 254 148 C279 175 281 200 258 222 C227 250 165 271 109 278"/>
+      <path d="M329 142 L329 244"/>
+      <path d="M394 244 L396 130 C397 113 411 114 426 123 C462 144 493 190 520 244"/>
+      <path d="M585 95 C622 145 664 206 704 258"/>
+      <path d="M704 95 C664 147 624 207 585 258"/>
+      <circle cx="329" cy="83" r="12" fill="#F4515B" stroke="none"/>
+    </g>
+    <g id="compact-logo" transform="translate(5 0)" fill="none" stroke="#F4515B" stroke-width="29" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M100 242 C100 188 101 120 102 66 C150 76 201 107 234 145 C260 174 261 197 239 218 C211 245 153 263 101 272"/>
+      <path d="M294 145 L294 242"/>
+      <path d="M342 272 C343 202 343 132 342 66 C379 101 420 174 457 272 C456 202 456 132 457 66"/>
+      <path d="M500 96 C535 145 571 196 606 248"/>
+      <path d="M606 96 C571 145 535 196 500 248"/>
+      <circle cx="294" cy="83" r="17" fill="#F4515B" stroke="none"/>
+    </g>
+  </defs>
+  <rect width="1480" height="900" fill="#11151D"/>
+  <text x="56" y="72" fill="#F6F7F9" font-family="Noto Sans, sans-serif" font-size="34" font-weight="700">DINX / estudos de wordmark</text>
+  <text x="58" y="110" fill="#AAB4C3" font-family="Noto Sans, sans-serif" font-size="17">Variações vetoriais inspiradas no esboço vermelho superior</text>
+  <g font-family="Noto Sans, sans-serif">
+    <g transform="translate(40 150)">
+      <rect width="444" height="700" rx="18" fill="#E7EBF1"/>
+      <text x="24" y="44" fill="#11151D" font-size="22" font-weight="700">01 · GESTO</text>
+      <text x="24" y="72" fill="#515D6C" font-size="15">Traço orgânico; X alongado</text>
+      <rect x="20" y="96" width="404" height="178" rx="12" fill="#FFFFFF"/>
+      <use href="#flow-logo" transform="translate(42 117) scale(0.4186)"/>
+      <rect x="20" y="294" width="404" height="178" rx="12" fill="#0B0D12"/>
+      <use href="#flow-logo" transform="translate(42 315) scale(0.4186)"/>
+      <rect x="20" y="492" width="404" height="178" rx="12" fill="#FFFFFF"/>
+      <text x="42" y="527" fill="#515D6C" font-size="14">AMOSTRA A 128 PX</text>
+      <use href="#flow-logo" transform="translate(42 548) scale(0.1977)"/>
+      <text x="226" y="574" fill="#11151D" font-size="15">Mais próximo do</text>
+      <text x="226" y="598" fill="#11151D" font-size="15">gesto original.</text>
+    </g>
+    <g transform="translate(518 150)">
+      <rect width="444" height="700" rx="18" fill="#E7EBF1"/>
+      <text x="24" y="44" fill="#11151D" font-size="22" font-weight="700">02 · CLARO</text>
+      <text x="24" y="72" fill="#515D6C" font-size="15">D equilibrado; X clássico</text>
+      <rect x="20" y="96" width="404" height="178" rx="12" fill="#FFFFFF"/>
+      <use href="#clear-logo" transform="translate(42 117) scale(0.4186)"/>
+      <rect x="20" y="294" width="404" height="178" rx="12" fill="#0B0D12"/>
+      <use href="#clear-logo" transform="translate(42 315) scale(0.4186)"/>
+      <rect x="20" y="492" width="404" height="178" rx="12" fill="#FFFFFF"/>
+      <text x="42" y="527" fill="#515D6C" font-size="14">AMOSTRA A 128 PX</text>
+      <use href="#clear-logo" transform="translate(42 548) scale(0.1977)"/>
+      <text x="226" y="574" fill="#11151D" font-size="15">Leitura mais</text>
+      <text x="226" y="598" fill="#11151D" font-size="15">regular e direta.</text>
+    </g>
+    <g transform="translate(996 150)">
+      <rect width="444" height="700" rx="18" fill="#E7EBF1"/>
+      <text x="24" y="44" fill="#11151D" font-size="22" font-weight="700">03 · COMPACTO</text>
+      <text x="24" y="72" fill="#515D6C" font-size="15">N orgânico; espaçamento mais fechado</text>
+      <rect x="20" y="96" width="404" height="178" rx="12" fill="#FFFFFF"/>
+      <use href="#compact-logo" transform="translate(71 117) scale(0.4186)"/>
+      <rect x="20" y="294" width="404" height="178" rx="12" fill="#0B0D12"/>
+      <use href="#compact-logo" transform="translate(71 315) scale(0.4186)"/>
+      <rect x="20" y="492" width="404" height="178" rx="12" fill="#FFFFFF"/>
+      <text x="42" y="527" fill="#515D6C" font-size="14">AMOSTRA A 128 PX</text>
+      <use href="#compact-logo" transform="translate(42 548) scale(0.1977)"/>
+      <text x="226" y="574" fill="#11151D" font-size="15">Mais robusto</text>
+      <text x="226" y="598" fill="#11151D" font-size="15">em escala pequena.</text>
+    </g>
+  </g>
+</svg>

@@ -34,12 +34,13 @@ optdepends=(
   'util-linux: isolate fresh-root provisioning for --isolated builds'
   'fuse2: run AppImages that require FUSE 2'
 )
+_aur_revision='f89d773125357baaa1d2fae715286ce9e00e2cb4'
 source=(
   "Shelly-ALPM-linux-x64-${pkgver}.tar.gz::https://github.com/Seafoam-Labs/Shelly-ALPM/releases/download/v${pkgver}/Shelly-ALPM-linux-x64.tar.gz"
-  'shellybuild.conf::https://aur.archlinux.org/cgit/aur.git/plain/shellybuild.conf?h=shelly-bin'
-  'com.shellyorg.shelly.desktop::https://aur.archlinux.org/cgit/aur.git/plain/com.shellyorg.shelly.desktop?h=shelly-bin'
-  'com.shellyorg.shelly-notifications.desktop::https://aur.archlinux.org/cgit/aur.git/plain/com.shellyorg.shelly-notifications.desktop?h=shelly-bin'
-  'shelly-flatpak-integrate::https://aur.archlinux.org/cgit/aur.git/plain/shelly-flatpak-integrate?h=shelly-bin'
+  "shellybuild.conf::https://aur.archlinux.org/cgit/aur.git/plain/shellybuild.conf?h=${_aur_revision}"
+  "com.shellyorg.shelly.desktop::https://aur.archlinux.org/cgit/aur.git/plain/com.shellyorg.shelly.desktop?h=${_aur_revision}"
+  "com.shellyorg.shelly-notifications.desktop::https://aur.archlinux.org/cgit/aur.git/plain/com.shellyorg.shelly-notifications.desktop?h=${_aur_revision}"
+  "shelly-flatpak-integrate::https://aur.archlinux.org/cgit/aur.git/plain/shelly-flatpak-integrate?h=${_aur_revision}"
 )
 sha256sums=(
   'cd6443eb5cce22560dca583b4b935891379e8b8ce4836f3ba85eaa52adb6da47'

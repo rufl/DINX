@@ -8,6 +8,14 @@ if [ ! -r "$live_conf" ] || ! grep -Eq '^[[:space:]]*AUTOLOGIN=true([[:space:]]*
   exit 0
 fi
 
+if getent group render >/dev/null 2>&1 && getent passwd dinx >/dev/null 2>&1; then
+  if ! usermod --append --groups render dinx; then
+    printf '%s\n' 'dinx-live-autologin: render access unavailable; session will use CPU graphics' >&2
+  fi
+else
+  printf '%s\n' 'dinx-live-autologin: render group or live user unavailable; session will use CPU graphics' >&2
+fi
+
 if [ ! -r "$config" ]; then
   printf '%s\n' 'dinx-live-autologin: greetd configuration is missing' >&2
   exit 1

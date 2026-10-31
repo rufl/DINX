@@ -1,11 +1,11 @@
 pkgname=dinxpanel
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='DINX YaST-inspired native system control center'
 arch=(x86_64)
 url='https://github.com/rufl/DINX'
 license=(Apache)
-depends=(gtk4 libadwaita dinitui pacman foot nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)
+depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)
 optdepends=('fwupd: firmware metadata and update checks' 'cups-dinit: optional CUPS printing support; downloads cups and dinit service files after installation')
 makedepends=('zig>=0.17')
 source=()

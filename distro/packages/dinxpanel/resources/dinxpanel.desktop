@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=DINXPanel
+Name=Control Center
+Name[pt_BR]=Central de Controle
 Comment=DINX system control center
 Exec=dinxpanel
 TryExec=dinxpanel

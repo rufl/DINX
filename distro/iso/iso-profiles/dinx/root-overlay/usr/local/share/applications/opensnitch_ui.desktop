@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=Traffic Monitor
+Name[pt_BR]=Monitor de Tráfego
+Exec=opensnitch-ui
+Icon=opensnitch-ui
+GenericName=Traffic Monitor
+GenericName[pt_BR]=Monitor de Tráfego
+Comment=Monitor network activity and manage application rules
+Comment[pt_BR]=Monitore a atividade de rede e gerencie regras de aplicativos
+Terminal=false
+NoDisplay=false
+Categories=System;Security;Monitor;
+Keywords=system;firewall;policies;security;polkit;policykit;
+X-GNOME-Autostart-Delay=3
+X-GNOME-Autostart-enabled=true

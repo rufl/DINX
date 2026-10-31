@@ -152,7 +152,7 @@ A ISO live abre diretamente a conta descartável `dinx` em `Aqueous + Pearl (DIN
 
 Quando o desktop aparecer, o estado gráfico testado é Aqueous/Pearl. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
 Pearl é o shell ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o Pearl Greeter lê `/etc/pearl/greeter.json`, usa o tema GTK DINX e força a entrada Aqueous/Pearl sem X11 nem UWSM.
-O Phyto é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes. `Dome`, `Seafoam Settings` e `zls` vêm na ISO base assinada. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings agrupa os pontos documentados de configuração de display/sessão; o Nocted usa o ZLS incluído para projetos Zig.
+O Phyto é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes. `Dome`, `Seafoam Settings` e `zls` vêm na ISO base assinada. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings agrupa os pontos documentados de configuração de display/sessão; o Dintor usa o ZLS incluído para projetos Zig.
 O runtime base do ZLS é compacto por design: completion e navegação usam a árvore `lib/std` correspondente incluída pela ISO por meio de `/usr/lib/zls/zig-env`; um compilador Zig completo é opcional e não faz parte do payload da ISO.
 
 ### Suporte opcional à BC-250
@@ -197,12 +197,7 @@ dinitctl status greetd
 dinitctl restart greetd
 ```
 
-Se a sessão gráfica não estiver disponível, use o fallback Wayland independente:
-
-```bash
-DINX_TERMINAL_FALLBACK=1 dinx-terminal
-```
-A combinação Aqueous/Pearl inicia `dinx-terminal` pelo launcher do Pearl. `$TERMINAL` aponta para `dinx-terminal`, que prefere o NOCTTY e usa `foot` quando o NOCTTY não está instalado. Não há outra sessão de usuário suportada; o host dedicado do Pearl Greeter é uma superfície de login do greetd, não uma configuração de sessão do usuário.
+Deetty é o único emulador de terminal da ISO live e da instalação nova. As sessões live e instalada definem `$TERMINAL` como `deetty`; Nano continua disponível como editor de recuperação. O Pearl Greeter é uma superfície de login do greetd, não uma configuração de sessão do usuário.
 
 Para registrar o estado sem alterar o sistema, execute:
 
@@ -247,11 +242,21 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A tela fica vazia
 
-DINX inclui Mesa Lavapipe (`vulkan-swrast`) para aplicativos Vulkan. Para a sessão Aqueous/Pearl em QEMU e sistemas sem render node DRM, o wrapper usa `aqueous-cpu`, compilado sem efeitos Vulkan, com renderização Pixman e Cairo. A detecção também cobre GPUs Virtio (`0x1af4`) mesmo quando elas expõem um render node, evitando a falha de apresentação observada com llvmpipe. Esse caminho é mais lento e não oferece efeitos Vulkan do compositor, como blur e cantos arredondados; em outros sistemas com render node, a sessão usa o compositor completo e mantém a seleção normal de driver. O suporte gráfico em hardware ainda não está totalmente qualificado. Registre o modelo da GPU, o modo do firmware e o comportamento do kernel/guest antes de abrir um relatório.
+A DINX inclui Mesa Lavapipe (`vulkan-swrast`) para aplicativos Vulkan. A seleção gráfica exige um render node DRM legível e gravável: QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`) usam `aqueous-cpu` com GLES2 no wlroots e GL no GTK4; essa build não inclui os efeitos Vulkan do Aqueous. Se o render node faltar/não estiver acessível ou um adaptador virtual 2D como `vboxvideo` ou QXL estiver ativo, a sessão usa Pixman/Cairo. Outros hardwares com render node usam a build completa do Aqueous. O usuário live, o Pearl Greeter e novos usuários criados pelo Calamares recebem acesso ao grupo `render`. Essa seleção escolhe o caminho gráfico do guest; não comprova que a aceleração 3D do host esteja ativa.
 
 ### Gráficos, drivers e mídia
 
-A DINX fornece Mesa/RADV para hardware, Lavapipe para aplicativos Vulkan por CPU, diagnóstico Vulkan, FFmpeg e VLC para o caminho de mídia open source suportado. A sessão Aqueous/Pearl usa Pixman/Cairo em GPUs Virtio e sistemas sem render node DRM, e não seleciona Lavapipe para compor a área de trabalho. Se a aceleração de hardware ou um driver proprietário de GPU faltar, abra **DINXPanel → GPU drivers**, execute a detecção, revise o plano fixo de pacotes Artix e reinicie quando for informada uma mudança de kernel ou driver. A DINX não instala drivers proprietários silenciosamente nem afirma que hardware não suportado está funcionando. Anexe a saída de `dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou falha ao iniciar um jogo.
+A DINX fornece Mesa/RADV para hardware, Lavapipe para aplicativos Vulkan por CPU, diagnóstico Vulkan, FFmpeg e VLC para o caminho de mídia open source suportado. Se faltar aceleração em outro hardware ou um driver proprietário de GPU, abra **DINXPanel → GPU drivers**, execute a detecção, revise o plano fixo de pacotes Artix e reinicie quando for informada uma mudança de kernel ou driver. A DINX não instala drivers proprietários silenciosamente nem afirma que hardware não suportado está funcionando. Anexe a saída de `dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou falha ao iniciar um jogo.
+
+Para QEMU virgl, use uma build do QEMU no host com GTK/OpenGL e suporte a virgl, depois solicite `virtio-vga-gl`, por exemplo:
+
+```sh
+DINX_QEMU_DISPLAY=gtk,gl=on \
+DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
+scripts/smoke-iso.sh /caminho/para/dinx.iso
+```
+
+No VirtualBox, selecione **VMSVGA** e habilite **Aceleração 3D** nas configurações de vídeo da VM. O guest usa Pixman/Cairo se o host não expuser um render node utilizável. Esses caminhos não significam que todas as combinações de host/GPU/driver estejam qualificadas; ao relatar bugs, informe o hypervisor, renderer do host, driver DRM do guest e a saída de `dinx-alpha7-hardware-report`.
 
 A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,

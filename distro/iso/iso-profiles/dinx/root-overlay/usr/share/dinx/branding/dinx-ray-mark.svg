@@ -1,0 +1,13 @@
+<!-- SPDX-FileCopyrightText: 2026 DINX Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">DINX lightning mark</title>
+  <desc id="desc">The DINX D outline with a prominent lightning bolt, on a transparent background, for compact branding.</desc>
+  <defs>
+    <path id="dinx-d" d="M100 242 C100 188 101 120 102 66 C150 76 201 107 234 145 C260 174 261 197 239 218 C211 245 153 263 101 272" fill="none" stroke="#F4515B" stroke-width="29" stroke-linecap="round" stroke-linejoin="round"/>
+  </defs>
+  <g transform="translate(-41 -24) scale(1.65)">
+    <use href="#dinx-d"/>
+    <path d="M207 117 L182 163 H208 L140 237 L168 186 H143 L180 131 Z" fill="#F4515B"/>
+  </g>
+</svg>

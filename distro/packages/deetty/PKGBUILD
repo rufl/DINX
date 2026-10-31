@@ -1,0 +1,83 @@
+pkgname=deetty
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${DEETTY_VERSION:?missing DEETTY_VERSION}"
+: "${DEETTY_SOURCE_SHA256:?missing DEETTY_SOURCE_SHA256}"
+pkgver="$DEETTY_VERSION"
+pkgrel=3
+pkgdesc='Native Zig terminal workspace and Dintor editor for DINX'
+arch=('x86_64')
+url='https://github.com/rufl/NOCTTY'
+license=('MIT' 'Unicode-3.0' 'Unicode-DFS-2016' 'ICU')
+depends=('clang' 'bubblewrap' 'ghostty-vt-runtime' 'gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'dbus' 'git' 'zlib')
+makedepends=('ghostty-vt-runtime' 'vte3' 'zig>=0.17' 'btop' 'clang' 'dialog' 'fzf' 'git' 'glances' 'less' 'libnewt' 'librsvg' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim' 'xorg-server-xvfb')
+provides=('dintor' 'terminal-emulator')
+conflicts=('noctty')
+replaces=('noctty')
+source=("noctty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
+sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' '55d8373724950143af768b2f8e8f992557cfcae209af1f438e457f621764381d' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
+
+prepare() {
+  cd "$srcdir/noctty-$pkgver"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/product-identity.patch"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/qualification-compat.patch"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal-exec.patch"
+}
+
+build() {
+  cd "$srcdir/noctty-$pkgver"
+  zig build -Doptimize=ReleaseSafe
+  zig build -Doptimize=ReleaseSafe test
+  zig build -Doptimize=ReleaseSafe noctty-smoke-binary
+  zig build -Doptimize=ReleaseSafe terminal-session-qualification-binary
+  zig build -Doptimize=ReleaseSafe terminal-compatibility-binary
+  qualification_script="$startdir/../../../scripts/deetty_p2_qualification.sh"
+  [[ -x "$qualification_script" ]] || {
+    printf 'PKGBUILD: missing P2 qualification script: %s\n' "$qualification_script" >&2
+    return 1
+  }
+  "$qualification_script" "$srcdir/noctty-$pkgver"
+  p3_qualification_script="$startdir/../../../scripts/dintor_p3_qualification.sh"
+  [[ -x "$p3_qualification_script" ]] || {
+    printf 'PKGBUILD: missing P3 qualification script: %s\n' "$p3_qualification_script" >&2
+    return 1
+  }
+  "$p3_qualification_script" "$srcdir/noctty-$pkgver"
+  smoke_binary="$srcdir/noctty-$pkgver/zig-out/bin/noctty-smoke"
+  qualification_binary="$srcdir/noctty-$pkgver/zig-out/bin/noctty-terminal-session-qualification"
+  compatibility_binary="$srcdir/noctty-$pkgver/zig-out/bin/noctty-terminal-compatibility"
+  [[ -x "$compatibility_binary" ]] || {
+    printf 'PKGBUILD: missing Deetty compatibility binary: %s\n' "$compatibility_binary" >&2
+    return 1
+  }
+  compatibility_output="$("$compatibility_binary")"
+  printf '%s\n' "$compatibility_output"
+  grep -Fq 'terminal_compatibility mode=' <<<"$compatibility_output"
+  grep -Fq 'protocol_cases=23 schedules=6 protocol_runs=138' <<<"$compatibility_output"
+  grep -Fq 'malformed_cases=128 malformed_bytes=524288 unicode_mutations=256 grapheme_cases=766' <<<"$compatibility_output"
+  grep -Fq 'state_diff=true replies=true modes=true sgr=true osc8=true osc52_blocked=true c1=true parser_bounds=true allocator_leak_free=true allocator_residual_bytes=0 assertions=true' <<<"$compatibility_output"
+  [[ -x "$qualification_binary" ]] || {
+    printf 'PKGBUILD: missing Deetty session qualification binary: %s\n' "$qualification_binary" >&2
+    return 1
+  }
+  qualification_output="$("$qualification_binary" 4 1)"
+  printf '%s\n' "$qualification_output"
+  grep -Fq 'terminal_session_qualification mode=' <<<"$qualification_output"
+  grep -Fq 'normal_cycles=4 forced_cycles=1 sessions=5 resizes=8' <<<"$qualification_output"
+  grep -Fq 'allocator_leak_free=true allocator_residual_bytes=0' <<<"$qualification_output"
+  grep -Fq 'forced_grace_exhausted=1 shell_reaped=1 foreground_groups_reaped=1 process_residual=0 assertions=true' <<<"$qualification_output"
+  [[ -x "$smoke_binary" ]] || {
+    printf 'PKGBUILD: missing Deetty smoke binary: %s\n' "$smoke_binary" >&2
+    return 1
+  }
+  "$smoke_binary" --pty-smoke | grep -Fqx 'pty_smoke spawned=true marker=true resized=true exited=true exit_code=0'
+  "$smoke_binary" --vt-smoke | grep -Fqx 'vt_smoke public_vt=true grid=true title=true paste=true'
+  "$smoke_binary" --terminal-session-smoke | grep -Fqx 'terminal_session_smoke pty=true vt=true grid=true title=true exited=true'
+}
+
+package() {
+  cd "$srcdir/noctty-$pkgver"
+  zig build -Doptimize=ReleaseSafe --prefix "$pkgdir/usr"
+  rm -rf "$pkgdir/usr/share/deetty/noctalia"
+}

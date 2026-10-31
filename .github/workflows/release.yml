@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing published prerelease tag to seed or resync the rolling ISO alias
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -12,6 +18,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event_name == 'push'
     name: Build and smoke-test release ISO
     uses: ./.github/workflows/p0-iso.yml
     permissions:
@@ -338,3 +345,106 @@ jobs:
               "${prerelease[@]}" \
               "${release_assets[@]}"
           fi
+  latest-alpha:
+    name: Update rolling alpha ISO alias
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.publish.result == 'success')
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Publish latest alpha ISO alias
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9._-]+$ ]]
+          latest_alpha_tag=$(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+              | jq -s -r '
+                flatten
+                | map(select(
+                    .prerelease
+                    and (.draft | not)
+                    and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+-"))
+                  ))
+                | sort_by(.published_at)
+                | last
+                | .tag_name // empty
+              '
+          )
+          if [[ "$latest_alpha_tag" != "$RELEASE_TAG" ]]; then
+            echo "Skipping stale alpha $RELEASE_TAG; latest published alpha is $latest_alpha_tag."
+            exit 0
+          fi
+
+          version="${RELEASE_TAG#v}"
+          versioned_iso="dinx-${version}-x86_64.iso"
+          alias_iso="dinx-latest-x86_64.iso"
+          alias_tag=alpha-latest
+          release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}")
+          jq -e '.prerelease == true' <<<"$release_json" >/dev/null
+          asset_count=$(jq --arg name "$versioned_iso" '[.assets[] | select(.name == $name)] | length' <<<"$release_json")
+          [[ "$asset_count" == 1 ]] || {
+            echo "Latest alpha has no single-file ISO asset; use its versioned release assets."
+            exit 1
+          }
+          asset_size=$(jq -r --arg name "$versioned_iso" '.assets[] | select(.name == $name) | .size' <<<"$release_json")
+          (( asset_size < 2147483648 )) || {
+            echo "Latest alpha ISO exceeds GitHub's 2 GiB per-asset limit."
+            exit 1
+          }
+
+          alias_dir="$RUNNER_TEMP/dinx-latest-alpha"
+          mkdir -p "$alias_dir"
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "$versioned_iso" \
+            --dir "$alias_dir"
+          cp "$alias_dir/$versioned_iso" "$alias_dir/$alias_iso"
+          iso_sha512=$(sha512sum "$alias_dir/$alias_iso" | cut -d ' ' -f 1)
+          printf '%s  %s\n' "$iso_sha512" "$alias_iso" > "$alias_dir/$alias_iso.sha512"
+
+          commit_sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_TAG}" --jq .sha)
+          alias_ref="repos/${GITHUB_REPOSITORY}/git/ref/tags/${alias_tag}"
+          alias_update_ref="repos/${GITHUB_REPOSITORY}/git/refs/tags/${alias_tag}"
+          if gh api "$alias_ref" >/dev/null 2>&1; then
+            gh api --method PATCH "$alias_update_ref" \
+              --field "sha=$commit_sha" \
+              --field force=true >/dev/null
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+              --field "ref=refs/tags/${alias_tag}" \
+              --field "sha=$commit_sha" >/dev/null
+          fi
+
+          release_url="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}"
+          cat > "$alias_dir/notes.md" <<EOF
+          # DINX latest alpha ISO
+
+          Rolling direct-download alias for [${RELEASE_TAG}](${release_url}).
+
+          - ISO: \`${alias_iso}\`
+          - SHA-512: \`${iso_sha512}\`
+          EOF
+          if gh release view "$alias_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$alias_tag" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "DINX latest alpha ISO" \
+              --notes-file "$alias_dir/notes.md" \
+              --prerelease
+          else
+            gh release create "$alias_tag" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$commit_sha" \
+              --title "DINX latest alpha ISO" \
+              --notes-file "$alias_dir/notes.md" \
+              --prerelease
+          fi
+          gh release upload "$alias_tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber \
+            "$alias_dir/$alias_iso" \
+            "$alias_dir/$alias_iso.sha512"

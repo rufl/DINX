@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Bluetooth
+Name[pt_BR]=Bluetooth
+GenericName=Bluetooth Manager
+GenericName[pt_BR]=Gerenciador de Bluetooth
+Comment=Blueman Bluetooth Manager
+Icon=blueman
+Exec=blueman-manager
+TryExec=blueman-manager
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GTK;GNOME;Settings;HardwareSettings;

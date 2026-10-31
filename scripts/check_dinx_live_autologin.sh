@@ -13,6 +13,7 @@ pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 service="$package_dir/dinx-live-autologin.service"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 
 fail() {
   printf 'check_dinx_live_autologin: %s\n' "$*" >&2
@@ -45,12 +46,18 @@ grep -Fq 'displayAutologin: false' "$users_conf" \
   || fail 'Calamares display autologin must remain disabled'
 grep -Fq 'doAutologin: false' "$users_conf" \
   || fail 'Calamares user autologin must remain disabled'
+grep -Fqx '    - render' "$users_conf" \
+  || fail 'installed users are missing DRM render-node access'
 
 grep -Fq "AUTOLOGIN=true" "$wrapper" || fail 'live wrapper does not guard on AUTOLOGIN=true'
 grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure greetd initial_session'
 grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
   || fail 'live initial Aqueous/Pearl command is missing'
 grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
+grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
+  || fail 'live user is missing DRM render-node access'
+grep -Fq 'getent group render' "$wrapper" \
+  || fail 'live autologin does not guard render-group enrollment'
 grep -Fq 'after = artix-live' "$service" || fail 'live autologin service ordering is incomplete'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'
@@ -77,11 +84,11 @@ done
 [[ ! -e "$root_overlay/etc/dinit.d/greetd" ]] \
   || fail 'live greetd dependency override leaked into installed rootfs overlay'
 
-grep -Fq 'build_package dinx-live-autologin' "$workflow" \
-  || fail 'CI does not build the live autologin package'
+grep -Fq 'build_package dinx-live-autologin' "$builder" \
+  || fail 'ISO builder does not build the live autologin package'
 grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
   || fail 'CI dropped the existing DINX session contract'
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_ordering=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true dinit=true\n'
+printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_ordering=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true dinit=true\n'

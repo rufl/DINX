@@ -7,18 +7,20 @@ instalação persistente suportados. O workflow de release é acionado por uma t
 e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e o
 smoke test no QEMU antes de publicar os artefatos.
 
+O workflow mantém o pré-release móvel `alpha-latest` com `dinx-latest-x86_64.iso` e seu checksum SHA-512. Releases por tag o atualizam; use `workflow_dispatch` com `release_tag` somente para inicializar ou resincronizar o alias. O limite de 2 GiB por asset do GitHub permite o alias apenas quando a alpha mais recente tem uma ISO única; use a página da release versionada quando a imagem estiver dividida.
+
 A metadata do build fica vinculada ao artefato exato da ISO nos caminhos P0 e de
 release com tag: o CI recalcula o tamanho em bytes e o SHA-512 da ISO e rejeita
 metadados que não correspondam ao arquivo baixado.
 
-O build P0 verifica o archive versionado do código NOCTTY/NoctEd contra o commit exato
-do repositório e o contrato SHA-256 em `distro/packages/noctty/source.env`, compila o
-pacote nativo `noctty` com Zig 0.17.0 e verifica que os dois aplicativos e seus
-recursos desktop/editor estão na ISO. O caminho de release não clona o NOCTTY nem exige
-segredo de repositório; atualize o archive e o contrato juntos quando alterar a origem
-fixada.
+O build P0 verifica o archive versionado do código upstream NOCTTY contra o commit exato
+do repositório e o contrato SHA-256 em `distro/packages/deetty/source.env`, compila o
+pacote nativo `deetty` com Zig 0.17.0 e verifica que os aplicativos Deetty/Dintor e seus
+recursos desktop/editor estão na ISO. O caminho de release preserva a origem upstream
+NOCTTY sem alteração e não a clona durante o build; atualize o archive e o contrato
+juntos quando alterar a origem fixada.
 
-Na P3, o mesmo build do pacote também executa `scripts/nocted_p3_qualification.sh`. Ele qualifica o core do editor Nocted, diagnósticos/navegação reais com `clangd`, os esquemas GTK/X11 nativos claro e escuro e marcadores limitados de status/diff do Git antes de o pacote ser elegível para o payload da ISO e o gate P0 de QEMU/instalação.
+Na P3, o mesmo build do pacote também executa `scripts/dintor_p3_qualification.sh`. Ele qualifica o core do editor Dintor, diagnósticos/navegação reais com `clangd`, os esquemas GTK/X11 nativos claro e escuro e marcadores limitados de status/diff do Git antes de o pacote ser elegível para o payload da ISO e o gate P0 de QEMU/instalação.
 
 ## Snapshot validado atual
 
@@ -42,6 +44,7 @@ Cada release alpha contém:
 
 - `dinx-<versão>-x86_64.iso` quando ela couber no limite por arquivo do GitHub; releases antigos que excedam o limite usam arquivos ordenados `.iso.part-*` mais `.iso.parts.json`;
 - o arquivo `.iso.sha512` correspondente;
+- um alias de download direto, `dinx-latest-x86_64.iso`, e seu checksum `.sha512` no pré-release `alpha-latest`; o workflow o atualiza a partir do alpha publicado mais recente com ISO única abaixo do limite de 2 GiB por asset do GitHub, o que mantém uma segunda cópia da imagem;
 - capturas PPM do menu de boot, gráficas e da sessão posterior do QEMU Linux, além do log serial;
 - `dinx-<versão>-dogfood.1-windows-x86_64.zip` — pacote pequeno de launcher Windows;
 - metadados do pacote Windows, manifesto de deploy ZTASH e `SHA256SUMS`;

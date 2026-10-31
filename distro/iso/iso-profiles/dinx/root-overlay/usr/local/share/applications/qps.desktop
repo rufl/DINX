@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Process Manager
+Name[pt_BR]=Processos
+GenericName=Process Manager
+GenericName[pt_BR]=Gerenciador de processos
+Comment=View and manage running processes
+Comment[pt_BR]=Visualize e gerencie os processos em execução
+Exec=qps
+TryExec=qps
+Type=Application
+Icon=qps
+Categories=System;
+Terminal=false
+StartupNotify=false

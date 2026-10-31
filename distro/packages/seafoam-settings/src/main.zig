@@ -57,7 +57,7 @@ const App = struct {
         const displays = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(displays), makeButton("Display layout", "Open the interactive Wayland display editor; closing it saves a Shikane profile", &onDisplaysClicked, self));
         c.gtk_box_append(@ptrCast(displays), makeButton("Save Shikane", "Save the current Wayland layout as the DINX wdisplays profile", &onShikaneExportClicked, self));
-        c.gtk_box_append(@ptrCast(displays), makeButton("Edit Shikane", "Edit the user Shikane configuration in a terminal", &onShikaneEditClicked, self));
+        c.gtk_box_append(@ptrCast(displays), makeButton("Edit Shikane", "Edit user Shikane config in Dintor", &onShikaneEditClicked, self));
         c.gtk_box_append(@ptrCast(content), displays);
 
         appendSectionTitle(content, "Session");
@@ -72,7 +72,7 @@ const App = struct {
         c.gtk_box_append(@ptrCast(seafoam), makeButton("Dome", "Open the bundled Seafoam resource monitor", &onDomeClicked, self));
         c.gtk_box_append(@ptrCast(content), seafoam);
 
-        const note = c.gtk_label_new("ZLS is bundled for Nocted and other Zig-aware editors.") orelse return;
+        const note = c.gtk_label_new("ZLS is bundled for Dintor and other Zig-aware editors.") orelse return;
         c.gtk_label_set_xalign(@ptrCast(note), 0.0);
         c.gtk_label_set_wrap(@ptrCast(note), 1);
         c.gtk_widget_add_css_class(note, "dim-label");
@@ -126,13 +126,13 @@ const App = struct {
         self.setStatus("Tool launched");
     }
 
-    fn launchConfig(self: *App, relative_path: []const u8, app_id: []const u8) void {
+    fn launchConfig(self: *App, relative_path: []const u8) void {
         const path = std.fs.path.join(allocator, &.{ self.home, relative_path }) catch {
             self.setStatusError("Unable to resolve configuration path");
             return;
         };
         defer allocator.free(path);
-        self.launch(&.{ "foot", app_id, "-e", "nano", path });
+        self.launch(&.{ "dintor", path });
     }
 
     fn setStatus(self: *App, text: []const u8) void {
@@ -175,11 +175,11 @@ fn onDisplaysClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 }
 
 fn onShikaneExportClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "foot", "--app-id=seafoam-settings-shikane-export", "-e", "dinx-save-shikane-profile" });
+    asApp(data).launch(&.{ "deetty", "-e", "dinx-save-shikane-profile" });
 }
 
 fn onShikaneEditClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launchConfig(".config/shikane/config.toml", "--app-id=seafoam-settings-shikane");
+    asApp(data).launchConfig(".config/shikane/config.toml");
 }
 
 fn onDinitClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

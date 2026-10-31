@@ -1,0 +1,14 @@
+<!-- SPDX-FileCopyrightText: 2026 DINX Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="320" viewBox="0 0 860 320" role="img" aria-labelledby="title desc">
+  <title id="title">DINX — Flow wordmark</title>
+  <desc id="desc">An expressive coral monoline wordmark based on the hand-drawn DINX sketch, with a sweeping X.</desc>
+  <g fill="none" stroke="#F4515B" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M105 238 C103 184 109 110 117 58 C158 87 218 125 255 158 C280 181 279 201 252 220 C220 245 163 266 116 274 C108 265 105 252 105 238"/>
+    <path d="M326 142 C325 174 324 209 324 244"/>
+    <path d="M390 244 C392 204 394 162 395 132 C396 117 405 117 420 126 C454 146 488 191 515 244"/>
+    <path d="M579 116 C617 161 654 210 693 261"/>
+    <path d="M608 197 C654 156 702 105 753 64"/>
+  </g>
+  <circle cx="326" cy="83" r="13" fill="#F4515B"/>
+</svg>

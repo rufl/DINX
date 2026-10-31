@@ -5,7 +5,8 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 
 checks=(
   check_first_party_apps.sh
-  check_noctty_integration.sh
+  check_deetty_integration.sh
+  check_ghostty_vt_runtime.sh
   check_firefox.sh
   check_swayimg.sh
   check_package_managers.sh
@@ -24,6 +25,7 @@ checks=(
   check_dinitui.sh
   check_dinxpanel.sh
   check_dinx_session.sh
+  check_dinx_graphics_profile.sh
   check_dinx_live_autologin.sh
   check_dinx_doctor.sh
   check_install_lifecycle.sh

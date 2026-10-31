@@ -1,0 +1,110 @@
+--- a/src/terminal/LaunchProfile.zig
++++ b/src/terminal/LaunchProfile.zig
+@@ -1,2 +1,42 @@
+ const std = @import("std");
++
++pub fn quoteCommandArguments(args: anytype, output: *[max_command_bytes]u8) ![]const u8 {
++    if (args.len == 0) return error.InvalidExecuteArguments;
++    var length: usize = 0;
++    for (args, 0..) |arg, index| {
++        if (index == 0 and arg.len == 0) return error.InvalidExecuteArguments;
++        if (index != 0) try appendCommandBytes(output, &length, " ");
++        try appendCommandBytes(output, &length, "'");
++        for (arg) |byte| {
++            if (byte < 0x20 or byte == 0x7f) return error.InvalidExecuteArgument;
++            if (byte == '\'') {
++                try appendCommandBytes(output, &length, "'\\''");
++            } else {
++                try appendCommandByte(output, &length, byte);
++            }
++        }
++        try appendCommandBytes(output, &length, "'");
++    }
++    return output[0..length];
++}
++
++fn appendCommandBytes(
++    output: *[max_command_bytes]u8,
++    length: *usize,
++    bytes: []const u8,
++) !void {
++    if (bytes.len > max_command_bytes - length.*) return error.ExecuteArgumentsTooLong;
++    @memcpy(output[length.* .. length.* + bytes.len], bytes);
++    length.* += bytes.len;
++}
++
++fn appendCommandByte(
++    output: *[max_command_bytes]u8,
++    length: *usize,
++    byte: u8,
++) !void {
++    if (length.* == max_command_bytes) return error.ExecuteArgumentsTooLong;
++    output[length.*] = byte;
++    length.* += 1;
++}
+ const builtin = @import("builtin");
+@@ -524,0 +565,16 @@
++test "terminal execute argv are safely quoted and bounded" {
++    const argv = [_][]const u8{ "/usr/bin/echo", "space here", "a'b", "", "$(touch /tmp/no)" };
++    var output: [max_command_bytes]u8 = undefined;
++    try std.testing.expectEqualStrings(
++        "'/usr/bin/echo' 'space here' 'a'\\''b' '' '$(touch /tmp/no)'",
++        try quoteCommandArguments(&argv, &output),
++    );
++
++    const no_program = [_][]const u8{""};
++    try std.testing.expectError(error.InvalidExecuteArguments, quoteCommandArguments(&no_program, &output));
++    const controls = [_][]const u8{ "/bin/echo", "line\nbreak" };
++    try std.testing.expectError(error.InvalidExecuteArgument, quoteCommandArguments(&controls, &output));
++    var long_argument: [max_command_bytes]u8 = @splat('x');
++    const long_argv = [_][]const u8{ "/bin/echo", long_argument[0..] };
++    try std.testing.expectError(error.ExecuteArgumentsTooLong, quoteCommandArguments(&long_argv, &output));
++}
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -3698,0 +3699,19 @@
++        if (std.mem.eql(u8, cmd, "-e") or std.mem.eql(u8, cmd, "--execute")) {
++            if (args.len < 3) return error.InvalidExecuteArguments;
++            var command_buffer: [noctty.launch_profile.max_command_bytes]u8 = undefined;
++            const command = try noctty.launch_profile.quoteCommandArguments(args[2..], &command_buffer);
++            try runNativeGridActivated(
++                allocator,
++                init.io,
++                home_dir,
++                init.environ_map,
++                1,
++                .visible,
++                null,
++                .restart_shells,
++                false,
++                null,
++                command,
++            );
++            return;
++        }
+@@ -3716,0 +3736,2 @@
++                \\  -e, --execute COMMAND [ARGS...]
++                \\                             Run COMMAND in an independent window
+@@ -3778,0 +3800,1 @@
++                null,
+@@ -3812,0 +3835,1 @@
++                null,
+@@ -3833,0 +3857,1 @@
++                null,
+@@ -8923,0 +8948,1 @@
++        null,
+@@ -9005,0 +9031,1 @@
++    initial_command: ?[]const u8,
+@@ -9100,1 +9126,1 @@
+-    var session = if (hot_session_load == .restored)
++    var session = if (initial_command == null and hot_session_load == .restored)
+@@ -9111,3 +9137,8 @@
+-        const initial_profile = app.config.terminal.launch_profile.forInitialLaunch(
++        var initial_profile = app.config.terminal.launch_profile.forInitialLaunch(
+             initial_working_directory,
+         );
++        if (initial_command) |command| {
++            initial_profile.kind = .command;
++            try initial_profile.shell.set("/bin/sh");
++            try initial_profile.command.set(command);
++        }

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Audio Control
+Name[pt_BR]=Ajustes de Áudio
+GenericName=PipeWire Volume Control
+GenericName[pt_BR]=Controle de volume do PipeWire
+Exec=pwvucontrol
+TryExec=pwvucontrol
+Icon=com.saivert.pwvucontrol
+Terminal=false
+Type=Application
+Categories=Settings;
+Keywords=PipeWire;Volume;Audio;Mixer;Control;Sound
+StartupNotify=true

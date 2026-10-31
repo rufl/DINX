@@ -45,7 +45,7 @@ Reproducibility is an acceptance target. A build that cannot identify its inputs
 
 ## Application isolation
 
-Noctty and Nocted must not require elevated privileges. Project files, editor plugins and terminal commands are untrusted inputs. The applications should follow normal XDG permission boundaries and must not silently execute project code.
+Deetty and Dintor must not require elevated privileges. Project files, editor plugins and terminal commands are untrusted inputs. The applications should follow normal XDG permission boundaries and must not silently execute project code.
 
 Optional integrations use standard XDG, Wayland and D-Bus boundaries. Validate message shape, handle unavailable endpoints and keep startup independent of optional services.
 

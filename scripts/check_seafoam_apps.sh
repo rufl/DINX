@@ -6,6 +6,7 @@ profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 iso_check="$root/scripts/check-iso-content.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
+builder="$root/scripts/build-iso-container.sh"
 dome_dir="$root/distro/packages/dome"
 pearl_source="$root/distro/packages/pearl/source.env"
 
@@ -18,7 +19,7 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$groups" "$iso_check" "$workflow" \
+for path in "$profile" "$groups" "$iso_check" "$workflow" "$builder" \
   "$dome_dir/PKGBUILD" "$dome_source" "$pearl_source" "$zls_dir/PKGBUILD" "$zls_dir/source.env" \
   "$zls_smoke" "$settings_contract"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
@@ -100,16 +101,16 @@ grep -Fq 'zig-x86_64-linux-$ZIG_VERSION/lib/std' "$zls_dir/PKGBUILD" || fail 'ZL
 if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$zls_dir/PKGBUILD"; then
   fail 'ZLS package recipe introduces a systemd or uwsm dependency or command'
 fi
-grep -Fq 'build_package dome' "$workflow" || fail 'workflow does not build Dome for the base ISO package repository'
-grep -Fq 'build_package zls' "$workflow" || fail 'workflow does not build ZLS for the base ISO package repository'
-grep -Fq 'build_package seafoam-settings' "$workflow" || fail 'workflow does not build Seafoam Settings for the base ISO package repository'
-grep -Fq 'zig_version=0.17.0' "$workflow" || fail 'workflow does not pin Zig 0.17 for native DINX packages'
-grep -Fq 'extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")' "$workflow" || fail 'workflow does not pass the pinned Zig toolchain to native packages'
-grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$workflow" \
-  || fail 'workflow does not select the Pearl Zig toolchain for Dome'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$workflow" \
-  || fail 'workflow does not pass the Pearl Zig toolchain to Dome'
-grep -Fq 'scripts/smoke_zls.sh' "$workflow" || fail 'workflow does not smoke-test ZLS'
+grep -Fq 'build_package dome' "$builder" || fail 'ISO builder does not build Dome for the base package repository'
+grep -Fq 'build_package zls' "$builder" || fail 'ISO builder does not build ZLS for the base package repository'
+grep -Fq 'build_package seafoam-settings' "$builder" || fail 'ISO builder does not build Seafoam Settings for the base package repository'
+grep -Fq 'zig_version=0.17.0' "$builder" || fail 'ISO builder does not pin Zig 0.17 for native DINX packages'
+grep -Fq 'extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")' "$builder" || fail 'ISO builder does not pass the pinned Zig toolchain to native packages'
+grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$builder" \
+  || fail 'ISO builder does not select the Pearl Zig toolchain for Dome'
+grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+  || fail 'ISO builder does not pass Pearl Zig toolchain to Dome'
+grep -Fq 'ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh' "$builder" || fail 'Artix builder does not smoke-test ZLS'
 grep -Fq 'scripts/check_seafoam_apps.sh' "$workflow" || fail 'workflow does not run the Seafoam app contract'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'
 "$settings_contract"

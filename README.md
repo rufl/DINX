@@ -1,6 +1,6 @@
-<p align="center">
-  <img src="distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx.svg" alt="Logotipo DINX" width="180">
-</p>
+<h1 align="center">
+  <img src="distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg" alt="Logotipo DINX Linux" width="420">
+</h1>
 
 <h1 align="center">DINX</h1>
 
@@ -13,6 +13,9 @@ Tweakable e extendable via CLI sim, sem purismo desnecessário.  <p></p><p align
 Rápida, Leve e Focada em Produzir
 Sem Gnome, Sem KDE, Sem Systemd.<br>
 Ecossistema de tools com foco em aumentar seu roster de Zig-Heavy com menos serviços e clutter possíveis.</strong>
+<p align="center">
+  <strong>Artix Linux + dinit, com um desktop Wayland enxuto e explícito.</strong><br>
+  Um alpha público para testar a base, os limites e o caminho de instalação — sem esconder o que ainda falta.
 </p>
 
 <p align="center">
@@ -21,7 +24,8 @@ Ecossistema de tools com foco em aumentar seu roster de Zig-Heavy com menos serv
 </p>
 
 <p align="center">
-  <a href="https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso"><img alt="Baixar ISO alpha mais recente" src="https://img.shields.io/badge/baixar-ISO%20alpha%20mais%20recente-ef3340?logo=linux&amp;logoColor=white"></a>
+  <a href="https://github.com/rufl/DINX/releases/tag/alpha-latest"><img alt="Release alpha mais recente" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="Status da validação P0" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
   <img alt="Próximo marco: Beta 0.1 do sistema (planejado)" src="https://img.shields.io/badge/pr%C3%B3ximo%20marco-Beta%200.1%20do%20sistema-f59e0b">
   <a href="LICENSE"><img alt="Licença Apache 2.0" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
@@ -33,7 +37,7 @@ Ecossistema de tools com foco em aumentar seu roster de Zig-Heavy com menos serv
 
 | Você quer… | Vá para |
 |---|---|
-| Baixar a imagem publicada | [DINX v0.1.0-alpha.10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10) |
+| Baixar a ISO alpha mais recente | [ISO direta](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Release Alpha 0.11](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11) · [Outras releases](https://github.com/rufl/DINX/releases) |
 | Verificar e instalar a ISO | [Guia de instalação](docs/pt-BR/install.md) |
 | Ver o que o CI realmente provou | [Status do build P0](docs/pt-BR/p0-build.md) |
 | Entender compatibilidade e limites | [Compatibilidade](docs/pt-BR/compatibility.md) · [Roadmap](docs/pt-BR/roadmap.md) |
@@ -52,7 +56,7 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **Phyto** como gerenciador de arquivos padrão e **File Roller** para abrir, criar e extrair arquivos compactados;
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
-- **Mesa Lavapipe** (`vulkan-swrast`) continua disponível para aplicativos Vulkan; Aqueous usa uma build Pixman separada, sem efeitos Vulkan, em sistemas sem render node e com GPU Virtio, evitando a falha no QEMU e preservando o compositor completo em hardware;
+- **Mesa/RADV e gráficos em VM:** novas saídas do Aqueous começam com dois workspaces. Render nodes acessíveis de QEMU `virtio_gpu`/virgl ou VirtualBox VMSVGA (`vmwgfx`) usam Mesa GLES2 com a build do Aqueous sem efeitos Vulkan; nodes ausentes/inacessíveis e adaptadores virtuais somente 2D usam Pixman/Cairo. A aceleração 3D também precisa estar habilitada no host; veja o [guia gráfico](docs/pt-BR/install.md).
 - **DINX Gaming** mantém o launcher manual oculto. A ISO base não inclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam nem bibliotecas gaming de 32 bits; o usuário pode optar por instalar o conjunto gaming após a instalação. A base mantém RADV/Vulkan de 64 bits; veja o [guia de instalação](docs/pt-BR/install.md).
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
@@ -61,7 +65,7 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 ## Seafoam e a sessão única na ISO base
 
-**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Nocted com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. O Pearl 0.3.0, inclusive a fonte upstream usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream usam o Zig 0.17.0 verificado.
+**Dome**, **Seafoam Settings** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos sem instalar ou exigir systemd; Seafoam Settings agrupa os pontos de entrada de display e sessão; ZLS fornece LSP para Zig no Dintor com a biblioteca padrão Zig correspondente e um shim de metadados compacto, sem exigir um compilador Zig completo na ISO. O Pearl 0.3.0, inclusive a fonte upstream usada pelo Dome, e a fonte Pearl 0.2.8 incorporada ao Phyto usam seu toolchain Zig 0.16.0 fixado; Pori, Aqueous e os demais pacotes Zig nativos da DINX fora dessa árvore upstream usam o Zig 0.17.0 verificado.
 
 **Aqueous 1.0.5** e **Pearl 0.3.0** vêm na ISO base. `Aqueous + Pearl (DINX)` é a única sessão de usuário selecionável e a sessão inicial da live: a DINX inicia o Aqueous diretamente, executa os helpers supervisionados de Shikane/PolicyKit/idle e faz `exec` do Pearl sem `systemd`, `systemctl`, `uwsm` ou unidades de usuário. O login instalado/manual usa o **Pearl Greeter**, iniciado diretamente pelo greetd através da conta dedicada `pearl-greeter`; o Greeter força a mesma entrada Aqueous/Pearl e não expõe X11 nem UWSM. Se a sessão Aqueous/Pearl da live terminar, o greetd retorna ao Pearl Greeter em vez de trocar de sessão silenciosamente.
 
@@ -69,31 +73,31 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 | Item | Estado |
 |---|---|
-| Release publicado | `v0.1.0-alpha.10`, ISO direta de 1.862.772.736 bytes |
+| Release publicado | [DINX Alpha 0.11 (`v0.1.0-alpha.11`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11), ISO direta de 1.836.740.608 bytes |
 | Base | Artix Linux x86_64 com dinit |
 | Próximo marco | Beta 0.1 do sistema: planejada, ainda não publicada e sem data |
 | Qualificação gaming | P5 separada da beta do sistema; ainda não concluída |
-| Validação da release publicada | [Workflow 40879223746](https://github.com/rufl/DINX/actions/runs/40879223746), commit `3fd3cd036cab7e8fb553e6e5c244b02429f1a18e` |
+| Validação da ISO Alpha 11 | [Build P0, QEMU e instalação](https://github.com/rufl/DINX/actions/runs/41169078281/job/124442910444) concluídos; [release publicada](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11) |
 | P0 da main após Alpha 10 | [Workflow 40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, concluído com sucesso |
 
 ## Próximo marco: Beta 0.1 do sistema
 
 A Beta 0.1 está planejada, ainda sem data de lançamento. O objetivo é qualificar a sessão Aqueous/Pearl sobre dinit e os caminhos de instalação, atualização e recuperação em uma matriz declarada de hardware físico. A publicação dependerá de testes de rede, áudio, GPU/display e suspensão, além de instalação e recuperação em discos de teste, atualização assinada e documentação dos limites.
 
-A meta de tamanho para a próxima ISO é **até 1.800.000.000 bytes**; a Alpha 10 atual tem 1.862.772.736 bytes. O P5 de jogos permanece uma trilha separada: a Beta 0.1 não alegará suporte gaming sem testes reais de DRM, Steam, controle e áudio. A sessão continuará Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
+O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **menor que 2 GiB** (`2.147.483.648` bytes); a DINX não tem uma meta menor de 1,8 bilhão de bytes. A Alpha 11 é distribuída como ISO direta abaixo do limite. A ISO futura precisa continuar abaixo dele para ser publicada como arquivo direto. O P5 gaming segue separado: a Beta 0.1 não alegará suporte sem testes reais de DRM, Steam, controle e áudio. A sessão continua Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
 
 
 ## Instalação rápida
 
-1. Baixe a ISO e o arquivo `.iso.sha512` da [release Alpha 10](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.10).
+1. Baixe a [ISO alpha mais recente](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) e seu [arquivo SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
 2. No mesmo diretório, verifique o arquivo:
 
    ```bash
-   sha512sum -c dinx-0.1.0-alpha.10-x86_64.iso.sha512
+   sha512sum -c dinx-latest-x86_64.iso.sha512
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
-4. A imagem Alpha 10 publicada abre diretamente em `Aqueous + Pearl (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
+A imagem Alpha 11 publicada abre diretamente em `Aqueous + Pearl (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 
@@ -122,7 +126,7 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer 
 
 ## Código, contratos e licença
 
-Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O archive versionado do Noctty é uma fonte upstream separada sob MIT; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
+Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O pacote DINX `deetty` fornece os aplicativos Deetty/Dintor a partir de um archive upstream separado sob MIT, cuja URL e identidade NOCTTY permanecem inalteradas; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
 
 - [Código no GitHub](https://github.com/rufl/DINX)
 - [Issues](https://github.com/rufl/DINX/issues)

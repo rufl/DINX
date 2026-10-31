@@ -1,0 +1,14 @@
+<!-- SPDX-FileCopyrightText: 2026 DINX Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="320" viewBox="0 0 720 320" role="img" aria-labelledby="title desc">
+  <title id="title">DINX — Compact wordmark</title>
+  <desc id="desc">A compact coral DINX wordmark with a clearly structured uppercase N, intended for small interface surfaces.</desc>
+  <g transform="translate(5 0)" fill="none" stroke="#F4515B" stroke-width="29" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 242 C100 188 101 120 102 66 C150 76 201 107 234 145 C260 174 261 197 239 218 C211 245 153 263 101 272"/>
+    <path d="M294 145 L294 242"/>
+    <path d="M342 272 C343 202 343 132 342 66 C379 101 420 174 457 272 C456 202 456 132 457 66"/>
+    <path d="M500 96 C535 145 571 196 606 248"/>
+    <path d="M606 96 C571 145 535 196 500 248"/>
+    <circle cx="294" cy="83" r="17" fill="#F4515B" stroke="none"/>
+  </g>
+</svg>

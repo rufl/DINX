@@ -41,7 +41,7 @@ Concluído:
 
 - publicação da ISO/partes, checksums, instruções de instalação, problemas conhecidos e metadados de release;
 - qualificação do instalador persistente experimental e do caminho de recuperação no primeiro boot pelo CI em discos BIOS e UEFI descartáveis;
-- fornecimento do terminal mínimo de fallback e da configuração funcional de shell;
+- definido o Deetty como único emulador de terminal na ISO live e na instalação nova, com defaults funcionais de shell;
 - registro explícito do pré-requisito da chave de produção, do limite de hardware e das limitações de recuperação na documentação do release;
 
 Gates de release adiados:
@@ -50,13 +50,12 @@ Gates de release adiados:
 
 **Critério de saída:** atendido. Uma pessoa convidada consegue instalar o snapshot alpha pelo release público e pela documentação sem reconstruir o ambiente de desenvolvimento.
 
-## P2 — Noctty
-
+## P2 — Deetty
 **Status:** concluída. A P2 foi encerrada com a execução P0 final verde registrada em [Status do build P0](p0-build.md).
 
 Evidências de saída da P2:
 
-- o archive exato do NOCTTY/NoctEd é fixado por SHA-256, verificado e compilado no pacote Artix;
+- o archive upstream NOCTTY exato é fixado por SHA-256, verificado e compilado no pacote DINX `deetty`;
 - o core nativo Zig qualifica criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, compatibilidade de protocolo/Unicode, ciclo de vida com contabilização do allocator e fairness em 30 panes com paste de 8 MiB;
 - a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
 - o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta do Aqueous/Pearl e runtime do pacote estão verificados;
@@ -71,9 +70,9 @@ Limites mantidos depois da P2:
 
 Abas, painéis, transparência e detecção de URLs vêm depois da semântica central do terminal.
 
-## P3 — Nocted
+## P3 — Dintor
 
-**Status:** concluída. A P3 fecha com a fonte Nocted fixada, o patch de compatibilidade DINX, o payload do pacote/ISO, o gate de qualificação P3 e o contrato de integração do editor.
+**Status:** concluída. A P3 fecha com a fonte upstream NOCTTY fixada, o patch de compatibilidade DINX, o payload do pacote/ISO, o gate de qualificação P3 e o contrato de integração do editor.
 
 Entregue:
 
@@ -83,12 +82,12 @@ Entregue:
 - busca no arquivo/no projeto, substituição por fluxos de seleção e atalhos de teclado;
 - gerenciamento limitado de processos/clientes LSP com diagnósticos, completion, hover, definições, referências, rename, símbolos e formatação;
 - status do Git, diffs unificados e marcadores de alterações no menu Tools e no `--git-probe` headless;
-- esquemas estáticos claro/escuro do DINX pelo contrato documentado de ambiente `DINX_COLOR_SCHEME`/`NOCTED_THEME`, mantendo o editor útil independentemente de um shell gráfico;
+- esquemas estáticos claro/escuro do DINX pelo contrato documentado de ambiente `DINX_COLOR_SCHEME`/`DINTOR_THEME`, mantendo o editor útil independentemente de um shell gráfico;
 
 Gate de release P3:
 
-- `scripts/nocted_p3_qualification.sh` executa endurance do core, escala/deltas do índice, workers, recuperação de estado, tarefas, `clangd` real, smoke GTK nativo X11 nos modos claro/escuro e um fixture Git real;
-- `PKGBUILD`, o perfil ISO, `check_noctty_integration.sh` e `check-iso-content.sh` carregam o mesmo contrato Nocted/LSP/Git/tema;
+- `scripts/dintor_p3_qualification.sh` executa endurance do core, escala/deltas do índice, workers, recuperação de estado, tarefas, `clangd` real, smoke GTK nativo X11 nos modos claro/escuro e um fixture Git real;
+- `PKGBUILD`, o perfil ISO, `check_deetty_integration.sh` e `check-iso-content.sh` carregam o mesmo contrato Dintor/LSP/Git/tema;
 - o workflow P0 continua sendo o gate obrigatório de pacote, ISO, QEMU, instalação persistente, recuperação e atestação.
 
 **Critério de saída:** atendido. Uma pessoa desenvolvedora consegue trabalhar em um projeto Zig ou C/C++, consultar diagnósticos e alterações do Git e editar sem um segundo editor.
@@ -166,7 +165,8 @@ Gate de release P3:
 - Testar instalação guiada e manual em discos físicos descartáveis, incluindo os caminhos UEFI/BIOS suportados, primeiro boot, TTY de recuperação e recuperação após instalação interrompida. Manter swap opcional; nunca exigir criação manual pelo usuário. Documentar limites de Windows/BitLocker/hibernação e não prometer preservação de dados além dos layouts testados.
 - Qualificar bootstrap do repositório assinado, verificação de assinaturas, atualizações do sistema instalado e recuperação de pacotes. Decidir se upgrades de ISO instalada e rollback do filesystem serão suportados; caso contrário, declarar que continuam indisponíveis e documentar o caminho de recuperação/reinstalação.
 - Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. Aqueous/Pearl continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
-- Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta em até **1.800.000.000 bytes**; a Alpha 10 tem 1.862.772.736 bytes, portanto a meta de tamanho continua aberta.
+- Verificar aplicativos GTK 3/4, Qt 6 e XWayland na sessão Aqueous: barra de título, minimizar/maximizar/fechar, arrastar, encaixar e sobreposição de barras próprias. Registrar exceções por aplicativo em vez de alegar comportamento uniforme sem evidência.
+- Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta abaixo do [limite de 2 GiB por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2.147.483.648` bytes); a Alpha 10 tem 1.862.772.736 bytes e está dentro do limite.
 - Publicar guias correspondentes em inglês e português brasileiro para instalação, compatibilidade, problemas conhecidos e recuperação, com evidências de teste e casos explicitamente não suportados.
 
 **Fora da afirmação da Beta 0.1:** suporte gaming permanece na trilha P5 separada. Não afirmar suporte a Steam, jogos comerciais, controles, saída DRM real ou áudio gaming até passar pelos gates de hardware. Secure Boot e recuperação física também não são alegados sem testes próprios.

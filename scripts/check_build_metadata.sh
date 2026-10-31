@@ -49,7 +49,7 @@ require_value zig_version '^0\.17\.0$'
 require_value profile_sha256 '^[0-9a-f]{64}$'
 require_value common_profile_sha256 '^[0-9a-f]{64}$'
 require_value feature_groups_sha256 '^[0-9a-f]{64}$'
-require_value noctty_source_env_sha256 '^[0-9a-f]{64}$'
+require_value deetty_source_env_sha256 '^[0-9a-f]{64}$'
 require_value iso_name '^[^/[:space:]]+\.iso$'
 require_value iso_bytes '^[1-9][0-9]*$'
 require_value iso_sha512 '^[0-9a-f]{128}$'
@@ -85,8 +85,8 @@ common_profile_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/common/common
 [[ "$(read_value common_profile_sha256)" == "$common_profile_sha" ]] || fail 'common profile checksum does not match the checked-out source'
 feature_groups_sha=$(sha256sum "$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json" | cut -d ' ' -f 1)
 [[ "$(read_value feature_groups_sha256)" == "$feature_groups_sha" ]] || fail 'feature-group checksum does not match the checked-out source'
-source_env_sha=$(sha256sum "$repo_root/distro/packages/noctty/source.env" | cut -d ' ' -f 1)
-[[ "$(read_value noctty_source_env_sha256)" == "$source_env_sha" ]] || fail 'Noctty source.env checksum does not match the checked-out source'
+source_env_sha=$(sha256sum "$repo_root/distro/packages/deetty/source.env" | cut -d ' ' -f 1)
+[[ "$(read_value deetty_source_env_sha256)" == "$source_env_sha" ]] || fail 'Deetty source.env checksum does not match the checked-out source'
 compression_wrapper_sha=$(sha256sum "$repo_root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 [[ "$(read_value compression_wrapper_sha256)" == "$compression_wrapper_sha" ]] \
   || fail 'compression wrapper checksum does not match the checked-out source'
@@ -98,6 +98,21 @@ metadata_commit=$(read_value commit)
 if [[ -n "${GITHUB_SHA:-}" && "$GITHUB_SHA" != "$checkout_commit" && "$GITHUB_SHA" != "$(printf '%040d' 0)" ]]; then
   fail "GITHUB_SHA does not match checked-out source: $GITHUB_SHA != $checkout_commit"
 fi
+build_context=$(read_value build_context)
+[[ -n "$build_context" ]] || build_context=github-actions
+case "$build_context" in
+  github-actions)
+    [[ -z "$(read_value source_tree_sha256)" ]] \
+      || fail 'GitHub build metadata unexpectedly contains a local source-tree checksum'
+    ;;
+  local-docker)
+    require_value source_tree_sha256 '^[0-9a-f]{64}$'
+    actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root")
+    [[ "$(read_value source_tree_sha256)" == "$actual_source_tree_sha" ]] \
+      || fail 'metadata source-tree checksum does not match the current local source'
+    ;;
+  *) fail "unsupported build context: $build_context" ;;
+esac
 
 printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true repository_inputs=true signed_package_repository=true source_checksums=true iso_binding=%s\n' \
   "$(read_value commit)" "$(read_value iso_name)" "$iso_binding"

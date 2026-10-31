@@ -1,0 +1,456 @@
+--- a/build.zig
++++ b/build.zig
+@@ -427,6 +427,7 @@
+         .strip = strip,
+     });
+     terminal_session_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_session_qualification_mod.addImport("compat", compat_mod);
+     const terminal_session_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-session-qualification",
+         .root_module = terminal_session_qualification_mod,
+@@ -452,6 +453,7 @@
+         .strip = strip,
+     });
+     terminal_agent_fairness_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_agent_fairness_mod.addImport("compat", compat_mod);
+     terminal_agent_fairness_mod.linkSystemLibrary("glib-2.0", .{
+         .use_pkg_config = .force,
+     });
+@@ -480,6 +482,7 @@
+         .strip = strip,
+     });
+     launch_continuity_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    launch_continuity_qualification_mod.addImport("compat", compat_mod);
+     const launch_continuity_qualification_exe = b.addExecutable(.{
+         .name = "noctty-launch-continuity-qualification",
+         .root_module = launch_continuity_qualification_mod,
+@@ -505,6 +508,7 @@
+         .strip = strip,
+     });
+     terminal_real_tui_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_real_tui_qualification_mod.addImport("compat", compat_mod);
+     const terminal_real_tui_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-real-tui-qualification",
+         .root_module = terminal_real_tui_qualification_mod,
+@@ -530,6 +534,7 @@
+         .strip = strip,
+     });
+     terminal_ncurses_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_ncurses_qualification_mod.addImport("compat", compat_mod);
+     const terminal_ncurses_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-ncurses-qualification",
+         .root_module = terminal_ncurses_qualification_mod,
+@@ -555,6 +560,7 @@
+         .strip = strip,
+     });
+     terminal_system_tui_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
++    terminal_system_tui_qualification_mod.addImport("compat", compat_mod);
+     const terminal_system_tui_qualification_exe = b.addExecutable(.{
+         .name = "noctty-terminal-system-tui-qualification",
+         .root_module = terminal_system_tui_qualification_mod,
+@@ -586,1 +592,2 @@
++    b.installFile("resources/nocted/styles/nocted-light.xml", "share/dintor/styles/dintor-light.xml");
+     b.installFile("resources/icons/48x48/com.noctty.NOCTTY.png", "share/icons/hicolor/48x48/apps/org.dinx.Deetty.png");
+--- a/src/terminal/RealTuiQualification.zig
++++ b/src/terminal/RealTuiQualification.zig
+@@ -339,6 +339,6 @@
+     )) |info| identity: {
+         for (case.process_names) |process_name| {
+-            if (std.ascii.indexOfIgnoreCase(info.name, process_name) != null)
++            if (containsIgnoreCase(info.name, process_name))
+                 break :identity true;
+         }
+         break :identity false;
+@@ -439,1 +439,12 @@
++fn containsIgnoreCase(haystack: []const u8, needle: []const u8) bool {
++    if (needle.len == 0) return true;
++    if (needle.len > haystack.len) return false;
++    for (0..haystack.len - needle.len + 1) |offset| {
++        if (std.ascii.eqlIgnoreCase(
++            haystack[offset .. offset + needle.len],
++            needle,
++        )) return true;
++    }
++    return false;
++}
+ fn allMarkersPresent(grid: Vt.Grid, markers: []const []const u8) bool {
+--- a/src/terminal/SystemTuiQualification.zig
++++ b/src/terminal/SystemTuiQualification.zig
+@@ -49,8 +49,8 @@
+     var info_command_buffer: [1024]u8 = undefined;
+     const info_command = try std.fmt.bufPrint(
+         &info_command_buffer,
+-        "exec \"{s}\" --file=dir",
+-        .{info_path},
++        "exec \"{s}\" --file=\"{s}/noctty-system.info\"",
++        .{ info_path, scratch },
+     );
+     var whiptail_command_buffer: [1024]u8 = undefined;
+     const whiptail_command = try std.fmt.bufPrint(
+@@ -72,1 +72,2 @@
+-        "exec \"{s}\" -interactive ':memory:' " ++
++        "TERM=dumb; export TERM; exec \"{s}\" -interactive ':memory:' " ++
++            "-cmd \".prompt --no-color\" " ++
+@@ -172,1 +172,1 @@
+-    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
++    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "SQLite-" };
+--- /dev/null
++++ b/src/nocted/Git.zig
+@@ -0,0 +1,167 @@
++const std = @import("std");
++const task = @import("Task.zig");
++
++pub const max_status_bytes: usize = 256 * 1024;
++pub const max_diff_bytes: usize = 512 * 1024;
++pub const max_preview_bytes: usize = 48 * 1024;
++
++pub const Counts = struct {
++    changed: usize = 0,
++    staged: usize = 0,
++    unstaged: usize = 0,
++    untracked: usize = 0,
++    added: usize = 0,
++    deleted: usize = 0,
++    modified: usize = 0,
++    renamed: usize = 0,
++};
++
++pub const Snapshot = struct {
++    status: []u8,
++    diff: []u8,
++    counts: Counts,
++
++    pub fn deinit(self: *Snapshot, allocator: std.mem.Allocator) void {
++        allocator.free(self.status);
++        allocator.free(self.diff);
++        self.* = undefined;
++    }
++};
++
++pub fn snapshotAlloc(
++    allocator: std.mem.Allocator,
++    io: std.Io,
++    root: []const u8,
++) !Snapshot {
++    const status_result = try runGit(
++        allocator,
++        io,
++        root,
++        &.{
++            "git",
++            "-c",
++            "color.ui=false",
++            "--no-optional-locks",
++            "status",
++            "--short",
++            "--untracked-files=all",
++            "--",
++        },
++    );
++    defer allocator.free(status_result.output);
++    if (!status_result.success) return error.GitStatusFailed;
++    if (status_result.output.len > max_status_bytes) return error.GitStatusTooLarge;
++    const status = try allocator.dupe(u8, status_result.output);
++    errdefer allocator.free(status);
++
++    const diff_result = try runGit(
++        allocator,
++        io,
++        root,
++        &.{
++            "git",
++            "-c",
++            "color.ui=false",
++            "--no-pager",
++            "--no-optional-locks",
++            "diff",
++            "--no-ext-diff",
++            "--unified=0",
++            "--",
++        },
++    );
++    defer allocator.free(diff_result.output);
++    if (!diff_result.success) return error.GitDiffFailed;
++    if (diff_result.output.len > max_diff_bytes) return error.GitDiffTooLarge;
++    const diff = try allocator.dupe(u8, diff_result.output);
++    return .{ .status = status, .diff = diff, .counts = countStatus(status) };
++}
++
++fn runGit(
++    allocator: std.mem.Allocator,
++    io: std.Io,
++    root: []const u8,
++    argv: []const []const u8,
++) !task.Result {
++    return task.runControlledAlloc(
++        allocator,
++        io,
++        root,
++        .{ .name = "Git", .argv = argv },
++        .{ .timeout_ms = 15_000 },
++    );
++}
++
++pub fn countStatus(status: []const u8) Counts {
++    var counts: Counts = .{};
++    var lines = std.mem.splitScalar(u8, status, '\n');
++    while (lines.next()) |line| {
++        if (line.len < 2 or (line[0] == ' ' and line[1] == ' ')) continue;
++        const index_status = line[0];
++        const worktree_status = line[1];
++        counts.changed += 1;
++        if (index_status == '?' and worktree_status == '?') {
++            counts.untracked += 1;
++            continue;
++        }
++        if (index_status != ' ') counts.staged += 1;
++        if (worktree_status != ' ') counts.unstaged += 1;
++        const kind = if (index_status != ' ') index_status else worktree_status;
++        switch (kind) {
++            'A' => counts.added += 1,
++            'D' => counts.deleted += 1,
++            'M' => counts.modified += 1,
++            'R' => counts.renamed += 1,
++            else => {},
++        }
++    }
++    return counts;
++}
++
++pub fn formatAlloc(
++    allocator: std.mem.Allocator,
++    snapshot: Snapshot,
++) ![]u8 {
++    var output: std.Io.Writer.Allocating = .init(allocator);
++    errdefer output.deinit();
++    try output.writer.print(
++        "Git changes: changed={d} staged={d} unstaged={d} untracked={d} added={d} deleted={d} modified={d} renamed={d}\n\nStatus:\n",
++        .{
++            snapshot.counts.changed,
++            snapshot.counts.staged,
++            snapshot.counts.unstaged,
++            snapshot.counts.untracked,
++            snapshot.counts.added,
++            snapshot.counts.deleted,
++            snapshot.counts.modified,
++            snapshot.counts.renamed,
++        },
++    );
++    try writePreview(&output.writer, snapshot.status);
++    try output.writer.writeAll("\nDiff:\n");
++    try writePreview(&output.writer, snapshot.diff);
++    return output.toOwnedSlice();
++}
++
++fn writePreview(writer: anytype, text: []const u8) !void {
++    const length = @min(text.len, max_preview_bytes);
++    try writer.writeAll(text[0..length]);
++    if (length < text.len) try writer.writeAll("\n[preview truncated]\n");
++}
++
++test "parses porcelain status into change markers" {
++    const counts = countStatus(" M src/main.zig\nA  new.zig\nD  old.zig\nR  old.zig -> new.zig\n?? scratch.txt\n");
++    try std.testing.expectEqual(@as(usize, 5), counts.changed);
++    try std.testing.expectEqual(@as(usize, 3), counts.staged);
++    try std.testing.expectEqual(@as(usize, 1), counts.unstaged);
++    try std.testing.expectEqual(@as(usize, 1), counts.untracked);
++    try std.testing.expectEqual(@as(usize, 1), counts.added);
++    try std.testing.expectEqual(@as(usize, 1), counts.deleted);
++    try std.testing.expectEqual(@as(usize, 1), counts.modified);
++    try std.testing.expectEqual(@as(usize, 1), counts.renamed);
++}
++
++test "ignores empty status lines" {
++    const counts = countStatus("\n  \n");
++    try std.testing.expectEqual(@as(usize, 0), counts.changed);
++}
+--- /dev/null
++++ b/resources/nocted/styles/nocted-light.xml
+@@ -0,0 +1,37 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<style-scheme id="dintor-light" _name="Dintor Light" version="1.0">
++  <author>DINX contributors</author>
++  <_description>DINX-aligned compact light editor palette</_description>
++  <color name="background" value="#F7F8FA"/>
++  <color name="foreground" value="#202631"/>
++  <color name="muted" value="#687386"/>
++  <color name="selection" value="#D9E5FF"/>
++  <color name="pink" value="#B4235A"/>
++  <color name="green" value="#1B7F5A"/>
++  <color name="yellow" value="#8A5A00"/>
++  <color name="blue" value="#2859A8"/>
++  <color name="violet" value="#7048A8"/>
++  <color name="orange" value="#9A4D00"/>
++  <style name="text" foreground="foreground" background="background"/>
++  <style name="selection" foreground="foreground" background="selection"/>
++  <style name="cursor" foreground="foreground"/>
++  <style name="current-line" background="#EEF1F6"/>
++  <style name="line-numbers" foreground="muted" background="#EEF1F6"/>
++  <style name="right-margin" foreground="#D9DEE8" background="background"/>
++  <style name="search-match" foreground="#202631" background="yellow"/>
++  <style name="bracket-match" foreground="orange" bold="true"/>
++  <style name="bracket-mismatch" foreground="foreground" background="pink"/>
++  <style name="def:comment" foreground="muted" italic="true"/>
++  <style name="def:string" foreground="yellow"/>
++  <style name="def:character" foreground="yellow"/>
++  <style name="def:number" foreground="violet"/>
++  <style name="def:boolean" foreground="violet"/>
++  <style name="def:constant" foreground="violet"/>
++  <style name="def:keyword" foreground="pink"/>
++  <style name="def:statement" foreground="pink"/>
++  <style name="def:type" foreground="blue" italic="true"/>
++  <style name="def:function" foreground="green"/>
++  <style name="def:identifier" foreground="green"/>
++  <style name="def:preprocessor" foreground="blue"/>
++  <style name="def:error" foreground="foreground" background="pink"/>
++</style-scheme>
+--- a/src/nocted/root.zig
++++ b/src/nocted/root.zig
+@@ -1,5 +1,6 @@
+ pub const document = @import("Document.zig");
+ pub const folding = @import("Folding.zig");
++pub const git = @import("Git.zig");
+ pub const ignore = @import("Ignore.zig");
+ pub const lsp = @import("Lsp.zig");
+ pub const multi_selection = @import("MultiSelection.zig");
+@@ -19,1 +20,2 @@
++    _ = git;
+     _ = ignore;
+--- a/src/nocted/main.zig
++++ b/src/nocted/main.zig
+@@ -1732,1 +1732,7 @@
++        appendMenuAction(
++            tools_menu,
++            "Git Status and Diff...",
++            &onShowGitStatus,
++            self,
++        );
+         appendMenuSeparator(tools_menu);
+@@ -3069,2 +3069,3 @@
+-        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, "dintor-dark")) |scheme|
++        const style_scheme = if (lightThemeRequested(self.environ_map)) "dintor-light" else "dintor-dark";
++        if (c.gtk_source_style_scheme_manager_get_scheme(self.style_manager, style_scheme)) |scheme|
+             c.gtk_source_buffer_set_style_scheme(buffer, scheme);
+@@ -4793,1 +4793,49 @@
++    fn currentGitRoot(self: *App) ?[]const u8 {
++        if (self.project_root) |root| return root;
++        const document = self.currentDocument() orelse return null;
++        const path = document.path orelse return null;
++        return std.fs.path.dirname(path) orelse ".";
++    }
++    fn showGitStatus(self: *App) void {
++        const root = self.currentGitRoot() orelse {
++            self.updateStatusError("Open a project or file before inspecting Git");
++            return;
++        };
++        var snapshot = core.git.snapshotAlloc(self.allocator, self.io, root) catch |err| {
++            self.showWorkerError("Git status unavailable", err);
++            return;
++        };
++        defer snapshot.deinit(self.allocator);
++        const summary = core.git.formatAlloc(self.allocator, snapshot) catch |err| {
++            self.showWorkerError("Git summary unavailable", err);
++            return;
++        };
++        defer self.allocator.free(summary);
++        const summary_z = Compat.dupeZ(self.allocator, summary) catch return;
++        defer self.allocator.free(summary_z);
++        const dialog = c.gtk_message_dialog_new(
++            asWindow(self.window),
++            c.GTK_DIALOG_MODAL | c.GTK_DIALOG_DESTROY_WITH_PARENT,
++            c.GTK_MESSAGE_INFO,
++            c.GTK_BUTTONS_CLOSE,
++            "%s",
++            summary_z.ptr,
++        ) orelse return;
++        _ = c.gtk_dialog_run(@ptrCast(dialog));
++        c.gtk_widget_destroy(dialog);
++        const status = std.fmt.allocPrintSentinel(
++            self.allocator,
++            "Git: {d} changed, {d} staged, {d} unstaged, {d} untracked",
++            .{
++                snapshot.counts.changed,
++                snapshot.counts.staged,
++                snapshot.counts.unstaged,
++                snapshot.counts.untracked,
++            },
++            0,
++        ) catch return;
++        defer self.allocator.free(status);
++        self.updateStatus(status.ptr);
++    }
++
+     fn importSyntaxDirectory(self: *App, path: []const u8) void {
+@@ -6718,1 +6773,25 @@
++    if (args.len > 2 and std.mem.eql(u8, args[1], "--git-probe")) {
++        var snapshot = try core.git.snapshotAlloc(allocator, init.io, args[2]);
++        defer snapshot.deinit(allocator);
++        var buffer: [1024]u8 = undefined;
++        var writer: std.Io.File.Writer = .init(.stdout(), init.io, &buffer);
++        try writer.interface.print(
++            "nocted_git_probe changed={d} staged={d} unstaged={d} untracked={d} added={d} deleted={d} modified={d} renamed={d} diff_bytes={d} markers=true\n",
++            .{
++                snapshot.counts.changed,
++                snapshot.counts.staged,
++                snapshot.counts.unstaged,
++                snapshot.counts.untracked,
++                snapshot.counts.added,
++                snapshot.counts.deleted,
++                snapshot.counts.modified,
++                snapshot.counts.renamed,
++                snapshot.diff.len,
++            },
++        );
++        try writer.interface.flush();
++        if (snapshot.counts.changed == 0) return error.GitProbeClean;
++        if (snapshot.diff.len == 0) return error.GitProbeDiffUnavailable;
++        return;
++    }
+     if (args.len > 1 and std.mem.eql(u8, args[1], "--runtime-contract")) {
+@@ -6954,2 +7033,7 @@
++fn lightThemeRequested(environ_map: *const std.process.Environ.Map) bool {
++    const value = environ_map.get("DINX_COLOR_SCHEME") orelse
++        environ_map.get("DINTOR_THEME") orelse return false;
++    return std.mem.eql(u8, value, "light") or std.mem.eql(u8, value, "prefer-light");
++}
+
+ fn installCss() void {
+@@ -8120,1 +8204,6 @@
++
++fn onShowGitStatus(_: ?*c.GtkWidget, data: ?*anyopaque) callconv(.c) void {
++    const app: *App = @ptrCast(@alignCast(data.?));
++    app.showGitStatus();
++}
+ fn onImportSyntax(_: ?*c.GtkWidget, data: ?*anyopaque) callconv(.c) void {
+--- a/src/nocted/ProjectIndexQualification.zig
++++ b/src/nocted/ProjectIndexQualification.zig
+@@ -127,3 +127,3 @@
+     const quick_open_ns = elapsedNanoseconds(started, io);
+-    if (builtin.mode == .ReleaseSafe and scale == core.project_index.max_entries and
++    if (builtin.mode == .safe and scale == core.project_index.max_entries and
+         quick_open_ns > quick_open_budget_ns_release_safe)
+--- a/scripts/nocted_core_stability_qualification.sh
++++ b/scripts/nocted_core_stability_qualification.sh
+@@ -41,1 +41,1 @@
+-for mode in Debug ReleaseSafe; do
++for mode in debug safe; do
+--- a/scripts/nocted_core_endurance_qualification.sh
++++ b/scripts/nocted_core_endurance_qualification.sh
+@@ -17,1 +17,1 @@
+-for mode in Debug ReleaseSafe; do
++for mode in debug safe; do
+--- a/scripts/nocted_project_index_qualification.sh
++++ b/scripts/nocted_project_index_qualification.sh
+@@ -12,1 +12,1 @@
+-for mode in Debug ReleaseSafe; do
++for mode in debug safe; do
+--- a/scripts/nocted_worker_qualification.sh
++++ b/scripts/nocted_worker_qualification.sh
+@@ -12,1 +12,1 @@
+-for mode in Debug ReleaseSafe; do
++for mode in debug safe; do
+--- a/scripts/nocted_lsp_smoke.sh
++++ b/scripts/nocted_lsp_smoke.sh
+@@ -20,1 +20,1 @@
+-echo 'nocted_lsp_smoke client=true server=false transport=stdio framing=true initialize=true did_open=true symbols=true clangd=true timeout=true scratch_clean=true'
++echo 'nocted_lsp_smoke client=true server=true transport=stdio framing=true initialize=true did_open=true symbols=true clangd=true timeout=true scratch_clean=true'

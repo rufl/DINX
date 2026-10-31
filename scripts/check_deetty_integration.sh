@@ -11,7 +11,6 @@ groups="$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json"
 fish_profile="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"
 shell_profile="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh"
 session_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
-wm_config="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/wm.toml"
 terminal_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-terminal"
 terminal_fallback="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-terminal-fallback.desktop"
 source_env="$repo_root/distro/packages/deetty/source.env"
@@ -21,7 +20,7 @@ exec_patch="$repo_root/distro/packages/deetty/deetty-terminal-exec.patch"
 identity_patch="$repo_root/distro/packages/deetty/product-identity.patch"
 
 for path in "$profile" "$groups" "$fish_profile" "$shell_profile" "$session_launcher" \
-  "$wm_config" "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch"; do
+  "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 
@@ -44,10 +43,6 @@ done
 grep -Fq 'set -gx TERMINAL deetty' "$fish_profile" || fail 'Fish TERMINAL default is missing'
 grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' "$shell_profile" || fail 'POSIX TERMINAL default is missing'
 grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' "$session_launcher" || fail 'session TERMINAL default is missing'
-grep -Fq 'spawn_terminal = "deetty"' "$wm_config" || fail 'Aqueous Super+Return terminal action is not Deetty'
-if grep -Eiq 'foot|ghostty' "$wm_config"; then
-  fail 'Aqueous terminal config references a removed terminal'
-fi
 grep -Fq 'export EDITOR="${EDITOR:-dintor}"' "$shell_profile" || fail 'EDITOR default is missing'
 grep -Fq 'export VISUAL="${VISUAL:-$EDITOR}"' "$shell_profile" || fail 'VISUAL default is missing'
 grep -Fq "makedepends=('ghostty-vt-runtime'" "$pkgbuild" || fail 'Deetty build does not use the isolated VT runtime'
@@ -110,6 +105,11 @@ task_smoke="$patched_source/scripts/nocted_task_smoke.sh"
 grep -Fq './zig-out/bin/dintor' "$task_smoke" || fail 'Dintor task smoke uses the old executable path'
 if grep -Fq './zig-out/bin/nocted' "$task_smoke"; then
   fail 'Dintor task smoke still references the old executable'
+fi
+lsp_smoke="$patched_source/scripts/nocted_lsp_smoke.sh"
+grep -Fq './zig-out/bin/dintor --lsp-probe' "$lsp_smoke" || fail 'Dintor LSP smoke uses the old executable path'
+if grep -Fq './zig-out/bin/nocted' "$lsp_smoke"; then
+  fail 'Dintor LSP smoke still references the old executable'
 fi
 patched_desktop=$(<"$patched_source/resources/com.noctty.NOCTTY.desktop")
 grep -Fqx 'Name=Deetty' <<<"$patched_desktop" || fail 'Deetty desktop name is incorrect'

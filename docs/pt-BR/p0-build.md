@@ -43,18 +43,18 @@ Os pontos de entrada são:
 
 ## Build remoto
 
-O workflow separado `DINX contracts` executa os checks estáticos/de fixture e o lint REUSE em todo pull request e push para `main`. Execuções confiáveis usam o secret Actions `DEETTY_SOURCE_READ_TOKEN` para fazer checkout da fonte privada NOCTTY fixada e gerar o archive ignorado pelo Git. Pull requests de forks não recebem os secrets do repositório; somente os dois checks dependentes dessa fonte são pulados, enquanto os demais contratos e o lint REUSE continuam.
+O workflow separado `DINX contracts` executa todos os checks estáticos/de fixture e o lint REUSE em todo pull request e push para `main`. Como `rufl/NOCTTY` é público, execuções confiáveis e pull requests de forks fazem checkout do commit fixado usando o `GITHUB_TOKEN` integrado ao workflow e geram o archive ignorado; nenhum secret Actions adicional é necessário.
 
 O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do perfil/build mudam. Ele:
 
 1. faz checkout da DINX;
-2. lê o commit fixado em `distro/packages/deetty/source.env`, faz checkout do repositório privado `rufl/NOCTTY`, gera o archive ignorado de Deetty/Dintor e verifica o SHA-256 fixado;
+2. lê o commit fixado em `distro/packages/deetty/source.env`, faz checkout do repositório público `rufl/NOCTTY`, gera o archive ignorado pelo Git para Deetty/Dintor e verifica o SHA-256 fixado;
 3. instala QEMU, ferramentas de inspeção da ISO e os dados OCR de inglês do Tesseract no runner Ubuntu;
 4. executa Artix em um container privilegiado;
 5. instala `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb e VTE 2.91 (`vte3`) para o smoke headless do Deetty. O aplicativo Ghostty completo é instalado temporariamente somente no builder como fonte de extração do `ghostty-vt-runtime`; esse pacote contém a biblioteca VT, headers e licença. Depois, o aplicativo completo é removido antes de montar a ISO. Os pacotes DINX de Aqueous/Pearl e suas dependências Wayland diretas são compilados a partir das entradas configuradas.
 O Pearl 0.3.0 segue o `.zigversion` upstream e é compilado com o archive exato do Zig 0.16.0 verificado pelo workflow; os pacotes Zig nativos da DINX continuam no toolchain Zig 0.17.0 verificado.
 6. compila os pacotes DINX fixados, incluindo topgrade, paru e Shelly, além do BC250 Control Center v1.21.1 e do governor Cyan Skillfish; os pacotes específicos de hardware têm `iso:false` e ficam fora dos dois rootfs genéricos. Compila e instala Deetty/Dintor com o runtime somente VT antes da DINXPanel e dos pacotes de sessão Aqueous/Pearl; depois compila o Seafoam Settings. Todos os caminhos DINX de execução de terminal usam Deetty. O build do pacote Deetty executa os marcadores de smoke PTY/VT/sessão fixados, a qualificação com contabilização do allocator, compatibilidade de protocolo/Unicode, `scripts/deetty_p2_qualification.sh` e `scripts/dintor_p3_qualification.sh` em ReleaseSafe. A matriz P3 comprova o caminho nativo do editor nos dois esquemas empacotados, uma resposta real de símbolo do `clangd` e marcadores limitados de status/diff do Git. Usa tmux real com shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local e a qualificação de projeto/editor do Dintor.
-O patch de identidade também atualiza o smoke upstream de tarefas para executar o binário renomeado `zig-out/bin/dintor`; o contrato de integração verifica que não restou o caminho antigo `nocted`.
+O patch de identidade atualiza os smokes upstream de tarefas e LSP do `clangd` para executar o binário renomeado `zig-out/bin/dintor`; o contrato de integração verifica que nenhum dos dois smokes usa o caminho antigo do executável `nocted`.
 7. executa o probe de pré-requisitos;
 8. constrói a ISO com `buildiso`;
 9. valida os payloads SquashFS do root e da sessão live, incluindo a regra tmpfiles dos logs Dinit no rootfs e as substituições de remontagem da raiz exclusivas do livefs;
@@ -98,7 +98,7 @@ Releases por tag reutilizam o mesmo artefato de build por meio de `.github/workf
 
 O pacote `dinx-live-autologin`, exclusivo do livefs, substitui `root-ro` e `early-root-rw.target` por no-ops para o overlay já gravável. Seu serviço Dinit habilitado no boot grava a configuração única da sessão inicial Aqueous/Pearl e declara `before = greetd` e `before = login.target`; como ambos os serviços são ativados no boot live, o Dinit inicia o configurador antes do serviço upstream `greetd-dinit`, sem instalar um segundo pacote dono de `/etc/dinit.d/greetd`. O Calamares instala `rootfs.img`, então o sistema instalado mantém as unidades genéricas de remontagem do Artix e o greetd de login manual.
 
-O helper gráfico live seleciona `aqueous-cpu` com `WLR_RENDERER=gles2` e `GSK_RENDERER=gl` somente quando o driver ativo QEMU `virtio_gpu` ou VirtualBox VMSVGA `vmwgfx` tem um render node legível e gravável. Isso permite usar a renderização Mesa virgl/SVGA sem habilitar os efeitos Vulkan do Aqueous. Nodes ausentes/inacessíveis e adaptadores 2D usam `WLR_RENDERER=pixman` com `GSK_RENDERER=cairo`; outros hardwares com render node usam o Aqueous completo. O usuário live, o Pearl Greeter e novos usuários Calamares recebem acesso ao grupo `render`. O contrato da ISO verifica os módulos guest do kernel e os arquivos Mesa `virgl_dri.so`/`svga_dri.so`.
+O helper gráfico live seleciona `aqueous-cpu` com `WLR_RENDERER=gles2` e `GSK_RENDERER=gl` somente quando o driver ativo QEMU `virtio_gpu` ou VirtualBox VMSVGA `vmwgfx` tem um render node legível e gravável. Isso permite usar a renderização Mesa virgl/SVGA sem habilitar os efeitos Vulkan do Aqueous. Nodes ausentes/inacessíveis e adaptadores 2D usam `WLR_RENDERER=pixman` com `GSK_RENDERER=cairo`; outros hardwares com render node usam o Aqueous completo. O usuário live, o Pearl Greeter e novos usuários Calamares recebem acesso ao grupo `render`. O contrato da ISO verifica os módulos guest do kernel e os módulos DRI Mesa `virtio_gpu_dri.so` e `vmwgfx_dri.so`.
 
 O perfil controla o contrato visual DINX em `/usr/share/dinx/theme/DINX.json`. `scripts/check_dinx_theme.sh` valida a paleta estática, `DINX_COLOR_SCHEME`, as bridges GTK/Qt, o Pearl Greeter, Calamares e GRUB antes do `buildiso`; `scripts/check-iso-content.sh` verifica os mesmos arquivos dentro da imagem SquashFS do root.
 
@@ -189,7 +189,7 @@ Execute na raiz do checkout DINX:
 bash scripts/build-iso-docker.sh
 ```
 
-Se o archive ignorado de Deetty estiver ausente, o script o prepara a partir de um checkout autenticado no commit privado fixado do NOCTTY. Defina `DEETTY_SOURCE_CHECKOUT` para esse checkout; o commit e o SHA-256 do archive gerado são verificados.
+Se o archive ignorado de Deetty estiver ausente, o script o prepara a partir de um checkout no commit público fixado do NOCTTY. Defina `DEETTY_SOURCE_CHECKOUT` para esse checkout; o commit e o SHA-256 do archive gerado são verificados.
 
 ```sh
 DEETTY_SOURCE_CHECKOUT=/caminho/para/NOCTTY bash scripts/build-iso-docker.sh
@@ -204,6 +204,9 @@ DINX_LOCAL_QEMU_SMOKE=1 bash scripts/build-iso-docker.sh
 ```
 
 Ela exige as dependências locais do smoke QEMU (`qemu-system-x86_64`, `socat` e Tesseract). O build para antes de começar se não conseguir acessar o daemon Docker. `DINX_LOCAL_BUILD_DIR` pode selecionar um diretório de saída novo e vazio dentro de `dist`; resultados existentes nunca são sobrescritos.
+
+Ao sair do container, o builder encerra o servidor temporário do repositório e restaura a propriedade do host nos diretórios montados da ISO, dos pacotes, da árvore de build e das fontes de pacotes. Assim, a etapa P0 de checksum e as verificações locais pós-build conseguem gravar nos diretórios de saída.
+
 
 ## Sequência de aceitação
 

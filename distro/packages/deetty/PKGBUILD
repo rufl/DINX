@@ -5,7 +5,7 @@ source_env="$startdir/source.env"
 : "${DEETTY_VERSION:?missing DEETTY_VERSION}"
 : "${DEETTY_SOURCE_SHA256:?missing DEETTY_SOURCE_SHA256}"
 pkgver="$DEETTY_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Native Zig terminal workspace and Dintor editor for DINX'
 arch=('x86_64')
 url='https://github.com/rufl/NOCTTY'
@@ -16,7 +16,7 @@ provides=('dintor' 'terminal-emulator')
 conflicts=('noctty')
 replaces=('noctty')
 source=("noctty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
-sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' 'c8b79c65778dba3220a9011fb18610d001e1844163330db11f68d137734f33da' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
+sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' '55d8373724950143af768b2f8e8f992557cfcae209af1f438e457f621764381d' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
 
 prepare() {
   cd "$srcdir/noctty-$pkgver"

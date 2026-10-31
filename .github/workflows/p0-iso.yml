@@ -16,8 +16,6 @@ on:
         required: false
       DINX_PACKAGE_SIGNING_FINGERPRINT:
         required: false
-      DEETTY_SOURCE_READ_TOKEN:
-        required: false
   push:
     branches:
       - main
@@ -117,20 +115,12 @@ jobs:
           ref=$(awk -F= '$1 == "DEETTY_REF" { print $2; exit }' distro/packages/deetty/source.env)
           [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { printf 'Invalid DEETTY_REF in source.env\n' >&2; exit 1; }
           printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
-      - name: Require private Deetty/Dintor source access
-        env:
-          DEETTY_SOURCE_READ_TOKEN: ${{ secrets.DEETTY_SOURCE_READ_TOKEN }}
-        run: |
-          if [[ -z "${DEETTY_SOURCE_READ_TOKEN:-}" ]]; then
-            printf 'Configure the DEETTY_SOURCE_READ_TOKEN Actions secret with read-only access to rufl/NOCTTY.\n' >&2
-            exit 1
-          fi
-      - name: Checkout pinned private NOCTTY source
+      - name: Checkout pinned public NOCTTY source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: rufl/NOCTTY
           ref: ${{ steps.deetty-source.outputs.ref }}
-          token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN }}
+          token: ${{ github.token }}
           path: third_party/noctty
           persist-credentials: false
       - name: Prepare pinned Deetty/Dintor source archive
@@ -156,6 +146,22 @@ jobs:
         run: ./scripts/check_seafoam_apps.sh
       - name: Verify Seafoam Settings package and argv contract
         run: ./scripts/check_seafoam_settings.sh
+
+      - name: Install pinned Zig for native session contracts
+        run: |
+          zig_version=0.17.0
+          zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
+          zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$RUNNER_TEMP/$zig_archive" \
+            "https://ziglang.org/download/${zig_version}/${zig_archive}"
+          printf '%s  %s\n' "$zig_sha256" "$RUNNER_TEMP/$zig_archive" \
+            | sha256sum --check --status -
+          tar -xJf "$RUNNER_TEMP/$zig_archive" --directory "$RUNNER_TEMP"
+          zig_bin="$RUNNER_TEMP/zig-x86_64-linux-${zig_version}/zig"
+          test "$("$zig_bin" version)" = "$zig_version"
+          echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
+
       - name: Verify Aqueous/Pearl direct dinit session contract
         run: ./scripts/check_aqueous_pearl.sh
       - name: Verify wdisplays to Shikane persistence contract

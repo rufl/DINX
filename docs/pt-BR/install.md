@@ -242,7 +242,7 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A tela fica vazia
 
-A DINX inclui Mesa Lavapipe (`vulkan-swrast`) para aplicativos Vulkan. QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`) devem usar `aqueous-cpu` com GLES2 no wlroots e GL no GTK4, sem os efeitos Vulkan do Aqueous; render nodes ausentes/inacessíveis e adaptadores 2D `vboxvideo`/QXL usam Pixman/Cairo. **A Alpha 11 publicada tem um bug no VirtualBox VMSVGA:** a sessão solicita GLES2, mas a biblioteca wlroots foi compilada somente com Vulkan; o Aqueous encerra e retorna ao greeter. A receita do pacote agora solicita GLES2 e Vulkan e verifica a lista de renderers configurados pelo Meson; a correção não está na Alpha 11 e exige uma ISO reconstruída. Nenhuma configuração do host adiciona o renderer ausente a essa ISO. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso a `render`. A seleção do renderer não comprova que a aceleração 3D do host esteja ativa.
+A DINX inclui Mesa Lavapipe (`vulkan-swrast`) para aplicativos Vulkan. QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`) devem usar `aqueous-cpu` com GLES2 no wlroots e GL no GTK4, sem os efeitos Vulkan do Aqueous; render nodes ausentes/inacessíveis e adaptadores 2D `vboxvideo`/QXL usam Pixman/Cairo. A ISO Alpha 12 inclui wlroots compilado com GLES2 + Vulkan; o CI do release validou a imagem, o boot e a captura gráfica no QEMU. O boot direto no VirtualBox VMSVGA ainda não foi qualificado. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso a `render`. A seleção do renderer não comprova que a aceleração 3D do host esteja ativa.
 
 ### Gráficos, drivers e mídia
 

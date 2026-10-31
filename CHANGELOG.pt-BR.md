@@ -3,11 +3,15 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+
+## DINX v0.1.0-alpha.12 — 2026-10-31
+
+- Release publicado a partir do commit `56a814575e33bfae6215993972784f11b7dae215` após o workflow [#41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) passar pelo build da ISO, boot gráfico no QEMU, transações Calamares e verificações de instalação persistente BIOS/UEFI e TTY de recuperação. A ISO de 1.836.830.720 bytes fica abaixo do limite de 2 GiB por arquivo do GitHub; `alpha-latest` agora aponta para este release com o SHA-512 correspondente.
 - Corrigidas falhas no alias de releases por tag causadas pelo atraso de visibilidade do GitHub. O publicador tenta novamente erros 404 transitórios de metadados, arquivos e uploads do alias com limite fixo, aguarda a listagem de releases, impede que alphas antigas revertam o alias e identifica a etapa que falhou; smokes cobrem recuperação e esgotamento das tentativas.
 - Restaurados os fontes Zig do DinitUI e do DINXPanel exigidos pelos pacotes no repositório; a remoção fazia contratos falharem em checkouts limpos e deixava os builds sem os pontos de entrada.
 
 - A validação da ISO não depende mais do nome upstream da entrada Calamares; exige o arquivo do pacote e verifica se o override DINX de mesmo ID o oculta, deixando visível apenas o launcher Instalar DINX.
-- Corrigido o loop de login do VirtualBox VMSVGA na Alpha 11: a sessão solicitava GLES2 ao wlroots, mas a biblioteca havia sido compilada somente com Vulkan. A receita do Aqueous agora solicita GLES2 e Vulkan e verifica a lista de renderers configurados pelo Meson; `libglvnd` é declarado como dependência de build e runtime para EGL/GLES2. A ISO Alpha 11 não muda até a publicação de uma nova imagem.
+- Incluída na Alpha 12 a correção do loop de login da Alpha 11 no VirtualBox VMSVGA: o Aqueous solicita GLES2 ao wlroots, mas a biblioteca da Alpha 11 foi compilada somente com Vulkan. A receita agora solicita e verifica GLES2 + Vulkan; `libglvnd` fornece as dependências de build e runtime EGL/GLES2. O CI do release validou gráficos no QEMU; o boot direto no VirtualBox ainda não foi qualificado.
 - Adicionado um alias de download direto e um checksum SHA-512 persistentes para a ISO alpha mais recente. O workflow de release por tag atualiza o alias, e as duas páginas iniciais do GitHub apontam para ele.
 - Corrigida a falha do build P0 causada pela ausência do pacote Gapless fixado no repositório local assinado. O builder Artix agora instala Vala e as dependências de build do GStreamer, empacota o Gapless antes de montar a rootfs e verifica essa configuração no contrato de proveniência.
 - As instalações de pacotes locais agora atualizam os bancos pacman e tentam novamente quando os metadados dos mirrors divergem. As árvores Zig versionadas de DinitUI, DINXPanel e Seafoam Settings são preservadas ao omitir `makepkg --clean` nesses builds; smoke de recuperação adicionado.

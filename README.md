@@ -26,7 +26,7 @@
 
 | Você quer… | Vá para |
 |---|---|
-| Baixar a ISO alpha mais recente | [ISO direta](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Release Alpha 0.11](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11) · [Outras releases](https://github.com/rufl/DINX/releases) |
+| Baixar a ISO alpha mais recente | [ISO direta](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Release Alpha 0.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12) · [Outras releases](https://github.com/rufl/DINX/releases) |
 | Verificar e instalar a ISO | [Guia de instalação](docs/pt-BR/install.md) |
 | Ver o que o CI realmente provou | [Status do build P0](docs/pt-BR/p0-build.md) |
 | Entender compatibilidade e limites | [Compatibilidade](docs/pt-BR/compatibility.md) · [Roadmap](docs/pt-BR/roadmap.md) |
@@ -45,7 +45,7 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **Phyto** como gerenciador de arquivos padrão e **File Roller** para abrir, criar e extrair arquivos compactados;
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
-- **Mesa/RADV e gráficos em VM:** saídas novas do Aqueous começam com dois workspaces; QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`) usam GLES2 quando há um render node acessível. **Problema conhecido na Alpha 11:** a biblioteca wlroots da ISO foi compilada sem GLES2, então o VMSVGA retorna ao greeter. A receita de build agora solicita e verifica GLES2 + Vulkan, mas a correção exige uma ISO reconstruída. Nodes ausentes/inacessíveis e adaptadores 2D usam Pixman/Cairo; veja o [guia gráfico](docs/pt-BR/install.md).
+- **Mesa/RADV e gráficos em VM:** saídas novas do Aqueous começam com dois workspaces; Alpha 12 inclui wlroots recompilado com GLES2 + Vulkan, e o CI validou boot e captura gráfica no QEMU. O boot direto no VirtualBox VMSVGA ainda não foi qualificado. Nodes ausentes/inacessíveis e adaptadores 2D usam Pixman/Cairo; veja o [guia gráfico](docs/pt-BR/install.md).
 - **DINX Gaming** mantém o launcher manual oculto. A ISO base não inclui Gamescope, Steam, GameMode, MangoHud, regras de dispositivos Steam nem bibliotecas gaming de 32 bits; o usuário pode optar por instalar o conjunto gaming após a instalação. A base mantém RADV/Vulkan de 64 bits; veja o [guia de instalação](docs/pt-BR/install.md).
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
@@ -62,18 +62,18 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 | Item | Estado |
 |---|---|
-| Release publicado | [DINX Alpha 0.11 (`v0.1.0-alpha.11`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11), ISO direta de 1.836.740.608 bytes |
+| Release publicado | [DINX Alpha 0.12 (`v0.1.0-alpha.12`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), ISO direta de 1.836.830.720 bytes |
 | Base | Artix Linux x86_64 com dinit |
 | Próximo marco | Beta 0.1 do sistema: planejada, ainda não publicada e sem data |
 | Qualificação gaming | P5 separada da beta do sistema; ainda não concluída |
-| Validação da ISO Alpha 11 | [Build P0, QEMU e instalação](https://github.com/rufl/DINX/actions/runs/41169078281/job/124442910444) concluídos; [release publicada](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11) |
-| P0 da main após Alpha 10 | [Workflow 40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, concluído com sucesso |
+| Validação da ISO Alpha 12 | [Build P0, boot gráfico QEMU e instalação](https://github.com/rufl/DINX/actions/runs/41197618617) concluídos; [release publicada](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12) |
+| Commit da Alpha 12 | `56a814575e33bfae6215993972784f11b7dae215`; [workflow de release](https://github.com/rufl/DINX/actions/runs/41197618617) concluído |
 
 ## Próximo marco: Beta 0.1 do sistema
 
 A Beta 0.1 está planejada, ainda sem data de lançamento. O objetivo é qualificar a sessão Aqueous/Pearl sobre dinit e os caminhos de instalação, atualização e recuperação em uma matriz declarada de hardware físico. A publicação dependerá de testes de rede, áudio, GPU/display e suspensão, além de instalação e recuperação em discos de teste, atualização assinada e documentação dos limites.
 
-O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **menor que 2 GiB** (`2.147.483.648` bytes); a DINX não tem uma meta menor de 1,8 bilhão de bytes. A Alpha 11 é distribuída como ISO direta abaixo do limite. A ISO futura precisa continuar abaixo dele para ser publicada como arquivo direto. O P5 gaming segue separado: a Beta 0.1 não alegará suporte sem testes reais de DRM, Steam, controle e áudio. A sessão continua Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
+O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **menor que 2 GiB** (`2.147.483.648` bytes); a DINX não tem uma meta menor de 1,8 bilhão de bytes. A Alpha 12 é publicada como ISO direta de 1.836.830.720 bytes, abaixo do limite. A ISO futura precisa continuar abaixo dele para ser publicada como arquivo direto. O P5 gaming segue separado: a Beta 0.1 não alegará suporte sem testes reais de DRM, Steam, controle e áudio. A sessão continua Aqueous/Pearl com dinit, sem systemd ou UWSM. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
 
 
 ## Instalação rápida
@@ -86,7 +86,7 @@ O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositor
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
-A imagem Alpha 11 publicada abre diretamente em `Aqueous + Pearl (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
+A imagem Alpha 12 publicada abre diretamente em `Aqueous + Pearl (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 

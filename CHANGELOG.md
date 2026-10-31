@@ -3,11 +3,15 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+
+## DINX v0.1.0-alpha.12 — 2026-10-31
+
+- Published from `56a814575e33bfae6215993972784f11b7dae215` after release workflow [#41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) passed ISO build, QEMU graphical boot, Calamares transactions and persistent BIOS/UEFI installation and recovery checks. The 1,836,830,720-byte ISO is below GitHub's 2 GiB asset limit; `alpha-latest` now points to this release with the matching SHA-512 checksum.
 - Fixed tagged-release alias failures caused by GitHub's delayed release visibility. The publisher retries transient 404s for release metadata, assets and alias uploads with a fixed limit, waits for the release listing to catch up, prevents stale alphas from rolling back the alias, and reports stage-specific failures; fixture smokes cover recovery and exhaustion.
 - Restored the DinitUI and DINXPanel Zig sources required by their in-tree packages; their removal made clean CI checkouts fail source contracts and left package builds without their entry points.
 
 - Made ISO validation independent of the upstream Calamares desktop name; it now requires the package entry and verifies the same-ID DINX override hides it, leaving only the Install DINX launcher visible.
-- Fix the Alpha 11 VirtualBox VMSVGA login loop: the session requested wlroots GLES2, but its renderer library had been built with Vulkan only. The Aqueous recipe now requests both GLES2 and Vulkan and verifies Meson's configured renderer list; `libglvnd` is declared for EGL/GLES2 build and runtime dependencies. The Alpha 11 ISO is unchanged until a new image is published.
+- Shipped the Alpha 11 VirtualBox VMSVGA login-loop fix in Alpha 12: Aqueous requests wlroots GLES2, but Alpha 11's library was built with Vulkan only. The recipe now requests and verifies GLES2 + Vulkan; `libglvnd` supplies EGL/GLES2 build and runtime dependencies. Release CI verified QEMU graphics; direct VirtualBox boot remains unqualified.
 - Added a rolling direct-download alias and matching SHA-512 checksum for the latest alpha ISO. The tagged release workflow refreshes it, and both GitHub landing pages link to it.
 - Fixed the P0 ISO build failure caused by omitting the pinned Gapless package from the signed local repository. The Artix builder now installs Vala and GStreamer build dependencies, packages Gapless before composing the rootfs, and checks this wiring in the provenance contract.
 - Made local package installation retry after refreshing pacman databases when mirror metadata drifts. Preserved checked-in Zig sources by skipping `makepkg --clean` for DinitUI, DINXPanel and Seafoam Settings; added a recovery smoke.

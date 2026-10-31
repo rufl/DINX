@@ -6,6 +6,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Adicionado um alias de download direto e um checksum SHA-512 persistentes para a ISO alpha mais recente. O workflow de release por tag atualiza o alias, e as duas páginas iniciais do GitHub apontam para ele.
 - Corrigida a falha do build P0 causada pela ausência do pacote Gapless fixado no repositório local assinado. O builder Artix agora instala Vala e as dependências de build do GStreamer, empacota o Gapless antes de montar a rootfs e verifica essa configuração no contrato de proveniência.
+- As instalações de pacotes locais agora atualizam os bancos pacman e tentam novamente quando os metadados dos mirrors divergem. As árvores Zig versionadas de DinitUI, DINXPanel e Seafoam Settings são preservadas ao omitir `makepkg --clean` nesses builds; smoke de recuperação adicionado.
 - Corrigido o cleanup EXIT do builder Artix para encerrar o servidor temporário do repositório e restaurar a propriedade do host nos diretórios de saída da ISO e dos pacotes, permitindo gerar o checksum e executar as verificações locais pós-build.
 - Atualizadas as verificações do payload gráfico para os nomes dos módulos DRI Mesa presentes na ISO (`virtio_gpu_dri.so` e `vmwgfx_dri.so`). Os nomes antigos `virgl_dri.so` e `svga_dri.so` causavam uma falha falsa apesar dos dois drivers virtuais exigidos estarem presentes.
 - Removida da verificação da ISO a expectativa por um PNG 128×128 do Dintor que o pacote não instala; o ícone empacotado é o SVG escalável.

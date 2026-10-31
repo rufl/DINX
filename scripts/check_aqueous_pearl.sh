@@ -21,6 +21,7 @@ for path in \
   "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
+  "$aqueous_dir/gles2-renderer.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
   "$aqueous_dir/window_policy_test.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
@@ -43,6 +44,10 @@ source "$pearl_dir/source.env"
   || fail 'Pearl Zig source URL changed'
 [[ "$PEARL_ZIG_SOURCE_SHA256" == 70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00 ]] \
   || fail 'Pearl Zig source checksum changed'
+grep -Fq 'patch --forward --fuzz=0 -Np1 < "$startdir/gles2-renderer.patch"' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous package does not apply the GLES2 renderer patch'
+grep -Fq "  'libglvnd'" "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous package is missing its EGL/GLES2 dependency'
 aqueous_archive="$aqueous_dir/Aqueous-$AQUEOUS_VERSION.tar.gz"
 [[ -r "$aqueous_archive" ]] || fail "missing pinned Aqueous source archive: ${aqueous_archive#$root/}"
 for command_name in tar patch; do
@@ -54,11 +59,16 @@ window_test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/dinx-aqueous-window-tests.XXXXXX")
 trap 'rm -rf "$window_test_tmp"' EXIT
 source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
 tar -xzf "$aqueous_archive" -C "$window_test_tmp"
-for patch_file in dinit.patch server-decorations.patch titlebar-text.patch two-default-workspaces.patch; do
+for patch_file in dinit.patch gles2-renderer.patch server-decorations.patch titlebar-text.patch two-default-workspaces.patch; do
   patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+wlroots_build_hook="$source_root/compositor/scripts/build-wlroots-render-hook.sh"
+grep -Fq -- '-Drenderers=gles2,vulkan \' "$wlroots_build_hook" \
+  || fail 'wlroots does not compile both GLES2 and Vulkan renderers'
+grep -Fq 'meson", "introspect", "--buildoptions"' "$wlroots_build_hook" \
+  || fail 'wlroots renderer build does not verify configured renderers'
 wm_config="$source_root/wm.toml"
 grep -Fq 'spawn_terminal = "deetty"' "$wm_config" \
   || fail 'Aqueous WM config does not launch Deetty'

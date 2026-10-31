@@ -244,7 +244,7 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The screen is blank
 
-DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. Graphics selection requires a readable and writable DRM render node: QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) use `aqueous-cpu` with wlroots GLES2 and GTK4 GL; this build omits Aqueous's Vulkan effects. If the render node is missing/inaccessible, or a 2D-only adapter such as `vboxvideo` or QXL is active, the session uses Pixman/Cairo instead. Other render-node hardware uses the full Aqueous build. The live user, Pearl Greeter and new Calamares users receive `render` group access. This selects a guest rendering path; it does not prove that host-side 3D acceleration is enabled.
+DINX includes Mesa Lavapipe (`vulkan-swrast`) for Vulkan applications. QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`) are intended to use `aqueous-cpu` with wlroots GLES2 and GTK4 GL, without Aqueous Vulkan effects; absent/inaccessible render nodes and 2D-only `vboxvideo`/QXL use Pixman/Cairo. **Published Alpha 11 has a VirtualBox VMSVGA bug:** its session requests GLES2, but its wlroots library was built with Vulkan only, so Aqueous exits and returns to the greeter. The source package fix now requests both wlroots GLES2 and Vulkan and checks Meson's configured renderer list; it is not in Alpha 11 and requires a rebuilt ISO. No host setting can add the missing renderer to that ISO. The live user, Pearl Greeter and new Calamares users receive `render` access. Renderer selection does not prove host-side 3D acceleration is enabled.
 
 ### Graphics, drivers and media
 

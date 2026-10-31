@@ -3,7 +3,9 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Restaurados os fontes Zig do DinitUI e do DINXPanel exigidos pelos pacotes no repositório; a remoção fazia contratos falharem em checkouts limpos e deixava os builds sem os pontos de entrada.
 
+- Corrigido o loop de login do VirtualBox VMSVGA na Alpha 11: a sessão solicitava GLES2 ao wlroots, mas a biblioteca havia sido compilada somente com Vulkan. A receita do Aqueous agora solicita GLES2 e Vulkan e verifica a lista de renderers configurados pelo Meson; `libglvnd` é declarado como dependência de build e runtime para EGL/GLES2. A ISO Alpha 11 não muda até a publicação de uma nova imagem.
 - Adicionado um alias de download direto e um checksum SHA-512 persistentes para a ISO alpha mais recente. O workflow de release por tag atualiza o alias, e as duas páginas iniciais do GitHub apontam para ele.
 - Corrigida a falha do build P0 causada pela ausência do pacote Gapless fixado no repositório local assinado. O builder Artix agora instala Vala e as dependências de build do GStreamer, empacota o Gapless antes de montar a rootfs e verifica essa configuração no contrato de proveniência.
 - Corrigido o cleanup EXIT do builder Artix para encerrar o servidor temporário do repositório e restaurar a propriedade do host nos diretórios de saída da ISO e dos pacotes, permitindo gerar o checksum e executar as verificações locais pós-build.

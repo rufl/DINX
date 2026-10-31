@@ -621,6 +621,9 @@ diff --git a/compositor/aqueous/xwayland_dpi.zig b/compositor/aqueous/xwayland_d
 diff --git a/wm.toml b/wm.toml
 --- a/wm.toml
 +++ b/wm.toml
+@@ -261,1 +261,1 @@
+-spawn_terminal = "ghostty"
++spawn_terminal = "deetty"
 @@ -356,4 +356,4 @@
 -set_layout_primary    = "Super+T"          # → tile
 -set_layout_secondary  = "Super+F"          # → scrolling

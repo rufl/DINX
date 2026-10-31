@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${AQUEOUS_SOURCE_SHA256:?missing AQUEOUS_SOURCE_SHA256}"
 : "${AQUEOUS_WLROOTS_SHA256:?missing AQUEOUS_WLROOTS_SHA256}"
 pkgver="$AQUEOUS_VERSION"
-pkgrel=3
+pkgrel=4
 pkgdesc='Aqueous Wayland compositor and control clients for DINX'
 arch=('x86_64')
 url="$AQUEOUS_SOURCE_URL"

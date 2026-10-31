@@ -3,9 +3,13 @@ set -euo pipefail
 
 host_uid=${DINX_HOST_UID:-}
 host_gid=${DINX_HOST_GID:-}
+repo_pid=
 finish() {
   local status=$?
   trap - EXIT
+  if [[ -n "$repo_pid" ]]; then
+    kill "$repo_pid" 2>/dev/null || true
+  fi
   if [[ "$host_uid" =~ ^[0-9]+$ && "$host_gid" =~ ^[0-9]+$ ]]; then
     for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso /workspace/distro/packages; do
       [[ -n "$path" && -e "$path" ]] || continue
@@ -401,7 +405,6 @@ trap finish EXIT
                 --directory "$package_repo" \
                 >/tmp/dinx-package-repo.log 2>&1 &
               repo_pid=$!
-              trap "kill $repo_pid 2>/dev/null || true" EXIT
 
               mksquashfs_path=$(command -v mksquashfs)
               real_mksquashfs=$(readlink -f "$mksquashfs_path")

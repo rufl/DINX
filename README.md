@@ -62,11 +62,11 @@ O software BC-250 não é instalado na ISO genérica. Os pacotes estão disponí
 
 | Item | Estado |
 |---|---|
-| Release publicado | [DINX Alpha 0.11 (`v0.1.0-alpha.11`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11), ISO direta abaixo de 2 GiB |
+| Release publicado | [DINX Alpha 0.11 (`v0.1.0-alpha.11`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11), ISO direta de 1.836.740.608 bytes |
 | Base | Artix Linux x86_64 com dinit |
 | Próximo marco | Beta 0.1 do sistema: planejada, ainda não publicada e sem data |
 | Qualificação gaming | P5 separada da beta do sistema; ainda não concluída |
-| Validação da release publicada | [Workflow 41169078281](https://github.com/rufl/DINX/actions/runs/41169078281), commit `370135fca522a649f0dc8ab2ed4a4b4a96c5e1cc`, concluído com sucesso |
+| Validação da ISO Alpha 11 | [Build P0, QEMU e instalação](https://github.com/rufl/DINX/actions/runs/41169078281/job/124442910444) concluídos; [release publicada](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.11) |
 | P0 da main após Alpha 10 | [Workflow 40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, concluído com sucesso |
 
 ## Próximo marco: Beta 0.1 do sistema

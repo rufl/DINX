@@ -165,8 +165,8 @@ required_paths=(
   usr/bin/aqueous-config
   usr/bin/pearl
   usr/local/libexec/dinx-graphics-profile
-  usr/lib/dri/virgl_dri.so
-  usr/lib/dri/svga_dri.so
+  usr/lib/dri/virtio_gpu_dri.so
+  usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
   usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy
   usr/bin/phyto
@@ -244,7 +244,7 @@ required_paths=(
   usr/share/vulkan/icd.d/lvp_icd.json
   usr/lib/libvulkan_lvp.so
   usr/bin/vulkaninfo
-  usr/lib/dri/virgl_dri.so
+  usr/lib/dri/virtio_gpu_dri.so
   usr/lib/dri/vmwgfx_dri.so
   etc/paru.conf
   etc/shellybuild.conf

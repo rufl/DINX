@@ -108,7 +108,8 @@ O livefs adiciona o pacote dinit `dinx-live-autologin`, exclusivo da sessão liv
 
 O perfil controla bridges visuais estáticas DINX: `/usr/share/dinx/theme/DINX.json` é a fonte das cores semânticas e ANSI; GTK e Qt consomem arquivos DINX versionados, e `DINX_COLOR_SCHEME` é o contrato de cor da sessão do usuário. `qt6ct`, `adw-gtk-theme` e Noto Sans 10 são instalados para esses consumidores, alinhados à tipografia GTK padrão do CachyOS; Noto Sans Mono é usado nos campos de largura fixa. O host do Pearl Greeter lê `/etc/pearl/greeter.json`, usa a bridge GTK DINX e força `Aqueous + Pearl (DINX)` com X11 e UWSM desativados; Aqueous/Pearl é o único contrato de sessão do usuário. `scripts/check_dinx_theme.sh` valida esse contrato antes do build da ISO.
 
-O wordmark DINX Linux completo aparece no Pearl Greeter e no wallpaper inicial da área de trabalho; o Calamares também o usa no logo do produto e na tela de boas-vindas. O símbolo reduzido D com raio é mantido como SVG transparente em `design/brand/dinx-ray-mark.svg`, copiado para os assets de marca da ISO e renderizado como logo do GRUB; o Calamares usa-o como ícone do produto. Ícones de aplicativos e da área de trabalho permanecem upstream/Adwaita; a marca DINX não é forçada sobre eles.
+O Pearl Greeter e a área de trabalho inicial usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo do produto e na tela de boas-vindas. O símbolo reduzido D com raio é mantido como SVG transparente em `design/brand/dinx-ray-mark.svg`, copiado para os assets de marca da ISO e renderizado como logo do GRUB; o Calamares usa-o como ícone do produto. Ícones de aplicativos e da área de trabalho permanecem upstream/Adwaita.
+Na primeira sessão Pearl, um wizard exibido uma vez permite ativar ou ocultar o dock, posicionar a barra em cima ou em baixo e escolher DINX claro/escuro ou Pearl Material claro/escuro. O dock fica na borda oposta à barra; as escolhas são salvas em `~/.config/pearl/preferences.json`.
 O D-ray em ASCII em `/usr/share/dinx/branding/dinx-ray-mark.txt` é gerado por densidade a partir do SVG original da DINX e funciona como logo em texto puro:
 ```sh
 fastfetch --logo-type file --logo /usr/share/dinx/branding/dinx-ray-mark.txt
@@ -194,7 +195,7 @@ O contrato de payload também exige `wdisplays`, `shikane` e os pontos de entrad
 
 O workflow armazena uma captura separada `dinx-boot-screen.ppm`, feita antes do envio das teclas do menu de boot. Esse quadro deve ser revisado ao qualificar a superfície GRUB de seleção do kernel; ele é a evidência de regressão do painel opaco removido.
 
-O GRUB usa o símbolo compacto D com raio, transparente, junto às cores DINX de superfície, primeiro plano e seleção primária no lugar do logo Artix; as fontes Artix continuam em uso. As texturas opacas do menu ficam desativadas. O Pearl Greeter e o wallpaper da área de trabalho usam o wordmark completo; o Calamares usa-o no logo/boas-vindas e o símbolo compacto como ícone do produto. Os ícones dos lançadores continuam upstream/Adwaita, sem a marca DINX.
+O GRUB usa o símbolo compacto D com raio, transparente, junto às cores DINX de superfície, primeiro plano e seleção primária no lugar do logo Artix; as fontes Artix continuam em uso. As texturas opacas do menu ficam desativadas. O Pearl Greeter e a área de trabalho inicial usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo/boas-vindas e o símbolo compacto como ícone do produto. Os ícones dos lançadores continuam upstream/Adwaita, sem a marca DINX.
 No perfil fonte atual, o caminho live normal é autologin direto; o greeter permanece como fallback, não como etapa obrigatória do boot.
 
 ## Limite do perfil

@@ -25,8 +25,11 @@ for path in \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
   "$aqueous_dir/gles2-renderer.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
+  "$aqueous_dir/pixman-rounded-corners.patch" \
+  "$aqueous_dir/0034-pixman-rounded-window-corners.patch" \
   "$aqueous_dir/window_policy_test.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
+  "$pearl_dir/server-decorations.patch" \
   "$graphics_helper" "$graphics_environment" "$greeter_wrapper" \
   "$root/scripts/check_dinx_graphics_profile.sh"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
@@ -40,6 +43,7 @@ source "$aqueous_dir/source.env"
   || fail 'Aqueous wlroots checksum changed'
 source "$pearl_dir/source.env"
 [[ "$PEARL_VERSION" == 0.3.0 ]] || fail "unexpected Pearl version: $PEARL_VERSION"
+
 [[ "$PEARL_SOURCE_SHA256" == afb15f5650cdd0aa00a9d6ee697dec1cde2cb9eaa77b1631e4876c125caba24a ]] \
   || fail 'Pearl source checksum changed'
 [[ "$PEARL_ZIG_VERSION" == 0.16.0 ]] || fail "unexpected Pearl Zig version: $PEARL_ZIG_VERSION"
@@ -62,12 +66,20 @@ window_test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/dinx-aqueous-window-tests.XXXXXX")
 trap 'rm -rf "$window_test_tmp"' EXIT
 source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
 tar -xzf "$aqueous_archive" -C "$window_test_tmp"
-for patch_file in dinit.patch gles2-renderer.patch server-decorations.patch titlebar-text.patch two-default-workspaces.patch; do
+for patch_file in \
+  dinit.patch gles2-renderer.patch server-decorations.patch \
+  titlebar-text.patch two-default-workspaces.patch pixman-rounded-corners.patch; do
   patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
 wlroots_build_hook="$source_root/compositor/scripts/build-wlroots-render-hook.sh"
+grep -Fq '0034-pixman-rounded-window-corners.patch' "$wlroots_build_hook" \
+  || fail 'Aqueous does not apply the Pixman rounded-corner renderer patch'
+grep -Fq 'pixman-rounded-corners.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous package does not apply the CPU corner integration patch'
+grep -Fq 'wlr_scene_buffer_set_rounded_clip' "$source_root/compositor/aqueous/fx.zig" \
+  || fail 'Aqueous CPU profile does not pass window clips into wlroots scene nodes'
 grep -Fq -- '-Drenderers=gles2,vulkan \' "$wlroots_build_hook" \
   || fail 'wlroots does not compile both GLES2 and Vulkan renderers'
 grep -Fq 'meson", "introspect", "--buildoptions"' "$wlroots_build_hook" \
@@ -140,7 +152,9 @@ for required in \
   '  usr/local/libexec/dinx-aqueous-pearl' \
   '  usr/local/libexec/dinx-aqueous-init' \
   '  usr/local/libexec/dinx-graphics-environment.sh' \
-  '  usr/local/libexec/dinx-pearl-greeter-host'; do
+  '  usr/local/libexec/dinx-pearl-greeter-host' \
+  '  usr/local/libexec/dinx-pearl-shell' \
+  '  usr/local/libexec/dinx-first-run-wizard'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
 
@@ -164,7 +178,7 @@ grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous patches are not applied reproducibly'
 grep -Fq 'server-decorations.patch' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous compositor decorations are not applied reproducibly'
-for decoration in drawTitlebar decorationActionAt toggleMaximized move_floating; do
+for decoration in drawTitlebar decorationActionAt toggleMaximized move_floating decorationDoubleClick; do
   grep -Fq "$decoration" "$aqueous_dir/server-decorations.patch" \
     || fail "Aqueous compositor decoration patch is missing $decoration"
 done
@@ -183,6 +197,18 @@ fi
 
 grep -Fq 'pkgver="$PEARL_VERSION"' "$pearl_dir/PKGBUILD" || fail 'Pearl package version is not pinned'
 grep -Fq '$PEARL_SOURCE_SHA256' "$pearl_dir/PKGBUILD" || fail 'Pearl source checksum is not wired to source.env'
+grep -Fq 'server-decorations.patch' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl Settings fix patch is not applied'
+grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/server-decorations.patch"' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl Settings fix patch is not applied reproducibly'
+for required in \
+  'validateFormDraft' \
+  '.settings-window.pearl-gtk { background: @window_bg_color; color: @window_fg_color; }' \
+  '-        win.setTitlebar(header.as(gtk.Widget));' \
+  "type_text(s, 'not-a-color')"; do
+  grep -Fq -- "$required" "$pearl_dir/server-decorations.patch" \
+    || fail "Pearl Settings fix patch is missing: $required"
+done
 grep -Fq -- '-Dwasm-plugins=false' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not select the compact native build'
 grep -Fq 'build-greeter' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not build Pearl Greeter'
 grep -Fq 'install=pearl.install' "$pearl_dir/PKGBUILD" || fail 'Pearl package has no greeter account install hook'
@@ -252,12 +278,12 @@ grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init" \
   || fail 'Aqueous init does not delegate to the supervised dinit session'
-grep -Fq 'start_required shell pearl' \
+grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
-  || fail 'session supervisor does not own Pearl'
+  || fail 'session supervisor does not launch the Pearl first-run wrapper'
 grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 qemu_virgl_gles=true virtualbox_vmsvga_pixman=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_minimize=true qemu_virgl_gles=true virtualbox_vmsvga_pixman=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

@@ -60,6 +60,7 @@ fi
 for smoke in \
   smoke_dinx_display_persistence.sh \
   smoke_dinx_session_supervisor.sh \
+  smoke_dinx_qt_palette.sh \
   smoke_pori_mount_service.sh \
   smoke_pori_zig.sh \
   smoke_latest_alpha_alias.sh \

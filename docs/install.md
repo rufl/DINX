@@ -245,7 +245,7 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The screen is blank
 
-Aqueous chooses the graphics profile from each accessible DRM render node's sysfs driver, not DRM card order. QEMU `virtio_gpu`/virgl uses `aqueous-cpu` with wlroots GLES2 and GTK4 GL when its render node is readable and writable, without Aqueous Vulkan effects. `vmwgfx` and other 2D virtual adapters use Pixman/Cairo; both the Aqueous session and Pearl Greeter fallback receive this policy. Alpha 12's release QEMU smoke used default VGA; the current P0 workflow adds a VMware-SVGA guest boot/capture smoke, not yet run. Alpha 12 predates the source fix, and direct VirtualBox boot remains unqualified. The live user, Pearl Greeter and new Calamares users receive `render` access.
+Aqueous chooses the graphics profile from each accessible DRM render node's sysfs driver, not DRM card order. QEMU `virtio_gpu`/virgl uses `aqueous-cpu` with wlroots GLES2 and GTK4 GL when its render node is readable and writable, without Aqueous Vulkan effects. `vmwgfx` and other 2D virtual adapters use Pixman/Cairo; both the Aqueous session and Pearl Greeter fallback receive this policy. Alpha 12's release QEMU smoke used default VGA; the current P0 workflow adds a VMware-SVGA guest boot/capture smoke, not yet run. A manual Pearl run was reported on VirtualBox 7.2.22/Windows 11 (VMSVGA, EFI, 4 vCPUs, 8 GiB, 3D enabled); the log has both an Alpha 12 ISO and Alpha 10 VDI attached, and no ISO checksum or EFI boot-selection record. The 286 MB read from the ISO versus 9.8 MB from the VDI suggests a live-ISO boot, but does not bind the session to the published artifact. The live user, Pearl Greeter and new Calamares users receive `render` access.
 
 ### Graphics, drivers and media
 
@@ -259,7 +259,7 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /path/to/dinx.iso
 ```
 
-For the next DINX ISO, use **VMSVGA** in VirtualBox; the source selects Pixman/Cairo for `vmwgfx` in both the Aqueous session and Pearl Greeter fallback, regardless of render-node visibility or 3D acceleration. The published Alpha 12 can fail with either 3D setting because its GLES2 path is disabled in the guest build; changing that setting does not repair the binary. The VMware-SVGA QEMU smoke is configured in P0 but has not run; direct VirtualBox boot also remains unqualified. When reporting a failure on a rebuilt ISO, include the hypervisor, host renderer, guest DRM driver and `dinx-alpha7-hardware-report` output.
+For the next DINX ISO, use **VMSVGA** in VirtualBox; the source selects Pixman/Cairo for `vmwgfx` in both the Aqueous session and Pearl Greeter fallback, regardless of render-node visibility or 3D acceleration. The published Alpha 12 can fail with either 3D setting because its GLES2 path is disabled in the guest build; changing that setting does not repair the binary. The VMware-SVGA QEMU smoke is configured in P0 but has not run. One manual VirtualBox run reached Pearl, but boot-source and artifact identity remain unconfirmed; broader direct-boot qualification is still open. When reporting a failure on a rebuilt ISO, include the hypervisor, host renderer, guest DRM driver and `dinx-alpha7-hardware-report` output.
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected

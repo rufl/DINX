@@ -131,7 +131,7 @@ start_required shikane shikane
 start_required policykit lxqt-policykit-agent
 start_required idle "$libexec_dir/dinx-idle"
 start_optional bc250 bc250-control-centerd
-start_required shell pearl
+start_required shell "$libexec_dir/dinx-pearl-shell"
 
 set_status ready
 log 'status=ready'

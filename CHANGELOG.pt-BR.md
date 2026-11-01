@@ -4,6 +4,12 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- A sessão Aqueous/Pearl agora fornece um locale de caracteres UTF-8 quando o locale herdado é ASCII, corrigindo aplicativos de terminal como `btop` sem substituir locales válidos do usuário.
+
+- Corrigida a paleta Qt6ct do DINX: as cores agora seguem a ordem dos papéis `QPalette`, evitando fundos rosa/azuis e texto ilegível no Qps e em outros aplicativos Qt. Na sessão, somente a paleta padrão antiga é atualizada; personalizações e symlinks são preservados.
+
+- Arredondamento de janelas corrigido no perfil Aqueous CPU/Pixman: wlroots agora aplica máscara alpha antialiasada às superfícies e mantém o recorte interno da decoração mesmo sem efeitos Vulkan. O build CPU e o smoke da máscara passaram; a aparência da correção ainda não foi verificada em uma VM VirtualBox.
+
 - Direciona Aqueous/Pearl e o Pearl Greeter para Pixman/Cairo em adaptadores `vmwgfx`/2D, mantendo GLES2 no QEMU `virtio_gpu`. O primeiro smoke com VMware-SVGA revelou a causa restante: o Artix gerava um initramfs sem `vmwgfx` e `vboxvideo`. `build-iso.sh` agora altera uma cópia privada do helper Artix para acrescentar os dois módulos à configuração realmente usada no bootfs, imediatamente antes do `mkinitcpio`; um smoke de contrato protege esse hook e a inspeção verifica o initramfs gerado. O P0 está configurado para iniciar VMware-SVGA; ainda faltam um smoke VMSVGA bem-sucedido e a qualificação do boot direto no VirtualBox.
 - Corrigido o checksum do fonte de `dinx-live-autologin` e incrementado `pkgrel` para 7. O checksum antigo interrompeu uma execução P0 anterior antes da composição da ISO; uma execução posterior gerou a primeira imagem com o fallback gráfico e revelou que o Artix havia omitido `vmwgfx` e `vboxvideo` do initramfs.
 
@@ -64,10 +70,11 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Definido o tema escuro DINX como padrão global do GTK 3/4 e exportada a seleção GTK/Qt6ct pelo launcher direto da sessão Aqueous. Pastas home existentes recebem a configuração e a paleta DINX do Qt6ct quando ainda não existem.
 - Novos perfis de usuário do Aqueous recebem `stacking` flutuante em todos os workspaces. A configuração WM distribuída desativa os atalhos padrão de mosaico, rolagem, monocle e grade (`Super+T/F/M/G`); `Alt+Shift+F` seleciona stacking e `Super+Shift+Space` alterna o modo flutuante por janela. Ao arrastar uma janela flutuante até a borda esquerda/direita/inferior, ela encaixa em uma metade; nos cantos, em um quarto; no centro da borda superior, maximiza (limite de 24 px, sem espaço). Configurações existentes não são alteradas.
-- Todas as janelas de nível superior do Aqueous exibem uma barra DINX desenhada pelo compositor, com título e controles para minimizar, maximizar/restaurar e fechar, inclusive em clientes GTK e Pearl. Títulos longos são truncados com reticências antes dos controles. Arrastar uma área livre da barra move a janela e usa o encaixe flutuante existente; tela cheia oculta a barra. O chrome do cliente nos 36 pixels lógicos superiores pode ficar encoberto.
+- Todas as janelas de nível superior do Aqueous exibem uma barra DINX desenhada pelo compositor, com título e controles para minimizar, maximizar/restaurar e fechar, inclusive em clientes GTK e Pearl. Títulos longos são truncados com reticências antes dos controles. Arrastar uma área livre da barra move a janela e usa o encaixe flutuante; clicar duas vezes nessa área minimiza a janela; tela cheia oculta a barra. O chrome do cliente nos 36 pixels lógicos superiores pode ficar encoberto.
 - Corrigido o texto desatualizado na barra do Aqueous quando clientes Wayland ou XWayland alteram o título. O gate Aqueous/Pearl agora aplica os patches DINX à fonte upstream fixada, testa zonas dos controles e geometria de encaixe flutuante, e verifica que notificações de título invalidam o cache.
+- Adicionado um wizard de configuração inicial, exibido uma vez, para escolher visibilidade do dock, posição superior/inferior da barra e tema DINX claro/escuro ou Pearl Material claro/escuro. As escolhas ficam salvas nas preferências Pearl do usuário.
 
-- Adicionado o símbolo reduzido D com raio como SVG canônico transparente em `design/brand/dinx-ray-mark.svg`; o GRUB usa sua versão RGBA e o Calamares usa-o como ícone do produto. O wordmark completo permanece no wallpaper do greeter/desktop e nas superfícies de logo/boas-vindas do Calamares; ícones upstream/Adwaita de aplicativos e da área de trabalho permanecem inalterados.
+- Adicionado o símbolo reduzido D com raio como SVG canônico transparente em `design/brand/dinx-ray-mark.svg`; o GRUB usa sua versão RGBA e o Calamares usa-o como ícone do produto. O Pearl Greeter e a área de trabalho agora usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo e na tela de boas-vindas. Ícones upstream/Adwaita de aplicativos e da área de trabalho permanecem inalterados.
 - Substituída a primeira aproximação ASCII por uma conversão por densidade do SVG original do D-ray DINX. O asset em ASCII puro funciona com o Fastfetch e com o formato de logo personalizado do `fetch` opcional de Areofyl.
 
 ## v0.1.0-alpha.10 — 2026-10-29

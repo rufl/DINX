@@ -12,11 +12,11 @@ calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/br
 calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 qt_palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/colors/DINX.conf"
+qt_palette_seed="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-qt6ct-palette-seed"
 brand_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg"
 brand_ray_source="$repo_root/design/brand/dinx-ray-mark.svg"
 brand_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.svg"
 fastfetch_logo="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.txt"
-brand_wallpaper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-wallpaper.png"
 calamares_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx.svg"
 calamares_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx-ray-mark.svg"
 pearl_preferences="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/pearl/preferences.json"
@@ -34,6 +34,8 @@ gtk4_settings="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.co
 system_gtk3="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
 system_gtk4="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.0/settings.ini"
 session_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
+pearl_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
+wizard_source="$repo_root/distro/packages/pearl/dinx-first-run-wizard.c"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
 fail() {
   printf 'check_dinx_theme: %s\n' "$*" >&2
@@ -42,10 +44,10 @@ fail() {
 
 for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg" \
   "$grub" "$grub_logo" "$calamares" "$calamares_branding" "$calamares_wordmark" \
-  "$calamares_ray" "$brand_wordmark" "$brand_ray" "$brand_ray_source" "$brand_wallpaper" "$pearl_preferences" "$fastfetch_logo" \
+  "$calamares_ray" "$brand_wordmark" "$brand_ray" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
-  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper"; do
+  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 
@@ -81,7 +83,7 @@ for mode in ("dark", "light"):
 PY
 
 python - "$repo_root" "$brand_ray_source" "$pearl_greeter" "$pearl_preferences" "$brand_wordmark" "$brand_ray" \
-  "$calamares_wordmark" "$calamares_ray" "$brand_wallpaper" "$grub_logo" "$fastfetch_logo" <<'PY'
+  "$calamares_wordmark" "$calamares_ray" "$grub_logo" "$fastfetch_logo" <<'PY'
 import json
 import pathlib
 import struct
@@ -89,7 +91,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 (root, ray_source_path, greeter_path, prefs_path, wordmark_path, ray_path,
- cal_wordmark_path, cal_ray_path, wallpaper_path, grub_logo_path, fastfetch_logo_path) = map(pathlib.Path, sys.argv[1:])
+ cal_wordmark_path, cal_ray_path, grub_logo_path, fastfetch_logo_path) = map(pathlib.Path, sys.argv[1:])
 brand = root / "design/brand/dinx-wordmark-compact.svg"
 ns = "{http://www.w3.org/2000/svg}"
 accent = "#F4515B"
@@ -136,12 +138,15 @@ assert any("@" in line for line in ascii_logo_lines) and any("#" in line for lin
 
 
 greeter = json.loads(greeter_path.read_text())
-expected_wallpaper = "/usr/share/dinx/branding/dinx-wallpaper.png"
-assert greeter.get("wallpaper") == expected_wallpaper and greeter.get("wallpaper_fit") == "cover", "Pearl Greeter does not use the DINX wallpaper"
+assert "wallpaper" not in greeter and "wallpaper_fit" not in greeter and "logo" not in greeter, "Pearl Greeter still configures a wallpaper or logo"
+assert greeter.get("wallpaper_color") == "#0b0d12", "Pearl Greeter solid surface color is missing"
 preferences = json.loads(prefs_path.read_text())
-assert preferences.get("wallpaper", {}).get("path") == expected_wallpaper, "fresh Pearl preferences do not use the DINX wallpaper"
+wallpaper = preferences.get("wallpaper", {})
+assert wallpaper.get("mode") == "solid" and wallpaper.get("path") == "", "fresh Pearl preferences still select a wallpaper image"
+assert preferences.get("bar", {}).get("edge") == "top", "Pearl default bar position is not top"
+assert preferences.get("dock", {}).get("enabled") is True and preferences.get("dock", {}).get("edge") == "bottom", "Pearl default dock configuration is incorrect"
 desktop_icons = preferences.get("desktop_icons", {})
-assert desktop_icons.get("enabled") is True, "DINX wallpaper seed unexpectedly disables desktop icons"
+assert desktop_icons.get("enabled") is True, "Pearl seed unexpectedly disables desktop icons"
 assert not {"icon", "icons", "icon_theme", "iconTheme"} & desktop_icons.keys(), "desktop icon preferences contain a branding override"
 assert not {"icon_theme", "iconTheme"} & preferences.keys(), "DINX preferences override the desktop icon theme"
 
@@ -151,7 +156,6 @@ def png_info(path):
     width, height = struct.unpack(">II", data[16:24])
     return width, height, data[25]
 
-assert png_info(wallpaper_path) == (1920, 1080, 2), "DINX wallpaper has unexpected dimensions or color format"
 assert png_info(grub_logo_path) == (512, 512, 6), "GRUB D-ray logo must be 512x512 RGBA"
 PY
 
@@ -181,7 +185,62 @@ grep -Fqx '    - adw-gtk-theme' "$profile" || fail 'profile does not install adw
 grep -Fqx '    - noto-fonts' "$profile" || fail 'profile does not install Noto fonts'
 grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
 grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt" || fail 'Qt6ct does not consume DINX colors'
-grep -Fq 'active_colors=#ff0b0d12, #ffd7dde8' "$qt_palette" || fail 'Qt6ct DINX palette omits dark surfaces or foreground text'
+python - "$qt_palette" "$palette" <<'PY'
+import configparser
+import json
+import sys
+
+config = configparser.ConfigParser(interpolation=None)
+config.read(sys.argv[1], encoding="utf-8")
+with open(sys.argv[2], encoding="utf-8") as stream:
+    tokens = json.load(stream)["dark"]
+
+# Qt6ct serializes colors by QPalette::ColorRole numeric order.
+roles = (
+    "WindowText", "Button", "Light", "Midlight", "Dark", "Mid", "Text",
+    "BrightText", "ButtonText", "Base", "Window", "Shadow", "Highlight",
+    "HighlightedText", "Link", "LinkVisited", "AlternateBase", "NoRole",
+    "ToolTipBase", "ToolTipText", "PlaceholderText",
+)
+active_roles = {
+    "WindowText": "mOnSurface", "Button": "mSurfaceVariant", "Light": "mHover",
+    "Midlight": "mOutline", "Dark": "mShadow", "Mid": "mSurface",
+    "Text": "mOnSurface", "BrightText": "mError", "ButtonText": "mOnSurface",
+    "Base": "mSurface", "Window": "mSurface", "Shadow": "mShadow",
+    "Highlight": "mHover", "HighlightedText": "mOnHover", "Link": "mPrimary",
+    "LinkVisited": "mTertiary", "AlternateBase": "mSurfaceVariant",
+    "NoRole": "mSurface", "ToolTipBase": "mSurfaceVariant",
+    "ToolTipText": "mOnSurface", "PlaceholderText": "mOnSurfaceVariant",
+}
+disabled_roles = {
+    "WindowText": "mOnSurfaceVariant", "Button": "mSurfaceVariant",
+    "Light": "mOutline", "Midlight": "mSurfaceVariant", "Dark": "mShadow",
+    "Mid": "mSurface", "Text": "mOnSurfaceVariant",
+    "BrightText": "mOnSurfaceVariant", "ButtonText": "mOnSurfaceVariant",
+    "Base": "mSurfaceVariant", "Window": "mSurfaceVariant", "Shadow": "mShadow",
+    "Highlight": "mHover", "HighlightedText": "mOnSurfaceVariant",
+    "Link": "mOnSurfaceVariant", "LinkVisited": "mOnSurfaceVariant",
+    "AlternateBase": "mSurfaceVariant", "NoRole": "mSurfaceVariant",
+    "ToolTipBase": "mSurfaceVariant", "ToolTipText": "mOnSurfaceVariant",
+    "PlaceholderText": "mOnSurfaceVariant",
+}
+
+def qt_color(token):
+    return "#ff" + tokens[token][1:].lower()
+
+for group, expected_roles in (
+    ("active_colors", active_roles),
+    ("inactive_colors", active_roles),
+    ("disabled_colors", disabled_roles),
+):
+    colors = [color.strip().lower() for color in config["ColorScheme"][group].split(",")]
+    if len(colors) != len(roles):
+        raise SystemExit(f"{group} has {len(colors)} colors; expected {len(roles)} Qt palette roles")
+    for index, role in enumerate(roles):
+        expected = qt_color(expected_roles[role])
+        if colors[index] != expected:
+            raise SystemExit(f"{group} maps {role} to {colors[index]}, expected {expected}")
+PY
 grep -Fq '"theme": "gtk"' "$pearl_greeter" || fail 'Pearl Greeter does not use the GTK theme bridge'
 grep -Fq '"gtk_theme": "DINX"' "$pearl_greeter" || fail 'Pearl Greeter does not use the DINX GTK theme'
 grep -Fq '"wallpaper_color": "#0b0d12"' "$pearl_greeter" || fail 'Pearl Greeter surface color is missing'
@@ -190,9 +249,11 @@ grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' "$pearl_greeter
   || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
 grep -Fq '"allow_uwsm": false' "$pearl_greeter" || fail 'Pearl Greeter UWSM integration is not disabled'
 grep -Fq '"x11": false' "$pearl_greeter" || fail 'Pearl Greeter X11 integration is not disabled'
-grep -Fq '"wallpaper": "/usr/share/dinx/branding/dinx-wallpaper.png"' "$pearl_greeter" \
-  || fail 'Pearl Greeter does not use the DINX wallpaper asset'
-grep -Fq '"wallpaper_fit": "cover"' "$pearl_greeter" || fail 'Pearl Greeter DINX wallpaper fit is incorrect'
+if grep -Eq '"(wallpaper|wallpaper_fit|logo)"[[:space:]]*:' "$pearl_greeter"; then
+  fail 'Pearl Greeter still configures its wallpaper image or logo'
+fi
+grep -Fq '"mode": "solid"' "$pearl_preferences" || fail 'Fresh Pearl preferences enable an image wallpaper'
+grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences retain an image wallpaper path'
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
 grep -Fq 'productIcon: "dinx-ray-mark.svg"' "$calamares_branding" || fail 'Calamares icon does not use the DINX D-ray mark'
 grep -Fq 'productLogo: "dinx.svg"' "$calamares_branding" || fail 'Calamares logo does not use the DINX Linux wordmark'
@@ -214,11 +275,15 @@ grep -Fq 'export GTK_THEME="DINX:dark"' "$session_wrapper" || fail 'Aqueous sess
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'Aqueous session does not force Qt6ct for GUI apps'
 grep -Fq 'qt6ct/qt6ct.conf' "$session_wrapper" || fail 'Aqueous session does not seed the Qt6ct config for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' "$session_wrapper" || fail 'Aqueous session does not seed the DINX Qt palette for existing users'
-grep -Fq 'pearl/preferences.json' "$session_wrapper" || fail 'Aqueous session does not seed DINX Pearl wallpaper preferences for missing files'
+grep -Fq 'dinx-qt6ct-palette-seed' "$session_wrapper" \
+  || fail 'Aqueous session does not safely migrate the stock Qt6ct palette'
+grep -Fq 'pearl/preferences.json' "$session_wrapper" || fail 'Aqueous session does not seed Pearl preferences for missing files'
 grep -Fq '[ ! -e "$config_home/pearl/preferences.json" ]' "$session_wrapper" \
   || fail 'Aqueous session may overwrite existing Pearl preferences'
 grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' "$session_wrapper" \
-  || fail 'Aqueous session overwrites Pearl recovery state while seeding the wallpaper'
+  || fail 'Aqueous session may overwrite Pearl recovery state'
+sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
+grep -Fq 'DINX_FIRST_RUN_WIZARD' "$pearl_shell" || fail 'Pearl shell wrapper lacks a testable wizard path'
 grep -Fq "desktop-color: \"${dark_token[mSurface]}\"" "$grub" || fail 'GRUB surface does not use DINX background'
 grep -Fq "selected_item_color = \"${dark_token[mPrimary]}\"" "$grub" || fail 'GRUB selection does not use DINX primary color'
 if grep -Eq '^[[:space:]]*(desktop-image|menu_pixmap_style|selected_item_pixmap_style)[[:space:]]*=' "$grub"; then

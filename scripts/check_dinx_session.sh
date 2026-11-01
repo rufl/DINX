@@ -18,6 +18,8 @@ gtk4_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.0/set
 gtk4_skel="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/gtk-4.0/settings.ini"
 aqueous_init="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init"
 supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
+pearl_shell="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
+wizard_source="$root/distro/packages/pearl/dinx-first-run-wizard.c"
 aqueous_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-aqueous-pearl.desktop"
 gaming_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-gaming.desktop"
 session_dir="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions"
@@ -41,6 +43,7 @@ fail() {
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
   "$aqueous_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
   "$useradd_defaults" "$users_conf" "$gtk3_system" "$gtk3_skel" \
@@ -210,7 +213,46 @@ grep -Fq 'aqueous/layout.toml' "$aqueous_wrapper" \
   || fail 'Aqueous session does not seed the DINX floating layout'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
   || fail 'Aqueous init does not launch the supervisor'
-grep -Fq 'start_required shell pearl' "$supervisor" || fail 'session supervisor does not own Pearl'
+grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
+  || fail 'session supervisor does not launch the Pearl first-run wrapper'
+sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
+pearl_shell_test=$(mktemp -d)
+trap 'rm -rf "$pearl_shell_test"' EXIT
+mkdir -p "$pearl_shell_test/bin" "$pearl_shell_test/config/pearl"
+cat >"$pearl_shell_test/wizard" <<'SH'
+#!/bin/sh
+printf 'called\n' >>"$DINX_WIZARD_CALLS"
+printf 'off bottom material-light\n'
+SH
+cat >"$pearl_shell_test/bin/pearl" <<'SH'
+#!/bin/sh
+exit 0
+SH
+chmod +x "$pearl_shell_test/wizard" "$pearl_shell_test/bin/pearl"
+cat >"$pearl_shell_test/config/pearl/preferences.json" <<'JSON'
+{"theme":{"seed":"#F4515B"},"wallpaper":{"mode":"solid","path":"","color":"#0b0d12"},"bar":{"retained":true},"dock":{"retained":true},"unrelated":42}
+JSON
+pearl_shell_test_env=(
+  "PATH=$pearl_shell_test/bin:$PATH"
+  "HOME=$pearl_shell_test/home"
+  "XDG_CONFIG_HOME=$pearl_shell_test/config"
+  "XDG_STATE_HOME=$pearl_shell_test/state"
+  "DINX_FIRST_RUN_WIZARD=$pearl_shell_test/wizard"
+  "DINX_WIZARD_CALLS=$pearl_shell_test/wizard-calls"
+)
+mkdir -p "$pearl_shell_test/home"
+env "${pearl_shell_test_env[@]}" "$pearl_shell"
+jq -e '.theme.mode == "static" and .theme.variant == "light" and .theme.gtk_name == "" and .theme.seed == "#F4515B" and .bar.edge == "bottom" and .bar.retained == true and .dock.enabled == false and .dock.edge == "top" and .dock.retained == true and .unrelated == 42' \
+  "$pearl_shell_test/config/pearl/preferences.json" >/dev/null \
+  || fail 'Pearl wizard selection did not update preferences while preserving existing settings'
+[[ -e "$pearl_shell_test/state/dinx/pearl-first-run-complete" ]] \
+  || fail 'Pearl first-run completion marker is missing'
+[[ $(stat -c '%a' "$pearl_shell_test/config/pearl/preferences.json") == 600 ]] \
+  || fail 'Pearl first-run preferences are not private'
+env "${pearl_shell_test_env[@]}" "$pearl_shell"
+[[ $(wc -l <"$pearl_shell_test/wizard-calls") == 1 ]] \
+  || fail 'Pearl first-run wizard runs again after completion'
+printf 'pearl_first_run_smoke dock=off bar=bottom theme=material-light preserves_settings=true once=true\n'
 grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'

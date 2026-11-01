@@ -106,7 +106,8 @@ The livefs adds the live-only `dinx-live-autologin` dinit package. It enables gr
 
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and Noto Sans 10 are installed for the corresponding consumers, matching CachyOS's default GTK typography; Noto Sans Mono is used for fixed-width fields. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 
-The full DINX Linux wordmark appears on the Pearl Greeter and initial desktop wallpaper; Calamares also uses it for the product logo and welcome surface. The reduced D-and-ray symbol is maintained as a transparent SVG at `design/brand/dinx-ray-mark.svg`, copied into the ISO branding assets, and rendered as the GRUB logo; Calamares uses it as the product icon. Desktop and app-launcher icons remain upstream/Adwaita; DINX branding is not forced onto them.
+The Pearl Greeter and initial desktop use solid backgrounds without wallpaper images or a DINX logo; Calamares retains the full wordmark on its product logo/welcome surface. The reduced D-and-ray symbol is maintained as a transparent SVG at `design/brand/dinx-ray-mark.svg`, copied into the ISO branding assets, and rendered as the GRUB logo; Calamares uses it as the product icon. Desktop and app-launcher icons remain upstream/Adwaita.
+On the first Pearl session, a one-time setup wizard lets each user enable or hide the dock, place the Pearl bar at the top or bottom, and choose DINX dark/light or Pearl Material dark/light. The dock uses the opposite edge from the bar; choices are saved in `~/.config/pearl/preferences.json`.
 The ASCII D-ray at `/usr/share/dinx/branding/dinx-ray-mark.txt` is density-mapped from DINX's source SVG and works as a plain-text logo:
 ```sh
 fastfetch --logo-type file --logo /usr/share/dinx/branding/dinx-ray-mark.txt
@@ -195,7 +196,7 @@ The payload contract also requires `wdisplays`, `shikane` and the DINX display p
 
 The workflow stores a separate `dinx-boot-screen.ppm` capture taken before the boot-menu keys are sent. Review this frame when qualifying the GRUB kernel-selection surface; it is the regression evidence for the removed opaque menu panel.
 
-GRUB uses the transparent compact D-ray mark with DINX surface, foreground and primary selection colors instead of the Artix logo; Artix font assets remain in use. The opaque menu textures are disabled. The Pearl Greeter and desktop wallpaper use the full wordmark; Calamares uses it for its product logo/welcome and the compact mark for its product icon. Desktop launcher icons remain upstream/Adwaita icons, not DINX branding.
+GRUB uses the transparent compact D-ray mark with DINX surface, foreground and primary selection colors instead of the Artix logo; Artix font assets remain in use. The opaque menu textures are disabled. Pearl Greeter and the initial desktop use solid backgrounds without a wallpaper image or DINX logo; Calamares retains the full wordmark on its product logo/welcome and the compact mark for its product icon. Desktop launcher icons remain upstream/Adwaita icons, not DINX branding.
 In the current source profile, the normal live path is direct autologin; the greeter remains a fallback surface rather than a required boot step.
 
 ## Profile boundary

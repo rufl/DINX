@@ -39,7 +39,7 @@ prepare_initramfs_mkinitcpio() {
 EOF
 "$patcher" --patch-artix-helper "$helper"
 if ! awk '
-  /"\$DINX_INITRAMFS_PATCHER" "\$mnt\/etc\/\$mkinitcpio_conf"/ { patch_line = NR }
+  /"\$DINX_INITRAMFS_PATCHER" --ensure-graphics-modules "\$mnt\/etc\/\$mkinitcpio_conf"/ { patch_line = NR }
   /artix-chroot "\$mnt" mkinitcpio -k "\$k"/ { build_line = NR }
   END { exit !(patch_line && build_line == patch_line + 1) }
 ' "$helper"; then

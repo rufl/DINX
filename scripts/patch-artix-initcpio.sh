@@ -60,14 +60,14 @@ patch_artix_helper() {
   trap 'rm -f -- "$tmp_file"' EXIT
 
   awk '
-    index($0, "\"$DINX_INITRAMFS_PATCHER\" \"$mnt/etc/$mkinitcpio_conf\"") {
+      index($0, "\"$DINX_INITRAMFS_PATCHER\" --ensure-graphics-modules \"$mnt/etc/$mkinitcpio_conf\"") {
       already_patched++
     }
     index($0, "artix-chroot \"$mnt\" mkinitcpio -k \"$k\"") {
       target_count++
       indentation = $0
       sub(/[^[:space:]].*$/, "", indentation)
-      printf "%s\"$DINX_INITRAMFS_PATCHER\" \"$mnt/etc/$mkinitcpio_conf\"\n", indentation
+      printf "%s\"$DINX_INITRAMFS_PATCHER\" --ensure-graphics-modules \"$mnt/etc/$mkinitcpio_conf\"\n", indentation
     }
     { print }
     END {

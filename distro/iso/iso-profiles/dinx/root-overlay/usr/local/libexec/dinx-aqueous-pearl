@@ -1,5 +1,14 @@
 #!/bin/sh
 set -eu
+locale_charmap=$(locale charmap 2>/dev/null || true)
+case "$locale_charmap" in
+  *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) ;;
+  *)
+    unset LC_ALL
+    export LC_CTYPE=C.UTF-8
+    ;;
+esac
+
 
 export XDG_CURRENT_DESKTOP=Aqueous
 export XDG_SESSION_DESKTOP=Aqueous
@@ -64,8 +73,10 @@ fi
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/qt6ct/qt6ct.conf" ] && [ -r /etc/skel/.config/qt6ct/qt6ct.conf ]; then
   install -Dm644 /etc/skel/.config/qt6ct/qt6ct.conf "$config_home/qt6ct/qt6ct.conf"
 fi
-if [ -n "${HOME:-}" ] && [ ! -e "$config_home/qt6ct/colors/DINX.conf" ] && [ -r /etc/skel/.config/qt6ct/colors/DINX.conf ]; then
-  install -Dm644 /etc/skel/.config/qt6ct/colors/DINX.conf "$config_home/qt6ct/colors/DINX.conf"
+if [ -n "${HOME:-}" ]; then
+  /usr/local/libexec/dinx-qt6ct-palette-seed \
+    "$config_home/qt6ct/colors/DINX.conf" \
+    /etc/skel/.config/qt6ct/colors/DINX.conf
 fi
 
 if [ -n "${HOME:-}" ] \

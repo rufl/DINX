@@ -41,6 +41,8 @@ User scope uses `dinitctl --user`. System scope uses `dinitctl --system` and ret
 
 Every Aqueous top-level window displays a compositor-drawn DINX titlebar with the window title and minimize, maximize/restore and close buttons, including GTK and Pearl clients. Long titles are ellipsized before the controls. The session sets `GTK_CSD=0`, and Aqueous requests server-side decorations, so standard GTK windows use the compositor titlebar; Wayland clients that honor xdg-decoration receive the same request. Dragging any unobstructed part of the titlebar moves the window and uses Aqueous floating-window snapping: side/bottom edges snap to halves, corners to quarters, and the top edge maximizes. Fullscreen windows hide the titlebar. Apps that hard-code custom client-side titlebars and ignore server-decoration requests can still draw beneath the compositor bar; Wayland does not provide a generic way for the compositor to remove client-rendered content. Menus and popups are not top-level windows and keep their own behavior.
 
+Pearl Settings avoids its own client-side headerbar in this session, leaving one compositor decoration. GTK-theme mode sets an opaque theme background. The Pearl border-sync option synchronizes colors, not geometry: the `aqueous-cpu` compatibility build disables Vulkan effects and keeps square corners; rounded compositor corners require Aqueous with Vulkan effects enabled.
+
 - Aqueous/Pearl is the only selectable and supported DINX user session.
 - The live ISO opens `dinx` directly through the dinit autologin path; the installed rootfs keeps manual login.
 - Pearl Greeter is the installed greetd login UI, not a second user session; its root-owned config forces `Aqueous + Pearl (DINX)` and has no silent session fallback.

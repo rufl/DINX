@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PEARL_SOURCE_URL:?missing PEARL_SOURCE_URL}"
 : "${PEARL_SOURCE_SHA256:?missing PEARL_SOURCE_SHA256}"
 pkgver="$PEARL_VERSION"
-pkgrel=2
+pkgrel=4
 epoch=1
 pkgdesc='Pearl GTK desktop shell and Pearl Greeter for direct Aqueous sessions on DINX'
 arch=('x86_64')
@@ -52,6 +52,7 @@ makedepends=(
   'qt6-base'
   'python>=3.14'
   'librsvg'
+  'gtk4>=1:4.22.5'
 )
 optdepends=(
   'file-roller: archive context menu actions in Phyto'
@@ -67,13 +68,14 @@ optdepends=(
 provides=('pearl-capture-picker=0.3.0' 'pearl-greeter=0.3.0')
 conflicts=('pearl-git')
 options=('!strip' '!debug')
-source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch")
-sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4')
+source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch" "server-decorations.patch" "dinx-first-run-wizard.c")
+sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' '021f79a2016dc358fe704cbd832e192d5c0a1ba64c5a6f2753f8ac53aad99b95' '5cb4d32096181d0ae11c8d9055886b988cc09b3a052e57b2875f6102474e7133')
 install=pearl.install
 
 prepare() {
   cd "$srcdir/pearl-$pkgver"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal.patch"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/server-decorations.patch"
 }
 
 
@@ -87,6 +89,9 @@ build() {
   }
   export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
   export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
+  "${CC:-gcc}" -O2 -Wall -Wextra -Werror \
+    $(pkgconf --cflags gtk4) "$srcdir/dinx-first-run-wizard.c" \
+    $(pkgconf --libs gtk4) -o "$srcdir/dinx-first-run-wizard"
   "$zig_bin" build install build-greeter -Dqt-themes=true -Doptimize=ReleaseSafe \
     -Drelease=true -Dcpu=baseline -Dwasm-plugins=false
 }
@@ -100,12 +105,15 @@ check() {
   for bin in pearl-greeter pearl-greeter-session pearl-greeter-host pearl-greeter-sync; do
     test -x "$srcdir/pearl-$pkgver/zig-out/greeter/bin/$bin"
   done
+  test -x "$srcdir/dinx-first-run-wizard"
 }
 
 package() {
   cd "$srcdir/pearl-$pkgver"
   DESTDIR="$pkgdir" PEARL_BINARY_DIR="$PWD/zig-out/bin" \
     bash packaging/install.sh
+  install -Dm755 "$srcdir/dinx-first-run-wizard" \
+    "$pkgdir/usr/local/libexec/dinx-first-run-wizard"
 
   local greeter_stage="$srcdir/pearl-greeter-stage"
   rm -rf "$greeter_stage"

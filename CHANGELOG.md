@@ -4,6 +4,9 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
+- Validate Pearl Settings form values before publishing drafts, keeping invalid intermediate input editable instead of corrupting the JSON draft. Remove the Settings client-side headerbar to avoid duplicate compositor decorations and make GTK-theme windows opaque. Pearl border synchronization affects colors only; `aqueous-cpu` keeps square corners until Vulkan effects are available.
+
 - Route Aqueous/Pearl and the Pearl Greeter through Pixman/Cairo for `vmwgfx`/2D adapters while QEMU `virtio_gpu` retains GLES2. The first VMware-SVGA boot smoke exposed the remaining root cause: Artix generated an initramfs without `vmwgfx` or `vboxvideo`. `build-iso.sh` now patches a private copy of Artix's initramfs helper to add both modules to the configuration actually used inside the bootfs, immediately before `mkinitcpio`; a contract smoke protects that hook and ISO inspection checks the generated initramfs. P0 is configured to boot VMware-SVGA; successful VMSVGA smoke and direct VirtualBox boot remain unqualified.
 - Repair the `dinx-live-autologin` source checksum and bump `pkgrel` to 7. The stale checksum stopped an earlier P0 run before ISO composition; a later run built the first ISO with the graphics fallback and exposed that Artix had omitted `vmwgfx` and `vboxvideo` from its generated initramfs.
 
@@ -64,10 +67,11 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 - Set DINX dark as the system GTK 3/4 default and export GTK/Qt6ct theme selection from the direct Aqueous session launcher. Existing user homes receive the Qt6ct DINX configuration and palette when missing.
 - Seed fresh Aqueous user profiles with floating `stacking` on every workspace. The shipped WM config disables the default tile, scrolling, monocle and grid shortcuts (`Super+T/F/M/G`); `Alt+Shift+F` selects stacking and `Super+Shift+Space` toggles floating per window. Dragging a floating window to the left/right/bottom edge snaps it to a half, corners to quarters, and the top-center edge maximizes it (24 px threshold, no gap). Existing user configs remain untouched.
-- Give every Aqueous top-level window a compositor-drawn DINX titlebar with its title and minimize, maximize/restore and close controls, including GTK and Pearl clients. Long titles ellipsize before the controls. Dragging an unobstructed part of the bar moves the window and uses the existing floating snap behavior; fullscreen hides the bar. Client-drawn chrome within the top 36 logical pixels can be obscured.
+- Give Aqueous top-level windows a compositor-drawn DINX titlebar with minimize, maximize/restore and close controls, including GTK and Pearl clients. Long titles ellipsize before the controls. Dragging an unobstructed part of the bar moves the window and uses the floating snap behavior; double-clicking that titlebar area minimizes it; fullscreen hides the bar. Client-drawn chrome within the top 36 logical pixels can be obscured.
 - Fixed stale Aqueous titlebar text when Wayland or XWayland clients change their title. The Aqueous/Pearl gate now applies DINX patches to the pinned upstream source, tests titlebar hit zones and floating snap geometry, and asserts title notifications invalidate the text cache.
+- Added a one-time Pearl setup wizard for dock visibility, top/bottom bar placement and DINX dark/light or Pearl Material dark/light themes. Selections persist in the user's Pearl preferences.
 
-- Added the reduced D-and-ray symbol as a transparent canonical SVG at `design/brand/dinx-ray-mark.svg`; GRUB uses its RGBA rendering and Calamares uses it as the product icon. The full wordmark remains on the greeter/desktop wallpaper and Calamares logo/welcome surfaces; upstream/Adwaita app and desktop icons remain unchanged.
+- Added the reduced D-and-ray symbol as a transparent canonical SVG at `design/brand/dinx-ray-mark.svg`; GRUB uses its RGBA rendering and Calamares uses it as the product icon. Pearl Greeter and the initial desktop now use solid backgrounds without a wallpaper image or DINX logo; Calamares retains the full wordmark on its logo/welcome surfaces. Upstream/Adwaita app and desktop icons remain unchanged.
 - Replaced the first ASCII approximation with a density-mapped rendering of the DINX D-ray source SVG. The plain-ASCII asset works with Fastfetch and Areofyl's optional `fetch` custom-logo format.
 
 ## v0.1.0-alpha.10 — 2026-10-29

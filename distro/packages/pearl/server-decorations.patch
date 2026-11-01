@@ -1,0 +1,107 @@
+--- a/src/settings/preferences_view.zig
++++ b/src/settings/preferences_view.zig
+@@ -13,0 +14,3 @@
++fn validateFormDraft(alloc: std.mem.Allocator, json: []const u8) !void {
++    _ = try model.parse(alloc, json);
++}
+@@ -93,0 +97 @@
++    form_invalid: bool = false,
+@@ -248 +252 @@
+-        apps_section.body.append(w.label(if (german) "Wartet auf ausstehende Aqueous-Änderungen. Ausschalten behält die letzten Farben; im GTK-Modus pausiert die Synchronisierung." else "Waits for pending Aqueous edits. Turning off keeps the last colors; GTK mode pauses synchronization.", "pearl-secondary").as(gtk.Widget));
++        apps_section.body.append(w.label(if (german) "Synchronisiert Fensterrahmenfarben mit Pearl. Der Eckenradius wird von Aqueous bestimmt; im CPU-Kompatibilitätsmodus bleiben Ecken quadratisch." else "Synchronizes window-border colors with Pearl. Aqueous controls corner radius; corners stay square in CPU compatibility mode.", "pearl-secondary").as(gtk.Widget));
+@@ -260 +264 @@
+-        row(qt_card, if (german) "Eckenradius (0: beibehalten)" else "Corner radius (0: keep existing)", qt_radius.as(gtk.Widget));
++        row(qt_card, if (german) "Qt-Eckenradius (0: beibehalten)" else "Qt corner radius (0: keep existing)", qt_radius.as(gtk.Widget));
+@@ -395 +399 @@
+-        if (!self.editor.editable() or self.raw_invalid) return error.Unavailable;
++        if (!self.editor.editable() or self.raw_invalid or self.form_invalid) return error.Unavailable;
+@@ -400,0 +405,3 @@
++    pub fn formValid(self: *const View) bool {
++        return !self.form_invalid;
++    }
+@@ -421,0 +429 @@
++                self.form_invalid = false;
+@@ -447,2 +455,2 @@
+-        self.message.setText(if (self.raw_invalid) self.t("Advanced JSON is invalid. Correct it there to use these controls.", "Das JSON ist ungültig. Korrigiere es unter Erweitert, um diese Regler zu nutzen.") else "");
+-        self.message.as(gtk.Widget).setVisible(@intFromBool(self.raw_invalid));
++        self.message.setText(if (self.raw_invalid) self.t("Advanced JSON is invalid. Correct it there to use these controls.", "Das JSON ist ungültig. Korrigiere es unter Erweitert, um diese Regler zu nutzen.") else if (self.form_invalid) self.t("A form value is invalid. Correct it before applying.", "Ein Formularwert ist ungültig. Korrigiere ihn vor dem Anwenden.") else "");
++        self.message.as(gtk.Widget).setVisible(@intFromBool(self.raw_invalid or self.form_invalid));
+@@ -604,0 +613,8 @@
++        var validation = std.heap.ArenaAllocator.init(a);
++        defer validation.deinit();
++        validateFormDraft(validation.allocator(), json) catch {
++            self.form_invalid = true;
++            self.editor.notify(self.editor.context, .changed);
++            return;
++        };
++        self.form_invalid = false;
+@@ -684,0 +701 @@
++            self.form_invalid = false;
+@@ -920,0 +938,11 @@
++test "form draft validation rejects invalid colors and accepts the corrected value" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var prefs: model.Preferences = .{};
++    prefs.theme.seed = "not-a-color";
++    const invalid = try std.json.Stringify.valueAlloc(arena.allocator(), prefs, .{ .whitespace = .indent_2 });
++    try std.testing.expectError(error.InvalidColor, validateFormDraft(arena.allocator(), invalid));
++    prefs.theme.seed = "#6750a4";
++    const corrected = try std.json.Stringify.valueAlloc(arena.allocator(), prefs, .{ .whitespace = .indent_2 });
++    try validateFormDraft(arena.allocator(), corrected);
++}
+--- a/src/settings/window.zig
++++ b/src/settings/window.zig
+@@ -105,7 +104,0 @@
+-        const header = gtk.HeaderBar.new();
+-        header.setShowTitleButtons(1);
+-        header.setDecorationLayout("menu:minimize,maximize,close");
+-        const brand = w.row(10);
+-        const pearl = w.label("●", "settings-pearl");
+-        pearl.as(gtk.Widget).setHexpand(0);
+-        brand.append(pearl.as(gtk.Widget));
+@@ -114,8 +106,0 @@
+-        const brand_name = w.label(if (german) "Pearl Einstellungen" else "Pearl Settings", "settings-brand");
+-        brand_name.as(gtk.Widget).setHexpand(0);
+-        brand_name.setWrap(0);
+-        brand_name.setEllipsize(.end);
+-        brand_name.setMaxWidthChars(18);
+-        brand.append(brand_name.as(gtk.Widget));
+-        header.packStart(brand.as(gtk.Widget));
+-        header.setTitleWidget(gtk.Box.new(.horizontal, 0).as(gtk.Widget));
+@@ -124 +108,0 @@
+-        header.packEnd(sections.as(gtk.Widget));
+@@ -160,0 +145 @@
++        heading.as(gtk.Widget).setHexpand(1);
+@@ -162,0 +148,3 @@
++        sections.as(gtk.Widget).setHalign(.end);
++        sections.as(gtk.Widget).setValign(.center);
++        heading_row.append(sections.as(gtk.Widget));
+@@ -218 +205,0 @@
+-        win.setTitlebar(header.as(gtk.Widget));
+@@ -856 +843,2 @@
+-        self.save.as(gtk.Widget).setSensitive(@intFromBool(available and dirty and (if (editor.local != null) editor.local_valid else editor.state.valid) and !editor.state.conflict and !editor.recovery));
++        const form_valid = if (self.preferences_view) |view| view.formValid() else true;
++        self.save.as(gtk.Widget).setSensitive(@intFromBool(available and form_valid and dirty and (if (editor.local != null) editor.local_valid else editor.state.valid) and !editor.state.conflict and !editor.recovery));
+--- a/resources/settings.css
++++ b/resources/settings.css
+@@ -2 +1,0 @@
+-.settings-window.$scope headerbar { background: $container$; border-bottom: 1px solid alpha($outline$, 0.25); }
+--- a/resources/settings-layout.css
++++ b/resources/settings-layout.css
+@@ -2,3 +1,0 @@
+-.settings-window headerbar { min-height: 50px; padding: 0 12px; }
+-.settings-brand { font-size: 13px; font-weight: 600; }
+-.settings-pearl { font-size: 22px; color: #d0bcff; }
+@@ -45,0 +43 @@
++.settings-window.pearl-gtk { background: @window_bg_color; color: @window_fg_color; }
+@@ -50 +47,0 @@
+-.settings-window headerbar button { border-radius: 9px; min-width: 24px; min-height: 24px; padding: 5px; background: transparent; }
+--- a/tests/integration/test_settings_appearance.py
++++ b/tests/integration/test_settings_appearance.py
+@@ -205,0 +206,6 @@
++            click(s, ipc, 'seed'); type_text(s, 'not-a-color')
++            time.sleep(.3)
++            assert peer.document() == json.dumps(p)
++            assert peer.state()['valid']
++            capture(s, 'appearance-invalid-form-value')
++            passed('invalid-form-value-is-not-published-and-form-recovers')

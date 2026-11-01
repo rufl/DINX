@@ -146,6 +146,9 @@ required_paths=(
   etc/dinit.d/bluetoothd
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
+  usr/local/libexec/dinx-pearl-shell
+  usr/local/libexec/dinx-qt6ct-palette-seed
+  usr/local/libexec/dinx-first-run-wizard
   usr/lib/pearl/pearl-greeter-host
   usr/lib/pearl/pearl-greeter-session
   usr/lib/pearl/pearl-greeter-init
@@ -355,7 +358,6 @@ required_paths=(
   etc/calamares/branding/dinx/dinx-ray-mark.svg
   usr/share/dinx/branding/dinx-linux-logo.svg
   usr/share/dinx/branding/dinx-ray-mark.svg
-  usr/share/dinx/branding/dinx-wallpaper.png
   usr/share/dinx/branding/dinx-ray-mark.txt
   usr/share/grub/themes/artix/logo.png
 )
@@ -455,13 +457,14 @@ grep -Fq '"theme": "gtk"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter GTK 
 grep -Fq '"gtk_theme": "DINX"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter DINX theme is not enabled'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
-grep -Fq '"wallpaper": "/usr/share/dinx/branding/dinx-wallpaper.png"' <<<"$pearl_greeter_config" \
-  || fail 'Pearl Greeter DINX wallpaper is missing'
-grep -Fq '"wallpaper_fit": "cover"' <<<"$pearl_greeter_config" \
-  || fail 'Pearl Greeter wallpaper fit is not cover'
+if grep -Eq '"(wallpaper|wallpaper_fit|logo)"[[:space:]]*:' <<<"$pearl_greeter_config"; then
+  fail 'Pearl Greeter still configures a wallpaper image or logo'
+fi
+grep -Fq '"wallpaper_color": "#0b0d12"' <<<"$pearl_greeter_config" \
+  || fail 'Pearl Greeter solid surface color is missing'
 pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
-grep -Fq '"path": "/usr/share/dinx/branding/dinx-wallpaper.png"' <<<"$pearl_preferences" \
-  || fail 'fresh user Pearl preferences do not use the DINX wallpaper'
+jq -e '.wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
+  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl dock, bar or solid-wallpaper defaults are incorrect'
 grep -Fq '"enabled": true' <<<"$pearl_preferences" \
   || fail 'Pearl default desktop icons are no longer enabled'
 grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
@@ -529,7 +532,7 @@ done
 grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
-grep -Fq 'start_required shell pearl' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch Pearl'
+grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'
 grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate D-Bus readiness'
 if grep -Eq 'systemd|systemctl|uwsm|loginctl' <<<"$aqueous_session$aqueous_launcher$aqueous_init$session_supervisor"; then
@@ -621,7 +624,7 @@ qt6ct_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc
 grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' <<<"$qt6ct_config" || fail 'Qt6ct DINX color path is missing'
 grep -Fq 'general="Noto Sans,10' <<<"$qt6ct_config" || fail 'Qt6ct Noto Sans font contract is missing'
 qt6ct_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/colors/DINX.conf)
-grep -Fq 'active_colors=#ff0b0d12, #ffd7dde8' <<<"$qt6ct_palette" || fail 'Qt6ct DINX palette omits dark surfaces or foreground text'
+grep -Fq 'active_colors=#ffd7dde8, #ff11151d' <<<"$qt6ct_palette" || fail 'Qt6ct DINX palette has an incorrect QPalette role order'
 swayimg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/swayimg/init.lua)
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' <<<"$swayimg_config" || fail 'DINX Swayimg surface is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' <<<"$swayimg_config" || fail 'Swayimg font contract is missing'
@@ -659,7 +662,7 @@ grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueo
 grep -Fq 'export GTK_THEME="DINX:dark"' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force DINX dark GTK theme'
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force Qt6ct'
 grep -Fq 'pearl/preferences.json' <<<"$aqueous_wrapper" \
-  || fail 'Aqueous session does not seed the DINX Pearl wallpaper preference'
+  || fail 'Aqueous session does not seed Pearl preferences for missing files'
 grep -Fq '[ ! -e "$config_home/pearl/preferences.json" ]' <<<"$aqueous_wrapper" \
   || fail 'Aqueous session may overwrite saved Pearl preferences'
 grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' <<<"$aqueous_wrapper" \
@@ -673,7 +676,7 @@ grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' <<<"$aqueous_wm_config" 
 aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'Aqueous init supervisor command is missing'
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq 'start_required shell pearl' <<<"$session_supervisor" || fail 'Pearl is not required by the session supervisor'
+grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'Pearl is not required by the session supervisor'
 grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'Aqueous session does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' <<<"$session_supervisor" || fail 'Aqueous session does not gate D-Bus readiness'
 if grep -Eiq 'labwc|noctalia|systemd|uwsm' <<<"$aqueous_wrapper
@@ -982,4 +985,4 @@ grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: DINX wordmark/D-ray branding is present in GRUB, greeter, Calamares and desktop wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'
+printf 'ISO content check passed: DINX wordmark/D-ray branding is present in GRUB and Calamares; Pearl uses a solid greeter/desktop surface without a logo wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'

@@ -5,6 +5,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Route both the Aqueous/Pearl session and the Pearl Greeter fallback through the detected graphics profile. Bind each DRM render node to its own sysfs driver rather than assuming `card0` order; `vmwgfx` and other 2D virtual adapters use Pixman/Cairo, while accessible QEMU `virtio_gpu` keeps GLES2. Regression contracts cover the driver mapping, multi-GPU ordering, CPU fallback and both launch paths. The P0 workflow now configures an additional VMware-SVGA QEMU boot/capture smoke, but it has not run yet. The published Alpha 12 predates this fix; a new ISO and direct VirtualBox boot are still required.
+- Repair the `dinx-live-autologin` source checksum and bump `pkgrel` to 7. The stale checksum had stopped the P0 pipeline before ISO composition, so no image containing the VMware-SVGA fallback had been built.
 
 ## DINX v0.1.0-alpha.12 — 2026-10-31
 

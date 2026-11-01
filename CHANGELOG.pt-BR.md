@@ -5,6 +5,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Direciona VirtualBox VMSVGA (`vmwgfx`) para o compositor de compatibilidade Pixman/Cairo, com ou sem render node e independentemente da opção 3D do host. O runtime da Alpha 12 publicada informa que GLES2 está desabilitado na compilação apesar da configuração da receita, causando o loop relatado no startup do desktop. QEMU `virtio_gpu`/virgl mantém o caminho GLES2; fixtures cobrem VMSVGA com e sem render node. Ainda são necessárias uma nova ISO e validação direta no VirtualBox.
+- Corrigido o checksum do fonte de `dinx-live-autologin` e incrementado `pkgrel` para 7. O checksum antigo interrompia o P0 antes da composição da ISO; nenhuma imagem com o fallback para VMware-SVGA tinha sido construída.
 
 ## DINX v0.1.0-alpha.12 — 2026-10-31
 

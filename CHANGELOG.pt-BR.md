@@ -5,6 +5,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - A sessão Aqueous/Pearl agora fornece um locale de caracteres UTF-8 quando o locale herdado é ASCII, corrigindo aplicativos de terminal como `btop` sem substituir locales válidos do usuário.
+- Corrigida a contagem de linhas do hunk no patch de cantos arredondados Pixman do Aqueous; smoke do supervisor alinhado ao wrapper Pearl exigido.
+
 
 - Corrigida a paleta Qt6ct do DINX: as cores agora seguem a ordem dos papéis `QPalette`, evitando fundos rosa/azuis e texto ilegível no Qps e em outros aplicativos Qt. Na sessão, somente a paleta padrão antiga é atualizada; personalizações e symlinks são preservados.
 

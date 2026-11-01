@@ -5,6 +5,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
+- Fix the hunk line count in Aqueous's Pixman rounded-corners patch; keep the session-supervisor smoke aligned with its required Pearl shell wrapper.
+
 - Validate Pearl Settings form values before publishing drafts, keeping invalid intermediate input editable instead of corrupting the JSON draft. Remove the Settings client-side headerbar to avoid duplicate compositor decorations and make GTK-theme windows opaque. Pearl border synchronization affects colors only; `aqueous-cpu` keeps square corners until Vulkan effects are available.
 
 - Route Aqueous/Pearl and the Pearl Greeter through Pixman/Cairo for `vmwgfx`/2D adapters while QEMU `virtio_gpu` retains GLES2. The first VMware-SVGA boot smoke exposed the remaining root cause: Artix generated an initramfs without `vmwgfx` or `vboxvideo`. `build-iso.sh` now patches a private copy of Artix's initramfs helper to add both modules to the configuration actually used inside the bootfs, immediately before `mkinitcpio`; a contract smoke protects that hook and ISO inspection checks the generated initramfs. P0 is configured to boot VMware-SVGA; successful VMSVGA smoke and direct VirtualBox boot remain unqualified.

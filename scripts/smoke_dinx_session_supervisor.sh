@@ -19,10 +19,11 @@ while :; do /usr/bin/sleep 1; done
 EOF
   chmod +x "$fakebin/$name"
 }
-for helper in shikane lxqt-policykit-agent pearl; do
+for helper in shikane lxqt-policykit-agent dinx-pearl-shell; do
   make_helper "$helper"
 done
 cp "$fakebin/shikane" "$libexec/dinx-idle"
+cp "$fakebin/dinx-pearl-shell" "$libexec/dinx-pearl-shell"
 
 export DINX_SESSION_SKIP_WAYLAND_CHECK=1
 export DINX_SESSION_SKIP_DBUS_CHECK=1
@@ -45,7 +46,7 @@ wait_for_status() {
 DINX_SESSION_COMPOSITOR_PID= "${supervisor}" aqueous >/dev/null 2>&1 &
 supervisor_pid=$!
 wait_for_status ready
-kill -TERM "$(cat "$state/pearl.pid")"
+kill -TERM "$(cat "$state/dinx-pearl-shell.pid")"
 wait_for_status failed
 wait "$supervisor_pid" || true
 

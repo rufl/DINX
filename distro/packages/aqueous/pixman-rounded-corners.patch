@@ -12,7 +12,7 @@
  
  pub const CornerRadii = EffectMetadata.CornerRadii;
  pub const BufferClip = EffectMetadata.BufferClip;
-@@ -55,21 +54,58 @@
+@@ -55,22 +54,58 @@
              std.log.err("could not store scene-buffer effect metadata: out of memory", .{});
              return;
          };

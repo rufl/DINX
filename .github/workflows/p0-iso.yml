@@ -216,7 +216,7 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes btrfs-progs dosfstools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+          sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
       - name: Smoke-test Calamares partition transaction
         run: sudo ./scripts/smoke_calamares_partitioning.sh
       - name: Smoke-test Windows side-by-side and manual partition transactions
@@ -269,6 +269,9 @@ jobs:
           DINX_QEMU_TIMEOUT: 90
         run: ./scripts/check_dinx_budget.sh
 
+      - name: Verify boot initramfs and graphical ISO payload
+        run: scripts/check-iso-content.sh "$DINX_ISO"
+
       - name: Boot smoke test and graphical capture
         env:
           DINX_QEMU_TIMEOUT: 90
@@ -290,8 +293,6 @@ jobs:
           DINX_QEMU_BOOT_KEYS: down,down,ret
         run: scripts/smoke-iso.sh "$DINX_ISO"
 
-      - name: Verify graphical ISO payload
-        run: scripts/check-iso-content.sh "$DINX_ISO"
       - name: Smoke-test persistent BIOS and UEFI installs and recovery TTY
         env:
           DINX_INSTALL_OUTPUT_DIR: dist/iso/dinx

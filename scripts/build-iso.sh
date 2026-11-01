@@ -64,58 +64,67 @@ fi
 
 ensure_loop_support
 
-artools_data_dir=$(awk -F"'" '
+artools_paths=$(awk -F"'" '
+  /^LIBDIR=/ {
+    libdir = $2
+    libdir_count++
+  }
   /^DATADIR=/ {
-    print $2
-    count++
+    datadir = $2
+    datadir_count++
   }
   END {
-    if (count != 1) exit 1
+    if (libdir_count != 1 || datadir_count != 1 || libdir == "" || datadir == "") exit 1
+    print libdir
+    print datadir
   }
-' "$buildiso_path") || fail "cannot resolve Artix buildiso data directory: $buildiso_path"
-artools_mkinitcpio_config="$artools_data_dir/mkinitcpio.conf"
-[[ -r "$artools_mkinitcpio_config" ]] \
-  || fail "missing Artix initramfs configuration: $artools_mkinitcpio_config"
+' "$buildiso_path") || fail "cannot resolve Artix buildiso directories: $buildiso_path"
+mapfile -t artools_paths <<< "$artools_paths"
+[[ ${#artools_paths[@]} -eq 2 ]] || fail "invalid Artix buildiso directories: $buildiso_path"
+artools_lib_dir=${artools_paths[0]}
+artools_data_dir=${artools_paths[1]}
+case "$artools_lib_dir" in
+  "$artools_data_dir"/*) artools_lib_relative=${artools_lib_dir#"$artools_data_dir"/} ;;
+  *) fail "Artix library directory is outside its data directory: $artools_lib_dir" ;;
+esac
+artools_initcpio_helper="$artools_lib_dir/iso/initcpio.sh"
+[[ -r "$artools_initcpio_helper" ]] \
+  || fail "missing Artix initramfs builder helper: $artools_initcpio_helper"
+[[ -x "$repo_root/scripts/patch-artix-initcpio.sh" ]] \
+  || fail "missing executable initramfs patcher: $repo_root/scripts/patch-artix-initcpio.sh"
 
 private_buildiso_dir=$(mktemp -d "${TMPDIR:-/tmp}/dinx-buildiso.XXXXXX")
 trap 'rm -rf -- "$private_buildiso_dir"' EXIT
-mkdir "$private_buildiso_dir/data"
-cp -a -- "$artools_data_dir/." "$private_buildiso_dir/data/"
+private_artools_data="$private_buildiso_dir/data"
+mkdir "$private_artools_data"
+cp -a -- "$artools_data_dir/." "$private_artools_data/"
 
-patched_mkinitcpio_config="$private_buildiso_dir/mkinitcpio.conf"
-awk '
-  /^MODULES=\(/ {
-    if (modules_seen || $0 !~ /\)$/) exit 1
-    if (index($0, "vmwgfx") == 0) sub(/\)$/, " vmwgfx)")
-    if (index($0, "vboxvideo") == 0) sub(/\)$/, " vboxvideo)")
-    modules_seen++
-    print
-    next
-  }
-  { print }
-  END {
-    if (modules_seen != 1) exit 1
-  }
-' "$private_buildiso_dir/data/mkinitcpio.conf" > "$patched_mkinitcpio_config" \
-  || fail "unsupported MODULES layout in $artools_mkinitcpio_config"
-chmod --reference="$artools_mkinitcpio_config" "$patched_mkinitcpio_config"
-mv -- "$patched_mkinitcpio_config" "$private_buildiso_dir/data/mkinitcpio.conf"
+private_initcpio_helper="$private_artools_data/$artools_lib_relative/iso/initcpio.sh"
+"$repo_root/scripts/patch-artix-initcpio.sh" --patch-artix-helper "$private_initcpio_helper"
 
 private_buildiso="$private_buildiso_dir/buildiso"
-awk -v datadir="$private_buildiso_dir/data" '
+awk '
+  /^LIBDIR=/ {
+    print "LIBDIR=\"${DINX_PRIVATE_LIBDIR:?}\""
+    libdir_replacements++
+    next
+  }
   /^DATADIR=/ {
-    printf "DATADIR=\"%s\"\n", datadir
-    replacements++
+    print "DATADIR=\"${DINX_PRIVATE_DATADIR:?}\""
+    datadir_replacements++
     next
   }
   { print }
   END {
-    if (replacements != 1) exit 1
+    if (libdir_replacements != 1 || datadir_replacements != 1) exit 1
   }
 ' "$buildiso_path" > "$private_buildiso" \
-  || fail "unsupported DATADIR layout in $buildiso_path"
+  || fail "unsupported Artix buildiso directory layout: $buildiso_path"
 chmod --reference="$buildiso_path" "$private_buildiso"
 
+DINX_INITRAMFS_PATCHER="$repo_root/scripts/patch-artix-initcpio.sh" \
+DINX_PRIVATE_LIBDIR="$private_artools_data/$artools_lib_relative" \
+DINX_PRIVATE_DATADIR="$private_artools_data" \
 PATH="$iso_tools_path" WORKSPACE_DIR="$workspace_dir" \
   "$private_buildiso" \
   -p dinx \

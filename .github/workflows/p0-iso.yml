@@ -213,6 +213,8 @@ jobs:
       - name: Verify Alpha 7 hardware-report contract
         run: ./scripts/check_alpha7_hardware_report.sh
 
+      - name: Verify Artix initramfs patch contract
+        run: ./scripts/check_artix_initcpio_patch.sh
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update

@@ -4,7 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
-- Direciona Aqueous/Pearl e o Pearl Greeter para Pixman/Cairo em adaptadores `vmwgfx`/2D, mantendo GLES2 no QEMU `virtio_gpu`. O primeiro smoke com VMware-SVGA revelou a causa restante: o Artix gerava um initramfs sem `vmwgfx` e `vboxvideo`. `build-iso.sh` agora gera a imagem com ambos os módulos em uma cópia isolada dos dados do Artix; a inspeção da ISO verifica o initramfs real e o P0 inicia o dispositivo VMware-SVGA. Ainda falta um smoke bem-sucedido e o boot direto no VirtualBox.
+- Direciona Aqueous/Pearl e o Pearl Greeter para Pixman/Cairo em adaptadores `vmwgfx`/2D, mantendo GLES2 no QEMU `virtio_gpu`. O primeiro smoke com VMware-SVGA revelou a causa restante: o Artix gerava um initramfs sem `vmwgfx` e `vboxvideo`. `build-iso.sh` agora altera uma cópia privada do helper Artix para acrescentar os dois módulos à configuração realmente usada no bootfs, imediatamente antes do `mkinitcpio`; um smoke de contrato protege esse hook e a inspeção verifica o initramfs gerado. O P0 está configurado para iniciar VMware-SVGA; ainda faltam um smoke VMSVGA bem-sucedido e a qualificação do boot direto no VirtualBox.
 - Corrigido o checksum do fonte de `dinx-live-autologin` e incrementado `pkgrel` para 7. O checksum antigo interrompeu uma execução P0 anterior antes da composição da ISO; uma execução posterior gerou a primeira imagem com o fallback gráfico e revelou que o Artix havia omitido `vmwgfx` e `vboxvideo` do initramfs.
 
 ## DINX v0.1.0-alpha.12 — 2026-10-31

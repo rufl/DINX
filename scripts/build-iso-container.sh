@@ -156,6 +156,7 @@ trap finish EXIT
                 xz \
                 zlib \
                 rust
+              scripts/check_artix_initcpio_patch.sh --check-installed
               update-mime-database /usr/share/mime
               mkdir -p /usr/lib/gdk-pixbuf-2.0/2.10.0
               gdk-pixbuf-query-loaders --update-cache

@@ -64,6 +64,8 @@ scripts/smoke-iso.sh dist/iso/<file>.iso
 
 The smoke also checks the captured session frame. Without `DINX_QEMU_SCREENSHOT`, it saves the checked PPM beside the QEMU log as `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` selects another installed Tesseract model.
 
+`build-iso.sh` copies Artix's `artools` data into a private temporary tree and patches its copied initramfs helper to add `vmwgfx` and `vboxvideo` to the configuration used inside the bootfs, immediately before Artix runs `mkinitcpio`; it does not modify the host installation. `check_artix_initcpio_patch.sh` guards this helper/config contract, and `check-iso-content.sh` requires `bsdtar` and verifies both modules inside the ISO's actual boot initramfs. The P0 VMware-SVGA smoke then requires the desktop.
+
 
 Check the graphical payload inside the root SquashFS image:
 

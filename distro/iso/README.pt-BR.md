@@ -71,6 +71,9 @@ Verifique o payload gráfico dentro da imagem SquashFS do root:
 scripts/check-iso-content.sh dist/iso/<arquivo>.iso
 ```
 
+`build-iso.sh` copia os dados do `artools` para uma árvore temporária privada e altera o helper initramfs copiado para acrescentar `vmwgfx` e `vboxvideo` à configuração usada dentro do bootfs, imediatamente antes de o Artix executar `mkinitcpio`; não modifica a instalação do host. `scripts/check_artix_initcpio_patch.sh` protege esse contrato do helper/configuração, e `check-iso-content.sh` exige `bsdtar` e verifica os dois módulos dentro do initramfs real da ISO. O smoke P0 VMware-SVGA exige que o desktop apareça.
+
+
 Opções adicionais do `buildiso` são repassadas sem alteração. Por exemplo, para consultar as configurações sem executar o build:
 
 ```bash

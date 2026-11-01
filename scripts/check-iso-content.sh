@@ -17,12 +17,23 @@ iso_path=${1:-}
 [[ -n "$iso_path" ]] || fail "usage: $0 ISO"
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
 
-for command in mktemp rm xorriso unsquashfs grep; do
+for command in mktemp rm xorriso unsquashfs bsdtar grep; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
+
+xorriso -osirrox on \
+  -indev "$iso_path" \
+  -extract /boot/initramfs-x86_64.img "$tmp_dir/initramfs.img" \
+  >/dev/null
+
+initramfs_manifest=$(bsdtar -tf "$tmp_dir/initramfs.img")
+for graphics_module in vmwgfx vboxvideo; do
+  grep -Eq "/${graphics_module}\\.ko(\\.(zst|xz|gz))?$" <<<"$initramfs_manifest" \
+    || fail "live initramfs omits the VirtualBox graphics module: $graphics_module"
+done
 
 xorriso -osirrox on \
   -indev "$iso_path" \

@@ -8,7 +8,17 @@
  
  const DragIcon = @import("DragIcon.zig");
  const InputDevice = @import("InputDevice.zig");
-@@ -840,6 +841,48 @@
+@@ -33,0 +34,7 @@
++const DecorationClick = struct {
++    window: Window.Ref,
++    time_msec: u32,
++    x: f64,
++    y: f64,
++};
++
+@@ -125,0 +126,1 @@
++    last_decoration_click: ?DecorationClick = null,
+@@ -840,6 +849,76 @@
      }, !cursor.hasActivePointerConstraint());
  }
  
@@ -46,8 +56,36 @@
 +    }
 +}
 +
-+fn consumeDecorationPress(cursor: *Cursor, window: *Window, surface: ?*wlr.Surface) bool {
-+    const action = window.decorationActionAt(surface, cursor.wlr_cursor.x, cursor.wlr_cursor.y) orelse return false;
++fn consumeDecorationPress(
++    cursor: *Cursor,
++    window: *Window,
++    surface: ?*wlr.Surface,
++    time_msec: u32,
++    previous_click: ?DecorationClick,
++) bool {
++    var action = window.decorationActionAt(surface, cursor.wlr_cursor.x, cursor.wlr_cursor.y) orelse return false;
++    if (action == .move) {
++        const double_click = if (previous_click) |previous|
++            pointer_drag.decorationDoubleClick(
++                previous.window.key,
++                window.ref.key,
++                previous.time_msec,
++                time_msec,
++                previous.x,
++                previous.y,
++                cursor.wlr_cursor.x,
++                cursor.wlr_cursor.y,
++            )
++        else
++            false;
++        cursor.last_decoration_click = if (double_click) null else .{
++            .window = window.ref,
++            .time_msec = time_msec,
++            .x = cursor.wlr_cursor.x,
++            .y = cursor.wlr_cursor.y,
++        };
++        if (double_click) action = .minimize;
++    }
 +    cursor.handleDecorationAction(window, action);
 +    cursor.mode = .ignore;
 +    cursor.clearFocus();
@@ -57,7 +95,10 @@
  pub fn processButton(cursor: *Cursor, event: *const Seat.Event.PointerButton) void {
      if (event.state == .pressed) server.window_switcher.pointerIntent(cursor.seat);
      if (event.state == .pressed and server.window_switcher.output != null) {
-@@ -867,6 +910,19 @@
+@@ -855,0 +935,2 @@
++        const previous_decoration_click = cursor.last_decoration_click;
++        cursor.last_decoration_click = null;
+@@ -867,6 +948,24 @@
              _ = cursor.seat.wlr_seat.pointerNotifyButton(event.time_msec, event.button, event.state);
              return;
          }
@@ -65,7 +106,12 @@
 +            if (server.scene.at(cursor.wlr_cursor.x, cursor.wlr_cursor.y)) |at| {
 +                switch (at.data) {
 +                    .window => |window| {
-+                        if (cursor.consumeDecorationPress(window, at.surface)) {
++                        if (cursor.consumeDecorationPress(
++                            window,
++                            at.surface,
++                            event.time_msec,
++                            previous_decoration_click,
++                        )) {
 +                            result.value_ptr.* = null;
 +                            return;
 +                        }
@@ -383,7 +429,7 @@
          .toplevel => |toplevel| toplevel.wlr_toplevel.base.surface,
 --- a/compositor/aqueous/wm/input/drag.zig
 +++ b/compositor/aqueous/wm/input/drag.zig
-@@ -10,6 +10,64 @@
+@@ -10,6 +10,88 @@
  pub const ResizeAxis = enum { horizontal, vertical };
  
  pub const ResizeEdges = geometry_policy.ResizeEdges;
@@ -445,6 +491,30 @@
 +    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(90, 20, 40, 20));
 +    try std.testing.expectEqual(@as(?DecorationAction, null), decorationActionAt(2, 20, 1, 10));
 +}
++
++pub fn decorationDoubleClick(
++    previous_window_key: anytype,
++    current_window_key: @TypeOf(previous_window_key),
++    previous_msec: u32,
++    current_msec: u32,
++    previous_x: f64,
++    previous_y: f64,
++    current_x: f64,
++    current_y: f64,
++) bool {
++    return std.meta.eql(previous_window_key, current_window_key) and
++        withinDoubleClick(previous_msec, current_msec) and
++        stayedClick(current_x, current_y, previous_x, previous_y);
++}
++
++test "decoration double click minimizes only the same window within click bounds" {
++    try std.testing.expect(decorationDoubleClick(7, 7, 10, 410, 12, 24, 16, 20));
++    try std.testing.expect(!decorationDoubleClick(7, 8, 10, 410, 12, 24, 12, 24));
++    try std.testing.expect(!decorationDoubleClick(7, 7, 10, 411, 12, 24, 12, 24));
++    try std.testing.expect(!decorationDoubleClick(7, 7, 10, 410, 12, 24, 16.01, 24));
++    try std.testing.expect(decorationDoubleClick(7, 7, 0xfffffff0, 5, 12, 24, 12, 24));
++}
++
  
  /// The layout dispatcher selects this path for every non-stacking layout.
  pub fn tiledMoveAllowed(kind: PolicyState.Kind, fixed: bool, fullscreen: bool) bool {

@@ -209,6 +209,8 @@ Ela exige as dependências locais do smoke QEMU (`qemu-system-x86_64`, `socat` e
 
 Ao sair do container, o builder encerra o servidor temporário do repositório e restaura a propriedade do host nos diretórios montados da ISO, dos pacotes, da árvore de build e das fontes de pacotes. Assim, a etapa P0 de checksum e as verificações locais pós-build conseguem gravar nos diretórios de saída.
 
+A validação local pós-build usa o commit e a árvore de fontes capturados antes de iniciar o Docker. Árvores makepkg, archives de pacotes e saídas de staging gerados são excluídos do fingerprint; alterações em fontes rastreadas ou não rastreadas continuam invalidando a validação.
+
 
 ## Sequência de aceitação
 

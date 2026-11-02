@@ -165,7 +165,7 @@ esac
 
 source_tree_sha256=
 if [[ "$build_context" == local-docker ]]; then
-  source_tree_sha256=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root")
+  source_tree_sha256=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$commit")
 fi
 require_persistent=${DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING:-false}
 [[ "$require_persistent" == true || "$require_persistent" == false ]] \
@@ -249,7 +249,7 @@ if [[ ${DINX_SKIP_POSTBUILD_CHECKS:-false} != true ]]; then
   metadata_path="$(dirname -- "$iso_path")/build-metadata.txt"
   [[ -r "$metadata_path" ]] || fail "build metadata missing: $metadata_path"
   (cd "$(dirname -- "$iso_path")" && sha512sum "$(basename -- "$iso_path")" > "$(basename -- "$iso_path").sha512")
-  "$repo_root/scripts/check_build_metadata.sh" "$metadata_path" "$iso_path"
+  DINX_EXPECTED_COMMIT="$commit" "$repo_root/scripts/check_build_metadata.sh" "$metadata_path" "$iso_path"
   "$repo_root/scripts/check-iso-content.sh" "$iso_path"
   DINX_ISO_PATH="$iso_path" "$repo_root/scripts/check_dinx_budget.sh"
   tar --format=posix --owner=0 --group=0 --numeric-owner \

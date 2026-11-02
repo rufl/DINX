@@ -630,6 +630,9 @@ grep -Fq 'vlc.desktop' <<<"$manifest" || fail 'VLC desktop entry is not in the I
 grep -Fq 'com.github.neithern.g4music.desktop' <<<"$manifest" || fail 'Gapless desktop entry is not in the ISO payload'
 grep -Fq 'galculator.desktop' <<<"$manifest" || fail 'Galculator desktop entry is not in the ISO payload'
 grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
+gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
+gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
+
 theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
@@ -778,6 +781,7 @@ for archive_mime in application/zip application/x-7z-compressed application/vnd.
 done
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
+# Empty compatibility directories are inert; reject files and symlinks under these paths.
 for forbidden_path in \
   etc/systemd \
   usr/lib/systemd \
@@ -819,7 +823,7 @@ for forbidden_path in \
   usr/share/applications/org.kde.partitionmanager.desktop \
   usr/lib/gvfs \
   usr/lib/tumbler; do
-  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$manifest"); then
+  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$manifest" | grep -v '^d'); then
     printf '%s\n' "$forbidden_matches" >&2
     fail "forbidden desktop/runtime payload is present: $forbidden_path"
   fi
@@ -857,7 +861,7 @@ for forbidden_path in \
   etc/uwsm \
   usr/share/uwsm \
   usr/bin/uwsm; do
-  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$livefs_manifest"); then
+  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$livefs_manifest" | grep -v '^d'); then
     printf '%s\n' "$forbidden_matches" >&2
     fail "forbidden livefs init payload is present: $forbidden_path"
   fi

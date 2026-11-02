@@ -8,6 +8,9 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Definir e persistir o hostname da sessão live como `dinxlive` antes de iniciar o greetd. Aplicar a marca DINX aos menus GRUB live e instalado, substituindo a marca antiga pelo novo símbolo DINX em gradiente.
 - A sessão Aqueous/Pearl agora fornece um locale de caracteres UTF-8 quando o locale herdado é ASCII, corrigindo aplicativos de terminal como `btop` sem substituir locales válidos do usuário.
 - Limpa a árvore de fontes do Dome antes de repetir uma build Zig interrompida, evitando reutilizar estado parcial de dependências; quando o build local da ISO é executado via `sudo`, restaura a propriedade dos arquivos montados ao usuário original.
+- Vincular as verificações locais de metadata pós-build ao commit e à árvore de fontes capturados antes de iniciar o Docker; excluir árvores makepkg, archives e saídas de staging gerados do fingerprint, mantendo a rejeição de alterações reais nas fontes.
+- Inicializar as configurações GTK do checker de conteúdo ISO a partir do esqueleto do usuário antes de validar os temas padrão.
+- Ignorar diretórios de compatibilidade vazios nos manifests SquashFS, mantendo a rejeição de arquivos e symlinks de desktops e init systems removidos.
 - Definido `DownloadUser = root` somente na configuração pacman temporária do `buildiso` Artix. O downloader `alpm` do pacman 7 não consegue gravar no diretório de staging do banco sync pertencente a root em uma nova rootfs basestrap; a configuração pacman do host e a imagem instalada não são alteradas.
 - Corrigida a contagem de linhas do hunk no patch de cantos arredondados Pixman do Aqueous; smoke do supervisor alinhado ao wrapper Pearl exigido.
 - Atrasa em três segundos as teclas do menu de boot no smoke QEMU VMware-SVGA e captura a tela GRUB antes delas, como no smoke VGA padrão que passou.

@@ -208,6 +208,8 @@ This needs the local QEMU smoke dependencies (`qemu-system-x86_64`, `socat`, and
 
 On container exit, the builder stops the temporary package-repository server and restores host ownership of the ISO, package, build-tree and mounted package-source directories. The P0 checksum step and local post-build checks can then write to their output directories.
 
+Local post-build validation uses the commit and source-tree baseline captured before Docker starts. Generated makepkg trees, package archives and staging outputs are excluded from the source fingerprint; changes to tracked or untracked source inputs still fail validation.
+
 
 ## Acceptance sequence
 

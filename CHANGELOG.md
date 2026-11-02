@@ -8,6 +8,9 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Set and persist the live-session hostname as `dinxlive` before greetd starts. Apply DINX branding to live and installed GRUB menus, replacing the old boot mark with the new DINX gradient mark.
 - Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
 - Remove a failed Dome build's partial source/cache before retrying, and restore bind-mounted files to the invoking user when the local ISO builder runs through sudo.
+- Pin local post-build metadata checks to the commit and source-tree baseline captured before Docker starts; exclude generated makepkg trees, package archives and staging outputs from that fingerprint while still rejecting changed source inputs.
+- Initialize the ISO content checker's GTK settings from the user skeleton before checking theme defaults.
+- Ignore empty compatibility directories in SquashFS manifests while continuing to reject files and symlinks from retired desktops and init systems.
 - Set `DownloadUser = root` only in the temporary Artix `buildiso` pacman config. Pacman 7's `alpm` downloader cannot write the root-owned sync-database staging directory in a fresh basestrap target; host pacman and the installed image remain unchanged.
 - Delay VMware-SVGA QEMU boot-menu input by three seconds and capture the pre-key GRUB screen, matching the successful default-VGA smoke.
 - Fix the hunk line count in Aqueous's Pixman rounded-corners patch; keep the session-supervisor smoke aligned with its required Pearl shell wrapper.

@@ -90,13 +90,18 @@ source_env_sha=$(sha256sum "$repo_root/distro/packages/deetty/source.env" | cut 
 compression_wrapper_sha=$(sha256sum "$repo_root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 [[ "$(read_value compression_wrapper_sha256)" == "$compression_wrapper_sha" ]] \
   || fail 'compression wrapper checksum does not match the checked-out source'
-checkout_commit=$(git -C "$repo_root" rev-parse HEAD) \
-  || fail 'checked-out commit cannot be resolved'
+expected_commit=${DINX_EXPECTED_COMMIT:-}
+if [[ -z "$expected_commit" ]]; then
+  expected_commit=$(git -C "$repo_root" rev-parse HEAD) \
+    || fail 'checked-out commit cannot be resolved'
+fi
+[[ "$expected_commit" =~ ^[0-9a-f]{40}$ ]] \
+  || fail "expected build commit is invalid: $expected_commit"
 metadata_commit=$(read_value commit)
-[[ "$metadata_commit" == "$checkout_commit" ]] \
-  || fail "metadata commit does not match checked-out source: $metadata_commit != $checkout_commit"
-if [[ -n "${GITHUB_SHA:-}" && "$GITHUB_SHA" != "$checkout_commit" && "$GITHUB_SHA" != "$(printf '%040d' 0)" ]]; then
-  fail "GITHUB_SHA does not match checked-out source: $GITHUB_SHA != $checkout_commit"
+[[ "$metadata_commit" == "$expected_commit" ]] \
+  || fail "metadata commit does not match expected build commit: $metadata_commit != $expected_commit"
+if [[ -n "${GITHUB_SHA:-}" && "$GITHUB_SHA" != "$expected_commit" && "$GITHUB_SHA" != "$(printf '%040d' 0)" ]]; then
+  fail "GITHUB_SHA does not match expected build commit: $GITHUB_SHA != $expected_commit"
 fi
 build_context=$(read_value build_context)
 [[ -n "$build_context" ]] || build_context=github-actions
@@ -107,7 +112,7 @@ case "$build_context" in
     ;;
   local-docker)
     require_value source_tree_sha256 '^[0-9a-f]{64}$'
-    actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root")
+    actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$metadata_commit")
     [[ "$(read_value source_tree_sha256)" == "$actual_source_tree_sha" ]] \
       || fail 'metadata source-tree checksum does not match the current local source'
     ;;

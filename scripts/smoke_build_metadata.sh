@@ -18,7 +18,7 @@ deetty_source_env_sha=$(sha256sum "$root/distro/packages/deetty/source.env" | cu
 compression_wrapper_sha=$(sha256sum "$root/scripts/iso-tools/mksquashfs" | cut -d ' ' -f 1)
 
 fixture_commit=$(git -C "$root" rev-parse HEAD)
-source_tree_sha=$("$root/scripts/hash-dinx-source-tree.sh" "$root")
+source_tree_sha=$("$root/scripts/hash-dinx-source-tree.sh" "$root" "$fixture_commit")
 zero_sha=0000000000000000000000000000000000000000
 cat >"$metadata" <<EOF
 schema=dinx-build-metadata/v1
@@ -68,6 +68,24 @@ verified=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$meta
 grep -Fq 'iso_binding=verified' <<<"$verified"
 unchecked=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$metadata")
 grep -Fq 'iso_binding=not-checked' <<<"$unchecked"
+snapshot_commit=1111111111111111111111111111111111111111
+[[ "$snapshot_commit" != "$fixture_commit" ]] || snapshot_commit=2222222222222222222222222222222222222222
+snapshot_metadata="$tmp_dir/snapshot-metadata.txt"
+awk -v snapshot_commit="$snapshot_commit" '
+  /^commit=/ { print "commit=" snapshot_commit; next }
+  /^build_context=/ { print "build_context=github-actions"; next }
+  /^source_tree_sha256=/ { next }
+  { print }
+' "$metadata" > "$snapshot_metadata"
+snapshot_verified=$(DINX_EXPECTED_COMMIT="$snapshot_commit" GITHUB_SHA="$snapshot_commit" \
+  "$root/scripts/check_build_metadata.sh" "$snapshot_metadata")
+grep -Fq "commit=$snapshot_commit" <<<"$snapshot_verified"
+if DINX_EXPECTED_COMMIT="$fixture_commit" GITHUB_SHA="$zero_sha" \
+  "$root/scripts/check_build_metadata.sh" "$snapshot_metadata" >/dev/null 2>&1; then
+  printf 'smoke_build_metadata: metadata for another commit unexpectedly passed\n' >&2
+  exit 1
+fi
+
 bad_metadata="$tmp_dir/bad-source-metadata.txt"
 awk -v zero_sha="$zero_sha" '
   /^source_tree_sha256=/ { sub(/=.*/, "=" zero_sha) }
@@ -83,5 +101,35 @@ if $root/scripts/check_build_metadata.sh "$metadata" "$iso" >/dev/null 2>&1; the
   printf 'smoke_build_metadata: changed ISO unexpectedly passed metadata binding\n' >&2
   exit 1
 fi
+snapshot_repo="$tmp_dir/source-snapshot"
+mkdir -p "$snapshot_repo/distro/iso" "$snapshot_repo/design/brand" \
+  "$snapshot_repo/distro/packages/fixture/src"
+git init --quiet --initial-branch=main "$snapshot_repo" >/dev/null 2>&1
+git -C "$snapshot_repo" config user.name 'DINX metadata smoke'
+git -C "$snapshot_repo" config user.email 'dinx-metadata-smoke@example.invalid'
+cp "$root/.gitignore" "$snapshot_repo/.gitignore"
+printf 'base profile\n' > "$snapshot_repo/distro/iso/profile.yaml"
+git -C "$snapshot_repo" add -- .gitignore distro/iso/profile.yaml
+git -C "$snapshot_repo" commit --quiet -m 'source baseline'
+snapshot_base=$(git -C "$snapshot_repo" rev-parse HEAD)
+printf 'updated profile\n' > "$snapshot_repo/distro/iso/profile.yaml"
+printf 'DINX mark\n' > "$snapshot_repo/design/brand/mark.svg"
+printf 'generated before build\n' > "$snapshot_repo/distro/packages/fixture/src/source.tar.gz"
+dirty_snapshot_hash=$("$root/scripts/hash-dinx-source-tree.sh" "$snapshot_repo" "$snapshot_base")
+git -C "$snapshot_repo" add -- distro/iso/profile.yaml
+git -C "$snapshot_repo" commit --quiet -m 'commit source snapshot'
+printf 'generated after clean\n' > "$snapshot_repo/distro/packages/fixture/src/source.tar.gz"
+committed_snapshot_hash=$("$root/scripts/hash-dinx-source-tree.sh" "$snapshot_repo" "$snapshot_base")
+[[ "$dirty_snapshot_hash" == "$committed_snapshot_hash" ]] || {
+  printf 'smoke_build_metadata: commit movement or package-cache cleanup changed the source snapshot\n' >&2
+  exit 1
+}
+printf 'changed DINX mark\n' > "$snapshot_repo/design/brand/mark.svg"
+changed_snapshot_hash=$("$root/scripts/hash-dinx-source-tree.sh" "$snapshot_repo" "$snapshot_base")
+[[ "$changed_snapshot_hash" != "$committed_snapshot_hash" ]] || {
+  printf 'smoke_build_metadata: changed untracked source did not change the source snapshot\n' >&2
+  exit 1
+}
 
-printf 'build_metadata_smoke binding=true local_source=true source_mismatch_rejected=true iso_mismatch_rejected=true\n'
+
+printf 'build_metadata_smoke binding=true local_source=true source_mismatch_rejected=true iso_mismatch_rejected=true expected_commit_snapshot=true source_baseline_stable=true generated_caches_ignored=true untracked_sources_bound=true\n'

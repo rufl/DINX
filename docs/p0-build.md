@@ -54,15 +54,13 @@ Pearl 0.3.0 follows its upstream `.zigversion` and is built with the exact Zig 0
 6. builds pinned DINX packages, including topgrade, paru and Shelly plus the BC250 Control Center v1.21.1 and Cyan Skillfish governor; hardware-specific packages are marked `iso:false` and remain absent from both generic rootfs profiles. It builds and installs Deetty/Dintor against the VT-only runtime before DINXPanel and the Aqueous/Pearl session packages, then packages Seafoam Settings; all DINX terminal launch paths use Deetty. The Deetty package build runs the pinned PTY/VT/session smoke markers, allocator-accounted terminal-session qualification, protocol/Unicode qualification, `scripts/deetty_p2_qualification.sh` and `scripts/dintor_p3_qualification.sh` in ReleaseSafe. The P3 matrix proves the native editor path in both packaged schemes, a real `clangd` symbol response and bounded Git status/diff markers. It uses real tmux plus a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP and the Dintor project/editor qualification.
 The product-identity patch updates the upstream task-probe and clangd LSP smokes to launch the renamed `zig-out/bin/dintor`; the package integration contract verifies neither smoke uses the old `nocted` executable path.
 
-7. runs the prerequisite probe;
+7. runs the host prerequisite probe;
 8. builds the ISO with `buildiso`;
 9. validates the root and live-session SquashFS payloads, including the rootfs Dinit log-directory tmpfiles rule and livefs-only root-remount overrides;
-10. generates a SHA-512 checksum;
-11. keeps QEMU running for a configurable boot window, captures the VGA surface and requires OCR to recognize Pearl/Aqueous/DINX rather than a greeter, login prompt or visible Dinit failure;
-12. runs disposable BIOS and UEFI disks produced from the same offline rootfs/Calamares package-removal contract, generates initramfs and the matching BIOS or UEFI GRUB path, then checks a dinit first-boot marker and recovery-TTY service;
-
-13. creates GitHub artifact attestations for the ISO and checksum;
-14. publishes the ISO, checksum, QEMU logs and PPM captures as a temporary workflow artifact.
+10. generates the SHA-512 checksum;
+11. runs `scripts/qualify-iso.sh`, shared with local builds: verifies build metadata, checksum, content and budgets, boots/captures default VGA and VMware-SVGA in QEMU, then qualifies disposable BIOS and UEFI installs through first boot and recovery TTY;
+12. creates GitHub artifact attestations for the ISO and checksum;
+13. publishes the ISO, checksum, QEMU logs and PPM captures as a temporary workflow artifact.
 
 The temporary pacman repository is signed inside the builder with an ephemeral CI key. The workflow records the package-content snapshot, repository database/key checksums and signing fingerprint in `build-metadata.txt`, then verifies all package/database signatures and archive path ownership before `buildiso` consumes the repository. This qualifies the build contract; it is not the production repository key or an installed-system update channel.
 Only the temporary Artix `buildiso` pacman config sets `DownloadUser = root`: pacman 7's `alpm` downloader cannot write the root-owned sync-database staging directory in a fresh basestrap target. This does not change the host pacman config or the installed image.
@@ -198,13 +196,30 @@ DEETTY_SOURCE_CHECKOUT=/path/to/NOCTTY bash scripts/build-iso-docker.sh
 
 The Deetty package build clears its cached source tree before applying patches. A failed build therefore cannot leave patched source that breaks the next retry.
 
-Requirements: reachable rootful Docker, `--privileged` and loop-device support, network access for package/source downloads, and sufficient free disk for the temporary rootfs and ISO. QEMU verification is optional:
+Requirements: a reachable rootful Docker Engine, `--privileged` and loop-device support, network access, and enough free disk for the temporary rootfs and ISO. The local build runs the same full qualification as P0 by default. It also requires the commands listed by `scripts/check-iso-qualification-host.sh full`, QEMU with the `vmware-svga` device, Tesseract's `eng` model, OVMF firmware, and `sudo` (or root). Check prerequisites before starting:
 
 ```sh
-DINX_LOCAL_QEMU_SMOKE=1 bash scripts/build-iso-docker.sh
+scripts/check-iso-qualification-host.sh full
 ```
 
-This needs the local QEMU smoke dependencies (`qemu-system-x86_64`, `socat`, and Tesseract). The build fails before starting if Docker cannot reach its daemon. `DINX_LOCAL_BUILD_DIR` may select a new empty output directory under `dist`; existing outputs are never overwritten.
+The local builder caches Zig toolchain archives in `dist/.cache/dinx/toolchains`; every cache hit is verified against the pinned SHA-256, and downloads are published atomically. The P0 workflow saves this archive cache only after full ISO qualification; the contracts workflow restores it read-only when available. No compiled packages or rootfs are cached.
+
+Static-only mode is explicit and **does not** qualify boot or installation:
+
+```sh
+DINX_ISO_QUALIFICATION=static bash scripts/build-iso-docker.sh
+scripts/qualify-iso.sh --static /path/to/dinx.iso
+```
+
+To rerun the same full gates on an ISO with `build-metadata.txt` beside it:
+
+```sh
+DINX_EXPECTED_COMMIT=$(git rev-parse HEAD) scripts/qualify-iso.sh /path/to/dinx.iso
+```
+
+`DINX_LOCAL_BUILD_DIR` selects a new, empty output directory under `dist`; existing results are never overwritten. `DINX_BUILD_CACHE_DIR` selects a different cache directory under `dist`.
+
+The builder emits `dinx-build-timing` per package, for ISO assembly and for total container time. Compare equivalent build logs before claiming a time reduction; the verified cache only avoids repeated downloads of already-verified archives. Local `scripts/qualify-iso.sh` also writes QEMU logs and PPM captures beside the ISO.
 
 On container exit, the builder stops the temporary package-repository server and restores host ownership of the ISO, package, build-tree and mounted package-source directories. The P0 checksum step and local post-build checks can then write to their output directories.
 

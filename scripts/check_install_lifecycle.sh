@@ -3,6 +3,7 @@ set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 smoke="$root/scripts/smoke-install.sh"
+qualifier="$root/scripts/qualify-iso.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
 release_workflow="$root/.github/workflows/release.yml"
 install_doc="$root/docs/install.md"
@@ -13,8 +14,7 @@ fail() {
   printf 'check_install_lifecycle: %s\n' "$*" >&2
   exit 1
 }
-
-for path in "$smoke" "$workflow" "$release_workflow" "$install_doc" "$roadmap" "$update_smoke"; do
+for path in "$smoke" "$qualifier" "$workflow" "$release_workflow" "$install_doc" "$roadmap" "$update_smoke"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -27,8 +27,9 @@ grep -Fq 'EFI/BOOT/grub.cfg' "$smoke" || fail 'UEFI fallback GRUB config is miss
 grep -Fq -- "-p '(hd0,gpt1)/EFI/BOOT'" "$smoke" || fail 'UEFI GRUB prefix image is missing'
 grep -Fq 'part_gpt fat ext2 normal configfile linux' "$smoke" || fail 'UEFI GRUB modules are incomplete'
 grep -Fq 'OVMF_CODE' "$smoke" || fail 'UEFI QEMU firmware path is missing'
-grep -Fq 'DINX_INSTALL_FIRMWARE=bios' "$workflow" || fail 'BIOS install smoke is not wired'
-grep -Fq 'DINX_INSTALL_FIRMWARE=uefi' "$workflow" || fail 'UEFI install smoke is not wired'
+grep -Fq 'DINX_INSTALL_FIRMWARE=bios' "$qualifier" || fail 'shared ISO qualifier omits BIOS install smoke'
+grep -Fq 'DINX_INSTALL_FIRMWARE=uefi' "$qualifier" || fail 'shared ISO qualifier omits UEFI install smoke'
+grep -Fq 'scripts/qualify-iso.sh "$DINX_ISO"' "$workflow" || fail 'P0 does not run the shared ISO qualifier'
 grep -Fq 'There is no installed-ISO upgrade or filesystem rollback procedure.' "$install_doc" || fail 'installed upgrade/filesystem rollback boundary is not documented'
 grep -Fq 'installed-ISO upgrades, filesystem rollback and data preservation remain release gates.' "$roadmap" || fail 'installed upgrade/filesystem rollback release gate is not documented'
 grep -Fq 'scripts/smoke_dinx_update.sh' "$workflow" || fail 'package update smoke is not wired'

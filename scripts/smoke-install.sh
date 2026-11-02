@@ -23,16 +23,30 @@ esac
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout; do
+for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 if [[ "$firmware_mode" == uefi ]]; then
   command -v mkfs.fat >/dev/null 2>&1 || fail 'required command not found: mkfs.fat'
+  ovmf_code=${DINX_INSTALL_OVMF_CODE:-}
+  ovmf_vars_template=${DINX_INSTALL_OVMF_VARS:-}
+  if [[ -z "$ovmf_code" ]]; then
+    for candidate in /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd; do
+      if [[ -r "$candidate" ]]; then ovmf_code=$candidate; break; fi
+    done
+  fi
+  if [[ -z "$ovmf_vars_template" ]]; then
+    for candidate in /usr/share/OVMF/OVMF_VARS_4M.fd /usr/share/OVMF/OVMF_VARS.fd; do
+      if [[ -r "$candidate" ]]; then ovmf_vars_template=$candidate; break; fi
+    done
+  fi
+  [[ -r "$ovmf_code" ]] || fail 'OVMF code firmware is missing; install OVMF or set DINX_INSTALL_OVMF_CODE'
+  [[ -r "$ovmf_vars_template" ]] || fail 'OVMF variables template is missing; install OVMF or set DINX_INSTALL_OVMF_VARS'
 fi
 
 if [[ $EUID -ne 0 ]]; then
   command -v sudo >/dev/null 2>&1 || fail 'root or passwordless sudo is required'
-  exec sudo --preserve-env=DINX_INSTALL_FIRMWARE,DINX_INSTALL_TIMEOUT,DINX_INSTALL_MEMORY,DINX_INSTALL_DISK_SIZE,DINX_INSTALL_OUTPUT_DIR \
+  exec sudo --preserve-env=DINX_INSTALL_FIRMWARE,DINX_INSTALL_TIMEOUT,DINX_INSTALL_MEMORY,DINX_INSTALL_DISK_SIZE,DINX_INSTALL_OUTPUT_DIR,DINX_INSTALL_OVMF_CODE,DINX_INSTALL_OVMF_VARS \
     "$0" "$@"
 fi
 
@@ -62,9 +76,16 @@ mounted_dev=false
 mounted_proc=false
 mounted_sys=false
 mounted_run=false
+qemu_pid=
+monitor_dir=
 
 cleanup() {
   set +e
+  if [[ -n "$qemu_pid" ]]; then
+    kill "$qemu_pid" 2>/dev/null || true
+    wait "$qemu_pid" 2>/dev/null || true
+  fi
+  if [[ -n "$monitor_dir" ]]; then rm -rf "$monitor_dir"; fi
   if [[ "$mounted_run" == true ]]; then umount -R "$target_dir/run" 2>/dev/null || umount "$target_dir/run" 2>/dev/null || true; fi
   if [[ "$mounted_sys" == true ]]; then umount -R "$target_dir/sys" 2>/dev/null || umount "$target_dir/sys" 2>/dev/null || true; fi
   if [[ "$mounted_proc" == true ]]; then umount -R "$target_dir/proc" 2>/dev/null || umount "$target_dir/proc" 2>/dev/null || true; fi
@@ -396,8 +417,10 @@ if [[ "$monitor_ready" == true ]]; then
 fi
 wait "$qemu_pid"
 qemu_status=$?
+qemu_pid=
 set -e
 rm -rf "$monitor_dir"
+monitor_dir=
 [[ "$qemu_status" -eq 124 ]] || {
   [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
   fail "installed disk QEMU exited before the ${timeout_seconds}s boot window (status $qemu_status)"

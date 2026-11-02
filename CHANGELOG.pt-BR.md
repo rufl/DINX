@@ -4,6 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Unificada a qualificação completa da ISO entre build local e CI P0: metadados, checksum, payload e limites; capturas QEMU VGA e VMware-SVGA; e smokes de instalação descartável BIOS/UEFI. A qualificação local completa é o padrão; o modo estático explícito não conta como evidência de boot. O cache contém apenas archives Zig verificados por SHA-256 e registra tempos por pacote, montagem e container; não se afirma redução total do build sem execuções comparáveis. Documentados os limites de evidência no VirtualBox e em hardware físico.
 - Removido o override global `GTK_THEME` do tema DINX e definido o Adwaita como padrão GTK3/GTK4 e do modo GTK do Pearl, sem sobrepor as escolhas de tema Material do Pearl.
 - Definir e persistir o hostname da sessão live como `dinxlive` antes de iniciar o greetd. Aplicar a marca DINX aos menus GRUB live e instalado, substituindo a marca antiga pelo novo símbolo DINX em gradiente.
 - Declarar `local.target` e `artix-live` como dependências Dinit separadas do autologin live, para que ambos sejam resolvidos em vez de serem interpretados como um único serviço inexistente.

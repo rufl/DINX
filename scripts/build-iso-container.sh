@@ -4,14 +4,16 @@ set -euo pipefail
 host_uid=${DINX_HOST_UID:-}
 host_gid=${DINX_HOST_GID:-}
 repo_pid=
+builder_started=$SECONDS
 finish() {
   local status=$?
+  local elapsed=$((SECONDS - builder_started))
   trap - EXIT
   if [[ -n "$repo_pid" ]]; then
     kill "$repo_pid" 2>/dev/null || true
   fi
   if [[ "$host_uid" =~ ^[0-9]+$ && "$host_gid" =~ ^[0-9]+$ ]]; then
-    for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso /workspace/distro/packages; do
+    for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso /var/cache/dinx /workspace/distro/packages; do
       [[ -n "$path" && -e "$path" ]] || continue
       if ! chown -R -- "$host_uid:$host_gid" "$path"; then
         printf 'build-iso-container: failed to restore ownership of %s\n' "$path" >&2
@@ -19,6 +21,7 @@ finish() {
       fi
     done
   fi
+  printf 'dinx-build-timing phase=container-total elapsed_seconds=%s exit_status=%s\n' "$elapsed" "$status"
   exit "$status"
 }
 trap finish EXIT
@@ -163,13 +166,17 @@ trap finish EXIT
               zig_version=0.17.0
               zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
               zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
-              curl --fail --silent --show-error --location --retry 3 \
-                --output "/tmp/$zig_archive" \
-                "https://ziglang.org/download/${zig_version}/${zig_archive}"
-              actual_zig_sha=$(sha256sum "/tmp/$zig_archive" | cut -d " " -f 1)
+              toolchain_cache="${DINX_BUILD_CACHE_DIR:-/var/cache/dinx}/toolchains"
+              mkdir -p "$toolchain_cache"
+              zig_archive_path="$toolchain_cache/$zig_archive"
+              scripts/cache-verified-download.sh \
+                "$zig_archive_path" \
+                "https://ziglang.org/download/${zig_version}/${zig_archive}" \
+                "$zig_sha256"
+              actual_zig_sha=$(sha256sum "$zig_archive_path" | cut -d " " -f 1)
               printf "zig_sha256=%s\n" "$actual_zig_sha"
               test "$actual_zig_sha" = "$zig_sha256"
-              tar -xJf "/tmp/$zig_archive" --directory /tmp
+              tar -xJf "$zig_archive_path" --directory /tmp
               export PATH="/tmp/zig-x86_64-linux-${zig_version}:$PATH"
               actual_zig_version=$(zig version)
               printf "zig_version=%s\n" "$actual_zig_version"
@@ -179,13 +186,15 @@ trap finish EXIT
               : "${PEARL_ZIG_SOURCE_URL:?PEARL_ZIG_SOURCE_URL is missing}"
               : "${PEARL_ZIG_SOURCE_SHA256:?PEARL_ZIG_SOURCE_SHA256 is missing}"
               pearl_zig_archive="zig-x86_64-linux-${PEARL_ZIG_VERSION}.tar.xz"
-              curl --fail --silent --show-error --location --retry 3 \
-                --output "/tmp/$pearl_zig_archive" \
-                "$PEARL_ZIG_SOURCE_URL"
-              actual_pearl_zig_sha=$(sha256sum "/tmp/$pearl_zig_archive" | cut -d " " -f 1)
+              pearl_zig_archive_path="$toolchain_cache/$pearl_zig_archive"
+              scripts/cache-verified-download.sh \
+                "$pearl_zig_archive_path" \
+                "$PEARL_ZIG_SOURCE_URL" \
+                "$PEARL_ZIG_SOURCE_SHA256"
+              actual_pearl_zig_sha=$(sha256sum "$pearl_zig_archive_path" | cut -d " " -f 1)
               printf "pearl_zig_sha256=%s\n" "$actual_pearl_zig_sha"
               test "$actual_pearl_zig_sha" = "$PEARL_ZIG_SOURCE_SHA256"
-              tar -xJf "/tmp/$pearl_zig_archive" --directory /tmp
+              tar -xJf "$pearl_zig_archive_path" --directory /tmp
 
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_dinx_theme.sh
@@ -251,6 +260,8 @@ trap finish EXIT
               build_package() {
                 local package_name="$1"
                 local package_dir="/workspace/distro/packages/$package_name"
+                local package_started=$SECONDS
+                local status
                 local -a extra_env=()
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 case "$package_name" in
@@ -274,14 +285,22 @@ trap finish EXIT
                 elif [[ "$package_name" == pori || "$package_name" == aqueous ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")
                 fi
-                (
+                if (
                   cd "$package_dir"
                   runuser -u dinxbuild -- env "${extra_env[@]}" \
                     MAKEPKG_CONF="$makepkg_conf" \
                     GNUPGHOME="$signing_home" \
                     makepkg "${makepkg_options[@]}" \
                     --sign --key "$signing_key"
-                )
+                ); then
+                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0\n' \
+                    "$package_name" "$((SECONDS - package_started))"
+                else
+                  status=$?
+                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=%s\n' \
+                    "$package_name" "$((SECONDS - package_started))" "$status"
+                  return "$status"
+                fi
               }
               build_package ghostty-vt-runtime
               ghostty_vt_package=$(find "$package_repo" -maxdepth 1 -type f -name 'ghostty-vt-runtime-*.pkg.tar.zst' -print -quit)
@@ -435,8 +454,16 @@ trap finish EXIT
               mksquashfs_path=$(command -v mksquashfs)
               test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs
               printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$mksquashfs_path" "$DINX_MKSQUASHFS_REAL"
-              scripts/check-iso-host.sh
-              scripts/build-iso.sh
+              iso_assembly_started=$SECONDS
+              if scripts/build-iso.sh; then
+                printf 'dinx-build-timing phase=iso-assembly elapsed_seconds=%s exit_status=0\n' \
+                  "$((SECONDS - iso_assembly_started))"
+              else
+                status=$?
+                printf 'dinx-build-timing phase=iso-assembly elapsed_seconds=%s exit_status=%s\n' \
+                  "$((SECONDS - iso_assembly_started))" "$status"
+                exit "$status"
+              fi
               metadata_path="$DINX_ISO_OUTPUT/dinx/build-metadata.txt"
               mkdir -p "$(dirname "$metadata_path")"
               iso_path=$(find "$DINX_ISO_OUTPUT" -type f -name "*.iso" -print -quit)

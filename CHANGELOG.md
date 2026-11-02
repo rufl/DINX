@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Use one full ISO qualifier for local builds and P0 CI: metadata, checksum, payload and budget checks; VGA and VMware-SVGA QEMU captures; and disposable BIOS/UEFI install smokes. Full local qualification runs by default; an explicit static-only mode does not count as boot evidence. Cache only SHA-256-verified Zig archives and report per-package/assembly/container timing; no total build-time reduction is claimed without comparable runs. Document the VirtualBox and physical-hardware evidence boundary.
 - Stop forcing the custom DINX GTK theme through `GTK_THEME`; use Adwaita as the GTK3/GTK4 and Pearl GTK-mode default so application and Pearl Material theme choices are not overridden.
 - Set and persist the live-session hostname as `dinxlive` before greetd starts. Apply DINX branding to live and installed GRUB menus, replacing the old boot mark with the new DINX gradient mark.
 - Declare `local.target` and `artix-live` as separate Dinit dependencies for live autologin, so both services resolve instead of being parsed as one missing service.

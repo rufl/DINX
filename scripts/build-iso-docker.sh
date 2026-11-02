@@ -26,12 +26,13 @@ Options are controlled through environment variables:
   DINX_LOCAL_BUILD_DIR       Choose an output directory under checkout dist/.
   DINX_ISO_OUTPUT            Override the ISO output directory under dist/.
   DINX_PACKAGE_OUTPUT        Override package directory under dist/ (must end in /packages).
+  DINX_BUILD_CACHE_DIR       Reuse SHA-verified toolchain archives under dist/.
   DINX_ARTIX_IMAGE           Override the digest-pinned Artix builder image.
   DINX_ISO_CHROOTS           Use a chroot directory outside the checkout or under dist/.
   DINX_KEEP_CHROOTS=1        Keep the temporary chroot after a successful build.
-  DINX_LOCAL_QEMU_SMOKE=1    Also boot and capture the ISO with scripts/smoke-iso.sh.
+  DINX_ISO_QUALIFICATION     Run full qualification (default) or static checks only.
   DINX_SKIP_CONTRACTS=1      Skip local static/fixture contracts.
-  DEETTY_SOURCE_CHECKOUT   Local checkout of the pinned public NOCTTY source.
+  DEETTY_SOURCE_CHECKOUT     Local checkout of the pinned public NOCTTY source.
 USAGE
 }
 
@@ -40,6 +41,11 @@ if [[ ${1:-} == --help || ${1:-} == -h ]]; then
   exit 0
 fi
 [[ $# -eq 0 ]] || fail 'unknown argument; use --help'
+qualification_mode=${DINX_ISO_QUALIFICATION:-full}
+case "$qualification_mode" in
+  full|static) ;;
+  *) fail 'DINX_ISO_QUALIFICATION must be full or static' ;;
+esac
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "required host command not found: $1"
@@ -85,6 +91,9 @@ if [[ -z "$build_context" ]]; then
 fi
 [[ "$build_context" == local-docker || "$build_context" == github-actions ]] \
   || fail 'DINX_BUILD_CONTEXT must be local-docker or github-actions'
+if [[ "$build_context" == local-docker ]]; then
+  "$repo_root/scripts/check-iso-qualification-host.sh" "$qualification_mode"
+fi
 
 resolve_repo_path() {
   local path=$1
@@ -124,6 +133,11 @@ if [[ "$build_context" == local-docker ]]; then
 fi
 iso_output_container=$(container_path "$iso_output_host")
 package_output_container=$(container_path "$package_output_host")
+cache_host=$(resolve_repo_path "${DINX_BUILD_CACHE_DIR:-$repo_root/dist/.cache/dinx}")
+case "$cache_host" in
+  "$repo_root"/dist/*) ;;
+  *) fail "toolchain cache must be under $repo_root/dist: $cache_host" ;;
+esac
 case "$package_output_host" in
   */packages) ;;
   *) fail 'DINX_PACKAGE_OUTPUT must end in /packages so the repository bundle has the expected layout' ;;
@@ -142,7 +156,7 @@ require_empty_output "$iso_output_host"
 require_empty_output "$package_output_host"
 [[ ! -e "$package_bundle_host" ]] \
   || fail "package bundle already exists; choose a fresh build directory: $package_bundle_host"
-mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")"
+mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" "$cache_host/toolchains"
 
 source_env="$repo_root/distro/packages/deetty/source.env"
 version=$(awk -F= '$1 == "DEETTY_VERSION" { print $2; exit }' "$source_env")
@@ -223,6 +237,7 @@ else
 fi
 docker run --rm --privileged \
   --volume "$repo_root:/workspace" \
+  --volume "$cache_host:/var/cache/dinx" \
   --volume "$chroots_dir:/var/lib/artools/buildiso" \
   --workdir /workspace \
   --env DINX_ISO_OUTPUT="$iso_output_container" \
@@ -248,29 +263,11 @@ if [[ ${DINX_SKIP_POSTBUILD_CHECKS:-false} != true ]]; then
   iso_path=${iso_paths[0]}
   metadata_path="$(dirname -- "$iso_path")/build-metadata.txt"
   [[ -r "$metadata_path" ]] || fail "build metadata missing: $metadata_path"
-  (cd "$(dirname -- "$iso_path")" && sha512sum "$(basename -- "$iso_path")" > "$(basename -- "$iso_path").sha512")
-  DINX_EXPECTED_COMMIT="$commit" "$repo_root/scripts/check_build_metadata.sh" "$metadata_path" "$iso_path"
-  "$repo_root/scripts/check-iso-content.sh" "$iso_path"
-  DINX_ISO_PATH="$iso_path" "$repo_root/scripts/check_dinx_budget.sh"
-  tar --format=posix --owner=0 --group=0 --numeric-owner \
-    --directory "$(dirname -- "$package_output_host")" \
-    --create --file "$package_bundle_host" packages
-  [[ -s "$package_bundle_host" ]] || fail 'signed package repository bundle is empty'
-  case ${DINX_LOCAL_QEMU_SMOKE:-false} in
-    true|1)
-      DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-90} \
-      DINX_QEMU_BOOT_KEYS=${DINX_QEMU_BOOT_KEYS:-down,down,ret} \
-      DINX_QEMU_BOOT_SCREENSHOT=${DINX_QEMU_BOOT_SCREENSHOT:-$build_root/dinx-boot-screen.ppm} \
-      DINX_QEMU_BOOT_SCREENSHOT_DELAY=${DINX_QEMU_BOOT_SCREENSHOT_DELAY:-3} \
-      DINX_QEMU_SCREENSHOT=${DINX_QEMU_SCREENSHOT:-$build_root/dinx-graphical-screen.ppm} \
-      DINX_QEMU_SCREENSHOT_DELAY=${DINX_QEMU_SCREENSHOT_DELAY:-60} \
-      DINX_QEMU_POST_SCREENSHOT=${DINX_QEMU_POST_SCREENSHOT:-$build_root/dinx-session-screen.ppm} \
-      DINX_QEMU_POST_SCREENSHOT_DELAY=${DINX_QEMU_POST_SCREENSHOT_DELAY:-10} \
-        "$repo_root/scripts/smoke-iso.sh" "$iso_path"
-      ;;
-    false|0) ;;
-    *) fail 'DINX_LOCAL_QEMU_SMOKE must be true/false or 1/0' ;;
-  esac
+  qualification_args=("$iso_path")
+  if [[ "$qualification_mode" == static ]]; then
+    qualification_args=(--static "$iso_path")
+  fi
+  DINX_EXPECTED_COMMIT="$commit" "$repo_root/scripts/qualify-iso.sh" "${qualification_args[@]}"
   printf '\nDINX local ISO: %s\nSHA-512: %s\nBuild metadata: %s\nSigned package repository: %s (ephemeral key)\n' \
     "$iso_path" "$(cut -d ' ' -f 1 "$(dirname -- "$iso_path")/$(basename -- "$iso_path").sha512")" \
     "$metadata_path" "$package_bundle_host"

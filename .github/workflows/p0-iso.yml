@@ -27,6 +27,7 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/build-iso-container.sh"
+      - "scripts/cache-verified-download.sh"
       - "scripts/iso-tools/mksquashfs"
       - "scripts/check_dinx_compression.sh"
       - "scripts/check_wizp_package.sh"
@@ -50,6 +51,10 @@ on:
       - "scripts/check_dinx_qemu_session.sh"
       - "scripts/smoke-install.sh"
       - "scripts/check_calamares_partitioning.sh"
+      - "scripts/qualify-iso.sh"
+      - "scripts/check-iso-qualification-host.sh"
+      - "scripts/smoke_cache_verified_download.sh"
+      - "scripts/check_install_lifecycle.sh"
       - "scripts/smoke_calamares_partitioning.sh"
       - "scripts/smoke_calamares_startup.sh"
       - "scripts/smoke_calamares_windows.sh"
@@ -109,6 +114,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Prepare verified toolchain cache
+        run: mkdir -p dist/.cache/dinx/toolchains
+      - name: Restore verified toolchain archives
+        id: toolchain-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.2.0
+        with:
+          path: dist/.cache/dinx/toolchains
+          key: dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/p0-iso.yml', 'scripts/build-iso-container.sh', 'scripts/cache-verified-download.sh', 'distro/packages/pearl/source.env') }}
+          restore-keys: |
+            dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-
       - name: Read pinned Deetty/Dintor source revision
         id: deetty-source
         run: |
@@ -152,16 +167,15 @@ jobs:
           zig_version=0.17.0
           zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
           zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
-          curl --fail --silent --show-error --location --retry 3 \
-            --output "$RUNNER_TEMP/$zig_archive" \
-            "https://ziglang.org/download/${zig_version}/${zig_archive}"
-          printf '%s  %s\n' "$zig_sha256" "$RUNNER_TEMP/$zig_archive" \
-            | sha256sum --check --status -
-          tar -xJf "$RUNNER_TEMP/$zig_archive" --directory "$RUNNER_TEMP"
+          zig_archive_path="$GITHUB_WORKSPACE/dist/.cache/dinx/toolchains/$zig_archive"
+          scripts/cache-verified-download.sh \
+            "$zig_archive_path" \
+            "https://ziglang.org/download/${zig_version}/${zig_archive}" \
+            "$zig_sha256"
+          tar -xJf "$zig_archive_path" --directory "$RUNNER_TEMP"
           zig_bin="$RUNNER_TEMP/zig-x86_64-linux-${zig_version}/zig"
           test "$("$zig_bin" version)" = "$zig_version"
           echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
-
       - name: Verify Aqueous/Pearl direct dinit session contract
         run: ./scripts/check_aqueous_pearl.sh
       - name: Verify wdisplays to Shikane persistence contract
@@ -219,6 +233,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+      - name: Verify full ISO qualification prerequisites
+        run: scripts/check-iso-qualification-host.sh full
       - name: Smoke-test Calamares partition transaction
         run: sudo ./scripts/smoke_calamares_partitioning.sh
       - name: Smoke-test Windows side-by-side and manual partition transactions
@@ -233,6 +249,7 @@ jobs:
           DINX_BUILD_CONTEXT: github-actions
           DINX_SKIP_CONTRACTS: 'true'
           DINX_SKIP_POSTBUILD_CHECKS: 'true'
+          DINX_BUILD_CACHE_DIR: ${{ github.workspace }}/dist/.cache/dinx
         run: scripts/build-iso-docker.sh
 
       - name: Generate checksum and locate ISO
@@ -259,51 +276,18 @@ jobs:
             packages
           test -s dist/dinx-package-repository.tar
 
-      - name: Smoke-test build metadata artifact binding
-        run: ./scripts/smoke_build_metadata.sh
-      - name: Verify build metadata
+      - name: Qualify built ISO with shared local/CI gates
         env:
-          GITHUB_SHA: ${{ github.sha }}
-        run: ./scripts/check_build_metadata.sh "${{ steps.artifact.outputs.metadata_path }}" "${{ steps.artifact.outputs.iso_path }}"
-      - name: Verify built ISO and boot-window budgets
-        env:
-          DINX_ISO_PATH: ${{ env.DINX_ISO }}
+          DINX_EXPECTED_COMMIT: ${{ github.sha }}
           DINX_QEMU_TIMEOUT: 90
-        run: ./scripts/check_dinx_budget.sh
-
-      - name: Verify boot initramfs and graphical ISO payload
-        run: scripts/check-iso-content.sh "$DINX_ISO"
-
-      - name: Boot smoke test and graphical capture
-        env:
-          DINX_QEMU_TIMEOUT: 90
-          DINX_QEMU_SCREENSHOT: dist/iso/dinx/dinx-graphical-screen.ppm
-          DINX_QEMU_BOOT_SCREENSHOT: dist/iso/dinx/dinx-boot-screen.ppm
-          DINX_QEMU_BOOT_SCREENSHOT_DELAY: 3
-          DINX_QEMU_SCREENSHOT_DELAY: 60
-          DINX_QEMU_BOOT_KEYS: down,down,ret
-          DINX_QEMU_POST_SCREENSHOT: dist/iso/dinx/dinx-session-screen.ppm
-          DINX_QEMU_POST_SCREENSHOT_DELAY: 10
-        run: scripts/smoke-iso.sh "$DINX_ISO"
-      - name: Boot smoke with VMware SVGA graphics
-        env:
-          DINX_QEMU_TIMEOUT: 90
-          DINX_QEMU_VIDEO_DEVICE: vmware-svga
-          DINX_QEMU_LOG: dist/iso/dinx/dinx-vmware-svga.qemu.log
-          DINX_QEMU_BOOT_SCREENSHOT: dist/iso/dinx/dinx-vmware-svga-boot-screen.ppm
-          DINX_QEMU_BOOT_SCREENSHOT_DELAY: 3
-          DINX_QEMU_SCREENSHOT: dist/iso/dinx/dinx-vmware-svga-session.ppm
-          DINX_QEMU_SCREENSHOT_DELAY: 60
-          DINX_QEMU_BOOT_KEYS: down,down,ret
-        run: scripts/smoke-iso.sh "$DINX_ISO"
-
-      - name: Smoke-test persistent BIOS and UEFI installs and recovery TTY
-        env:
-          DINX_INSTALL_OUTPUT_DIR: dist/iso/dinx
           DINX_INSTALL_TIMEOUT: 180
-        run: |
-          DINX_INSTALL_FIRMWARE=bios scripts/smoke-install.sh "$DINX_ISO"
-          DINX_INSTALL_FIRMWARE=uefi scripts/smoke-install.sh "$DINX_ISO"
+        run: scripts/qualify-iso.sh "$DINX_ISO"
+      - name: Save verified toolchain archives
+        if: success() && steps.toolchain-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.2.0
+        with:
+          path: dist/.cache/dinx/toolchains
+          key: dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/p0-iso.yml', 'scripts/build-iso-container.sh', 'scripts/cache-verified-download.sh', 'distro/packages/pearl/source.env') }}
 
       - name: Attest ISO, package repository and checksum provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -313,11 +297,11 @@ jobs:
             ${{ steps.artifact.outputs.iso_path }}.sha512
             ${{ steps.artifact.outputs.metadata_path }}
             dist/dinx-package-repository.tar
-      - name: Upload alpha workflow artifact
+      - name: Upload P0 qualification diagnostics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: dinx-foundation-iso-${{ github.sha }}
+          name: dinx-p0-${{ job.status }}-${{ github.sha }}
           if-no-files-found: warn
           retention-days: 7
           path: |

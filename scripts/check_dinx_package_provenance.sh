@@ -83,12 +83,17 @@ for required in \
   'scripts/check_dinx_feature_groups.sh' \
   'scripts/check_dinx_package_repository.sh' \
   'scripts/smoke_dinx_update.sh' \
+  'scripts/cache-verified-download.sh' \
+  'scripts/qualify-iso.sh' \
+  'scripts/check-iso-qualification-host.sh' \
+  'scripts/smoke_cache_verified_download.sh' \
   'DINX_PACKAGE_SIGNING_KEY' \
   'DINX_PACKAGE_SIGNING_FINGERPRINT' \
   'DINX_BUILD_CONTEXT: github-actions' \
   'DINX_SKIP_CONTRACTS: '\''true'\''' \
   'DINX_SKIP_POSTBUILD_CHECKS: '\''true'\''' \
   'run: scripts/build-iso-docker.sh' \
+  'run: scripts/qualify-iso.sh "$DINX_ISO"' \
   'run: ./scripts/check_first_party_apps.sh' \
   'ref: ${{ steps.deetty-source.outputs.ref }}' \
   'token: ${{ github.token }}' \
@@ -111,6 +116,8 @@ for required in \
 done
 grep -Fq 'secrets: inherit' "$release_workflow" \
   || fail 'release workflow does not pass package-signing secrets to P0'
+grep -Fq 'name: dinx-p0-success-${{ github.sha }}' "$release_workflow" \
+  || fail 'release workflow does not consume the successful P0 qualification artifact'
 if grep -Fq 'DEETTY_SOURCE_READ_TOKEN' "$workflow" "$contracts_workflow"; then
   fail 'public NOCTTY source checkout unexpectedly requires an Actions secret'
 fi

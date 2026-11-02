@@ -267,8 +267,9 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$greeter_wrapper
   || fail 'Pearl Greeter does not apply the shared renderer policy'
 grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' "$greeter_wrapper" \
   || fail 'Pearl Greeter wrapper does not execute the packaged host'
-grep -Fq 'DINX_QEMU_VIDEO_DEVICE: vmware-svga' "$workflow" \
-  || fail 'P0 does not boot the ISO with a VMware SVGA device'
+qualifier="$root/scripts/qualify-iso.sh"
+grep -Fq 'DINX_QEMU_VIDEO_DEVICE=vmware-svga' "$qualifier" \
+  || fail 'shared ISO qualifier does not boot with VMware SVGA'
 grep -Fq 'virtio_gpu)' "$graphics_helper" \
   || fail 'QEMU virtio-gpu render-node driver is not detected'
 grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \

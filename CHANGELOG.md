@@ -6,6 +6,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 - Stop forcing the custom DINX GTK theme through `GTK_THEME`; use Adwaita as the GTK3/GTK4 and Pearl GTK-mode default so application and Pearl Material theme choices are not overridden.
 - Set and persist the live-session hostname as `dinxlive` before greetd starts. Apply DINX branding to live and installed GRUB menus, replacing the old boot mark with the new DINX gradient mark.
+- Declare `local.target` and `artix-live` as separate Dinit dependencies for live autologin, so both services resolve instead of being parsed as one missing service.
 - Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
 - Remove a failed Dome build's partial source/cache before retrying, and restore bind-mounted files to the invoking user when the local ISO builder runs through sudo.
 - Pin local post-build metadata checks to the commit and source-tree baseline captured before Docker starts; exclude generated makepkg trees, package archives and staging outputs from that fingerprint while still rejecting changed source inputs.

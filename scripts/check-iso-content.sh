@@ -91,6 +91,12 @@ grep -Fq 'user = "dinx"' <<<"$live_autologin" \
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'command = /usr/local/libexec/dinx-live-autologin' <<<"$live_autologin_service" \
   || fail 'livefs autologin service command is incorrect'
+grep -Fqx 'depends-on = local.target' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service does not depend on local.target'
+grep -Fqx 'depends-on = artix-live' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service does not depend on artix-live'
+! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service combines dependencies into one unresolved service name'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
 grep -Fq 'command         = /usr/bin/greetd' <<<"$root_greetd_service" \
   || fail 'installed greetd service command is incorrect'

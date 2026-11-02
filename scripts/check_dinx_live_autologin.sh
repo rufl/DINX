@@ -70,8 +70,12 @@ hostname_setup_line=$(grep -nF "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wra
 autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -f1)
 ((hostname_setup_line < autologin_gate_line)) \
   || fail 'hostname setup is incorrectly gated on autologin'
-grep -Fq 'depends-on = local.target artix-live' "$service" \
-  || fail 'live hostname service does not depend on the artix-live setup'
+grep -Fqx 'depends-on = local.target' "$service" \
+  || fail 'live hostname service does not depend on local.target'
+grep -Fqx 'depends-on = artix-live' "$service" \
+  || fail 'live hostname service does not depend on artix-live'
+! grep -Fqx 'depends-on = local.target artix-live' "$service" \
+  || fail 'live hostname service combines dependencies into one unresolved service name'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'
 ! grep -Fq 'greetd.service' "$pkgbuild" \

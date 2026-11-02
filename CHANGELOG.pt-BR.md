@@ -6,6 +6,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Removido o override global `GTK_THEME` do tema DINX e definido o Adwaita como padrão GTK3/GTK4 e do modo GTK do Pearl, sem sobrepor as escolhas de tema Material do Pearl.
 - Definir e persistir o hostname da sessão live como `dinxlive` antes de iniciar o greetd. Aplicar a marca DINX aos menus GRUB live e instalado, substituindo a marca antiga pelo novo símbolo DINX em gradiente.
+- Declarar `local.target` e `artix-live` como dependências Dinit separadas do autologin live, para que ambos sejam resolvidos em vez de serem interpretados como um único serviço inexistente.
 - A sessão Aqueous/Pearl agora fornece um locale de caracteres UTF-8 quando o locale herdado é ASCII, corrigindo aplicativos de terminal como `btop` sem substituir locales válidos do usuário.
 - Limpa a árvore de fontes do Dome antes de repetir uma build Zig interrompida, evitando reutilizar estado parcial de dependências; quando o build local da ISO é executado via `sudo`, restaura a propriedade dos arquivos montados ao usuário original.
 - Vincular as verificações locais de metadata pós-build ao commit e à árvore de fontes capturados antes de iniciar o Docker; excluir árvores makepkg, archives e saídas de staging gerados do fingerprint, mantendo a rejeição de alterações reais nas fontes.

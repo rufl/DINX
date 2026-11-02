@@ -257,6 +257,10 @@ trap finish EXIT
                   dinitui|dinxpanel|seafoam-settings)
                     # These packages build directly from checked-in source trees.
                     ;;
+                  dome)
+                    # A failed Zig build can leave partial dependency state in $srcdir.
+                    makepkg_options+=(--clean --cleanbuild)
+                    ;;
                   *)
                     makepkg_options+=(--clean)
                     ;;
@@ -378,10 +382,13 @@ trap finish EXIT
               test -n "$pacman_conf"
               printf "\n[dinx]\nSigLevel = Required\nServer = http://127.0.0.1:8765\n" \
                 >> "$pacman_conf"
+              # Pacman 7's alpm downloader cannot write basestrap's root-owned alternate-root sync DB.
               pacman_options_tmp="$pacman_conf.dinx"
               awk '
+                /^[[:space:]]*DownloadUser[[:space:]]*=/ { next }
                 /^\[options\][[:space:]]*$/ && !injected {
                   print
+                  print "DownloadUser = root"
                   print "NoExtract = usr/lib/systemd"
                   print "NoExtract = usr/lib/systemd/*"
                   print "NoExtract = etc/systemd"
@@ -401,6 +408,8 @@ trap finish EXIT
                 }
               ' "$pacman_conf" > "$pacman_options_tmp"
               mv -- "$pacman_options_tmp" "$pacman_conf"
+              [[ $(grep -Ec '^[[:space:]]*DownloadUser[[:space:]]*=' "$pacman_conf") -eq 1 ]]
+              grep -Fqx 'DownloadUser = root' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/lib/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = etc/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/share/uwsm/*' "$pacman_conf"

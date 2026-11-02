@@ -19,9 +19,6 @@ end
 if not set -q DINTOR_THEME
     set -gx DINTOR_THEME prefer-dark
 end
-if not set -q GTK_THEME
-    set -gx GTK_THEME DINX:dark
-end
 if not set -q QT_QPA_PLATFORMTHEME
     set -gx QT_QPA_PLATFORMTHEME qt6ct
 end

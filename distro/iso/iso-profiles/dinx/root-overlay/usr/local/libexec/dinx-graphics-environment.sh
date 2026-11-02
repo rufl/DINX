@@ -6,11 +6,11 @@ dinx_apply_graphics_environment() {
   case "${1:-}" in
     cpu)
       export WLR_RENDERER=pixman
-      export GSK_RENDERER=cairo
+      unset GSK_RENDERER
       ;;
     virtual-gl)
       export WLR_RENDERER=gles2
-      export GSK_RENDERER=gl
+      unset GSK_RENDERER
       ;;
     hardware)
       ;;

@@ -79,8 +79,8 @@ check_renderers() {
   }
 }
 
-check_renderers cpu pixman,cairo
-check_renderers virtual-gl gles2,gl
+check_renderers cpu pixman,unset
+check_renderers virtual-gl gles2,unset
 hardware_renderers=$(WLR_RENDERER=custom GSK_RENDERER=custom bash -c '
   . "$1"
   dinx_apply_graphics_environment hardware
@@ -95,6 +95,6 @@ if dinx_apply_graphics_environment unknown >/dev/null 2>&1; then
   exit 1
 fi
 
-printf 'dinx_graphics_profile_contract vmsvga_pixman=true qemu_virgl_gles=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true\n'
+printf 'dinx_graphics_profile_contract vmsvga_pixman=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true\n'
 
 

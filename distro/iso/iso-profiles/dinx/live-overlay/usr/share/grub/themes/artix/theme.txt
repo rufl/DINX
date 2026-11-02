@@ -1,0 +1,36 @@
+# DINX GRUB theme override.
+# DINX boot mark; fonts remain bundled with the theme.
+# The menu textures remain disabled so the boot surface has no opaque panel.
+
+message-font: "u_vga16 16"
+message-color: "#d7dde8"
+message-bg-color: "#0b0d12"
+terminal-font: "u_vga16 16"
+desktop-color: "#0b0d12"
+title-text: ""
+
++ boot_menu {
+    left = 15%
+    top = 30%
+    width = 75%
+    height = 45%
+    item_font = "u_vga16 16"
+    item_color = "#d7dde8"
+    selected_item_font = "u_vga16 16"
+    selected_item_color = "#8fb8ff"
+    icon_height = 28
+    icon_width = 28
+    item_height = 32
+    item_padding = 4
+    item_icon_space = 32
+    item_spacing = 0
+    scrollbar = false
+}
+
++ image {
+    left = 1%
+    top = 1%
+    width = 20%
+    height = 20%
+    file = "logo.png"
+}

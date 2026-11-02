@@ -136,6 +136,8 @@ for required in \
   'NoExtract = etc/systemd/*' \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
   'NoExtract = usr/share/uwsm/*' \
+  'DownloadUser = root' \
+  '^[[:space:]]*DownloadUser[[:space:]]*=' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'local -a makepkg_options=(--nodeps --nocheck --noconfirm)' \
   'dinitui|dinxpanel|seafoam-settings)' \

@@ -214,8 +214,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-host_uid=$(id -u)
-host_gid=$(id -g)
+if [[ ${SUDO_UID:-} =~ ^[0-9]+$ && ${SUDO_GID:-} =~ ^[0-9]+$ ]]; then
+  host_uid=$SUDO_UID
+  host_gid=$SUDO_GID
+else
+  host_uid=$(id -u)
+  host_gid=$(id -g)
+fi
 docker run --rm --privileged \
   --volume "$repo_root:/workspace" \
   --volume "$chroots_dir:/var/lib/artools/buildiso" \

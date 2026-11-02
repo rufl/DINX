@@ -1,5 +1,5 @@
 # DINX GRUB theme override.
-# The DINX D-ray replaces Artix's logo; its font assets remain in use.
+# DINX boot mark; fonts remain bundled with the theme.
 # The menu textures remain disabled so the boot surface has no opaque panel.
 
 message-font: "u_vga16 16"

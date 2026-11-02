@@ -1,13 +1,13 @@
 pkgname=dinx-live-autologin
 pkgver=0.1.0
-pkgrel=7
+pkgrel=9
 pkgdesc='DINX live-session autologin and overlay boot dinit configuration'
 arch=('any')
 url='https://github.com/rufl/DINX'
 license=('Apache-2.0')
 depends=('dinit' 'greetd')
 source=('dinx-live-autologin' 'dinx-live-autologin.service' 'root-ro' 'early-root-rw.target')
-sha256sums=('00837f7bb5bf83d614851a4fb1001a4a42ad939b8cff8291d8b1b936b1b97a80' '8e25d6956bafb4cfc88741cae6154a225c3c11e558ef50425704b69eedc6daf4' '4630703466183f02395a93fbfc56845f8d443f21ce3a0eac9a85280bf077ac00' 'd6984b967ccc73b1736eaf9325429e19ea3f5a72cfb337d5ab7956eae3d6fa9d')
+sha256sums=('141c0434f16a9026c957d30343d8d1480ddad60ec99c6f81de2e22ec3ae18c35' '00f167fd24a03bdf3bfc57a088f6188c2b02a64a7046efac1495aee4b7bed1ad' '4630703466183f02395a93fbfc56845f8d443f21ce3a0eac9a85280bf077ac00' 'd6984b967ccc73b1736eaf9325429e19ea3f5a72cfb337d5ab7956eae3d6fa9d')
 
 package() {
   install -Dm755 "$srcdir/dinx-live-autologin" \

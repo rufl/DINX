@@ -1,0 +1,14 @@
+<!-- SPDX-FileCopyrightText: 2026 DINX Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">DINX boot mark</title>
+  <desc id="desc">A rounded DINX D mark with a lightning bolt, in a coral-to-magenta gradient.</desc>
+  <defs>
+    <linearGradient id="dinx-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5a50"/>
+      <stop offset="1" stop-color="#f20a54"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#dinx-gradient)" fill-rule="evenodd" d="M120 58 C91 49 61 68 54 98 C51 105 50 113 50 122 V390 C50 433 88 462 130 450 L344 388 C416 367 462 315 462 256 C462 197 416 145 344 124 Z M132 145 L132 363 L322 307 C355 297 378 280 378 256 C378 232 355 215 322 205 Z"/>
+  <path fill="url(#dinx-gradient)" d="M291 204 L224 263 H268 L211 326 L307 246 H267 L318 213 Z"/>
+</svg>

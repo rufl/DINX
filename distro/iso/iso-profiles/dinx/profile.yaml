@@ -1,6 +1,7 @@
 ---
 live-session:
   user: dinx
+  hostname: dinxlive
   password: dinx
   autologin: true
   use-xlibre: false

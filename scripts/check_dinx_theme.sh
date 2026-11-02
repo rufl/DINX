@@ -8,6 +8,10 @@ profile_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.
 pearl_greeter="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.json"
 pearl_pkg="$repo_root/distro/packages/pearl/PKGBUILD"
 grub="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/theme.txt"
+grub_defaults="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/grub.d/10-dinx-branding.cfg"
+live_grub="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/themes/artix/theme.txt"
+live_grub_defaults="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/etc/default/grub"
+live_grub_logo="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/themes/artix/logo.png"
 calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/stylesheet.qss"
 calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
@@ -21,6 +25,7 @@ calamares_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/cal
 calamares_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx-ray-mark.svg"
 pearl_preferences="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/pearl/preferences.json"
 grub_logo="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/logo.png"
+boot_mark_source="$repo_root/design/brand/dinx-boot-mark.svg"
 dinitui_source="$repo_root/distro/packages/dinitui/src/main.zig"
 dinxpanel_source="$repo_root/distro/packages/dinxpanel/src/main.zig"
 seafoam_settings_source="$repo_root/distro/packages/seafoam-settings/src/main.zig"
@@ -43,11 +48,14 @@ fail() {
 }
 
 for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg" \
-  "$grub" "$grub_logo" "$calamares" "$calamares_branding" "$calamares_wordmark" \
+  "$grub" "$grub_defaults" "$grub_logo" "$boot_mark_source" "$calamares" "$calamares_branding" "$calamares_wordmark" \
   "$calamares_ray" "$brand_wordmark" "$brand_ray" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
+  [[ -r "$path" ]] || fail "missing file: $path"
+done
+for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 
@@ -83,7 +91,7 @@ for mode in ("dark", "light"):
 PY
 
 python - "$repo_root" "$brand_ray_source" "$pearl_greeter" "$pearl_preferences" "$brand_wordmark" "$brand_ray" \
-  "$calamares_wordmark" "$calamares_ray" "$grub_logo" "$fastfetch_logo" <<'PY'
+  "$calamares_wordmark" "$calamares_ray" "$grub_logo" "$fastfetch_logo" "$boot_mark_source" <<'PY'
 import json
 import pathlib
 import struct
@@ -91,9 +99,17 @@ import sys
 import xml.etree.ElementTree as ET
 
 (root, ray_source_path, greeter_path, prefs_path, wordmark_path, ray_path,
- cal_wordmark_path, cal_ray_path, grub_logo_path, fastfetch_logo_path) = map(pathlib.Path, sys.argv[1:])
+ cal_wordmark_path, cal_ray_path, grub_logo_path, fastfetch_logo_path, boot_mark_path) = map(pathlib.Path, sys.argv[1:])
 brand = root / "design/brand/dinx-wordmark-compact.svg"
 ns = "{http://www.w3.org/2000/svg}"
+boot_mark = ET.parse(boot_mark_path).getroot()
+assert boot_mark.tag == f"{ns}svg", "DINX boot mark source is not SVG"
+assert boot_mark.attrib.get("viewBox") == "0 0 512 512", "DINX boot mark has unexpected dimensions"
+boot_title = boot_mark.find(f"{ns}title")
+assert boot_title is not None and boot_title.text == "DINX boot mark", "DINX boot mark source title is missing"
+assert boot_mark.find(f".//{ns}linearGradient") is not None, "DINX boot mark gradient is missing"
+assert len(boot_mark.findall(f".//{ns}path")) == 2, "DINX boot mark paths are incomplete"
+assert not boot_mark.findall(f".//{ns}rect"), "DINX boot mark paints an opaque background"
 accent = "#F4515B"
 stroke = {
     "fill": "none",
@@ -156,7 +172,7 @@ def png_info(path):
     width, height = struct.unpack(">II", data[16:24])
     return width, height, data[25]
 
-assert png_info(grub_logo_path) == (512, 512, 6), "GRUB D-ray logo must be 512x512 RGBA"
+assert png_info(grub_logo_path) == (512, 512, 6), "GRUB DINX boot mark must be 512x512 RGBA"
 PY
 
 
@@ -242,7 +258,7 @@ for group, expected_roles in (
             raise SystemExit(f"{group} maps {role} to {colors[index]}, expected {expected}")
 PY
 grep -Fq '"theme": "gtk"' "$pearl_greeter" || fail 'Pearl Greeter does not use the GTK theme bridge'
-grep -Fq '"gtk_theme": "DINX"' "$pearl_greeter" || fail 'Pearl Greeter does not use the DINX GTK theme'
+grep -Fq '"gtk_theme": "Adwaita"' "$pearl_greeter" || fail 'Pearl Greeter does not use the GTK Adwaita theme'
 grep -Fq '"wallpaper_color": "#0b0d12"' "$pearl_greeter" || fail 'Pearl Greeter surface color is missing'
 grep -Fq '"font_size": 16' "$pearl_greeter" || fail 'Pearl Greeter font size is missing'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' "$pearl_greeter" \
@@ -255,6 +271,21 @@ fi
 grep -Fq '"mode": "solid"' "$pearl_preferences" || fail 'Fresh Pearl preferences enable an image wallpaper'
 grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences retain an image wallpaper path'
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
+grep -Fq '"gtk_name": "Adwaita"' "$pearl_preferences" || fail 'Fresh Pearl preferences do not use the GTK Adwaita theme'
+grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'
+grep -Fq 'GRUB_THEME="/usr/share/grub/themes/artix/theme.txt"' "$grub_defaults" || fail 'GRUB does not activate the DINX theme'
+if grep -Eiq 'artix' "$grub"; then
+  fail 'DINX GRUB theme retains Artix branding'
+fi
+grep -Fq 'file = "logo.png"' "$live_grub" || fail 'live ISO GRUB theme does not display the DINX logo'
+grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$live_grub_defaults" || fail 'live ISO GRUB distributor is not DINX'
+grep -Fq 'GRUB_THEME="/usr/share/grub/themes/artix/theme.txt"' "$live_grub_defaults" \
+  || fail 'live ISO GRUB does not activate the DINX theme'
+if grep -Eiq 'artix' "$live_grub"; then
+  fail 'live ISO DINX GRUB theme retains Artix branding'
+fi
+cmp -s "$grub" "$live_grub" || fail 'live ISO and installed GRUB themes diverge'
+cmp -s "$grub_logo" "$live_grub_logo" || fail 'live ISO and installed DINX boot marks differ'
 grep -Fq 'productIcon: "dinx-ray-mark.svg"' "$calamares_branding" || fail 'Calamares icon does not use the DINX D-ray mark'
 grep -Fq 'productLogo: "dinx.svg"' "$calamares_branding" || fail 'Calamares logo does not use the DINX Linux wordmark'
 grep -Fq 'productWelcome: "dinx.svg"' "$calamares_branding" || fail 'Calamares welcome does not use the DINX Linux wordmark'
@@ -266,12 +297,14 @@ grep -Fq 'pearl-greeter-host' "$pearl_pkg" || fail 'Pearl Greeter host is not pa
 grep -Fq 'rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"' "$pearl_pkg" \
   || fail 'Pearl upstream lifecycle payloads are not removed'
 for gtk_settings in "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4"; do
-  grep -Fq 'gtk-theme-name=DINX' "$gtk_settings" || fail "GTK settings omit DINX theme: $gtk_settings"
+  grep -Fq 'gtk-theme-name=Adwaita' "$gtk_settings" || fail "GTK settings omit the Adwaita theme: $gtk_settings"
   grep -Fq 'gtk-icon-theme-name=Adwaita' "$gtk_settings" || fail "GTK settings override upstream icons: $gtk_settings"
   grep -Fq 'gtk-font-name=Noto Sans 10' "$gtk_settings" || fail "GTK settings omit Noto Sans 10: $gtk_settings"
   grep -Fq 'gtk-application-prefer-dark-theme=1' "$gtk_settings" || fail "GTK settings omit dark preference: $gtk_settings"
 done
-grep -Fq 'export GTK_THEME="DINX:dark"' "$session_wrapper" || fail 'Aqueous session does not force the DINX dark GTK variant'
+if grep -Eq 'GTK_THEME=' "$session_wrapper" "$profile_shell"; then
+  fail 'DINX session overrides the GTK theme selected by applications'
+fi
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'Aqueous session does not force Qt6ct for GUI apps'
 grep -Fq 'qt6ct/qt6ct.conf' "$session_wrapper" || fail 'Aqueous session does not seed the Qt6ct config for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' "$session_wrapper" || fail 'Aqueous session does not seed the DINX Qt palette for existing users'
@@ -340,4 +373,4 @@ grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' "$swayimg" || fail 'Swayimg surface color is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' "$swayimg" || fail 'Swayimg font contract is missing'
 grep -Fq 'swayimg.text.size = 10' "$swayimg" || fail 'Swayimg text size does not match Noto Sans 10'
-printf 'dinx_theme_contract palette=true static=true typography=true states=true gtk=true gtk_system=true qt=true qt_palette=true qt_session_seed=true swayimg=true pearl_greeter=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true desktop_icons_upstream=true\n'
+printf 'dinx_theme_contract palette=true static=true typography=true states=true gtk=true gtk_system=true qt=true qt_palette=true qt_session_seed=true swayimg=true pearl_greeter=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true desktop_icons_upstream=true boot_mark=true\n'

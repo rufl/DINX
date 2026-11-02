@@ -15,6 +15,7 @@ post_screenshot_path=${DINX_QEMU_POST_SCREENSHOT:-}
 post_screenshot_delay=${DINX_QEMU_POST_SCREENSHOT_DELAY:-10}
 post_keys=${DINX_QEMU_POST_KEYS:-}
 qemu_display=${DINX_QEMU_DISPLAY:-none}
+ocr_language=${DINX_QEMU_OCR_LANG:-eng}
 qemu_video_device=${DINX_QEMU_VIDEO_DEVICE:-}
 
 fail() {
@@ -33,6 +34,15 @@ command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not foun
 command -v timeout >/dev/null 2>&1 || fail "required command not found: timeout"
 command -v socat >/dev/null 2>&1 || fail "required command not found: socat"
 command -v tesseract >/dev/null 2>&1 || fail "required command not found: tesseract (install tesseract-ocr and tesseract-ocr-eng)"
+command -v python3 >/dev/null 2>&1 || fail 'required command not found: python3'
+[[ "$ocr_language" =~ ^[[:alnum:]_+-]+$ ]] || fail 'DINX_QEMU_OCR_LANG contains unsupported characters'
+ocr_languages=$(tesseract --list-langs 2>&1) \
+  || fail 'Tesseract could not list installed language data'
+IFS='+' read -r -a requested_ocr_languages <<< "$ocr_language"
+for language in "${requested_ocr_languages[@]}"; do
+  grep -Fqx "$language" <<< "$ocr_languages" \
+    || fail "Tesseract language data '$language' is missing; install tesseract-ocr-eng or set DINX_QEMU_OCR_LANG to an installed model"
+done
 (( screenshot_delay < timeout_seconds )) || fail 'DINX_QEMU_SCREENSHOT_DELAY must be shorter than DINX_QEMU_TIMEOUT'
 
 if [[ -z "$log_path" ]]; then
@@ -86,6 +96,7 @@ if [[ -n "$qemu_video_device" ]]; then
   video_args=( -vga none -device "$qemu_video_device" )
 fi
 
+qemu_pid=
 monitor_dir=$(mktemp -d)
 monitor_path="$monitor_dir/qemu.monitor"
 monitor_args=( -monitor "unix:$monitor_path,server=on,wait=off" )
@@ -103,6 +114,10 @@ fi
 mkdir -p "$(dirname "$session_screenshot_path")"
 
 cleanup() {
+  if [[ -n "$qemu_pid" ]]; then
+    kill "$qemu_pid" 2>/dev/null || true
+    wait "$qemu_pid" 2>/dev/null || true
+  fi
   if [[ -n "$monitor_dir" ]]; then
     rm -rf "$monitor_dir"
   fi
@@ -184,6 +199,7 @@ fi
 
 wait "$qemu_pid"
 status=$?
+qemu_pid=
 set -e
 
 if [[ "$status" -ne 124 ]]; then

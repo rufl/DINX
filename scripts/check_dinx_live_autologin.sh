@@ -11,6 +11,7 @@ root_ro="$package_dir/root-ro"
 root_rw="$package_dir/early-root-rw.target"
 pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
+live_overlay="$root/distro/iso/iso-profiles/dinx/live-overlay"
 service="$package_dir/dinx-live-autologin.service"
 workflow="$root/.github/workflows/p0-iso.yml"
 builder="$root/scripts/build-iso-container.sh"
@@ -20,13 +21,17 @@ fail() {
   exit 1
 }
 
-for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow"; do
+for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow" \
+  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
 bash -n "$wrapper" || fail 'live autologin wrapper has invalid shell syntax'
 grep -Fq '  autologin: true' "$profile" || fail 'live-session autologin is not enabled'
 
+grep -Fq '  hostname: dinxlive' "$profile" || fail 'live-session profile hostname is not dinxlive'
+grep -Fqx 'dinxlive' "$live_overlay/etc/hostname" \
+  || fail 'live overlay hostname file is not dinxlive'
 livefs_packages=$(awk '
   /^livefs:/{in_live=1; next}
   in_live && /^  packages:/{in_packages=1; next}
@@ -58,7 +63,19 @@ grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
   || fail 'live user is missing DRM render-node access'
 grep -Fq 'getent group render' "$wrapper" \
   || fail 'live autologin does not guard render-group enrollment'
-grep -Fq 'after = artix-live' "$service" || fail 'live autologin service ordering is incomplete'
+grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" \
+  || fail 'live wrapper does not persist the dinxlive hostname'
+grep -Fq 'hostname dinxlive' "$wrapper" || fail 'live wrapper does not set the active dinxlive hostname'
+hostname_setup_line=$(grep -nF "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" | cut -d: -f1)
+autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -f1)
+((hostname_setup_line < autologin_gate_line)) \
+  || fail 'hostname setup is incorrectly gated on autologin'
+grep -Fqx 'depends-on = local.target' "$service" \
+  || fail 'live hostname service does not depend on local.target'
+grep -Fqx 'depends-on = artix-live' "$service" \
+  || fail 'live hostname service does not depend on artix-live'
+! grep -Fqx 'depends-on = local.target artix-live' "$service" \
+  || fail 'live hostname service combines dependencies into one unresolved service name'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'
 ! grep -Fq 'greetd.service' "$pkgbuild" \

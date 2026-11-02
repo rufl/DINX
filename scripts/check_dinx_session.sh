@@ -116,7 +116,7 @@ fi
 jq -e '
   .version == 1
   and .theme == "gtk"
-  and .gtk_theme == "DINX"
+  and .gtk_theme == "Adwaita"
   and .default_session == "wayland:dinx-aqueous-pearl.desktop"
   and .force_session == "wayland:dinx-aqueous-pearl.desktop"
   and .allow == ["wayland:dinx-aqueous-pearl.desktop"]
@@ -171,14 +171,10 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper
   || fail 'Aqueous wrapper does not apply the selected renderer policy'
 grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
   || fail 'Aqueous VM renderer policy does not use GLES2'
-grep -Fq 'export GSK_RENDERER=gl' "$graphics_environment" \
-  || fail 'GTK4 VM renderer policy does not use GL'
-grep -Fq 'export WLR_RENDERER=pixman' "$graphics_environment" \
-  || fail 'Aqueous CPU fallback policy does not use Pixman'
-grep -Fq 'export GSK_RENDERER=cairo' "$graphics_environment" \
-  || fail 'GTK4 CPU fallback policy is missing'
-[[ $(grep -Fc 'export GSK_RENDERER=cairo' "$graphics_environment") -eq 1 ]] \
-  || fail 'GTK4 Cairo fallback is duplicated or overrides the hardware path'
+grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
+  || fail 'GTK4 VM renderer selection is not left automatic'
+[[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 2 ]] \
+  || fail 'GTK4 renderer selection is not automatic for virtual GL and CPU profiles'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not launch the selected compositor'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
@@ -186,8 +182,11 @@ if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrappe
 fi
 grep -Fq 'xdg-user-dirs-update' "$aqueous_wrapper" \
   || fail 'Aqueous session does not initialize XDG user directories'
-grep -Fq 'export GTK_THEME="DINX:dark"' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not force the DINX dark GTK theme'
+if grep -Eq 'GTK_THEME=|set -gx GTK_THEME' "$aqueous_wrapper" \
+  "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh" \
+  "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"; then
+  fail 'DINX session forces a GTK theme and overrides application preferences'
+fi
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$aqueous_wrapper" \
   || fail 'Aqueous session does not force the Qt6ct platform theme'
 grep -Fq 'default = "stacking"' "$aqueous_layout" \

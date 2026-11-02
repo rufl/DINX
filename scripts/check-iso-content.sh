@@ -17,7 +17,7 @@ iso_path=${1:-}
 [[ -n "$iso_path" ]] || fail "usage: $0 ISO"
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
 
-for command in mktemp rm xorriso unsquashfs bsdtar grep; do
+for command in mktemp rm xorriso unsquashfs bsdtar grep cmp; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -91,6 +91,12 @@ grep -Fq 'user = "dinx"' <<<"$live_autologin" \
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'command = /usr/local/libexec/dinx-live-autologin' <<<"$live_autologin_service" \
   || fail 'livefs autologin service command is incorrect'
+grep -Fqx 'depends-on = local.target' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service does not depend on local.target'
+grep -Fqx 'depends-on = artix-live' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service does not depend on artix-live'
+! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
+  || fail 'livefs autologin service combines dependencies into one unresolved service name'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
 grep -Fq 'command         = /usr/bin/greetd' <<<"$root_greetd_service" \
   || fail 'installed greetd service command is incorrect'
@@ -454,7 +460,7 @@ if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
 fi
 pearl_greeter_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/pearl/greeter.json)
 grep -Fq '"theme": "gtk"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter GTK theme is not enabled'
-grep -Fq '"gtk_theme": "DINX"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter DINX theme is not enabled'
+grep -Fq '"gtk_theme": "Adwaita"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter Adwaita theme is not enabled'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
 if grep -Eq '"(wallpaper|wallpaper_fit|logo)"[[:space:]]*:' <<<"$pearl_greeter_config"; then
@@ -514,9 +520,10 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$aqueous_laun
 aqueous_graphics_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-profile)
 graphics_environment=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-environment.sh)
 grep -Fq 'export WLR_RENDERER=gles2' <<<"$graphics_environment" || fail 'DINX QEMU renderer policy is not set to GLES2'
-grep -Fq 'export GSK_RENDERER=gl' <<<"$graphics_environment" || fail 'DINX GTK4 QEMU renderer policy is not set to GL'
 grep -Fq 'export WLR_RENDERER=pixman' <<<"$graphics_environment" || fail 'DINX CPU compatibility renderer policy is missing'
-grep -Fq 'export GSK_RENDERER=cairo' <<<"$graphics_environment" || fail 'DINX GTK4 Cairo fallback policy is missing'
+grep -Fq 'unset GSK_RENDERER' <<<"$graphics_environment" || fail 'DINX virtual graphics profiles do not leave GTK4 renderer selection automatic'
+[[ $(grep -Fc 'unset GSK_RENDERER' <<<"$graphics_environment") -eq 2 ]] \
+  || fail 'DINX GTK4 renderer selection is not automatic for both virtualized profiles'
 greeter_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-pearl-greeter-host)
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not detect the graphics profile'
 grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not load the shared renderer policy'
@@ -564,6 +571,51 @@ fi
 grep -Fq 'desktop-color: "#0b0d12"' <<<"$grub_theme" || fail 'DINX GRUB background color is missing'
 grep -Fq 'selected_item_color = "#8fb8ff"' <<<"$grub_theme" || fail 'DINX GRUB accent color is missing'
 grep -Fq 'file = "logo.png"' <<<"$grub_theme" || fail 'GRUB theme does not display its DINX logo'
+grub_defaults=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/default/grub.d/10-dinx-branding.cfg)
+grep -Fq 'GRUB_DISTRIBUTOR="DINX"' <<<"$grub_defaults" || fail 'GRUB menu distributor is not DINX'
+grep -Fq 'GRUB_THEME="/usr/share/grub/themes/artix/theme.txt"' <<<"$grub_defaults" || fail 'GRUB does not activate the DINX theme'
+if grep -Eiq 'artix' <<<"$grub_theme"; then
+  fail 'DINX GRUB theme retains Artix branding'
+fi
+live_grub_defaults=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/default/grub)
+grep -Fq 'GRUB_DISTRIBUTOR="DINX"' <<<"$live_grub_defaults" \
+  || fail 'live ISO GRUB distributor is not DINX'
+grep -Fq 'GRUB_THEME="/usr/share/grub/themes/artix/theme.txt"' <<<"$live_grub_defaults" \
+  || fail 'live ISO GRUB does not select the DINX theme'
+live_grub_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/share/grub/themes/artix/theme.txt)
+grep -Fq 'DINX GRUB theme override.' <<<"$live_grub_theme" \
+  || fail 'live ISO GRUB theme override is missing'
+if grep -Eiq 'artix' <<<"$live_grub_theme"; then
+  fail 'live ISO GRUB theme retains Artix branding'
+fi
+
+xorriso -osirrox on \
+  -indev "$iso_path" \
+  -extract /boot/grub/themes/artix/theme.txt "$tmp_dir/iso-grub-theme.txt" \
+  -extract /boot/grub/themes/artix/logo.png "$tmp_dir/iso-grub-logo.png" \
+  >/dev/null
+[[ -s "$tmp_dir/iso-grub-theme.txt" && -s "$tmp_dir/iso-grub-logo.png" ]] \
+  || fail 'built ISO omits its DINX GRUB theme or boot mark'
+grep -Fq 'DINX GRUB theme override.' "$tmp_dir/iso-grub-theme.txt" \
+  || fail 'built ISO GRUB theme is not DINX-branded'
+if grep -Eiq 'artix' "$tmp_dir/iso-grub-theme.txt"; then
+  fail 'built ISO GRUB theme retains Artix branding'
+fi
+unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/share/grub/themes/artix/theme.txt \
+  > "$tmp_dir/livefs-grub-theme.txt"
+cmp -s "$tmp_dir/livefs-grub-theme.txt" "$tmp_dir/iso-grub-theme.txt" \
+  || fail 'ISO boot GRUB theme differs from the DINX livefs theme'
+
+
+unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/grub/themes/artix/logo.png \
+  > "$tmp_dir/rootfs-grub-logo.png"
+unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/share/grub/themes/artix/logo.png \
+  > "$tmp_dir/livefs-grub-logo.png"
+cmp -s "$tmp_dir/rootfs-grub-logo.png" "$tmp_dir/livefs-grub-logo.png" \
+  || fail 'livefs GRUB logo differs from the installed DINX boot mark'
+cmp -s "$tmp_dir/rootfs-grub-logo.png" "$tmp_dir/iso-grub-logo.png" \
+  || fail 'ISO boot GRUB logo differs from the DINX boot mark'
+
 
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)
 grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general section is missing'
@@ -584,13 +636,16 @@ grep -Fq 'vlc.desktop' <<<"$manifest" || fail 'VLC desktop entry is not in the I
 grep -Fq 'com.github.neithern.g4music.desktop' <<<"$manifest" || fail 'Gapless desktop entry is not in the ISO payload'
 grep -Fq 'galculator.desktop' <<<"$manifest" || fail 'Galculator desktop entry is not in the ISO payload'
 grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
+gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
+gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
+
 theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
-gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
+grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Adwaita'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 desktop icons do not retain Adwaita'
-gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
+grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Adwaita'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 desktop icons do not retain Adwaita'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
@@ -638,11 +693,11 @@ gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" 
 grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dark bridge is missing'
 
 gtk3_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-3.0/settings.ini)
-grep -Fq 'gtk-theme-name=DINX' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is missing'
+grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Adwaita'
 grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 desktop icons do not retain Adwaita'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk3_system_settings" || fail 'System GTK3 dark preference is missing'
 gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-4.0/settings.ini)
-grep -Fq 'gtk-theme-name=DINX' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is missing'
+grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Adwaita'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
 grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 desktop icons do not retain Adwaita'
 aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
@@ -659,7 +714,9 @@ grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgra
 
 aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
-grep -Fq 'export GTK_THEME="DINX:dark"' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force DINX dark GTK theme'
+if grep -Eq 'GTK_THEME=' <<<"$aqueous_wrapper"; then
+  fail 'Live GUI session overrides the selected GTK theme'
+fi
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force Qt6ct'
 grep -Fq 'pearl/preferences.json' <<<"$aqueous_wrapper" \
   || fail 'Aqueous session does not seed Pearl preferences for missing files'
@@ -730,6 +787,7 @@ for archive_mime in application/zip application/x-7z-compressed application/vnd.
 done
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
+# Empty compatibility directories are inert; reject files and symlinks under these paths.
 for forbidden_path in \
   etc/systemd \
   usr/lib/systemd \
@@ -771,7 +829,7 @@ for forbidden_path in \
   usr/share/applications/org.kde.partitionmanager.desktop \
   usr/lib/gvfs \
   usr/lib/tumbler; do
-  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$manifest"); then
+  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$manifest" | grep -v '^d'); then
     printf '%s\n' "$forbidden_matches" >&2
     fail "forbidden desktop/runtime payload is present: $forbidden_path"
   fi
@@ -809,7 +867,7 @@ for forbidden_path in \
   etc/uwsm \
   usr/share/uwsm \
   usr/bin/uwsm; do
-  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$livefs_manifest"); then
+  if forbidden_matches=$(grep -F "/$forbidden_path" <<<"$livefs_manifest" | grep -v '^d'); then
     printf '%s\n' "$forbidden_matches" >&2
     fail "forbidden livefs init payload is present: $forbidden_path"
   fi
@@ -956,6 +1014,8 @@ grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Din
 
 livefs_required_paths=(
   etc/artools/live.conf
+  etc/default/grub
+  etc/hostname
   etc/dinit.d/boot.d/NetworkManager
   etc/dinit.d/boot.d/artix-live
   etc/dinit.d/boot.d/dinx-live-autologin
@@ -964,11 +1024,16 @@ livefs_required_paths=(
   etc/dinit.d/boot.d/metalog
   etc/dinit.d/boot.d/pacman-init
   etc/dinit.d/boot.d/userspawn
+  usr/share/grub/themes/artix/theme.txt
+  usr/share/grub/themes/artix/logo.png
 )
 
 for path in "${livefs_required_paths[@]}"; do
   grep -Fq "/$path" <<<"$livefs_manifest" || fail "missing livefs path: $path"
 done
+live_hostname=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/hostname)
+grep -Fqx 'dinxlive' <<<"$live_hostname" || fail 'livefs hostname is not dinxlive'
+
 
 live_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/artools/live.conf)
 grep -Fq 'AUTOLOGIN=true' <<<"$live_config" || fail 'live session autologin is not enabled'
@@ -977,6 +1042,10 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 live_autologin_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
 grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologin initial session is missing'
 grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin command is incorrect'
+grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" <<<"$live_autologin_wrapper" \
+  || fail 'live autologin does not persist hostname dinxlive'
+grep -Fq 'hostname dinxlive' <<<"$live_autologin_wrapper" \
+  || fail 'live autologin does not set the active hostname to dinxlive'
 grep -Fq 'user = "dinx"' <<<"$live_autologin_wrapper" || fail 'live autologin user is incorrect'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'before = login.target' <<<"$live_autologin_service" || fail 'live autologin service does not precede the login target'
@@ -985,4 +1054,4 @@ grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: DINX wordmark/D-ray branding is present in GRUB and Calamares; Pearl uses a solid greeter/desktop surface without a logo wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'
+printf 'ISO content check passed: DINX wordmark/boot-mark branding is present in the live and installed GRUB themes and Calamares; Pearl uses a solid greeter/desktop surface without a logo wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'

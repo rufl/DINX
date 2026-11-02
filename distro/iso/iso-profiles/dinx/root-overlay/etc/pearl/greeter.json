@@ -1,7 +1,7 @@
 {
   "version": 1,
   "theme": "gtk",
-  "gtk_theme": "DINX",
+  "gtk_theme": "Adwaita",
   "wallpaper_color": "#0b0d12",
   "font_size": 16,
   "reduced_motion": true,

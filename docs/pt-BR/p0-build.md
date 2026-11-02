@@ -55,16 +55,16 @@ O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do pe
 O Pearl 0.3.0 segue o `.zigversion` upstream e é compilado com o archive exato do Zig 0.16.0 verificado pelo workflow; os pacotes Zig nativos da DINX continuam no toolchain Zig 0.17.0 verificado.
 6. compila os pacotes DINX fixados, incluindo topgrade, paru e Shelly, além do BC250 Control Center v1.21.1 e do governor Cyan Skillfish; os pacotes específicos de hardware têm `iso:false` e ficam fora dos dois rootfs genéricos. Compila e instala Deetty/Dintor com o runtime somente VT antes da DINXPanel e dos pacotes de sessão Aqueous/Pearl; depois compila o Seafoam Settings. Todos os caminhos DINX de execução de terminal usam Deetty. O build do pacote Deetty executa os marcadores de smoke PTY/VT/sessão fixados, a qualificação com contabilização do allocator, compatibilidade de protocolo/Unicode, `scripts/deetty_p2_qualification.sh` e `scripts/dintor_p3_qualification.sh` em ReleaseSafe. A matriz P3 comprova o caminho nativo do editor nos dois esquemas empacotados, uma resposta real de símbolo do `clangd` e marcadores limitados de status/diff do Git. Usa tmux real com shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local e a qualificação de projeto/editor do Dintor.
 O patch de identidade atualiza os smokes upstream de tarefas e LSP do `clangd` para executar o binário renomeado `zig-out/bin/dintor`; o contrato de integração verifica que nenhum dos dois smokes usa o caminho antigo do executável `nocted`.
-7. executa o probe de pré-requisitos;
+7. executa o probe de pré-requisitos do host;
 8. constrói a ISO com `buildiso`;
 9. valida os payloads SquashFS do root e da sessão live, incluindo a regra tmpfiles dos logs Dinit no rootfs e as substituições de remontagem da raiz exclusivas do livefs;
-10. gera checksum SHA-512;
-11. mantém o QEMU executando por uma janela de boot configurável, captura a superfície VGA e exige que o OCR reconheça Pearl/Aqueous/DINX em vez do greeter, do prompt de login ou de uma falha visível do Dinit;
-12. tenta inicializar discos BIOS e UEFI descartáveis produzidos a partir do mesmo contrato offline de rootfs/remoção do Calamares, gera initramfs e o caminho GRUB BIOS ou UEFI correspondente e verifica um marcador de primeiro boot dinit e o serviço de TTY de recuperação;
-13. cria atestações de artefato do GitHub para a ISO e o checksum;
-14. publica a ISO, checksum, logs QEMU e capturas PPM como artefato temporário do workflow.
+10. gera o checksum SHA-512;
+11. executa `scripts/qualify-iso.sh`, compartilhado com o build local: verifica metadados, checksum, conteúdo e limites; inicializa/captura VGA padrão e VMware-SVGA no QEMU; depois qualifica instalações descartáveis BIOS e UEFI, primeiro boot e TTY de recuperação;
+12. cria atestações de artefato GitHub para a ISO e o checksum;
+13. publica ISO, checksum, logs QEMU e capturas PPM como artefato temporário do workflow.
 
 O repositório pacman temporário é assinado dentro do builder com uma chave CI efêmera. O workflow registra o snapshot do conteúdo dos pacotes, os checksums do banco/chave do repositório e o fingerprint da assinatura em `build-metadata.txt`, depois verifica todas as assinaturas e os caminhos duplicados dos archives antes de o `buildiso` consumir o repositório. Isso qualifica o contrato do build; não é a chave do repositório de produção nem um canal de atualização do sistema instalado.
+Apenas a configuração pacman temporária do `buildiso` Artix define `DownloadUser = root`: o downloader `alpm` do pacman 7 não consegue gravar no diretório de staging do banco sync pertencente a root em uma nova rootfs basestrap. Isso não altera a configuração pacman do host nem a imagem instalada.
 As instalações locais com `pacman -U` tentam até três vezes e atualizam os bancos do repositório entre as tentativas; uma falha na atualização encerra a transação. `makepkg --clean` é omitido somente para DinitUI, DINXPanel e Seafoam Settings, pois essas receitas compilam a partir de árvores `src/` versionadas. `scripts/smoke_pacman_local_install.sh` cobre sucesso inicial, recuperação, falha após as tentativas e falha na atualização do banco.
 O builder agora valida o ambiente da imagem fixada antes do `docker run` e novamente dentro do container, portanto a geração dos metadados não prossegue com a identidade da imagem ausente.
 O wrapper de compactação da ISO impõe o preset xz suportado pela ferramenta com BCJ x86, blocos de 256 KiB e dicionário de 256 KiB, além de excluir fontes do kernel, caches de pacotes pacman e logs de build. O workflow registra o schema de compactação e o checksum do wrapper em `build-metadata.txt`; `check_build_metadata.sh` os vincula ao wrapper versionado. As ferramentas SquashFS exclusivas do build ficam no builder e não são copiadas para o payload de runtime.
@@ -97,9 +97,9 @@ A smoke QEMU captura um PPM VGA pós-boot e o verifica com Tesseract: o quadro p
 
 Releases por tag reutilizam o mesmo artefato de build por meio de `.github/workflows/release.yml`. O job de release publica a ISO ou partes ordenadas abaixo de 2 GiB, o SHA-512 completo, as evidências do QEMU Linux e um pacote launcher Windows pequeno. O launcher baixa a URL HTTPS fixada nos metadados e, quando necessário, cada parte ordenada, verifica as partes e o SHA-512 completo e então executa `scripts/smoke-iso.ps1` com QEMU no Windows. Os metadados ZTASH apontam para o receptor registrado `ddjarin` sem embutir credenciais.
 
-O pacote `dinx-live-autologin`, exclusivo do livefs, substitui `root-ro` e `early-root-rw.target` por no-ops para o overlay já gravável. Seu serviço Dinit habilitado no boot grava a configuração única da sessão inicial Aqueous/Pearl e declara `before = greetd` e `before = login.target`; como ambos os serviços são ativados no boot live, o Dinit inicia o configurador antes do serviço upstream `greetd-dinit`, sem instalar um segundo pacote dono de `/etc/dinit.d/greetd`. O Calamares instala `rootfs.img`, então o sistema instalado mantém as unidades genéricas de remontagem do Artix e o greetd de login manual.
+O pacote `dinx-live-autologin`, exclusivo do livefs, substitui `root-ro` e `early-root-rw.target` por no-ops para o overlay já gravável. Seu serviço Dinit habilitado no boot grava e aplica o hostname `dinxlive`, cria a configuração única da sessão inicial Aqueous/Pearl e declara `before = greetd` e `before = login.target`; como ambos são ativados no boot live, o Dinit conclui a configuração antes do serviço upstream `greetd-dinit`, sem instalar um segundo pacote dono de `/etc/dinit.d/greetd`. O Calamares instala `rootfs.img`, então o sistema instalado mantém as unidades genéricas de remontagem do Artix e o greetd de login manual.
 
-Os wrappers gráficos da sessão e do greeter compartilham uma política. Cada render node DRM acessível é associado ao próprio driver sysfs, sem presumir a ordem dos dispositivos DRM. QEMU `virtio_gpu` com render node legível/gravável seleciona `aqueous-cpu`, GLES2 no wlroots e GL no GTK4; `vmwgfx` e outros adaptadores virtuais 2D usam Pixman/Cairo tanto na sessão Aqueous quanto no fallback Pearl Greeter. Outros render nodes de hardware usam o Aqueous completo. O smoke QEMU da Alpha 12 usou VGA padrão; a main atual adiciona um smoke de boot/captura guest com VMware-SVGA, ainda não executado. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso ao grupo `render`. Checks estáticos da ISO validam presença de pacotes/módulos e wiring dos wrappers, não o boot real no VirtualBox.
+Os wrappers gráficos da sessão e do greeter compartilham uma política. Cada render node DRM acessível é associado ao próprio driver sysfs, sem presumir a ordem dos dispositivos DRM. QEMU `virtio_gpu` com render node legível/gravável seleciona `aqueous-cpu` e GLES2 no wlroots; a seleção do renderizador GTK4 fica automática. `vmwgfx` e outros adaptadores virtuais 2D usam Pixman no compositor Aqueous, também sem forçar o renderizador do GTK4. Outros render nodes de hardware usam o Aqueous completo. O smoke QEMU da Alpha 12 usou VGA padrão; a main atual adiciona um smoke de boot/captura guest com VMware-SVGA, ainda não executado. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso ao grupo `render`. Checks estáticos da ISO validam presença de pacotes/módulos e wiring dos wrappers, não o boot real no VirtualBox.
 
 O perfil controla o contrato visual DINX em `/usr/share/dinx/theme/DINX.json`. `scripts/check_dinx_theme.sh` valida a paleta estática, `DINX_COLOR_SCHEME`, as bridges GTK/Qt, o Pearl Greeter, Calamares e GRUB antes do `buildiso`; `scripts/check-iso-content.sh` verifica os mesmos arquivos dentro da imagem SquashFS do root.
 
@@ -114,10 +114,10 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /caminho/para/dinx.iso
 ```
 
-O perfil de compatibilidade do VirtualBox usa VMSVGA e Pixman/Cairo tanto na sessão Aqueous quanto no fallback Pearl Greeter; a política do código não exige aceleração 3D. A Alpha 12 publicada é anterior ao fallback e pode retornar ao Pearl Greeter com qualquer configuração 3D. O P0 atual configura um smoke de boot/captura QEMU com VMware-SVGA, mas ainda não o executou; o boot direto no VirtualBox continua sem qualificação.
+O perfil de compatibilidade do VirtualBox usa VMSVGA e Pixman no compositor Aqueous; o GTK4 seleciona seu renderizador automaticamente na sessão e no fallback do Pearl Greeter. A política do código não exige aceleração 3D. A Alpha 12 publicada é anterior a esse fallback e pode retornar ao Pearl Greeter com qualquer configuração 3D. O P0 atual configura um smoke de boot/captura QEMU com VMware-SVGA, mas ainda não o executou; o boot direto no VirtualBox continua sem qualificação.
 
 O workflow também captura `dinx-boot-screen.ppm` três segundos depois que o QEMU abre e antes do envio das teclas do menu de boot. Isso fornece evidência visual direta de regressão para a tela GRUB de seleção do kernel.
-O GRUB usa as cores DINX de superfície, primeiro plano e seleção primária, mantendo os assets de logo/fonte do Artix. As texturas opacas do menu ficam desativadas, então o menu de boot, o greeter, o instalador e o desktop compartilham a mesma hierarquia visual plana.
+O GRUB usa cores DINX de superfície, primeiro plano e seleção; o tema ativo exibe o novo símbolo DINX em gradiente no lugar do logo upstream, preserva ícones e fontes do pacote e desativa texturas opacas do menu. Assim, as telas de boot evitam referências visuais à marca Artix sem renomear o caminho interno exigido pelo pacote.
 
 O perfil também incorpora um caminho experimental offline do Calamares com branding DINX e módulos de serviço dinit; o Pori é a única interface gráfica de armazenamento e o Phyto é o gerenciador de arquivos padrão. A verificação de conteúdo confirma a configuração do instalador, os defaults estáticos de tema/paleta DINX, o Pearl Greeter, a sessão Aqueous/Pearl forçada e os payloads de recuperação. `scripts/smoke-install.sh` verifica instalações BIOS e UEFI offline, a geração de initramfs/GRUB, o primeiro boot e a TTY de recuperação em discos efêmeros; é um smoke de contrato do CI, não uma qualificação arbitrária de hardware.
 O contrato de particionamento do Calamares é verificado antes do build do container: ESP recomendada de 1 GiB/mínima de 64 MiB, EFI FAT32 e root ext4/btrfs, particionamento manual explícito, LVM desabilitado, exceções de montagens live, remoção de pacotes offline, suporte de leitura/escrita pelo `ntfs3` do kernel, `ntfs-3g` opcional pós-instalação, suporte a `os-prober` e um plano Btrfs explícito de nível superior que não recria `@`/`@home` existentes. `scripts/smoke_calamares_partitioning.sh` faz round-trip das tabelas BIOS e UEFI, filesystems e fstab em discos descartáveis e reabre um volume Btrfs com subvolumes existentes. `scripts/smoke_calamares_windows.sh` preserva uma ESP FAT32/caminho Microsoft e partição NTFS de Windows existentes enquanto conclui transações DINX de root/GRUB em layouts side-by-side e manuais. São smokes transacionais dos layouts suportados, não uma alegação de que todos os caminhos de filesystem, criptografia, RAID, BitLocker, hibernação, firmware Windows ou firmware físico do Calamares estejam livres de bugs.
@@ -198,15 +198,34 @@ DEETTY_SOURCE_CHECKOUT=/caminho/para/NOCTTY bash scripts/build-iso-docker.sh
 
 O build do pacote Deetty limpa a árvore de fontes em cache antes de aplicar patches. Uma tentativa com falha não deixa fontes modificadas que quebrem a próxima execução.
 
-Requisitos: Docker rootful acessível, suporte a `--privileged` e dispositivos loop, rede para baixar pacotes/fontes e espaço livre suficiente para o rootfs temporário e a ISO. A verificação QEMU é opcional:
+Requisitos: Docker rootful acessível, suporte a `--privileged` e dispositivos loop, rede e espaço livre para o rootfs/ISO. Por padrão, o build local executa a qualificação completa usada pelo workflow P0. Isso também exige os comandos listados em `scripts/check-iso-qualification-host.sh full`, QEMU com o dispositivo `vmware-svga`, Tesseract com o modelo `eng`, firmware OVMF e `sudo` (ou root). Confira antes de começar:
 
 ```sh
-DINX_LOCAL_QEMU_SMOKE=1 bash scripts/build-iso-docker.sh
+scripts/check-iso-qualification-host.sh full
 ```
 
-Ela exige as dependências locais do smoke QEMU (`qemu-system-x86_64`, `socat` e Tesseract). O build para antes de começar se não conseguir acessar o daemon Docker. `DINX_LOCAL_BUILD_DIR` pode selecionar um diretório de saída novo e vazio dentro de `dist`; resultados existentes nunca são sobrescritos.
+O builder local mantém archives dos toolchains Zig em `dist/.cache/dinx/toolchains`; cada cache hit é validado pelo SHA-256 fixado e os downloads são publicados atomicamente. O workflow P0 salva esse cache somente após a qualificação completa da ISO; o workflow de contratos o restaura em modo somente leitura quando disponível. Pacotes compilados e rootfs não entram no cache.
+
+O modo reduzido é explícito e **não** qualifica boot/instalação:
+
+```sh
+DINX_ISO_QUALIFICATION=static bash scripts/build-iso-docker.sh
+scripts/qualify-iso.sh --static /caminho/para/dinx.iso
+```
+
+Para executar novamente os mesmos gates completos sobre uma ISO com `build-metadata.txt` ao lado do arquivo:
+
+```sh
+DINX_EXPECTED_COMMIT=$(git rev-parse HEAD) scripts/qualify-iso.sh /caminho/para/dinx.iso
+```
+
+`DINX_LOCAL_BUILD_DIR` pode selecionar um diretório de saída novo e vazio dentro de `dist`; resultados existentes nunca são sobrescritos. `DINX_BUILD_CACHE_DIR` pode apontar para outro diretório de cache dentro de `dist`.
+
+O builder emite `dinx-build-timing` por pacote, montagem da ISO e duração total do container. Compare logs de builds equivalentes antes de afirmar redução de tempo; o cache comprovadamente evita somente downloads repetidos de archives já verificados. A etapa local `scripts/qualify-iso.sh` também grava logs QEMU e capturas PPM ao lado da ISO.
 
 Ao sair do container, o builder encerra o servidor temporário do repositório e restaura a propriedade do host nos diretórios montados da ISO, dos pacotes, da árvore de build e das fontes de pacotes. Assim, a etapa P0 de checksum e as verificações locais pós-build conseguem gravar nos diretórios de saída.
+
+A validação local pós-build usa o commit e a árvore de fontes capturados antes de iniciar o Docker. Árvores makepkg, archives de pacotes e saídas de staging gerados são excluídos do fingerprint; alterações em fontes rastreadas ou não rastreadas continuam invalidando a validação.
 
 
 ## Sequência de aceitação

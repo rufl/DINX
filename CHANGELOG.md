@@ -4,12 +4,22 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Use one full ISO qualifier for local builds and P0 CI: metadata, checksum, payload and budget checks; VGA and VMware-SVGA QEMU captures; and disposable BIOS/UEFI install smokes. Full local qualification runs by default; an explicit static-only mode does not count as boot evidence. Cache only SHA-256-verified Zig archives and report per-package/assembly/container timing; no total build-time reduction is claimed without comparable runs. Document the VirtualBox and physical-hardware evidence boundary.
+- Stop forcing the custom DINX GTK theme through `GTK_THEME`; use Adwaita as the GTK3/GTK4 and Pearl GTK-mode default so application and Pearl Material theme choices are not overridden.
+- Set and persist the live-session hostname as `dinxlive` before greetd starts. Apply DINX branding to live and installed GRUB menus, replacing the old boot mark with the new DINX gradient mark.
+- Declare `local.target` and `artix-live` as separate Dinit dependencies for live autologin, so both services resolve instead of being parsed as one missing service.
 - Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
+- Remove a failed Dome build's partial source/cache before retrying, and restore bind-mounted files to the invoking user when the local ISO builder runs through sudo.
+- Pin local post-build metadata checks to the commit and source-tree baseline captured before Docker starts; exclude generated makepkg trees, package archives and staging outputs from that fingerprint while still rejecting changed source inputs.
+- Initialize the ISO content checker's GTK settings from the user skeleton before checking theme defaults.
+- Ignore empty compatibility directories in SquashFS manifests while continuing to reject files and symlinks from retired desktops and init systems.
+- Set `DownloadUser = root` only in the temporary Artix `buildiso` pacman config. Pacman 7's `alpm` downloader cannot write the root-owned sync-database staging directory in a fresh basestrap target; host pacman and the installed image remain unchanged.
+- Delay VMware-SVGA QEMU boot-menu input by three seconds and capture the pre-key GRUB screen, matching the successful default-VGA smoke.
 - Fix the hunk line count in Aqueous's Pixman rounded-corners patch; keep the session-supervisor smoke aligned with its required Pearl shell wrapper.
 
 - Validate Pearl Settings form values before publishing drafts, keeping invalid intermediate input editable instead of corrupting the JSON draft. Remove the Settings client-side headerbar to avoid duplicate compositor decorations and make GTK-theme windows opaque. Pearl border synchronization affects colors only; `aqueous-cpu` keeps square corners until Vulkan effects are available.
 
-- Route Aqueous/Pearl and the Pearl Greeter through Pixman/Cairo for `vmwgfx`/2D adapters while QEMU `virtio_gpu` retains GLES2. The first VMware-SVGA boot smoke exposed the remaining root cause: Artix generated an initramfs without `vmwgfx` or `vboxvideo`. `build-iso.sh` now patches a private copy of Artix's initramfs helper to add both modules to the configuration actually used inside the bootfs, immediately before `mkinitcpio`; a contract smoke protects that hook and ISO inspection checks the generated initramfs. P0 is configured to boot VMware-SVGA; successful VMSVGA smoke and direct VirtualBox boot remain unqualified.
+- Stop forcing GTK4's Cairo GSK renderer in CPU/Pixman and virtual-GL sessions; leave renderer selection to GTK4 while keeping Aqueous's compositor renderer profile-specific. This addresses blank client surfaces reported in VirtualBox; actual VirtualBox verification is still required. The first VMware-SVGA boot smoke exposed the remaining initramfs issue: Artix omitted `vmwgfx` and `vboxvideo`. `build-iso.sh` patches a private copy of Artix's initramfs helper to add both modules immediately before `mkinitcpio`; a contract smoke protects that hook and ISO inspection checks the generated initramfs. P0 is configured to boot VMware-SVGA; successful VMSVGA smoke and direct VirtualBox boot remain unqualified.
 - Repair the `dinx-live-autologin` source checksum and bump `pkgrel` to 7. The stale checksum stopped an earlier P0 run before ISO composition; a later run built the first ISO with the graphics fallback and exposed that Artix had omitted `vmwgfx` and `vboxvideo` from its generated initramfs.
 
 ## DINX v0.1.0-alpha.12 — 2026-10-31

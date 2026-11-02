@@ -2,6 +2,7 @@ type = scripted
 command = /usr/local/libexec/dinx-live-autologin
 restart = false
 depends-on = local.target
+depends-on = artix-live
 after = artix-live
 before = greetd
 before = login.target

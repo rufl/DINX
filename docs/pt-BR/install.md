@@ -46,7 +46,7 @@ A Alpha 12, alpha de sistema publicada, oferece ISO direta e checksum correspond
 
 1. Abra o [workflow da ISO P0](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml).
 2. Abra a execução mais recente com marca verde de sucesso.
-3. Em **Artifacts**, baixe `dinx-foundation-iso-<commit>`.
+3. Em **Artifacts**, baixe `dinx-p0-success-<commit>` dessa execução bem-sucedida.
 4. Extraia o arquivo baixado em um diretório novo.
 5. Continue usando a `.iso` e o `.iso.sha512` correspondente no diretório extraído.
 
@@ -73,7 +73,7 @@ test -n "$run_id"
 commit=$(gh run view "$run_id" --repo "$repo" --json headSha --jq '.headSha')
 gh run download "$run_id" \
   --repo "$repo" \
-  --name "dinx-foundation-iso-$commit" \
+  --name "dinx-p0-success-$commit" \
   --dir dinx-iso
 ```
 
@@ -243,7 +243,7 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A tela fica vazia
 
-A Aqueous escolhe o perfil gráfico pelo driver sysfs de cada render node DRM acessível, não pela ordem dos dispositivos DRM. QEMU `virtio_gpu`/virgl usa `aqueous-cpu` com GLES2 no wlroots e GL no GTK4 quando seu render node é legível e gravável, sem os efeitos Vulkan do Aqueous. `vmwgfx` e outros adaptadores virtuais 2D usam Pixman/Cairo; a mesma política vale para a sessão Aqueous e o fallback do Pearl Greeter. O smoke QEMU da Alpha 12 usou VGA padrão; o workflow P0 atual adiciona boot/captura guest com VMware-SVGA, ainda não executado. Um teste manual foi reportado como funcional no Pearl com VirtualBox 7.2.22/Windows 11 (VMSVGA, EFI, 4 vCPUs, 8 GiB, 3D habilitado); o log tem uma ISO Alpha 12 e um VDI Alpha 10 conectados, sem checksum da ISO nem registro da seleção EFI. Os 286 MB lidos da ISO contra 9,8 MB do VDI sugerem boot pela ISO live, mas não vinculam a sessão ao artefato publicado. O usuário live, o Pearl Greeter e novos usuários do Calamares recebem acesso a `render`.
+A Aqueous escolhe o perfil gráfico pelo driver sysfs de cada render node DRM acessível, não pela ordem dos dispositivos DRM. QEMU `virtio_gpu`/virgl usa `aqueous-cpu` com GLES2 no wlroots e GL no GTK4 quando seu render node é legível e gravável, sem os efeitos Vulkan do Aqueous. `vmwgfx` e outros adaptadores virtuais 2D usam Pixman/Cairo; a mesma política vale para a sessão Aqueous e o fallback do Pearl Greeter. O gate `scripts/qualify-iso.sh` do P0/local inclui boot/captura QEMU com VGA padrão e VMware-SVGA, mas essas verificações não provam aprovação no VirtualBox ou em máquina física até serem executadas. O log fornecido do VirtualBox 7.2.22/Windows 11 informa VT-x indisponível e modo Hyper-V NEM “Snail execution mode”; isso indica uma via de execução mais lenta, não um resultado gráfico do guest. A VM desligou após cerca de oito minutos, mas o log não comprova se o Pearl apareceu nem por que a VM parou. Ele lista uma ISO Alpha 12 e um VDI chamado Alpha 0.10, sem checksum verificado da ISO ou confirmação da origem do boot. Considere essa execução não qualificada; repita em uma VM nova, com SHA-512 exato da ISO e sem VDI antigo anexado durante o boot live.
 
 ### Gráficos, drivers e mídia
 
@@ -257,7 +257,9 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /caminho/para/dinx.iso
 ```
 
-Na próxima ISO DINX, use **VMSVGA** no VirtualBox; o código seleciona Pixman/Cairo para `vmwgfx` tanto na sessão Aqueous quanto no fallback Pearl Greeter, independentemente do render node ou da aceleração 3D. A Alpha 12 publicada pode falhar com qualquer configuração 3D porque o caminho GLES2 está desabilitado no build do guest; mudar essa opção não corrige o binário. O smoke QEMU VMware-SVGA está configurado no P0, mas ainda não foi executado. Um teste manual no VirtualBox chegou ao Pearl, mas a origem do boot e a identidade do artefato não foram confirmadas; a qualificação geral de boot direto permanece aberta. Ao relatar falha numa ISO reconstruída, informe hypervisor, renderer do host, driver DRM do guest e a saída de `dinx-alpha7-hardware-report`.
+No VirtualBox, qualifique a ISO exata com SHA-512 verificado em uma VM descartável nova. Use o adaptador VMSVGA; comece com aceleração 3D desabilitada para verificar o fallback Pixman/Cairo e depois repita com 3D habilitado como caso separado. A Alpha 12 publicada ainda pode falhar quando o 3D seleciona o caminho GLES2 do guest, desabilitado na compilação; alterar essa configuração da VM não corrige a Alpha 12. Registre o modo de firmware e as configurações da VM, confirme que o boot live chega ao Pearl e depois ao Aqueous e salve o log do VBox e capturas de tela. Não anexe um VDI de sistema antigo durante o teste de mídia live; para testar o instalador, use um disco virtual descartável recém-criado, ejete a ISO após a instalação, inicialize o disco e registre o resultado da sessão instalada. O teste VMware-SVGA no QEMU é apenas um proxy gráfico, não uma aprovação no VirtualBox. Hyper-V/NEM pode deixar o VirtualBox muito lento; não desative Memory Integrity nem outras proteções do host para melhorar desempenho.
+
+Para hardware real, use a matriz de dispositivos e o procedimento de relatório em [qualificação de hardware DINX](alpha7-qualification.md). Verifique o checksum exato da ISO e registre função da máquina, firmware, GPU e cada resultado observado; use um disco externo descartável para testes de instalação. Evidências de CI/QEMU e VirtualBox não substituem as verificações físicas de display, entrada, áudio, rede, suspensão/retomada, brilho e GPU.
 
 A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,

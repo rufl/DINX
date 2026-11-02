@@ -17,6 +17,12 @@ dist/
 /distro/packages/deetty/*.pkg.tar.zst
 /distro/packages/deetty/src/
 /distro/packages/deetty/pkg/
+/distro/packages/*/src/
+/distro/packages/*/pkg/
+/distro/packages/*/*.pkg.tar.zst
+/distro/packages/*/*.pkg.tar.zst.sig
+/distro/packages/*/*.tar.*
+
 # Test output
 test-results/
 coverage/

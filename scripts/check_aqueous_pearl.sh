@@ -256,12 +256,10 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper
   || fail 'Aqueous session does not apply the selected renderer policy'
 grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
   || fail 'QEMU renderer policy is not set to GLES2'
-grep -Fq 'export GSK_RENDERER=gl' "$graphics_environment" \
-  || fail 'GTK4 QEMU renderer policy is not set to GL'
-grep -Fq 'export WLR_RENDERER=pixman' "$graphics_environment" \
-  || fail 'CPU compatibility renderer policy is not set to Pixman'
-grep -Fq 'export GSK_RENDERER=cairo' "$graphics_environment" \
-  || fail 'GTK4 Cairo fallback policy is missing'
+grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
+  || fail 'virtual graphics profiles leave GTK4 renderer selection automatic'
+[[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 2 ]] \
+  || fail 'GTK4 renderer selection is not automatic for both virtualized profiles'
 sh -n "$greeter_wrapper" "$aqueous_wrapper" || fail 'graphics wrapper shell syntax is invalid'
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$greeter_wrapper" \
   || fail 'Pearl Greeter does not select the detected graphics profile'
@@ -269,8 +267,9 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$greeter_wrapper
   || fail 'Pearl Greeter does not apply the shared renderer policy'
 grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' "$greeter_wrapper" \
   || fail 'Pearl Greeter wrapper does not execute the packaged host'
-grep -Fq 'DINX_QEMU_VIDEO_DEVICE: vmware-svga' "$workflow" \
-  || fail 'P0 does not boot the ISO with a VMware SVGA device'
+qualifier="$root/scripts/qualify-iso.sh"
+grep -Fq 'DINX_QEMU_VIDEO_DEVICE=vmware-svga' "$qualifier" \
+  || fail 'shared ISO qualifier does not boot with VMware SVGA'
 grep -Fq 'virtio_gpu)' "$graphics_helper" \
   || fail 'QEMU virtio-gpu render-node driver is not detected'
 grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
@@ -285,5 +284,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_minimize=true qemu_virgl_gles=true virtualbox_vmsvga_pixman=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_minimize=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_pixman=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

@@ -52,17 +52,20 @@ tools. The disks are temporary and deleted after the smoke; this is not a substi
 for hardware qualification.
 
 
-The workflow's QEMU boot smoke captures the VGA surface and uses Tesseract OCR to require a Pearl/Aqueous/DINX desktop marker while rejecting Pearl Greeter, login prompts and visible Dinit failures. Local smoke runs need `qemu-system-x86_64`, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`:
+The workflow's QEMU boot smoke captures the VGA surface and uses Tesseract OCR to require a Pearl/Aqueous/DINX desktop marker while rejecting Pearl Greeter, login prompts and visible Dinit failures. It sends `Alt+F4` after the first capture to dismiss Pearl's first-run setup window, then checks the post-dismissal desktop frame. Local smoke runs need `qemu-system-x86_64`, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`:
 
 ```bash
 DINX_QEMU_TIMEOUT=90 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/graphical-screen.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
+DINX_QEMU_POST_SCREENSHOT=dist/iso/dinx/session-screen.ppm \
+DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
+DINX_QEMU_POST_KEYS=alt-f4 \
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
 
-The smoke also checks the captured session frame. Without `DINX_QEMU_SCREENSHOT`, it saves the checked PPM beside the QEMU log as `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` selects another installed Tesseract model.
+The smoke also checks the captured session frame. If the original frame contains no OCR-readable text, it enlarges the top panel before checking the desktop marker. Without `DINX_QEMU_SCREENSHOT`, it saves the checked PPM beside the QEMU log as `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` selects another installed Tesseract model.
 
 `build-iso.sh` copies Artix's `artools` data into a private temporary tree and patches its copied initramfs helper to add `vmwgfx` and `vboxvideo` to the configuration used inside the bootfs, immediately before Artix runs `mkinitcpio`; it does not modify the host installation. `check_artix_initcpio_patch.sh` guards this helper/config contract, and `check-iso-content.sh` requires `bsdtar` and verifies both modules inside the ISO's actual boot initramfs. The P0 VMware-SVGA smoke then requires the desktop.
 

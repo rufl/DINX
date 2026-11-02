@@ -52,17 +52,20 @@ OVMF, QEMU e ferramentas SquashFS. Os discos são apagados ao fim do smoke; isso
 substitui a qualificação em hardware.
 
 
-A smoke de boot no QEMU captura a superfície VGA e usa OCR do Tesseract para exigir um marcador da área de trabalho Pearl/Aqueous/DINX, rejeitando Pearl Greeter, prompts de login e falhas visíveis do Dinit. Smokes locais exigem `qemu-system-x86_64`, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`:
+A smoke de boot no QEMU captura a superfície VGA e usa OCR do Tesseract para exigir um marcador da área de trabalho Pearl/Aqueous/DINX, rejeitando Pearl Greeter, prompts de login e falhas visíveis do Dinit. Ela envia `Alt+F4` após a primeira captura para dispensar a configuração inicial do Pearl e verifica o quadro da área de trabalho em seguida. Smokes locais exigem `qemu-system-x86_64`, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`:
 
 ```bash
 DINX_QEMU_TIMEOUT=90 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/tela-grafica.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
+DINX_QEMU_POST_SCREENSHOT=dist/iso/dinx/tela-sessao.ppm \
+DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
+DINX_QEMU_POST_KEYS=alt-f4 \
 scripts/smoke-iso.sh dist/iso/<arquivo>.iso
 ```
 
-O smoke também verifica o quadro capturado da sessão. Sem `DINX_QEMU_SCREENSHOT`, salva o PPM verificado ao lado do log QEMU como `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` seleciona outro modelo de idioma Tesseract instalado.
+O smoke também verifica o quadro da sessão capturado. Se o quadro original não contiver texto legível por OCR, ele amplia o painel superior antes de verificar o marcador da área de trabalho. Sem `DINX_QEMU_SCREENSHOT`, salva o PPM verificado ao lado do log QEMU como `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` seleciona outro modelo de idioma Tesseract instalado.
 
 
 Verifique o payload gráfico dentro da imagem SquashFS do root:

@@ -288,8 +288,8 @@ trap finish EXIT
               gpg --batch --homedir "$signing_home" --export "$signing_key" \
                 > "$package_repo/dinx-package-signing-key.gpg"
               chown -R dinxbuild:dinxbuild "$signing_home"
-              pacman-key --add "$package_repo/dinx-package-signing-key.gpg"
               pacman-key --init
+              pacman-key --add "$package_repo/dinx-package-signing-key.gpg"
               pacman-key --lsign-key "$signing_key"
               package_cache_builder_sha256=$(sha256sum /workspace/scripts/build-iso-container.sh | cut -d " " -f 1)
               package_cache_as_build_user() {
@@ -488,6 +488,7 @@ trap finish EXIT
               } > "$package_repo/dinx-repository-metadata.txt"
               scripts/check_dinx_package_repository.sh "$package_repo"
               scripts/smoke_dinx_update.sh "$package_repo"
+              dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg
 
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)

@@ -139,6 +139,12 @@ fi
 cache_helper=scripts/lib/dinx-package-artifact-cache.sh
 [[ -r "$cache_helper" ]] || fail 'package artifact cache helper is missing'
 for required in \
+  'dinx_invalidate_pacman_package_cache() {' \
+  'rm -f -- "$pacman_cache/$name" "$pacman_cache/$name.sig"'; do
+  grep -Fq -- "$required" "$cache_helper" \
+    || fail "package artifact cache helper is missing stale-signature handling: $required"
+done
+for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
   'NoExtract = usr/lib/systemd/*' \
@@ -164,6 +170,7 @@ for required in \
   'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \
   'build_package gapless' \
   '--sign --key' \
+  'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \
   'SigLevel = Required' \
   'DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"' \
@@ -184,6 +191,14 @@ for required in \
   grep -Fq -- "$required" "$builder" \
     || fail "Artix container builder is missing provenance/build wiring: $required"
 done
+if ! awk '
+  /pacman-key --init/ { init_line = NR }
+  /pacman-key --add/ { add_line = NR }
+  /pacman-key --lsign-key/ { sign_line = NR }
+  END { exit !(init_line && add_line && sign_line && init_line < add_line && add_line < sign_line) }
+' "$builder"; then
+  fail 'pacman keyring must be initialized before adding and locally signing the DINX key'
+fi
 for required in \
   '--privileged' \
   '--env DINX_BUILD_CONTEXT="$build_context"' \

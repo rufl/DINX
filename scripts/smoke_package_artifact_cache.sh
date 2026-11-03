@@ -69,6 +69,35 @@ gpg --batch --homedir "$signing_home" --pinentry-mode loopback --passphrase '' \
   --quick-generate-key 'DINX package cache smoke <cache@dinx.invalid>' ed25519 sign 0 >/dev/null 2>&1
 
 dinx_package_cache_restore "$cache_root" demo "$key" "$package_repo" "$signing_home"
+pacman_cache="$tmp/pacman-cache"
+stale_signing_home="$tmp/stale-gnupg"
+mkdir -p "$pacman_cache" "$stale_signing_home"
+chmod 700 "$stale_signing_home"
+gpg --batch --homedir "$stale_signing_home" --pinentry-mode loopback --passphrase '' \
+  --quick-generate-key 'DINX stale package cache smoke <stale-cache@dinx.invalid>' ed25519 sign 0 \
+  >/dev/null 2>&1
+cached_name=$(basename -- "$archive_one")
+cached_archive="$pacman_cache/$cached_name"
+cp -- "$archive_one" "$cached_archive"
+gpg --batch --yes --homedir "$stale_signing_home" --detach-sign \
+  --output "$cached_archive.sig" "$cached_archive"
+if gpg --batch --homedir "$signing_home" --verify \
+  "$cached_archive.sig" "$cached_archive" >/dev/null 2>&1; then
+  printf 'smoke_package_artifact_cache: stale signature unexpectedly validates under the current repository key\n' >&2
+  exit 1
+fi
+unrelated_archive="$pacman_cache/artix-unrelated-1-any.pkg.tar.zst"
+printf 'unrelated upstream package cache entry\n' > "$unrelated_archive"
+dinx_invalidate_pacman_package_cache "$package_repo" "$pacman_cache"
+[[ ! -e "$cached_archive" && ! -e "$cached_archive.sig" ]] || {
+  printf 'smoke_package_artifact_cache: DINX archive/signature cache entries were not invalidated\n' >&2
+  exit 1
+}
+[[ -f "$unrelated_archive" ]] || {
+  printf 'smoke_package_artifact_cache: unrelated upstream cache entry was removed\n' >&2
+  exit 1
+}
+printf 'smoke_package_artifact_cache: stale ephemeral-signature cache invalidation passed\n'
 for archive in "$archive_one" "$archive_two"; do
   name=$(basename -- "$archive")
   cmp -- "$archive" "$package_repo/$name"

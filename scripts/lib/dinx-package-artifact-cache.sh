@@ -248,3 +248,17 @@ dinx_package_cache_store() {
   rm -rf -- "$temporary"
   return 1
 }
+dinx_invalidate_pacman_package_cache() {
+  (($# == 2)) || return 2
+  local package_repo=$1 pacman_cache=$2 archive name count=0
+  [[ -d "$package_repo" && ! -L "$package_repo" ]] || return 2
+  [[ -d "$pacman_cache" && ! -L "$pacman_cache" ]] || return 2
+  local -a package_archives=("$package_repo"/*.pkg.tar.zst)
+  for archive in "${package_archives[@]}"; do
+    [[ -f "$archive" && ! -L "$archive" ]] || continue
+    name=${archive##*/}
+    rm -f -- "$pacman_cache/$name" "$pacman_cache/$name.sig" || return 2
+    count=$((count + 1))
+  done
+  printf 'dinx-package-cache: invalidated pacman repository entries=%s\n' "$count"
+}

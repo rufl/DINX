@@ -118,7 +118,7 @@ jobs:
         run: mkdir -p dist/.cache/dinx/toolchains
       - name: Restore verified toolchain archives
         id: toolchain-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.2.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
         with:
           path: dist/.cache/dinx/toolchains
           key: dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/p0-iso.yml', 'scripts/build-iso-container.sh', 'scripts/cache-verified-download.sh', 'distro/packages/pearl/source.env') }}

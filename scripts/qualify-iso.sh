@@ -55,6 +55,7 @@ DINX_QEMU_SCREENSHOT_DELAY=60 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_POST_SCREENSHOT="$iso_dir/dinx-session-screen.ppm" \
 DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
+DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
 
 DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-90} \
@@ -65,6 +66,9 @@ DINX_QEMU_BOOT_SCREENSHOT_DELAY=3 \
 DINX_QEMU_SCREENSHOT="$iso_dir/dinx-vmware-svga-session.ppm" \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
+DINX_QEMU_POST_SCREENSHOT="$iso_dir/dinx-vmware-svga-session-after-setup.ppm" \
+DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
+DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
 
 DINX_INSTALL_OUTPUT_DIR="$iso_dir" \

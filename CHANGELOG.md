@@ -5,7 +5,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Use one full ISO qualifier for local builds and P0 CI: metadata, checksum, payload and budget checks; VGA and VMware-SVGA QEMU captures; and disposable BIOS/UEFI install smokes. Full local qualification runs by default; an explicit static-only mode does not count as boot evidence. Cache only SHA-256-verified Zig archives and report per-package/assembly/container timing; no total build-time reduction is claimed without comparable runs. Document the VirtualBox and physical-hardware evidence boundary.
-- Stop forcing the custom DINX GTK theme through `GTK_THEME`; use Adwaita as the GTK3/GTK4 and Pearl GTK-mode default so application and Pearl Material theme choices are not overridden.
+- Use Pearl Material dark as the fresh-session and first-run default; keep GTK application defaults on Adwaita and preserve existing user theme choices.
+- Bump Pearl to `pkgrel=5` and refresh the pinned first-run wizard checksum for the Material default.
 - Set and persist the live-session hostname as `dinxlive` before greetd starts. Apply DINX branding to live and installed GRUB menus, replacing the old boot mark with the new DINX gradient mark.
 - Declare `local.target` and `artix-live` as separate Dinit dependencies for live autologin, so both services resolve instead of being parsed as one missing service.
 - Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
@@ -15,7 +16,9 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Ignore empty compatibility directories in SquashFS manifests while continuing to reject files and symlinks from retired desktops and init systems.
 - Set `DownloadUser = root` only in the temporary Artix `buildiso` pacman config. Pacman 7's `alpm` downloader cannot write the root-owned sync-database staging directory in a fresh basestrap target; host pacman and the installed image remain unchanged.
 - Delay VMware-SVGA QEMU boot-menu input by three seconds and capture the pre-key GRUB screen, matching the successful default-VGA smoke.
-- Fix the hunk line count in Aqueous's Pixman rounded-corners patch; keep the session-supervisor smoke aligned with its required Pearl shell wrapper.
+- Remove DINX's custom Pixman scene-buffer rounded-corner patches and stop routing VirtualBox `vmwgfx`/`vboxvideo` or systems without an accessible DRM render node through `aqueous-cpu`; use the full Aqueous binary with `WLR_RENDERER=vulkan` and `GSK_RENDERER` unset, matching Devario's Vulkan-only wlroots renderer policy. QEMU `virtio_gpu` keeps reduced-effects GLES2, and QXL/other 2D adapters retain the CPU compatibility profile when a render node is present. VirtualBox client-surface behavior still requires a fresh-ISO smoke.
+- Extend QEMU VGA and VMware-SVGA smoke checks to OCR the Pearl GTK4 first-run window's `Dock` title before accepting the later desktop screenshot; catches blank client surfaces that a wallpaper/panel-only check could miss.
+- Install Shikane profile-save cleanup before creating scratch files; its smoke forces the second `mktemp` to fail and verifies no temporary profile files remain.
 
 - Validate Pearl Settings form values before publishing drafts, keeping invalid intermediate input editable instead of corrupting the JSON draft. Remove the Settings client-side headerbar to avoid duplicate compositor decorations and make GTK-theme windows opaque. Pearl border synchronization affects colors only; `aqueous-cpu` keeps square corners until Vulkan effects are available.
 
@@ -49,7 +52,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 - Seed fresh Aqueous outputs with two workspaces instead of the upstream nine-workspace startup set.
 
-- Added graphics profiles for QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`). Alpha 12 initially selected GLES2 for both when render nodes were accessible; its published runtime exposed the VirtualBox GLES2 build gap. The Unreleased fix routes `vmwgfx` to Pixman/Cairo. The live user, Pearl Greeter and new installed accounts receive `render` access; no systemd packages or services are added.
+- Added graphics profiles for QEMU `virtio_gpu`/virgl and VirtualBox VMSVGA (`vmwgfx`). Alpha 12 initially selected GLES2 for both when render nodes were accessible; its published runtime exposed the VirtualBox GLES2 build gap. Current source routes `vmwgfx`/`vboxvideo` and systems without accessible DRM render nodes through full Aqueous with `WLR_RENDERER=vulkan` and `GSK_RENDERER` unset, while QEMU `virtio_gpu` retains reduced-effects GLES2. The live user, Pearl Greeter and new installed accounts receive `render` access; no systemd packages or services are added.
 
 - Export `GTK_CSD=0` from the Aqueous/Pearl session and request server-side decorations so standard GTK and protocol-capable Wayland apps use the compositor titlebar. Document the remaining boundary for apps that hard-code custom client-side chrome.
 

@@ -5,7 +5,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Unificada a qualificação completa da ISO entre build local e CI P0: metadados, checksum, payload e limites; capturas QEMU VGA e VMware-SVGA; e smokes de instalação descartável BIOS/UEFI. A qualificação local completa é o padrão; o modo estático explícito não conta como evidência de boot. O cache contém apenas archives Zig verificados por SHA-256 e registra tempos por pacote, montagem e container; não se afirma redução total do build sem execuções comparáveis. Documentados os limites de evidência no VirtualBox e em hardware físico.
-- Removido o override global `GTK_THEME` do tema DINX e definido o Adwaita como padrão GTK3/GTK4 e do modo GTK do Pearl, sem sobrepor as escolhas de tema Material do Pearl.
+- Definido Pearl Material escuro como padrão da sessão nova e do wizard inicial; os aplicativos GTK mantêm Adwaita como padrão e as escolhas de tema já salvas pelo usuário são preservadas.
+- Incrementado o Pearl para `pkgrel=5` e atualizado o checksum fixado do wizard inicial para o padrão Material.
 - Definir e persistir o hostname da sessão live como `dinxlive` antes de iniciar o greetd. Aplicar a marca DINX aos menus GRUB live e instalado, substituindo a marca antiga pelo novo símbolo DINX em gradiente.
 - Declarar `local.target` e `artix-live` como dependências Dinit separadas do autologin live, para que ambos sejam resolvidos em vez de serem interpretados como um único serviço inexistente.
 - A sessão Aqueous/Pearl agora fornece um locale de caracteres UTF-8 quando o locale herdado é ASCII, corrigindo aplicativos de terminal como `btop` sem substituir locales válidos do usuário.
@@ -14,13 +15,14 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Inicializar as configurações GTK do checker de conteúdo ISO a partir do esqueleto do usuário antes de validar os temas padrão.
 - Ignorar diretórios de compatibilidade vazios nos manifests SquashFS, mantendo a rejeição de arquivos e symlinks de desktops e init systems removidos.
 - Definido `DownloadUser = root` somente na configuração pacman temporária do `buildiso` Artix. O downloader `alpm` do pacman 7 não consegue gravar no diretório de staging do banco sync pertencente a root em uma nova rootfs basestrap; a configuração pacman do host e a imagem instalada não são alteradas.
-- Corrigida a contagem de linhas do hunk no patch de cantos arredondados Pixman do Aqueous; smoke do supervisor alinhado ao wrapper Pearl exigido.
+- Removidos os patches DINX de cantos arredondados no caminho de buffers de cena Pixman. VirtualBox `vmwgfx`/`vboxvideo` e sistemas sem render node DRM acessível agora usam o Aqueous completo com `WLR_RENDERER=vulkan` e `GSK_RENDERER` sem override, seguindo a política wlroots Vulkan-only do Devario. QEMU `virtio_gpu` mantém GLES2 com efeitos reduzidos; QXL e outros adaptadores 2D mantêm o perfil CPU de compatibilidade quando há render node. O comportamento das superfícies de clientes no VirtualBox ainda exige smoke em uma ISO nova.
 - Atrasa em três segundos as teclas do menu de boot no smoke QEMU VMware-SVGA e captura a tela GRUB antes delas, como no smoke VGA padrão que passou.
+- Ampliar os smokes QEMU VGA e VMware-SVGA para exigir OCR do título `Dock` na janela GTK4 inicial do Pearl antes de aceitar a captura posterior do desktop; isso detecta superfícies de cliente pretas que um check limitado a wallpaper/painel poderia não perceber.
+- Instalar a limpeza de temporários do salvamento Shikane antes de criá-los; o smoke força a falha do segundo `mktemp` e confirma que nenhum arquivo temporário de perfil fica para trás.
 
 
 - Corrigida a paleta Qt6ct do DINX: as cores agora seguem a ordem dos papéis `QPalette`, evitando fundos rosa/azuis e texto ilegível no Qps e em outros aplicativos Qt. Na sessão, somente a paleta padrão antiga é atualizada; personalizações e symlinks são preservados.
 
-- Arredondamento de janelas corrigido no perfil Aqueous CPU/Pixman: wlroots agora aplica máscara alpha antialiasada às superfícies e mantém o recorte interno da decoração mesmo sem efeitos Vulkan. O build CPU e o smoke da máscara passaram; a aparência da correção ainda não foi verificada em uma VM VirtualBox.
 
 - Remover o Cairo forçado do renderizador GSK do GTK4 nos perfis CPU/Pixman e virtual-GL; deixar a seleção para o GTK4, mantendo o renderizador do compositor Aqueous específico por perfil. Isso trata superfícies de cliente pretas relatadas no VirtualBox; ainda é necessária verificação real no VirtualBox. O primeiro smoke de boot VMware-SVGA revelou o problema restante do initramfs: o Artix omitia `vmwgfx` e `vboxvideo`. `build-iso.sh` altera uma cópia privada do helper initramfs do Artix para incluir os dois módulos antes do `mkinitcpio`; um smoke de contrato protege o hook e a inspeção valida o initramfs gerado. O P0 está configurado para iniciar VMware-SVGA; ainda faltam smoke VMSVGA bem-sucedido e qualificação do boot direto no VirtualBox.
 - Corrigido o checksum do fonte de `dinx-live-autologin` e incrementado `pkgrel` para 7. O checksum antigo interrompeu uma execução P0 anterior antes da composição da ISO; uma execução posterior gerou a primeira imagem com o fallback gráfico e revelou que o Artix havia omitido `vmwgfx` e `vboxvideo` do initramfs.
@@ -52,7 +54,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Saídas novas do Aqueous agora começam com dois workspaces, em vez dos nove workspaces iniciais do upstream.
 
-- Adicionados perfis gráficos para QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`). A Alpha 12 inicialmente selecionava GLES2 para ambos com render nodes acessíveis; o runtime publicado expôs o gap de build GLES2 no VirtualBox. A correção em Não lançado direciona `vmwgfx` para Pixman/Cairo. O usuário live, o Pearl Greeter e novas contas instaladas recebem acesso ao grupo `render`; nenhum pacote ou serviço systemd foi adicionado.
+- Adicionados perfis gráficos para QEMU `virtio_gpu`/virgl e VirtualBox VMSVGA (`vmwgfx`). A Alpha 12 inicialmente selecionava GLES2 para ambos quando havia render nodes; o runtime publicado expôs o gap de build GLES2 no VirtualBox. O código atual direciona `vmwgfx`/`vboxvideo` e sistemas sem render nodes DRM acessíveis ao Aqueous completo com `WLR_RENDERER=vulkan` e `GSK_RENDERER` sem override, seguindo a política wlroots Vulkan-only do Devario. QEMU `virtio_gpu` mantém GLES2 com efeitos reduzidos. O usuário live, o Pearl Greeter e novas contas instaladas recebem acesso ao grupo `render`; nenhum pacote ou serviço systemd foi adicionado.
 
 - A sessão Aqueous/Pearl exporta `GTK_CSD=0` e solicita decorações do servidor para que janelas GTK padrão e clientes Wayland compatíveis usem a barra do compositor. A documentação registra o limite restante para aplicativos com chrome CSD próprio.
 

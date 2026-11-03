@@ -2,6 +2,7 @@
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+real_mktemp=$(command -v mktemp)
 launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-wdisplays"
 saver="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-save-shikane-profile"
 tmp=$(mktemp -d)
@@ -46,7 +47,23 @@ case "${1:-}" in
         ;;
 esac
 EOF
+cat >"$fakebin/mktemp" <<'EOF'
+#!/bin/sh
+set -eu
+count_file="$DINX_DISPLAY_SMOKE_STATE/mktemp-count"
+count=0
+if [ -r "$count_file" ]; then
+    count=$(cat "$count_file")
+fi
+count=$((count + 1))
+printf '%s\n' "$count" >"$count_file"
+if [ "${DINX_DISPLAY_SMOKE_FAIL_MKTEMP:-0}" = "$count" ]; then
+    exit 1
+fi
+exec "$DINX_REAL_MKTEMP" "$@"
+EOF
 chmod +x "$fakebin/wdisplays" "$fakebin/shikanectl"
+chmod +x "$fakebin/mktemp"
 
 cat >"$config_home/shikane/config.toml" <<'EOF'
 timeout = 0
@@ -60,6 +77,7 @@ EOF
 
 export DINX_DISPLAY_SMOKE_STATE="$state"
 export XDG_CONFIG_HOME="$config_home"
+export DINX_REAL_MKTEMP="$real_mktemp"
 export HOME="$tmp/home"
 export PATH="$fakebin:$(dirname "$launcher"):$PATH"
 
@@ -94,5 +112,18 @@ if "$saver"; then
     exit 1
 fi
 grep -Fqx 'position = "0,0"' "$config_home/shikane/config.toml"
+export DINX_DISPLAY_SMOKE_FAIL_MKTEMP=2
+rm -f "$state/mktemp-count"
+if "$saver"; then
+    printf 'smoke: second mktemp failure unexpectedly succeeded\n' >&2
+    exit 1
+fi
+unset DINX_DISPLAY_SMOKE_FAIL_MKTEMP
+if find "$config_home/shikane" -maxdepth 1 \
+    \( -name '.dinx-wdisplays-export.*' -o -name '.dinx-wdisplays-config.*' \) \
+    -print -quit | grep -q .; then
+    printf 'smoke: failed temp creation left Shikane profile scratch files\n' >&2
+    exit 1
+fi
 
-printf 'dinx_display_persistence_smoke save=true replace=true failure_safe=true reload=true reload_failure=true\n'
+printf 'dinx_display_persistence_smoke save=true replace=true failure_safe=true reload=true reload_failure=true temp_cleanup=true\n'

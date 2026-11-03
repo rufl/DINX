@@ -2,6 +2,7 @@
 set -euo pipefail
 
 screenshot=${1:-}
+mode=${2:-session}
 ocr_language=${DINX_QEMU_OCR_LANG:-eng}
 
 fail() {
@@ -9,7 +10,12 @@ fail() {
   exit 1
 }
 
-[[ -n "$screenshot" ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm'
+[[ $# -le 2 ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm [session|first-run]'
+[[ -n "$screenshot" ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm [session|first-run]'
+case "$mode" in
+  session|first-run) ;;
+  *) fail 'mode must be session or first-run' ;;
+esac
 [[ -s "$screenshot" ]] || fail "session screenshot is missing or empty: $screenshot"
 command -v python3 >/dev/null 2>&1 || fail 'required command not found: python3'
 
@@ -42,6 +48,39 @@ fi
 recognized=$(tesseract "$screenshot" stdout -l "$ocr_language" --psm 11 2>/dev/null) \
   || fail "Tesseract could not inspect the session screenshot with language '$ocr_language': $screenshot"
 if [[ -z "${recognized//[[:space:]]/}" ]]; then
+  ocr_tmp=$(mktemp)
+  trap 'rm -f "$ocr_tmp"' EXIT
+  python3 - "$screenshot" "$ocr_tmp" <<'PY'
+import sys
+from pathlib import Path
+
+data = Path(sys.argv[1]).read_bytes()
+try:
+    magic, dimensions, maximum, pixels = data.split(b"\n", 3)
+    width, height = map(int, dimensions.split())
+    max_value = int(maximum)
+except ValueError:
+    sys.exit(1)
+if magic.strip() != b"P6" or width < 1 or height < 1 or max_value != 255 or len(pixels) != width * height * 3:
+    sys.exit(1)
+
+scale = 3
+crop_height = min(height, 64)
+with Path(sys.argv[2]).open("wb") as output:
+    output.write(f"P6\n{width * scale} {crop_height * scale}\n255\n".encode())
+    for y in range(crop_height):
+        row = pixels[y * width * 3:(y + 1) * width * 3]
+        enlarged = bytearray(width * scale * 3)
+        for x in range(width):
+            start = x * scale * 3
+            enlarged[start:start + scale * 3] = row[x * 3:x * 3 + 3] * scale
+        for _ in range(scale):
+            output.write(enlarged)
+PY
+  recognized=$(tesseract "$ocr_tmp" stdout -l "$ocr_language" --psm 11 2>/dev/null) \
+    || fail "Tesseract could not inspect the enlarged session panel with language '$ocr_language': $screenshot"
+fi
+if [[ -z "${recognized//[[:space:]]/}" ]]; then
   fail "no readable text in QEMU session screenshot: $screenshot"
 fi
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then
@@ -50,6 +89,14 @@ fi
 if grep -Eiq 'pearl[[:space:]]+greeter|login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|select[[:space:]]*user|fail|dinit:.*execution failed|initializing[[:space:]]+aqueous[[:space:]]+version' <<<"$recognized"; then
   printf 'dinx-qemu-session: rejected non-session screen:\n%s\n' "$recognized" >&2
   exit 1
+fi
+if [[ "$mode" == first-run ]]; then
+  if ! grep -Eiq '(^|[^[:alnum:]_])Dock([^[:alnum:]_]|$)' <<<"$recognized"; then
+    printf 'dinx-qemu-session: Pearl first-run client window has no readable Dock title:\n%s\n' "$recognized" >&2
+    exit 1
+  fi
+  printf 'dinx-qemu-session: first_run_client_visible=true marker=Dock screenshot=%s\n' "$screenshot"
+  exit 0
 fi
 marker=identity
 if ! grep -Eiq '(^|[^[:alnum:]_])(pearl|aqueous|dinx)([^[:alnum:]_]|$)' <<<"$recognized"; then

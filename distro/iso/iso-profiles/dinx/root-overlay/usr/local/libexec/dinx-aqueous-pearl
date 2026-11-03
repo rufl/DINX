@@ -41,7 +41,7 @@ case "$graphics_profile" in
   cpu|virtual-gl)
     compositor=/usr/bin/aqueous-cpu
     ;;
-  hardware)
+  hardware|vulkan)
     ;;
   *)
     printf 'dinx-aqueous-pearl: unknown graphics profile: %s\n' "$graphics_profile" >&2

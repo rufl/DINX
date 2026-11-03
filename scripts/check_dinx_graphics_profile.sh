@@ -59,9 +59,10 @@ run_multi_case() {
 }
 
 run_case qemu-virgl virtio_gpu true virtual-gl
-run_case virtualbox-vmsvga-no-render-node vmwgfx false cpu
-run_case virtualbox-vmsvga-render-node vmwgfx true cpu
-run_case virtualbox-legacy vboxvideo true cpu
+run_case virtualbox-vmsvga-no-render-node vmwgfx false vulkan
+run_case virtualbox-vmsvga-render-node vmwgfx true vulkan
+run_case virtualbox-legacy vboxvideo true vulkan
+run_case headless-no-render-node "" false vulkan
 run_case qemu-qxl qxl true cpu
 run_case physical-amdgpu amdgpu true hardware
 run_multi_case physical-gpu-after-simpledrm hardware simpledrm amdgpu amdgpu
@@ -81,6 +82,8 @@ check_renderers() {
 
 check_renderers cpu pixman,unset
 check_renderers virtual-gl gles2,unset
+check_renderers vulkan vulkan,unset
+check_renderers hardware unset,unset
 hardware_renderers=$(WLR_RENDERER=custom GSK_RENDERER=custom bash -c '
   . "$1"
   dinx_apply_graphics_environment hardware
@@ -95,6 +98,6 @@ if dinx_apply_graphics_environment unknown >/dev/null 2>&1; then
   exit 1
 fi
 
-printf 'dinx_graphics_profile_contract vmsvga_pixman=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true\n'
+printf 'dinx_graphics_profile_contract vmsvga_vulkan=true no_render_node_vulkan=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true\n'
 
 

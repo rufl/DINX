@@ -222,12 +222,16 @@ else
   [[ "$session_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept session screendump'
   validate_screenshot "$session_screenshot_path" 'session'
 fi
-"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path"
-
 if [[ -n "$post_screenshot_path" ]]; then
   [[ "$post_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept post-screenshot screendump'
   validate_screenshot "$post_screenshot_path" 'post'
 fi
+session_check_screenshot=$session_screenshot_path
+if [[ -n "$post_screenshot_path" && -n "$post_keys" ]]; then
+  session_check_screenshot=$post_screenshot_path
+fi
+"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run
+"$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot"
 
 
 printf 'smoke-iso: Pearl/Aqueous session reached a graphical-ready screen within %ss\n' "$timeout_seconds"

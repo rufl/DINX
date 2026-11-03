@@ -52,17 +52,20 @@ tools. The disks are temporary and deleted after the smoke; this is not a substi
 for hardware qualification.
 
 
-The workflow's QEMU boot smoke captures the VGA surface and uses Tesseract OCR to require a Pearl/Aqueous/DINX desktop marker while rejecting Pearl Greeter, login prompts and visible Dinit failures. Local smoke runs need `qemu-system-x86_64`, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`:
+The workflow's QEMU boot smoke captures the VGA surface and uses Tesseract OCR to require a Pearl/Aqueous/DINX desktop marker while rejecting Pearl Greeter, login prompts and visible Dinit failures. It sends `Alt+F4` after the first capture to dismiss Pearl's first-run setup window, then checks the post-dismissal desktop frame. Local smoke runs need `qemu-system-x86_64`, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`:
 
 ```bash
 DINX_QEMU_TIMEOUT=90 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/graphical-screen.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
+DINX_QEMU_POST_SCREENSHOT=dist/iso/dinx/session-screen.ppm \
+DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
+DINX_QEMU_POST_KEYS=alt-f4 \
 scripts/smoke-iso.sh dist/iso/<file>.iso
 ```
 
-The smoke also checks the captured session frame. Without `DINX_QEMU_SCREENSHOT`, it saves the checked PPM beside the QEMU log as `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` selects another installed Tesseract model.
+The smoke also checks the captured session frame. If the original frame contains no OCR-readable text, it enlarges the top panel before checking the desktop marker. Without `DINX_QEMU_SCREENSHOT`, it saves the checked PPM beside the QEMU log as `<iso>.qemu.log.session.ppm`; `DINX_QEMU_OCR_LANG` selects another installed Tesseract model.
 
 `build-iso.sh` copies Artix's `artools` data into a private temporary tree and patches its copied initramfs helper to add `vmwgfx` and `vboxvideo` to the configuration used inside the bootfs, immediately before Artix runs `mkinitcpio`; it does not modify the host installation. `check_artix_initcpio_patch.sh` guards this helper/config contract, and `check-iso-content.sh` requires `bsdtar` and verifies both modules inside the ISO's actual boot initramfs. The P0 VMware-SVGA smoke then requires the desktop.
 
@@ -107,7 +110,7 @@ The livefs adds the live-only `dinx-live-autologin` dinit package. It enables gr
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and Noto Sans 10 are installed for the corresponding consumers, matching CachyOS's default GTK typography; Noto Sans Mono is used for fixed-width fields. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 
 The Pearl Greeter and initial desktop use solid backgrounds without wallpaper images or a DINX logo; Calamares retains the full wordmark on its product logo/welcome surface. The reduced D-and-ray symbol is maintained as a transparent SVG at `design/brand/dinx-ray-mark.svg`, copied into the ISO branding assets, and rendered as the GRUB logo; Calamares uses it as the product icon. Desktop and app-launcher icons remain upstream/Adwaita.
-On the first Pearl session, a one-time setup wizard lets each user enable or hide the dock, place the Pearl bar at the top or bottom, and choose DINX dark/light or Pearl Material dark/light. The dock uses the opposite edge from the bar; choices are saved in `~/.config/pearl/preferences.json`.
+On the first Pearl session, a one-time setup wizard lets each user enable or hide the dock, place the Pearl bar at the top or bottom, and choose DINX dark/light or Pearl Material dark/light; Pearl Material dark is preselected. The dock uses the opposite edge from the bar; choices are saved in `~/.config/pearl/preferences.json`.
 The ASCII D-ray at `/usr/share/dinx/branding/dinx-ray-mark.txt` is density-mapped from DINX's source SVG and works as a plain-text logo:
 ```sh
 fastfetch --logo-type file --logo /usr/share/dinx/branding/dinx-ray-mark.txt
@@ -126,9 +129,9 @@ Fastfetch and Areofyl's `fetch` are optional and are not included in the base IS
 
 The profile includes the experimental Calamares installer and GParted for standalone partition editing. Calamares copies the ISO root filesystem offline, keeps dinit as the installed init system, and removes the live-only Artix packages during installation. The base image carries the kernel `ntfs3` driver for NTFS read/write access and `os-prober` for Windows discovery; legacy `ntfs-3g` remains an optional post-install package in the signed extra channel. Existing Windows ESP/NTFS layouts are preserved by the installer and use a separate DINX EFI directory.
 
-Pearl Greeter, Aqueous/Pearl and the installer receive DINX defaults from the root overlay. Pearl Greeter uses the installed GTK DINX theme and the root-owned greeter JSON; Calamares uses the same surface/text/primary/error tokens in its Qt stylesheet. Pearl is the active user shell. The dedicated Aqueous host runs only Pearl Greeter and is not exposed as a user-session fallback. The Calamares dependency chain retains only installer components, unsupported session entries remain hidden, and `Aqueous + Pearl (DINX)` is the live session. The live session exposes `Install DINX` through the launcher. The package-provided `Install Artix` Calamares alias is hidden by a local desktop override, leaving DINX's launcher as the only installer shortcut.
+Pearl Greeter, Aqueous/Pearl and the installer receive DINX defaults from the root overlay. Pearl Greeter uses Adwaita as configured in its root-owned greeter JSON; Calamares uses the same surface/text/primary/error tokens in its Qt stylesheet. Pearl is the active user shell. The dedicated Aqueous host runs only Pearl Greeter and is not exposed as a user-session fallback. The Calamares dependency chain retains only installer components, unsupported session entries remain hidden, and `Aqueous + Pearl (DINX)` is the live session. The live session exposes `Install DINX` through the launcher. The package-provided `Install Artix` Calamares alias is hidden by a local desktop override, leaving DINX's launcher as the only installer shortcut.
 The live path uses `Aqueous + Pearl (DINX)` without a credential prompt: a live-only dinit service prepares greetd before it starts. The installed rootfs keeps manual login and Calamares keeps both autologin flags disabled.
-GTK 3/4 system defaults at `/etc/xdg/gtk-3.0/settings.ini` and `/etc/xdg/gtk-4.0/settings.ini` select DINX dark styling, including for GTK tools launched with elevated privileges. Because greetd starts the live session without shell profiles, the Aqueous launcher exports `GTK_THEME=DINX:dark` and `QT_QPA_PLATFORMTHEME=qt6ct` directly and seeds the DINX Qt6ct config/palette when an existing home lacks them. Aqueous starts in its freeform `stacking` layout; `Alt+Shift+F` selects it from another layout, and `Super+Shift+Space` toggles floating for the focused window.
+GTK 3/4 system and skeleton defaults use Adwaita so application-specific theme preferences are respected; Pearl's default shell appearance is Pearl Material dark. The first-run wizard can select DINX or Material in dark or light mode. The live Aqueous launcher does not force `GTK_THEME`; it sets `QT_QPA_PLATFORMTHEME=qt6ct` and seeds the DINX Qt6ct config/palette when an existing home lacks them. Aqueous starts in its freeform `stacking` layout; `Alt+Shift+F` selects it from another layout, and `Super+Shift+Space` toggles floating for the focused window.
 
 The runtime payload is Wayland/XWayland only: legacy Xorg/XLibre servers, drivers and Plasma session entries are omitted. Xvfb remains builder-only for package qualification.
 For storage, Pori is the DINX disk/mount manager and Phyto is the default file manager. File Roller provides graphical archive actions and GParted provides standalone partition editing outside Calamares. Pori uses UDisks2 for block-device discovery and creates persistent scripted mount services under `/etc/dinit.d`; it does not use systemd units. The base image does not install Thunar, GVFS, Tumbler or KDE Partition Manager. Phyto handles directory browsing; the standalone LXQt PolicyKit agent remains for privileged actions, and Pearl remains the active shell.

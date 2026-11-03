@@ -171,7 +171,7 @@ on_activate(GtkApplication *application, gpointer user_data)
     GtkStringList *theme_model = gtk_string_list_new(theme_names);
     wizard->theme = gtk_drop_down_new(G_LIST_MODEL(theme_model), NULL);
     g_object_unref(theme_model);
-    gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);
     gtk_widget_set_halign(wizard->theme, GTK_ALIGN_FILL);
     gtk_box_append(GTK_BOX(theme_page), wizard->theme);
     gtk_stack_add_named(GTK_STACK(wizard->stack), theme_page, "theme");

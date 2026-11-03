@@ -25,8 +25,6 @@ for path in \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
   "$aqueous_dir/gles2-renderer.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
-  "$aqueous_dir/pixman-rounded-corners.patch" \
-  "$aqueous_dir/0034-pixman-rounded-window-corners.patch" \
   "$aqueous_dir/window_policy_test.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
   "$pearl_dir/server-decorations.patch" \
@@ -55,6 +53,9 @@ grep -Fq 'patch --forward --fuzz=0 -Np1 < "$startdir/gles2-renderer.patch"' "$aq
   || fail 'Aqueous package does not apply the GLES2 renderer patch'
 grep -Fq "  'libglvnd'" "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous package is missing its EGL/GLES2 dependency'
+if grep -Eq 'pixman-rounded-corners|0034-pixman-rounded-window-corners' "$aqueous_dir/PKGBUILD"; then
+  fail 'Aqueous package still applies the custom Pixman scene-buffer patch'
+fi
 aqueous_archive="$aqueous_dir/Aqueous-$AQUEOUS_VERSION.tar.gz"
 [[ -r "$aqueous_archive" ]] || fail "missing pinned Aqueous source archive: ${aqueous_archive#$root/}"
 for command_name in tar patch; do
@@ -68,18 +69,12 @@ source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
 tar -xzf "$aqueous_archive" -C "$window_test_tmp"
 for patch_file in \
   dinit.patch gles2-renderer.patch server-decorations.patch \
-  titlebar-text.patch two-default-workspaces.patch pixman-rounded-corners.patch; do
+  titlebar-text.patch two-default-workspaces.patch; do
   patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
 wlroots_build_hook="$source_root/compositor/scripts/build-wlroots-render-hook.sh"
-grep -Fq '0034-pixman-rounded-window-corners.patch' "$wlroots_build_hook" \
-  || fail 'Aqueous does not apply the Pixman rounded-corner renderer patch'
-grep -Fq 'pixman-rounded-corners.patch' "$aqueous_dir/PKGBUILD" \
-  || fail 'Aqueous package does not apply the CPU corner integration patch'
-grep -Fq 'wlr_scene_buffer_set_rounded_clip' "$source_root/compositor/aqueous/fx.zig" \
-  || fail 'Aqueous CPU profile does not pass window clips into wlroots scene nodes'
 grep -Fq -- '-Drenderers=gles2,vulkan \' "$wlroots_build_hook" \
   || fail 'wlroots does not compile both GLES2 and Vulkan renderers'
 grep -Fq 'meson", "introspect", "--buildoptions"' "$wlroots_build_hook" \
@@ -246,6 +241,8 @@ grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not 
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
 grep -Fq 'compositor=/usr/bin/aqueous' "$aqueous_wrapper" \
   || fail 'hardware Aqueous compositor selection is missing'
+grep -Fq 'hardware|vulkan)' "$aqueous_wrapper" \
+  || fail 'full Aqueous compositor is not selected for the Vulkan profile'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
   || fail 'compatibility Aqueous compositor selection is missing'
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueous_wrapper" \
@@ -256,10 +253,12 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper
   || fail 'Aqueous session does not apply the selected renderer policy'
 grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
   || fail 'QEMU renderer policy is not set to GLES2'
+grep -Fq 'export WLR_RENDERER=vulkan' "$graphics_environment" \
+  || fail 'VirtualBox/default renderer policy is not set to Vulkan'
 grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
   || fail 'virtual graphics profiles leave GTK4 renderer selection automatic'
-[[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 2 ]] \
-  || fail 'GTK4 renderer selection is not automatic for both virtualized profiles'
+[[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 3 ]] \
+  || fail 'GTK4 renderer selection is not automatic for CPU, virtual-GL and Vulkan profiles'
 sh -n "$greeter_wrapper" "$aqueous_wrapper" || fail 'graphics wrapper shell syntax is invalid'
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$greeter_wrapper" \
   || fail 'Pearl Greeter does not select the detected graphics profile'
@@ -272,8 +271,10 @@ grep -Fq 'DINX_QEMU_VIDEO_DEVICE=vmware-svga' "$qualifier" \
   || fail 'shared ISO qualifier does not boot with VMware SVGA'
 grep -Fq 'virtio_gpu)' "$graphics_helper" \
   || fail 'QEMU virtio-gpu render-node driver is not detected'
-grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
-  || fail 'VirtualBox and 2D virtual display drivers do not use the safe fallback'
+grep -Fq 'vmwgfx|vboxvideo)' "$graphics_helper" \
+  || fail 'VirtualBox adapters do not use the Vulkan renderer profile'
+grep -Fq 'qxl|bochs|simpledrm|cirrus)' "$graphics_helper" \
+  || fail '2D virtual display drivers do not use the safe fallback'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init" \
   || fail 'Aqueous init does not delegate to the supervised dinit session'
@@ -284,5 +285,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_minimize=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_pixman=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_minimize=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

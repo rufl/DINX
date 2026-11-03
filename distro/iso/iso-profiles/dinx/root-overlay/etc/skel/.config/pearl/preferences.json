@@ -1,11 +1,11 @@
 {
   "version": 1,
   "theme": {
-    "mode": "gtk",
+    "mode": "static",
     "variant": "dark",
     "seed": "#F4515B",
     "source": "seed",
-    "gtk_name": "Adwaita"
+    "gtk_name": ""
   },
   "wallpaper": {
     "mode": "solid",

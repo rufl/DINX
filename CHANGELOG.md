@@ -7,6 +7,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Use one full ISO qualifier for local builds and P0 CI: metadata, checksum, payload and budget checks; default-VGA and Virtio-VGA QEMU captures; and disposable BIOS/UEFI install smokes. Full local qualification runs by default; static-only is not boot evidence. QEMU 11.1.2/KVM with `vmware-svga` stalls in early udev while `vmwgfx` loads; the test now avoids that emulator path rather than mislabel it VirtualBox evidence. Direct VirtualBox and physical hardware remain unqualified.
 - Recognize the Arch `edk2-ovmf` 4 MiB firmware paths for full host checks and UEFI install smoke, avoiding a false missing-OVMF failure when the package is installed.
 - Persist local pacman, makepkg-source, Cargo-registry, per-package Cargo-target and Zig global caches; combine pacman's database refresh and upgrade. Skip ownership walks over disposable chroots and same-UID source/cache trees. End QEMU qualification after required screenshots and installed first-boot checks instead of waiting for fixed timeout windows; all existing boot, screenshot, package and installation gates remain required.
+- Initialize each package build's timing state before invoking `makepkg`, preventing `nounset` from aborting the ISO build after a package completes.
+- Make Cargo-built packages honor the per-package `CARGO_TARGET_DIR` cache during packaging; Cyan Skillfish, Matugen and Shikane now install binaries from the same target directory used by Cargo.
 
 - Use Pearl Material dark as the fresh-session and first-run default; keep GTK application defaults on Adwaita and preserve existing user theme choices.
 - Bump Pearl to `pkgrel=5` and refresh the pinned first-run wizard checksum for the Material default.

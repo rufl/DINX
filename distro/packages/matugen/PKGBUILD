@@ -46,6 +46,6 @@ check() {
 package() {
   depends+=(libgcc_s.so)
   cd "matugen-$pkgver"
-  install -Dm0755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm0755 "${CARGO_TARGET_DIR:-target}/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

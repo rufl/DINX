@@ -29,7 +29,7 @@ build() {
 
 package() {
   cd "$srcdir/cyan-skillfish-governor-$pkgver"
-  install -Dm755 target/release/cyan-skillfish-governor-smu "$pkgdir/usr/bin/cyan-skillfish-governor-smu"
+  install -Dm755 "${CARGO_TARGET_DIR:-target}/release/cyan-skillfish-governor-smu" "$pkgdir/usr/bin/cyan-skillfish-governor-smu"
   install -Dm755 scripts/cyan-skillfish-performance-mode "$pkgdir/usr/bin/cyan-skillfish-performance-mode"
   install -Dm644 com.cyanskillfish.Governor.conf \
     "$pkgdir/usr/share/dbus-1/system.d/com.cyanskillfish.Governor.conf"

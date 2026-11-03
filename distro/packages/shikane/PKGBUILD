@@ -22,7 +22,7 @@ build() {
 
 package() {
   cd "$pkgname-v$pkgver"
-  install -Dm755 target/release/shikane "$pkgdir/usr/bin/shikane"
-  install -Dm755 target/release/shikanectl "$pkgdir/usr/bin/shikanectl"
+  install -Dm755 "${CARGO_TARGET_DIR:-target}/release/shikane" "$pkgdir/usr/bin/shikane"
+  install -Dm755 "${CARGO_TARGET_DIR:-target}/release/shikanectl" "$pkgdir/usr/bin/shikanectl"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

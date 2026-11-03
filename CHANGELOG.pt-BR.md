@@ -9,6 +9,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Persistir caches locais do pacman, fontes makepkg, registry Cargo, alvos Cargo por pacote e cache global Zig; combinar a atualização dos bancos e pacotes do pacman. Pular varreduras de propriedade em chroots descartáveis e árvores de fontes/cache com o mesmo UID. Encerrar a qualificação QEMU após as capturas exigidas e as verificações de primeiro boot, sem aguardar timeouts fixos; todos os gates de boot, tela, pacotes e instalação continuam obrigatórios.
 - Inicializar o estado de tempo de cada pacote antes de executar `makepkg`, evitando que o `nounset` interrompa o build da ISO após a conclusão de um pacote.
 - Fazer os pacotes Cargo respeitarem o cache `CARGO_TARGET_DIR` por pacote ao empacotar; Cyan Skillfish, Matugen e Shikane agora instalam os binários do mesmo diretório usado pelo Cargo.
+- Remover a dependência do marcador do smoke de instalação persistente no serviço live `early-root-rw.target`; a root ext4 instalada e descartável inicializa gravável, então essa ordenação de remontagem não é necessária.
 
 - Definido Pearl Material escuro como padrão da sessão nova e do wizard inicial; os aplicativos GTK mantêm Adwaita como padrão e as escolhas de tema já salvas pelo usuário são preservadas.
 - Incrementado o Pearl para `pkgrel=5` e atualizado o checksum fixado do wizard inicial para o padrão Material.

@@ -9,6 +9,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Persist local pacman, makepkg-source, Cargo-registry, per-package Cargo-target and Zig global caches; combine pacman's database refresh and upgrade. Skip ownership walks over disposable chroots and same-UID source/cache trees. End QEMU qualification after required screenshots and installed first-boot checks instead of waiting for fixed timeout windows; all existing boot, screenshot, package and installation gates remain required.
 - Initialize each package build's timing state before invoking `makepkg`, preventing `nounset` from aborting the ISO build after a package completes.
 - Make Cargo-built packages honor the per-package `CARGO_TARGET_DIR` cache during packaging; Cyan Skillfish, Matugen and Shikane now install binaries from the same target directory used by Cargo.
+- Drop the persistent-install smoke marker's live-session dependency on `early-root-rw.target`; the disposable installed root boots from writable ext4, so this remount ordering is not needed.
 
 - Use Pearl Material dark as the fresh-session and first-run default; keep GTK application defaults on Adwaita and preserve existing user theme choices.
 - Bump Pearl to `pkgrel=5` and refresh the pinned first-run wizard checksum for the Material default.

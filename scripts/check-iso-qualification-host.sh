@@ -46,13 +46,16 @@ done
 
 qemu_devices=$(qemu-system-x86_64 -device help 2>&1) \
   || fail 'qemu-system-x86_64 could not enumerate emulated devices'
-grep -Fq 'vmware-svga' <<< "$qemu_devices" \
-  || fail 'host QEMU lacks the vmware-svga display device required for VirtualBox graphics proxy smoke'
+grep -Fq 'virtio-vga' <<< "$qemu_devices" \
+  || fail 'host QEMU lacks the virtio-vga display device required for the live-session graphics smoke'
 
 ovmf_code=${DINX_INSTALL_OVMF_CODE:-}
 ovmf_vars=${DINX_INSTALL_OVMF_VARS:-}
 if [[ -z "$ovmf_code" ]]; then
-  for candidate in /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd; do
+  for candidate in \
+    /usr/share/OVMF/OVMF_CODE_4M.fd \
+    /usr/share/OVMF/OVMF_CODE.fd \
+    /usr/share/edk2/x64/OVMF_CODE.4m.fd; do
     if [[ -r "$candidate" ]]; then
       ovmf_code=$candidate
       break
@@ -60,7 +63,10 @@ if [[ -z "$ovmf_code" ]]; then
   done
 fi
 if [[ -z "$ovmf_vars" ]]; then
-  for candidate in /usr/share/OVMF/OVMF_VARS_4M.fd /usr/share/OVMF/OVMF_VARS.fd; do
+  for candidate in \
+    /usr/share/OVMF/OVMF_VARS_4M.fd \
+    /usr/share/OVMF/OVMF_VARS.fd \
+    /usr/share/edk2/x64/OVMF_VARS.4m.fd; do
     if [[ -r "$candidate" ]]; then
       ovmf_vars=$candidate
       break
@@ -69,4 +75,4 @@ if [[ -z "$ovmf_vars" ]]; then
 fi
 [[ -r "$ovmf_code" ]] || fail 'OVMF code firmware is missing; install the host OVMF package or set DINX_INSTALL_OVMF_CODE'
 [[ -r "$ovmf_vars" ]] || fail 'OVMF variables template is missing; install the host OVMF package or set DINX_INSTALL_OVMF_VARS'
-printf 'iso-qualification-host: full qualification prerequisites passed (OCR=%s, vmware-svga, OVMF)\n' "$ocr_language"
+printf 'iso-qualification-host: full qualification prerequisites passed (OCR=%s, virtio-vga, OVMF)\n' "$ocr_language"

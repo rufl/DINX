@@ -31,12 +31,18 @@ if [[ "$firmware_mode" == uefi ]]; then
   ovmf_code=${DINX_INSTALL_OVMF_CODE:-}
   ovmf_vars_template=${DINX_INSTALL_OVMF_VARS:-}
   if [[ -z "$ovmf_code" ]]; then
-    for candidate in /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd; do
+    for candidate in \
+      /usr/share/OVMF/OVMF_CODE_4M.fd \
+      /usr/share/OVMF/OVMF_CODE.fd \
+      /usr/share/edk2/x64/OVMF_CODE.4m.fd; do
       if [[ -r "$candidate" ]]; then ovmf_code=$candidate; break; fi
     done
   fi
   if [[ -z "$ovmf_vars_template" ]]; then
-    for candidate in /usr/share/OVMF/OVMF_VARS_4M.fd /usr/share/OVMF/OVMF_VARS.fd; do
+    for candidate in \
+      /usr/share/OVMF/OVMF_VARS_4M.fd \
+      /usr/share/OVMF/OVMF_VARS.fd \
+      /usr/share/edk2/x64/OVMF_VARS.4m.fd; do
       if [[ -r "$candidate" ]]; then ovmf_vars_template=$candidate; break; fi
     done
   fi
@@ -372,7 +378,10 @@ if [[ "$firmware_mode" == uefi ]]; then
   ovmf_code=${DINX_INSTALL_OVMF_CODE:-}
   ovmf_vars_template=${DINX_INSTALL_OVMF_VARS:-}
   if [[ -z "$ovmf_code" ]]; then
-    for candidate in /usr/share/OVMF/OVMF_CODE_4M.fd /usr/share/OVMF/OVMF_CODE.fd; do
+    for candidate in \
+      /usr/share/OVMF/OVMF_CODE_4M.fd \
+      /usr/share/OVMF/OVMF_CODE.fd \
+      /usr/share/edk2/x64/OVMF_CODE.4m.fd; do
       if [[ -r "$candidate" ]]; then
         ovmf_code=$candidate
         break
@@ -380,7 +389,10 @@ if [[ "$firmware_mode" == uefi ]]; then
     done
   fi
   if [[ -z "$ovmf_vars_template" ]]; then
-    for candidate in /usr/share/OVMF/OVMF_VARS_4M.fd /usr/share/OVMF/OVMF_VARS.fd; do
+    for candidate in \
+      /usr/share/OVMF/OVMF_VARS_4M.fd \
+      /usr/share/OVMF/OVMF_VARS.fd \
+      /usr/share/edk2/x64/OVMF_VARS.4m.fd; do
       if [[ -r "$candidate" ]]; then
         ovmf_vars_template=$candidate
         break

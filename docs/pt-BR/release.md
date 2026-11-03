@@ -4,7 +4,7 @@
 
 Os releases da DINX são snapshots de validação em pré-release, não releases de
 instalação persistente suportados. O workflow de release é acionado por uma tag `v*`
-e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e os smokes de boot QEMU configurados antes de publicar. O release Alpha 12 testou VGA padrão, não VMware-SVGA; a main atual configura o smoke VMware-SVGA, mas ainda não o executou.
+e reutiliza o build Artix do P0, a verificação de payload, a geração de SHA-512 e os smokes de boot QEMU configurados antes de publicar. O release Alpha 12 testou VGA padrão, não VMware-SVGA; o qualificador compartilhado atual testa VGA padrão e Virtio-VGA. O caminho `vmware-svga` do QEMU 11.1.2/KVM trava no udev inicial com `vmwgfx` carregado e não qualifica o VirtualBox.
 
 O workflow mantém o pré-release móvel `alpha-latest` com `dinx-latest-x86_64.iso` e seu checksum SHA-512. Releases por tag o atualizam; use `workflow_dispatch` com `release_tag` somente para inicializar ou resincronizar o alias. O limite de 2 GiB por asset do GitHub permite o alias apenas quando a alpha mais recente tem uma ISO única; use a página da release versionada quando a imagem estiver dividida. O publicador tenta novamente erros 404 transitórios enquanto metadados, arquivos e uploads do alias ficam disponíveis, aguarda a listagem de releases e impede que uma alpha antiga reverta o alias.
 

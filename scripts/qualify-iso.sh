@@ -59,14 +59,14 @@ DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
 
 DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-90} \
-DINX_QEMU_VIDEO_DEVICE=vmware-svga \
-DINX_QEMU_LOG="$iso_dir/dinx-vmware-svga.qemu.log" \
-DINX_QEMU_BOOT_SCREENSHOT="$iso_dir/dinx-vmware-svga-boot-screen.ppm" \
+DINX_QEMU_VIDEO_DEVICE=virtio-vga \
+DINX_QEMU_LOG="$iso_dir/dinx-virtio-vga.qemu.log" \
+DINX_QEMU_BOOT_SCREENSHOT="$iso_dir/dinx-virtio-vga-boot-screen.ppm" \
 DINX_QEMU_BOOT_SCREENSHOT_DELAY=3 \
-DINX_QEMU_SCREENSHOT="$iso_dir/dinx-vmware-svga-session.ppm" \
+DINX_QEMU_SCREENSHOT="$iso_dir/dinx-virtio-vga-session.ppm" \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
 DINX_QEMU_BOOT_KEYS=down,down,ret \
-DINX_QEMU_POST_SCREENSHOT="$iso_dir/dinx-vmware-svga-session-after-setup.ppm" \
+DINX_QEMU_POST_SCREENSHOT="$iso_dir/dinx-virtio-vga-session-after-setup.ppm" \
 DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
 DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
@@ -79,4 +79,4 @@ DINX_INSTALL_OUTPUT_DIR="$iso_dir" \
 DINX_INSTALL_TIMEOUT=${DINX_INSTALL_TIMEOUT:-180} \
 DINX_INSTALL_FIRMWARE=uefi \
   "$script_dir/smoke-install.sh" "$iso_path"
-printf 'qualify-iso: full QEMU VGA, VMware-SVGA, BIOS and UEFI installation gates passed: %s\n' "$iso_path"
+printf 'qualify-iso: full QEMU VGA, Virtio-VGA, BIOS and UEFI installation gates passed: %s\n' "$iso_path"

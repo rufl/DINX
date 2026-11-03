@@ -6,6 +6,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 - Unificada a qualificação completa da ISO entre build local e CI P0: metadados, checksum, payload e limites; capturas QEMU VGA padrão e Virtio-VGA; e smokes de instalação descartável BIOS/UEFI. A qualificação local completa é o padrão; o modo estático não conta como evidência de boot. QEMU 11.1.2/KVM com `vmware-svga` trava no udev inicial quando `vmwgfx` carrega; removemos esse caminho do gate, sem tratá-lo como evidência de VirtualBox. O boot direto no VBox e em hardware físico continua sem qualificação.
 - Reconhecer os caminhos 4 MiB do pacote Arch `edk2-ovmf` na verificação do host e no smoke de instalação UEFI, evitando falso erro de OVMF ausente com o pacote instalado.
+- Persistir caches locais do pacman, fontes makepkg, registry Cargo, alvos Cargo por pacote e cache global Zig; combinar a atualização dos bancos e pacotes do pacman. Pular varreduras de propriedade em chroots descartáveis e árvores de fontes/cache com o mesmo UID. Encerrar a qualificação QEMU após as capturas exigidas e as verificações de primeiro boot, sem aguardar timeouts fixos; todos os gates de boot, tela, pacotes e instalação continuam obrigatórios.
+
 - Definido Pearl Material escuro como padrão da sessão nova e do wizard inicial; os aplicativos GTK mantêm Adwaita como padrão e as escolhas de tema já salvas pelo usuário são preservadas.
 - Incrementado o Pearl para `pkgrel=5` e atualizado o checksum fixado do wizard inicial para o padrão Material.
 - Definir e persistir o hostname da sessão live como `dinxlive` antes de iniciar o greetd. Aplicar a marca DINX aos menus GRUB live e instalado, substituindo a marca antiga pelo novo símbolo DINX em gradiente.

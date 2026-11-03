@@ -26,7 +26,7 @@ Options are controlled through environment variables:
   DINX_LOCAL_BUILD_DIR       Choose an output directory under checkout dist/.
   DINX_ISO_OUTPUT            Override the ISO output directory under dist/.
   DINX_PACKAGE_OUTPUT        Override package directory under dist/ (must end in /packages).
-  DINX_BUILD_CACHE_DIR       Reuse SHA-verified toolchain archives under dist/.
+  DINX_BUILD_CACHE_DIR       Reuse package, source, Cargo and toolchain caches under dist/.
   DINX_ARTIX_IMAGE           Override the digest-pinned Artix builder image.
   DINX_ISO_CHROOTS           Use a chroot directory outside the checkout or under dist/.
   DINX_KEEP_CHROOTS=1        Keep the temporary chroot after a successful build.
@@ -156,7 +156,9 @@ require_empty_output "$iso_output_host"
 require_empty_output "$package_output_host"
 [[ ! -e "$package_bundle_host" ]] \
   || fail "package bundle already exists; choose a fresh build directory: $package_bundle_host"
-mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" "$cache_host/toolchains"
+mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" \
+  "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
+  "$cache_host/cargo" "$cache_host/zig"
 
 source_env="$repo_root/distro/packages/deetty/source.env"
 version=$(awk -F= '$1 == "DEETTY_VERSION" { print $2; exit }' "$source_env")
@@ -213,6 +215,10 @@ case "$chroots_dir" in
     ;;
 esac
 mkdir -p -- "$chroots_dir"
+remove_chroots_after_build=false
+if [[ "$created_chroots" == true && "$keep_chroots" != true && "$keep_chroots" != 1 ]]; then
+  remove_chroots_after_build=true
+fi
 
 cleanup() {
   local status=$?
@@ -238,6 +244,7 @@ fi
 docker run --rm --privileged \
   --volume "$repo_root:/workspace" \
   --volume "$cache_host:/var/cache/dinx" \
+  --volume "$cache_host/pacman/pkg:/var/cache/pacman/pkg" \
   --volume "$chroots_dir:/var/lib/artools/buildiso" \
   --workdir /workspace \
   --env DINX_ISO_OUTPUT="$iso_output_container" \
@@ -249,6 +256,7 @@ docker run --rm --privileged \
   --env DINX_SOURCE_TREE_SHA256="$source_tree_sha256" \
   --env DINX_HOST_UID="$host_uid" \
   --env DINX_HOST_GID="$host_gid" \
+  --env DINX_REMOVE_CHROOTS_AFTER_BUILD="$remove_chroots_after_build" \
   --env DINX_PACKAGE_SIGNING_KEY \
   --env DINX_PACKAGE_SIGNING_FINGERPRINT \
   --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING="$require_persistent" \

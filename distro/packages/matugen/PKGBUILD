@@ -19,7 +19,7 @@ sha256sums=("$MATUGEN_SOURCE_SHA256")
 
 _srcenv() {
   cd "matugen-$pkgver"
-  export CARGO_HOME="$srcdir"
+  export CARGO_HOME="${CARGO_HOME:-$srcdir}"
   export CARGO_PROFILE_RELEASE_DEBUG=2
   export CARGO_PROFILE_RELEASE_STRIP=false
   export CARGO_PROFILE_RELEASE_LTO=thin

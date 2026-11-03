@@ -187,6 +187,7 @@ set -eu
 install -d -m 0755 /var/lib/dinx
 fail() {
   printf 'install_smoke_failure=%s\n' "$1" > /var/lib/dinx/install-smoke.failed
+  printf 'install_smoke_failure=%s\n' "$1" > /dev/ttyS0 2>/dev/null || true
   exit 1
 }
 tmp=/var/lib/dinx/install-smoke.booted.tmp
@@ -234,7 +235,7 @@ tmp=/var/lib/dinx/install-smoke.booted.tmp
   printf 'lifecycle_checks=true\n'
 } > "$tmp"
 mv -f "$tmp" /var/lib/dinx/install-smoke.booted
-EOF
+printf 'install_smoke_ready=true\n' > /dev/ttyS0 2>/dev/null || true
 chmod 0755 "$target_dir/usr/local/libexec/dinx-install-smoke-marker"
 cat > "$target_dir/etc/dinit.d/dinx-install-smoke-marker" <<'EOF'
 type = scripted
@@ -420,12 +421,24 @@ for _ in {1..30}; do
   fi
   sleep 1
 done
+qemu_quit_requested=false
 if [[ "$monitor_ready" == true ]]; then
   sleep 30
   printf 'screendump %s\n' "$screen_path" | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
   printf 'sendkey ctrl-alt-f2\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
   sleep 3
   printf 'screendump %s\n' "$recovery_screen_path" | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
+  for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
+    if grep -Eq '^install_smoke_ready=true$|^install_smoke_failure=' "$serial_log"; then
+      if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
+        qemu_quit_requested=true
+        printf 'smoke-install: requested QEMU shutdown after first-boot checks\n'
+      fi
+      break
+    fi
+    kill -0 "$qemu_pid" 2>/dev/null || break
+    sleep 1
+  done
 fi
 wait "$qemu_pid"
 qemu_status=$?
@@ -433,10 +446,10 @@ qemu_pid=
 set -e
 rm -rf "$monitor_dir"
 monitor_dir=
-[[ "$qemu_status" -eq 124 ]] || {
+if [[ "$qemu_status" -ne 124 && ( "$qemu_status" -ne 0 || "$qemu_quit_requested" != true ) ]]; then
   [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
   fail "installed disk QEMU exited before the ${timeout_seconds}s boot window (status $qemu_status)"
-}
+fi
 [[ -s "$screen_path" ]] || fail "installed disk screenshot is missing: $screen_path"
 [[ -s "$recovery_screen_path" ]] || fail "recovery TTY screenshot is missing: $recovery_screen_path"
 for image in "$screen_path" "$recovery_screen_path"; do

@@ -31,14 +31,14 @@ build() {
   if pacman -T pacman-git >/dev/null 2>&1; then
     features+=(git)
   fi
-  cargo build --frozen --features "${features[*]}" --release --target-dir target
+  cargo build --frozen --features "${features[*]}" --release --target-dir "${CARGO_TARGET_DIR:-target}"
   ./scripts/mkmo locale/
 }
 
 package() {
   cd "$srcdir/paru-$pkgver"
 
-  install -Dm755 target/release/paru "$pkgdir/usr/bin/paru"
+  install -Dm755 "${CARGO_TARGET_DIR:-target}/release/paru" "$pkgdir/usr/bin/paru"
   install -Dm644 "$srcdir/paru.conf" "$pkgdir/etc/paru.conf"
 
   install -Dm644 man/paru.8 "$pkgdir/usr/share/man/man8/paru.8"

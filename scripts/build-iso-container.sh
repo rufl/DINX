@@ -3,11 +3,14 @@ set -euo pipefail
 
 host_uid=${DINX_HOST_UID:-}
 host_gid=${DINX_HOST_GID:-}
+build_uid=
+build_gid=
 repo_pid=
 builder_started=$SECONDS
 finish() {
   local status=$?
   local elapsed=$((SECONDS - builder_started))
+  local path
   trap - EXIT
   if [[ -n "$repo_pid" ]]; then
     kill "$repo_pid" 2>/dev/null || true
@@ -15,9 +18,22 @@ finish() {
   if [[ "$host_uid" =~ ^[0-9]+$ && "$host_gid" =~ ^[0-9]+$ ]]; then
     for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso /var/cache/dinx /workspace/distro/packages; do
       [[ -n "$path" && -e "$path" ]] || continue
+      if [[ "$path" == /var/lib/artools/buildiso \
+        && "$status" -eq 0 \
+        && "${DINX_REMOVE_CHROOTS_AFTER_BUILD:-false}" == true ]]; then
+        continue
+      fi
+      if [[ "$host_uid" == "$build_uid" && "$host_gid" == "$build_gid" \
+        && ( "$path" == /var/cache/dinx || "$path" == /workspace/distro/packages ) ]]; then
+        continue
+      fi
+      local chown_started=$SECONDS
       if ! chown -R -- "$host_uid:$host_gid" "$path"; then
         printf 'build-iso-container: failed to restore ownership of %s\n' "$path" >&2
         (( status != 0 )) || status=1
+      else
+        printf 'dinx-build-timing phase=ownership-restore path=%s elapsed_seconds=%s exit_status=0\n' \
+          "$path" "$((SECONDS - chown_started))"
       fi
     done
   fi
@@ -50,8 +66,8 @@ trap finish EXIT
                 return 1
               }
               source /workspace/scripts/lib/pacman-local-install.sh
-              pacman_retry -Syu --noconfirm
-              pacman_retry -Syy --noconfirm
+              builder_pacman_started=$SECONDS
+              pacman_retry -Syyu --noconfirm
               pacman_retry -S --needed --noconfirm \
                 artools \
                 iso-profiles \
@@ -159,6 +175,8 @@ trap finish EXIT
                 xz \
                 zlib \
                 rust
+              printf 'dinx-build-timing phase=builder-pacman-setup elapsed_seconds=%s exit_status=0\n' \
+                "$((SECONDS - builder_pacman_started))"
               scripts/check_artix_initcpio_patch.sh --check-installed
               update-mime-database /usr/share/mime
               mkdir -p /usr/lib/gdk-pixbuf-2.0/2.10.0
@@ -203,10 +221,24 @@ trap finish EXIT
               mkdir -p "$package_repo"
               makepkg_conf=/tmp/dinx-makepkg.conf
               cp /etc/makepkg.conf "$makepkg_conf"
-              printf '%q\n' "PKGDEST=$package_repo" >> "$makepkg_conf"
+              makepkg_source_cache=/var/cache/dinx/makepkg-sources
+              cargo_cache=/var/cache/dinx/cargo
+              cargo_target_cache=/var/cache/dinx/cargo-target
+              zig_cache=/var/cache/dinx/zig
+              mkdir -p "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache"
+              printf '%q\n' "PKGDEST=$package_repo" "SRCDEST=$makepkg_source_cache" >> "$makepkg_conf"
               chmod 644 "$makepkg_conf"
               useradd --create-home --user-group dinxbuild
-              chown -R dinxbuild:dinxbuild /workspace/distro/packages "$package_repo"
+              build_uid=$(id -u dinxbuild)
+              build_gid=$(id -g dinxbuild)
+              if [[ "$build_uid" == "$host_uid" && "$build_gid" == "$host_gid" ]]; then
+                chown dinxbuild:dinxbuild \
+                  "$package_repo" "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache"
+              else
+                chown -R dinxbuild:dinxbuild \
+                  /workspace/distro/packages "$package_repo" "$makepkg_source_cache" "$cargo_cache" \
+                  "$cargo_target_cache" "$zig_cache"
+              fi
               signing_home=/tmp/dinx-package-signing
               rm -rf "$signing_home"
               install -d -m 700 "$signing_home"
@@ -262,7 +294,11 @@ trap finish EXIT
                 local package_dir="/workspace/distro/packages/$package_name"
                 local package_started=$SECONDS
                 local status
-                local -a extra_env=()
+                local -a extra_env=(
+                  "CARGO_HOME=/var/cache/dinx/cargo"
+                  "CARGO_TARGET_DIR=/var/cache/dinx/cargo-target/$package_name"
+                  "ZIG_GLOBAL_CACHE_DIR=/var/cache/dinx/zig"
+                )
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 case "$package_name" in
                   dinitui|dinxpanel|seafoam-settings)
@@ -277,7 +313,7 @@ trap finish EXIT
                     ;;
                 esac
                 if [[ "$package_name" == deetty ]]; then
-                  extra_env=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
+                  extra_env+=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                   makepkg_options+=(--cleanbuild)
                 fi
                 if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then

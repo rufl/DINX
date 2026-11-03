@@ -204,7 +204,7 @@ Requisitos: Docker rootful acessível, suporte a `--privileged` e dispositivos l
 scripts/check-iso-qualification-host.sh full
 ```
 
-O builder local mantém archives dos toolchains Zig em `dist/.cache/dinx/toolchains`; cada cache hit é validado pelo SHA-256 fixado e os downloads são publicados atomicamente. O workflow P0 salva esse cache somente após a qualificação completa da ISO; o workflow de contratos o restaura em modo somente leitura quando disponível. Pacotes compilados e rootfs não entram no cache.
+O builder local reutiliza artefatos sob `dist/.cache/dinx`: archives fixados dos toolchains Zig, archives de pacotes pacman, fontes baixadas pelo makepkg, dados do registry Cargo e saídas Cargo por pacote, além do cache global Zig. Os toolchains são conferidos pelo SHA-256 fixado e publicados atomicamente; os archives de fontes continuam sujeitos às verificações de integridade das receitas, e builds Rust seguem lockfiles/modo frozen. O workflow P0 salva o cache de archives verificados somente após a qualificação completa; o workflow de contratos o restaura em modo somente leitura quando disponível. Archives de pacotes e rootfs nunca entram no cache ou na ISO.
 
 O modo reduzido é explícito e **não** qualifica boot/instalação:
 
@@ -221,7 +221,7 @@ DINX_EXPECTED_COMMIT=$(git rev-parse HEAD) scripts/qualify-iso.sh /caminho/para/
 
 `DINX_LOCAL_BUILD_DIR` pode selecionar um diretório de saída novo e vazio dentro de `dist`; resultados existentes nunca são sobrescritos. `DINX_BUILD_CACHE_DIR` pode apontar para outro diretório de cache dentro de `dist`.
 
-O builder emite `dinx-build-timing` por pacote, montagem da ISO e duração total do container. Compare logs de builds equivalentes antes de afirmar redução de tempo; o cache comprovadamente evita somente downloads repetidos de archives já verificados. A etapa local `scripts/qualify-iso.sh` também grava logs QEMU e capturas PPM ao lado da ISO.
+O builder emite `dinx-build-timing` para cada pacote, a preparação do pacman do builder, a montagem da ISO e a duração total do container. Compare logs equivalentes antes de afirmar redução de tempo; caches quentes evitam downloads repetidos, e o Cargo pode reutilizar saídas inalteradas por pacote. `scripts/qualify-iso.sh` local grava logs QEMU e capturas PPM ao lado da ISO.
 
 Ao sair do container, o builder encerra o servidor temporário do repositório e restaura a propriedade do host nos diretórios montados da ISO, dos pacotes, da árvore de build e das fontes de pacotes. Assim, a etapa P0 de checksum e as verificações locais pós-build conseguem gravar nos diretórios de saída.
 

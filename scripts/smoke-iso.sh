@@ -197,17 +197,31 @@ else
   post_dump_status=1
 fi
 
+qemu_quit_requested=false
+if [[ "$monitor_ready" == true \
+  && "$boot_dump_status" -eq 0 \
+  && "$session_dump_status" -eq 0 \
+  && "$post_dump_status" -eq 0 ]]; then
+  if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
+    qemu_quit_requested=true
+    printf 'smoke-iso: sent QEMU quit after all requested captures\n'
+  fi
+fi
+
 wait "$qemu_pid"
 status=$?
 qemu_pid=
 set -e
 
-if [[ "$status" -ne 124 ]]; then
-  printf 'smoke-iso: QEMU exited before the %ss boot window (status %s)\n' "$timeout_seconds" "$status" >&2
+if [[ "$status" -ne 124 && ( "$status" -ne 0 || "$qemu_quit_requested" != true ) ]]; then
+  printf 'smoke-iso: QEMU exited unexpectedly before the %ss boot window (status %s)\n' "$timeout_seconds" "$status" >&2
   if [[ -f "$log_path" ]]; then
     cat "$log_path" >&2
   fi
   exit 1
+fi
+if [[ "$status" -eq 124 ]]; then
+  printf 'smoke-iso: QEMU reached the %ss fallback timeout\n' "$timeout_seconds"
 fi
 
 

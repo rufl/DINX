@@ -66,6 +66,7 @@ trap finish EXIT
                 return 1
               }
               source /workspace/scripts/lib/pacman-local-install.sh
+              source /workspace/scripts/lib/dinx-package-artifact-cache.sh
               builder_pacman_started=$SECONDS
               pacman_retry -Syyu --noconfirm
               pacman_retry -S --needed --noconfirm \
@@ -221,11 +222,13 @@ trap finish EXIT
               mkdir -p "$package_repo"
               makepkg_conf=/tmp/dinx-makepkg.conf
               cp /etc/makepkg.conf "$makepkg_conf"
+              makepkg_base_conf_sha256=$(sha256sum "$makepkg_conf" | cut -d " " -f 1)
               makepkg_source_cache=/var/cache/dinx/makepkg-sources
               cargo_cache=/var/cache/dinx/cargo
               cargo_target_cache=/var/cache/dinx/cargo-target
               zig_cache=/var/cache/dinx/zig
-              mkdir -p "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache"
+              package_artifact_cache=/var/cache/dinx/package-artifacts
+              mkdir -p "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache" "$package_artifact_cache"
               printf '%q\n' "PKGDEST=$package_repo" "SRCDEST=$makepkg_source_cache" >> "$makepkg_conf"
               chmod 644 "$makepkg_conf"
               useradd --create-home --user-group dinxbuild
@@ -233,11 +236,11 @@ trap finish EXIT
               build_gid=$(id -g dinxbuild)
               if [[ "$build_uid" == "$host_uid" && "$build_gid" == "$host_gid" ]]; then
                 chown dinxbuild:dinxbuild \
-                  "$package_repo" "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache"
+                  "$package_repo" "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache" "$package_artifact_cache"
               else
                 chown -R dinxbuild:dinxbuild \
                   /workspace/distro/packages "$package_repo" "$makepkg_source_cache" "$cargo_cache" \
-                  "$cargo_target_cache" "$zig_cache"
+                  "$cargo_target_cache" "$zig_cache" "$package_artifact_cache"
               fi
               signing_home=/tmp/dinx-package-signing
               rm -rf "$signing_home"
@@ -288,18 +291,34 @@ trap finish EXIT
               pacman-key --add "$package_repo/dinx-package-signing-key.gpg"
               pacman-key --init
               pacman-key --lsign-key "$signing_key"
+              package_cache_builder_sha256=$(sha256sum /workspace/scripts/build-iso-container.sh | cut -d " " -f 1)
+              package_cache_as_build_user() {
+                local operation="$1"
+                shift
+                runuser -u dinxbuild -- bash -c '
+                  set -euo pipefail
+                  source "$1"
+                  operation=$2
+                  shift 2
+                  "$operation" "$@"
+                ' _ /workspace/scripts/lib/dinx-package-artifact-cache.sh "$operation" "$@"
+              }
+
+
 
               build_package() {
                 local package_name="$1"
                 local package_dir="/workspace/distro/packages/$package_name"
                 local package_started=$SECONDS
-                local status
+                local status archive archive_name installed_packages_sha256 cache_key
                 local -a extra_env=(
                   "CARGO_HOME=/var/cache/dinx/cargo"
                   "CARGO_TARGET_DIR=/var/cache/dinx/cargo-target/$package_name"
                   "ZIG_GLOBAL_CACHE_DIR=/var/cache/dinx/zig"
                 )
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
+                local -A existing_archives=()
+                local -a package_archives=()
                 case "$package_name" in
                   dinitui|dinxpanel|seafoam-settings)
                     # These packages build directly from checked-in source trees.
@@ -321,6 +340,30 @@ trap finish EXIT
                 elif [[ "$package_name" == pori || "$package_name" == aqueous ]]; then
                   extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")
                 fi
+
+                installed_packages_sha256=$(pacman -Q | LC_ALL=C sort | sha256sum)
+                installed_packages_sha256=${installed_packages_sha256%% *}
+                cache_key=$(dinx_package_cache_key \
+                  "$package_name" "$package_dir" "$makepkg_base_conf_sha256" \
+                  "$package_cache_builder_sha256" "$installed_packages_sha256" \
+                  "${makepkg_options[@]}" -- "${extra_env[@]}")
+                if package_cache_as_build_user dinx_package_cache_restore \
+                  "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
+                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=hit\n' \
+                    "$package_name" "$((SECONDS - package_started))"
+                  return 0
+                else
+                  status=$?
+                  if [[ "$status" -ne 1 ]]; then
+                    printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=%s cache=error\n' \
+                      "$package_name" "$((SECONDS - package_started))" "$status"
+                    return "$status"
+                  fi
+                fi
+
+                while IFS= read -r -d '' archive; do
+                  existing_archives["$(basename -- "$archive")"]=1
+                done < <(find "$package_repo" -maxdepth 1 -type f -name '*.pkg.tar.zst' -print0)
                 if (
                   cd "$package_dir"
                   runuser -u dinxbuild -- env "${extra_env[@]}" \
@@ -329,11 +372,25 @@ trap finish EXIT
                     makepkg "${makepkg_options[@]}" \
                     --sign --key "$signing_key"
                 ); then
-                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0\n' \
+                  while IFS= read -r -d '' archive; do
+                    archive_name=$(basename -- "$archive")
+                    if [[ -z ${existing_archives[$archive_name]+present} ]]; then
+                      package_archives+=("$archive")
+                    fi
+                  done < <(find "$package_repo" -maxdepth 1 -type f -name '*.pkg.tar.zst' -print0)
+                  if ((${#package_archives[@]} == 0)); then
+                    printf 'build-iso-container: makepkg produced no package archive for %s\n' "$package_name" >&2
+                    return 1
+                  fi
+                  if ! package_cache_as_build_user dinx_package_cache_store \
+                    "$package_artifact_cache" "$package_name" "$cache_key" "${package_archives[@]}"; then
+                    printf 'dinx-package-cache: store skipped package=%s key=%s\n' "$package_name" "$cache_key" >&2
+                  fi
+                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=miss\n' \
                     "$package_name" "$((SECONDS - package_started))"
                 else
                   status=$?
-                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=%s\n' \
+                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=%s cache=miss\n' \
                     "$package_name" "$((SECONDS - package_started))" "$status"
                   return "$status"
                 fi

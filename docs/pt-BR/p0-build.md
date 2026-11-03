@@ -204,7 +204,7 @@ Requisitos: Docker rootful acessível, suporte a `--privileged` e dispositivos l
 scripts/check-iso-qualification-host.sh full
 ```
 
-O builder local reutiliza artefatos sob `dist/.cache/dinx`: archives fixados dos toolchains Zig, archives de pacotes pacman, fontes baixadas pelo makepkg, dados do registry Cargo e saídas Cargo por pacote, além do cache global Zig. Os toolchains são conferidos pelo SHA-256 fixado e publicados atomicamente; os archives de fontes continuam sujeitos às verificações de integridade das receitas, e builds Rust seguem lockfiles/modo frozen. O workflow P0 salva o cache de archives verificados somente após a qualificação completa; o workflow de contratos o restaura em modo somente leitura quando disponível. Archives de pacotes e rootfs nunca entram no cache ou na ISO.
+O builder local reutiliza artefatos verificados em `dist/.cache/dinx`: archives fixados dos toolchains Zig, archives de pacotes pacman, fontes baixadas pelo makepkg, dados do registry Cargo, saídas Cargo por pacote, cache global Zig e archives DINX de pacotes identificados pelo conteúdo. A chave de cada pacote cobre suas entradas de fonte, o builder e sua implementação de cache, a configuração/opções do makepkg, o conjunto de pacotes instalados e o ambiente explícito de build; saídas geradas de compilação e empacotamento são excluídas. Os archives em cache são validados por checksum e assinados com a chave atual do repositório. Só os resultados de um `makepkg` bem-sucedido são publicados atomicamente. A primeira execução é fria; as seguintes podem pular builds de pacotes inalterados. O workflow P0 salva o cache verificado de archives somente após a qualificação completa; o workflow de contratos o restaura em modo somente leitura quando disponível. O staging do repositório, o rootfs e a ISO final continuam sendo gerados e qualificados a cada build; somente os archives individuais dos pacotes DINX são reutilizados.
 
 O modo reduzido é explícito e **não** qualifica boot/instalação:
 
@@ -221,7 +221,7 @@ DINX_EXPECTED_COMMIT=$(git rev-parse HEAD) scripts/qualify-iso.sh /caminho/para/
 
 `DINX_LOCAL_BUILD_DIR` pode selecionar um diretório de saída novo e vazio dentro de `dist`; resultados existentes nunca são sobrescritos. `DINX_BUILD_CACHE_DIR` pode apontar para outro diretório de cache dentro de `dist`.
 
-O builder emite `dinx-build-timing` para cada pacote, a preparação do pacman do builder, a montagem da ISO e a duração total do container. Compare logs equivalentes antes de afirmar redução de tempo; caches quentes evitam downloads repetidos, e o Cargo pode reutilizar saídas inalteradas por pacote. `scripts/qualify-iso.sh` local grava logs QEMU e capturas PPM ao lado da ISO.
+O builder emite `dinx-build-timing` para cada pacote, incluindo `cache=hit` ou `cache=miss`, a preparação do pacman do builder, a montagem da ISO e a duração total do container. Compare logs equivalentes antes de afirmar redução de tempo; hits quentes no cache de pacotes evitam recompilar pacotes DINX inalterados, enquanto os caches de downloads e Cargo reutilizam suas respectivas entradas/saídas. `scripts/qualify-iso.sh` local grava logs QEMU e capturas PPM ao lado da ISO.
 
 Ao sair do container, o builder encerra o servidor temporário do repositório e restaura a propriedade do host nos diretórios montados da ISO, dos pacotes, da árvore de build e das fontes de pacotes. Assim, a etapa P0 de checksum e as verificações locais pós-build conseguem gravar nos diretórios de saída.
 

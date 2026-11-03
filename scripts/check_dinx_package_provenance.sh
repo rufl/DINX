@@ -136,6 +136,8 @@ done
 if grep -Fq 'pacman -U --noconfirm' "$builder"; then
   fail 'Artix builder bypasses the retry-safe local package installer'
 fi
+cache_helper=scripts/lib/dinx-package-artifact-cache.sh
+[[ -r "$cache_helper" ]] || fail 'package artifact cache helper is missing'
 for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
@@ -150,6 +152,13 @@ for required in \
   'dinitui|dinxpanel|seafoam-settings)' \
   'makepkg_options+=(--clean)' \
   'source /workspace/scripts/lib/pacman-local-install.sh' \
+  'source /workspace/scripts/lib/dinx-package-artifact-cache.sh' \
+  'package_artifact_cache=/var/cache/dinx/package-artifacts' \
+  'dinx_package_cache_key' \
+  'dinx_package_cache_restore' \
+  'dinx_package_cache_store' \
+  'package_cache_as_build_user() {' \
+  'runuser -u dinxbuild -- bash -c' \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
   'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \

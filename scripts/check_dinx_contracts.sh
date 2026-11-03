@@ -65,7 +65,8 @@ for smoke in \
   smoke_pori_zig.sh \
   smoke_latest_alpha_alias.sh \
   smoke_pacman_local_install.sh \
-  smoke_cache_verified_download.sh; do
+  smoke_cache_verified_download.sh \
+  smoke_package_artifact_cache.sh; do
   "$root/scripts/$smoke"
 done
 printf 'dinx_contracts: all_static_and_fixture_checks_passed=true\n'

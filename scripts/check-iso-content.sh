@@ -596,9 +596,31 @@ xorriso -osirrox on \
   -indev "$iso_path" \
   -extract /boot/grub/themes/artix/theme.txt "$tmp_dir/iso-grub-theme.txt" \
   -extract /boot/grub/themes/artix/logo.png "$tmp_dir/iso-grub-logo.png" \
+  -extract /boot/grub/grub.cfg "$tmp_dir/iso-grub.cfg" \
+  -extract /boot/grub/kernels.cfg "$tmp_dir/iso-grub-kernels.cfg" \
+  -extract /boot/grub/variable.cfg "$tmp_dir/iso-grub-variable.cfg" \
   >/dev/null
 [[ -s "$tmp_dir/iso-grub-theme.txt" && -s "$tmp_dir/iso-grub-logo.png" ]] \
   || fail 'built ISO omits its DINX GRUB theme or boot mark'
+[[ -s "$tmp_dir/iso-grub.cfg" && -s "$tmp_dir/iso-grub-kernels.cfg" && -s "$tmp_dir/iso-grub-variable.cfg" ]] \
+  || fail 'built ISO omits its DINX two-choice GRUB boot menu'
+grep -Fq 'set default=0' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB does not select the first live option by default'
+grep -Fq 'set timeout=6' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB timeout is not six seconds'
+grep -Fq 'set timeout_style=menu' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB does not display its timed boot menu'
+grep -Fq 'source /boot/grub/kernels.cfg' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB does not load its live boot choices'
+[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 2 ]] \
+  || fail 'DINX ISO GRUB does not contain exactly two live boot choices'
+grep -Fq 'menuentry "Start DINX live (ISO/DVD)"' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX ISO/DVD boot choice is missing'
+grep -Fq 'menuentry "Start DINX live (USB/HDD)"' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX USB/HDD boot choice is missing'
+if grep -Fq 'menuentry ' "$tmp_dir/iso-grub.cfg"; then
+  fail 'DINX ISO GRUB adds unexpected menu entries outside its two live choices'
+fi
 grep -Fq 'DINX GRUB theme override.' "$tmp_dir/iso-grub-theme.txt" \
   || fail 'built ISO GRUB theme is not DINX-branded'
 if grep -Eiq 'artix' "$tmp_dir/iso-grub-theme.txt"; then

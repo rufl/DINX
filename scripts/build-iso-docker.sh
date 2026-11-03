@@ -158,6 +158,7 @@ require_empty_output "$package_output_host"
   || fail "package bundle already exists; choose a fresh build directory: $package_bundle_host"
 mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" \
   "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
+  "$cache_host/package-artifacts" \
   "$cache_host/cargo" "$cache_host/zig"
 
 source_env="$repo_root/distro/packages/deetty/source.env"

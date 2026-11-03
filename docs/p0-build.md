@@ -202,7 +202,7 @@ Requirements: a reachable rootful Docker Engine, `--privileged` and loop-device 
 scripts/check-iso-qualification-host.sh full
 ```
 
-The local builder reuses verified artifacts under `dist/.cache/dinx`: pinned Zig toolchain archives, pacman package archives, makepkg source downloads, Cargo registry data and per-package Cargo build outputs, plus Zig's global cache. Toolchain cache hits are checked against pinned SHA-256 hashes and published atomically; package source archives remain subject to each recipe's integrity checks, and Rust builds remain governed by their lockfiles/frozen mode. The P0 workflow saves its verified archive cache only after full ISO qualification; the contracts workflow restores that cache read-only when available. Packaged archives and rootfs are never cached or inserted into the ISO.
+The local builder reuses verified artifacts under `dist/.cache/dinx`: pinned Zig toolchain archives, pacman package archives, makepkg source downloads, Cargo registry data, per-package Cargo build outputs, Zig's global cache and content-addressed DINX package archives. A package-cache key covers that package's source inputs, builder/cache implementation, makepkg configuration/options, installed package set and explicit build environment; generated package and compiler outputs are excluded. Cached archives are checksum-checked, then signed with the current build's repository key. Only successful `makepkg` outputs are published atomically. The first run is cold; later runs can skip unchanged package builds. The P0 workflow saves its verified archive cache only after full ISO qualification; the contracts workflow restores that cache read-only when available. Package-repository staging, rootfs and final ISO are still produced and qualified on every build; only individual DINX package archives are reused.
 
 Static-only mode is explicit and **does not** qualify boot or installation:
 
@@ -219,7 +219,7 @@ DINX_EXPECTED_COMMIT=$(git rev-parse HEAD) scripts/qualify-iso.sh /path/to/dinx.
 
 `DINX_LOCAL_BUILD_DIR` selects a new, empty output directory under `dist`; existing results are never overwritten. `DINX_BUILD_CACHE_DIR` selects a different cache directory under `dist`.
 
-The builder emits `dinx-build-timing` for package builds, builder pacman setup, ISO assembly and total container time. Compare equivalent logs before claiming a time reduction; warm caches avoid repeated downloads and Cargo may reuse unchanged per-package build outputs. Local `scripts/qualify-iso.sh` writes QEMU logs and PPM captures beside the ISO.
+The builder emits `dinx-build-timing` for package builds, including `cache=hit` or `cache=miss`, builder pacman setup, ISO assembly and total container time. Compare equivalent logs before claiming a time reduction; warm package-cache hits avoid rebuilding unchanged DINX packages, while download and Cargo caches can reuse their respective inputs/outputs. Local `scripts/qualify-iso.sh` writes QEMU logs and PPM captures beside the ISO.
 
 On container exit, the builder stops the temporary package-repository server and restores host ownership of the ISO, package, build-tree and mounted package-source directories. The P0 checksum step and local post-build checks can then write to their output directories.
 

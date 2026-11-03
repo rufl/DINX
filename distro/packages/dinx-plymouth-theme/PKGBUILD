@@ -1,19 +1,18 @@
 # SPDX-License-Identifier: Apache-2.0
 pkgname=dinx-plymouth-theme
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='DINX Plymouth splash theme and Dinit handoff'
 arch=('any')
 url='https://github.com/rufl/DINX'
 license=('Apache-2.0')
 depends=('dinit' 'greetd' 'plymouth')
-backup=('etc/plymouth/plymouthd.conf')
+install=dinx-plymouth-theme.install
 source=(
   'dinx.plymouth'
   'dinx.script'
   'dinx-plymouth-quit'
   'dinx-plymouth-quit.service'
-  'plymouthd.conf'
   "dinx-logo.png::file://$startdir/../../iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/logo.png"
 )
 sha256sums=(
@@ -21,7 +20,6 @@ sha256sums=(
   'b46666591b58eb620f46e1b00b75f0bdd1906731a5a36f8dec245b404cef0771'
   '1bd999f51ec0890a8493d3c4ebbc6b60dc0c67b0dc450040b78e299ded5af2e7'
   'e40bb11f874636d4091b20b60c4266c3001ef65f6cf62c275ac610a36690d96e'
-  'b1b610749ebf2ef9f5a556e13200c4277f87ad826bb690e2680a36fb8769adab'
   'f1709b142b88d3402239d0aefcafee116cfad2f5f05db5e87be7ed21424763d9'
 )
 
@@ -32,8 +30,6 @@ package() {
     "$pkgdir/usr/share/plymouth/themes/dinx/dinx.script"
   install -Dm644 "$srcdir/dinx-logo.png" \
     "$pkgdir/usr/share/plymouth/themes/dinx/logo.png"
-  install -Dm644 "$srcdir/plymouthd.conf" \
-    "$pkgdir/etc/plymouth/plymouthd.conf"
   install -Dm755 "$srcdir/dinx-plymouth-quit" \
     "$pkgdir/usr/local/libexec/dinx-plymouth-quit"
   install -Dm644 "$srcdir/dinx-plymouth-quit.service" \

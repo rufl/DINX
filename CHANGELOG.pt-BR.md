@@ -13,6 +13,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Remover a dependência do marcador do smoke de instalação persistente no serviço live `early-root-rw.target`; a root ext4 instalada e descartável inicializa gravável, então essa ordenação de remontagem não é necessária.
 - Substituir o menu GRUB completo do Artix na ISO por dois modos DINX live (ISO/DVD e USB/HDD); ISO/DVD é o padrão e inicia após seis segundos com o menu visível. A qualificação QEMU agora deixa o menu sem teclas injetadas para verificar o boot automático.
 - Adicionar splash Plymouth com marca DINX no handoff do kernel: reutilizar o símbolo canônico de boot, incluir o hook Plymouth após `udev` e `quiet splash` nos argumentos do GRUB live, e encerrar o splash por serviço Dinit após o início do `greetd`. A qualificação VGA e Virtio-VGA captura o splash separadamente; sem integração systemd/UWSM.
+- Corrigir a colisão de `/etc/plymouth/plymouthd.conf`: o arquivo permanece sob propriedade do pacote Plymouth, e o pacote DINX seleciona o tema com `plymouth-set-default-theme` após instalar os arquivos do splash.
 
 - Definido Pearl Material escuro como padrão da sessão nova e do wizard inicial; os aplicativos GTK mantêm Adwaita como padrão e as escolhas de tema já salvas pelo usuário são preservadas.
 - Incrementado o Pearl para `pkgrel=5` e atualizado o checksum fixado do wizard inicial para o padrão Material.

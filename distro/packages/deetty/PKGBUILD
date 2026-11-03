@@ -20,6 +20,8 @@ sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fb
 
 prepare() {
   cd "$srcdir/noctty-$pkgver"
+  # The upstream tarball's read-only modes prevent patch from creating replacement files.
+  chmod -R u+w .
   patch --fuzz=0 --forward --strip=1 < "$srcdir/product-identity.patch"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/qualification-compat.patch"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal-exec.patch"

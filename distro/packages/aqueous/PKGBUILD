@@ -77,9 +77,6 @@ prepare() {
   patch --forward --fuzz=0 -Np1 < "$startdir/server-decorations.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/titlebar-text.patch"
   patch --forward --fuzz=0 -Np1 < "$startdir/two-default-workspaces.patch"
-  patch --forward --fuzz=0 -Np1 < "$startdir/pixman-rounded-corners.patch"
-  install -Dm644 "$startdir/0034-pixman-rounded-window-corners.patch" \
-    compositor/patches/wlroots/0034-pixman-rounded-window-corners.patch
   install -Dm644 "$startdir/titlebar_text.c" compositor/aqueous/titlebar_text.c
   install -Dm644 "$startdir/titlebar_text.zig" compositor/aqueous/titlebar_text.zig
 }

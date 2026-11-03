@@ -12,6 +12,10 @@ dinx_apply_graphics_environment() {
       export WLR_RENDERER=gles2
       unset GSK_RENDERER
       ;;
+    vulkan)
+      export WLR_RENDERER=vulkan
+      unset GSK_RENDERER
+      ;;
     hardware)
       ;;
     *)

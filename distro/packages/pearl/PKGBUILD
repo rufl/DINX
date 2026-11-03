@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PEARL_SOURCE_URL:?missing PEARL_SOURCE_URL}"
 : "${PEARL_SOURCE_SHA256:?missing PEARL_SOURCE_SHA256}"
 pkgver="$PEARL_VERSION"
-pkgrel=4
+pkgrel=5
 epoch=1
 pkgdesc='Pearl GTK desktop shell and Pearl Greeter for direct Aqueous sessions on DINX'
 arch=('x86_64')
@@ -69,7 +69,7 @@ provides=('pearl-capture-picker=0.3.0' 'pearl-greeter=0.3.0')
 conflicts=('pearl-git')
 options=('!strip' '!debug')
 source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch" "server-decorations.patch" "dinx-first-run-wizard.c")
-sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' '021f79a2016dc358fe704cbd832e192d5c0a1ba64c5a6f2753f8ac53aad99b95' '5cb4d32096181d0ae11c8d9055886b988cc09b3a052e57b2875f6102474e7133')
+sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' '021f79a2016dc358fe704cbd832e192d5c0a1ba64c5a6f2753f8ac53aad99b95' 'b9c6ce39cc3db5b3b4d967bc7b9bb334a946d673d54271ae45c9b7011d6a759f')
 install=pearl.install
 
 prepare() {

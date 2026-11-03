@@ -469,8 +469,8 @@ fi
 grep -Fq '"wallpaper_color": "#0b0d12"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter solid surface color is missing'
 pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
-jq -e '.wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
-  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl dock, bar or solid-wallpaper defaults are incorrect'
+jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == "" and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
+  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl Material, dock, bar or solid-wallpaper defaults are incorrect'
 grep -Fq '"enabled": true' <<<"$pearl_preferences" \
   || fail 'Pearl default desktop icons are no longer enabled'
 grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
@@ -520,18 +520,21 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$aqueous_laun
 aqueous_graphics_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-profile)
 graphics_environment=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-environment.sh)
 grep -Fq 'export WLR_RENDERER=gles2' <<<"$graphics_environment" || fail 'DINX QEMU renderer policy is not set to GLES2'
+grep -Fq 'export WLR_RENDERER=vulkan' <<<"$graphics_environment" || fail 'DINX VirtualBox/default renderer policy is not set to Vulkan'
 grep -Fq 'export WLR_RENDERER=pixman' <<<"$graphics_environment" || fail 'DINX CPU compatibility renderer policy is missing'
 grep -Fq 'unset GSK_RENDERER' <<<"$graphics_environment" || fail 'DINX virtual graphics profiles do not leave GTK4 renderer selection automatic'
-[[ $(grep -Fc 'unset GSK_RENDERER' <<<"$graphics_environment") -eq 2 ]] \
-  || fail 'DINX GTK4 renderer selection is not automatic for both virtualized profiles'
+[[ $(grep -Fc 'unset GSK_RENDERER' <<<"$graphics_environment") -eq 3 ]] \
+  || fail 'DINX GTK4 renderer selection is not automatic for CPU, virtual-GL and Vulkan profiles'
 greeter_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-pearl-greeter-host)
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not detect the graphics profile'
 grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not load the shared renderer policy'
 grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not apply the selected renderer'
 grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' <<<"$greeter_wrapper" || fail 'Pearl Greeter wrapper does not execute its packaged host'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
+grep -Fq 'hardware|vulkan)' <<<"$aqueous_launcher" || fail 'DINX full Aqueous compositor is not selected for the Vulkan profile'
 grep -Fq 'virtio_gpu)' <<<"$aqueous_graphics_helper" || fail 'QEMU virtio-gpu render-node driver is not detected'
-grep -Fq 'vmwgfx|vboxvideo|qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail 'VirtualBox and 2D virtual display fallback drivers are not detected'
+grep -Fq 'vmwgfx|vboxvideo)' <<<"$aqueous_graphics_helper" || fail 'VirtualBox Vulkan renderer policy is not selected'
+grep -Fq 'qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail '2D virtual display fallback drivers are not detected'
 for graphics_module in virtio-gpu vmwgfx; do
   grep -Eq "/usr/lib/modules/[^[:space:]]*/kernel/drivers/gpu/drm/.*/${graphics_module}\\.ko(\\.(zst|xz|gz))?([[:space:]]|$)" <<<"$manifest" \
     || fail "ISO kernel DRM module is missing for VM compatibility: $graphics_module"

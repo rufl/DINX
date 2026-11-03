@@ -18,13 +18,16 @@ flock -n 9 || {
     printf 'dinx-save-shikane-profile: another display profile update is running\n' >&2
     exit 1
 }
-export_file=$(mktemp "$config_dir/.dinx-wdisplays-export.XXXXXX")
-merged_file=$(mktemp "$config_dir/.dinx-wdisplays-config.XXXXXX")
+export_file=
+merged_file=
 cleanup() {
-    rm -f "$export_file" "$merged_file"
+    [ -z "$export_file" ] || rm -f "$export_file"
+    [ -z "$merged_file" ] || rm -f "$merged_file"
 }
 trap cleanup EXIT
 trap 'exit 143' HUP INT TERM
+export_file=$(mktemp "$config_dir/.dinx-wdisplays-export.XXXXXX")
+merged_file=$(mktemp "$config_dir/.dinx-wdisplays-config.XXXXXX")
 exported=0
 for attempt in 1 2 3 4 5; do
     : >"$export_file"

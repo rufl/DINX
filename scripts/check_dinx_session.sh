@@ -34,6 +34,8 @@ shell_profile="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/din
 fish_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"
 useradd_defaults="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/useradd"
 users_conf="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/modules/users.conf"
+qemu_session_checker="$root/scripts/check_dinx_qemu_session.sh"
+iso_smoke="$root/scripts/smoke-iso.sh"
 
 fail() {
   printf 'check_dinx_session: %s\n' "$*" >&2
@@ -47,7 +49,7 @@ for path in \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
   "$useradd_defaults" "$users_conf" "$gtk3_system" "$gtk3_skel" \
-  "$gtk4_system" "$gtk4_skel"; do
+  "$gtk4_system" "$gtk4_skel" "$qemu_session_checker" "$iso_smoke"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 for retired in \
@@ -171,10 +173,12 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper
   || fail 'Aqueous wrapper does not apply the selected renderer policy'
 grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
   || fail 'Aqueous VM renderer policy does not use GLES2'
+grep -Fq 'export WLR_RENDERER=vulkan' "$graphics_environment" \
+  || fail 'Aqueous VirtualBox renderer policy does not use Vulkan'
 grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
   || fail 'GTK4 VM renderer selection is not left automatic'
-[[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 2 ]] \
-  || fail 'GTK4 renderer selection is not automatic for virtual GL and CPU profiles'
+[[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 3 ]] \
+  || fail 'GTK4 renderer selection is not automatic for CPU, virtual GL and Vulkan profiles'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not launch the selected compositor'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
@@ -252,6 +256,24 @@ env "${pearl_shell_test_env[@]}" "$pearl_shell"
 [[ $(wc -l <"$pearl_shell_test/wizard-calls") == 1 ]] \
   || fail 'Pearl first-run wizard runs again after completion'
 printf 'pearl_first_run_smoke dock=off bar=bottom theme=material-light preserves_settings=true once=true\n'
+qemu_screen="$pearl_shell_test/qemu-client-window.ppm"
+printf 'P6\n2 2\n255\n\377\377\377\377\377\377\377\377\377\377\377\377' >"$qemu_screen"
+cat >"$pearl_shell_test/bin/tesseract" <<'SH'
+#!/bin/sh
+printf '%s\n' "${DINX_TEST_OCR:-}"
+SH
+chmod +x "$pearl_shell_test/bin/tesseract"
+env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='Dock Show the dock Next' \
+  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
+env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX Aqueous desktop' \
+  "$qemu_session_checker" "$qemu_screen" session >/dev/null
+if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop' \
+  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null 2>&1; then
+  fail 'QEMU first-run client-window check accepts a screenshot without readable client text'
+fi
+grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run' "$iso_smoke" \
+  || fail 'QEMU live smoke does not check readable first-run client-window content'
+printf 'qemu_client_window_smoke readable_first_run=true session_marker=true rejects_missing_title=true\n'
 grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
@@ -278,4 +300,4 @@ if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true server_decorations=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_virgl_gles=true virtualbox_vmsvga_pixman=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true server_decorations=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

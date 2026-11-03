@@ -2,6 +2,7 @@
 set -euo pipefail
 
 screenshot=${1:-}
+mode=${2:-session}
 ocr_language=${DINX_QEMU_OCR_LANG:-eng}
 
 fail() {
@@ -9,7 +10,12 @@ fail() {
   exit 1
 }
 
-[[ -n "$screenshot" ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm'
+[[ $# -le 2 ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm [session|first-run]'
+[[ -n "$screenshot" ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm [session|first-run]'
+case "$mode" in
+  session|first-run) ;;
+  *) fail 'mode must be session or first-run' ;;
+esac
 [[ -s "$screenshot" ]] || fail "session screenshot is missing or empty: $screenshot"
 command -v python3 >/dev/null 2>&1 || fail 'required command not found: python3'
 
@@ -83,6 +89,14 @@ fi
 if grep -Eiq 'pearl[[:space:]]+greeter|login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|select[[:space:]]*user|fail|dinit:.*execution failed|initializing[[:space:]]+aqueous[[:space:]]+version' <<<"$recognized"; then
   printf 'dinx-qemu-session: rejected non-session screen:\n%s\n' "$recognized" >&2
   exit 1
+fi
+if [[ "$mode" == first-run ]]; then
+  if ! grep -Eiq '(^|[^[:alnum:]_])Dock([^[:alnum:]_]|$)' <<<"$recognized"; then
+    printf 'dinx-qemu-session: Pearl first-run client window has no readable Dock title:\n%s\n' "$recognized" >&2
+    exit 1
+  fi
+  printf 'dinx-qemu-session: first_run_client_visible=true marker=Dock screenshot=%s\n' "$screenshot"
+  exit 0
 fi
 marker=identity
 if ! grep -Eiq '(^|[^[:alnum:]_])(pearl|aqueous|dinx)([^[:alnum:]_]|$)' <<<"$recognized"; then

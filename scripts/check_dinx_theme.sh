@@ -271,7 +271,14 @@ fi
 grep -Fq '"mode": "solid"' "$pearl_preferences" || fail 'Fresh Pearl preferences enable an image wallpaper'
 grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences retain an image wallpaper path'
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
-grep -Fq '"gtk_name": "Adwaita"' "$pearl_preferences" || fail 'Fresh Pearl preferences do not use the GTK Adwaita theme'
+jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == ""' "$pearl_preferences" >/dev/null \
+  || fail 'Fresh Pearl preferences do not default to Pearl Material dark'
+grep -Fq 'const char *theme_name[] = { "dinx-dark", "dinx-light", "material-dark", "material-light" };' "$wizard_source" \
+  || fail 'Pearl first-run theme selection order changed'
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+  || fail 'Pearl first-run wizard does not default to Pearl Material dark'
+wizard_sha256=$(sha256sum "$wizard_source" | cut -d ' ' -f 1)
+grep -Fq "'$wizard_sha256'" "$pearl_pkg" || fail 'Pearl first-run wizard source checksum is stale'
 grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'
 grep -Fq 'GRUB_THEME="/usr/share/grub/themes/artix/theme.txt"' "$grub_defaults" || fail 'GRUB does not activate the DINX theme'
 if grep -Eiq 'artix' "$grub"; then

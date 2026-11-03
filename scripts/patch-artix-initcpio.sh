@@ -17,56 +17,89 @@ ensure_boot_support() {
   trap 'rm -f -- "$tmp_file"' EXIT
 
   awk '
-    /^[[:space:]]*MODULES[[:space:]]*=\(/ {
-      if (modules_seen++) exit 1
-      open = index($0, "(")
-      rest = substr($0, open + 1)
-      if (rest !~ /\)[[:space:]]*(#.*)?$/) exit 1
-      close_pos = index(rest, ")")
-      body = substr(rest, 1, close_pos - 1)
-      suffix = substr(rest, close_pos)
-      prefix = substr($0, 1, open)
-      count = split(body, names, /[[:space:]]+/)
-      for (i = 1; i <= count; i++) {
-        if (names[i] == "vmwgfx") have_vmwgfx = 1
-        if (names[i] == "vboxvideo") have_vboxvideo = 1
+    function emit_array(    count, i, value, output, udev_count, plymouth_count, have_vmwgfx, have_vboxvideo) {
+      count = split(array_content, values, /[[:space:]]+/)
+      output = ""
+      if (array_name == "MODULES") {
+        for (i = 1; i <= count; i++) {
+          value = values[i]
+          if (value == "") continue
+          if (value == "vmwgfx") have_vmwgfx = 1
+          if (value == "vboxvideo") have_vboxvideo = 1
+          if (output != "") output = output " "
+          output = output value
+        }
+        if (!have_vmwgfx) {
+          if (output != "") output = output " "
+          output = output "vmwgfx"
+        }
+        if (!have_vboxvideo) {
+          if (output != "") output = output " "
+          output = output "vboxvideo"
+        }
+      } else {
+        for (i = 1; i <= count; i++) {
+          value = values[i]
+          if (value == "") continue
+          if (value == "udev") udev_count++
+          if (value == "plymouth") {
+            plymouth_count++
+            continue
+          }
+          if (output != "") output = output " "
+          output = output value
+          if (value == "udev") output = output " plymouth"
+        }
+        if (udev_count != 1 || plymouth_count > 1) return 0
       }
-      if (!have_vmwgfx) body = body " vmwgfx"
-      if (!have_vboxvideo) body = body " vboxvideo"
-      sub(/[[:space:]]+$/, "", body)
-      printf "%s%s%s\n", prefix, body, suffix
-      next
+      print array_prefix output array_suffix
+      array_name = ""
+      array_content = ""
+      array_prefix = ""
+      array_suffix = ""
+      return 1
     }
-    /^[[:space:]]*HOOKS[[:space:]]*=\(/ {
-      if (hooks_seen++) exit 1
-      open = index($0, "(")
-      rest = substr($0, open + 1)
-      if (rest !~ /\)[[:space:]]*(#.*)?$/) exit 1
-      close_pos = index(rest, ")")
-      body = substr(rest, 1, close_pos - 1)
-      suffix = substr(rest, close_pos)
-      prefix = substr($0, 1, open)
-      count = split(body, names, /[[:space:]]+/)
-      udev_count = 0
-      plymouth_count = 0
-      for (i = 1; i <= count; i++) {
-        if (names[i] == "udev") udev_count++
-        if (names[i] == "plymouth") plymouth_count++
+    function consume_array(fragment,    close_pos, suffix) {
+      close_pos = index(fragment, ")")
+      if (!close_pos) {
+        array_content = array_content " " fragment
+        return 1
       }
-      if (udev_count != 1 || plymouth_count > 1) exit 1
-      body = ""
-      for (i = 1; i <= count; i++) {
-        if (names[i] == "" || names[i] == "plymouth") continue
-        if (body != "") body = body " "
-        body = body names[i]
-        if (names[i] == "udev") body = body " plymouth"
-      }
-      printf "%s%s%s\n", prefix, body, suffix
-      next
+      suffix = substr(fragment, close_pos)
+      if (suffix !~ /^\)[[:space:]]*(#.*)?$/) return 0
+      array_content = array_content " " substr(fragment, 1, close_pos - 1)
+      array_suffix = suffix
+      return emit_array()
     }
-    { print }
+    function start_array(name,    open_pos) {
+      if (name == "MODULES") {
+        if (modules_seen++) return 0
+      } else {
+        if (hooks_seen++) return 0
+      }
+      array_name = name
+      open_pos = index($0, "(")
+      array_prefix = substr($0, 1, open_pos)
+      array_content = ""
+      return consume_array(substr($0, open_pos + 1))
+    }
+    {
+      if (array_name != "") {
+        if (!consume_array($0)) exit 1
+        next
+      }
+      if ($0 ~ /^[[:space:]]*MODULES[[:space:]]*=\(/) {
+        if (!start_array("MODULES")) exit 1
+        next
+      }
+      if ($0 ~ /^[[:space:]]*HOOKS[[:space:]]*=\(/) {
+        if (!start_array("HOOKS")) exit 1
+        next
+      }
+      print
+    }
     END {
-      if (modules_seen != 1 || hooks_seen != 1) exit 1
+      if (array_name != "" || modules_seen != 1 || hooks_seen != 1) exit 1
     }
   ' "$config_path" > "$tmp_file" \
     || fail "unsupported MODULES or HOOKS array in $config_path"

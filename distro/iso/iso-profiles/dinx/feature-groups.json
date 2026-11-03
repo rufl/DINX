@@ -245,7 +245,9 @@
       "wpa_supplicant-dinit"
     ],
     "common_boot": [
-      "iso-initcpio"
+      "dinx-plymouth-theme",
+      "iso-initcpio",
+      "plymouth"
     ],
     "profile_init": [
       "artix-live-dinit",

@@ -11,12 +11,17 @@ trap 'rm -rf -- "$tmp_dir"' EXIT
 config="$tmp_dir/mkinitcpio-default.conf"
 cat > "$config" <<'EOF'
 MODULES=(loop dm-snapshot)
-HOOKS=(base udev block filesystems)
+HOOKS=(base udev artix_shutdown artix artix_loop_mnt artix_kms
+        modconf block filesystems keyboard keymap)
+COMPRESSION="zstd"
+COMPRESSION_OPTIONS=(--ultra -22)
 EOF
 "$patcher" --ensure-boot-support "$config"
 cat > "$tmp_dir/expected.conf" <<'EOF'
 MODULES=(loop dm-snapshot vmwgfx vboxvideo)
-HOOKS=(base udev plymouth block filesystems)
+HOOKS=(base udev plymouth artix_shutdown artix artix_loop_mnt artix_kms modconf block filesystems keyboard keymap)
+COMPRESSION="zstd"
+COMPRESSION_OPTIONS=(--ultra -22)
 EOF
 if ! cmp -s "$tmp_dir/expected.conf" "$config"; then
   diff -u "$tmp_dir/expected.conf" "$config" >&2 || true

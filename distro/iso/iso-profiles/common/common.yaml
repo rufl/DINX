@@ -143,4 +143,6 @@ packages-init:
     - rsync-s6
     - wpa_supplicant-s6
 packages-boot:
+  - dinx-plymouth-theme
   - iso-initcpio
+  - plymouth

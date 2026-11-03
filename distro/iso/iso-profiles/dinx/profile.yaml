@@ -27,6 +27,7 @@ rootfs:
     - dinit-rc
     - dinitui
     - dinxpanel
+    - dinx-plymouth-theme
     - dome
     - aqueous
     - pearl

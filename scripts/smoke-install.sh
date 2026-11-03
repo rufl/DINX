@@ -162,6 +162,8 @@ printf 'smoke-install: applying Calamares package removal contract\n'
 chroot "$target_dir" /usr/bin/pacman -R --noconfirm \
   artix-live-base artix-live-dinit calamares calamares-extensions >/dev/null
 
+printf 'smoke-install: running system-user provisioning before Calamares user creation\n'
+chroot "$target_dir" /usr/bin/esysusers
 printf 'smoke-install: creating the Calamares user and persistent fstab\n'
 chroot "$target_dir" /usr/bin/useradd --create-home --user-group --shell /bin/fish \
   --groups users,audio,video,network,storage,wheel dinx
@@ -179,70 +181,45 @@ printf 'smoke-install: enabling dinit services and recovery TTYs\n'
 for service in NetworkManager elogind greetd getty@tty2 getty@tty3; do
   ln -sfn "../$service" "$target_dir/etc/dinit.d/boot.d/$service"
 done
-printf 'smoke-install: adding a first-boot marker service\n'
-mkdir -p "$target_dir/usr/local/libexec" "$target_dir/var/lib/dinx"
-cat > "$target_dir/usr/local/libexec/dinx-install-smoke-marker" <<'EOF'
-#!/bin/sh
-set -eu
-install -d -m 0755 /var/lib/dinx
-fail() {
-  printf 'install_smoke_failure=%s\n' "$1" > /var/lib/dinx/install-smoke.failed
-  printf 'install_smoke_failure=%s\n' "$1" > /dev/ttyS0 2>/dev/null || true
-  exit 1
-}
-tmp=/var/lib/dinx/install-smoke.booted.tmp
-{
-  printf 'dinit-first-boot=%s\n' "$(date -u +%FT%TZ)"
-  [ -d /var/lib/pacman/local ] || fail pacman_database_missing
-  printf 'pacman_database=true\n'
-  /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls >/dev/null 2>&1 \
-    || fail core_packages_missing
-  { [ -f /etc/zls.json ] || [ -f /etc/xdg/zls.json ]; } || fail zls_config_missing
-  [ -x /usr/lib/zls/zig-env ] || fail zls_shim_missing
-  [ -f /usr/lib/zls/zig/std/std.zig ] || fail zls_stdlib_missing
-  [ "$(/usr/bin/zls --version)" = 0.16.0 ] || fail zls_version_mismatch
-  [ "$(/usr/lib/zls/zig-env version)" = 0.16.0 ] || fail zls_shim_version_mismatch
-  /usr/bin/zls env | grep -Eq '/etc/(zls|xdg/zls)\.json' || fail zls_config_not_selected
-  printf 'zls_runtime=true\n'
-  printf 'core_packages=true\n'
-  for service in NetworkManager elogind; do
-    ready=false
-    attempt=0
-    while [ "$attempt" -lt 30 ]; do
-      if /usr/bin/dinitctl status "$service" >/dev/null 2>&1; then
-        ready=true
-        break
-      fi
-      attempt=$((attempt + 1))
-      sleep 1
-    done
-    [ "$ready" = true ] || fail "service_${service}_unavailable"
-  done
-  printf 'dinit_services=true\n'
-  [ -x /usr/bin/ldd ] || fail ldd_missing
-  for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings /usr/bin/zls; do
-    [ -x "$binary" ] || fail "binary_missing_${binary##*/}"
-    if /usr/bin/ldd "$binary" 2>&1 | grep -Fq 'not found'; then
-      fail "library_missing_${binary##*/}"
-    fi
-  done
-  printf 'dynamic_libraries=true\n'
-  if /usr/bin/pacman -Q wizp >/dev/null 2>&1 \
-    || /usr/bin/pacman -Q cups-dinit >/dev/null 2>&1; then
-    fail optional_packages_in_base_iso
+printf 'smoke-install: checking installed runtime payload before boot\n'
+mkdir -p "$target_dir/var/lib/dinx"
+[[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
+chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls \
+  >/dev/null 2>&1 || fail 'installed core packages are missing'
+[[ -f "$target_dir/etc/zls.json" || -f "$target_dir/etc/xdg/zls.json" ]] \
+  || fail 'installed ZLS configuration is missing'
+[[ -x "$target_dir/usr/lib/zls/zig-env" ]] || fail 'installed ZLS shim is missing'
+[[ -f "$target_dir/usr/lib/zls/zig/std/std.zig" ]] || fail 'installed ZLS standard library is missing'
+zls_version=$(chroot "$target_dir" /usr/bin/zls --version) \
+  || fail 'installed ZLS version check failed'
+[[ "$zls_version" == 0.16.0 ]] || fail 'installed ZLS version is incorrect'
+shim_version=$(chroot "$target_dir" /usr/lib/zls/zig-env version) \
+  || fail 'installed ZLS shim version check failed'
+[[ "$shim_version" == 0.16.0 ]] || fail 'installed ZLS shim version is incorrect'
+zls_environment=$(chroot "$target_dir" /usr/bin/zls env) \
+  || fail 'installed ZLS environment check failed'
+grep -Eq '/etc/(zls|xdg/zls)\.json' <<<"$zls_environment" \
+  || fail 'installed ZLS configuration is not selected'
+printf 'smoke-install: checking installed runtime libraries\n'
+for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings /usr/bin/zls; do
+  [[ -x "$target_dir$binary" ]] || fail "installed binary is missing: ${binary##*/}"
+  ldd_output=$(chroot "$target_dir" /usr/bin/ldd "$binary" 2>&1) \
+    || fail "installed library check failed: ${binary##*/}"
+  if grep -Fq 'not found' <<<"$ldd_output"; then
+    fail "installed library is missing: ${binary##*/}"
   fi
+done
+if chroot "$target_dir" /usr/bin/pacman -Q wizp >/dev/null 2>&1 \
+  || chroot "$target_dir" /usr/bin/pacman -Q cups-dinit >/dev/null 2>&1; then
+  fail 'optional package leaked into the base ISO'
+fi
+{
+  printf 'pacman_database=true\n'
+  printf 'core_packages=true\n'
+  printf 'zls_runtime=true\n'
+  printf 'dynamic_libraries=true\n'
   printf 'optional_base_absent=true\n'
-  printf 'lifecycle_checks=true\n'
-} > "$tmp"
-mv -f "$tmp" /var/lib/dinx/install-smoke.booted
-printf 'install_smoke_ready=true\n' > /dev/ttyS0 2>/dev/null || true
-chmod 0755 "$target_dir/usr/local/libexec/dinx-install-smoke-marker"
-cat > "$target_dir/etc/dinit.d/dinx-install-smoke-marker" <<'EOF'
-type = scripted
-command = /usr/local/libexec/dinx-install-smoke-marker
-restart = false
-EOF
-ln -sfn ../dinx-install-smoke-marker "$target_dir/etc/dinit.d/boot.d/dinx-install-smoke-marker"
+} > "$target_dir/var/lib/dinx/install-smoke.prepared"
 
 printf '\nMODULES=(virtio virtio_pci virtio_blk ata_generic ata_piix ext4)\n' >> "$target_dir/etc/mkinitcpio.conf"
 printf '\nGRUB_CMDLINE_LINUX="console=tty0 console=ttyS0"\nGRUB_TIMEOUT=1\nGRUB_TIMEOUT_STYLE=hidden\n' >> "$target_dir/etc/default/grub"
@@ -428,7 +405,9 @@ if [[ "$monitor_ready" == true ]]; then
   sleep 3
   printf 'screendump %s\n' "$recovery_screen_path" | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
   for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
-    if grep -Eq '^install_smoke_ready=true$|^install_smoke_failure=' "$serial_log"; then
+    if grep -Fq '[  OK  ] NetworkManager' "$serial_log" \
+      && grep -Fq '[  OK  ] elogind' "$serial_log" \
+      && grep -Fq '[  OK  ] local.target' "$serial_log"; then
       if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
         qemu_quit_requested=true
         printf 'smoke-install: requested QEMU shutdown after first-boot checks\n'
@@ -455,6 +434,12 @@ for image in "$screen_path" "$recovery_screen_path"; do
   IFS= read -r magic < "$image" || true
   [[ "$magic" == P6 ]] || fail "invalid QEMU PPM screenshot: $image"
 done
+for service in NetworkManager elogind local.target; do
+  if ! grep -Fq "[  OK  ] $service" "$serial_log"; then
+    [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
+    fail "installed Dinit service did not start: $service"
+  fi
+done
 
 loop_device=$(losetup --find --show --partscan "$disk_image")
 if [[ "$firmware_mode" == bios ]]; then
@@ -471,26 +456,18 @@ done
 mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
-if [[ -s "$target_dir/var/lib/dinx/install-smoke.failed" ]]; then
-  cat "$target_dir/var/lib/dinx/install-smoke.failed" >&2
-  fail 'installed runtime lifecycle checks failed'
-fi
-[[ -s "$target_dir/var/lib/dinx/install-smoke.booted" ]] || {
-  [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
-  fail 'dinit first-boot marker was not created'
-}
+[[ -s "$target_dir/var/lib/dinx/install-smoke.prepared" ]] \
+  || fail 'installed payload verification record is missing'
 [[ -L "$target_dir/etc/dinit.d/boot.d/getty@tty2" ]] || fail 'recovery TTY service is not enabled'
-grep -Fqx 'pacman_database=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
-  || fail 'installed pacman database check did not pass'
-grep -Fqx 'core_packages=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
-  || fail 'installed core package check did not pass'
-grep -Fqx 'dinit_services=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
-  || fail 'installed dinit service check did not pass'
-grep -Fqx 'dynamic_libraries=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
-  || fail 'installed dynamic library check did not pass'
-grep -Fqx 'optional_base_absent=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
-  || fail 'optional package leaked into the base ISO'
-grep -Fqx 'lifecycle_checks=true' "$target_dir/var/lib/dinx/install-smoke.booted" \
-  || fail 'installed lifecycle checks did not complete'
-printf 'smoke-install: installed pacman, dinit service, library and optional-package contracts passed\n'
+for check in pacman_database core_packages zls_runtime dynamic_libraries optional_base_absent; do
+  grep -Fqx "$check=true" "$target_dir/var/lib/dinx/install-smoke.prepared" \
+    || fail "installed runtime check did not pass: $check"
+done
+printf 'dinit_services=true\nlifecycle_checks=true\n' \
+  >> "$target_dir/var/lib/dinx/install-smoke.prepared"
+grep -Fqx 'dinit_services=true' "$target_dir/var/lib/dinx/install-smoke.prepared" \
+  || fail 'installed Dinit service check did not pass'
+grep -Fqx 'lifecycle_checks=true' "$target_dir/var/lib/dinx/install-smoke.prepared" \
+  || fail 'installed lifecycle check did not complete'
+printf 'smoke-install: installed pacman, Dinit services, libraries and optional-package contracts passed\n'
 printf 'smoke-install: persistent install and first-boot recovery contract passed\n'

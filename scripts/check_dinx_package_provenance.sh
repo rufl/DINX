@@ -168,6 +168,7 @@ for required in \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
   'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \
+  'build_package dinx-plymouth-theme' \
   'build_package gapless' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \

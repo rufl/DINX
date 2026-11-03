@@ -8,6 +8,8 @@ memory_mb=${DINX_QEMU_MEMORY:-2048}
 log_path=${DINX_QEMU_LOG:-}
 screenshot_path=${DINX_QEMU_SCREENSHOT:-}
 boot_screenshot_path=${DINX_QEMU_BOOT_SCREENSHOT:-}
+plymouth_screenshot_path=${DINX_QEMU_PLYMOUTH_SCREENSHOT:-}
+plymouth_screenshot_delay=${DINX_QEMU_PLYMOUTH_SCREENSHOT_DELAY:-10}
 screenshot_delay=${DINX_QEMU_SCREENSHOT_DELAY:-30}
 boot_screenshot_delay=${DINX_QEMU_BOOT_SCREENSHOT_DELAY:-3}
 boot_keys=${DINX_QEMU_BOOT_KEYS:-}
@@ -30,6 +32,7 @@ fail() {
 [[ "$screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$post_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_POST_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$boot_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_BOOT_SCREENSHOT_DELAY must be a non-negative integer"
+[[ "$plymouth_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_PLYMOUTH_SCREENSHOT_DELAY must be a non-negative integer"
 command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not found: qemu-system-x86_64"
 command -v timeout >/dev/null 2>&1 || fail "required command not found: timeout"
 command -v socat >/dev/null 2>&1 || fail "required command not found: socat"
@@ -105,6 +108,9 @@ session_screenshot_path=${screenshot_path:-"${log_path}.session.ppm"}
 if [[ -n "$boot_screenshot_path" ]]; then
   mkdir -p "$(dirname "$boot_screenshot_path")"
 fi
+if [[ -n "$plymouth_screenshot_path" ]]; then
+  mkdir -p "$(dirname "$plymouth_screenshot_path")"
+fi
 if [[ -n "$screenshot_path" ]]; then
   mkdir -p "$(dirname "$screenshot_path")"
 fi
@@ -142,6 +148,7 @@ timeout --kill-after=10s "${timeout_seconds}s" \
 qemu_pid=$!
 
 boot_dump_status=0
+plymouth_dump_status=0
 dump_status=0
 session_dump_status=0
 post_dump_status=0
@@ -168,6 +175,12 @@ if [[ "$monitor_ready" == true ]]; then
     printf 'smoke-iso: sent QEMU boot keys: %s\n' "$boot_keys"
   fi
 
+  if [[ -n "$plymouth_screenshot_path" ]]; then
+    sleep "$plymouth_screenshot_delay"
+    capture_screen "$plymouth_screenshot_path"
+    plymouth_dump_status=$?
+  fi
+
   if [[ -n "$screenshot_path" ]]; then
     sleep "$screenshot_delay"
     capture_screen "$screenshot_path"
@@ -192,6 +205,7 @@ if [[ "$monitor_ready" == true ]]; then
   fi
 else
   boot_dump_status=1
+  plymouth_dump_status=1
   dump_status=1
   session_dump_status=1
   post_dump_status=1
@@ -200,6 +214,7 @@ fi
 qemu_quit_requested=false
 if [[ "$monitor_ready" == true \
   && "$boot_dump_status" -eq 0 \
+  && "$plymouth_dump_status" -eq 0 \
   && "$session_dump_status" -eq 0 \
   && "$post_dump_status" -eq 0 ]]; then
   if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
@@ -228,6 +243,10 @@ fi
 if [[ -n "$boot_screenshot_path" ]]; then
   [[ "$boot_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept boot screendump'
   validate_screenshot "$boot_screenshot_path" 'boot'
+fi
+if [[ -n "$plymouth_screenshot_path" ]]; then
+  [[ "$plymouth_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept Plymouth screendump'
+  validate_screenshot "$plymouth_screenshot_path" 'Plymouth splash'
 fi
 if [[ -n "$screenshot_path" ]]; then
   [[ "$dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept screendump'

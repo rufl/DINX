@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ensure_pearl_greeter_account() {
+  esysusers || return 1
   if ! getent group pearl-greeter >/dev/null 2>&1; then
     groupadd --system pearl-greeter
   fi

@@ -206,6 +206,8 @@ for required in \
 done
 grep -Fq -- '-Dwasm-plugins=false' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not select the compact native build'
 grep -Fq 'build-greeter' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not build Pearl Greeter'
+grep -Fq "'esysusers'" "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl package does not declare the sysusers tool used by its install hook'
 grep -Fq 'install=pearl.install' "$pearl_dir/PKGBUILD" || fail 'Pearl package has no greeter account install hook'
 grep -Fq "'greetd'" "$pearl_dir/PKGBUILD" || fail 'Pearl package does not declare greetd integration'
 grep -Fq "'elogind'" "$pearl_dir/PKGBUILD" || fail 'Pearl package does not declare elogind power integration'

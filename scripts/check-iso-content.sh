@@ -35,6 +35,16 @@ for graphics_module in vmwgfx vboxvideo; do
     || fail "live initramfs omits the VirtualBox graphics module: $graphics_module"
 done
 
+for plymouth_path in \
+  usr/bin/plymouthd \
+  usr/lib/plymouth/script.so \
+  usr/share/plymouth/themes/dinx/dinx.plymouth \
+  usr/share/plymouth/themes/dinx/dinx.script \
+  usr/share/plymouth/themes/dinx/logo.png; do
+  grep -Fq "$plymouth_path" <<<"$initramfs_manifest" \
+    || fail "live initramfs omits the DINX Plymouth runtime or theme: $plymouth_path"
+done
+
 xorriso -osirrox on \
   -indev "$iso_path" \
   -extract /LiveOS/rootfs.img "$tmp_dir/rootfs.img" \
@@ -123,6 +133,16 @@ required_paths=(
   etc/calamares/settings.conf
   etc/default/grub.d/40-dinx-windows.cfg
   etc/dinit.d/greetd
+  etc/dinit.d/dinx-plymouth-quit
+  etc/dinit.d/boot.d/dinx-plymouth-quit
+  etc/plymouth/plymouthd.conf
+  usr/bin/plymouth
+  usr/bin/plymouthd
+  usr/lib/plymouth/script.so
+  usr/local/libexec/dinx-plymouth-quit
+  usr/share/plymouth/themes/dinx/dinx.plymouth
+  usr/share/plymouth/themes/dinx/dinx.script
+  usr/share/plymouth/themes/dinx/logo.png
   etc/greetd/config.toml
   usr/local/libexec/dinx-graphics-environment.sh
   usr/local/libexec/dinx-pearl-greeter-host
@@ -612,6 +632,8 @@ grep -Fq 'set timeout_style=menu' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB does not display its timed boot menu'
 grep -Fq 'source /boot/grub/kernels.cfg' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB does not load its live boot choices'
+grep -Fq 'set kopts="quiet splash"' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO boot menu does not enable Plymouth and silent boot'
 [[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 2 ]] \
   || fail 'DINX ISO GRUB does not contain exactly two live boot choices'
 grep -Fq 'menuentry "Start DINX live (ISO/DVD)"' "$tmp_dir/iso-grub-kernels.cfg" \
@@ -640,6 +662,24 @@ cmp -s "$tmp_dir/rootfs-grub-logo.png" "$tmp_dir/livefs-grub-logo.png" \
   || fail 'livefs GRUB logo differs from the installed DINX boot mark'
 cmp -s "$tmp_dir/rootfs-grub-logo.png" "$tmp_dir/iso-grub-logo.png" \
   || fail 'ISO boot GRUB logo differs from the DINX boot mark'
+plymouthd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/plymouth/plymouthd.conf)
+grep -Fqx 'Theme=dinx' <<<"$plymouthd_config" || fail 'Plymouth does not select the DINX splash theme'
+plymouth_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/plymouth/themes/dinx/dinx.plymouth)
+grep -Fqx 'ModuleName=script' <<<"$plymouth_theme" || fail 'DINX Plymouth theme does not use the script plugin'
+grep -Fqx 'ScriptFile=/usr/share/plymouth/themes/dinx/dinx.script' <<<"$plymouth_theme" \
+  || fail 'DINX Plymouth theme script path is incorrect'
+plymouth_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-plymouth-quit)
+grep -Fqx 'command = /usr/local/libexec/dinx-plymouth-quit' <<<"$plymouth_service" \
+  || fail 'Dinit Plymouth handoff service command is incorrect'
+grep -Fqx 'depends-on = greetd' <<<"$plymouth_service" \
+  || fail 'Dinit Plymouth handoff does not wait for greetd'
+plymouth_quit=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-plymouth-quit)
+grep -Fq '/usr/bin/plymouth --ping' <<<"$plymouth_quit" || fail 'Dinit Plymouth handoff does not check the daemon'
+grep -Fq 'exec /usr/bin/plymouth quit' <<<"$plymouth_quit" || fail 'Dinit Plymouth handoff does not quit the splash'
+unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/plymouth/themes/dinx/logo.png \
+  > "$tmp_dir/rootfs-plymouth-logo.png"
+cmp -s "$tmp_dir/rootfs-grub-logo.png" "$tmp_dir/rootfs-plymouth-logo.png" \
+  || fail 'DINX Plymouth logo differs from the canonical GRUB boot mark'
 
 
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)

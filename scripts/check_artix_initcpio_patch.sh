@@ -13,19 +13,19 @@ cat > "$config" <<'EOF'
 MODULES=(loop dm-snapshot)
 HOOKS=(base udev block filesystems)
 EOF
-"$patcher" --ensure-graphics-modules "$config"
+"$patcher" --ensure-boot-support "$config"
 cat > "$tmp_dir/expected.conf" <<'EOF'
 MODULES=(loop dm-snapshot vmwgfx vboxvideo)
-HOOKS=(base udev block filesystems)
+HOOKS=(base udev plymouth block filesystems)
 EOF
 if ! cmp -s "$tmp_dir/expected.conf" "$config"; then
   diff -u "$tmp_dir/expected.conf" "$config" >&2 || true
-  printf 'initramfs MODULES patch did not add exactly vmwgfx and vboxvideo\n' >&2
+  printf 'initramfs patch did not add graphics modules and the Plymouth hook\n' >&2
   exit 1
 fi
-"$patcher" --ensure-graphics-modules "$config"
+"$patcher" --ensure-boot-support "$config"
 cmp -s "$tmp_dir/expected.conf" "$config" || {
-  printf 'initramfs MODULES patch is not idempotent\n' >&2
+  printf 'initramfs patch is not idempotent\n' >&2
   exit 1
 }
 
@@ -39,7 +39,7 @@ prepare_initramfs_mkinitcpio() {
 EOF
 "$patcher" --patch-artix-helper "$helper"
 if ! awk '
-  /"\$DINX_INITRAMFS_PATCHER" --ensure-graphics-modules "\$mnt\/etc\/\$mkinitcpio_conf"/ { patch_line = NR }
+  /"\$DINX_INITRAMFS_PATCHER" --ensure-boot-support "\$mnt\/etc\/\$mkinitcpio_conf"/ { patch_line = NR }
   /artix-chroot "\$mnt" mkinitcpio -k "\$k"/ { build_line = NR }
   END { exit !(patch_line && build_line == patch_line + 1) }
 ' "$helper"; then

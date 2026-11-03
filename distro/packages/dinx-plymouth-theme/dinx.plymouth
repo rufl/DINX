@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+[Plymouth Theme]
+Name=DINX
+Description=DINX branded boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/dinx
+ScriptFile=/usr/share/plymouth/themes/dinx/dinx.script

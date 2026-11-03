@@ -6,7 +6,7 @@ fail() {
   exit 1
 }
 
-ensure_graphics_modules() {
+ensure_boot_support() {
   local config_path=$1
   local config_dir tmp_file
 
@@ -37,12 +37,39 @@ ensure_graphics_modules() {
       printf "%s%s%s\n", prefix, body, suffix
       next
     }
+    /^[[:space:]]*HOOKS[[:space:]]*=\(/ {
+      if (hooks_seen++) exit 1
+      open = index($0, "(")
+      rest = substr($0, open + 1)
+      if (rest !~ /\)[[:space:]]*(#.*)?$/) exit 1
+      close_pos = index(rest, ")")
+      body = substr(rest, 1, close_pos - 1)
+      suffix = substr(rest, close_pos)
+      prefix = substr($0, 1, open)
+      count = split(body, names, /[[:space:]]+/)
+      udev_count = 0
+      plymouth_count = 0
+      for (i = 1; i <= count; i++) {
+        if (names[i] == "udev") udev_count++
+        if (names[i] == "plymouth") plymouth_count++
+      }
+      if (udev_count != 1 || plymouth_count > 1) exit 1
+      body = ""
+      for (i = 1; i <= count; i++) {
+        if (names[i] == "" || names[i] == "plymouth") continue
+        if (body != "") body = body " "
+        body = body names[i]
+        if (names[i] == "udev") body = body " plymouth"
+      }
+      printf "%s%s%s\n", prefix, body, suffix
+      next
+    }
     { print }
     END {
-      if (modules_seen != 1) exit 1
+      if (modules_seen != 1 || hooks_seen != 1) exit 1
     }
   ' "$config_path" > "$tmp_file" \
-    || fail "unsupported MODULES array in $config_path"
+    || fail "unsupported MODULES or HOOKS array in $config_path"
 
   chmod --reference="$config_path" "$tmp_file"
   mv -f -- "$tmp_file" "$config_path"
@@ -60,14 +87,14 @@ patch_artix_helper() {
   trap 'rm -f -- "$tmp_file"' EXIT
 
   awk '
-      index($0, "\"$DINX_INITRAMFS_PATCHER\" --ensure-graphics-modules \"$mnt/etc/$mkinitcpio_conf\"") {
+    index($0, "\"$DINX_INITRAMFS_PATCHER\" --ensure-boot-support \"$mnt/etc/$mkinitcpio_conf\"") {
       already_patched++
     }
     index($0, "artix-chroot \"$mnt\" mkinitcpio -k \"$k\"") {
       target_count++
       indentation = $0
       sub(/[^[:space:]].*$/, "", indentation)
-      printf "%s\"$DINX_INITRAMFS_PATCHER\" --ensure-graphics-modules \"$mnt/etc/$mkinitcpio_conf\"\n", indentation
+      printf "%s\"$DINX_INITRAMFS_PATCHER\" --ensure-boot-support \"$mnt/etc/$mkinitcpio_conf\"\n", indentation
     }
     { print }
     END {
@@ -82,15 +109,15 @@ patch_artix_helper() {
 }
 
 case "${1:-}" in
-  --ensure-graphics-modules)
-    [[ $# -eq 2 ]] || fail 'usage: patch-artix-initcpio.sh --ensure-graphics-modules CONFIG'
-    ensure_graphics_modules "$2"
+  --ensure-boot-support)
+    [[ $# -eq 2 ]] || fail 'usage: patch-artix-initcpio.sh --ensure-boot-support CONFIG'
+    ensure_boot_support "$2"
     ;;
   --patch-artix-helper)
     [[ $# -eq 2 ]] || fail 'usage: patch-artix-initcpio.sh --patch-artix-helper HELPER'
     patch_artix_helper "$2"
     ;;
   *)
-    fail 'usage: patch-artix-initcpio.sh {--ensure-graphics-modules CONFIG|--patch-artix-helper HELPER}'
+    fail 'usage: patch-artix-initcpio.sh {--ensure-boot-support CONFIG|--patch-artix-helper HELPER}'
     ;;
 esac

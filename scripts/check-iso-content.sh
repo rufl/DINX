@@ -885,6 +885,8 @@ done
 
 # Artix desktop packages may ship inert compatibility unit files; reject the init/runtime itself.
 # Empty compatibility directories are inert; reject files and symlinks under these paths.
+
+# Reject the upstream terminal/editor install paths; Deetty/Dintor own the DINX payload.
 for forbidden_path in \
   etc/systemd \
   usr/lib/systemd \

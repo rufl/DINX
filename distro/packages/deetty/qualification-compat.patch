@@ -102,11 +102,11 @@
 -            "-cmd \"select 'NOCTTY_SQLITE_READY';\"",
 +            "-cmd \".prompt 'DEETTY_SQLITE> '\" " ++
 +                "-cmd \"select 'DEETTY_SQLITE_READY';\"",
-@@ -92,2 +94,2 @@
+@@ -93,2 +94,2 @@
          "LESS=R; export LESS; exec \"{s}\" --pager=\"{s}\" --local-file " ++
 -            "\"{s}/noctty-system.1\"",
 +            "\"{s}/deetty-system.1\"",
-@@ -165,11 +167,11 @@
+@@ -165,11 +166,11 @@
 -    const watch_markers = [_][]const u8{"NOCTTY_SYSTEM_WATCH"};
 +    const watch_markers = [_][]const u8{"DEETTY_SYSTEM_WATCH"};
      const info_markers = [_][]const u8{ "File: dir", "Top" };

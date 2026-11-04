@@ -53,6 +53,7 @@ git -C "$source_dir" archive \
 actual_sha=$(sha256sum "$tmp_archive" | awk '{print $1}')
 [[ "$actual_sha" == "$expected_sha" ]] ||
   fail "source sha256 mismatch expected=$expected_sha actual=$actual_sha"
+chmod 0644 "$tmp_archive"
 mv -f -- "$tmp_archive" "$archive"
 tmp_archive=
 

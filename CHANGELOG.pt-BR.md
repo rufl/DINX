@@ -12,6 +12,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Registrar hashes dos bancos sync Artix, do arquivo de pin da fonte Deetty e fingerprint da árvore de fontes nos metadados; aguardar o servidor assinado de pacotes antes da montagem e exigir uma ISO com metadados adjacentes.
 - Verificar espaço e inodes nos outputs, caches, chroots e armazenamento Docker; testar attachment privilegiado de loop, preservar chroots customizados não vazios após falha e rejeitar valores inválidos na flag que pula a qualificação pós-build.
 - Confirmar por OCR o TTY de recuperação instalado e documentar que o smoke BIOS/UEFI simula a instalação a partir do rootfs, sem exercitar o Calamares de ponta a ponta.
+- Comparar paths obrigatórios do rootfs instalado e do livefs com campos exatos nas listagens longas do SquashFS; as colunas de metadados faziam arquivos válidos da ISO parecerem ausentes.
 
 - Definir `logind` como backend libseat padrão do Pearl Greeter em sessões greetd sob dinit, preservando um backend explicitamente configurado.
 - Encerrar o ramo `version` do shim Zig do ZLS antes de delegar ao compilador opcional; o rootfs instalado informa a versão fixada sem exigir o pacote opcional `zig`.

@@ -13,6 +13,9 @@ cat > "$config" <<'EOF'
 MODULES=(loop dm-snapshot)
 HOOKS=(base udev artix_shutdown artix artix_loop_mnt artix_kms
         modconf block filesystems keyboard keymap)
+BINARIES=(/usr/bin/existing-tool)
+FILES=(/etc/existing.conf
+       /etc/second.conf)
 COMPRESSION="zstd"
 COMPRESSION_OPTIONS=(--ultra -22)
 EOF
@@ -20,17 +23,36 @@ EOF
 cat > "$tmp_dir/expected.conf" <<'EOF'
 MODULES=(loop dm-snapshot vmwgfx vboxvideo)
 HOOKS=(base udev plymouth artix_shutdown artix artix_loop_mnt artix_kms modconf block filesystems keyboard keymap)
+BINARIES=(/usr/bin/existing-tool /usr/bin/plymouthd /usr/bin/plymouth /usr/lib/plymouth/script.so)
+FILES=(/etc/existing.conf /etc/second.conf /etc/plymouth/plymouthd.conf /usr/share/plymouth/plymouthd.defaults /usr/share/plymouth/themes/dinx/dinx.plymouth /usr/share/plymouth/themes/dinx/dinx.script /usr/share/plymouth/themes/dinx/logo.png)
 COMPRESSION="zstd"
 COMPRESSION_OPTIONS=(--ultra -22)
 EOF
 if ! cmp -s "$tmp_dir/expected.conf" "$config"; then
   diff -u "$tmp_dir/expected.conf" "$config" >&2 || true
-  printf 'initramfs patch did not add graphics modules and the Plymouth hook\n' >&2
+  printf 'initramfs patch did not add graphics modules and the complete Plymouth payload\n' >&2
   exit 1
 fi
+
 "$patcher" --ensure-boot-support "$config"
 cmp -s "$tmp_dir/expected.conf" "$config" || {
   printf 'initramfs patch is not idempotent\n' >&2
+  exit 1
+}
+empty_config="$tmp_dir/mkinitcpio-no-payload-arrays.conf"
+cat > "$empty_config" <<'EOF'
+MODULES=()
+HOOKS=(base udev filesystems)
+EOF
+"$patcher" --ensure-boot-support "$empty_config"
+grep -Fqx 'BINARIES=(/usr/bin/plymouthd /usr/bin/plymouth /usr/lib/plymouth/script.so)' "$empty_config" \
+  || { printf 'initramfs patch did not create BINARIES when absent\n' >&2; exit 1; }
+grep -Fqx 'FILES=(/etc/plymouth/plymouthd.conf /usr/share/plymouth/plymouthd.defaults /usr/share/plymouth/themes/dinx/dinx.plymouth /usr/share/plymouth/themes/dinx/dinx.script /usr/share/plymouth/themes/dinx/logo.png)' "$empty_config" \
+  || { printf 'initramfs patch did not create FILES when absent\n' >&2; exit 1; }
+cp -- "$empty_config" "$tmp_dir/expected-no-payload-arrays.conf"
+"$patcher" --ensure-boot-support "$empty_config"
+cmp -s "$tmp_dir/expected-no-payload-arrays.conf" "$empty_config" || {
+  printf 'initramfs patch is not idempotent when BINARIES and FILES are absent\n' >&2
   exit 1
 }
 

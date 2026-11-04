@@ -17,7 +17,7 @@ ensure_boot_support() {
   trap 'rm -f -- "$tmp_file"' EXIT
 
   awk '
-    function emit_array(    count, i, value, output, udev_count, plymouth_count, have_vmwgfx, have_vboxvideo) {
+    function emit_array(    count, i, j, value, output, required, required_count, found, udev_count, plymouth_count, have_vmwgfx, have_vboxvideo) {
       count = split(array_content, values, /[[:space:]]+/)
       output = ""
       if (array_name == "MODULES") {
@@ -37,7 +37,7 @@ ensure_boot_support() {
           if (output != "") output = output " "
           output = output "vboxvideo"
         }
-      } else {
+      } else if (array_name == "HOOKS") {
         for (i = 1; i <= count; i++) {
           value = values[i]
           if (value == "") continue
@@ -51,6 +51,29 @@ ensure_boot_support() {
           if (value == "udev") output = output " plymouth"
         }
         if (udev_count != 1 || plymouth_count > 1) return 0
+      } else {
+        for (i = 1; i <= count; i++) {
+          value = values[i]
+          if (value == "") continue
+          if (output != "") output = output " "
+          output = output value
+        }
+        if (array_name == "BINARIES") {
+          required = "/usr/bin/plymouthd /usr/bin/plymouth /usr/lib/plymouth/script.so"
+        } else {
+          required = "/etc/plymouth/plymouthd.conf /usr/share/plymouth/plymouthd.defaults /usr/share/plymouth/themes/dinx/dinx.plymouth /usr/share/plymouth/themes/dinx/dinx.script /usr/share/plymouth/themes/dinx/logo.png"
+        }
+        required_count = split(required, required_values, /[[:space:]]+/)
+        for (i = 1; i <= required_count; i++) {
+          found = 0
+          for (j = 1; j <= count; j++) {
+            if (values[j] == required_values[i]) found = 1
+          }
+          if (!found) {
+            if (output != "") output = output " "
+            output = output required_values[i]
+          }
+        }
       }
       print array_prefix output array_suffix
       array_name = ""
@@ -74,8 +97,12 @@ ensure_boot_support() {
     function start_array(name,    open_pos) {
       if (name == "MODULES") {
         if (modules_seen++) return 0
-      } else {
+      } else if (name == "HOOKS") {
         if (hooks_seen++) return 0
+      } else if (name == "BINARIES") {
+        if (binaries_seen++) return 0
+      } else if (files_seen++) {
+        return 0
       }
       array_name = name
       open_pos = index($0, "(")
@@ -96,13 +123,23 @@ ensure_boot_support() {
         if (!start_array("HOOKS")) exit 1
         next
       }
+      if ($0 ~ /^[[:space:]]*BINARIES[[:space:]]*=\(/) {
+        if (!start_array("BINARIES")) exit 1
+        next
+      }
+      if ($0 ~ /^[[:space:]]*FILES[[:space:]]*=\(/) {
+        if (!start_array("FILES")) exit 1
+        next
+      }
       print
     }
     END {
       if (array_name != "" || modules_seen != 1 || hooks_seen != 1) exit 1
+      if (!binaries_seen) print "BINARIES=(/usr/bin/plymouthd /usr/bin/plymouth /usr/lib/plymouth/script.so)"
+      if (!files_seen) print "FILES=(/etc/plymouth/plymouthd.conf /usr/share/plymouth/plymouthd.defaults /usr/share/plymouth/themes/dinx/dinx.plymouth /usr/share/plymouth/themes/dinx/dinx.script /usr/share/plymouth/themes/dinx/logo.png)"
     }
   ' "$config_path" > "$tmp_file" \
-    || fail "unsupported MODULES or HOOKS array in $config_path"
+    || fail "unsupported MODULES, HOOKS, BINARIES or FILES array in $config_path"
 
   chmod --reference="$config_path" "$tmp_file"
   mv -f -- "$tmp_file" "$config_path"

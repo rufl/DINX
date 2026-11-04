@@ -9,10 +9,6 @@ dist/
 *.img
 *.qcow2
 *.raw
-/distro/packages/noctty/*.tar.gz
-/distro/packages/noctty/*.pkg.tar.zst
-/distro/packages/noctty/src/
-/distro/packages/noctty/pkg/
 /distro/packages/deetty/*.tar.gz
 /distro/packages/deetty/*.pkg.tar.zst
 /distro/packages/deetty/src/
@@ -32,7 +28,7 @@ coverage/
 .env.*
 !.env.example
 
-/third_party/noctty/
+/third_party/deetty/
 # Local credentials and private signing material
 *.key
 *.pem

@@ -345,7 +345,7 @@ trap finish EXIT
                 installed_packages_sha256=${installed_packages_sha256%% *}
                 cache_key=$(dinx_package_cache_key \
                   "$package_name" "$package_dir" "$makepkg_base_conf_sha256" \
-                  "$package_cache_builder_sha256" "$installed_packages_sha256" \
+                  "$package_cache_builder_sha256" "$installed_packages_sha256" /workspace \
                   "${makepkg_options[@]}" -- "${extra_env[@]}")
                 if package_cache_as_build_user dinx_package_cache_restore \
                   "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
@@ -406,8 +406,8 @@ trap finish EXIT
               icon_svg=/tmp/dinx-dintor-icon.svg
               icon_png=/usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
               tar -xOf \
-                "/workspace/distro/packages/deetty/noctty-${DEETTY_VERSION}.tar.gz" \
-                "noctty-${DEETTY_VERSION}/resources/com.noctty.NoctEd.svg" \
+                "/workspace/distro/packages/deetty/deetty-${DEETTY_VERSION}.tar.gz" \
+                "deetty-${DEETTY_VERSION}/resources/com.noctty.NoctEd.svg" \
                 > "$icon_svg"
               mkdir -p "$(dirname "$icon_png")"
               rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"
@@ -538,6 +538,23 @@ trap finish EXIT
                 --directory "$package_repo" \
                 >/tmp/dinx-package-repo.log 2>&1 &
               repo_pid=$!
+              repo_ready=false
+              for _ in {1..30}; do
+                if curl --fail --silent --show-error --max-time 2 \
+                  http://127.0.0.1:8765/dinx.db --output /dev/null; then
+                  repo_ready=true
+                  break
+                fi
+                if ! kill -0 "$repo_pid" 2>/dev/null; then
+                  break
+                fi
+                sleep 1
+              done
+              if [[ "$repo_ready" != true ]]; then
+                cat /tmp/dinx-package-repo.log >&2 || true
+                printf 'build-iso-container: signed package repository HTTP server did not become ready\n' >&2
+                exit 1
+              fi
 
               mksquashfs_path=$(command -v mksquashfs)
               real_mksquashfs=$(readlink -f "$mksquashfs_path")
@@ -559,23 +576,36 @@ trap finish EXIT
                   "$((SECONDS - iso_assembly_started))" "$status"
                 exit "$status"
               fi
-              metadata_path="$DINX_ISO_OUTPUT/dinx/build-metadata.txt"
+              mapfile -t iso_paths < <(find "$DINX_ISO_OUTPUT" -type f -name '*.iso' -print | LC_ALL=C sort)
+              [[ ${#iso_paths[@]} -eq 1 ]] || {
+                printf 'build-iso-container: expected exactly one ISO, found %s\n' "${#iso_paths[@]}" >&2
+                exit 1
+              }
+              iso_path=${iso_paths[0]}
+              metadata_path="$(dirname "$iso_path")/build-metadata.txt"
               mkdir -p "$(dirname "$metadata_path")"
-              iso_path=$(find "$DINX_ISO_OUTPUT" -type f -name "*.iso" -print -quit)
-              test -n "$iso_path"
               iso_size=$(stat -c "%s" "$iso_path")
               iso_sha512=$(sha512sum "$iso_path" | cut -d " " -f 1)
               buildiso_owner=$(pacman -Qo "$(command -v buildiso)")
+              mapfile -t builder_sync_databases < <(find /var/lib/pacman/sync -maxdepth 1 -type f -name '*.db' -print | LC_ALL=C sort)
+              ((${#builder_sync_databases[@]} > 0)) || {
+                printf 'build-iso-container: refreshed Artix sync databases are missing\n' >&2
+                exit 1
+              }
+              builder_sync_databases_sha256=$(
+                for sync_db in "${builder_sync_databases[@]}"; do
+                  digest=$(sha256sum -- "$sync_db")
+                  printf '%s  %s\n' "${digest%% *}" "$(basename -- "$sync_db")"
+                done | sha256sum | cut -d ' ' -f 1
+              )
               package_snapshot=$(pacman -Q iso-profiles mkinitcpio)
               {
                 printf "schema=dinx-build-metadata/v1\n"
                 printf "repository=%s\n" "$DINX_REPOSITORY"
                 printf "commit=%s\n" "$DINX_COMMIT"
                 printf "build_context=%s\n" "${DINX_BUILD_CONTEXT:-github-actions}"
-                if [[ "${DINX_BUILD_CONTEXT:-github-actions}" == local-docker ]]; then
-                  : "${DINX_SOURCE_TREE_SHA256:?local Docker build is missing its source-tree checksum}"
-                  printf "source_tree_sha256=%s\n" "$DINX_SOURCE_TREE_SHA256"
-                fi
+                : "${DINX_SOURCE_TREE_SHA256:?build is missing its source-tree checksum}"
+                printf "source_tree_sha256=%s\n" "$DINX_SOURCE_TREE_SHA256"
                 printf "workflow_run=%s\n" "$DINX_RUN_ID"
                 printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
                 printf "builder_pacman_conf_sha256=%s\n" "$builder_pacman_conf_sha256"
@@ -586,7 +616,7 @@ trap finish EXIT
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
                 printf "common_profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/common/common.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
-                printf "deetty_source_env_sha256=%s\n" "$(sha256sum /workspace/distro/packages/deetty/source.env | cut -d " " -f 1)"
+                printf "builder_sync_databases_sha256=%s\n" "$builder_sync_databases_sha256"
                 printf "compression_schema=dinx-squashfs/v1\n"
                 printf "compression_algorithm=xz\n"
                 printf "compression_level=tool-default\n"

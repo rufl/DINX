@@ -12,12 +12,12 @@ A metadata do build fica vinculada ao artefato exato da ISO nos caminhos P0 e de
 release com tag: o CI recalcula o tamanho em bytes e o SHA-512 da ISO e rejeita
 metadados que não correspondam ao arquivo baixado.
 
-O build P0 verifica o archive versionado do código upstream NOCTTY contra o commit exato
+O build P0 verifica o archive versionado do código upstream Deetty contra o commit exato
 do repositório e o contrato SHA-256 em `distro/packages/deetty/source.env`, compila o
 pacote nativo `deetty` com Zig 0.17.0 e verifica que os aplicativos Deetty/Dintor e seus
-recursos desktop/editor estão na ISO. O caminho de release preserva a origem upstream
-NOCTTY sem alteração e não a clona durante o build; atualize o archive e o contrato
-juntos quando alterar a origem fixada.
+recursos desktop/editor estão na ISO. O caminho de release não clona o repositório
+Deetty durante o build; atualize o archive e o contrato juntos quando alterar a origem
+fixada.
 
 Na P3, o mesmo build do pacote também executa `scripts/dintor_p3_qualification.sh`. Ele qualifica o core do editor Dintor, diagnósticos/navegação reais com `clangd`, os esquemas GTK/X11 nativos claro e escuro e marcadores limitados de status/diff do Git antes de o pacote ser elegível para o payload da ISO e o gate P0 de QEMU/instalação.
 

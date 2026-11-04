@@ -177,10 +177,6 @@ fi
 printf 'dinx-install-smoke\n' > "$target_dir/etc/hostname"
 printf 'smoke-install: root UUID=%s\n' "$root_uuid"
 
-printf 'smoke-install: enabling dinit services and recovery TTYs\n'
-for service in NetworkManager elogind greetd getty@tty2 getty@tty3; do
-  ln -sfn "../$service" "$target_dir/etc/dinit.d/boot.d/$service"
-done
 printf 'smoke-install: checking installed runtime payload before boot\n'
 mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
@@ -213,13 +209,6 @@ if chroot "$target_dir" /usr/bin/pacman -Q wizp >/dev/null 2>&1 \
   || chroot "$target_dir" /usr/bin/pacman -Q cups-dinit >/dev/null 2>&1; then
   fail 'optional package leaked into the base ISO'
 fi
-{
-  printf 'pacman_database=true\n'
-  printf 'core_packages=true\n'
-  printf 'zls_runtime=true\n'
-  printf 'dynamic_libraries=true\n'
-  printf 'optional_base_absent=true\n'
-} > "$target_dir/var/lib/dinx/install-smoke.prepared"
 
 printf '\nMODULES=(virtio virtio_pci virtio_blk ata_generic ata_piix ext4)\n' >> "$target_dir/etc/mkinitcpio.conf"
 printf '\nGRUB_CMDLINE_LINUX="console=tty0 console=ttyS0"\nGRUB_TIMEOUT=1\nGRUB_TIMEOUT_STYLE=hidden\n' >> "$target_dir/etc/default/grub"
@@ -456,18 +445,4 @@ done
 mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
-[[ -s "$target_dir/var/lib/dinx/install-smoke.prepared" ]] \
-  || fail 'installed payload verification record is missing'
-[[ -L "$target_dir/etc/dinit.d/boot.d/getty@tty2" ]] || fail 'recovery TTY service is not enabled'
-for check in pacman_database core_packages zls_runtime dynamic_libraries optional_base_absent; do
-  grep -Fqx "$check=true" "$target_dir/var/lib/dinx/install-smoke.prepared" \
-    || fail "installed runtime check did not pass: $check"
-done
-printf 'dinit_services=true\nlifecycle_checks=true\n' \
-  >> "$target_dir/var/lib/dinx/install-smoke.prepared"
-grep -Fqx 'dinit_services=true' "$target_dir/var/lib/dinx/install-smoke.prepared" \
-  || fail 'installed Dinit service check did not pass'
-grep -Fqx 'lifecycle_checks=true' "$target_dir/var/lib/dinx/install-smoke.prepared" \
-  || fail 'installed lifecycle check did not complete'
-printf 'smoke-install: installed pacman, Dinit services, libraries and optional-package contracts passed\n'
-printf 'smoke-install: persistent install and first-boot recovery contract passed\n'
+printf 'smoke-install: installed package payload and booted disk checks passed; this is not a Calamares end-to-end installation (GUI/user/storage modules are not exercised)\n'

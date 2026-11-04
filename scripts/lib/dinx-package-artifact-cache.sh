@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_DINX_PACKAGE_CACHE_SCHEMA=dinx-package-artifact-cache/v1
+_DINX_PACKAGE_CACHE_SCHEMA=dinx-package-artifact-cache/v2
 
 _dinx_package_cache_valid_name() {
   [[ "$1" =~ ^[a-z0-9][a-z0-9+_-]*$ ]]
@@ -14,22 +14,25 @@ _dinx_package_cache_valid_archive_name() {
   [[ "$1" =~ ^[A-Za-z0-9+._:-]+\.pkg\.tar\.zst$ ]]
 }
 
-# Key the package source tree and its effective build environment, not the full DINX checkout.
+# Key the package source tree, declared external source inputs, and effective build environment.
 dinx_package_cache_key() {
-  (($# >= 6)) || return 2
+  (($# >= 7)) || return 2
   local package=$1
   local package_dir=$2
   local makepkg_conf_sha256=$3
   local builder_sha256=$4
   local installed_packages_sha256=$5
-  shift 5
+  local source_root=$6
+  shift 6
   _dinx_package_cache_valid_name "$package" || return 2
   [[ -d "$package_dir" && ! -L "$package_dir" ]] || return 2
   [[ "$makepkg_conf_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
   [[ "$builder_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
   [[ "$installed_packages_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
+  source_root=$(realpath -e -- "$source_root") || return 2
+  [[ -d "$source_root" ]] || return 2
 
-  local -a makepkg_options=() extra_env=()
+  local -a makepkg_options=() extra_env=() external_inputs=() external_hashes=()
   local parse_environment=false
   local arg
   for arg in "$@"; do
@@ -45,6 +48,31 @@ dinx_package_cache_key() {
   done
   [[ "$parse_environment" == true ]] || return 2
 
+  local manifest="$package_dir/cache-inputs"
+  if [[ -e "$manifest" || -L "$manifest" ]]; then
+    [[ -f "$manifest" && ! -L "$manifest" ]] || return 2
+    local input resolved digest
+    local -A seen_inputs=()
+    while IFS= read -r input || [[ -n "$input" ]]; do
+      [[ -z "$input" || "$input" == \#* ]] && continue
+      [[ "$input" =~ ^[A-Za-z0-9_+./-]+$ && "$input" != /* ]] || return 2
+      case "/$input/" in
+        */../*|*/./*) return 2 ;;
+      esac
+      [[ -z ${seen_inputs[$input]+present} ]] || return 2
+      seen_inputs[$input]=1
+      resolved=$(realpath -e -- "$source_root/$input") || return 2
+      case "$resolved" in
+        "$source_root"/*) ;;
+        *) return 2 ;;
+      esac
+      [[ -f "$resolved" && ! -L "$resolved" ]] || return 2
+      digest=$(sha256sum -- "$resolved") || return 2
+      external_inputs+=("$input")
+      external_hashes+=("${digest%% *}")
+    done < "$manifest"
+  fi
+
   local library_sha256
   library_sha256=$(sha256sum -- "${BASH_SOURCE[0]}") || return 2
   library_sha256=${library_sha256%% *}
@@ -59,22 +87,13 @@ dinx_package_cache_key() {
     fi
   done
 
+  # Exclude generated makepkg/Cargo/Zig outputs, but hash the full checked-in package tree.
   local -a source_excludes=(
-    --exclude='./pkg'
-    --exclude='./.git' --exclude='*/.git'
+    --exclude='./pkg' --exclude='./.git' --exclude='*/.git'
     --exclude='./.zig-cache' --exclude='./zig-cache' --exclude='./zig-out' --exclude='./target'
     --exclude='*/.zig-cache' --exclude='*/zig-cache' --exclude='*/zig-out' --exclude='*/target'
     --exclude='*.pkg.tar.*' --exclude='*.sig'
   )
-  case "$package" in
-    dinitui|dinxpanel|seafoam-settings)
-      source_excludes+=(--exclude='./src/stage')
-      ;;
-    *)
-      source_excludes+=(--exclude='./src')
-      ;;
-  esac
-
   local result
   result=$(
     {
@@ -82,7 +101,12 @@ dinx_package_cache_key() {
       printf 'package=%s\n' "$package"
       printf 'makepkg_conf_sha256=%s\n' "$makepkg_conf_sha256"
       printf 'builder_sha256=%s\n' "$builder_sha256"
+      printf 'artix_image=%s\n' "${DINX_ARTIX_IMAGE:-unset}"
       printf 'cache_implementation_sha256=%s\n' "$library_sha256"
+      local index=0
+      for ((index = 0; index < ${#external_inputs[@]}; index++)); do
+        printf 'external_input=%s:%s\n' "${external_inputs[index]}" "${external_hashes[index]}"
+      done
       printf 'installed_packages_sha256=%s\n' "$installed_packages_sha256"
       for arg in "${makepkg_options[@]}"; do
         printf 'makepkg_option=%q\n' "$arg"

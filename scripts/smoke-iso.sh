@@ -150,6 +150,11 @@ if [[ -n "$post_screenshot_path" ]]; then
   mkdir -p "$(dirname "$post_screenshot_path")"
 fi
 mkdir -p "$(dirname "$session_screenshot_path")"
+for capture_path in "$log_path" "$boot_screenshot_path" "$plymouth_screenshot_path" \
+  "$screenshot_path" "$post_screenshot_path" "$session_screenshot_path"; do
+  [[ -z "$capture_path" || ! -e "$capture_path" ]] \
+    || fail "QEMU output already exists; refusing stale-evidence reuse or overwrite: $capture_path"
+done
 
 cleanup() {
   if [[ -n "$qemu_pid" ]]; then

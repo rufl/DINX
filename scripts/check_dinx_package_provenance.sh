@@ -96,33 +96,33 @@ for required in \
   'run: scripts/qualify-iso.sh "$DINX_ISO"' \
   'run: ./scripts/check_first_party_apps.sh' \
   'ref: ${{ steps.deetty-source.outputs.ref }}' \
-  'token: ${{ github.token }}' \
-  'repository: rufl/NOCTTY' \
-  'path: third_party/noctty' \
+  'token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN || github.token }}' \
+  'repository: rufl/DEETTY' \
+  'path: third_party/deetty' \
   'persist-credentials: false' \
   'Bundle signed package repository for artifact portability' \
   'dist/dinx-package-repository.tar'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
 done
 for required in \
-  'repository: rufl/NOCTTY' \
+  'repository: rufl/DEETTY' \
+  'if: github.event_name != '\''pull_request'\'' || github.event.pull_request.head.repo.full_name == github.repository' \
   'ref: ${{ steps.deetty-source.outputs.ref }}' \
-  'token: ${{ github.token }}' \
-  'path: third_party/noctty' \
+  'token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN || github.token }}' \
+  'path: third_party/deetty' \
   'persist-credentials: false' \
-  'run: ./scripts/prepare_first_party_apps.sh third_party/noctty'; do
+  'run: ./scripts/prepare_first_party_apps.sh third_party/deetty'; do
   grep -Fq -- "$required" "$contracts_workflow" \
-    || fail "contracts workflow is missing public-source handling: $required"
+    || fail "contracts workflow is missing Deetty source handling: $required"
 done
 grep -Fq 'secrets: inherit' "$release_workflow" \
   || fail 'release workflow does not pass package-signing secrets to P0'
 grep -Fq 'name: dinx-p0-success-${{ github.sha }}' "$release_workflow" \
   || fail 'release workflow does not consume the successful P0 qualification artifact'
-if grep -Fq 'DEETTY_SOURCE_READ_TOKEN' "$workflow" "$contracts_workflow"; then
-  fail 'public NOCTTY source checkout unexpectedly requires an Actions secret'
-fi
-grep -Fq '/third_party/noctty/' .gitignore \
-  || fail 'public Deetty/Dintor source checkout is not Git-ignored'
+grep -Fq 'token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN || github.token }}' "$workflow" "$contracts_workflow" \
+  || fail 'Deetty source checkout does not support the configured read token or GITHUB_TOKEN fallback'
+grep -Fq '/third_party/deetty/' .gitignore \
+  || fail 'Deetty/Dintor source checkout is not Git-ignored'
 local_package_installer=scripts/lib/pacman-local-install.sh
 [[ -r "$local_package_installer" ]] || fail 'local package retry helper is missing'
 for required in \

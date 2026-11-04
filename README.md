@@ -115,7 +115,7 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer 
 
 ## Código, contratos e licença
 
-Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O pacote DINX `deetty` fornece os aplicativos Deetty/Dintor a partir de um archive upstream separado sob MIT, cuja URL e identidade NOCTTY permanecem inalteradas; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
+Este repositório mantém juntos o perfil da ISO, os pacotes, as integrações do desktop, os checks de qualificação e o tooling de release. As entradas específicas da DINX são licenciadas sob Apache-2.0. O pacote DINX `deetty` fornece os aplicativos Deetty/Dintor a partir do archive upstream do repositório `rufl/DEETTY`, sob MIT; a cobertura está declarada em `REUSE.toml` e os textos estão em `LICENSES/`.
 
 - [Código no GitHub](https://github.com/rufl/DINX)
 - [Issues](https://github.com/rufl/DINX/issues)

@@ -41,12 +41,12 @@ The entry points are:
 
 ## Remote build
 
-The separate `DINX contracts` workflow runs all static/fixture checks and REUSE lint on every pull request and push to `main`. `rufl/NOCTTY` is public, so trusted runs and fork pull requests check out the pinned source commit with the workflow's built-in `GITHUB_TOKEN`, then generate the ignored source archive; no extra Actions secret is required.
+The separate `DINX contracts` workflow runs all static/fixture checks and REUSE lint on every pull request and push to `main`. The Deetty upstream repository is `rufl/DEETTY`; workflow access follows that repository's visibility and GitHub token permissions.
 
 The `P0 ISO foundation` workflow runs manually or when profile/build files change. It:
 
 1. checks out DINX;
-2. reads the pinned source commit from `distro/packages/deetty/source.env`, checks out public `rufl/NOCTTY`, generates the git-ignored Deetty/Dintor source archive and verifies it against the pinned SHA-256;
+2. reads the pinned source commit from `distro/packages/deetty/source.env`, checks out `rufl/DEETTY`, generates the git-ignored Deetty/Dintor source archive and verifies it against the pinned SHA-256;
 3. installs QEMU, ISO inspection tools and Tesseract's English OCR data on the Ubuntu runner;
 4. runs Artix in a privileged container;
 5. installs `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb and VTE 2.91 (`vte3`) for Deetty's headless smoke. The full Ghostty application is installed temporarily in the builder only as the extraction source for `ghostty-vt-runtime`; that package contains the VT library, headers and license, after which the full application is removed before ISO assembly. The DINX Aqueous/Pearl packages and their direct Wayland dependencies are built from the configured package inputs.
@@ -192,10 +192,10 @@ Run from the DINX checkout:
 bash scripts/build-iso-docker.sh
 ```
 
-If the ignored Deetty archive is absent, the script prepares it from a checkout at the pinned public NOCTTY commit. Set `DEETTY_SOURCE_CHECKOUT` to that checkout; the commit and generated archive SHA-256 are verified.
+If the ignored Deetty archive is absent, the script prepares it from a checkout at the pinned upstream commit. Set `DEETTY_SOURCE_CHECKOUT` to that checkout; the commit and generated archive SHA-256 are verified.
 
 ```sh
-DEETTY_SOURCE_CHECKOUT=/path/to/NOCTTY bash scripts/build-iso-docker.sh
+DEETTY_SOURCE_CHECKOUT=/path/to/DEETTY bash scripts/build-iso-docker.sh
 ```
 
 The Deetty package build clears its cached source tree before applying patches. A failed build therefore cannot leave patched source that breaks the next retry.

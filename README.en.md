@@ -118,7 +118,7 @@ Read the [installation guide](docs/install.md) before touching a disk. Windows F
 
 ## Code, contracts and licensing
 
-This repository keeps the ISO profile, packages, desktop integrations, qualification checks and release tooling together. DINX-owned entries are licensed under Apache-2.0. The versioned upstream NOCTTY archive is separate source material under MIT; the DINX package and applications are Deetty and Dintor. The coverage is declared in `REUSE.toml` and the license texts are in `LICENSES/`.
+This repository keeps the ISO profile, packages, desktop integrations, qualification checks and release tooling together. DINX-owned entries are licensed under Apache-2.0. The versioned Deetty upstream archive is separate source material under MIT; the DINX package and applications are Deetty and Dintor. The coverage is declared in `REUSE.toml` and the license texts are in `LICENSES/`.
 
 - [GitHub source](https://github.com/rufl/DINX)
 - [Issues](https://github.com/rufl/DINX/issues)

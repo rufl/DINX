@@ -32,7 +32,7 @@ Options are controlled through environment variables:
   DINX_KEEP_CHROOTS=1        Keep the temporary chroot after a successful build.
   DINX_ISO_QUALIFICATION     Run full qualification (default) or static checks only.
   DINX_SKIP_CONTRACTS=1      Skip local static/fixture contracts.
-  DEETTY_SOURCE_CHECKOUT     Local checkout of the pinned public NOCTTY source.
+  DEETTY_SOURCE_CHECKOUT     Local checkout of the pinned Deetty source.
 USAGE
 }
 
@@ -92,7 +92,8 @@ fi
 [[ "$build_context" == local-docker || "$build_context" == github-actions ]] \
   || fail 'DINX_BUILD_CONTEXT must be local-docker or github-actions'
 if [[ "$build_context" == local-docker ]]; then
-  "$repo_root/scripts/check-iso-qualification-host.sh" "$qualification_mode"
+  "$repo_root/scripts/check-iso-qualification-host.sh" "$qualification_mode" \
+    --build-path "$repo_root/dist" --build-path "${TMPDIR:-/tmp}"
 fi
 
 resolve_repo_path() {
@@ -143,6 +144,8 @@ case "$package_output_host" in
   *) fail 'DINX_PACKAGE_OUTPUT must end in /packages so the repository bundle has the expected layout' ;;
 esac
 [[ "$iso_output_host" != "$package_output_host" ]] || fail 'ISO and package output directories must differ'
+[[ "$cache_host" != "$iso_output_host" && "$cache_host" != "$package_output_host" ]] \
+  || fail 'build cache must be separate from ISO and package outputs'
 
 require_empty_output() {
   local path=$1
@@ -156,22 +159,15 @@ require_empty_output "$iso_output_host"
 require_empty_output "$package_output_host"
 [[ ! -e "$package_bundle_host" ]] \
   || fail "package bundle already exists; choose a fresh build directory: $package_bundle_host"
-mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" \
-  "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
-  "$cache_host/package-artifacts" \
-  "$cache_host/cargo" "$cache_host/zig"
 
 source_env="$repo_root/distro/packages/deetty/source.env"
 version=$(awk -F= '$1 == "DEETTY_VERSION" { print $2; exit }' "$source_env")
 [[ -n "$version" ]] || fail 'Deetty source version is missing'
-source_archive="$repo_root/distro/packages/deetty/noctty-$version.tar.gz"
-if [[ ! -r "$source_archive" ]]; then
-  source_checkout=${DEETTY_SOURCE_CHECKOUT:-"$repo_root/third_party/noctty"}
-  if [[ "$source_checkout" != /* ]]; then
-    source_checkout="$repo_root/$source_checkout"
-  fi
-  "$repo_root/scripts/prepare_first_party_apps.sh" "$source_checkout"
+source_checkout=${DEETTY_SOURCE_CHECKOUT:-"$repo_root/third_party/deetty"}
+if [[ "$source_checkout" != /* ]]; then
+  source_checkout="$repo_root/$source_checkout"
 fi
+"$repo_root/scripts/prepare_first_party_apps.sh" "$source_checkout"
 "$repo_root/scripts/check_first_party_apps.sh"
 
 case ${DINX_SKIP_CONTRACTS:-false} in
@@ -180,10 +176,7 @@ case ${DINX_SKIP_CONTRACTS:-false} in
   *) fail 'DINX_SKIP_CONTRACTS must be true/false or 1/0' ;;
 esac
 
-source_tree_sha256=
-if [[ "$build_context" == local-docker ]]; then
-  source_tree_sha256=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$commit")
-fi
+source_tree_sha256=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$commit")
 require_persistent=${DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING:-false}
 [[ "$require_persistent" == true || "$require_persistent" == false ]] \
   || fail 'DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING must be true or false'
@@ -198,42 +191,100 @@ case "$keep_chroots" in
   true|false|1|0) ;;
   *) fail 'DINX_KEEP_CHROOTS must be true/false or 1/0' ;;
 esac
+
+paths_overlap() {
+  case "$1/" in "$2/"*) return 0 ;; esac
+  case "$2/" in "$1/"*) return 0 ;; esac
+  return 1
+}
+assert_disjoint() {
+  local left=$1 right
+  shift
+  for right in "$@"; do
+    if paths_overlap "$left" "$right"; then
+      fail "build paths overlap: $left and $right"
+    fi
+  done
+}
+assert_disjoint "$iso_output_host" "$package_output_host" "$cache_host" "$package_bundle_host"
+assert_disjoint "$package_output_host" "$cache_host" "$package_bundle_host"
+assert_disjoint "$cache_host" "$package_bundle_host"
+
 created_chroots=false
 if [[ -n ${DINX_ISO_CHROOTS:-} ]]; then
+  [[ ! -L "$DINX_ISO_CHROOTS" ]] || fail "custom buildiso chroot path must not be a symlink: $DINX_ISO_CHROOTS"
   chroots_dir=$(realpath -m -- "$DINX_ISO_CHROOTS")
 elif [[ "$build_context" == github-actions ]]; then
-  chroots_dir="${RUNNER_TEMP:-/tmp}/dinx-artools"
+  chroots_dir=$(realpath -m -- "${RUNNER_TEMP:-/tmp}/dinx-artools")
 else
-  chroots_dir=$(mktemp -d "${TMPDIR:-/tmp}/dinx-artools.XXXXXX")
+  chroots_dir=
   created_chroots=true
 fi
-case "$chroots_dir" in
+chroots_preflight_path=${chroots_dir:-${TMPDIR:-/tmp}}
+case "$chroots_preflight_path" in
   "$repo_root"|"$repo_root"/*)
-    case "$chroots_dir" in
+    case "$chroots_preflight_path" in
       "$repo_root"/dist/*) ;;
-      *) fail "buildiso chroots inside the checkout must be under $repo_root/dist: $chroots_dir" ;;
+      *) fail "buildiso chroots inside the checkout must be under $repo_root/dist: $chroots_preflight_path" ;;
     esac
     ;;
 esac
-mkdir -p -- "$chroots_dir"
+if [[ -n "$chroots_dir" && ( -e "$chroots_dir" || -L "$chroots_dir" ) ]]; then
+  [[ -d "$chroots_dir" && ! -L "$chroots_dir" ]] \
+    || fail "buildiso chroot path must be a real directory: $chroots_dir"
+  [[ -z $(find "$chroots_dir" -mindepth 1 -maxdepth 1 -print -quit) ]] \
+    || fail "buildiso chroot path must be empty to avoid deleting unrelated data: $chroots_dir"
+fi
+if [[ "$qualification_mode" == full ]]; then
+  "$repo_root/scripts/check-iso-qualification-host.sh" full \
+    --build-path "$iso_output_host" \
+    --build-path "$package_output_host" \
+    --build-path "$cache_host" \
+    --build-path "$chroots_preflight_path" \
+    --build-path "$(docker info --format '{{.DockerRootDir}}')"
+fi
+if ! docker run --rm --privileged --entrypoint /bin/bash "$image" -eu -c '
+  probe=$(mktemp)
+  loop=
+  trap '\''if [[ -n "$loop" ]]; then losetup -d "$loop"; fi; rm -f "$probe"'\'' EXIT
+  truncate -s 1048576 "$probe"
+  loop=$(losetup --find --show "$probe") || {
+    printf "privileged Docker loop-device attach failed\n" >&2
+    exit 1
+  }
+  losetup -d "$loop"
+  loop=
+'; then
+  fail "privileged Docker loop-device preflight failed for image $image"
+fi
+if [[ "$created_chroots" == true ]]; then
+  chroots_dir=$(mktemp -d "${TMPDIR:-/tmp}/dinx-artools.XXXXXX")
+else
+  mkdir -p -- "$chroots_dir"
+fi
 remove_chroots_after_build=false
 if [[ "$created_chroots" == true && "$keep_chroots" != true && "$keep_chroots" != 1 ]]; then
   remove_chroots_after_build=true
 fi
-
 cleanup() {
   local status=$?
   trap - EXIT
-  if [[ "$created_chroots" == true ]]; then
+  if [[ "$created_chroots" == true && -d "$chroots_dir" ]]; then
     if (( status == 0 )) && [[ "$keep_chroots" != true && "$keep_chroots" != 1 ]]; then
-      rm -rf -- "$chroots_dir"
+      rm -rf -- "$chroots_dir" || status=1
+    elif [[ -z $(find "$chroots_dir" -mindepth 1 -maxdepth 1 -print -quit) ]]; then
+      rmdir -- "$chroots_dir" || status=1
     else
-      printf 'build-iso-docker: keeping buildiso chroots at %s\n' "$chroots_dir" >&2
+      printf 'build-iso-docker: keeping non-empty buildiso chroots at %s\n' "$chroots_dir" >&2
     fi
   fi
   exit "$status"
 }
 trap cleanup EXIT
+assert_disjoint "$chroots_dir" "$iso_output_host" "$package_output_host" "$cache_host" "$package_bundle_host"
+mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" \
+  "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
+  "$cache_host/package-artifacts" "$cache_host/cargo" "$cache_host/zig"
 
 if [[ ${SUDO_UID:-} =~ ^[0-9]+$ && ${SUDO_GID:-} =~ ^[0-9]+$ ]]; then
   host_uid=$SUDO_UID
@@ -264,6 +315,20 @@ docker run --rm --privileged \
   --env DINX_ARTIX_IMAGE="$image" \
   "$image" \
   bash /workspace/scripts/build-iso-container.sh
+if [[ "$build_context" == local-docker ]]; then
+  [[ -s "$package_output_host/dinx.db" && -s "$package_output_host/dinx.db.sig" ]] \
+    || fail "local package repository database or signature is missing: $package_output_host"
+  tar --sort=name --owner=0 --group=0 --numeric-owner -cf "$package_bundle_host" \
+    -C "$(dirname -- "$package_output_host")" "$(basename -- "$package_output_host")"
+  [[ -s "$package_bundle_host" ]] || fail "package repository bundle was not created: $package_bundle_host"
+  tar -tf "$package_bundle_host" >/dev/null \
+    || fail "package repository bundle is unreadable: $package_bundle_host"
+  package_bundle_sha256=$(sha256sum -- "$package_bundle_host")
+  package_bundle_sha256=${package_bundle_sha256%% *}
+  printf 'DINX local signed package repository: %s\nSHA-256: %s\n' \
+    "$package_bundle_host" "$package_bundle_sha256"
+fi
+
 
 if [[ ${DINX_SKIP_POSTBUILD_CHECKS:-false} != true ]]; then
   mapfile -t iso_paths < <(find "$iso_output_host" -type f -name '*.iso' -print | LC_ALL=C sort)

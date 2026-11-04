@@ -27,22 +27,22 @@ repository=$(read_value DEETTY_REPOSITORY)
 ref=$(read_value DEETTY_REF)
 version=$(read_value DEETTY_VERSION)
 source_sha=$(read_value DEETTY_SOURCE_SHA256)
-[[ "$repository" == https://github.com/rufl/NOCTTY.git ]] || fail "unexpected repository: $repository"
+[[ "$repository" == https://github.com/rufl/DEETTY.git ]] || fail "unexpected repository: $repository"
 [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || fail "invalid source ref: $ref"
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "invalid version: $version"
 [[ "$source_sha" =~ ^[0-9a-f]{64}$ ]] || fail "invalid source sha256: $source_sha"
 command -v sha256sum >/dev/null 2>&1 || fail 'sha256sum is required'
 command -v tar >/dev/null 2>&1 || fail 'tar is required'
 
-archive="$repo_root/distro/packages/deetty/noctty-$version.tar.gz"
+archive="$repo_root/distro/packages/deetty/deetty-$version.tar.gz"
 [[ -r "$archive" ]] || fail "missing source archive: $archive"
 actual_sha=$(sha256sum "$archive" | awk '{print $1}')
 [[ "$actual_sha" == "$source_sha" ]] ||
   fail "source archive sha256 mismatch expected=$source_sha actual=$actual_sha"
-tar -tzf "$archive" | grep -F 'noctty-'"$version"'/build.zig' >/dev/null ||
-  fail 'source archive does not contain build.zig'
-tar -tzf "$archive" | grep -F 'noctty-'"$version"'/src/main.zig' >/dev/null ||
-  fail 'source archive does not contain src/main.zig'
+tar -tzf "$archive" | grep -Fx "deetty-$version/build.zig" >/dev/null ||
+  fail 'source archive does not contain build.zig at the expected root'
+tar -tzf "$archive" | grep -Fx "deetty-$version/src/main.zig" >/dev/null ||
+  fail 'source archive does not contain src/main.zig at the expected root'
 for qualification_script in \
   nocted_core_stability_qualification.sh \
   nocted_core_endurance_qualification.sh \
@@ -54,7 +54,7 @@ for qualification_script in \
   nocted_native_smoke.sh \
   require_isolated_display.sh; do
   tar -tzf "$archive" |
-    grep -Fx "noctty-$version/scripts/$qualification_script" >/dev/null ||
+    grep -Fx "deetty-$version/scripts/$qualification_script" >/dev/null ||
     fail "source archive is missing qualification script: $qualification_script"
 done
 

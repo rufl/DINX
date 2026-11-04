@@ -10,7 +10,7 @@ Os pontos de entrada são:
 
 - `scripts/check-iso-host.sh` — probe de pré-requisitos;
 - `scripts/build-iso.sh` — wrapper de build com suporte a root;
-- `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do código fixado do upstream NOCTTY que fornece Deetty/Dintor;
+- `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do commit fixado do upstream Deetty que fornece Deetty/Dintor;
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
 - `scripts/check_build_metadata.sh` — valida a procedência do builder, snapshots de pacotes, hashes da configuração pacman do builder, checksums das fontes e o digest emitido da ISO; quando recebe o caminho da ISO, recalcula o tamanho em bytes e o SHA-512 contra o artefato baixado;
 - `scripts/check_dinx_package_repository.sh` — verifica metadados do snapshot do repositório, assinaturas dos pacotes/banco, fingerprint da chave e caminhos duplicados nos archives;
@@ -43,12 +43,12 @@ Os pontos de entrada são:
 
 ## Build remoto
 
-O workflow separado `DINX contracts` executa todos os checks estáticos/de fixture e o lint REUSE em todo pull request e push para `main`. Como `rufl/NOCTTY` é público, execuções confiáveis e pull requests de forks fazem checkout do commit fixado usando o `GITHUB_TOKEN` integrado ao workflow e geram o archive ignorado; nenhum secret Actions adicional é necessário.
+O workflow separado `DINX contracts` executa todos os checks estáticos/de fixture e o lint REUSE em todo pull request e push para `main`. O repositório upstream Deetty é `rufl/DEETTY`; o acesso do workflow depende da visibilidade desse repositório e das permissões do token GitHub.
 
 O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do perfil/build mudam. Ele:
 
 1. faz checkout da DINX;
-2. lê o commit fixado em `distro/packages/deetty/source.env`, faz checkout do repositório público `rufl/NOCTTY`, gera o archive ignorado pelo Git para Deetty/Dintor e verifica o SHA-256 fixado;
+2. lê o commit fixado em `distro/packages/deetty/source.env`, faz checkout de `rufl/DEETTY`, gera o archive ignorado pelo Git para Deetty/Dintor e verifica o SHA-256 fixado;
 3. instala QEMU, ferramentas de inspeção da ISO e os dados OCR de inglês do Tesseract no runner Ubuntu;
 4. executa Artix em um container privilegiado;
 5. instala `artools`, `iso-profiles`, Rust, gettext, go-md2man, Zig 0.17.0, `clang`/`clangd`, Xvfb e VTE 2.91 (`vte3`) para o smoke headless do Deetty. O aplicativo Ghostty completo é instalado temporariamente somente no builder como fonte de extração do `ghostty-vt-runtime`; esse pacote contém a biblioteca VT, headers e licença. Depois, o aplicativo completo é removido antes de montar a ISO. Os pacotes DINX de Aqueous/Pearl e suas dependências Wayland diretas são compilados a partir das entradas configuradas.
@@ -194,10 +194,10 @@ Execute na raiz do checkout DINX:
 bash scripts/build-iso-docker.sh
 ```
 
-Se o archive ignorado de Deetty estiver ausente, o script o prepara a partir de um checkout no commit público fixado do NOCTTY. Defina `DEETTY_SOURCE_CHECKOUT` para esse checkout; o commit e o SHA-256 do archive gerado são verificados.
+Se o archive ignorado de Deetty estiver ausente, o script o prepara a partir de um checkout no commit upstream fixado. Defina `DEETTY_SOURCE_CHECKOUT` para esse checkout; o commit e o SHA-256 do archive gerado são verificados.
 
 ```sh
-DEETTY_SOURCE_CHECKOUT=/caminho/para/NOCTTY bash scripts/build-iso-docker.sh
+DEETTY_SOURCE_CHECKOUT=/caminho/para/DEETTY bash scripts/build-iso-docker.sh
 ```
 
 O build do pacote Deetty limpa a árvore de fontes em cache antes de aplicar patches. Uma tentativa com falha não deixa fontes modificadas que quebrem a próxima execução.

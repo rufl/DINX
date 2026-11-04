@@ -392,7 +392,8 @@ required_paths=(
 )
 
 for path in "${required_paths[@]}"; do
-  grep -Fq "squashfs-root/$path" <<<"$manifest" || fail "missing ISO path: $path"
+  grep -Eq "^squashfs-root/${path}/?([[:space:]]|$)" <<<"$manifest" \
+    || fail "missing ISO path (exact path required): $path"
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for strawberry_path in usr/bin/strawberry usr/share/applications/org.strawberrymusicplayer.strawberry.desktop; do
@@ -1107,7 +1108,8 @@ livefs_required_paths=(
 )
 
 for path in "${livefs_required_paths[@]}"; do
-  grep -Fq "/$path" <<<"$livefs_manifest" || fail "missing livefs path: $path"
+  grep -Eq "^squashfs-root/${path}/?([[:space:]]|$)" <<<"$livefs_manifest" \
+    || fail "missing livefs path (exact path required): $path"
 done
 live_hostname=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/hostname)
 grep -Fqx 'dinxlive' <<<"$live_hostname" || fail 'livefs hostname is not dinxlive'

@@ -3,9 +3,11 @@ set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 
-checks=(
+source_checks=(
   check_first_party_apps.sh
   check_deetty_integration.sh
+)
+checks=(
   check_ghostty_vt_runtime.sh
   check_firefox.sh
   check_swayimg.sh
@@ -36,6 +38,19 @@ checks=(
   check_gaming.sh
   check_alpha7_hardware_report.sh
 )
+skip_deetty_sources=${DINX_SKIP_DEETTY_SOURCE_CHECKS:-false}
+case "$skip_deetty_sources" in
+  true)
+    printf 'dinx_contracts: Deetty source checks skipped for fork pull request; private source credentials are unavailable\n'
+    ;;
+  false)
+    checks=("${source_checks[@]}" "${checks[@]}")
+    ;;
+  *)
+    printf 'dinx_contracts: DINX_SKIP_DEETTY_SOURCE_CHECKS must be true or false\n' >&2
+    exit 1
+    ;;
+esac
 
 for check in "${checks[@]}"; do
   path="$root/scripts/$check"

@@ -9,7 +9,9 @@ A DINX é um repositório com conteúdo misto. O código, a configuração, a do
 - `LICENSE` contém o texto completo da Apache-2.0 para o trabalho mantido pela DINX.
 - `REUSE.toml` declara a licença SPDX e os direitos autorais dos arquivos versionados.
 - `LICENSES/` contém os textos canônicos usados pelos metadados REUSE.
-- `distro/packages/deetty/noctty-0.1.0.tar.gz` é gerado localmente durante o build a partir do commit upstream exato fixado em `source.env`; é ignorado pelo Git, não é vendorizado no repositório e fica fora do inventário de arquivos versionados do REUSE. Seu conteúdo continua sob a licença MIT upstream, com o `LICENSE` e os avisos internos preservados no pacote compilado. Embora a origem continue sendo https://github.com/rufl/NOCTTY.git e o archive/caminhos internos mantenham a identidade NOCTTY, o pacote e os aplicativos DINX são chamados `deetty` (Deetty) e Dintor.
+- `distro/packages/deetty/deetty-0.1.0.tar.gz` é gerado localmente durante o build a partir do commit upstream exato do Deetty fixado em `source.env`; é ignorado pelo Git, não é vendorizado no repositório e fica fora do inventário de arquivos versionados do REUSE. Seu conteúdo continua sob a licença MIT upstream, com o `LICENSE` e os avisos internos preservados no pacote compilado. O pacote e os aplicativos DINX são chamados `deetty` (Deetty) e Dintor.
+
+A revisão upstream fixada ainda contém o alias de módulo `noctty`, nomes de recursos como `com.noctty.*` e `nocttyhere.desktop`, além de nomes de executáveis e marcadores de qualificação P2 (`noctty-*`, `NOCTTY_*`). Os patches e testes os mantêm somente ao referenciar essas entradas upstream exatas; eles não definem aliases de produto instalado nem caminhos do pacote instalado.
 
 Não relicencie nem reescreva código, archives ou avisos de terceiros para fazê-los coincidir com o padrão do repositório. Ao adicionar um artefato vendorizado sob outra licença, inclua uma anotação REUSE específica.
 

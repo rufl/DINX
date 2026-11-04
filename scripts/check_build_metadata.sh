@@ -45,6 +45,7 @@ require_value compression_excludes '^kernel-source,pacman-cache,logs$'
 require_value compression_wrapper_sha256 '^[0-9a-f]{64}$'
 require_value builder_pacman_conf_sha256 '^[0-9a-f]{64}$'
 require_value builder_mirrorlist_sha256 '^[0-9a-f]{64}$'
+require_value builder_sync_databases_sha256 '^[0-9a-f]{64}$'
 require_value zig_version '^0\.17\.0$'
 require_value profile_sha256 '^[0-9a-f]{64}$'
 require_value common_profile_sha256 '^[0-9a-f]{64}$'
@@ -106,18 +107,13 @@ fi
 build_context=$(read_value build_context)
 [[ -n "$build_context" ]] || build_context=github-actions
 case "$build_context" in
-  github-actions)
-    [[ -z "$(read_value source_tree_sha256)" ]] \
-      || fail 'GitHub build metadata unexpectedly contains a local source-tree checksum'
-    ;;
-  local-docker)
-    require_value source_tree_sha256 '^[0-9a-f]{64}$'
-    actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$metadata_commit")
-    [[ "$(read_value source_tree_sha256)" == "$actual_source_tree_sha" ]] \
-      || fail 'metadata source-tree checksum does not match the current local source'
-    ;;
+  github-actions|local-docker) ;;
   *) fail "unsupported build context: $build_context" ;;
 esac
+require_value source_tree_sha256 '^[0-9a-f]{64}$'
+actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$metadata_commit")
+[[ "$(read_value source_tree_sha256)" == "$actual_source_tree_sha" ]] \
+  || fail 'metadata source-tree checksum does not match the current source'
 
 printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true repository_inputs=true signed_package_repository=true source_checksums=true iso_binding=%s\n' \
   "$(read_value commit)" "$(read_value iso_name)" "$iso_binding"

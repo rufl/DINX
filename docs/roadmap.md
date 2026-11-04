@@ -73,6 +73,8 @@ P2 exit evidence:
 - the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, Aqueous/Pearl discovery and package-runtime contracts are verified;
 - the final P0 workflow proves package creation, ISO generation, QEMU boot, graphical payload, persistent installation, recovery TTY, attestation and artifact upload.
 
+The pinned upstream source retains legacy internal module and resource names. They appear only where the patches and qualification fixtures must address those exact upstream inputs; installed package names and paths are Deetty/Dintor.
+
 Boundaries retained after P2:
 
 - the Codex slot uses a local fixture by default; no authenticated Codex or network qualification is claimed;
@@ -84,7 +86,7 @@ Tabs, panes, transparency and URL detection follow the core terminal semantics.
 
 ## P3 — Dintor
 
-**Status:** complete. P3 closes with the pinned NOCTTY source, the DINX compatibility patch, the `deetty` package/ISO payload, the Dintor P3 qualification gate, and the editor integration contract.
+**Status:** complete. P3 closes with the pinned Deetty source, the DINX compatibility patch, the `deetty` package/ISO payload, the Dintor P3 qualification gate, and the editor integration contract.
 
 Delivered:
 

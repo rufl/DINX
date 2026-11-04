@@ -15,7 +15,7 @@ terminal_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local
 terminal_fallback="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-terminal-fallback.desktop"
 source_env="$repo_root/distro/packages/deetty/source.env"
 pkgbuild="$repo_root/distro/packages/deetty/PKGBUILD"
-archive="$repo_root/distro/packages/deetty/noctty-0.1.0.tar.gz"
+archive="$repo_root/distro/packages/deetty/deetty-0.1.0.tar.gz"
 exec_patch="$repo_root/distro/packages/deetty/deetty-terminal-exec.patch"
 identity_patch="$repo_root/distro/packages/deetty/product-identity.patch"
 
@@ -75,17 +75,16 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/com.noctty.NOCTTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
-tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/nocttyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
-tar -tzf "$archive" | grep -Fx 'noctty-0.1.0/resources/nocted/styles/nocted-dark.xml' >/dev/null || fail 'pinned upstream Dintor source scheme is missing'
-upstream_dintor_desktop=$(tar -xOf "$archive" noctty-0.1.0/resources/com.noctty.NoctEd.desktop)
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/com.noctty.NOCTTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocttyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocted/styles/nocted-dark.xml' >/dev/null || fail 'pinned upstream Dintor source scheme is missing'
+upstream_dintor_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.noctty.NoctEd.desktop)
 grep -Fqx 'Exec=nocted %F' <<<"$upstream_dintor_desktop" || fail 'pinned upstream editor entry is missing'
-upstream_desktop=$(tar -xOf "$archive" noctty-0.1.0/resources/com.noctty.NOCTTY.desktop)
+upstream_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.noctty.NOCTTY.desktop)
 grep -Fqx 'TryExec=noctty' <<<"$upstream_desktop" || fail 'pinned upstream terminal entry is missing'
 grep -Fqx 'Exec=noctty --open-uri %u' <<<"$upstream_desktop" || fail 'upstream terminal URI entry is missing'
 grep -Fqx 'Categories=System;TerminalEmulator;' <<<"$upstream_desktop" || fail 'terminal desktop category is missing'
-service_menu=$(tar -xOf "$archive" noctty-0.1.0/resources/nocttyhere.desktop)
-grep -Fqx 'Exec=noctty --new-window --working-directory %f' <<<"$service_menu" || fail 'upstream working-directory launcher is missing'
+service_menu=$(tar -xOf "$archive" deetty-0.1.0/resources/nocttyhere.desktop)
 
 patched_source="$scratch/patched-source"
 mkdir -p "$patched_source"

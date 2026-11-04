@@ -27,11 +27,14 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/build-iso-container.sh"
-      - "scripts/cache-verified-download.sh"
+      - "scripts/lib/dinx-package-artifact-cache.sh"
+      - "scripts/smoke_package_artifact_cache.sh"
       - "scripts/iso-tools/mksquashfs"
       - "scripts/check_dinx_compression.sh"
       - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"
+      - "scripts/initramfs_manifest.py"
+      - "scripts/test_initramfs_manifest.py"
       - "scripts/check_dinx_package_repository.sh"
       - "scripts/check_dinx_package_provenance.sh"
       - "scripts/check_dinx_release_preflight.sh"
@@ -133,17 +136,17 @@ jobs:
           ref=$(awk -F= '$1 == "DEETTY_REF" { print $2; exit }' distro/packages/deetty/source.env)
           [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { printf 'Invalid DEETTY_REF in source.env\n' >&2; exit 1; }
           printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
-      - name: Checkout pinned public NOCTTY source
+      - name: Checkout pinned Deetty source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: rufl/NOCTTY
+          repository: rufl/DEETTY
           ref: ${{ steps.deetty-source.outputs.ref }}
-          token: ${{ github.token }}
-          path: third_party/noctty
+          token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN || github.token }}
+          path: third_party/deetty
           persist-credentials: false
       - name: Prepare pinned Deetty/Dintor source archive
-        run: ./scripts/prepare_first_party_apps.sh third_party/noctty
-      - name: Verify pinned NOCTTY source archive for Deetty and Dintor
+        run: ./scripts/prepare_first_party_apps.sh third_party/deetty
+      - name: Verify pinned Deetty source archive
         run: ./scripts/check_first_party_apps.sh
       - name: Verify Deetty and Dintor desktop and shell integration
         run: ./scripts/check_deetty_integration.sh
@@ -258,10 +261,14 @@ jobs:
       - name: Generate checksum and locate ISO
         id: artifact
         run: |
-          iso_path=$(find dist/iso -type f -name '*.iso' -print -quit)
-          test -n "$iso_path"
-          metadata_path=$(find dist/iso -type f -name 'build-metadata.txt' -print -quit)
-          test -n "$metadata_path"
+          mapfile -t iso_paths < <(find dist/iso -type f -name '*.iso' -print | LC_ALL=C sort)
+          test "${#iso_paths[@]}" -eq 1 || { printf 'Expected exactly one ISO, found %s\n' "${#iso_paths[@]}" >&2; exit 1; }
+          iso_path=${iso_paths[0]}
+          metadata_path="$(dirname "$iso_path")/build-metadata.txt"
+          mapfile -t metadata_paths < <(find dist/iso -type f -name build-metadata.txt -print | LC_ALL=C sort)
+          test "${#metadata_paths[@]}" -eq 1 && test "${metadata_paths[0]}" = "$metadata_path" \
+            || { printf 'Expected exactly one build metadata file adjacent to the ISO\n' >&2; exit 1; }
+          test -s "$metadata_path"
           iso_dir=$(dirname "$iso_path")
           iso_name=$(basename "$iso_path")
           (cd "$iso_dir" && sha512sum "$iso_name" > "$iso_name.sha512")

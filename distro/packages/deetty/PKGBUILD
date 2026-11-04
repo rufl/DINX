@@ -5,21 +5,19 @@ source_env="$startdir/source.env"
 : "${DEETTY_VERSION:?missing DEETTY_VERSION}"
 : "${DEETTY_SOURCE_SHA256:?missing DEETTY_SOURCE_SHA256}"
 pkgver="$DEETTY_VERSION"
-pkgrel=3
+pkgrel=4
 pkgdesc='Native Zig terminal workspace and Dintor editor for DINX'
 arch=('x86_64')
-url='https://github.com/rufl/NOCTTY'
+url='https://github.com/rufl/DEETTY'
 license=('MIT' 'Unicode-3.0' 'Unicode-DFS-2016' 'ICU')
 depends=('clang' 'bubblewrap' 'ghostty-vt-runtime' 'gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'dbus' 'git' 'zlib')
 makedepends=('ghostty-vt-runtime' 'vte3' 'zig>=0.17' 'btop' 'clang' 'dialog' 'fzf' 'git' 'glances' 'less' 'libnewt' 'librsvg' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim' 'xorg-server-xvfb')
 provides=('dintor' 'terminal-emulator')
-conflicts=('noctty')
-replaces=('noctty')
-source=("noctty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
+source=("deetty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
 sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' '55d8373724950143af768b2f8e8f992557cfcae209af1f438e457f621764381d' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
 
 prepare() {
-  cd "$srcdir/noctty-$pkgver"
+  cd "$srcdir/deetty-$pkgver"
   # The upstream tarball's read-only modes prevent patch from creating replacement files.
   chmod -R u+w .
   patch --fuzz=0 --forward --strip=1 < "$srcdir/product-identity.patch"
@@ -28,7 +26,7 @@ prepare() {
 }
 
 build() {
-  cd "$srcdir/noctty-$pkgver"
+  cd "$srcdir/deetty-$pkgver"
   zig build -Doptimize=ReleaseSafe
   zig build -Doptimize=ReleaseSafe test
   zig build -Doptimize=ReleaseSafe noctty-smoke-binary
@@ -39,16 +37,16 @@ build() {
     printf 'PKGBUILD: missing P2 qualification script: %s\n' "$qualification_script" >&2
     return 1
   }
-  "$qualification_script" "$srcdir/noctty-$pkgver"
+  "$qualification_script" "$srcdir/deetty-$pkgver"
   p3_qualification_script="$startdir/../../../scripts/dintor_p3_qualification.sh"
   [[ -x "$p3_qualification_script" ]] || {
     printf 'PKGBUILD: missing P3 qualification script: %s\n' "$p3_qualification_script" >&2
     return 1
   }
-  "$p3_qualification_script" "$srcdir/noctty-$pkgver"
-  smoke_binary="$srcdir/noctty-$pkgver/zig-out/bin/noctty-smoke"
-  qualification_binary="$srcdir/noctty-$pkgver/zig-out/bin/noctty-terminal-session-qualification"
-  compatibility_binary="$srcdir/noctty-$pkgver/zig-out/bin/noctty-terminal-compatibility"
+  "$p3_qualification_script" "$srcdir/deetty-$pkgver"
+  smoke_binary="$srcdir/deetty-$pkgver/zig-out/bin/noctty-smoke"
+  qualification_binary="$srcdir/deetty-$pkgver/zig-out/bin/noctty-terminal-session-qualification"
+  compatibility_binary="$srcdir/deetty-$pkgver/zig-out/bin/noctty-terminal-compatibility"
   [[ -x "$compatibility_binary" ]] || {
     printf 'PKGBUILD: missing Deetty compatibility binary: %s\n' "$compatibility_binary" >&2
     return 1
@@ -79,7 +77,7 @@ build() {
 }
 
 package() {
-  cd "$srcdir/noctty-$pkgver"
+  cd "$srcdir/deetty-$pkgver"
   zig build -Doptimize=ReleaseSafe --prefix "$pkgdir/usr"
   rm -rf "$pkgdir/usr/share/deetty/noctalia"
 }

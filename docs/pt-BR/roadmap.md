@@ -66,11 +66,13 @@ Gates de release adiados:
 
 Evidências de saída da P2:
 
-- o archive upstream NOCTTY exato é fixado por SHA-256, verificado e compilado no pacote DINX `deetty`;
+- o archive upstream Deetty exato é fixado por SHA-256, verificado e compilado no pacote DINX `deetty`;
 - o core nativo Zig qualifica criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, compatibilidade de protocolo/Unicode, ciclo de vida com contabilização do allocator e fairness em 30 panes com paste de 8 MiB;
 - a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
 - o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta do Aqueous/Pearl e runtime do pacote estão verificados;
 - a execução P0 final prova criação do pacote, geração da ISO, boot no QEMU, payload gráfico, instalação persistente, TTY de recuperação, atestação e upload do artefato.
+
+O código upstream fixado mantém nomes internos históricos de módulos e recursos. Eles aparecem somente onde os patches e fixtures de qualificação precisam referenciar essas entradas upstream exatas; os nomes e caminhos instalados são Deetty/Dintor.
 
 Limites mantidos depois da P2:
 
@@ -83,7 +85,7 @@ Abas, painéis, transparência e detecção de URLs vêm depois da semântica ce
 
 ## P3 — Dintor
 
-**Status:** concluída. A P3 fecha com a fonte upstream NOCTTY fixada, o patch de compatibilidade DINX, o payload do pacote/ISO, o gate de qualificação P3 e o contrato de integração do editor.
+**Status:** concluída. A P3 fecha com a fonte upstream Deetty fixada, o patch de compatibilidade DINX, o payload do pacote `deetty`, o gate de qualificação P3 e o contrato de integração do editor.
 
 Entregue:
 

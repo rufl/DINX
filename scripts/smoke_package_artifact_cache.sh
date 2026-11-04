@@ -10,12 +10,15 @@ trap 'rm -rf -- "$tmp"' EXIT
 cache_root="$tmp/cache"
 package_dir="$tmp/package"
 package_repo="$tmp/repo"
+source_root="$tmp/source-root"
 signing_home="$tmp/gnupg"
-mkdir -p "$package_dir" "$package_repo" "$signing_home" "$package_dir/src"
+mkdir -p "$package_dir" "$package_repo" "$signing_home" "$package_dir/src" "$source_root/share/licenses"
 chmod 700 "$signing_home"
 printf 'pkgname=cache-smoke\npkgver=1\n' > "$package_dir/PKGBUILD"
 printf 'source payload v1\n' > "$package_dir/payload"
 printf 'const source = true;\n' > "$package_dir/src/main.zig"
+printf 'share/licenses/DINX\n' > "$package_dir/cache-inputs"
+printf 'external license v1\n' > "$source_root/share/licenses/DINX"
 
 printf 'base makepkg config\n' > "$tmp/makepkg.conf"
 printf 'builder source\n' > "$tmp/builder"
@@ -25,11 +28,27 @@ builder_sha256=$(sha256sum "$tmp/builder" | cut -d ' ' -f 1)
 installed_packages_sha256=$(sha256sum "$tmp/installed" | cut -d ' ' -f 1)
 cache_key() {
   dinx_package_cache_key demo "$package_dir" "$makepkg_conf_sha256" \
-    "$builder_sha256" "$installed_packages_sha256" --nodeps -- 'FEATURE=one'
+    "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one'
 }
 key=$(cache_key)
+external_key=$key
+printf 'external license v2\n' > "$source_root/share/licenses/DINX"
+[[ "$(cache_key)" != "$external_key" ]] || {
+  printf 'smoke_package_artifact_cache: declared external source file did not invalidate cache key\n' >&2
+  exit 1
+}
+printf 'external license v1\n' > "$source_root/share/licenses/DINX"
+DINX_ARTIX_IMAGE=example.invalid/artix@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+image_key=$(cache_key)
+DINX_ARTIX_IMAGE=example.invalid/artix@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+image_key_changed=$(cache_key)
+[[ "$image_key_changed" != "$image_key" ]] || {
+  printf 'smoke_package_artifact_cache: Artix image did not invalidate cache key\n' >&2
+  exit 1
+}
+unset DINX_ARTIX_IMAGE
 direct_source_key=$(dinx_package_cache_key dinitui "$package_dir" "$makepkg_conf_sha256" \
-  "$builder_sha256" "$installed_packages_sha256" --nodeps -- 'FEATURE=one')
+  "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one')
 mkdir -p "$package_dir/.zig-cache/o" "$package_dir/zig-cache" \
   "$package_dir/src/.zig-cache/o" "$package_dir/src/zig-out/bin" \
   "$package_dir/src/stage/bin" "$package_dir/pkg/demo"
@@ -43,7 +62,7 @@ printf 'generated package contents\n' > "$package_dir/pkg/demo/archive"
   exit 1
 }
 [[ "$(dinx_package_cache_key dinitui "$package_dir" "$makepkg_conf_sha256" \
-  "$builder_sha256" "$installed_packages_sha256" --nodeps -- 'FEATURE=one')" == "$direct_source_key" ]] || {
+  "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one')" == "$direct_source_key" ]] || {
   printf 'smoke_package_artifact_cache: generated output changed a checked-in source package key\n' >&2
   exit 1
 }
@@ -131,16 +150,16 @@ gpg --batch --homedir "$signing_home" --verify \
 old_source=$(cat "$package_dir/src/main.zig")
 printf 'const changed_source = true;\n' > "$package_dir/src/main.zig"
 changed_direct_source_key=$(dinx_package_cache_key dinitui "$package_dir" "$makepkg_conf_sha256" \
-  "$builder_sha256" "$installed_packages_sha256" --nodeps -- 'FEATURE=one')
+  "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one')
 [[ "$changed_direct_source_key" != "$direct_source_key" ]]
 printf '%s\n' "$old_source" > "$package_dir/src/main.zig"
 
 changed_environment_key=$(dinx_package_cache_key demo "$package_dir" "$makepkg_conf_sha256" \
-  "$builder_sha256" "$installed_packages_sha256" --nodeps -- 'FEATURE=two')
+  "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=two')
 [[ "$changed_environment_key" != "$key" ]]
 changed_packages_sha256=$(printf 'different installed package set\n' | sha256sum | cut -d ' ' -f 1)
 changed_packages_key=$(dinx_package_cache_key demo "$package_dir" "$makepkg_conf_sha256" \
-  "$builder_sha256" "$changed_packages_sha256" --nodeps -- 'FEATURE=one')
+  "$builder_sha256" "$changed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one')
 [[ "$changed_packages_key" != "$key" ]]
 
 partial_key=$(printf 'partial artifact key\n' | sha256sum | cut -d ' ' -f 1)

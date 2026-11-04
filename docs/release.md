@@ -10,12 +10,13 @@ Build metadata is bound to the exact ISO artifact in both the P0 and tagged rele
 The release workflow maintains a rolling `alpha-latest` prerelease with `dinx-latest-x86_64.iso` and its SHA-512 checksum. Tagged releases refresh it; use `workflow_dispatch` with `release_tag` only to seed or resync it. GitHub's 2 GiB per-asset limit means the alias is available only when the latest alpha is a single ISO asset; use the versioned release page when an ISO is split. The publisher retries transient 404s while release metadata, assets and alias uploads become visible, waits for the release listing to catch up, and refuses to let an older alpha roll back the alias.
 
 
-The P0 build verifies the committed upstream source archive for Deetty and Dintor against the exact
+The P0 build verifies the locally generated upstream source archive for Deetty and Dintor against the exact
 repository commit and SHA-256 contract in `distro/packages/deetty/source.env`, builds
 the native `deetty` package with Zig 0.17.0, and verifies that Deetty, Dintor and
 their desktop/editor resources are in the ISO. The release path does not clone the
-pinned upstream NOCTTY repository or require a repository secret; update the archive
-and contract together when changing the pinned source.
+pinned Deetty repository or require a separate repository secret when its visibility
+and GitHub token permissions allow access; update the archive and contract together
+when changing the pinned source.
 
 For P3, the same package build also runs `scripts/dintor_p3_qualification.sh`. It
 qualifies the Dintor editor core, real `clangd` diagnostics/navigation, native GTK/X11

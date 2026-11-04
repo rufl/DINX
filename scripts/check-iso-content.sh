@@ -18,7 +18,7 @@ iso_path=${1:-}
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 
-for command in mktemp rm xorriso unsquashfs grep cmp python3 zstd; do
+for command in jq mktemp rm xorriso unsquashfs grep cmp python3 zstd; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -469,6 +469,24 @@ while IFS= read -r desktop_path; do
     fail "terminal-emulator desktop entry does not launch Deetty: ${desktop_path#squashfs-root/}"
   fi
 done <<<"$terminal_desktops"
+for deetty_path in \
+  usr/bin/deetty \
+  usr/bin/dintor \
+  usr/share/applications/org.dinx.Deetty.desktop \
+  usr/share/applications/org.dinx.Dintor.desktop \
+  usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg \
+  usr/share/icons/hicolor/scalable/apps/org.dinx.Dintor.svg \
+  usr/share/licenses/deetty/LICENSE; do
+  grep -Fq "/$deetty_path" <<<"$manifest" \
+    || fail "Deetty/Dintor runtime payload is missing: $deetty_path"
+done
+deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
+grep -Fqx 'Name=Deetty' <<<"$deetty_desktop" || fail 'Deetty desktop entry has the wrong product name'
+grep -Fqx 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop entry does not launch Deetty'
+grep -Fqx 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty URI handler does not launch Deetty'
+dintor_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Dintor.desktop)
+grep -Fqx 'Name=Editor' <<<"$dintor_desktop" || fail 'Dintor desktop entry has the wrong launcher name'
+grep -Fqx 'Exec=dintor %F' <<<"$dintor_desktop" || fail 'Dintor desktop entry does not launch Dintor'
 grep -Fq '/var/lib/pacman/local/deetty-' <<<"$manifest" || fail 'Deetty package metadata is missing from the installed rootfs'
 grep -Fq '/var/lib/pacman/local/ghostty-vt-runtime-' <<<"$manifest" || fail 'Ghostty VT-only runtime package metadata is missing from the installed rootfs'
 if grep -Eq '/var/lib/pacman/local/ghostty-[0-9][^/]*/' <<<"$manifest"; then

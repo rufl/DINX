@@ -38,9 +38,9 @@ printf 'external license v2\n' > "$source_root/share/licenses/DINX"
   exit 1
 }
 printf 'external license v1\n' > "$source_root/share/licenses/DINX"
-DINX_ARTIX_IMAGE=example.invalid/artix@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+export DINX_ARTIX_IMAGE=example.invalid/artix@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 image_key=$(cache_key)
-DINX_ARTIX_IMAGE=example.invalid/artix@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+export DINX_ARTIX_IMAGE=example.invalid/artix@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 image_key_changed=$(cache_key)
 [[ "$image_key_changed" != "$image_key" ]] || {
   printf 'smoke_package_artifact_cache: Artix image did not invalidate cache key\n' >&2

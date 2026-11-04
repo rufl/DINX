@@ -16,6 +16,8 @@ on:
         required: false
       DINX_PACKAGE_SIGNING_FINGERPRINT:
         required: false
+      DEETTY_SOURCE_READ_TOKEN:
+        required: false
   push:
     branches:
       - main
@@ -315,6 +317,7 @@ jobs:
           name: dinx-p0-${{ job.status }}-${{ github.sha }}
           if-no-files-found: warn
           retention-days: 7
+          path: |
             ${{ steps.artifact.outputs.iso_path }}
             ${{ steps.artifact.outputs.iso_path }}.sha512
             ${{ steps.artifact.outputs.metadata_path }}

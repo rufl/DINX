@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PEARL_SOURCE_URL:?missing PEARL_SOURCE_URL}"
 : "${PEARL_SOURCE_SHA256:?missing PEARL_SOURCE_SHA256}"
 pkgver="$PEARL_VERSION"
-pkgrel=7
+pkgrel=8
 epoch=1
 pkgdesc='Pearl GTK desktop shell and Pearl Greeter for direct Aqueous sessions on DINX'
 arch=('x86_64')
@@ -107,6 +107,12 @@ check() {
     test -x "$srcdir/pearl-$pkgver/zig-out/greeter/bin/$bin"
   done
   test -x "$srcdir/dinx-first-run-wizard"
+  (
+    cd "$srcdir/pearl-$pkgver"
+    ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}" \
+      ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}" \
+      "${ZIG:-zig}" build test -Dcpu=baseline -Doptimize=ReleaseSafe -Drelease=true
+  )
 }
 
 package() {

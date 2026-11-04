@@ -98,7 +98,6 @@ grep -Fq 'while (i <= 2)' "$workspace_source" \
 if grep -Fq 'while (i <= 9)' "$workspace_source"; then
   fail 'Aqueous still creates nine initial pinned workspaces'
 fi
-fi
 cp "$aqueous_dir/window_policy_test.zig" \
   "$source_root/compositor/aqueous/wm/dinx_window_policy_test.zig"
 (

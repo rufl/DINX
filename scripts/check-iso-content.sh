@@ -1035,6 +1035,7 @@ if grep -Eq '^(Hidden|NoDisplay)=true$' <<<"$installer_desktop"; then
 fi
 calamares_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/calamares.desktop)
 grep -Fqx 'Type=Application' <<<"$calamares_desktop" || fail 'Calamares desktop-ID mask is missing or invalid'
+grep -Fqx 'Name=Calamares' <<<"$calamares_desktop" || fail 'Calamares desktop-ID mask is missing its desktop name'
 grep -Fqx 'Hidden=true' <<<"$calamares_desktop" || fail 'Calamares Artix launcher is not deleted from the desktop namespace'
 grep -Fqx 'NoDisplay=true' <<<"$calamares_desktop" || fail 'Calamares Artix launcher remains visible in application menus'
 if grep -Eiq 'Install Artix|Instalar Artix|^(Exec|TryExec)=' <<<"$calamares_desktop"; then

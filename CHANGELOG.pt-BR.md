@@ -4,6 +4,9 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Desenhar titlebars do Aqueous acima do conteúdo do cliente e estender o contorno arredondado contínuo por titlebar e conteúdo. O duplo clique alterna maximizar/restaurar; restaurar recupera a geometria flutuante salva, mantém o foco e eleva a janela. `window_corner_radius` do Pearl passa a valer na próxima sessão Aqueous com efeitos Vulkan; o renderer CPU de compatibilidade continua quadrado.
+- Ocultar a entrada upstream do Calamares/Artix e iniciar `Instalar DINX` por um helper polkit que preserva Wayland/D-Bus e mostra erros de inicialização.
+
 - Usar `rufl/DEETTY` como origem canônica, com `DEETTY_SOURCE_READ_TOKEN` opcional, e renomear saídas dos executáveis de smoke/qualificação, marcadores de fixture e variáveis de teste de display do Deetty; identificadores upstream de módulo, ABI, configuração e recursos continuam internos à fonte fixada.
 - Incluir entradas externas declaradas nos hashes do cache de pacotes; alterações em licenças ou na marca de boot invalidam o artefato consumidor.
 - Registrar hashes dos bancos sync Artix, do arquivo de pin da fonte Deetty e fingerprint da árvore de fontes nos metadados; aguardar o servidor assinado de pacotes antes da montagem e exigir uma ISO com metadados adjacentes.

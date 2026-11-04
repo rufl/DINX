@@ -18,7 +18,7 @@
 +
 @@ -125,0 +126,1 @@
 +    last_decoration_click: ?DecorationClick = null,
-@@ -840,6 +849,76 @@
+@@ -840,6 +849,81 @@
      }, !cursor.hasActivePointerConstraint());
  }
  
@@ -100,10 +100,10 @@
  pub fn processButton(cursor: *Cursor, event: *const Seat.Event.PointerButton) void {
      if (event.state == .pressed) server.window_switcher.pointerIntent(cursor.seat);
      if (event.state == .pressed and server.window_switcher.output != null) {
-@@ -855,0 +935,2 @@
+@@ -855,0 +939,2 @@
 +        const previous_decoration_click = cursor.last_decoration_click;
 +        cursor.last_decoration_click = null;
-@@ -867,6 +948,24 @@
+@@ -867,6 +952,24 @@
              _ = cursor.seat.wlr_seat.pointerNotifyButton(event.time_msec, event.button, event.state);
              return;
          }
@@ -146,8 +146,7 @@
  const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
-@@ -40,3 +40,34 @@ const log = std.log.scoped(.wm);
- 
+@@ -41,2 +41,33 @@ const log = std.log.scoped(.wm);
 +var pearl_corner_radius_cache: ?u31 = null;
 +
 +fn pearlCornerRadius() u31 {
@@ -196,7 +195,9 @@
  };
  
  /// Windowing state requested by the wm.
-@@ -650,3 +673,4 @@
+@@ -650,5 +691,6 @@
+         .r = ((border_color >> 16) & 0xff) * expand,
+         .g = ((border_color >> 8) & 0xff) * expand,
          .b = (border_color & 0xff) * expand,
          .a = ((border_color >> 24) & 0xff) * expand,
 +        .corner_radius = pearlCornerRadius(),
@@ -305,12 +306,15 @@
          .workspace_link = undefined,
      };
  
-@@ -1310,3 +1334,4 @@
+@@ -1310,6 +1386,7 @@
+                 .width = @intCast(args.width),
+                 .r = args.r,
+                 .g = args.g,
                  .b = args.b,
                  .a = args.a,
 +                .corner_radius = pearlCornerRadius(),
              };
-@@ -2666,6 +2710,121 @@
+@@ -2666,6 +2710,125 @@
      } };
  }
  
@@ -465,7 +469,7 @@
  
      // f32 cannot represent all u32 values exactly, therefore we must initially use f64
      // (which can) and then cast to f32, potentially losing precision.
-@@ -2843,6 +3008,24 @@
+@@ -2843,6 +3008,27 @@
  /// Returns null if the window is currently being destroyed and no longer has
  /// an associated surface.
  /// May also return null for Xwayland windows that are not currently mapped.
@@ -495,7 +499,7 @@
          .toplevel => |toplevel| toplevel.wlr_toplevel.base.surface,
 --- a/compositor/aqueous/wm/input/drag.zig
 +++ b/compositor/aqueous/wm/input/drag.zig
-@@ -10,6 +10,96 @@
+@@ -10,6 +10,98 @@
  pub const ResizeAxis = enum { horizontal, vertical };
  
  pub const ResizeEdges = geometry_policy.ResizeEdges;
@@ -583,7 +587,6 @@
 +        stayedClick(current_x, current_y, previous_x, previous_y);
 +}
 +
--test "decoration double click minimizes only the same window within click bounds" {
 +test "decoration double click maximizes only the same window within click bounds" {
 +    try std.testing.expect(decorationDoubleClick(7, 7, 10, 410, 12, 24, 16, 20));
 +    try std.testing.expect(!decorationDoubleClick(7, 8, 10, 410, 12, 24, 12, 24));
@@ -621,10 +624,7 @@ diff --git a/compositor/aqueous/wm/state/store.zig b/compositor/aqueous/wm/state
  /// Restore a maximized window as part of a user-initiated titlebar move.
  /// Persistent floats can always return to their own geometry; tiled policy
  /// windows may do so only while their active layout presents them as floating.
-@@ -327,3 +327,17 @@ test "manual maximize supersedes client provenance" {
-     try std.testing.expect(!store.setClientMaximized(1, false, true));
- }
- 
+@@ -350,2 +366,17 @@
 +test "decoration maximize restores tiled windows as floating above" {
 +    TestResolver.reset();
 +    var store = Store.init(std.testing.allocator, TestResolver.resolve);

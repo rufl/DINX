@@ -155,6 +155,8 @@ The live ISO opens the disposable `dinx` account directly in `Aqueous + Pearl (D
 
 Once the desktop appears, the tested graphical state is Aqueous/Pearl. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
 Pearl is the active shell. The static DINX theme is applied through the checked-in GTK/Qt bridges; Pearl Greeter reads `/etc/pearl/greeter.json`, uses the GTK DINX theme and forces the Aqueous/Pearl entry without X11 or UWSM.
+
+Aqueous draws the titlebar outside client content, with the frame border continuing around both. Double-click an empty titlebar area to toggle maximize/restore; restore returns the saved floating geometry, keeps the window focused and raises it above other windows. Set **Aqueous window corner radius** in Pearl Settings; Aqueous reads the saved value at the next session start. Vulkan-effects rendering applies rounded corners; the CPU compatibility compositor stays square.
 Phyto is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts inside Aqueous/Pearl and reapplies matching profiles. `Dome`, `Seafoam Settings` and `zls` are bundled in the signed base ISO. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings groups the documented display/session configuration entry points; Dintor uses the bundled ZLS for Zig projects.
 The base ZLS runtime is compact by design: completion and navigation use the bundled matching `lib/std` tree through `/usr/lib/zls/zig-env`; a full Zig compiler is optional and is not part of the ISO payload.
 
@@ -177,8 +179,8 @@ The governor checks PCI `1002:13fe` before applying settings. The guard above pr
 
 From the live desktop:
 
-1. Open the application launcher and choose **Instalar DINX**.
-2. If the launcher entry is unavailable, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it checks the Wayland/D-Bus prerequisites and displays polkit or startup errors.
+1. Open the application launcher and choose **Install DINX**; the duplicate upstream Artix Calamares entry is hidden.
+2. If the launcher entry is unavailable, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it preserves the Wayland/D-Bus session for polkit, checks prerequisites and displays authorization or startup errors.
 3. Read **Install choices / Opções de instalação** before choosing partitions.
 4. Choose the layout that matches your intent:
    - **Erase disk** creates the layout automatically and erases all data on the selected disk. Choose it only if intended; verify the disk model and size.

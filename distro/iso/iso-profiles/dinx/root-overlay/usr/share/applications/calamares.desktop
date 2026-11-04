@@ -1,5 +1,6 @@
 [Desktop Entry]
 Type=Application
+Name=Calamares
 Hidden=true
 NoDisplay=true
 X-AppStream-Ignore=true

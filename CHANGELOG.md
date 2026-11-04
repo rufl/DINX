@@ -4,7 +4,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
-- Move Aqueous titlebars wholly above client content, map titlebar double-click to maximize/restore, and persist a separate Pearl window-corner radius read by Vulkan-effects Aqueous at session start. CPU-compatibility Aqueous still renders square corners because its renderer has no rounded-surface mask.
+- Draw Aqueous titlebars above client content and extend the continuous rounded frame around titlebar and client surfaces. Double-clicking the titlebar toggles maximize/restore; restore returns the saved floating geometry, keeps focus, and raises the window. Pearl's `window_corner_radius` applies at the next Vulkan-effects Aqueous session; CPU-compatibility rendering remains square.
+- Hide the upstream Artix Calamares desktop entry and run `Install DINX` through a Wayland/D-Bus-preserving polkit helper with visible startup errors.
 
 - Use canonical `rufl/DEETTY` source access with an optional `DEETTY_SOURCE_READ_TOKEN`, and rename Deetty smoke/qualification executable outputs, fixture markers and isolated-display test variables; upstream module, ABI, config and resource identifiers remain pinned source internals.
 - Include declared external package inputs in package-cache keys, so a source license or boot-mark change invalidates the consuming package artifact.

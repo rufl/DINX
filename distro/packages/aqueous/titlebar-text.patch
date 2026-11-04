@@ -27,9 +27,9 @@
 +    content_clip: *const wlr.Box,
 +) void {
 +    var visible = box;
++    _ = content_clip;
 +    if ((box.width <= 0 or box.height <= 0) or
-+        (!clip.empty() and !visible.intersection(&visible, clip)) or
-+        (!content_clip.empty() and !visible.intersection(&visible, content_clip)))
++        (!clip.empty() and !visible.intersection(&visible, clip)))
 +    {
 +        text.node.setEnabled(false);
 +        return;
@@ -72,7 +72,7 @@
 +    if (height_i >= 20 and window.title_text_width > 0) {
 +        drawClippedTitleText(nodes.title_text, .{
 +            .x = 16,
-+            .y = @divTrunc(height_i - 20, 2),
++            .y = @divTrunc(height_i - 20, 2) - @as(i32, @intCast(pointer_drag.titlebar_height)),
 +            .width = window.title_text_width,
 +            .height = 20,
 +        }, clip, &requested.content_clip);

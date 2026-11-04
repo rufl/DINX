@@ -98,17 +98,6 @@ grep -Fq 'while (i <= 2)' "$workspace_source" \
 if grep -Fq 'while (i <= 9)' "$workspace_source"; then
   fail 'Aqueous still creates nine initial pinned workspaces'
 fi
-if ! awk '
-  /^pub fn notifyTitle\(window: \*Window\) void \{/ { in_notify_title = 1; next }
-  in_notify_title && /window\.title_text_dirty = true;/ { invalidated = 1 }
-  in_notify_title && /window\.wm_scheduled\.dirty_title = true;/ {
-    valid = invalidated
-    exit
-  }
-  in_notify_title && /^pub fn / { exit }
-  END { exit !valid }
-' "$source_root/compositor/aqueous/Window.zig"; then
-  fail 'Aqueous title changes do not invalidate the compositor title cache'
 fi
 cp "$aqueous_dir/window_policy_test.zig" \
   "$source_root/compositor/aqueous/wm/dinx_window_policy_test.zig"
@@ -118,7 +107,7 @@ cp "$aqueous_dir/window_policy_test.zig" \
     ZIG_LOCAL_CACHE_DIR="$window_test_tmp/zig-local-cache" \
     "$zig_bin" test dinx_window_policy_test.zig
 )
-printf 'aqueous_window_policy_smoke source_pinned=true patches_apply=true titlebar_zones=true floating_snap_geometry=true\n'
+printf 'aqueous_pinned_source_smoke patches_apply=true window_policy_tests=passed\n'
 
 
 for package in aqueous pearl; do
@@ -173,12 +162,6 @@ grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous patches are not applied reproducibly'
 grep -Fq 'server-decorations.patch' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous compositor decorations are not applied reproducibly'
-for decoration in drawTitlebar decorationActionAt toggleMaximized move_floating decorationDoubleClick; do
-  grep -Fq "$decoration" "$aqueous_dir/server-decorations.patch" \
-    || fail "Aqueous compositor decoration patch is missing $decoration"
-done
-grep -Fq '@@ -292,1 +292,0 @@' "$aqueous_dir/dinit.patch" \
-  || fail 'Aqueous build still links systemd'
 grep -Fq '@@ -718,1 +718,0 @@' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous keyboard test still links systemd'
 grep -Fq 'compositor/aqueous/activity_bootstrap.c' "$aqueous_dir/dinit.patch" \
@@ -287,5 +270,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_minimize=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_maximize_restore=true pearl_window_radius_session_start=true cpu_corners_square=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

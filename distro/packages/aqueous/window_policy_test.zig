@@ -3,4 +3,5 @@
 
 test {
     _ = @import("input/drag.zig");
+    _ = @import("state/store.zig");
 }

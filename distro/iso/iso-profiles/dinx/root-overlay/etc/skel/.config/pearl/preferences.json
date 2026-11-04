@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "window_corner_radius": 15,
   "theme": {
     "mode": "static",
     "variant": "dark",

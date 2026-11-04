@@ -4,6 +4,8 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Move Aqueous titlebars wholly above client content, map titlebar double-click to maximize/restore, and persist a separate Pearl window-corner radius read by Vulkan-effects Aqueous at session start. CPU-compatibility Aqueous still renders square corners because its renderer has no rounded-surface mask.
+
 - Use canonical `rufl/DEETTY` source access with an optional `DEETTY_SOURCE_READ_TOKEN`, and rename Deetty smoke/qualification executable outputs, fixture markers and isolated-display test variables; upstream module, ABI, config and resource identifiers remain pinned source internals.
 - Include declared external package inputs in package-cache keys, so a source license or boot-mark change invalidates the consuming package artifact.
 - Record Artix sync-database hashes, the Deetty source-pin file hash and source-tree fingerprint in build metadata; wait for the signed package server before ISO assembly and require one ISO with adjacent metadata.

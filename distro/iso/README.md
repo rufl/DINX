@@ -57,7 +57,7 @@ The full QEMU qualifier captures default VGA and Virtio-VGA and uses Tesseract O
 The ISO menu offers two DINX live choices (ISO/DVD and USB/HDD), defaults to ISO/DVD, and boots it after a visible six-second timeout. Full QEMU qualification leaves the menu untouched to verify that timeout.
 
 ```bash
-DINX_QEMU_TIMEOUT=90 \
+DINX_QEMU_TIMEOUT=110 \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/graphical-screen.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
 DINX_QEMU_POST_SCREENSHOT=dist/iso/dinx/session-screen.ppm \
@@ -130,7 +130,7 @@ Fastfetch and Areofyl's `fetch` are optional and are not included in the base IS
 
 The profile includes the experimental Calamares installer and GParted for standalone partition editing. Calamares copies the ISO root filesystem offline, keeps dinit as the installed init system, and removes the live-only Artix packages during installation. The base image carries the kernel `ntfs3` driver for NTFS read/write access and `os-prober` for Windows discovery; legacy `ntfs-3g` remains an optional post-install package in the signed extra channel. Existing Windows ESP/NTFS layouts are preserved by the installer and use a separate DINX EFI directory.
 
-Pearl Greeter, Aqueous/Pearl and the installer receive DINX defaults from the root overlay. Pearl Greeter uses Adwaita as configured in its root-owned greeter JSON; Calamares uses the same surface/text/primary/error tokens in its Qt stylesheet. Pearl is the active user shell. The dedicated Aqueous host runs only Pearl Greeter and is not exposed as a user-session fallback. The Calamares dependency chain retains only installer components, unsupported session entries remain hidden, and `Aqueous + Pearl (DINX)` is the live session. The live session exposes `Install DINX` through the launcher. The package-provided `Install Artix` Calamares alias is hidden by a local desktop override, leaving DINX's launcher as the only installer shortcut.
+Pearl Greeter, Aqueous/Pearl and the installer receive DINX defaults from the root overlay. Pearl Greeter uses Adwaita as configured in its root-owned greeter JSON; Calamares uses the same surface/text/primary/error tokens in its Qt stylesheet. Pearl is the active user shell. The dedicated Aqueous host runs only Pearl Greeter and is not exposed as a user-session fallback. The Calamares dependency chain retains only installer components, unsupported session entries remain hidden, and `Aqueous + Pearl (DINX)` is the live session. The live session exposes `Install DINX` through its own launcher. The root overlay replaces the package's `/usr/share/applications/calamares.desktop` with a `Hidden=true`, `NoDisplay=true` tombstone that has no Artix name or executable. The DINX helper starts Calamares through `pkexec` with the live Wayland runtime/display and reports launch/authorization failures in a dialog.
 The live path uses `Aqueous + Pearl (DINX)` without a credential prompt: a live-only dinit service prepares greetd before it starts. The installed rootfs keeps manual login and Calamares keeps both autologin flags disabled.
 GTK 3/4 system and skeleton defaults use Adwaita so application-specific theme preferences are respected; Pearl's default shell appearance is Pearl Material dark. The first-run wizard can select DINX or Material in dark or light mode. The live Aqueous launcher does not force `GTK_THEME`; it sets `QT_QPA_PLATFORMTHEME=qt6ct` and seeds the DINX Qt6ct config/palette when an existing home lacks them. Aqueous starts in its freeform `stacking` layout; `Alt+Shift+F` selects it from another layout, and `Super+Shift+Space` toggles floating for the focused window.
 
@@ -143,7 +143,7 @@ The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/j
 
 ### Application launcher labels
 
-Launcher names follow the desktop locale. Swayimg remains hidden from the app menu and opens associated image files. The Artix-named Calamares alias is hidden; only the DINX installer shortcut is shown.
+Launcher names follow the desktop locale. Swayimg remains hidden from the app menu and opens associated image files. The original Artix Calamares desktop ID is replaced with an inert tombstone; only the functional DINX installer shortcut is exposed.
 
 | App | English | Português (Brasil) |
 | --- | --- | --- |

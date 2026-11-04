@@ -1,0 +1,55 @@
+#!/bin/sh
+set -u
+
+show_error() {
+    message=$1
+    if command -v zenity >/dev/null 2>&1; then
+        zenity --no-markup --error --title='Install DINX' --text="$message" 2>/dev/null || true
+    else
+        printf 'Install DINX: %s\n' "$message" >&2
+    fi
+}
+
+fail() {
+    show_error "$1"
+    exit 1
+}
+
+command -v pkexec >/dev/null 2>&1 || fail 'pkexec is not installed. The live ISO is missing the polkit authorization client.'
+command -v zenity >/dev/null 2>&1 || fail 'zenity is not installed, so installer errors cannot be shown.'
+command -v calamares >/dev/null 2>&1 || fail 'Calamares is not installed on this live system.'
+
+runtime_dir=${XDG_RUNTIME_DIR:-}
+wayland_display=${WAYLAND_DISPLAY:-}
+dbus_address=${DBUS_SESSION_BUS_ADDRESS:-}
+[ -n "$runtime_dir" ] && [ -d "$runtime_dir" ] \
+    || fail 'The Aqueous Wayland session has no valid XDG_RUNTIME_DIR. Log into the live desktop and retry.'
+command -v pgrep >/dev/null 2>&1 || fail 'pgrep is unavailable, so the live polkit authorization agent cannot be checked.'
+if ! pgrep -u "$(id -u)" -f '[l]xqt-policykit-agent' >/dev/null 2>&1; then
+    fail 'The lxqt-policykit-agent is not running in this session. Wait for the desktop to finish starting, then retry.'
+fi
+[ -n "$wayland_display" ] \
+    || fail 'WAYLAND_DISPLAY is missing. Launch Install DINX from the Aqueous desktop session.'
+case "$wayland_display" in
+    /*) socket=$wayland_display ;;
+    *) socket=$runtime_dir/$wayland_display ;;
+esac
+[ -S "$socket" ] \
+    || fail "The Wayland socket is unavailable at $socket. Wait for the desktop to finish starting, then retry."
+[ -n "$dbus_address" ] \
+    || fail 'DBUS_SESSION_BUS_ADDRESS is missing. The live session D-Bus and polkit authorization agent must be running.'
+
+output=$(pkexec env \
+    XDG_RUNTIME_DIR="$runtime_dir" \
+    WAYLAND_DISPLAY="$wayland_display" \
+    DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
+    XDG_SESSION_TYPE=wayland \
+    QT_QPA_PLATFORM=wayland \
+    calamares 2>&1)
+status=$?
+if [ "$status" -ne 0 ]; then
+    if [ -n "$output" ]; then
+        fail "$(printf 'Calamares could not be started (exit status %s). Check that the lxqt-policykit-agent is running and approve the authorization prompt.\n\n%s' "$status" "$output")"
+    fi
+    fail "Calamares could not be started (exit status $status). Check that the lxqt-policykit-agent is running and approve the authorization prompt."
+fi

@@ -11,7 +11,7 @@ gufw_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/a
 qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
 opensnitch_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/opensnitch_ui.desktop"
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
-artix_installer_override="$local_apps/calamares.desktop"
+calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
 display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
 
@@ -97,17 +97,32 @@ grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher 
 grep -Fqx 'Name[pt_BR]=Ajustes de Tela' "$display_launcher" || fail 'Display launcher Portuguese desktop name is incorrect'
 grep -Fqx 'Name=Install DINX' "$dinx_installer" || fail 'DINX installer English desktop name is incorrect'
 grep -Fqx 'Name[pt_BR]=Instalar DINX' "$dinx_installer" || fail 'DINX installer Portuguese desktop name is incorrect'
-grep -Fqx 'Exec=pkexec calamares' "$dinx_installer" || fail 'DINX installer command is incorrect'
-grep -Fqx '  usr/share/applications/calamares.desktop' "$iso_check" || fail 'ISO payload is missing the package-provided Calamares launcher'
-grep -Fqx 'Name=Install Artix' "$artix_installer_override" || fail 'Artix installer alias identity is incorrect'
-grep -Fqx 'Name[pt_BR]=Instalar Artix' "$artix_installer_override" || fail 'Artix installer alias Portuguese name is incorrect'
-grep -Fqx 'Exec=pkexec calamares' "$artix_installer_override" || fail 'Artix installer alias command is incorrect'
-grep -Fqx 'Hidden=true' "$artix_installer_override" || fail 'Artix installer alias is not hidden'
-grep -Fqx 'NoDisplay=true' "$artix_installer_override" || fail 'Artix installer alias is not suppressed from menus'
+grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' "$dinx_installer" || fail 'DINX installer does not use its session-aware launcher'
+grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' "$dinx_installer" || fail 'DINX installer launcher prerequisite is incorrect'
+installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
+[[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
+grep -Fqx '    - zenity' "$profile" || fail 'profile is missing the installer error-dialog dependency'
+grep -Fqx '    - polkit' "$profile" || fail 'profile is missing the polkit pkexec provider'
+grep -Fqx '    - lxqt-policykit' "$profile" || fail 'profile is missing the Wayland polkit authorization agent'
+grep -Fqx '    - procps-ng' "$profile" || fail 'profile is missing pgrep for the installer agent prerequisite check'
+grep -Fqx '  usr/bin/pgrep' "$iso_check" || fail 'ISO payload is missing pgrep'
+grep -Fqx '  usr/bin/pkexec' "$iso_check" || fail 'ISO payload is missing pkexec'
+grep -Fqx '  usr/bin/lxqt-policykit-agent' "$iso_check" || fail 'ISO payload is missing the Wayland polkit agent'
+grep -Fqx '  usr/local/libexec/dinx-installer' "$iso_check" || fail 'ISO payload is missing the DINX installer helper'
+grep -Fqx '  usr/bin/zenity' "$iso_check" || fail 'ISO payload is missing the installer error-dialog dependency'
+grep -Fqx '  usr/share/applications/calamares.desktop' "$iso_check" || fail 'ISO content contract omits the Calamares desktop-ID mask'
+grep -Fqx 'Type=Application' "$calamares_launcher" || fail 'Calamares desktop-ID mask has an invalid type'
+grep -Fqx 'Hidden=true' "$calamares_launcher" || fail 'Calamares Artix launcher is not deleted from the desktop namespace'
+grep -Fqx 'NoDisplay=true' "$calamares_launcher" || fail 'Calamares Artix launcher remains visible in application menus'
+if grep -Eiq 'Install Artix|Instalar Artix|^(Exec|TryExec)=' "$calamares_launcher"; then
+  fail 'Calamares desktop-ID mask retains an Artix identity or executable'
+fi
+artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/artix-installer.desktop"
+[[ ! -e "$artix_launcher" ]] || fail 'live ISO overlay ships the redundant Artix installer launcher'
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop org.kde.kolourpaint.desktop swayimg.desktop org.pwmt.zathura.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop calamares.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop org.kde.kolourpaint.desktop swayimg.desktop org.pwmt.zathura.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
@@ -156,4 +171,4 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_installer_hidden=true dinx_installer_visible=true firewall=localized process_manager=localized traffic_monitor=localized sane=true fwupd=true flatpak=true kolourpaint=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=localized process_manager=localized traffic_monitor=localized sane=true fwupd=true flatpak=true kolourpaint=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

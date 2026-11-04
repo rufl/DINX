@@ -10,7 +10,10 @@ import sys
 from pathlib import Path
 
 BACKGROUND = (11, 13, 18)
-GRUB_MENU = re.compile(r"\bstart\s+dinx(?:\s+live|\s*\()|\badvanced\s+options\b", re.IGNORECASE)
+GRUB_MENU = re.compile(
+    r"\bstart\s+din[xvy]\b|\b(?:iso\s*/\s*dvd|usb\s*/\s*hdd)\b|\badvanced\s+options\b",
+    re.IGNORECASE,
+)
 
 
 def has_grub_menu(text: str) -> bool:
@@ -86,9 +89,6 @@ def main(argv: list[str]) -> int:
         return 1
 
     valid, reason = has_centered_dinx_logo(width, height, pixels)
-    if not valid:
-        print(f"check_dinx_plymouth_screen: {reason}", file=sys.stderr)
-        return 1
 
     try:
         result = subprocess.run(
@@ -103,6 +103,9 @@ def main(argv: list[str]) -> int:
 
     if has_grub_menu(result.stdout):
         print("check_dinx_plymouth_screen: capture still shows the GRUB menu", file=sys.stderr)
+        return 1
+    if not valid:
+        print(f"check_dinx_plymouth_screen: {reason}", file=sys.stderr)
         return 1
     print(f"check_dinx_plymouth_screen: {reason} without GRUB menu: {path}")
     return 0

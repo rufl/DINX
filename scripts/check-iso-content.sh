@@ -69,6 +69,9 @@ done
 manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/rootfs.img")
 livefs_manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/livefs.img")
 
+if grep -Fq 'squashfs-root/usr/share/applications/artix-installer.desktop' <<<"$manifest"; then
+  fail 'live ISO ships an Artix installer desktop shortcut'
+fi
 for live_path in \
   etc/artools/live.conf \
   etc/dinit.d/dinx-live-autologin \
@@ -351,6 +354,10 @@ required_paths=(
   usr/local/libexec/dinx-session-supervisor
   usr/bin/dbus-send
   usr/bin/lxqt-policykit-agent
+  usr/bin/pkexec
+  usr/bin/zenity
+  usr/bin/pgrep
+  usr/local/libexec/dinx-installer
   usr/bin/ps
   usr/share/applications/dinx-installer.desktop
   usr/share/applications/calamares.desktop
@@ -376,7 +383,6 @@ required_paths=(
   usr/local/share/applications/blueman-manager.desktop
   usr/local/share/applications/nm-connection-editor.desktop
   usr/local/share/applications/com.saivert.pwvucontrol.desktop
-  usr/local/share/applications/calamares.desktop
   usr/local/share/applications/mimeinfo.cache
   usr/share/applications/gparted.desktop
   usr/share/applications/network.cycles.wdisplays.desktop
@@ -511,8 +517,8 @@ fi
 grep -Fq '"wallpaper_color": "#0b0d12"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter solid surface color is missing'
 pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
-jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == "" and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
-  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl Material, dock, bar or solid-wallpaper defaults are incorrect'
+jq -e '.window_corner_radius == 15 and .theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == "" and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
+  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl Material, dock, bar, radius or solid-wallpaper defaults are incorrect'
 grep -Fq '"enabled": true' <<<"$pearl_preferences" \
   || fail 'Pearl default desktop icons are no longer enabled'
 grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
@@ -1022,17 +1028,18 @@ grep -Fq 'productWelcome: "dinx.svg"' <<<"$calamares_branding_desc" \
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Name=Install DINX' <<<"$installer_desktop" || fail 'DINX installer English desktop name is missing'
 grep -Fq 'Name[pt_BR]=Instalar DINX' <<<"$installer_desktop" || fail 'DINX installer Portuguese desktop name is missing'
+grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' <<<"$installer_desktop" || fail 'DINX installer launcher prerequisite is incorrect'
+grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' <<<"$installer_desktop" || fail 'DINX installer launch command is incorrect'
 if grep -Eq '^(Hidden|NoDisplay)=true$' <<<"$installer_desktop"; then
   fail 'DINX installer launcher is hidden'
 fi
-calamares_package_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/calamares.desktop)
-grep -Fqx 'Type=Application' <<<"$calamares_package_desktop" || fail 'Calamares package desktop entry is missing or invalid'
-calamares_hidden_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/calamares.desktop)
-grep -Fqx 'Name=Install Artix' <<<"$calamares_hidden_override" || fail 'Calamares hidden installer override identity is missing'
-grep -Fqx 'Name[pt_BR]=Instalar Artix' <<<"$calamares_hidden_override" || fail 'Calamares hidden installer override localization is missing'
-grep -Fqx 'Exec=pkexec calamares' <<<"$calamares_hidden_override" || fail 'Calamares installer override does not target the installer'
-grep -Fqx 'Hidden=true' <<<"$calamares_hidden_override" || fail 'Artix installer alias is not hidden'
-grep -Fqx 'NoDisplay=true' <<<"$calamares_hidden_override" || fail 'Artix installer alias is not suppressed from menus'
+calamares_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/calamares.desktop)
+grep -Fqx 'Type=Application' <<<"$calamares_desktop" || fail 'Calamares desktop-ID mask is missing or invalid'
+grep -Fqx 'Hidden=true' <<<"$calamares_desktop" || fail 'Calamares Artix launcher is not deleted from the desktop namespace'
+grep -Fqx 'NoDisplay=true' <<<"$calamares_desktop" || fail 'Calamares Artix launcher remains visible in application menus'
+if grep -Eiq 'Install Artix|Instalar Artix|^(Exec|TryExec)=' <<<"$calamares_desktop"; then
+  fail 'Calamares desktop-ID mask retains an Artix identity or executable'
+fi
 deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
 grep -Fq 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop launcher is missing'
 grep -Fq 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty desktop URI command is incorrect'
@@ -1084,7 +1091,6 @@ usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|blueman
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
 usr/local/share/applications/org.gnome.FileRoller.desktop|Archive Manager|Descompactador|file-roller %U
-usr/local/share/applications/calamares.desktop|Install Artix|Instalar Artix|pkexec calamares
 usr/share/applications/network.cycles.wdisplays.desktop|Display Settings|Ajustes de Tela|dinx-wdisplays
 usr/share/applications/com.pori.app.desktop|Disks & Mounts|Discos e Montagens|/usr/bin/pori
 EOF

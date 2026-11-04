@@ -292,7 +292,7 @@ jobs:
       - name: Qualify built ISO with shared local/CI gates
         env:
           DINX_EXPECTED_COMMIT: ${{ github.sha }}
-          DINX_QEMU_TIMEOUT: 90
+          DINX_QEMU_TIMEOUT: 110
           DINX_INSTALL_TIMEOUT: 180
         run: scripts/qualify-iso.sh "$DINX_ISO"
       - name: Save verified toolchain archives

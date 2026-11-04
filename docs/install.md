@@ -178,7 +178,7 @@ The governor checks PCI `1002:13fe` before applying settings. The guard above pr
 From the live desktop:
 
 1. Open the application launcher and choose **Instalar DINX**.
-2. If the launcher entry is unavailable, run `pkexec calamares` from a terminal.
+2. If the launcher entry is unavailable, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it checks the Wayland/D-Bus prerequisites and displays polkit or startup errors.
 3. Read **Install choices / Opções de instalação** before choosing partitions.
 4. Choose the layout that matches your intent:
    - **Erase disk** creates the layout automatically and erases all data on the selected disk. Choose it only if intended; verify the disk model and size.

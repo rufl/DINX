@@ -68,6 +68,7 @@ rootfs:
     - firefox
     - pipewire
     - pipewire-pulse
+    - zenity
     - polkit
     - lxqt-policykit
     - seatd

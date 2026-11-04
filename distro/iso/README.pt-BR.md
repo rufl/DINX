@@ -57,7 +57,7 @@ A smoke de boot no QEMU captura a superfície VGA e usa OCR do Tesseract para ex
 O menu da ISO oferece duas opções DINX live (ISO/DVD e USB/HDD), seleciona ISO/DVD por padrão e inicia automaticamente após seis segundos visíveis. A qualificação completa do QEMU deixa o menu sem teclas injetadas para verificar esse timeout.
 
 ```bash
-DINX_QEMU_TIMEOUT=90 \
+DINX_QEMU_TIMEOUT=110 \
 DINX_QEMU_SCREENSHOT=dist/iso/dinx/tela-grafica.ppm \
 DINX_QEMU_SCREENSHOT_DELAY=60 \
 DINX_QEMU_POST_SCREENSHOT=dist/iso/dinx/tela-sessao.ppm \
@@ -132,7 +132,7 @@ Fastfetch e o `fetch` de Areofyl são opcionais e não fazem parte da ISO base.
 
 O perfil inclui o instalador experimental Calamares e o GParted para particionamento gráfico independente. O Calamares copia o root filesystem da ISO sem rede, mantém o dinit como init instalado e remove os pacotes exclusivos da sessão live durante a instalação. A imagem base traz o driver de kernel `ntfs3` para leitura e escrita em NTFS e `os-prober` para descobrir o Windows; o `ntfs-3g` legado fica como pacote opcional pós-instalação no canal extra assinado. Layouts Windows existentes de ESP/NTFS são preservados pelo instalador e usam um diretório EFI DINX separado.
 
-Pearl Greeter, Aqueous/Pearl e o instalador recebem defaults DINX pelo root overlay. O Pearl Greeter usa Adwaita conforme o JSON do greeter pertencente ao root; o Calamares usa os mesmos tokens de superfície/texto/primário/erro no stylesheet Qt. Pearl é o shell ativo do usuário. O host Aqueous dedicado executa somente o Pearl Greeter e não é exposto como fallback de sessão do usuário. A cadeia do Calamares mantém apenas os componentes do instalador, entradas de sessão não suportadas continuam ocultas e `Aqueous + Pearl (DINX)` é a sessão live. A sessão live expõe `Instalar DINX` pelo launcher. O alias `Instalar Artix` fornecido pelo pacote do Calamares fica oculto por um override desktop local; o atalho do instalador DINX é o único exibido.
+Pearl Greeter, Aqueous/Pearl e o instalador recebem defaults DINX pelo root overlay. O Pearl Greeter usa Adwaita conforme o JSON do greeter pertencente ao root; o Calamares usa os mesmos tokens de superfície/texto/primário/erro no stylesheet Qt. Pearl é o shell ativo do usuário. O host Aqueous dedicado executa somente o Pearl Greeter e não é exposto como fallback de sessão do usuário. A cadeia do Calamares mantém apenas os componentes do instalador, entradas de sessão não suportadas continuam ocultas e `Aqueous + Pearl (DINX)` é a sessão live. A sessão live expõe `Instalar DINX` por um launcher próprio. O root overlay substitui o `/usr/share/applications/calamares.desktop` do pacote por um tombstone `Hidden=true`, `NoDisplay=true`, sem nome Artix nem executável. O helper DINX inicia o Calamares via `pkexec`, preservando o runtime/display Wayland da sessão live e exibindo erros de inicialização/autorização em uma janela.
 O caminho live usa `Aqueous + Pearl (DINX)` sem prompt de credenciais: um serviço dinit exclusivo da live prepara o greetd antes de iniciá-lo. O rootfs instalado mantém login manual e o Calamares mantém os dois flags de autologin desativados.
 Os defaults globais e do esqueleto de GTK 3/4 usam Adwaita para respeitar as preferências específicas dos aplicativos; a aparência padrão do shell Pearl é Pearl Material escuro. O wizard inicial permite selecionar DINX ou Material em modo escuro ou claro. O launcher Aqueous live não força `GTK_THEME`; ele define `QT_QPA_PLATFORMTHEME=qt6ct` e copia a configuração/paleta DINX do Qt6ct quando faltam na pasta home existente. O Aqueous inicia no layout livre `stacking`; `Alt+Shift+F` o seleciona a partir de outro layout e `Super+Shift+Space` alterna o modo flutuante da janela focada.
 
@@ -145,7 +145,7 @@ O perfil também inclui btop/nvtop/inxi, diagnóstico PCI e USB, Git/curl/less/j
 
 ### Nomes dos launchers
 
-Os nomes seguem o idioma do desktop. O Swayimg permanece oculto no menu de aplicativos e abre arquivos de imagem associados. O alias Artix do Calamares fica oculto; somente o atalho do instalador DINX é exibido.
+Os nomes seguem o idioma do desktop. O Swayimg permanece oculto no menu de aplicativos e abre arquivos de imagem associados. O desktop ID original do Calamares/Artix é substituído por um tombstone inerte; somente o atalho funcional do instalador DINX é exposto.
 
 | Aplicativo | English | Português (Brasil) |
 | --- | --- | --- |

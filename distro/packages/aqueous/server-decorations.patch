@@ -49,7 +49,12 @@
 +            server.aqueous.api.requestManageCycle();
 +        },
 +        .maximize => {
-+            _ = server.aqueous.window_states.toggleMaximized(handle) orelse return;
++            _ = server.aqueous.window_states.toggleMaximizedFloating(handle, .{
++                .x = window.box.x,
++                .y = window.box.y,
++                .width = window.box.width,
++                .height = window.box.height,
++            }) orelse return;
 +            server.aqueous.api.requestManageCycle();
 +        },
 +        .close => window.close(),
@@ -84,7 +89,7 @@
 +            .x = cursor.wlr_cursor.x,
 +            .y = cursor.wlr_cursor.y,
 +        };
-+        if (double_click) action = .minimize;
++        if (double_click) action = .maximize;
 +    }
 +    cursor.handleDecorationAction(window, action);
 +    cursor.mode = .ignore;
@@ -141,6 +146,41 @@
  const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
+@@ -40,3 +40,34 @@ const log = std.log.scoped(.wm);
+ 
++var pearl_corner_radius_cache: ?u31 = null;
++
++fn pearlCornerRadius() u31 {
++    if (pearl_corner_radius_cache) |radius| return radius;
++    var radius: u31 = fx.corner_radius;
++    if (comptime !build_options.vulkan_effects) return 0;
++    defer pearl_corner_radius_cache = radius;
++    var owned_config_dir: ?[]u8 = null;
++    defer if (owned_config_dir) |dir| util.gpa.free(dir);
++    const config_dir = posix.getenv("XDG_CONFIG_HOME") orelse blk: {
++        const home = posix.getenv("HOME") orelse break :blk "";
++        owned_config_dir = std.fmt.allocPrint(util.gpa, "{s}/.config", .{home}) catch break :blk "";
++        break :blk owned_config_dir.?;
++    };
++    if (config_dir.len > 0) {
++        const path = std.fmt.allocPrint(util.gpa, "{s}/pearl/preferences.json", .{config_dir}) catch return radius;
++        defer util.gpa.free(path);
++        var arena = std.heap.ArenaAllocator.init(util.gpa);
++        defer arena.deinit();
++        const bytes = std.fs.cwd().readFileAlloc(arena.allocator(), path, 65536) catch return radius;
++        const root = std.json.parseFromSliceLeaky(std.json.Value, arena.allocator(), bytes, .{}) catch return radius;
++        if (root == .object) if (root.object.get("window_corner_radius")) |value| {
++            if (value == .integer and value.integer >= 0 and value.integer <= 32) {
++                radius = @intCast(value.integer);
++            }
++        };
++    }
++    pearl_corner_radius_cache = radius;
++    return radius;
++}
++
+ 
+ pub const Dimensions = struct {
 @@ -97,6 +99,14 @@
      right: *wlr.SceneRect,
      top: *wlr.SceneRect,
@@ -156,6 +196,11 @@
  };
  
  /// Windowing state requested by the wm.
+@@ -650,3 +673,4 @@
+         .b = (border_color & 0xff) * expand,
+         .a = ((border_color >> 24) & 0xff) * expand,
++        .corner_radius = pearlCornerRadius(),
+     };
 @@ -787,14 +797,47 @@
      hasher.update(std.mem.asBytes(&workspace_id));
  }
@@ -260,7 +305,12 @@
          .workspace_link = undefined,
      };
  
-@@ -2666,6 +2710,115 @@
+@@ -1310,3 +1334,4 @@
+                 .b = args.b,
+                 .a = args.a,
++                .corner_radius = pearlCornerRadius(),
+             };
+@@ -2666,6 +2710,121 @@
      } };
  }
  
@@ -272,9 +322,10 @@
 +    color: *const [4]f32,
 +) void {
 +    var visible = box;
++    visible.y -= @as(i32, @intCast(pointer_drag.titlebar_height));
++    _ = content_clip;
 +    if ((box.width <= 0 or box.height <= 0) or
-+        (!clip.empty() and !visible.intersection(&visible, clip)) or
-+        (!content_clip.empty() and !visible.intersection(&visible, content_clip)))
++        (!clip.empty() and !visible.intersection(&visible, clip)))
 +    {
 +        rect.node.setEnabled(false);
 +        return;
@@ -288,7 +339,7 @@
 +fn drawTitlebar(window: *Window, nodes: *const BorderNodes, clip: *const wlr.Box) void {
 +    const requested = &window.rendering_requested;
 +    if (window.box.width <= 0 or window.box.height <= 0 or window.wm_requested.fullscreen != null) return;
-+    const height_i: i32 = @min(@as(i32, @intCast(pointer_drag.titlebar_height)), window.box.height);
++    const height_i: i32 = @intCast(pointer_drag.titlebar_height);
 +    const width_i: i32 = window.box.width;
 +    const active_color: [4]f32 = .{ 0.09, 0.11, 0.15, 1 };
 +    const inactive_color: [4]f32 = .{ 0.13, 0.14, 0.17, 1 };
@@ -304,6 +355,11 @@
 +        &requested.content_clip,
 +        &control_color,
 +    );
++    const titlebar_radius: u31 = @intCast(@min(
++        @as(u32, requested.border.corner_radius) + @as(u32, requested.border.width),
++        @as(u32, @intCast(@divTrunc(@min(width_i, height_i), 2))),
++    ));
++    fx.setRectRadius(nodes.titlebar, titlebar_radius);
 +    const accent_height = @min(2, height_i);
 +    drawClippedDecorationRect(
 +        nodes.accent,
@@ -337,6 +393,10 @@
 +    if (button_width_i < 14 or height_i < 14) return;
 +
 +    const icon_y = @divTrunc(height_i, 2) - 5;
++    fx.setRectRadius(nodes.close_button, @min(
++        requested.border.corner_radius,
++        @as(u31, @intCast(@divTrunc(@min(button_width_i, height_i), 2))),
++    ));
 +    const minimize_x = first_button_x + @divTrunc(button_width_i, 2) - 5;
 +    drawClippedDecorationRect(
 +        nodes.minimize_glyph,
@@ -394,15 +454,18 @@
  }
  
  fn drawBorderNodes(
-@@ -2693,6 +2854,7 @@
+@@ -2693,6 +2854,10 @@
      };
++    drawTitlebar(window, nodes, clip);
++    const titlebar_height_i: i32 = @intCast(pointer_drag.titlebar_height);
++    content.y -= titlebar_height_i;
++    content.height = @min(content.height, math.maxInt(i32) - titlebar_height_i) + titlebar_height_i;
      if (!requested.content_clip.empty() and
          !content.intersection(&content, &requested.content_clip)) return;
-+    drawTitlebar(window, nodes, clip);
  
      // f32 cannot represent all u32 values exactly, therefore we must initially use f64
      // (which can) and then cast to f32, potentially losing precision.
-@@ -2843,6 +3005,24 @@
+@@ -2843,6 +3008,24 @@
  /// Returns null if the window is currently being destroyed and no longer has
  /// an associated surface.
  /// May also return null for Xwayland windows that are not currently mapped.
@@ -418,9 +481,12 @@
 +    }
 +    return pointer_drag.decorationActionAt(
 +        window.box.width,
-+        window.box.height,
++        @max(
++            window.box.height,
++            @as(i32, @intCast(pointer_drag.titlebar_height)),
++        ),
 +        x - @as(f64, @floatFromInt(window.box.x)),
-+        y - @as(f64, @floatFromInt(window.box.y)),
++        pointer_drag.decorationLocalY(y, window.box.y),
 +    );
 +}
 +
@@ -429,13 +495,16 @@
          .toplevel => |toplevel| toplevel.wlr_toplevel.base.surface,
 --- a/compositor/aqueous/wm/input/drag.zig
 +++ b/compositor/aqueous/wm/input/drag.zig
-@@ -10,6 +10,88 @@
+@@ -10,6 +10,96 @@
  pub const ResizeAxis = enum { horizontal, vertical };
  
  pub const ResizeEdges = geometry_policy.ResizeEdges;
 +pub const DecorationAction = enum { move, minimize, maximize, close };
 +pub const titlebar_height: u31 = 36;
 +pub const decoration_control_width: u31 = 40;
++pub fn decorationLocalY(y: f64, window_y: i32) f64 {
++    return y - @as(f64, @floatFromInt(window_y)) + @as(f64, @floatFromInt(titlebar_height));
++}
 +
 +/// Match the compositor-owned titlebar's three right-aligned controls. Narrow
 +/// windows divide their width equally so no control extends beyond the frame.
@@ -450,6 +519,13 @@
 +    if (x >= width_f - button_width_f * 2) return .maximize;
 +    if (x >= width_f - button_width_f * 3) return .minimize;
 +    return .move;
++}
++
++test "decoration hit mapping stays above client content" {
++    try std.testing.expectEqual(
++        @as(?DecorationAction, .move),
++        decorationActionAt(800, 600, 20, decorationLocalY(82, 100)),
++    );
 +}
 +
 +test "server titlebar action zones stay inside the window" {
@@ -507,7 +583,8 @@
 +        stayedClick(current_x, current_y, previous_x, previous_y);
 +}
 +
-+test "decoration double click minimizes only the same window within click bounds" {
+-test "decoration double click minimizes only the same window within click bounds" {
++test "decoration double click maximizes only the same window within click bounds" {
 +    try std.testing.expect(decorationDoubleClick(7, 7, 10, 410, 12, 24, 16, 20));
 +    try std.testing.expect(!decorationDoubleClick(7, 8, 10, 410, 12, 24, 12, 24));
 +    try std.testing.expect(!decorationDoubleClick(7, 7, 10, 411, 12, 24, 12, 24));
@@ -518,3 +595,50 @@
  
  /// The layout dispatcher selects this path for every non-stacking layout.
  pub fn tiledMoveAllowed(kind: PolicyState.Kind, fixed: bool, fullscreen: bool) bool {
+diff --git a/compositor/aqueous/wm/state/store.zig b/compositor/aqueous/wm/state/store.zig
+--- a/compositor/aqueous/wm/state/store.zig
++++ b/compositor/aqueous/wm/state/store.zig
+@@ -100,6 +100,22 @@ pub fn toggleMaximized(store: *Store, handle: types.Handle) ?bool {
+     return true;
+ }
+ 
++pub fn toggleMaximizedFloating(store: *Store, handle: types.Handle, geometry: types.Rect) ?bool {
++    const entry = store.resolver(handle) orelse return null;
++    entry.overrideFloating();
++    entry.client_maximize_origin = .none;
++    if (entry.geometry_state == .maximized) {
++        entry.geometry_state = .normal;
++        setFloatingEntry(entry, entry.floating_geometry);
++        entry.overrideStackLayer();
++        entry.stack_layer = .above;
++        return false;
++    }
++    setFloatingEntry(entry, geometry);
++    entry.geometry_state = .maximized;
++    return true;
++}
++
+ /// Restore a maximized window as part of a user-initiated titlebar move.
+ /// Persistent floats can always return to their own geometry; tiled policy
+ /// windows may do so only while their active layout presents them as floating.
+@@ -327,3 +327,17 @@ test "manual maximize supersedes client provenance" {
+     try std.testing.expect(!store.setClientMaximized(1, false, true));
+ }
+ 
++test "decoration maximize restores tiled windows as floating above" {
++    TestResolver.reset();
++    var store = Store.init(std.testing.allocator, TestResolver.resolve);
++    defer store.deinit();
++
++    const geometry: types.Rect = .{ .x = 20, .y = 30, .width = 580, .height = 360 };
++    try std.testing.expect(store.toggleMaximizedFloating(1, geometry).?);
++    try std.testing.expectEqual(GeometryState.maximized, TestResolver.entries[0].geometry_state);
++    try std.testing.expect(!store.toggleMaximizedFloating(1, .empty).?);
++    try std.testing.expectEqual(GeometryState.normal, TestResolver.entries[0].geometry_state);
++    try std.testing.expectEqual(Presentation.floating, TestResolver.entries[0].presentation);
++    try std.testing.expectEqual(StackLayer.above, TestResolver.entries[0].stack_layer);
++    try std.testing.expectEqual(geometry, TestResolver.entries[0].floating_geometry);
++}
++
+ const TestResolver = struct {
+     var entries: [2]Entry = .{ .{}, .{} };

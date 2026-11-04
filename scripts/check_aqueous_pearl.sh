@@ -100,6 +100,10 @@ if grep -Fq 'while (i <= 9)' "$workspace_source"; then
 fi
 cp "$aqueous_dir/window_policy_test.zig" \
   "$source_root/compositor/aqueous/wm/dinx_window_policy_test.zig"
+install -Dm644 "$aqueous_dir/titlebar_text.c" \
+  "$source_root/compositor/aqueous/titlebar_text.c"
+install -Dm644 "$aqueous_dir/titlebar_text.zig" \
+  "$source_root/compositor/aqueous/titlebar_text.zig"
 "$zig_bin" fmt --check \
   "$source_root/compositor/aqueous/Cursor.zig" \
   "$source_root/compositor/aqueous/Window.zig" \

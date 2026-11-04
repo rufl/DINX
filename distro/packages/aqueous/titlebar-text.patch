@@ -14,14 +14,11 @@
      close_glyph: [9]*wlr.SceneRect,
 +    title_text: *wlr.SceneBuffer,
  };
-@@ -349,3 +351,7 @@
- tree: *wlr.SceneTree,
- 
+@@ -350,0 +351,4 @@
 +title_text_dirty: bool = true,
 +title_text_capacity: i32 = -1,
 +title_text_width: i32 = 0,
 +
- /// Backend-specific blur mask behind this window's content. The output-local
 @@ -850,2 +856,3 @@
          .close_glyph = undefined,
 +        .title_text = try tree.createSceneBuffer(null),

@@ -8,16 +8,15 @@
  
  const DragIcon = @import("DragIcon.zig");
  const InputDevice = @import("InputDevice.zig");
-@@ -33,0 +34,7 @@
+@@ -33,0 +34,6 @@
 +const DecorationClick = struct {
 +    window: Window.Ref,
 +    time_msec: u32,
 +    x: f64,
 +    y: f64,
 +};
-+
 @@ -125,0 +126,1 @@
-+    last_decoration_click: ?DecorationClick = null,
++last_decoration_click: ?DecorationClick = null,
 @@ -840,6 +849,81 @@
      }, !cursor.hasActivePointerConstraint());
  }
@@ -146,7 +145,7 @@
  const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
-@@ -41,2 +41,33 @@ const log = std.log.scoped(.wm);
+@@ -41,2 +41,32 @@ const log = std.log.scoped(.wm);
 +var pearl_corner_radius_cache: ?u31 = null;
 +
 +fn pearlCornerRadius() u31 {
@@ -177,7 +176,6 @@
 +    pearl_corner_radius_cache = radius;
 +    return radius;
 +}
-+
  
  pub const Dimensions = struct {
 @@ -97,6 +99,14 @@
@@ -488,7 +486,7 @@
          .toplevel => |toplevel| toplevel.wlr_toplevel.base.surface,
 --- a/compositor/aqueous/wm/input/drag.zig
 +++ b/compositor/aqueous/wm/input/drag.zig
-@@ -10,6 +10,98 @@
+@@ -10,6 +10,97 @@
  pub const ResizeAxis = enum { horizontal, vertical };
  
  pub const ResizeEdges = geometry_policy.ResizeEdges;
@@ -583,7 +581,6 @@
 +    try std.testing.expect(!decorationDoubleClick(7, 7, 10, 410, 12, 24, 16.01, 24));
 +    try std.testing.expect(decorationDoubleClick(7, 7, 0xfffffff0, 5, 12, 24, 12, 24));
 +}
-+
  
  /// The layout dispatcher selects this path for every non-stacking layout.
  pub fn tiledMoveAllowed(kind: PolicyState.Kind, fixed: bool, fullscreen: bool) bool {

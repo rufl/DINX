@@ -98,10 +98,11 @@
 @@ -65,1 +65,1 @@
 -        "exec \"{s}\" --border --prompt='NOCTTY_FZF> ' " ++
 +        "exec \"{s}\" --border --prompt='DEETTY_FZF> ' " ++
-@@ -73,1 +73,1 @@
+@@ -73,1 +73,2 @@
 -            "-cmd \"select 'NOCTTY_SQLITE_READY';\"",
-+            "-cmd \"select 'DEETTY_SQLITE_READY';\"",
-@@ -165,11 +165,11 @@
++            "-cmd \".prompt 'DEETTY_SQLITE> '\" " ++
++                "-cmd \"select 'DEETTY_SQLITE_READY';\"",
+@@ -165,11 +166,11 @@
 -    const watch_markers = [_][]const u8{"NOCTTY_SYSTEM_WATCH"};
 +    const watch_markers = [_][]const u8{"DEETTY_SYSTEM_WATCH"};
      const info_markers = [_][]const u8{ "File: dir", "Top" };
@@ -113,7 +114,7 @@
 -    const fzf_markers = [_][]const u8{ "NOCTTY_FZF", "NOCTTY_FZF_TARGET" };
 -    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
 +    const fzf_markers = [_][]const u8{ "DEETTY_FZF", "DEETTY_FZF_TARGET" };
-+    const sqlite_markers = [_][]const u8{ "DEETTY_SQLITE_READY", "sqlite>" };
++    const sqlite_markers = [_][]const u8{ "DEETTY_SQLITE_READY", "DEETTY_SQLITE>" };
      const glances_markers = [_][]const u8{ "CPU", "MEM", "LOAD" };
 -    const bash_markers = [_][]const u8{ "NOCTTY_BASH_READY", "NOCTTY_BASH>" };
 -    const man_markers = [_][]const u8{ "NOCTTY-SYSTEM", "NOCTTY_SYSTEM_MAN" };

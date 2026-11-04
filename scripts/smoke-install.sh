@@ -23,7 +23,7 @@ esac
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate; do
+for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 if [[ "$firmware_mode" == uefi ]]; then
@@ -72,6 +72,10 @@ fi
 serial_log="$output_dir/dinx-installed${output_suffix}.qemu.log"
 screen_path="$output_dir/dinx-installed${output_suffix}-screen.ppm"
 recovery_screen_path="$output_dir/dinx-recovery${output_suffix}-screen.ppm"
+for output in "$serial_log" "$screen_path" "$recovery_screen_path"; do
+  [[ ! -e "$output" && ! -L "$output" ]] \
+    || fail "refusing to overwrite existing qualification output: $output"
+done
 loop_device=
 root_device=
 efi_device=
@@ -389,10 +393,18 @@ done
 qemu_quit_requested=false
 if [[ "$monitor_ready" == true ]]; then
   sleep 30
-  printf 'screendump %s\n' "$screen_path" | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
-  printf 'sendkey ctrl-alt-f2\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
+  printf 'screendump "%s"\n' "$screen_path" \
+    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
+    || fail "QEMU could not capture the installed desktop screen: $screen_path"
+  [[ -s "$screen_path" ]] || fail "installed desktop screenshot was not created: $screen_path"
+  printf 'sendkey ctrl-alt-f2\n' \
+    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
+    || fail 'QEMU could not switch to recovery TTY 2'
   sleep 3
-  printf 'screendump %s\n' "$recovery_screen_path" | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 || true
+  printf 'screendump "%s"\n' "$recovery_screen_path" \
+    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
+    || fail "QEMU could not capture recovery TTY 2: $recovery_screen_path"
+  [[ -s "$recovery_screen_path" ]] || fail "recovery TTY screenshot was not created: $recovery_screen_path"
   for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
     if grep -Fq '[  OK  ] NetworkManager' "$serial_log" \
       && grep -Fq '[  OK  ] elogind' "$serial_log" \
@@ -406,6 +418,9 @@ if [[ "$monitor_ready" == true ]]; then
     kill -0 "$qemu_pid" 2>/dev/null || break
     sleep 1
   done
+else
+  [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
+  fail 'installed disk QEMU monitor did not become ready'
 fi
 wait "$qemu_pid"
 qemu_status=$?
@@ -429,6 +444,10 @@ for service in NetworkManager elogind local.target; do
     fail "installed Dinit service did not start: $service"
   fi
 done
+recovery_text=$(tesseract "$recovery_screen_path" stdout -l "${DINX_QEMU_OCR_LANG:-eng}" --psm 6 2>/dev/null) \
+  || fail "Tesseract could not inspect recovery TTY 2: $recovery_screen_path"
+grep -Eiq '(^|[^[:alnum:]_])login([^[:alnum:]_]|$)' <<<"$recovery_text" \
+  || fail "installed recovery TTY 2 did not show a login prompt: $recovery_screen_path"
 
 loop_device=$(losetup --find --show --partscan "$disk_image")
 if [[ "$firmware_mode" == bios ]]; then

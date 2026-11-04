@@ -30,6 +30,7 @@ workflow_run=1
 artix_image=artixlinux/artixlinux@sha256:0000000000000000000000000000000000000000000000000000000000000000
 builder_pacman_conf_sha256=0000000000000000000000000000000000000000000000000000000000000000
 builder_mirrorlist_sha256=0000000000000000000000000000000000000000000000000000000000000000
+builder_sync_databases_sha256=0000000000000000000000000000000000000000000000000000000000000000
 buildiso_owner=/usr/bin/buildiso is owned by artools-iso 0.40.0-1
 zig_version=0.17.0
 profile_sha256=$profile_sha
@@ -68,21 +69,18 @@ verified=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$meta
 grep -Fq 'iso_binding=verified' <<<"$verified"
 unchecked=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$metadata")
 grep -Fq 'iso_binding=not-checked' <<<"$unchecked"
-snapshot_commit=1111111111111111111111111111111111111111
-[[ "$snapshot_commit" != "$fixture_commit" ]] || snapshot_commit=2222222222222222222222222222222222222222
-snapshot_metadata="$tmp_dir/snapshot-metadata.txt"
-awk -v snapshot_commit="$snapshot_commit" '
-  /^commit=/ { print "commit=" snapshot_commit; next }
+github_metadata="$tmp_dir/github-metadata.txt"
+awk '
   /^build_context=/ { print "build_context=github-actions"; next }
-  /^source_tree_sha256=/ { next }
   { print }
-' "$metadata" > "$snapshot_metadata"
-snapshot_verified=$(DINX_EXPECTED_COMMIT="$snapshot_commit" GITHUB_SHA="$snapshot_commit" \
-  "$root/scripts/check_build_metadata.sh" "$snapshot_metadata")
-grep -Fq "commit=$snapshot_commit" <<<"$snapshot_verified"
-if DINX_EXPECTED_COMMIT="$fixture_commit" GITHUB_SHA="$zero_sha" \
-  "$root/scripts/check_build_metadata.sh" "$snapshot_metadata" >/dev/null 2>&1; then
-  printf 'smoke_build_metadata: metadata for another commit unexpectedly passed\n' >&2
+' "$metadata" > "$github_metadata"
+github_verified=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$github_metadata")
+grep -Fq "source_checksums=true" <<<"$github_verified"
+if GITHUB_SHA="$zero_sha" awk '
+  !/^source_tree_sha256=/ { print }
+' "$github_metadata" > "$tmp_dir/missing-source-metadata.txt" \
+  && "$root/scripts/check_build_metadata.sh" "$tmp_dir/missing-source-metadata.txt" >/dev/null 2>&1; then
+  printf 'smoke_build_metadata: metadata without source-tree binding unexpectedly passed\n' >&2
   exit 1
 fi
 

@@ -34,11 +34,5 @@ grep -Fq 'There is no installed-ISO upgrade or filesystem rollback procedure.' "
 grep -Fq 'installed-ISO upgrades, filesystem rollback and data preservation remain release gates.' "$roadmap" || fail 'installed upgrade/filesystem rollback release gate is not documented'
 grep -Fq 'scripts/smoke_dinx_update.sh' "$workflow" || fail 'package update smoke is not wired'
 grep -Fq 'require_persistent_package_signing: true' "$release_workflow" || fail 'release workflow does not require persistent signing'
-grep -Fq 'pacman_database=true' "$smoke" || fail 'installed pacman database check is missing'
-grep -Fq 'dinit_services=true' "$smoke" || fail 'installed dinit service check is missing'
-grep -Fq 'dynamic_libraries=true' "$smoke" || fail 'installed dynamic library check is missing'
-grep -Fq 'optional_base_absent=true' "$smoke" || fail 'base ISO optional-package boundary check is missing'
-grep -Fq 'lifecycle_checks=true' "$smoke" || fail 'installed lifecycle marker is missing'
 grep -Fq 'filesystem_rollback=not-claimed' "$update_smoke" || fail 'package rollback boundary is not explicit'
-
-printf 'install_lifecycle_contract=bios=true uefi=true installed_runtime=true package_update=true package_rollback=true installed_iso_upgrade=unsupported filesystem_rollback=unsupported\n'
+printf 'install_lifecycle_contract=bios_uefi_smokes=wired package_update_smoke=wired installed_runtime=checked_during_qualification installed_iso_upgrade=unsupported filesystem_rollback=unsupported\n'

@@ -240,7 +240,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
       - name: Verify full ISO qualification prerequisites
-        run: scripts/check-iso-qualification-host.sh full
+        run: scripts/check-iso-qualification-host.sh full --build-path "$GITHUB_WORKSPACE/dist" --build-path "$RUNNER_TEMP" --build-path "$(docker info --format '{{.DockerRootDir}}')"
       - name: Smoke-test Calamares partition transaction
         run: sudo ./scripts/smoke_calamares_partitioning.sh
       - name: Smoke-test Windows side-by-side and manual partition transactions
@@ -273,6 +273,7 @@ jobs:
           iso_name=$(basename "$iso_path")
           (cd "$iso_dir" && sha512sum "$iso_name" > "$iso_name.sha512")
           printf 'iso_path=%s\n' "$iso_path" >> "$GITHUB_OUTPUT"
+          printf 'iso_dir=%s\n' "$iso_dir" >> "$GITHUB_OUTPUT"
           printf 'metadata_path=%s\n' "$metadata_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
       - name: Bundle signed package repository for artifact portability
@@ -314,10 +315,9 @@ jobs:
           name: dinx-p0-${{ job.status }}-${{ github.sha }}
           if-no-files-found: warn
           retention-days: 7
-          path: |
-            dist/iso/**/*.iso
-            dist/iso/**/*.sha512
-            dist/iso/**/*.qemu.log
-            dist/iso/**/*.ppm
+            ${{ steps.artifact.outputs.iso_path }}
+            ${{ steps.artifact.outputs.iso_path }}.sha512
+            ${{ steps.artifact.outputs.metadata_path }}
+            dist/iso/dinx/*.qemu.log
+            dist/iso/dinx/*.ppm
             dist/dinx-package-repository.tar
-            dist/iso/**/build-metadata.txt

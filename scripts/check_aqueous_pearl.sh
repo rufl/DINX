@@ -100,6 +100,13 @@ if grep -Fq 'while (i <= 9)' "$workspace_source"; then
 fi
 cp "$aqueous_dir/window_policy_test.zig" \
   "$source_root/compositor/aqueous/wm/dinx_window_policy_test.zig"
+"$zig_bin" fmt --check \
+  "$source_root/compositor/aqueous/Cursor.zig" \
+  "$source_root/compositor/aqueous/Window.zig" \
+  "$source_root/compositor/aqueous/titlebar_text.zig" \
+  "$source_root/compositor/aqueous/wm/input/drag.zig" \
+  "$source_root/compositor/aqueous/wm/state/store.zig" \
+  || fail 'patched Aqueous Zig sources do not parse or match formatter output'
 (
   cd "$source_root/compositor/aqueous/wm"
   ZIG_GLOBAL_CACHE_DIR="$window_test_tmp/zig-global-cache" \

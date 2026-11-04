@@ -195,13 +195,8 @@
  };
  
  /// Windowing state requested by the wm.
-@@ -650,5 +691,6 @@
-         .r = ((border_color >> 16) & 0xff) * expand,
-         .g = ((border_color >> 8) & 0xff) * expand,
-         .b = (border_color & 0xff) * expand,
-         .a = ((border_color >> 24) & 0xff) * expand,
+@@ -653,0 +654,1 @@
 +        .corner_radius = pearlCornerRadius(),
-     };
 @@ -787,14 +797,47 @@
      hasher.update(std.mem.asBytes(&workspace_id));
  }
@@ -306,14 +301,8 @@
          .workspace_link = undefined,
      };
  
-@@ -1310,6 +1386,7 @@
-                 .width = @intCast(args.width),
-                 .r = args.r,
-                 .g = args.g,
-                 .b = args.b,
-                 .a = args.a,
+@@ -1314,0 +1315,1 @@
 +                .corner_radius = pearlCornerRadius(),
-             };
 @@ -2666,6 +2710,125 @@
      } };
  }

@@ -6,20 +6,31 @@
 +        river.root_module.addCSourceFile(.{ .file = b.path("aqueous/titlebar_text.c"), .flags = &.{ "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror" } });
 --- a/compositor/aqueous/Window.zig
 +++ b/compositor/aqueous/Window.zig
-@@ -23,0 +24,1 @@
+@@ -23,2 +23,3 @@
+ const pointer_drag = @import("wm/input/drag.zig");
 +const titlebar_text = @import("titlebar_text.zig");
-@@ -109,0 +111,1 @@
+ const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
+@@ -140,2 +141,3 @@
+     close_glyph: [9]*wlr.SceneRect,
 +    title_text: *wlr.SceneBuffer,
-@@ -350,0 +353,4 @@
+ };
+@@ -349,3 +351,7 @@
+ tree: *wlr.SceneTree,
+ 
 +title_text_dirty: bool = true,
 +title_text_capacity: i32 = -1,
 +title_text_width: i32 = 0,
 +
-@@ -815,0 +822,1 @@
+ /// Backend-specific blur mask behind this window's content. The output-local
+@@ -850,2 +856,3 @@
+         .close_glyph = undefined,
 +        .title_text = try tree.createSceneBuffer(null),
-@@ -837,0 +845,1 @@
+     };
+@@ -851,2 +858,3 @@
+     };
 +    nodes.title_text.point_accepts_input = rejectAnimationBufferInput;
-@@ -2733,0 +2742,46 @@
+     nodes.minimize_glyph = try tree.createSceneRect(0, 0, &.{ 0, 0, 0, 0 });
+@@ -2746,1 +2754,47 @@
 +fn drawClippedTitleText(
 +    text: *wlr.SceneBuffer,
 +    box: wlr.Box,
@@ -66,7 +77,9 @@
 +    window.title_text_width = text.width;
 +}
 +
-@@ -2782,0 +2837,12 @@
+ fn drawClippedDecorationRect(
+@@ -2803,2 +2857,14 @@
+     const first_button_x: i32 = width_i - button_width_i * 3;
 +    const title_max_width = @min(@max(0, first_button_x - 24), 2048);
 +    updateTitleText(window, title_max_width);
 +    if (height_i >= 20 and window.title_text_width > 0) {
@@ -79,11 +92,17 @@
 +    } else {
 +        nodes.title_text.node.setEnabled(false);
 +    }
-@@ -2834,0 +2901,1 @@
+     const button_rects = [_]struct {
+@@ -2877,2 +2943,3 @@
+         "minimize_glyph",
 +        "title_text",
-@@ -3244,2 +3244,3 @@
+     }) |part| {
+@@ -3473,2 +3540,3 @@
  pub fn notifyTitle(window: *Window) void {
 +    window.title_text_dirty = true;
      window.wm_scheduled.dirty_title = true;
-@@ -3425,0 +3494,1 @@
+@@ -3654,3 +3721,4 @@
+     const window: *Window = @fieldParentPtr("ftm_request_activate", listener);
 +    window.title_text_dirty = true;
+     _ = event; // seat is informational; the wm picks the focus seat itself.
+     window.requestActivate();

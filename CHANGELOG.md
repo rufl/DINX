@@ -12,6 +12,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Record Artix sync-database hashes, the Deetty source-pin file hash and source-tree fingerprint in build metadata; wait for the signed package server before ISO assembly and require one ISO with adjacent metadata.
 - Preflight disk space/inodes for build outputs, caches, chroots and Docker storage; probe privileged loop attachment, preserve non-empty custom chroots on failure, and reject malformed post-build-skip flags.
 - OCR-check the installed recovery TTY and document that the BIOS/UEFI smoke simulates installation from the rootfs rather than exercising Calamares end to end.
+- Match required installed-rootfs and livefs paths against exact fields in SquashFS long listings; metadata columns previously made valid ISO files appear missing.
 
 - Bundle Artix Intel firmware for `i915`/`xe` and install a backed-up `FONT=ter-124n` console configuration with the Plymouth package; verify the firmware files and selected font in the built rootfs.
 - Default Pearl Greeter's libseat backend to elogind for greetd sessions under dinit, while preserving an explicit backend override.

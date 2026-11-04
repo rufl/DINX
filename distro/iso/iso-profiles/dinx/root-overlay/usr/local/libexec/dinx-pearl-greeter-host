@@ -7,4 +7,5 @@ graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
 . /usr/local/libexec/dinx-graphics-environment.sh
 dinx_apply_graphics_environment "$graphics_profile"
 
+export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"
 exec /usr/lib/pearl/pearl-greeter-host "$@"

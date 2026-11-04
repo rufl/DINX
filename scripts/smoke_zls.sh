@@ -13,7 +13,11 @@ version=$($zls_bin --version)
   printf 'smoke_zls: expected ZLS %s, got %s\n' "$ZLS_VERSION" "$version" >&2
   exit 1
 }
-[[ "$($zig_shim version)" == "$ZIG_VERSION" ]] || {
+if ! shim_version=$("$zig_shim" version); then
+  printf 'smoke_zls: Zig shim version command exited unsuccessfully\n' >&2
+  exit 1
+fi
+[[ "$shim_version" == "$ZIG_VERSION" ]] || {
   printf 'smoke_zls: Zig shim version mismatch\n' >&2
   exit 1
 }

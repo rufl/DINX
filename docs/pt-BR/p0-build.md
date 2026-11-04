@@ -103,9 +103,9 @@ Os wrappers gráficos da sessão e do greeter compartilham uma política. Cada r
 
 O perfil controla o contrato visual DINX em `/usr/share/dinx/theme/DINX.json`. `scripts/check_dinx_theme.sh` valida a paleta estática, `DINX_COLOR_SCHEME`, as bridges GTK/Qt, o Pearl Greeter, Calamares e GRUB antes do `buildiso`; `scripts/check-iso-content.sh` verifica os mesmos arquivos dentro da imagem SquashFS do root.
 
-Para uma captura gráfica local, instale QEMU, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`, depois defina `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` e, opcionalmente, `DINX_QEMU_SCREENSHOT_DELAY` antes de executar `scripts/smoke-iso.sh`. Defina `DINX_QEMU_TIMEOUT` para cobrir todas as esperas configuradas de boot, splash, sessão e pós-captura; a qualificação usa janela QEMU de 90 segundos.
+Para capturas gráficas locais, instale QEMU, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`; então defina `DINX_QEMU_BOOT_KEYS=down,down,ret`, `DINX_QEMU_SCREENSHOT` e, opcionalmente, `DINX_QEMU_SCREENSHOT_DELAY` antes de executar `scripts/smoke-iso.sh`. `DINX_QEMU_PLYMOUTH_SCREENSHOT` faz novas capturas por até `DINX_QEMU_PLYMOUTH_WAIT_SECONDS` (padrão 12) até que o logo DINX centralizado e o OCR confirmem que o quadro é Plymouth, não GRUB. As esperas configuradas devem caber em `DINX_QEMU_TIMEOUT`; a qualificação usa 90 segundos.
 Sem `DINX_QEMU_SCREENSHOT`, o smoke salva o quadro verificado ao lado do log QEMU como `<iso>.qemu.log.session.ppm`. `DINX_QEMU_OCR_LANG` seleciona outro modelo de idioma Tesseract instalado, se necessário.
-Defina `DINX_QEMU_PLYMOUTH_SCREENSHOT` para capturar o logo durante o boot; `DINX_QEMU_PLYMOUTH_SCREENSHOT_DELAY` controla a espera após a captura do GRUB/teclas. A qualificação completa grava `dinx-plymouth-screen.ppm` e `dinx-virtio-vga-plymouth-screen.ppm` ao lado da ISO e verifica se o initramfs contém o tema DINX.
+Defina `DINX_QEMU_PLYMOUTH_SCREENSHOT` para validar e capturar o logo durante o boot; `DINX_QEMU_PLYMOUTH_WAIT_SECONDS` limita a espera após a captura do GRUB/teclas. A qualificação completa grava `dinx-plymouth-screen.ppm` e `dinx-virtio-vga-plymouth-screen.ppm` ao lado da ISO e verifica se o initramfs contém o tema DINX.
 
 Para solicitar virgl no host em um smoke gráfico local com QEMU, o QEMU do host precisa ter suporte a GTK/OpenGL e virgl:
 
@@ -117,7 +117,7 @@ scripts/smoke-iso.sh /caminho/para/dinx.iso
 
 A política atual do VirtualBox seleciona Aqueous completo com `WLR_RENDERER=vulkan` para `vmwgfx`/`vboxvideo`; o GTK4 seleciona o próprio renderer automaticamente e `vulkan-swrast` continua empacotado como ICD Vulkan por software. O código não comprova se a aceleração 3D do VirtualBox precisa estar habilitada. A Alpha 12 publicada é anterior a essa política de renderer. O smoke Virtio-VGA do QEMU valida outro caminho gráfico live, não o driver VMware nem o boot direto no VBox; a validação direta ainda exige uma ISO nova.
 
-Qualificação completa captura `dinx-boot-screen.ppm` três segundos após abrir o QEMU e, durante o boot automático, o splash Plymouth como `dinx-plymouth-screen.ppm` (mais uma captura Virtio-VGA). Os quadros separam a tela GRUB, o handoff gráfico do kernel e a sessão.
+A qualificação completa captura `dinx-boot-screen.ppm` três segundos após abrir o QEMU e, durante o boot automático, espera pelo logo Plymouth centralizado antes de gravar `dinx-plymouth-screen.ppm` (e a captura equivalente em Virtio-VGA). O validador rejeita OCR do menu GRUB e logos na posição de canto do GRUB. As capturas gráfica e pós-sessão continuam sendo evidências separadas do desktop.
 
 O GRUB usa cores DINX de superfície, primeiro plano e seleção; o tema ativo exibe o novo símbolo DINX em gradiente no lugar do logo upstream, preserva ícones e fontes do pacote e desativa texturas opacas do menu. Assim, as telas de boot evitam referências visuais à marca Artix sem renomear o caminho interno exigido pelo pacote.
 

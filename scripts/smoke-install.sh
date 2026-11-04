@@ -294,7 +294,7 @@ fi
 printf 'smoke-install: target mkinitcpio configuration\n'
 grep -E '^(MODULES|HOOKS)=' "$target_dir/etc/mkinitcpio.conf" || true
 printf 'smoke-install: installed initramfs storage modules\n'
-chroot "$target_dir" /usr/bin/lsinitcpio -n -l /boot/initramfs-linux.img \
+LC_ALL=C chroot "$target_dir" /usr/bin/lsinitcpio -n -l /boot/initramfs-linux.img \
   | grep -E '(^|/)(virtio(_pci|_blk)?|ata(_generic|_piix)?|ext4)(\.ko|/)' || true
 if [[ "$firmware_mode" == bios ]]; then
   printf 'smoke-install: target BIOS GRUB modules\n'

@@ -553,6 +553,8 @@ grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$gre
 grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not load the shared renderer policy'
 grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not apply the selected renderer'
 grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' <<<"$greeter_wrapper" || fail 'Pearl Greeter wrapper does not execute its packaged host'
+grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter does not select elogind for libseat'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
 grep -Fq 'hardware|vulkan)' <<<"$aqueous_launcher" || fail 'DINX full Aqueous compositor is not selected for the Vulkan profile'
 grep -Fq 'virtio_gpu)' <<<"$aqueous_graphics_helper" || fail 'QEMU virtio-gpu render-node driver is not detected'

@@ -41,6 +41,7 @@ case "${1:-}" in
     ;;
   version)
     printf '%s\n' @ZIG_VERSION@
+    exit 0
     ;;
 esac
 

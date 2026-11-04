@@ -9,7 +9,7 @@ log_path=${DINX_QEMU_LOG:-}
 screenshot_path=${DINX_QEMU_SCREENSHOT:-}
 boot_screenshot_path=${DINX_QEMU_BOOT_SCREENSHOT:-}
 plymouth_screenshot_path=${DINX_QEMU_PLYMOUTH_SCREENSHOT:-}
-plymouth_screenshot_delay=${DINX_QEMU_PLYMOUTH_SCREENSHOT_DELAY:-10}
+plymouth_wait_seconds=${DINX_QEMU_PLYMOUTH_WAIT_SECONDS:-12}
 screenshot_delay=${DINX_QEMU_SCREENSHOT_DELAY:-30}
 boot_screenshot_delay=${DINX_QEMU_BOOT_SCREENSHOT_DELAY:-3}
 boot_keys=${DINX_QEMU_BOOT_KEYS:-}
@@ -32,7 +32,7 @@ fail() {
 [[ "$screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$post_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_POST_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$boot_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_BOOT_SCREENSHOT_DELAY must be a non-negative integer"
-[[ "$plymouth_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_PLYMOUTH_SCREENSHOT_DELAY must be a non-negative integer"
+[[ "$plymouth_wait_seconds" =~ ^[0-9]+$ ]] || fail 'DINX_QEMU_PLYMOUTH_WAIT_SECONDS must be a non-negative integer'
 command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not found: qemu-system-x86_64"
 command -v timeout >/dev/null 2>&1 || fail "required command not found: timeout"
 command -v socat >/dev/null 2>&1 || fail "required command not found: socat"
@@ -47,6 +47,20 @@ for language in "${requested_ocr_languages[@]}"; do
     || fail "Tesseract language data '$language' is missing; install tesseract-ocr-eng or set DINX_QEMU_OCR_LANG to an installed model"
 done
 (( screenshot_delay < timeout_seconds )) || fail 'DINX_QEMU_SCREENSHOT_DELAY must be shorter than DINX_QEMU_TIMEOUT'
+if [[ -n "$plymouth_screenshot_path" ]]; then
+  boot_wait_budget=0
+  [[ -z "$boot_screenshot_path" ]] || boot_wait_budget=$boot_screenshot_delay
+  key_wait_budget=0
+  if [[ -n "$boot_keys" ]]; then
+    IFS=',' read -r -a boot_key_list <<< "$boot_keys"
+    key_wait_budget=${#boot_key_list[@]}
+  fi
+  post_wait_budget=0
+  [[ -z "$post_screenshot_path" ]] || post_wait_budget=$post_screenshot_delay
+  capture_budget_twice=$((2 * (boot_wait_budget + plymouth_wait_seconds + screenshot_delay + post_wait_budget) + key_wait_budget + 10))
+  ((capture_budget_twice < 2 * timeout_seconds)) \
+    || fail 'configured screenshot waits leave insufficient time for QEMU qualification'
+fi
 
 if [[ -z "$log_path" ]]; then
   log_path="${iso_path}.qemu.log"
@@ -73,6 +87,24 @@ capture_screen() {
   local path="$1"
   printf 'screendump %s\n' "$path" \
     | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
+}
+wait_for_plymouth_splash() {
+  local path="$1"
+  local wait_started=$SECONDS
+  local checker_output='QEMU did not capture a frame'
+
+  while ((SECONDS - wait_started <= plymouth_wait_seconds)); do
+    if capture_screen "$path"; then
+      if checker_output=$("$script_dir/check_dinx_plymouth_screen.py" "$path" "$ocr_language" 2>&1); then
+        printf 'smoke-iso: %s\n' "$checker_output"
+        return 0
+      fi
+    else
+      checker_output='QEMU monitor rejected screendump'
+    fi
+    sleep 0.5
+  done
+  fail "centered DINX Plymouth splash not observed within ${plymouth_wait_seconds}s: ${checker_output}"
 }
 
 validate_screenshot() {
@@ -176,9 +208,8 @@ if [[ "$monitor_ready" == true ]]; then
   fi
 
   if [[ -n "$plymouth_screenshot_path" ]]; then
-    sleep "$plymouth_screenshot_delay"
-    capture_screen "$plymouth_screenshot_path"
-    plymouth_dump_status=$?
+    wait_for_plymouth_splash "$plymouth_screenshot_path"
+    plymouth_dump_status=0
   fi
 
   if [[ -n "$screenshot_path" ]]; then
@@ -247,6 +278,7 @@ fi
 if [[ -n "$plymouth_screenshot_path" ]]; then
   [[ "$plymouth_dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept Plymouth screendump'
   validate_screenshot "$plymouth_screenshot_path" 'Plymouth splash'
+  "$script_dir/check_dinx_plymouth_screen.py" "$plymouth_screenshot_path" "$ocr_language"
 fi
 if [[ -n "$screenshot_path" ]]; then
   [[ "$dump_status" -eq 0 ]] || fail 'QEMU monitor did not accept screendump'

@@ -4,6 +4,10 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 
+- Definir `logind` como backend libseat padrão do Pearl Greeter em sessões greetd sob dinit, preservando um backend explicitamente configurado.
+- Encerrar o ramo `version` do shim Zig do ZLS antes de delegar ao compilador opcional; o rootfs instalado informa a versão fixada sem exigir o pacote opcional `zig`.
+- Capturar telas QEMU repetidamente até o logo DINX centralizado do Plymouth aparecer, rejeitar capturas do menu GRUB e reservar tempo para a tela da sessão dentro do timeout de boot.
+- Executar a listagem do initramfs instalado com locale C para evitar avisos de locale não fatal do `bsdcpio`.
 - Unificada a qualificação completa da ISO entre build local e CI P0: metadados, checksum, payload e limites; capturas QEMU VGA padrão e Virtio-VGA; e smokes de instalação descartável BIOS/UEFI. A qualificação local completa é o padrão; o modo estático não conta como evidência de boot. QEMU 11.1.2/KVM com `vmware-svga` trava no udev inicial quando `vmwgfx` carrega; removemos esse caminho do gate, sem tratá-lo como evidência de VirtualBox. O boot direto no VBox e em hardware físico continua sem qualificação.
 - Reconhecer os caminhos 4 MiB do pacote Arch `edk2-ovmf` na verificação do host e no smoke de instalação UEFI, evitando falso erro de OVMF ausente com o pacote instalado.
 - Persistir caches locais do pacman, fontes makepkg, registry Cargo, alvos Cargo por pacote e cache global Zig; combinar a atualização dos bancos e pacotes do pacman. Pular varreduras de propriedade em chroots descartáveis e árvores de fontes/cache com o mesmo UID. Encerrar a qualificação QEMU após as capturas exigidas e as verificações de primeiro boot, sem aguardar timeouts fixos; todos os gates de boot, tela, pacotes e instalação continuam obrigatórios.

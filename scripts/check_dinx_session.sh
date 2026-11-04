@@ -10,6 +10,7 @@ pearl_install="$root/distro/packages/pearl/pearl.install"
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
 graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
 graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
+greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
@@ -44,7 +45,7 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$aqueous_wrapper" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
@@ -67,12 +68,14 @@ for session_path in "$session_dir"/*.desktop; do
     *) fail "unsupported user session entry remains: ${session_path#$root/}" ;;
   esac
 done
+[[ -x "$greeter_wrapper" ]] || fail 'Pearl Greeter wrapper is not executable'
 [[ -x "$aqueous_wrapper" ]] || fail 'Aqueous session wrapper is not executable'
 [[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
 [[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
 [[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
+sh -n "$greeter_wrapper" || fail 'Pearl Greeter wrapper has invalid shell syntax'
 
 for package in greetd brightnessctl swayidle swaylock fish aqueous pearl vulkan-swrast; do
   grep -Fq "    - $package" "$profile" || fail "profile is missing $package"
@@ -115,6 +118,8 @@ if grep -Eiq 'systemd|systemctl' "$greetd_config"; then
   fail 'greetd config contains a systemd integration'
 fi
 
+grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not default libseat to the active elogind seat'
 jq -e '
   .version == 1
   and .theme == "gtk"

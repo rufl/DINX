@@ -5,6 +5,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Use canonical `rufl/DEETTY` source access with an optional `DEETTY_SOURCE_READ_TOKEN`, and rename Deetty smoke/qualification executable outputs, fixture markers and isolated-display test variables; upstream module, ABI, config and resource identifiers remain pinned source internals.
+- Make the Deetty SQLite TUI qualification prompt deterministic across SQLite shell versions; the test no longer depends on SQLite's version-specific default prompt.
 - Include declared external package inputs in package-cache keys, so a source license or boot-mark change invalidates the consuming package artifact.
 - Record Artix sync-database hashes, the Deetty source-pin file hash and source-tree fingerprint in build metadata; wait for the signed package server before ISO assembly and require one ISO with adjacent metadata.
 - Preflight disk space/inodes for build outputs, caches, chroots and Docker storage; probe privileged loop attachment, preserve non-empty custom chroots on failure, and reject malformed post-build-skip flags.

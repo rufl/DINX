@@ -5,6 +5,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Usar `rufl/DEETTY` como origem canônica, com `DEETTY_SOURCE_READ_TOKEN` opcional, e renomear saídas dos executáveis de smoke/qualificação, marcadores de fixture e variáveis de teste de display do Deetty; identificadores upstream de módulo, ABI, configuração e recursos continuam internos à fonte fixada.
+- Tornar determinístico o prompt da qualificação TUI do SQLite no Deetty; o teste não depende mais do prompt padrão específico da versão.
 - Incluir entradas externas declaradas nos hashes do cache de pacotes; alterações em licenças ou na marca de boot invalidam o artefato consumidor.
 - Registrar hashes dos bancos sync Artix, do arquivo de pin da fonte Deetty e fingerprint da árvore de fontes nos metadados; aguardar o servidor assinado de pacotes antes da montagem e exigir uma ISO com metadados adjacentes.
 - Verificar espaço e inodes nos outputs, caches, chroots e armazenamento Docker; testar attachment privilegiado de loop, preservar chroots customizados não vazios após falha e rejeitar valores inválidos na flag que pula a qualificação pós-build.

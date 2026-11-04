@@ -98,14 +98,10 @@
 @@ -65,1 +65,1 @@
 -        "exec \"{s}\" --border --prompt='NOCTTY_FZF> ' " ++
 +        "exec \"{s}\" --border --prompt='DEETTY_FZF> ' " ++
-@@ -73,1 +74,2 @@
+@@ -73,1 +73,2 @@
 -            "-cmd \"select 'NOCTTY_SQLITE_READY';\"",
 +            "-cmd \".prompt 'DEETTY_SQLITE> '\" " ++
 +                "-cmd \"select 'DEETTY_SQLITE_READY';\"",
-@@ -93,2 +94,2 @@
-         "LESS=R; export LESS; exec \"{s}\" --pager=\"{s}\" --local-file " ++
--            "\"{s}/noctty-system.1\"",
-+            "\"{s}/deetty-system.1\"",
 @@ -165,11 +166,11 @@
 -    const watch_markers = [_][]const u8{"NOCTTY_SYSTEM_WATCH"};
 +    const watch_markers = [_][]const u8{"DEETTY_SYSTEM_WATCH"};

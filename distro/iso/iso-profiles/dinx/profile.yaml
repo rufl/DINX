@@ -49,6 +49,7 @@ rootfs:
     - pori
     - greetd
     - linux-firmware-amdgpu
+    - linux-firmware-intel
     - mesa
     - networkmanager
     - vulkan-radeon

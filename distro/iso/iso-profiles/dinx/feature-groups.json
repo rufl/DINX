@@ -26,6 +26,7 @@
         "libva",
         "libva-utils",
         "linux-firmware-amdgpu",
+        "linux-firmware-intel",
         "mesa",
         "networkmanager",
         "pipewire",

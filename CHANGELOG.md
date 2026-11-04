@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 
+- Bundle Artix Intel firmware for `i915`/`xe` and install a backed-up `FONT=ter-124n` console configuration with the Plymouth package; verify the firmware files and selected font in the built rootfs.
 - Default Pearl Greeter's libseat backend to elogind for greetd sessions under dinit, while preserving an explicit backend override.
 - Stop the ZLS Zig shim's `version` branch before optional compiler delegation; the installed rootfs can report its pinned Zig version without the optional `zig` package.
 - Poll QEMU frames until the centered DINX Plymouth logo is visible, reject GRUB-menu captures, and reserve time for session screenshots within the boot timeout.

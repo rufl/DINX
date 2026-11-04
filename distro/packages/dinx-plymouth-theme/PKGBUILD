@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 pkgname=dinx-plymouth-theme
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc='DINX Plymouth splash theme and Dinit handoff'
 arch=('any')
 url='https://github.com/rufl/DINX'
 license=('Apache-2.0')
-depends=('dinit' 'greetd' 'plymouth')
+depends=('dinit' 'greetd' 'plymouth' 'terminus-font')
+backup=('etc/vconsole.conf')
 install=dinx-plymouth-theme.install
 source=(
   'dinx.plymouth'
@@ -14,6 +15,7 @@ source=(
   'dinx-plymouth-quit'
   'dinx-plymouth-quit.service'
   "dinx-logo.png::file://$startdir/../../iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/logo.png"
+  'vconsole.conf'
 )
 sha256sums=(
   'b25cf86f8303b04ac2fd1d0e2c4639a9b89f696639d829598b23ce0ace352067'
@@ -21,6 +23,7 @@ sha256sums=(
   '1bd999f51ec0890a8493d3c4ebbc6b60dc0c67b0dc450040b78e299ded5af2e7'
   'e40bb11f874636d4091b20b60c4266c3001ef65f6cf62c275ac610a36690d96e'
   'f1709b142b88d3402239d0aefcafee116cfad2f5f05db5e87be7ed21424763d9'
+  'dada7ce5cc6d3a2877d33f9964ee217b236d03bfab2e022a0787e1113ad6bc8b'
 )
 
 package() {
@@ -37,4 +40,5 @@ package() {
   install -d "$pkgdir/etc/dinit.d/boot.d"
   ln -s ../dinx-plymouth-quit \
     "$pkgdir/etc/dinit.d/boot.d/dinx-plymouth-quit"
+  install -Dm644 "$srcdir/vconsole.conf" "$pkgdir/etc/vconsole.conf"
 }

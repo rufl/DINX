@@ -685,6 +685,14 @@ unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/plymouth
   > "$tmp_dir/rootfs-plymouth-logo.png"
 cmp -s "$tmp_dir/rootfs-grub-logo.png" "$tmp_dir/rootfs-plymouth-logo.png" \
   || fail 'DINX Plymouth logo differs from the canonical GRUB boot mark'
+vconsole_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/vconsole.conf)
+grep -Fqx 'FONT=ter-124n' <<<"$vconsole_config" || fail 'rootfs console font is not configured to Terminus 12x24'
+grep -Fq 'squashfs-root/usr/share/kbd/consolefonts/ter-124n.psf.gz' <<<"$manifest" \
+  || fail 'rootfs omits the configured Terminus console font'
+for gpu_firmware_dir in i915 xe; do
+  grep -Eq "squashfs-root/usr/lib/firmware/${gpu_firmware_dir}/[^[:space:]]" <<<"$manifest" \
+    || fail "rootfs omits Intel GPU firmware files: $gpu_firmware_dir"
+done
 
 
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)

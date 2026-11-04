@@ -43,7 +43,7 @@ Os pontos de entrada são:
 
 ## Build remoto
 
-O workflow separado `DINX contracts` executa todos os checks estáticos/de fixture e o lint REUSE em todo pull request e push para `main`. O repositório upstream Deetty é `rufl/DEETTY`; o acesso do workflow depende da visibilidade desse repositório e das permissões do token GitHub.
+O workflow separado `DINX contracts` executa checks de contrato/fixture e lint REUSE em todo pull request e push para `main`. Os workflows P0 e de contratos fazem checkout de `rufl/DEETTY` usando `DEETTY_SOURCE_READ_TOKEN` quando configurado e, caso contrário, `GITHUB_TOKEN`; o token precisa ter acesso ao repositório de fontes. O workflow de contratos pula somente os checks dependentes da fonte em PRs de forks externos que não podem receber secrets do repositório.
 
 O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do perfil/build mudam. Ele:
 
@@ -59,7 +59,7 @@ O patch de identidade atualiza os smokes upstream de tarefas e LSP do `clangd` p
 8. constrói a ISO com `buildiso`;
 9. valida os payloads SquashFS do root e da sessão live, incluindo a regra tmpfiles dos logs Dinit no rootfs e as substituições de remontagem da raiz exclusivas do livefs;
 10. gera o checksum SHA-512;
-11. executa `scripts/qualify-iso.sh`, compartilhado com o build local: verifica metadados, checksum, conteúdo e limites; inicializa/captura VGA padrão e Virtio-VGA no QEMU; depois qualifica instalações descartáveis BIOS e UEFI, primeiro boot e TTY de recuperação;
+11. executa `scripts/qualify-iso.sh`: verifica metadados, checksum, payload e limites; inicializa/captura VGA padrão e Virtio-VGA no QEMU; depois simula instalações BIOS/UEFI usando o mesmo rootfs, verifica pacotes e serviços Dinit instalados e usa OCR no TTY 2 de recuperação. Essas simulações não executam a GUI nem os módulos de particionamento do Calamares de ponta a ponta;
 12. cria atestações de artefato GitHub para a ISO e o checksum;
 13. publica ISO, checksum, logs QEMU e capturas PPM como artefato temporário do workflow.
 
@@ -70,7 +70,7 @@ O builder agora valida o ambiente da imagem fixada antes do `docker run` e novam
 O wrapper de compactação da ISO impõe o preset xz suportado pela ferramenta com BCJ x86, blocos de 256 KiB e dicionário de 256 KiB, além de excluir fontes do kernel, caches de pacotes pacman e logs de build. O workflow registra o schema de compactação e o checksum do wrapper em `build-metadata.txt`; `check_build_metadata.sh` os vincula ao wrapper versionado. As ferramentas SquashFS exclusivas do build ficam no builder e não são copiadas para o payload de runtime.
 Como o `buildiso` do Artix pode chamar `/usr/bin/mksquashfs` diretamente, o workflow privilegiado preserva o binário real, instala o wrapper DINX nesse caminho absoluto, exporta o caminho do binário real e rejeita recursão para o próprio wrapper. Depois da montagem, `check-iso-content.sh` lê os superblocos das duas imagens SquashFS e verifica xz com blocos de 256 KiB, em vez de confiar apenas na intenção dos argumentos.
 
-O marcador do primeiro boot instalado verifica que o banco pacman sobreviveu à instalação offline, que os pacotes centrais DINX estão instalados, que NetworkManager e elogind estão disponíveis pelo dinit, que DinitUI/DINXPanel não têm bibliotecas dinâmicas ausentes e que WIZP/CUPS continuam fora da imagem base.
+O smoke de instalação verifica no disco o banco pacman, pacotes centrais, payload/versão do ZLS, bibliotecas de DinitUI/DINXPanel/Dome/Seafoam/ZLS e a ausência de WIZP/CUPS antes do boot. Depois verifica a saída real de boot de NetworkManager, elogind e `local.target` e usa OCR para confirmar o prompt de login no TTY de recuperação; não usa marcador sintético de primeiro boot nem afirma qualificação end-to-end do Calamares.
 
 DinitUI é compilado de `distro/packages/dinitui` com Zig 0.17.0 contra GTK4/libadwaita, enquanto a DINXPanel é compilada de `distro/packages/dinxpanel`; os dois pacotes são adicionados ao repositório pacman temporário e instalados pelo perfil DINX. `scripts/check_dinitui.sh` valida o contrato de backend do DinitUI; `scripts/check_dinxpanel.sh` valida o centro de controle inspirado no YaST, os atalhos fixos, os lançamentos por argv direto, a ponte fixa de GPU e o catálogo seguro de kernels antes do build do container.
 O relatório de upgrades da DINXPanel usa o caminho somente-leitura `sync`/`list-updates all` do Shelly e, opcionalmente, `fwupdmgr refresh`/`get-updates`; o preview do Topgrade é `topgrade --dry-run --show-skipped --no-self-update --no-tmux`, e aplicar Topgrade ou Shelly continua sendo uma ação explícita no terminal.
@@ -216,6 +216,8 @@ O modo reduzido é explícito e **não** qualifica boot/instalação:
 DINX_ISO_QUALIFICATION=static bash scripts/build-iso-docker.sh
 scripts/qualify-iso.sh --static /caminho/para/dinx.iso
 ```
+
+Somente para depuração do build, `DINX_SKIP_POSTBUILD_CHECKS=1` pula toda a qualificação da ISO. Esse artefato não está qualificado; execute `scripts/qualify-iso.sh` no modo completo antes de usá-lo ou publicá-lo.
 
 Para executar novamente os mesmos gates completos sobre uma ISO com `build-metadata.txt` ao lado do arquivo:
 

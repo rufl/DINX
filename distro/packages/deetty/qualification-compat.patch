@@ -6,7 +6,7 @@
      terminal_session_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
 +    terminal_session_qualification_mod.addImport("compat", compat_mod);
      const terminal_session_qualification_exe = b.addExecutable(.{
-         .name = "noctty-terminal-session-qualification",
+         .name = "deetty-terminal-session-qualification",
          .root_module = terminal_session_qualification_mod,
 @@ -452,6 +453,7 @@
          .strip = strip,
@@ -22,7 +22,7 @@
      launch_continuity_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
 +    launch_continuity_qualification_mod.addImport("compat", compat_mod);
      const launch_continuity_qualification_exe = b.addExecutable(.{
-         .name = "noctty-launch-continuity-qualification",
+         .name = "deetty-launch-continuity-qualification",
          .root_module = launch_continuity_qualification_mod,
 @@ -505,6 +508,7 @@
          .strip = strip,
@@ -30,7 +30,7 @@
      terminal_real_tui_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
 +    terminal_real_tui_qualification_mod.addImport("compat", compat_mod);
      const terminal_real_tui_qualification_exe = b.addExecutable(.{
-         .name = "noctty-terminal-real-tui-qualification",
+         .name = "deetty-terminal-real-tui-qualification",
          .root_module = terminal_real_tui_qualification_mod,
 @@ -530,6 +534,7 @@
          .strip = strip,
@@ -38,7 +38,7 @@
      terminal_ncurses_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
 +    terminal_ncurses_qualification_mod.addImport("compat", compat_mod);
      const terminal_ncurses_qualification_exe = b.addExecutable(.{
-         .name = "noctty-terminal-ncurses-qualification",
+         .name = "deetty-terminal-ncurses-qualification",
          .root_module = terminal_ncurses_qualification_mod,
 @@ -555,6 +560,7 @@
          .strip = strip,
@@ -46,11 +46,82 @@
      terminal_system_tui_qualification_mod.addImport("ghostty_vt_public", ghostty_vt_public_mod);
 +    terminal_system_tui_qualification_mod.addImport("compat", compat_mod);
      const terminal_system_tui_qualification_exe = b.addExecutable(.{
-         .name = "noctty-terminal-system-tui-qualification",
+         .name = "deetty-terminal-system-tui-qualification",
          .root_module = terminal_system_tui_qualification_mod,
 @@ -586,1 +592,2 @@
 +    b.installFile("resources/nocted/styles/nocted-light.xml", "share/dintor/styles/dintor-light.xml");
      b.installFile("resources/icons/48x48/com.noctty.NOCTTY.png", "share/icons/hicolor/48x48/apps/org.dinx.Deetty.png");
+--- a/src/terminal/ContinuityQualification.zig
++++ b/src/terminal/ContinuityQualification.zig
+@@ -27,4 +27,4 @@
+     const cases = [_]Case{
+-        .{ .kind = .tmux, .session_name = "noctty-tmux", .marker = "NOCTTY_CONTINUITY_OK:tmux" },
+-        .{ .kind = .zellij, .session_name = "noctty-zellij", .marker = "NOCTTY_CONTINUITY_OK:zellij" },
++        .{ .kind = .tmux, .session_name = "deetty-tmux", .marker = "DEETTY_CONTINUITY_OK:tmux" },
++        .{ .kind = .zellij, .session_name = "deetty-zellij", .marker = "DEETTY_CONTINUITY_OK:zellij" },
+     };
+@@ -70,1 +70,1 @@
+-    try profile.environment.set("NOCTTY_CONTINUITY=ready");
++    try profile.environment.set("DEETTY_CONTINUITY=ready");
+--- a/src/terminal/NcursesQualification.zig
++++ b/src/terminal/NcursesQualification.zig
+@@ -30,7 +30,7 @@
+     var dialog_command_buffer: [1024]u8 = undefined;
+     const dialog_command = try std.fmt.bufPrint(
+         &dialog_command_buffer,
+-        "exec \"{s}\" --clear --title NOCTTY_NCURSES_DIALOG " ++
++        "exec \"{s}\" --clear --title DEETTY_NCURSES_DIALOG " ++
+             "--msgbox 'real ncurses dialog fixture' 8 50",
+         .{dialog_path},
+     );
+@@ -57,4 +57,4 @@
+-    const nano_markers = [_][]const u8{ "NOCTTY_NCURSES_NANO", "Write Out" };
+-    const less_markers = [_][]const u8{"NOCTTY_NCURSES_LESS"};
++    const nano_markers = [_][]const u8{ "DEETTY_NCURSES_NANO", "Write Out" };
++    const less_markers = [_][]const u8{"DEETTY_NCURSES_LESS"};
+     const dialog_markers = [_][]const u8{
+-        "NOCTTY_NCURSES_DIALOG",
++        "DEETTY_NCURSES_DIALOG",
+--- a/src/terminal/RealTuiQualification.zig
++++ b/src/terminal/RealTuiQualification.zig
+@@ -123,1 +123,1 @@
+-    const vim_markers = [_][]const u8{"NOCTTY_REAL_TUI_VIM"};
++    const vim_markers = [_][]const u8{"DEETTY_REAL_TUI_VIM"};
+--- a/src/terminal/SystemTuiQualification.zig
++++ b/src/terminal/SystemTuiQualification.zig
+@@ -46,1 +46,1 @@
+-        "exec \"{s}\" -n 60 -t \"printf 'NOCTTY_SYSTEM_WATCH\\nreal procps watch fixture\\n'\"",
++        "exec \"{s}\" -n 60 -t \"printf 'DEETTY_SYSTEM_WATCH\\nreal procps watch fixture\\n'\"",
+@@ -58,1 +58,1 @@
+-        "exec \"{s}\" --title NOCTTY_SYSTEM_WHIPTAIL " ++
++        "exec \"{s}\" --title DEETTY_SYSTEM_WHIPTAIL " ++
+@@ -65,1 +65,1 @@
+-        "exec \"{s}\" --border --prompt='NOCTTY_FZF> ' " ++
++        "exec \"{s}\" --border --prompt='DEETTY_FZF> ' " ++
+@@ -73,1 +73,1 @@
+-            "-cmd \"select 'NOCTTY_SQLITE_READY';\"",
++            "-cmd \"select 'DEETTY_SQLITE_READY';\"",
+@@ -165,11 +165,11 @@
+-    const watch_markers = [_][]const u8{"NOCTTY_SYSTEM_WATCH"};
++    const watch_markers = [_][]const u8{"DEETTY_SYSTEM_WATCH"};
+     const info_markers = [_][]const u8{ "File: dir", "Top" };
+     const whiptail_markers = [_][]const u8{
+-        "NOCTTY_SYSTEM_WHIPTAIL",
++        "DEETTY_SYSTEM_WHIPTAIL",
+         "real newt widget fixture",
+     };
+-    const fzf_markers = [_][]const u8{ "NOCTTY_FZF", "NOCTTY_FZF_TARGET" };
+-    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
++    const fzf_markers = [_][]const u8{ "DEETTY_FZF", "DEETTY_FZF_TARGET" };
++    const sqlite_markers = [_][]const u8{ "DEETTY_SQLITE_READY", "sqlite>" };
+     const glances_markers = [_][]const u8{ "CPU", "MEM", "LOAD" };
+-    const bash_markers = [_][]const u8{ "NOCTTY_BASH_READY", "NOCTTY_BASH>" };
+-    const man_markers = [_][]const u8{ "NOCTTY-SYSTEM", "NOCTTY_SYSTEM_MAN" };
++    const bash_markers = [_][]const u8{ "DEETTY_BASH_READY", "DEETTY_BASH>" };
++    const man_markers = [_][]const u8{ "DEETTY-SYSTEM", "DEETTY_SYSTEM_MAN" };
+@@ -262,1 +262,1 @@
+-            .input = "printf 'NOCTTY_BASH_COMMAND_OK\\n'\rexit\r",
++            .input = "printf 'DEETTY_BASH_COMMAND_OK\\n'\rexit\r",
 --- a/src/terminal/RealTuiQualification.zig
 +++ b/src/terminal/RealTuiQualification.zig
 @@ -339,6 +339,6 @@
@@ -82,7 +153,7 @@
          &info_command_buffer,
 -        "exec \"{s}\" --file=dir",
 -        .{info_path},
-+        "exec \"{s}\" --file=\"{s}/noctty-system.info\"",
++        "exec \"{s}\" --file=\"{s}/deetty-system.info\"",
 +        .{ info_path, scratch },
      );
      var whiptail_command_buffer: [1024]u8 = undefined;
@@ -91,9 +162,6 @@
 -        "exec \"{s}\" -interactive ':memory:' " ++
 +        "TERM=dumb; export TERM; exec \"{s}\" -interactive ':memory:' " ++
 +            "-cmd \".prompt --no-color\" " ++
-@@ -172,1 +172,1 @@
--    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "sqlite>" };
-+    const sqlite_markers = [_][]const u8{ "NOCTTY_SQLITE_READY", "SQLite-" };
 --- /dev/null
 +++ b/src/nocted/Git.zig
 @@ -0,0 +1,167 @@
@@ -454,3 +522,21 @@
 @@ -20,1 +20,1 @@
 -echo 'nocted_lsp_smoke client=true server=false transport=stdio framing=true initialize=true did_open=true symbols=true clangd=true timeout=true scratch_clean=true'
 +echo 'nocted_lsp_smoke client=true server=true transport=stdio framing=true initialize=true did_open=true symbols=true clangd=true timeout=true scratch_clean=true'
+--- a/scripts/nocted_native_smoke.sh
++++ b/scripts/nocted_native_smoke.sh
+@@ -5,2 +5,2 @@
+-if [ "${NOCTTY_DEDICATED_DISPLAY:-0}" != 1 ] &&
+-  [ "${NOCTTY_ISOLATED_DISPLAY:-}" != "$isolation_backend" ]; then
++if [ "${DEETTY_DEDICATED_DISPLAY:-0}" != 1 ] &&
++  [ "${DEETTY_ISOLATED_DISPLAY:-}" != "$isolation_backend" ]; then
+--- a/scripts/require_isolated_display.sh
++++ b/scripts/require_isolated_display.sh
+@@ -7,1 +7,1 @@
+-    if [ "${NOCTTY_DEDICATED_DISPLAY:-0}" != 1 ]; then
++    if [ "${DEETTY_DEDICATED_DISPLAY:-0}" != 1 ]; then
+@@ -18,1 +18,1 @@
+-case "${NOCTTY_ISOLATED_DISPLAY:-}" in
++case "${DEETTY_ISOLATED_DISPLAY:-}" in
+@@ -33,1 +33,1 @@
+-    if [ "${NOCTTY_DEDICATED_DISPLAY:-0}" != 1 ]; then
++    if [ "${DEETTY_DEDICATED_DISPLAY:-0}" != 1 ]; then

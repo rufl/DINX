@@ -38,6 +38,21 @@ printf 'external license v2\n' > "$source_root/share/licenses/DINX"
   exit 1
 }
 printf 'external license v1\n' > "$source_root/share/licenses/DINX"
+outside_input="$tmp/outside-license"
+printf 'external file outside source root\n' > "$outside_input"
+ln -s "$outside_input" "$source_root/share/licenses/outside"
+printf 'share/licenses/outside\n' > "$package_dir/cache-inputs"
+if cache_key >/dev/null 2>&1; then
+  printf 'smoke_package_artifact_cache: external source symlink escaped the source root\n' >&2
+  exit 1
+fi
+printf '../outside-license\n' > "$package_dir/cache-inputs"
+if cache_key >/dev/null 2>&1; then
+  printf 'smoke_package_artifact_cache: external source path traversal was accepted\n' >&2
+  exit 1
+fi
+rm "$source_root/share/licenses/outside"
+printf 'share/licenses/DINX\n' > "$package_dir/cache-inputs"
 export DINX_ARTIX_IMAGE=example.invalid/artix@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 image_key=$(cache_key)
 export DINX_ARTIX_IMAGE=example.invalid/artix@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
@@ -47,6 +62,10 @@ image_key_changed=$(cache_key)
   exit 1
 }
 unset DINX_ARTIX_IMAGE
+[[ "$(cache_key)" == "$key" ]] || {
+  printf 'smoke_package_artifact_cache: restoring external inputs did not restore the key\n' >&2
+  exit 1
+}
 direct_source_key=$(dinx_package_cache_key dinitui "$package_dir" "$makepkg_conf_sha256" \
   "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one')
 mkdir -p "$package_dir/.zig-cache/o" "$package_dir/zig-cache" \

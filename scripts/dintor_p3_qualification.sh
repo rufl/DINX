@@ -194,8 +194,8 @@ EOF
   done
   gtk-update-icon-cache -f "$icon_home/icons/DintorSmoke" >/dev/null
   output=$(
-    NOCTTY_DEDICATED_DISPLAY=1 \
-    NOCTTY_ISOLATED_DISPLAY=x11 \
+    DEETTY_DEDICATED_DISPLAY=1 \
+    DEETTY_ISOLATED_DISPLAY=x11 \
     NOCTED_GDK_BACKEND=x11 \
     DINX_COLOR_SCHEME="$theme" \
     DINTOR_THEME="$theme" \

@@ -14,7 +14,7 @@ depends=('clang' 'bubblewrap' 'ghostty-vt-runtime' 'gtk3' 'libepoxy' 'gtk-layer-
 makedepends=('ghostty-vt-runtime' 'vte3' 'zig>=0.17' 'btop' 'clang' 'dialog' 'fzf' 'git' 'glances' 'less' 'libnewt' 'librsvg' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim' 'xorg-server-xvfb')
 provides=('dintor' 'terminal-emulator')
 source=("deetty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
-sha256sums=("$DEETTY_SOURCE_SHA256" '19f57e4ad4f1b04acd0a3efa0857bb300ec6132e0fbe749383c509fdc4042399' '55d8373724950143af768b2f8e8f992557cfcae209af1f438e457f621764381d' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
+sha256sums=("$DEETTY_SOURCE_SHA256" 'd6980e3042f5f8c65f3ad477f0bcb6bd2679aad5dda5471438fe4fea7b8a402d' '8d4192549729e05d72caf46dfb094693877c9ed492c41a0635465ab4fc9d6bef' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
 
 prepare() {
   cd "$srcdir/deetty-$pkgver"
@@ -29,7 +29,7 @@ build() {
   cd "$srcdir/deetty-$pkgver"
   zig build -Doptimize=ReleaseSafe
   zig build -Doptimize=ReleaseSafe test
-  zig build -Doptimize=ReleaseSafe noctty-smoke-binary
+  zig build -Doptimize=ReleaseSafe deetty-smoke-binary
   zig build -Doptimize=ReleaseSafe terminal-session-qualification-binary
   zig build -Doptimize=ReleaseSafe terminal-compatibility-binary
   qualification_script="$startdir/../../../scripts/deetty_p2_qualification.sh"
@@ -44,9 +44,9 @@ build() {
     return 1
   }
   "$p3_qualification_script" "$srcdir/deetty-$pkgver"
-  smoke_binary="$srcdir/deetty-$pkgver/zig-out/bin/noctty-smoke"
-  qualification_binary="$srcdir/deetty-$pkgver/zig-out/bin/noctty-terminal-session-qualification"
-  compatibility_binary="$srcdir/deetty-$pkgver/zig-out/bin/noctty-terminal-compatibility"
+  smoke_binary="$srcdir/deetty-$pkgver/zig-out/bin/deetty-smoke"
+  qualification_binary="$srcdir/deetty-$pkgver/zig-out/bin/deetty-terminal-session-qualification"
+  compatibility_binary="$srcdir/deetty-$pkgver/zig-out/bin/deetty-terminal-compatibility"
   [[ -x "$compatibility_binary" ]] || {
     printf 'PKGBUILD: missing Deetty compatibility binary: %s\n' "$compatibility_binary" >&2
     return 1

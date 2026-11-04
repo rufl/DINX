@@ -598,6 +598,7 @@ trap finish EXIT
                   printf '%s  %s\n' "${digest%% *}" "$(basename -- "$sync_db")"
                 done | sha256sum | cut -d ' ' -f 1
               )
+              deetty_source_env_sha256=$(sha256sum -- /workspace/distro/packages/deetty/source.env | cut -d " " -f 1)
               package_snapshot=$(pacman -Q iso-profiles mkinitcpio)
               {
                 printf "schema=dinx-build-metadata/v1\n"
@@ -606,6 +607,7 @@ trap finish EXIT
                 printf "build_context=%s\n" "${DINX_BUILD_CONTEXT:-github-actions}"
                 : "${DINX_SOURCE_TREE_SHA256:?build is missing its source-tree checksum}"
                 printf "source_tree_sha256=%s\n" "$DINX_SOURCE_TREE_SHA256"
+                printf "deetty_source_env_sha256=%s\n" "$deetty_source_env_sha256"
                 printf "workflow_run=%s\n" "$DINX_RUN_ID"
                 printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
                 printf "builder_pacman_conf_sha256=%s\n" "$builder_pacman_conf_sha256"

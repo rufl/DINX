@@ -89,9 +89,12 @@ dinx_package_cache_key() {
 
   # Exclude generated makepkg/Cargo/Zig outputs, but hash the full checked-in package tree.
   local -a source_excludes=(
-    --exclude='./pkg' --exclude='./.git' --exclude='*/.git'
-    --exclude='./.zig-cache' --exclude='./zig-cache' --exclude='./zig-out' --exclude='./target'
-    --exclude='*/.zig-cache' --exclude='*/zig-cache' --exclude='*/zig-out' --exclude='*/target'
+    --exclude='./pkg' --exclude='*/pkg' --exclude='./stage' --exclude='*/stage'
+    --exclude='./.git' --exclude='*/.git'
+    --exclude='./.zig-cache' --exclude='*/.zig-cache'
+    --exclude='./zig-cache' --exclude='*/zig-cache'
+    --exclude='./zig-out' --exclude='*/zig-out'
+    --exclude='./target' --exclude='*/target'
     --exclude='*.pkg.tar.*' --exclude='*.sig'
   )
   local result

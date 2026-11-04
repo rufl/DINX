@@ -18,6 +18,77 @@
          .root_module = nocted_mod,
          .use_llvm = true,
      });
+@@ -258,5 +258,5 @@
+     const vte_exe = b.addExecutable(.{
+-        .name = "noctty-vte",
++        .name = "deetty-vte",
+         .root_module = vte_mod,
+         .use_llvm = true,
+     });
+@@ -288,5 +288,5 @@
+     const smoke_exe = b.addExecutable(.{
+-        .name = "noctty-smoke",
++        .name = "deetty-smoke",
+         .root_module = smoke_mod,
+         .use_llvm = true,
+     });
+@@ -320,5 +320,5 @@
+     const noctty_smoke_step = b.step(
+-        "noctty-smoke-binary",
+-        "Build only the NOCTTY smoke binary",
++        "deetty-smoke-binary",
++        "Build only the Deetty smoke binary",
+     );
+     noctty_smoke_step.dependOn(&install_smoke.step);
+@@ -408,5 +408,5 @@
+     const terminal_compatibility_exe = b.addExecutable(.{
+-        .name = "noctty-terminal-compatibility",
++        .name = "deetty-terminal-compatibility",
+         .root_module = terminal_compatibility_mod,
+         .use_llvm = true,
+     });
+@@ -431,5 +431,5 @@
+     const terminal_session_qualification_exe = b.addExecutable(.{
+-        .name = "noctty-terminal-session-qualification",
++        .name = "deetty-terminal-session-qualification",
+         .root_module = terminal_session_qualification_mod,
+         .use_llvm = true,
+     });
+@@ -459,5 +459,5 @@
+     const terminal_agent_fairness_exe = b.addExecutable(.{
+-        .name = "noctty-terminal-agent-fairness",
++        .name = "deetty-terminal-agent-fairness",
+         .root_module = terminal_agent_fairness_mod,
+         .use_llvm = true,
+     });
+@@ -484,5 +484,5 @@
+     const launch_continuity_qualification_exe = b.addExecutable(.{
+-        .name = "noctty-launch-continuity-qualification",
++        .name = "deetty-launch-continuity-qualification",
+         .root_module = launch_continuity_qualification_mod,
+         .use_llvm = true,
+     });
+@@ -509,5 +509,5 @@
+     const terminal_real_tui_qualification_exe = b.addExecutable(.{
+-        .name = "noctty-terminal-real-tui-qualification",
++        .name = "deetty-terminal-real-tui-qualification",
+         .root_module = terminal_real_tui_qualification_mod,
+         .use_llvm = true,
+     });
+@@ -534,5 +534,5 @@
+     const terminal_ncurses_qualification_exe = b.addExecutable(.{
+-        .name = "noctty-terminal-ncurses-qualification",
++        .name = "deetty-terminal-ncurses-qualification",
+         .root_module = terminal_ncurses_qualification_mod,
+         .use_llvm = true,
+     });
+@@ -559,5 +559,5 @@
+     const terminal_system_tui_qualification_exe = b.addExecutable(.{
+-        .name = "noctty-terminal-system-tui-qualification",
++        .name = "deetty-terminal-system-tui-qualification",
+         .root_module = terminal_system_tui_qualification_mod,
+         .use_llvm = true,
+     });
 @@ -571,35 +571,35 @@
      terminal_system_tui_qualification_binary_step.dependOn(
          &install_terminal_system_tui_qualification.step,

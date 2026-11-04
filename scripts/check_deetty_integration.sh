@@ -18,9 +18,10 @@ pkgbuild="$repo_root/distro/packages/deetty/PKGBUILD"
 archive="$repo_root/distro/packages/deetty/deetty-0.1.0.tar.gz"
 exec_patch="$repo_root/distro/packages/deetty/deetty-terminal-exec.patch"
 identity_patch="$repo_root/distro/packages/deetty/product-identity.patch"
+qualification_patch="$repo_root/distro/packages/deetty/qualification-compat.patch"
 
 for path in "$profile" "$groups" "$fish_profile" "$shell_profile" "$session_launcher" \
-  "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch"; do
+  "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch" "$qualification_patch"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 
@@ -63,6 +64,11 @@ exec_patch_sha=$(sha256sum "$exec_patch" | cut -d ' ' -f 1)
 grep -Fq "'$exec_patch_sha'" "$pkgbuild" || fail 'Deetty execute-argv patch checksum is not pinned'
 identity_patch_sha=$(sha256sum "$identity_patch" | cut -d ' ' -f 1)
 grep -Fq "'$identity_patch_sha'" "$pkgbuild" || fail 'Deetty product identity patch checksum is not pinned'
+grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/qualification-compat.patch"' "$pkgbuild" \
+  || fail 'Deetty qualification patch is not applied without fuzz'
+qualification_patch_sha=$(sha256sum "$qualification_patch" | cut -d ' ' -f 1)
+grep -Fq "'$qualification_patch_sha'" "$pkgbuild" \
+  || fail 'Deetty qualification patch checksum is not pinned'
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
@@ -92,6 +98,18 @@ tar -xzf "$archive" -C "$patched_source" --strip-components=1
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$identity_patch"
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$repo_root/distro/packages/deetty/qualification-compat.patch"
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$exec_patch"
+grep -Fq 'DEETTY_DEDICATED_DISPLAY' "$patched_source/scripts/nocted_native_smoke.sh" \
+  || fail 'Deetty isolated-display environment name was not patched'
+grep -Fq 'DEETTY_ISOLATED_DISPLAY' "$patched_source/scripts/require_isolated_display.sh" \
+  || fail 'Deetty display boundary environment name was not patched'
+if grep -Eq 'NOCTTY_(DEDICATED|ISOLATED)_DISPLAY' \
+  "$patched_source/scripts/nocted_native_smoke.sh" "$patched_source/scripts/require_isolated_display.sh"; then
+  fail 'Deetty display scripts still use legacy NOCTTY environment names'
+fi
+grep -Fq 'DEETTY_DEDICATED_DISPLAY=1' "$repo_root/scripts/dintor_p3_qualification.sh" \
+  || fail 'Dintor qualification does not use the Deetty display contract'
+grep -Fq 'DEETTY_ISOLATED_DISPLAY=x11' "$repo_root/scripts/dintor_p3_qualification.sh" \
+  || fail 'Dintor qualification does not use the Deetty display isolation contract'
 grep -Fq 'std.mem.eql(u8, cmd, "--execute")' "$patched_source/src/main.zig" || fail 'Deetty -e/--execute option is missing'
 grep -Fq 'quoteCommandArguments(args[2..]' "$patched_source/src/main.zig" || fail 'Deetty does not preserve command argv safely'
 grep -Fq 'terminal execute argv are safely quoted and bounded' "$patched_source/src/terminal/LaunchProfile.zig" || fail 'Deetty execute argv boundary test is missing'

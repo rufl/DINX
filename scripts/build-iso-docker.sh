@@ -32,6 +32,7 @@ Options are controlled through environment variables:
   DINX_KEEP_CHROOTS=1        Keep the temporary chroot after a successful build.
   DINX_ISO_QUALIFICATION     Run full qualification (default) or static checks only.
   DINX_SKIP_CONTRACTS=1      Skip local static/fixture contracts.
+  DINX_SKIP_POSTBUILD_CHECKS=1 Skip ISO qualification (debug only; output is unqualified).
   DEETTY_SOURCE_CHECKOUT     Local checkout of the pinned Deetty source.
 USAGE
 }
@@ -45,6 +46,12 @@ qualification_mode=${DINX_ISO_QUALIFICATION:-full}
 case "$qualification_mode" in
   full|static) ;;
   *) fail 'DINX_ISO_QUALIFICATION must be full or static' ;;
+esac
+skip_postbuild_checks=${DINX_SKIP_POSTBUILD_CHECKS:-false}
+case "$skip_postbuild_checks" in
+  true|1) skip_postbuild_checks=true ;;
+  false|0) skip_postbuild_checks=false ;;
+  *) fail 'DINX_SKIP_POSTBUILD_CHECKS must be true/false or 1/0' ;;
 esac
 
 require_command() {
@@ -330,7 +337,7 @@ if [[ "$build_context" == local-docker ]]; then
 fi
 
 
-if [[ ${DINX_SKIP_POSTBUILD_CHECKS:-false} != true ]]; then
+if [[ "$skip_postbuild_checks" != true ]]; then
   mapfile -t iso_paths < <(find "$iso_output_host" -type f -name '*.iso' -print | LC_ALL=C sort)
   (( ${#iso_paths[@]} == 1 )) \
     || fail "expected exactly one ISO under $iso_output_host; found ${#iso_paths[@]}"

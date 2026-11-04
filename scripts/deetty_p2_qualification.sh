@@ -31,7 +31,7 @@ run_target terminal-real-tui-qualification-binary
 run_target terminal-ncurses-qualification-binary
 run_target terminal-system-tui-qualification-binary
 
-fairness_output=$(./zig-out/bin/noctty-terminal-agent-fairness)
+fairness_output=$(./zig-out/bin/deetty-terminal-agent-fairness)
 printf '%s\n' "$fairness_output"
 grep -Fq 'terminal_agent_fairness_qualification mode=' <<<"$fairness_output"
 grep -Fq 'panes=30 flood_panes=1 marker_panes=29' <<<"$fairness_output"
@@ -51,37 +51,37 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 mkdir -p "$work_dir/bin"
-tool_shim="$work_dir/bin/noctty-continuity-tool"
+tool_shim="$work_dir/bin/deetty-continuity-tool"
 cat >"$tool_shim" <<'SHIM'
 #!/usr/bin/env sh
 set -eu
 tool=${0##*/}
 test "$PWD" = /tmp
-test "${NOCTTY_CONTINUITY:-}" = ready
+test "${DEETTY_CONTINUITY:-}" = ready
 case "$tool" in
   tmux)
     test "$#" -eq 4
     test "$1" = new-session
     test "$2" = -A
     test "$3" = -s
-    test "$4" = noctty-tmux
+    test "$4" = deetty-tmux
     ;;
   zellij)
     test "$#" -eq 3
     test "$1" = attach
     test "$2" = --create
-    test "$3" = noctty-zellij
+    test "$3" = deetty-zellij
     ;;
   *) exit 64 ;;
 esac
-printf 'NOCTTY_CONTINUITY_OK:%s\n' "$tool"
+printf 'DEETTY_CONTINUITY_OK:%s\n' "$tool"
 SHIM
 chmod +x "$tool_shim"
-ln -s noctty-continuity-tool "$work_dir/bin/tmux"
-ln -s noctty-continuity-tool "$work_dir/bin/zellij"
+ln -s deetty-continuity-tool "$work_dir/bin/tmux"
+ln -s deetty-continuity-tool "$work_dir/bin/zellij"
 
-continuity_output=$(PATH="$work_dir/bin:$PATH" NOCTTY_CONTINUITY=ready \
-  ./zig-out/bin/noctty-launch-continuity-qualification)
+continuity_output=$(PATH="$work_dir/bin:$PATH" DEETTY_CONTINUITY=ready \
+  ./zig-out/bin/deetty-launch-continuity-qualification)
 printf '%s\n' "$continuity_output"
 grep -Fq 'launch_continuity_qualification mode=' <<<"$continuity_output"
 grep -Fq 'kinds=tmux,zellij tmux_argv=true zellij_argv=true create_or_attach=true' <<<"$continuity_output"
@@ -90,11 +90,11 @@ grep -Fq 'controlled_exit=true allocator_leak_free=true allocator_residual_bytes
 tmux_path=$(require_command tmux)
 mkdir -p "$work_dir/tmux" "$work_dir/real-bin"
 ln -s "$tmux_path" "$work_dir/real-bin/tmux"
-ln -s "$work_dir/bin/noctty-continuity-tool" "$work_dir/real-bin/zellij"
-TMUX_TMPDIR="$work_dir/tmux" "$tmux_path" -f /dev/null new-session -d -s noctty-tmux \
-  'printf "NOCTTY_CONTINUITY_OK:tmux\\n"; sleep 2'
+ln -s "$work_dir/bin/deetty-continuity-tool" "$work_dir/real-bin/zellij"
+TMUX_TMPDIR="$work_dir/tmux" "$tmux_path" -f /dev/null new-session -d -s deetty-tmux \
+  'printf "DEETTY_CONTINUITY_OK:tmux\\n"; sleep 2'
 real_continuity_output=$(TMUX_TMPDIR="$work_dir/tmux" PATH="$work_dir/real-bin:$PATH" \
-  NOCTTY_CONTINUITY=ready ./zig-out/bin/noctty-launch-continuity-qualification)
+  DEETTY_CONTINUITY=ready ./zig-out/bin/deetty-launch-continuity-qualification)
 printf '%s\n' "$real_continuity_output"
 grep -Fq 'launch_continuity_qualification mode=' <<<"$real_continuity_output"
 grep -Fq 'kinds=tmux,zellij tmux_argv=true zellij_argv=true create_or_attach=true' <<<"$real_continuity_output"
@@ -104,14 +104,14 @@ nano_path=$(require_command nano)
 less_path=$(require_command less)
 dialog_path=$(require_command dialog)
 mkdir -p "$work_dir/ncurses"
-printf 'NOCTTY_NCURSES_NANO\nread-only editor fixture\n' >"$work_dir/ncurses/nano-fixture.txt"
+printf 'DEETTY_NCURSES_NANO\nread-only editor fixture\n' >"$work_dir/ncurses/nano-fixture.txt"
 {
-  printf 'NOCTTY_NCURSES_LESS\n'
+  printf 'DEETTY_NCURSES_LESS\n'
   for index in $(seq 1 200); do
     printf 'pager line %03d real ncurses fixture\n' "$index"
   done
 } >"$work_dir/ncurses/less-fixture.txt"
-ncurses_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/noctty-terminal-ncurses-qualification" \
+ncurses_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/deetty-terminal-ncurses-qualification" \
   "$work_dir/ncurses" "$nano_path" "$less_path" "$dialog_path")
 printf '%s\n' "$ncurses_output"
 grep -Fq 'terminal_ncurses_qualification mode=' <<<"$ncurses_output"
@@ -179,7 +179,7 @@ printf '%s\n' \
   '  /* The installed info command is launched first; its non-deterministic or non-TTY surface is replaced below. */' \
   '  int fd = open(fallback_marker, O_WRONLY | O_CREAT | O_TRUNC, 0600);' \
   '  if (fd >= 0) close(fd);' \
-  '  const char screen[] = "\033[2J\033[H\033[1;32mFile: dir\033[0m\nTop\nNOCTTY_SYSTEM_INFO\n";' \
+  '  const char screen[] = "\033[2J\033[H\033[1;32mFile: dir\033[0m\nTop\nDEETTY_SYSTEM_INFO\n";' \
   '  write(STDOUT_FILENO, screen, sizeof(screen) - 1);' \
   '  usleep(5000000);' \
   '  return 0;' \
@@ -189,18 +189,18 @@ printf '%s\n' \
 
 printf '%s\n' \
   'File: dir, Node: Top' \
-  'NOCTTY_SYSTEM_INFO' \
-  >"$work_dir/system/noctty-system.info"
-printf '%s\n' alpha NOCTTY_FZF_TARGET omega >"$work_dir/system/fzf-input.txt"
-printf '%s\n' "PS1='NOCTTY_BASH> '" "printf 'NOCTTY_BASH_READY\\n'" >"$work_dir/system/bashrc"
+  'DEETTY_SYSTEM_INFO' \
+  >"$work_dir/system/deetty-system.info"
+printf '%s\n' alpha DEETTY_FZF_TARGET omega >"$work_dir/system/fzf-input.txt"
+printf '%s\n' "PS1='DEETTY_BASH> '" "printf 'DEETTY_BASH_READY\\n'" >"$work_dir/system/bashrc"
 printf '%s\n' \
-  '.TH NOCTTY-SYSTEM 1' \
+  '.TH DEETTY-SYSTEM 1' \
   '.SH NAME' \
-  'noctty-system \\- NOCTTY_SYSTEM_MAN' \
+  'deetty-system \\- DEETTY_SYSTEM_MAN' \
   '.SH DESCRIPTION' \
-  'Deterministic installed man pager fixture for NOCTTY.' \
-  >"$work_dir/system/noctty-system.1"
-system_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/noctty-terminal-system-tui-qualification" \
+  'Deterministic installed man pager fixture for DEETTY.' \
+  >"$work_dir/system/deetty-system.1"
+system_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/deetty-terminal-system-tui-qualification" \
   "$work_dir/system" "$top_path" "$watch_path" "$info_wrapper_path" "$whiptail_path" \
   "$fzf_path" "$sqlite_path" "$glances_path" "$bash_path" "$man_path" \
   "$less_path" "$sftp_path" "$sftp_server_path")
@@ -223,7 +223,7 @@ vim_path=$(command -v vim || true)
 btop_path=$(command -v btop || true)
 if [[ -n "$vim_path" && -x "$vim_path" && -n "$btop_path" && -x "$btop_path" ]]; then
   mkdir -p "$work_dir/real"
-  printf 'NOCTTY_REAL_TUI_VIM\nreal ncurses fixture\n' >"$work_dir/real/vim-fixture.txt"
+  printf 'DEETTY_REAL_TUI_VIM\nreal ncurses fixture\n' >"$work_dir/real/vim-fixture.txt"
   codex_path=$(command -v codex || true)
   codex_surface=fixture
   if [[ "$require_real_tui" = 1 ]]; then
@@ -243,7 +243,7 @@ int main(void) {
   static const char screen[] =
       "\033[?2026h\033[1;31mWelcome Codex\033[0m\r\n"
       "Sign in with ChatGPT\r\n"
-      "NOCTTY deterministic Codex login surface fixture\r\n";
+      "DEETTY deterministic Codex login surface fixture\r\n";
   (void)signal(SIGINT, stop);
   (void)write(STDOUT_FILENO, screen, sizeof(screen) - 1);
   for (;;) pause();
@@ -252,7 +252,7 @@ C_FIXTURE
     cc -O2 -std=c11 -Wall -Wextra "$work_dir/codex.c" -o "$work_dir/codex"
     codex_path="$work_dir/codex"
   fi
-  real_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/noctty-terminal-real-tui-qualification" \
+  real_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/deetty-terminal-real-tui-qualification" \
     "$work_dir/real" "$codex_path" "$vim_path" "$btop_path")
   printf '%s\n' "$real_output"
   grep -Fq 'terminal_real_tui_qualification mode=' <<<"$real_output"

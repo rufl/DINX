@@ -24,6 +24,8 @@ for path in "$profile" "$groups" "$fish_profile" "$shell_profile" "$session_laun
   "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch" "$qualification_patch"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
+[[ $(stat -c '%a' "$archive") == 644 ]] \
+  || fail 'Deetty source archive must be readable by non-root build steps'
 
 grep -Fqx '    - deetty' "$profile" || fail 'profile does not install Deetty'
 grep -Fqx '    - ghostty-vt-runtime' "$profile" || fail 'profile does not install the VT-only runtime'

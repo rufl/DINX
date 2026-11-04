@@ -102,6 +102,15 @@
 -            "-cmd \"select 'NOCTTY_SQLITE_READY';\"",
 +            "-cmd \".prompt 'DEETTY_SQLITE> '\" " ++
 +                "-cmd \"select 'DEETTY_SQLITE_READY';\"",
+@@ -90,7 +90,7 @@
+     const man_command = try std.fmt.bufPrint(
+         &man_command_buffer,
+         "LESS=R; export LESS; exec \"{s}\" --pager=\"{s}\" --local-file " ++
+-            "\"{s}/noctty-system.1\"",
++            "\"{s}/deetty-system.1\"",
+         .{ man_path, less_path, scratch },
+     );
+     var sftp_command_buffer: [1024]u8 = undefined;
 @@ -165,11 +166,11 @@
 -    const watch_markers = [_][]const u8{"NOCTTY_SYSTEM_WATCH"};
 +    const watch_markers = [_][]const u8{"DEETTY_SYSTEM_WATCH"};

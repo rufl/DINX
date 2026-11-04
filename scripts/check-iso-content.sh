@@ -16,8 +16,9 @@ assert_desktop_entry() {
 iso_path=${1:-}
 [[ -n "$iso_path" ]] || fail "usage: $0 ISO"
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
+script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 
-for command in mktemp rm xorriso unsquashfs bsdtar grep cmp; do
+for command in mktemp rm xorriso unsquashfs grep cmp python3 zstd; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -29,13 +30,15 @@ xorriso -osirrox on \
   -extract /boot/initramfs-x86_64.img "$tmp_dir/initramfs.img" \
   >/dev/null
 
-initramfs_manifest=$(bsdtar -tf "$tmp_dir/initramfs.img")
+initramfs_manifest=$(PYTHONDONTWRITEBYTECODE=1 python3 "$script_dir/initramfs_manifest.py" "$tmp_dir/initramfs.img")
 for graphics_module in vmwgfx vboxvideo; do
   grep -Eq "/${graphics_module}\\.ko(\\.(zst|xz|gz))?$" <<<"$initramfs_manifest" \
     || fail "live initramfs omits the VirtualBox graphics module: $graphics_module"
 done
 
 for plymouth_path in \
+  etc/plymouth/plymouthd.conf \
+  usr/bin/plymouth \
   usr/bin/plymouthd \
   usr/lib/plymouth/script.so \
   usr/share/plymouth/themes/dinx/dinx.plymouth \

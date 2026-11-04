@@ -18,7 +18,7 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "required host command not found: $1"
 }
 
-for command in awk bsdtar cmp grep mktemp rm sha256sum sha512sum stat unsquashfs xorriso; do
+for command in awk cmp grep mktemp python3 rm sha256sum sha512sum stat unsquashfs xorriso zstd; do
   require_command "$command"
 done
 
@@ -30,7 +30,6 @@ fi
 for command in blkid chroot grub-install grub-mkconfig losetup mkfs.ext4 mount mkfs.fat qemu-system-x86_64 sfdisk socat tesseract timeout truncate umount unsquashfs xorriso; do
   require_command "$command"
 done
-require_command python3
 if [[ $EUID -ne 0 ]]; then
   require_command sudo
 fi

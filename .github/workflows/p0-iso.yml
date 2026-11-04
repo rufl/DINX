@@ -232,7 +232,7 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+          sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
       - name: Verify full ISO qualification prerequisites
         run: scripts/check-iso-qualification-host.sh full
       - name: Smoke-test Calamares partition transaction

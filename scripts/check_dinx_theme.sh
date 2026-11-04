@@ -12,6 +12,9 @@ grub_defaults="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/
 live_grub="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/themes/artix/theme.txt"
 live_grub_defaults="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/etc/default/grub"
 live_grub_logo="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/themes/artix/logo.png"
+live_grub_cfg="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/grub.cfg"
+live_grub_kernels="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/kernels.cfg"
+live_grub_variable="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/variable.cfg"
 calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/stylesheet.qss"
 calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
@@ -55,7 +58,8 @@ for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg"
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
-for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo"; do
+for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
+  "$live_grub_cfg" "$live_grub_kernels" "$live_grub_variable"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 
@@ -293,6 +297,18 @@ if grep -Eiq 'artix' "$live_grub"; then
 fi
 cmp -s "$grub" "$live_grub" || fail 'live ISO and installed GRUB themes diverge'
 cmp -s "$grub_logo" "$live_grub_logo" || fail 'live ISO and installed DINX boot marks differ'
+grep -Fq 'set default=0' "$live_grub_cfg" || fail 'live ISO GRUB default is not the ISO/DVD option'
+grep -Fq 'set timeout=6' "$live_grub_cfg" || fail 'live ISO GRUB timeout is not six seconds'
+grep -Fq 'set timeout_style=menu' "$live_grub_cfg" || fail 'live ISO GRUB menu is not visible during timeout'
+grep -Fq 'set kopts="quiet splash"' "$live_grub_cfg" || fail 'live ISO GRUB does not enable Plymouth and quiet boot'
+grep -Fq 'grub_theme=/boot/grub/themes/artix/theme.txt' "$live_grub_variable" \
+  || fail 'live ISO GRUB does not select the DINX boot theme'
+[[ $(grep -Fc 'menuentry "Start DINX live (' "$live_grub_kernels") -eq 2 ]] \
+  || fail 'live ISO GRUB does not define exactly two DINX live boot modes'
+grep -Fq 'menuentry "Start DINX live (ISO/DVD)"' "$live_grub_kernels" \
+  || fail 'DINX ISO/DVD boot option is missing'
+grep -Fq 'menuentry "Start DINX live (USB/HDD)"' "$live_grub_kernels" \
+  || fail 'DINX USB/HDD boot option is missing'
 grep -Fq 'productIcon: "dinx-ray-mark.svg"' "$calamares_branding" || fail 'Calamares icon does not use the DINX D-ray mark'
 grep -Fq 'productLogo: "dinx.svg"' "$calamares_branding" || fail 'Calamares logo does not use the DINX Linux wordmark'
 grep -Fq 'productWelcome: "dinx.svg"' "$calamares_branding" || fail 'Calamares welcome does not use the DINX Linux wordmark'

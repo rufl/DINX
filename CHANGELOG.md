@@ -11,8 +11,9 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Initialize each package build's timing state before invoking `makepkg`, preventing `nounset` from aborting the ISO build after a package completes.
 - Make Cargo-built packages honor the per-package `CARGO_TARGET_DIR` cache during packaging; Cyan Skillfish, Matugen and Shikane now install binaries from the same target directory used by Cargo.
 - Drop the persistent-install smoke marker's live-session dependency on `early-root-rw.target`; the disposable installed root boots from writable ext4, so this remount ordering is not needed.
-- Replace Artix's full ISO GRUB menu with two DINX live boot modes (ISO/DVD and USB/HDD); ISO/DVD is the default and starts after a visible six-second timeout. QEMU qualification now leaves the menu untouched to verify automatic boot.
+- Put the DINX GRUB templates in the live overlay consumed by Artix `prepare_grub`; previously they landed only in the root filesystem, so the ISO silently kept Artix's indefinite menu. The ISO now boots the first DINX option after a visible six-second timeout.
 - Add a DINX-branded Plymouth splash during kernel handoff: reuse the canonical boot mark, include the Plymouth hook after `udev` and `quiet splash` in the live GRUB kernel arguments, and quit via a Dinit service after `greetd` starts. VGA and Virtio-VGA qualification captures the splash separately; no systemd/UWSM integration.
+- Inspect both CPIO layers of Artix mkinitcpio images during ISO qualification. The raw early archive contains kernel modules; Plymouthd and its DINX payload are in the appended Zstandard archive. QEMU capture gates exercise the splash-to-Dinit/greetd handoff.
 
 - Use Pearl Material dark as the fresh-session and first-run default; keep GTK application defaults on Adwaita and preserve existing user theme choices.
 - Bump Pearl to `pkgrel=5` and refresh the pinned first-run wizard checksum for the Material default.

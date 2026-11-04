@@ -69,5 +69,7 @@ for smoke in \
   smoke_package_artifact_cache.sh; do
   "$root/scripts/$smoke"
 done
+printf 'dinx_contracts: run=test_initramfs_manifest.py\n'
+PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_initramfs_manifest.py"
 printf 'dinx_contracts: all_static_and_fixture_checks_passed=true\n'
 

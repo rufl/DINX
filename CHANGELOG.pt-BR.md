@@ -11,11 +11,12 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Inicializar o estado de tempo de cada pacote antes de executar `makepkg`, evitando que o `nounset` interrompa o build da ISO após a conclusão de um pacote.
 - Fazer os pacotes Cargo respeitarem o cache `CARGO_TARGET_DIR` por pacote ao empacotar; Cyan Skillfish, Matugen e Shikane agora instalam os binários do mesmo diretório usado pelo Cargo.
 - Remover a dependência do marcador do smoke de instalação persistente no serviço live `early-root-rw.target`; a root ext4 instalada e descartável inicializa gravável, então essa ordenação de remontagem não é necessária.
-- Substituir o menu GRUB completo do Artix na ISO por dois modos DINX live (ISO/DVD e USB/HDD); ISO/DVD é o padrão e inicia após seis segundos com o menu visível. A qualificação QEMU agora deixa o menu sem teclas injetadas para verificar o boot automático.
+- Colocar os templates GRUB DINX no `live-overlay` consumido por `prepare_grub` do Artix; antes ficavam apenas no rootfs e a ISO mantinha silenciosamente o menu Artix sem timeout. A primeira opção DINX agora inicia após seis segundos com o menu visível.
 - Adicionar splash Plymouth com marca DINX no handoff do kernel: reutilizar o símbolo canônico de boot, incluir o hook Plymouth após `udev` e `quiet splash` nos argumentos do GRUB live, e encerrar o splash por serviço Dinit após o início do `greetd`. A qualificação VGA e Virtio-VGA captura o splash separadamente; sem integração systemd/UWSM.
 - Corrigir a colisão de `/etc/plymouth/plymouthd.conf`: o arquivo permanece sob propriedade do pacote Plymouth, e o pacote DINX seleciona o tema com `plymouth-set-default-theme` após instalar os arquivos do splash.
 - Instalar `plymouth` e `dinx-plymouth-theme` no bootfs temporário da ISO.
 - Declarar Plymouth explicitamente nos arrays `BINARIES` e `FILES` do initramfs live, incluindo o daemon, o plugin Script, a configuração e os assets do tema DINX; preservar entradas existentes e manter a inclusão idempotente.
+- Corrigir o falso negativo da qualificação da ISO: o initramfs Artix contém um CPIO inicial de módulos e outro CPIO compactado com `zstd` que inclui `plymouthd` e o tema. `bsdtar` listava apenas o primeiro; o verificador agora lê ambos e o gate QEMU confere o handoff do splash para Dinit/greetd.
 
 - Definido Pearl Material escuro como padrão da sessão nova e do wizard inicial; os aplicativos GTK mantêm Adwaita como padrão e as escolhas de tema já salvas pelo usuário são preservadas.
 - Incrementado o Pearl para `pkgrel=5` e atualizado o checksum fixado do wizard inicial para o padrão Material.

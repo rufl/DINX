@@ -82,7 +82,8 @@ for smoke in \
   smoke_pacman_local_install.sh \
   smoke_cache_verified_download.sh \
   smoke_cache_verified_extract.sh \
-  smoke_package_artifact_cache.sh; do
+  smoke_package_artifact_cache.sh \
+  smoke_iso_builder_packages.sh; do
   "$root/scripts/$smoke"
 done
 printf 'dinx_contracts: run=test_initramfs_manifest.py\n'

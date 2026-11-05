@@ -143,6 +143,10 @@ for package in artools iso-profiles mkinitcpio rust; do
   grep -Fxq -- "$package" "$builder_packages" \
     || fail "builder image manifest is missing required package: $package"
 done
+grep -Fq 'scripts/check_iso_builder_packages.sh /workspace/scripts/iso-builder/packages.txt' scripts/build-iso-container.sh \
+  || fail 'builder image does not verify manifest packages and group members'
+grep -Fq 'smoke_iso_builder_packages.sh' scripts/check_dinx_contracts.sh \
+  || fail 'builder package group preflight smoke test is not in the contract runner'
 for required in \
   'repository: rufl/DEETTY' \
   'if: github.event_name != '\''pull_request'\'' || github.event.pull_request.head.repo.full_name == github.repository' \

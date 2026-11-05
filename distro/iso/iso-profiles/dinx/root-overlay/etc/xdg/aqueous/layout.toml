@@ -1,6 +1,6 @@
 [layout]
 default = "stacking"
-force_ssd = true
+force_ssd = false
 
 [layout.slots]
 primary = "stacking"

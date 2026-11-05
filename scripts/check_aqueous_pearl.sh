@@ -110,12 +110,16 @@ install -Dm644 "$aqueous_dir/titlebar_text.zig" \
   "$source_root/compositor/aqueous/titlebar_text.zig" \
   "$source_root/compositor/aqueous/wm/input/drag.zig" \
   "$source_root/compositor/aqueous/wm/state/store.zig" \
+  "$source_root/compositor/aqueous/wm/window_decoration_policy.zig" \
   || fail 'patched Aqueous Zig sources do not parse or match formatter output'
 (
   cd "$source_root/compositor/aqueous/wm"
   ZIG_GLOBAL_CACHE_DIR="$window_test_tmp/zig-global-cache" \
     ZIG_LOCAL_CACHE_DIR="$window_test_tmp/zig-local-cache" \
     "$zig_bin" test dinx_window_policy_test.zig
+  ZIG_GLOBAL_CACHE_DIR="$window_test_tmp/zig-global-cache" \
+    ZIG_LOCAL_CACHE_DIR="$window_test_tmp/zig-local-cache" \
+    "$zig_bin" test window_decoration_policy.zig
 )
 printf 'aqueous_pinned_source_smoke patches_apply=true window_policy_tests=passed\n'
 

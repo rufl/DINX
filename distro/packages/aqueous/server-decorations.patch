@@ -137,12 +137,13 @@
  const std = @import("std");
  const assert = std.debug.assert;
  const math = std.math;
-@@ -19,6 +20,7 @@
+@@ -19,6 +20,8 @@
  const server = &@import("main.zig").server;
  const util = @import("util.zig");
  const scaling = @import("scaling");
 +const pointer_drag = @import("wm/input/drag.zig");
  const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
++const decoration_policy = @import("wm/window_decoration_policy.zig");
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
 @@ -41,2 +41,32 @@ const log = std.log.scoped(.wm);
@@ -195,6 +196,31 @@
  /// Windowing state requested by the wm.
 @@ -653,0 +654,1 @@
 +        .corner_radius = pearlCornerRadius(),
+@@ -706,1 +748,6 @@
+-    window.wm_requested.ssd = integratedSsdMode(force_ssd, window.hasXdgDecoration());
++    window.wm_requested.ssd = integratedSsdMode(
++        force_ssd,
++        window.hasXdgDecoration(),
++        window.wm_scheduled.decoration_hint == .prefers_csd or
++            window.wm_scheduled.decoration_hint == .only_supports_csd,
++    );
+@@ -709,3 +756,3 @@
+-fn integratedSsdMode(force_ssd: bool, has_xdg_decoration: bool) bool {
+-    return force_ssd and has_xdg_decoration;
++fn integratedSsdMode(force_ssd: bool, has_xdg_decoration: bool, client_requires_csd: bool) bool {
++    return decoration_policy.useServerSideDecorations(force_ssd, has_xdg_decoration, client_requires_csd);
+ }
+@@ -720,6 +767,6 @@
+ test "integrated SSD policy follows force setting and protocol capability" {
+-    try std.testing.expect(!integratedSsdMode(false, false));
+-    try std.testing.expect(!integratedSsdMode(false, true));
+-    try std.testing.expect(!integratedSsdMode(true, false));
+-    try std.testing.expect(integratedSsdMode(true, true));
++    try std.testing.expect(!integratedSsdMode(false, false, false));
++    try std.testing.expect(!integratedSsdMode(false, true, false));
++    try std.testing.expect(!integratedSsdMode(true, false, true));
++    try std.testing.expect(integratedSsdMode(true, true, false));
+ }
 @@ -787,14 +797,47 @@
      hasher.update(std.mem.asBytes(&workspace_id));
  }
@@ -301,7 +327,7 @@
  
 @@ -1314,0 +1315,1 @@
 +                .corner_radius = pearlCornerRadius(),
-@@ -2666,6 +2710,125 @@
+@@ -2666,6 +2716,133 @@
      } };
  }
  
@@ -327,9 +353,17 @@
 +    rect.node.setEnabled(true);
 +}
 +
++fn usesServerTitlebar(window: *const Window) bool {
++    return switch (window.impl) {
++        .toplevel => decoration_policy.shouldDrawServerTitlebar(false, window.wm_requested.ssd),
++        .xwayland => decoration_policy.shouldDrawServerTitlebar(true, false),
++        .destroying => false,
++    };
++}
++
 +fn drawTitlebar(window: *Window, nodes: *const BorderNodes, clip: *const wlr.Box) void {
 +    const requested = &window.rendering_requested;
-+    if (window.box.width <= 0 or window.box.height <= 0 or window.wm_requested.fullscreen != null) return;
++    if (!window.usesServerTitlebar() or window.box.width <= 0 or window.box.height <= 0 or window.wm_requested.fullscreen != null) return;
 +    const height_i: i32 = @intCast(pointer_drag.titlebar_height);
 +    const width_i: i32 = window.box.width;
 +    const active_color: [4]f32 = .{ 0.09, 0.11, 0.15, 1 };
@@ -427,7 +461,7 @@
  fn disableBorderNodes(nodes: *const BorderNodes) void {
      inline for (.{
          "rounded_outline",
-@@ -2673,9 +2826,17 @@
+@@ -2673,9 +2840,17 @@
          "right",
          "top",
          "bottom",
@@ -445,18 +479,20 @@
  }
  
  fn drawBorderNodes(
-@@ -2693,6 +2854,10 @@
+@@ -2693,6 +2868,12 @@
      };
 +    drawTitlebar(window, nodes, clip);
-+    const titlebar_height_i: i32 = @intCast(pointer_drag.titlebar_height);
-+    content.y -= titlebar_height_i;
-+    content.height = @min(content.height, math.maxInt(i32) - titlebar_height_i) + titlebar_height_i;
++    if (window.usesServerTitlebar()) {
++        const titlebar_height_i: i32 = @intCast(pointer_drag.titlebar_height);
++        content.y -= titlebar_height_i;
++        content.height = @min(content.height, math.maxInt(i32) - titlebar_height_i) + titlebar_height_i;
++    }
      if (!requested.content_clip.empty() and
          !content.intersection(&content, &requested.content_clip)) return;
  
      // f32 cannot represent all u32 values exactly, therefore we must initially use f64
      // (which can) and then cast to f32, potentially losing precision.
-@@ -2843,6 +3008,27 @@
+@@ -2843,6 +3024,28 @@
  /// Returns null if the window is currently being destroyed and no longer has
  /// an associated surface.
  /// May also return null for Xwayland windows that are not currently mapped.
@@ -466,6 +502,7 @@
 +    x: f64,
 +    y: f64,
 +) ?pointer_drag.DecorationAction {
++    if (!window.usesServerTitlebar()) return null;
 +    if (surface) |hit_surface| {
 +        const root = window.rootSurface() orelse return null;
 +        if (hit_surface.getRootSurface() != root) return null;
@@ -628,3 +665,35 @@ diff --git a/compositor/aqueous/wm/state/store.zig b/compositor/aqueous/wm/state
 +
  const TestResolver = struct {
      var entries: [2]Entry = .{ .{}, .{} };
+diff --git a/compositor/aqueous/wm/window_decoration_policy.zig b/compositor/aqueous/wm/window_decoration_policy.zig
+new file mode 100644
+--- /dev/null
++++ b/compositor/aqueous/wm/window_decoration_policy.zig
+@@ -0,0 +1,27 @@
++const std = @import("std");
++
++/// Keep client titlebars for CSD clients unless the user explicitly forces SSD.
++pub fn useServerSideDecorations(
++    force_ssd: bool,
++    has_xdg_decoration: bool,
++    client_requires_csd: bool,
++) bool {
++    return has_xdg_decoration and (force_ssd or !client_requires_csd);
++}
++
++pub fn shouldDrawServerTitlebar(is_xwayland: bool, ssd: bool) bool {
++    return is_xwayland or ssd;
++}
++
++test "server decorations honor client CSD preference" {
++    try std.testing.expect(!useServerSideDecorations(true, false, false));
++    try std.testing.expect(!useServerSideDecorations(false, true, true));
++    try std.testing.expect(useServerSideDecorations(false, true, false));
++    try std.testing.expect(useServerSideDecorations(true, true, true));
++}
++
++test "XWayland keeps server titlebars while xdg CSD does not" {
++    try std.testing.expect(!shouldDrawServerTitlebar(false, false));
++    try std.testing.expect(shouldDrawServerTitlebar(true, false));
++    try std.testing.expect(shouldDrawServerTitlebar(false, true));
++}

@@ -65,6 +65,8 @@ rootfs:
     - wdisplays
     - kolourpaint
     - adw-gtk-theme
+    - dconf
+    - gsettings-desktop-schemas
     - noto-fonts
     - firefox
     - pipewire

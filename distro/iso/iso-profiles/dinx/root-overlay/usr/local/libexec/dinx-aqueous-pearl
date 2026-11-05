@@ -72,6 +72,7 @@ if [ "$(stat -c '%u' "$XDG_RUNTIME_DIR")" != "$(id -u)" ]; then
   exit 1
 fi
 chmod 0700 "$XDG_RUNTIME_DIR"
+/usr/local/libexec/dinx-gtk-dark-mode-seed
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then

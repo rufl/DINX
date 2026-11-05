@@ -5,6 +5,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Desenhar titlebars do Aqueous acima do conteúdo do cliente e estender o contorno arredondado contínuo por titlebar e conteúdo. O duplo clique alterna maximizar/restaurar; restaurar recupera a geometria flutuante salva, mantém o foco e eleva a janela. `window_corner_radius` do Pearl passa a valer na próxima sessão Aqueous com efeitos Vulkan; o renderer CPU de compatibilidade continua quadrado.
+- Define o modo escuro do GNOME/libadwaita somente quando o dconf não contém escolha explícita do usuário; respeita pedidos xdg-decoration por CSD para evitar titlebars GTK duplicadas e sobreposição de conteúdo/controles do compositor.
 - Ocultar a entrada upstream do Calamares/Artix e iniciar `Instalar DINX` por um helper polkit que preserva Wayland/D-Bus e mostra erros de inicialização; semear um atalho `Instalar DINX` na área de trabalho do usuário live e dos novos usuários instalados.
 - Incluir `squashfs-tools` na rootfs live porque o `unpackfs` do Calamares precisa de `unsquashfs`; remover essa dependência exclusiva do instalador do sistema instalado e verificar os dois casos nos checks da ISO e do smoke de instalação.
 

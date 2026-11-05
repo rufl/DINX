@@ -23,7 +23,7 @@ O contrato do tema estático DINX é a fonte de verdade:
 - paleta: `/usr/share/dinx/theme/DINX.json`;
 - escolha de cor do usuário: `DINX_COLOR_SCHEME=light|dark`, com `DINTOR_THEME=prefer-light` aceito pelo Dintor;
 - cores Qt6ct: `~/.config/qt6ct/colors/DINX.conf`;
-- tema GTK: tema instalado `DINX` com Noto Sans 10;
+- tema GTK: Adwaita com Noto Sans 10; a sessão define o esquema `prefer-dark` do GNOME somente quando o usuário não tem uma escolha explícita de esquema de cores.
 - texto de largura fixa: Noto Sans Mono 10 quando exigido pelo aplicativo;
 - bridges gráficas: estados DINX de superfície, controle, hover, primário e erro, com ícones Adwaita quando disponíveis.
 
@@ -39,7 +39,7 @@ O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --
 
 ## Contrato da sessão Aqueous/Pearl
 
-Todas as janelas de nível superior do Aqueous exibem uma barra DINX desenhada pelo compositor, com título e botões para minimizar, maximizar/restaurar e fechar, inclusive clientes GTK e Pearl. Títulos longos são truncados com reticências antes dos controles. A sessão define `GTK_CSD=0` e o Aqueous solicita decorações do servidor; janelas GTK padrão usam a barra do compositor, e clientes Wayland que respeitam xdg-decoration recebem a mesma solicitação. Arrastar qualquer área livre da barra move a janela e usa o encaixe do Aqueous para janelas flutuantes: bordas laterais/inferior encaixam em metades, cantos em quartos e a borda superior maximiza. Janelas em tela cheia ocultam a barra. Aplicativos que definem barras de título próprias e ignoram a solicitação de decoração do servidor ainda podem desenhar conteúdo por baixo da barra do compositor; o Wayland não oferece um mecanismo genérico para o compositor remover conteúdo renderizado pelo cliente. Menus e popups não são janelas de nível superior e mantêm o comportamento próprio.
+O Aqueous desenha titlebars e controles DINX para clientes xdg-decoration cujo modo negociado é servidor. Por padrão, clientes que solicitam ou exigem decorações próprias mantêm suas titlebars; o Aqueous omite a barra, o deslocamento de 36 pixels do conteúdo e as zonas de interação da barra nessas janelas. Clientes sem preferência CSD ou com preferência por SSD recebem a decoração DINX. `force_ssd=true` continua disponível como override explícito. `GTK_CSD=0` desativa o CSD padrão do GTK, mas não barras customizadas criadas pelo aplicativo. A sessão define `org.gnome.desktop.interface color-scheme='prefer-dark'` somente quando o dconf não tem valor do usuário, preservando escolhas explícitas de tema claro/escuro. Arrastar uma área livre da titlebar do servidor move a janela e usa o encaixe do Aqueous para janelas flutuantes: laterais/base encaixam em metades, cantos em quartos e a borda superior maximiza. Janelas em tela cheia ocultam a barra. Menus e popups mantêm seu comportamento.
 
 O Pearl Settings não cria uma barra de título própria nesta sessão, evitando decoração duplicada; no modo de tema GTK, a janela usa um fundo opaco do tema. A opção de sincronização de bordas do Pearl sincroniza cores, não geometria: a build `aqueous-cpu` de compatibilidade desativa os efeitos Vulkan e mantém cantos quadrados. Cantos arredondados no compositor exigem Aqueous com efeitos Vulkan habilitados.
 

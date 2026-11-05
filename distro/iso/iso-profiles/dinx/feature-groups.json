@@ -49,6 +49,8 @@
       "iso": true,
       "packages": [
         "adw-gtk-theme",
+        "dconf",
+        "gsettings-desktop-schemas",
         "blueman",
         "bluez",
         "bluez-utils",

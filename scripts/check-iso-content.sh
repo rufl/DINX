@@ -348,10 +348,13 @@ required_paths=(
   usr/share/dintor/styles/dintor-dark.xml
   usr/share/dintor/styles/dintor-light.xml
   usr/bin/calamares
+  usr/bin/dconf
+  usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
   usr/local/libexec/dinx-aqueous-pearl
+  usr/local/libexec/dinx-gtk-dark-mode-seed
   usr/local/libexec/dinx-aqueous-init
   usr/local/libexec/dinx-session-supervisor
   usr/bin/dbus-send
@@ -597,6 +600,8 @@ for graphics_module in virtio-gpu vmwgfx; do
     || fail "ISO kernel DRM module is missing for VM compatibility: $graphics_module"
 done
 grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
+grep -Fq '/usr/local/libexec/dinx-gtk-dark-mode-seed' <<<"$aqueous_launcher" \
+  || fail 'DINX Aqueous session does not seed the system dark preference for GTK/libadwaita'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'

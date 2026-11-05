@@ -26,7 +26,7 @@ source distro/packages/paru/source.env
 source distro/packages/shelly/source.env
 
 [[ "$TOPGRADE_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid topgrade version: $TOPGRADE_VERSION"
-[[ "$TOPGRADE_SOURCE_URL" == *"/topgrade-${TOPGRADE_VERSION}-x86_64-unknown-linux-musl.tar.gz" ]] \
+[[ "$TOPGRADE_SOURCE_URL" == *"/download/v${TOPGRADE_VERSION}/topgrade-v${TOPGRADE_VERSION}-x86_64-unknown-linux-musl.tar.gz" ]] \
   || fail 'topgrade release URL does not match the pinned version'
 [[ "$TOPGRADE_SOURCE_B2" =~ ^[0-9a-f]{128}$ ]] || fail 'topgrade release BLAKE2 checksum is invalid'
 grep -Fq '. "$source_env"' distro/packages/topgrade/PKGBUILD \
@@ -60,7 +60,7 @@ aur_sources=(
 shelly_pkgbuild=distro/packages/shelly/PKGBUILD
 shelly_aur_revision=f89d773125357baaa1d2fae715286ce9e00e2cb4
 grep -Fq "_aur_revision='${shelly_aur_revision}'" "$shelly_pkgbuild" || fail 'shelly AUR sources are not pinned to the verified revision'
-resolved_shelly_sources=$(bash -c 'source "$1"; printf "%s\n" "${source[@]}"' _ "$shelly_pkgbuild")
+resolved_shelly_sources=$(bash -c 'startdir=$(dirname "$1"); source "$1"; printf "%s\n" "${source[@]}"' _ "$shelly_pkgbuild")
 for source_file in "${aur_sources[@]}"; do
   grep -Fq "${source_file}?h=${shelly_aur_revision}" <<<"$resolved_shelly_sources" || fail "shelly source is not pinned to the verified AUR revision: $source_file"
 done

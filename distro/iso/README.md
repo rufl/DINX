@@ -108,15 +108,16 @@ The livefs adds the live-only `dinx-live-autologin` dinit package. It enables gr
 
 `iso-profiles/dinx/feature-groups.json` records the foundation, desktop, gaming, hardware and optional package groups without replacing Artix's `profile.yaml`. The CI builder signs every locally built package and the temporary `dinx` repository database with an ephemeral key, checks package signatures and duplicate archive paths, and records the immutable package snapshot in `build-metadata.txt`. This is build qualification only; the production pacman repository key and installed-system update channel remain separate release prerequisites.
 
-The DINX package-source refresh is intended to open weekly reviewed pull
-requests rather than changing pins directly. After a reviewed change is merged,
-custom packages can publish to a separate signed rolling pacman repository at
-the GitHub Release tag `dinx-packages-latest`, independently of ISO publication.
-This update workflow and channel are not yet confirmed as run or published.
-`dinx-keyring` configures `[dinx]` and the editable
+The source tree configures a weekly upstream-pin refresh at Monday 04:17 UTC.
+It opens one reviewed PR for 13 release-based custom-package sources; the
+private Deetty commit and ZLS/Zig 0.16 pins remain manual. After merge, a
+separate signed package-only workflow publishes to the GitHub Release tag
+`dinx-packages-latest` without ISO assembly. These workflows are configured
+but have not yet been confirmed green or published. `dinx-keyring` configures
+the required-signature `[dinx]` repository and editable
 `/etc/pacman.d/dinx-mirrorlist`; Shelly uses pacman to sync and update packages.
-See the [release guide](../../docs/release.md) for operator signing-secret
-setup and manual key fingerprint verification/bootstrap.
+See the [release guide](../../docs/release.md) for signing-secret setup and
+manual key verification/bootstrap.
 
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and Noto Sans 10 are installed for the corresponding consumers, matching CachyOS's default GTK typography; Noto Sans Mono is used for fixed-width fields. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 

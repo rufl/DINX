@@ -3,7 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
-- Document the planned signed rolling DINX pacman repository, manual trust bootstrap and keyring setup, Shelly/pacman update flow, weekly reviewed source-pin PRs, and production signing-secret requirements; do not claim the workflow or rolling channel has already published.
+- Configure weekly reviewed upstream source-pin PRs for 13 release-based custom packages, a signed package-only GitHub Release publisher at `dinx-packages-latest`, and `dinx-keyring`/Shelly pacman integration. The workflows remain unverified until required production signing secrets are configured and a publication run succeeds.
 
 - Draw Aqueous titlebars above client content and extend the continuous rounded frame around titlebar and client surfaces. Double-clicking the titlebar toggles maximize/restore; restore returns the saved floating geometry, keeps focus, and raises the window. Pearl's `window_corner_radius` applies at the next Vulkan-effects Aqueous session; CPU-compatibility rendering remains square.
 - Default GNOME/libadwaita to dark mode only when dconf has no explicit user choice; honor xdg-decoration CSD requests and XWayland Motif CSD hints so client-owned titlebars do not overlap compositor titlebars, content offsets or controls.

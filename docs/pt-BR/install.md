@@ -175,13 +175,15 @@ O governor verifica o PCI `1002:13fe` antes de aplicar configurações. A prote�
 
 ## Atualizações seguras de pacotes
 
-As atualizações de pacotes customizados da DINX devem usar um repositório
-pacman assinado, publicado separadamente na URL móvel da GitHub Release
-`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. A
-atualização semanal das origens abre um pull request para revisão; alterações
-de pacotes integradas podem ser publicadas independentemente dos releases da
-ISO. Ainda não há confirmação de execução do workflow nem de publicação do
-canal móvel.
+O código da DINX agora configura um repositório pacman móvel e assinado na URL
+da GitHub Release
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. Toda
+segunda-feira às 04:17 UTC, o atualizador verifica 13 pins de origens com
+releases upstream e abre um pull request para revisão. O commit privado do
+Deetty e os pins acoplados do ZLS/Zig 0.16 continuam manuais. Alterações de
+pacotes integradas usam um workflow separado, assinado e sem montagem de ISO;
+elas não acionam a montagem P0. Os workflows estão configurados, mas ainda
+não foram confirmados verdes nem publicados.
 
 Quando `dinx-keyring` estiver disponível, instale-o e atualize pelo Shelly:
 
@@ -190,10 +192,10 @@ sudo pacman -Syu --needed dinx-keyring
 shelly sync
 ```
 
-Depois use o fluxo de atualização do Shelly para aplicar as atualizações
-disponíveis ou execute `sudo pacman -Syu`. O Shelly delega as operações de
-pacotes ao pacman, que verifica as assinaturas dos pacotes `[dinx]` com a
-política de assinatura obrigatória.
+Depois execute `shelly sync`, confira com `shelly list-updates all` e aplique
+com `shelly upgrade all`; `sudo pacman -Syu` é a alternativa direta. O Shelly
+delegará as operações ao pacman, que exige assinaturas válidas para o
+repositório `[dinx]`.
 
 Para preparar o sistema quando o repositório móvel estiver publicado, mas
 `dinx-keyring` ainda não estiver disponível, siga a verificação manual da

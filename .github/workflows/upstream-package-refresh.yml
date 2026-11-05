@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: write
   pull-requests: write
 
@@ -22,6 +23,7 @@ jobs:
       changed: ${{ steps.refresh.outputs.changed }}
       branch: ${{ steps.refresh.outputs.branch }}
       source_ref: ${{ steps.refresh.outputs.source_ref }}
+      validated: ${{ steps.refresh.outputs.validated }}
     steps:
       - name: Checkout DINX
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -60,20 +62,28 @@ jobs:
           printf 'changed=true\n' >> "$GITHUB_OUTPUT"
           printf 'branch=%s\n' "$branch" >> "$GITHUB_OUTPUT"
           printf 'source_ref=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          commit=$(git rev-parse HEAD)
+          gh workflow run contracts.yml --repo "$GITHUB_REPOSITORY" --ref "$branch"
+          contract_run=
+          for _ in {1..30}; do
+            contract_run=$(
+              gh run list --repo "$GITHUB_REPOSITORY" --workflow contracts.yml \
+                --branch "$branch" --event workflow_dispatch --limit 20 \
+                --json databaseId,headSha |
+                jq -r --arg sha "$commit" '[.[] | select(.headSha == $sha)] | .[0].databaseId // empty'
+            )
+            [[ -n "$contract_run" ]] && break
+            sleep 2
+          done
+          [[ -n "$contract_run" ]] || { printf 'Could not find dispatched package-source contract run\n' >&2; exit 1; }
+          gh run watch "$contract_run" --repo "$GITHUB_REPOSITORY" --exit-status --interval 10
+          printf 'validated=true\n' >> "$GITHUB_OUTPUT"
 
-  validate:
-    name: Validate refreshed package pins
-    needs: refresh
-    if: needs.refresh.outputs.changed == 'true'
-    uses: ./.github/workflows/contracts.yml
-    with:
-      source_ref: ${{ needs.refresh.outputs.source_ref }}
-    secrets: inherit
 
   open-review:
     name: Open reviewed source-update PR
-    needs: [refresh, validate]
-    if: needs.refresh.outputs.changed == 'true' && needs.validate.result == 'success'
+    needs: refresh
+    if: needs.refresh.outputs.changed == 'true' && needs.refresh.outputs.validated == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout DINX
@@ -88,7 +98,7 @@ jobs:
         run: |
           set -euo pipefail
           body=$(cat <<EOF
-          Automated upstream release-pin refresh, validated against commit \`${UPDATE_COMMIT}\` by the reusable DINX contract workflow.
+          Automated upstream release-pin refresh, validated against commit \`${UPDATE_COMMIT}\` by the DINX contract workflow.
 
           Review source versions, checksums, package changelogs, and runtime compatibility before merging. This workflow never writes package pins directly to \`main\`.
           EOF

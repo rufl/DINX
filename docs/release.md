@@ -56,13 +56,16 @@ Each alpha release contains:
 
 ## Signed rolling package repository
 
-DINX custom packages are planned for a signed rolling pacman repository hosted
-as GitHub Release assets under the rolling tag `dinx-packages-latest`, at
-`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. This
-repository is separate from ISO releases: after a package-source change is
-merged, it can be published independently of an ISO. The package-source refresh
-opens a weekly reviewed pull request; it does not update pins directly. This
-workflow and rolling channel are not yet confirmed as having run or published.
+DINX source now configures a signed rolling pacman repository hosted as GitHub
+Release assets under `dinx-packages-latest` at
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. The
+weekly updater checks 13 release-based upstream source pins every Monday at
+04:17 UTC and opens one reviewed pull request; it never writes pins to `main`.
+Deetty's private commit pin and the ZLS/Zig 0.16 coupled pins remain manually
+maintained. After package changes merge, a separate workflow builds and signs
+the package repository without assembling an ISO; package-only changes no
+longer trigger P0 ISO assembly. These workflows are configured but have not
+yet been confirmed green or published to the rolling release.
 
 `dinx-keyring` configures the `[dinx]` repository with required package
 signatures and `/etc/pacman.d/dinx-mirrorlist`. That editable mirrorlist lets
@@ -133,10 +136,10 @@ Refresh databases and install the keyring when it becomes available:
 sudo pacman -Syu --needed dinx-keyring
 ```
 
-After setup, Shelly uses pacman to synchronize and update packages; use
-`shelly sync` to synchronize databases, then Shelly's update flow (or
-`sudo pacman -Syu`) to apply updates. Required signatures make pacman reject
-unsigned or untrusted repository packages.
+After setup, Shelly uses pacman and the `[dinx]` repository for package updates:
+run `shelly sync`, review with `shelly list-updates all`, then apply with
+`shelly upgrade all` (or `sudo pacman -Syu`). Required signatures make pacman
+reject unsigned or untrusted repository packages.
 
 The currently documented tagged-release workflow may also attach signed
 repository assets to an ISO release. Those assets do not establish that the

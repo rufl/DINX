@@ -54,15 +54,17 @@ Cada release alpha contém:
 
 ## Repositório móvel de pacotes assinado
 
-Os pacotes customizados da DINX estão planejados para um repositório pacman
-móvel e assinado, hospedado como assets de uma GitHub Release sob a tag móvel
-`dinx-packages-latest`, em
-`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. Esse
-repositório é separado dos releases da ISO: após a integração de uma alteração
-de pacote, ela pode ser publicada independentemente de uma ISO. A atualização
-das origens dos pacotes abre um pull request semanal para revisão; não altera
-os pins diretamente. Ainda não há confirmação de execução desse workflow nem
-de publicação desse canal móvel.
+O código da DINX agora configura um repositório pacman móvel e assinado,
+hospedado como assets de GitHub Release sob `dinx-packages-latest`, em
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. O
+atualizador semanal verifica 13 pins de origens com releases upstream toda
+segunda-feira às 04:17 UTC e abre um pull request para revisão; nunca altera
+pins diretamente na `main`. O commit privado do Deetty e os pins acoplados do
+ZLS/Zig 0.16 continuam mantidos manualmente. Após integrar alterações de
+pacotes, um workflow separado compila e assina o repositório sem montar uma
+ISO; alterações somente de pacotes não acionam mais a montagem P0 da ISO.
+Esses workflows estão configurados, mas ainda não foram confirmados verdes nem
+publicados no release móvel.
 
 `dinx-keyring` configura o repositório `[dinx]` com assinaturas de pacotes
 obrigatórias e `/etc/pacman.d/dinx-mirrorlist`. Esse arquivo de mirrors
@@ -135,11 +137,10 @@ Atualize os bancos e instale o keyring quando estiver disponível:
 sudo pacman -Syu --needed dinx-keyring
 ```
 
-Depois da configuração, o Shelly usa pacman para sincronizar e atualizar
-pacotes; use `shelly sync` para sincronizar os bancos e, em seguida, o fluxo de
-atualização do Shelly (ou `sudo pacman -Syu`) para aplicar atualizações.
-Assinaturas obrigatórias fazem o pacman rejeitar pacotes não assinados ou não
-confiáveis.
+Depois da configuração, o Shelly usa pacman e o repositório `[dinx]` para
+atualizar pacotes: execute `shelly sync`, confira com `shelly list-updates all`
+e aplique com `shelly upgrade all` (ou `sudo pacman -Syu`). As assinaturas
+obrigatórias fazem o pacman rejeitar pacotes não assinados ou não confiáveis.
 
 O workflow de releases marcados atualmente documentado também pode anexar assets
 de repositório assinado a um release da ISO. Esses assets não significam que o

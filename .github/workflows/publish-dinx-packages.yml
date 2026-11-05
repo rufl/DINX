@@ -192,9 +192,11 @@ jobs:
           printf 'package_artifacts=%s\n' "$package_dirty" >> "$GITHUB_OUTPUT"
           printf 'build_data=%s\n' "$data_dirty" >> "$GITHUB_OUTPUT"
           printf 'toolchains=%s\n' "$toolchains_dirty" >> "$GITHUB_OUTPUT"
-          find dist/.cache/dinx -maxdepth 2 -type f \
-            \( -name '.dinx-package-cache-updated-*' -o -name '.dinx-build-data-updated-*' \
-              -o -name '.dinx-toolchain-cache-updated-*' \) -delete
+          if [[ -d dist/.cache/dinx ]]; then
+            find dist/.cache/dinx -maxdepth 2 -type f \
+              \( -name '.dinx-package-cache-updated-*' -o -name '.dinx-build-data-updated-*' \
+                -o -name '.dinx-toolchain-cache-updated-*' \) -delete
+          fi
       - name: Save verified DINX package artifacts
         if: always() && steps.package-build.outcome != 'skipped' && steps.cache-dirty.outputs.package_artifacts == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0

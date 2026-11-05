@@ -177,12 +177,13 @@ The governor checks PCI `1002:13fe` before applying settings. The guard above pr
 
 ## Secure package updates
 
-DINX custom-package updates are intended to use a separately published signed
-pacman repository at the rolling GitHub Release URL
-`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. A weekly
-package-source refresh opens a reviewed pull request; merged package changes
-can publish independently of ISO releases. The workflow and rolling channel
-are not yet confirmed as run or published.
+DINX source now configures a signed rolling pacman repository at the GitHub
+Release URL `https://github.com/rufl/DINX/releases/download/dinx-packages-latest`.
+Every Monday at 04:17 UTC, the updater checks 13 release-based upstream source
+pins and opens one reviewed pull request. Deetty's private commit and the
+ZLS/Zig 0.16 coupled pins remain manual. Merged package changes use a separate
+signed package-only workflow; they do not trigger P0 ISO assembly. The workflows
+are configured but are not yet confirmed green or published.
 
 Once `dinx-keyring` is available, install it and update through Shelly:
 
@@ -191,9 +192,10 @@ sudo pacman -Syu --needed dinx-keyring
 shelly sync
 ```
 
-Then use Shelly's update flow to apply available updates, or run `sudo pacman
--Syu`. Shelly delegates package operations to pacman, so `[dinx]` package
-signatures are checked under pacman's required-signature policy.
+Then run `shelly sync`, review updates with `shelly list-updates all`, and apply
+them with `shelly upgrade all`; `sudo pacman -Syu` is the direct alternative.
+Shelly delegates package operations to pacman, which requires valid signatures
+for the `[dinx]` repository.
 
 For bootstrap when the rolling repository is published but `dinx-keyring` is
 not yet available, follow the manual public-key verification and repository

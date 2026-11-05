@@ -55,6 +55,19 @@ grep -Fq '"$GAPLESS_SOURCE_URL"' "$gapless_recipe" \
   || fail 'Gapless package URL is not wired to source.env'
 grep -Fq '"$GAPLESS_SOURCE_B2"' "$gapless_recipe" \
   || fail 'Gapless package checksum is not wired to source.env'
+matugen_recipe="$root/distro/packages/matugen/PKGBUILD"
+matugen_source="$root/distro/packages/matugen/source.env"
+source "$matugen_source"
+[[ "$MATUGEN_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Matugen version: $MATUGEN_VERSION"
+[[ "$MATUGEN_SOURCE_URL" == "$MATUGEN_REPOSITORY/archive/refs/tags/v${MATUGEN_VERSION}.tar.gz" ]] \
+  || fail 'Matugen source URL does not match its version pin'
+[[ "$MATUGEN_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Matugen source checksum is invalid'
+grep -Fq 'pkgver="$MATUGEN_VERSION"' "$matugen_recipe" \
+  || fail 'Matugen package version is not wired to source.env'
+grep -Fq '"$MATUGEN_SOURCE_URL"' "$matugen_recipe" \
+  || fail 'Matugen source URL is not wired to source.env'
+grep -Fq '"$MATUGEN_SOURCE_SHA256"' "$matugen_recipe" \
+  || fail 'Matugen source checksum is not wired to source.env'
 grep -Fqx '  gst-plugins-base' "$gapless_recipe" || fail 'Gapless package does not require GStreamer base codecs'
 grep -Fqx '  gst-plugins-good' "$gapless_recipe" || fail 'Gapless package does not require GStreamer good codecs'
 if grep -Fqx 'DBusActivatable=true' "$local_apps/com.github.neithern.g4music.desktop"; then

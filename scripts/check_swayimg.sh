@@ -17,7 +17,7 @@ source "$source_env"
   || { printf 'swayimg_contract: source URL does not match the pinned version\n' >&2; exit 1; }
 [[ "$SWAYIMG_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
 grep -Fq 'pkgver="$SWAYIMG_VERSION"' "$pkgbuild"
-grep -Fq '"$SWAYIMG_SOURCE_URL"' "$pkgbuild"
+grep -Fq '${SWAYIMG_SOURCE_URL}' "$pkgbuild"
 grep -Fq '"$SWAYIMG_SOURCE_SHA256"' "$pkgbuild"
 grep -Fq "sha256sums=(\"\$SWAYIMG_SOURCE_SHA256\")" "$pkgbuild"
 grep -Fq '    - swayimg' "$profile"

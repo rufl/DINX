@@ -79,10 +79,16 @@ for live_path in \
   etc/dinit.d/boot.d/dinx-live-autologin \
   etc/dinit.d/root-ro \
   etc/dinit.d/early-root-rw.target \
-  usr/local/libexec/dinx-live-autologin; do
+  usr/local/libexec/dinx-live-autologin \
+  etc/issue; do
   grep -Fq "squashfs-root/$live_path" <<<"$livefs_manifest" \
     || fail "missing livefs path: $live_path"
 done
+live_cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/issue)
+grep -Fq 'DINX Linux' <<<"$live_cli_issue" || fail 'live CLI login banner is not branded as DINX Linux'
+if grep -Eiq 'Artix' <<<"$live_cli_issue"; then
+  fail 'live CLI login banner still identifies Artix'
+fi
 # The livefs is an overlay; greetd's service file is inherited from rootfs.
 grep -Fq 'squashfs-root/etc/dinit.d/boot.d/greetd -> /etc/dinit.d/greetd' <<<"$livefs_manifest" \
   || fail 'livefs greetd boot link does not target the inherited rootfs service'

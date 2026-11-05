@@ -76,8 +76,8 @@ class PlymouthScreenTests(unittest.TestCase):
             self.assertEqual(read_ppm(path), (800, 600, pixels))
 
     def test_grub_menu_ocr_is_identified(self) -> None:
-        self.assertTrue(has_grub_menu("Start DINX live (ISO/DVD)"))
-        self.assertTrue(has_grub_menu("Start DINY LIV\nStart DINY\n(USB/HDD"))
+        self.assertTrue(has_grub_menu("Start DINX Linux"))
+        self.assertTrue(has_grub_menu("Boot to the Firmware/BIOS"))
         self.assertTrue(has_grub_menu("Advanced options"))
         self.assertFalse(has_grub_menu("Pearl Greeter"))
 

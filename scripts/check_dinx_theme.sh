@@ -22,6 +22,7 @@ qt_palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.confi
 qt_palette_seed="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-qt6ct-palette-seed"
 brand_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg"
 cli_issue="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/issue"
+live_cli_issue="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/etc/issue"
 brand_ray_source="$repo_root/design/brand/dinx-ray-mark.svg"
 brand_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.svg"
 fastfetch_logo="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.txt"
@@ -60,13 +61,18 @@ for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg"
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
-  "$live_grub_cfg" "$live_grub_kernels" "$live_grub_variable"; do
+  "$live_grub_cfg" "$live_grub_kernels" "$live_grub_variable" "$live_cli_issue"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 grep -Fq 'DINX Linux' "$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'
 if grep -Eiq 'Artix' "$cli_issue"; then
   fail 'CLI login banner still identifies Artix'
 fi
+grep -Fq 'DINX Linux' "$live_cli_issue" || fail 'live CLI login banner is not branded as DINX Linux'
+if grep -Eiq 'Artix' "$live_cli_issue"; then
+  fail 'live CLI login banner still identifies Artix'
+fi
+cmp -s "$cli_issue" "$live_cli_issue" || fail 'live and installed CLI login banners differ'
 
 python - "$palette" <<'PY'
 import json

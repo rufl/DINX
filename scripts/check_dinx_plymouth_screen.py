@@ -78,10 +78,6 @@ def read_ppm(path: Path) -> tuple[int, int, bytes]:
     return width, height, pixels
 
 
-        self.assertTrue(has_grub_menu("Start DINX Linux"))
-        self.assertTrue(has_grub_menu("Boot to the Firmware/BIOS"))
-        self.assertTrue(has_grub_menu("Advanced options"))
-        self.assertFalse(has_grub_menu("Pearl Greeter"))
 
     path = Path(argv[1])
     language = argv[2] if len(argv) == 3 else "eng"

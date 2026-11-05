@@ -35,7 +35,10 @@ printf 'unmounted\n' >"$PORI_SMOKE_STATE/status"
 EOF
 cat >"$fakebin/sleep" <<'EOF'
 #!/bin/sh
-exit 0
+set -eu
+if [ "$(cat "$PORI_SMOKE_STATE/status")" = mounted ]; then
+  : >"$PORI_SMOKE_STATE/mounted_wait"
+fi
 EOF
 chmod +x "$fakebin"/*
 
@@ -48,11 +51,12 @@ export PORI_SLEEP_BIN="$fakebin/sleep"
 "$service" "$tmp/source" "$tmp/mnt" ntfs3 defaults,noatime &
 pid=$!
 for _ in $(seq 1 50); do
-  if grep -Fqx mounted "$state/status"; then
+  if [[ -e "$state/mounted_wait" ]]; then
     break
   fi
   sleep 0.01
 done
+test -e "$state/mounted_wait"
 grep -Fqx mounted "$state/status"
 kill -TERM "$pid"
 if wait "$pid"; then

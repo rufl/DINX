@@ -70,7 +70,7 @@ provides=('pearl-capture-picker=0.3.0' 'pearl-greeter=0.3.0')
 conflicts=('pearl-git')
 options=('!strip' '!debug')
 source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch" "server-decorations.patch" "dinx-first-run-wizard.c")
-sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' '36f10d7ac5f4637ccbaadb612961efc8536c0f389170bf0478fe1b8d6595f8de' 'b9c6ce39cc3db5b3b4d967bc7b9bb334a946d673d54271ae45c9b7011d6a759f')
+sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' '9235014afbf1b379376d1c8c1660b3b35aa195a70d88e8a0ab55c0408666166d' 'b9c6ce39cc3db5b3b4d967bc7b9bb334a946d673d54271ae45c9b7011d6a759f')
 install=pearl.install
 
 prepare() {

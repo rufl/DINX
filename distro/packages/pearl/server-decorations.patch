@@ -108,13 +108,14 @@
 diff --git a/src/config/preferences.zig b/src/config/preferences.zig
 --- a/src/config/preferences.zig
 +++ b/src/config/preferences.zig
-@@ -83,5 +83,6 @@ pub const Preferences = struct {
+@@ -90,6 +90,7 @@ pub const Preferences = struct {
      idle: @import("../services/idle_policy.zig").Config = .{},
      theme: Theme = .{},
      qt: @import("../theme/qt.zig").Config = .{},
 +    window_corner_radius: u8 = 15,
      matugen: @import("../theme/matugen_profiles.zig").Config = .{},
      wallpaper: Wallpaper = .{},
+     font: []const u8 = "",
 @@ -132,2 +133,3 @@ pub const Preferences = struct {
          try self.qt.validate();
 +        if (self.window_corner_radius > 32) return error.InvalidWindowCornerRadius;
@@ -122,15 +123,21 @@ diff --git a/src/config/preferences.zig b/src/config/preferences.zig
 diff --git a/src/settings/preferences_view.zig b/src/settings/preferences_view.zig
 --- a/src/settings/preferences_view.zig
 +++ b/src/settings/preferences_view.zig
-@@ -115,1 +115,2 @@ pub const View = struct {
+@@ -106,4 +110,5 @@ pub const View = struct {
      sync_borders: *gtk.Switch = undefined,
 +    window_radius: *gtk.SpinButton = undefined,
-@@ -247,2 +247,5 @@ pub fn create(window: *gtk.Window, host: *gtk.Box, editor: *Editor, german: bool) !*View {
+     variant: *gtk.DropDown,
+     source: *gtk.DropDown,
+     fit: *gtk.DropDown,
+@@ -247,5 +247,8 @@ pub fn create(window: *gtk.Window, host: *gtk.Box, editor: *Editor, german: bool) !*View {
          const sync_borders = toggle(apps_section.body, if (german) "Fensterrahmen folgen dem Pearl-Design" else "Window borders follow Pearl theme");
 +        const window_radius = gtk.SpinButton.newWithRange(0, 32, 1);
 +        row(apps_section.body, if (german) "Aqueous-Fensterradius (0: eckig)" else "Aqueous window corner radius (0: square)", window_radius.as(gtk.Widget));
 +        apps_section.body.append(w.label(if (german) "Aqueous übernimmt diesen Wert beim nächsten Sitzungsstart; Qt-Eckenradius bleibt separat. CPU-Kompatibilitätsbuilds bleiben eckig." else "Aqueous reads this value at the next session start; the Qt corner radius remains separate. CPU compatibility builds stay square.", "pearl-secondary").as(gtk.Widget));
-        apps_section.body.append(w.label(if (german) "Synchronisiert Fensterrahmenfarben mit dem Pearl-Design; im GTK-Modus pausiert die Synchronisierung." else "Synchronizes window-border colors with the Pearl theme; GTK mode pauses synchronization.", "pearl-secondary").as(gtk.Widget));
+         apps_section.body.append(w.label(if (german) "Synchronisiert Fensterrahmenfarben mit dem Pearl-Design; im GTK-Modus pausiert die Synchronisierung." else "Synchronizes window-border colors with the Pearl theme; GTK mode pauses synchronization.", "pearl-secondary").as(gtk.Widget));
+         const qt_card = card(apps_section.body);
+         qt_card.append(w.label(if (german) "Qt-Anwendungen · QtEngine + Darkly" else "Qt applications · QtEngine + Darkly", "settings-row-title").as(gtk.Widget));
+         qt_card.append(w.label(if (german) "QtEngine verwendet eine gemeinsame Konfiguration für Qt 5 und Qt 6. Ausgewählte Prüfungen kontrollieren die installierten Laufzeiten. GTK-Modus verwendet statische Pearl-Farben. Deaktivieren stellt unveränderte frühere Werte wieder her." else "QtEngine shares one configuration across Qt 5 and Qt 6. Selected checks verify the installed runtimes. Changes affect this user account. GTK mode uses Pearl's static colors. Disabling restores previous values that have not been edited elsewhere.", "pearl-secondary").as(gtk.Widget));
 @@ -338,2 +338,3 @@ pub fn create(window: *gtk.Window, host: *gtk.Box, editor: *Editor, german: bool) !*View {
          self.sync_borders = sync_borders;
 +        self.window_radius = window_radius;

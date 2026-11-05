@@ -5,7 +5,9 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 
 - Desenhar titlebars do Aqueous acima do conteúdo do cliente e estender o contorno arredondado contínuo por titlebar e conteúdo. O duplo clique alterna maximizar/restaurar; restaurar recupera a geometria flutuante salva, mantém o foco e eleva a janela. `window_corner_radius` do Pearl passa a valer na próxima sessão Aqueous com efeitos Vulkan; o renderer CPU de compatibilidade continua quadrado.
-- Ocultar a entrada upstream do Calamares/Artix e iniciar `Instalar DINX` por um helper polkit que preserva Wayland/D-Bus e mostra erros de inicialização.
+- Ocultar a entrada upstream do Calamares/Artix e iniciar `Instalar DINX` por um helper polkit que preserva Wayland/D-Bus e mostra erros de inicialização; semear um atalho `Instalar DINX` na área de trabalho do usuário live e dos novos usuários instalados.
+- Incluir `squashfs-tools` na rootfs live porque o `unpackfs` do Calamares precisa de `unsquashfs`; remover essa dependência exclusiva do instalador do sistema instalado e verificar os dois casos nos checks da ISO e do smoke de instalação.
+
 
 - Persistir o log completo da build local e anexá-lo aos diagnósticos do P0; `dinx-build-timing` separa preparação de fontes, contratos, pré-requisitos, builder, pacotes, repositório, montagem e qualificação. Reutilizar imagem Artix com digest fixado/refresh diário, BuildKit no GitHub Actions, arquivos de pacotes validados e toolchains Zig verificadas. Versionar caches GitHub por execução para artifacts assinados, fontes makepkg, Cargo (registry/alvos), Zig e toolchains; salvar cada categoria somente quando seu marcador registra mudança. Manter só a chave atual por pacote no cache local e compilar hardware opcional em paralelo à montagem, incorporando-o ao banco assinado depois. O ganho ainda precisa ser medido num build completo quente.
 

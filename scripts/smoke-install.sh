@@ -164,8 +164,12 @@ mounted_run=true
 
 printf 'smoke-install: applying Calamares package removal contract\n'
 chroot "$target_dir" /usr/bin/pacman -R --noconfirm \
-  artix-live-base artix-live-dinit calamares calamares-extensions >/dev/null
-
+  artix-live-base artix-live-dinit calamares calamares-extensions squashfs-tools >/dev/null
+if chroot "$target_dir" /usr/bin/pacman -Q squashfs-tools >/dev/null 2>&1; then
+  fail 'Calamares-only squashfs-tools dependency remains in installed package database'
+fi
+[[ ! -e "$target_dir/usr/bin/unsquashfs" ]] \
+  || fail 'Calamares-only unsquashfs executable remains in installed system'
 printf 'smoke-install: running system-user provisioning before Calamares user creation\n'
 chroot "$target_dir" /usr/bin/esysusers
 printf 'smoke-install: creating the Calamares user and persistent fstab\n'

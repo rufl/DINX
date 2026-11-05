@@ -149,6 +149,7 @@ required_paths=(
   usr/share/plymouth/themes/dinx/dinx.plymouth
   usr/share/plymouth/themes/dinx/dinx.script
   usr/share/plymouth/themes/dinx/logo.png
+  usr/bin/unsquashfs
   etc/greetd/config.toml
   usr/local/libexec/dinx-graphics-environment.sh
   usr/local/libexec/dinx-pearl-greeter-host
@@ -198,6 +199,7 @@ required_paths=(
   etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
   etc/skel/.config/shikane/config.toml
+  etc/skel/Desktop/Install DINX.desktop
   usr/share/themes/DINX/gtk-3.0/gtk.css
   usr/share/themes/DINX/gtk-4.0/gtk.css
   usr/share/themes/DINX/index.theme
@@ -361,6 +363,7 @@ required_paths=(
   usr/bin/ps
   usr/share/applications/dinx-installer.desktop
   usr/share/applications/calamares.desktop
+  etc/skel/Desktop/Install DINX.desktop
   usr/local/bin/dinx-save-shikane-profile
   usr/local/bin/dinx-wdisplays
   usr/bin/brightnessctl
@@ -496,6 +499,8 @@ dintor_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" u
 grep -Fqx 'Name=Editor' <<<"$dintor_desktop" || fail 'Dintor desktop entry has the wrong launcher name'
 grep -Fqx 'Exec=dintor %F' <<<"$dintor_desktop" || fail 'Dintor desktop entry does not launch Dintor'
 grep -Fq '/var/lib/pacman/local/deetty-' <<<"$manifest" || fail 'Deetty package metadata is missing from the installed rootfs'
+grep -Fq '/var/lib/pacman/local/squashfs-tools-' <<<"$manifest" \
+  || fail 'SquashFS runtime package metadata is missing from the ISO rootfs'
 grep -Fq '/var/lib/pacman/local/ghostty-vt-runtime-' <<<"$manifest" || fail 'Ghostty VT-only runtime package metadata is missing from the installed rootfs'
 if grep -Eq '/var/lib/pacman/local/ghostty-[0-9][^/]*/' <<<"$manifest"; then
   fail 'full Ghostty terminal package metadata is present in the installed rootfs'
@@ -1043,6 +1048,14 @@ grep -Fqx 'NoDisplay=true' <<<"$calamares_desktop" || fail 'Calamares Artix laun
 if grep -Eiq 'Install Artix|Instalar Artix|^(Exec|TryExec)=' <<<"$calamares_desktop"; then
   fail 'Calamares desktop-ID mask retains an Artix identity or executable'
 fi
+installer_seed=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "etc/skel/Desktop/Install DINX.desktop")
+grep -Fq 'Name=Install DINX' <<<"$installer_seed" || fail 'live-user desktop shortcut English name is missing'
+grep -Fq 'Name[pt_BR]=Instalar DINX' <<<"$installer_seed" || fail 'live-user desktop shortcut Portuguese name is missing'
+grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' <<<"$installer_seed" || fail 'live-user desktop shortcut does not use the DINX launcher'
+live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
+grep -Fq 'xdg-user-dir DESKTOP' <<<"$live_session_launcher" || fail 'live session does not resolve the user desktop directory'
+grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' <<<"$live_session_launcher" || fail 'live session does not seed its pre-existing user from /etc/skel'
+grep -Fq 'mv -n "$installer_tmp" "$installer_desktop"' <<<"$live_session_launcher" || fail 'live installer shortcut seeding is not atomic and non-overwriting'
 deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
 grep -Fq 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop launcher is missing'
 grep -Fq 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty desktop URI command is incorrect'

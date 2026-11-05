@@ -10,6 +10,7 @@
         "btrfs-progs",
         "calamares",
         "calamares-extensions",
+        "squashfs-tools",
         "dinit",
         "dinit-rc",
         "dinitui",

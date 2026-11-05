@@ -13,7 +13,7 @@ opensnitch_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/s
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
-display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
+desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
@@ -95,10 +95,17 @@ grep -Fqx 'Name=Disks & Mounts' "$root/distro/packages/pori/PKGBUILD" || fail 'P
 grep -Fqx 'Name[pt_BR]=Discos e Montagens' "$root/distro/packages/pori/PKGBUILD" || fail 'Pori Portuguese desktop name is incorrect'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English desktop name is incorrect'
 grep -Fqx 'Name[pt_BR]=Ajustes de Tela' "$display_launcher" || fail 'Display launcher Portuguese desktop name is incorrect'
-grep -Fqx 'Name=Install DINX' "$dinx_installer" || fail 'DINX installer English desktop name is incorrect'
-grep -Fqx 'Name[pt_BR]=Instalar DINX' "$dinx_installer" || fail 'DINX installer Portuguese desktop name is incorrect'
+grep -Fqx 'Name=Install DINX' "$dinx_installer" || fail 'DINX installer English desktop name is missing'
+grep -Fqx 'Name[pt_BR]=Instalar DINX' "$dinx_installer" || fail 'DINX installer Portuguese desktop name is missing'
 grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' "$dinx_installer" || fail 'DINX installer does not use its session-aware launcher'
 grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' "$dinx_installer" || fail 'DINX installer launcher prerequisite is incorrect'
+[[ -f "$desktop_installer" ]] || fail 'live-user skeleton omits the Install DINX desktop shortcut'
+grep -Fqx 'Name=Install DINX' "$desktop_installer" || fail 'desktop shortcut English name is missing'
+grep -Fqx 'Name[pt_BR]=Instalar DINX' "$desktop_installer" || fail 'desktop shortcut Portuguese name is missing'
+grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut does not use the session-aware launcher'
+grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut launcher prerequisite is incorrect'
+grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not resolve the provisioned desktop directory'
+grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not seed the installer shortcut from /etc/skel'
 installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
 [[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
 grep -Fqx '    - zenity' "$profile" || fail 'profile is missing the installer error-dialog dependency'

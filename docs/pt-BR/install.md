@@ -177,8 +177,8 @@ O governor verifica o PCI `1002:13fe` antes de aplicar configurações. A prote�
 
 A partir do desktop live:
 
-1. Abra o launcher de aplicativos e escolha **Instalar DINX**; a entrada duplicada do Calamares/Artix fica oculta.
-2. Se a entrada do launcher não estiver disponível, execute `/usr/local/libexec/dinx-installer` em um terminal da sessão desktop live; o helper preserva Wayland/D-Bus para o polkit, verifica os pré-requisitos e mostra erros de autorização ou inicialização.
+1. Abra o atalho **Instalar DINX** na área de trabalho ou escolha **Instalar DINX** no launcher de aplicativos; a entrada duplicada upstream do Calamares fica oculta.
+2. Se nenhum dos atalhos estiver disponível, execute `/usr/local/libexec/dinx-installer` em um terminal da sessão desktop live; o helper preserva Wayland/D-Bus para o polkit, verifica os pré-requisitos e mostra erros de autorização ou inicialização.
 3. Leia **Opções de instalação / Install choices** antes de escolher as partições.
 4. Escolha o layout adequado à sua intenção:
    - **Apagar disco** cria o layout automaticamente e apaga todos os dados do disco selecionado. Escolha somente se essa for sua intenção; confira o modelo e o tamanho do disco.

@@ -179,8 +179,8 @@ The governor checks PCI `1002:13fe` before applying settings. The guard above pr
 
 From the live desktop:
 
-1. Open the application launcher and choose **Install DINX**; the duplicate upstream Artix Calamares entry is hidden.
-2. If the launcher entry is unavailable, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it preserves the Wayland/D-Bus session for polkit, checks prerequisites and displays authorization or startup errors.
+1. Open the **Install DINX** desktop shortcut or choose **Install DINX** from the application launcher; the duplicate upstream Calamares entry is hidden.
+2. If neither shortcut is available, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it preserves the Wayland/D-Bus session for polkit, checks prerequisites and displays authorization or startup errors.
 3. Read **Install choices / Opções de instalação** before choosing partitions.
 4. Choose the layout that matches your intent:
    - **Erase disk** creates the layout automatically and erases all data on the selected disk. Choose it only if intended; verify the disk model and size.

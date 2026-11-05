@@ -112,9 +112,14 @@ require_text 'hide-back-and-next-during-exec: true' "$settings_conf"
 require_text 'update_db: false' "$packages_conf"
 require_text 'update_system: false' "$packages_conf"
 require_text '  - remove:' "$packages_conf"
+require_text '    - squashfs-tools' "$packages_conf"
+require_text '    - squashfs-tools' "$profile_yaml"
+jq -e '.groups.foundation.packages | index("squashfs-tools") != null' "$feature_groups" >/dev/null \
+  || fail 'squashfs-tools is missing from the ISO foundation package group'
 if grep -R -nF 'update-mirrorlist' "$calamares_root" >/dev/null; then
   fail 'Calamares configuration invokes a network mirror update'
 fi
 require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
+require_text 'sourcefs: "squashfs"' "$unpackfs_conf"
 
 printf 'calamares_partition_contract=guided_choices=true no_swap_default=true safe_partition_default=true layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true ntfs3_base_rw=true ntfs3_legacy_optional=true startup_smoke=true\n'

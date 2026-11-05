@@ -1,0 +1,62 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  printf 'dinx-seed-aqueous-live-effects: expected one Aqueous wm.toml path\n' >&2
+  exit 2
+fi
+
+config=$1
+if [ ! -f "$config" ] || [ -L "$config" ]; then
+  printf 'dinx-seed-aqueous-live-effects: config must be a regular file: %s\n' "$config" >&2
+  exit 1
+fi
+
+temporary=$(mktemp "${config}.XXXXXX")
+trap 'rm -f -- "$temporary"' EXIT HUP INT TERM
+awk '
+function flush_section() {
+  if (section == "blur" && !blur_enabled) {
+    print "enabled = false"
+    blur_enabled = 1
+  } else if (section == "opacity" && !opacity_enabled) {
+    print "enabled = false"
+    opacity_enabled = 1
+  }
+}
+{
+  line = $0
+  trimmed = line
+  sub(/^[[:space:]]*/, "", trimmed)
+  if (trimmed ~ /^\[[^]]+\][[:space:]]*(#.*)?$/) {
+    flush_section()
+    section = trimmed
+    sub(/[[:space:]]*#.*/, "", section)
+    sub(/^\[/, "", section)
+    sub(/\][[:space:]]*$/, "", section)
+    blur_enabled = 0
+    opacity_enabled = 0
+    if (section == "blur") blur_section = 1
+    if (section == "opacity") opacity_section = 1
+  }
+  if ((section == "blur" || section == "opacity") && line ~ /^[[:space:]]*enabled[[:space:]]*=/) {
+    equals = index(line, "=")
+    prefix = substr(line, 1, equals)
+    value = substr(line, equals + 1)
+    comment_at = index(value, "#")
+    comment = comment_at ? substr(value, comment_at) : ""
+    line = prefix " false"
+    if (comment != "") line = line " " comment
+    if (section == "blur") blur_enabled = 1
+    if (section == "opacity") opacity_enabled = 1
+  }
+  print line
+}
+END {
+  flush_section()
+  if (!blur_section) print "\n[blur]\nenabled = false"
+  if (!opacity_section) print "\n[opacity]\nenabled = false"
+}' "$config" >"$temporary"
+chmod --reference="$config" "$temporary"
+mv -f -- "$temporary" "$config"
+trap - EXIT HUP INT TERM

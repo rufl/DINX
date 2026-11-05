@@ -13,6 +13,7 @@ graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/
 greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
 gtk_dark_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gtk-dark-mode-seed"
+effects_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-effects"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 aqueous_decoration_patch="$root/distro/packages/aqueous/server-decorations.patch"
 gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
@@ -47,7 +48,7 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$gtk_dark_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$aqueous_wrapper" "$gtk_dark_seed" "$effects_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
@@ -235,14 +236,68 @@ for gtk_settings in "$gtk3_system" "$gtk3_skel" "$gtk4_system" "$gtk4_skel"; do
 done
 grep -Fq 'aqueous/layout.toml' "$aqueous_wrapper" \
   || fail 'Aqueous session does not seed the DINX floating layout'
+aqueous_wm_seed_block=$(awk '
+  /^if / && /aqueous\/wm\.toml/ { capture = 1 }
+  capture { print }
+  capture && /^fi$/ { exit }
+' "$aqueous_wrapper")
+grep -Fq '[ ! -e "$config_home/aqueous/wm.toml" ]' <<<"$aqueous_wm_seed_block" \
+  || fail 'Aqueous session may overwrite an existing live-user window-manager config'
+grep -Fq 'install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
+  || fail 'Aqueous session does not seed the system window-manager config for a new user'
+grep -Fq 'dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
+  || fail 'Aqueous session does not disable live-only blur and opacity only for a new user'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
   || fail 'Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
   || fail 'session supervisor does not launch the Pearl first-run wrapper'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
+[[ -x "$effects_seed" ]] || fail 'live Aqueous effects seed helper is not executable'
+sh -n "$effects_seed" || fail 'live Aqueous effects seed helper has invalid shell syntax'
 pearl_shell_test=$(mktemp -d)
 trap 'rm -rf "$pearl_shell_test"' EXIT
 mkdir -p "$pearl_shell_test/bin" "$pearl_shell_test/config/pearl"
+mkdir -p "$pearl_shell_test/config/aqueous"
+cat >"$pearl_shell_test/config/aqueous/wm.toml" <<'TOML'
+[blur]
+enabled = true # preserve blur note
+radius = 9
+[unrelated]
+enabled = true
+[opacity]
+enabled = true # preserve opacity note
+value = 0.8
+TOML
+chmod 0640 "$pearl_shell_test/config/aqueous/wm.toml"
+"$effects_seed" "$pearl_shell_test/config/aqueous/wm.toml"
+[[ $(stat -c '%a' "$pearl_shell_test/config/aqueous/wm.toml") == 640 ]] \
+  || fail 'live Aqueous effects seed did not preserve config permissions'
+grep -Fqx 'enabled = false # preserve blur note' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous effects seed did not disable backdrop blur or preserve its comment'
+grep -Fqx 'enabled = false # preserve opacity note' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous effects seed did not disable window opacity or preserve its comment'
+grep -Fqx 'radius = 9' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous effects seed changed the blur radius'
+grep -Fqx 'value = 0.8' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous effects seed changed the opacity value'
+grep -Fqx 'enabled = true' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous effects seed changed an unrelated enabled setting'
+effects_seed_hash=$(sha256sum "$pearl_shell_test/config/aqueous/wm.toml")
+"$effects_seed" "$pearl_shell_test/config/aqueous/wm.toml"
+[[ $(sha256sum "$pearl_shell_test/config/aqueous/wm.toml") == "$effects_seed_hash" ]] \
+  || fail 'live Aqueous effects seed is not idempotent'
+printf '[unrelated]\nvalue = 1\n' >"$pearl_shell_test/aqueous-wm-missing-sections.toml"
+"$effects_seed" "$pearl_shell_test/aqueous-wm-missing-sections.toml"
+awk '
+  /^\[blur\]$/ { section = "blur"; next }
+  /^\[opacity\]$/ { section = "opacity"; next }
+  /^\[/ { section = "" }
+  section == "blur" && $0 == "enabled = false" { blur = 1 }
+  section == "opacity" && $0 == "enabled = false" { opacity = 1 }
+  END { exit !(blur && opacity) }
+' "$pearl_shell_test/aqueous-wm-missing-sections.toml" \
+  || fail 'live Aqueous effects seed did not add disabled missing sections'
+printf 'aqueous_live_effects_seed blur=disabled opacity=disabled preserves_settings=true idempotent=true\n'
 cat >"$pearl_shell_test/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"

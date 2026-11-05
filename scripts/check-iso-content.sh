@@ -239,6 +239,7 @@ required_paths=(
   etc/zls.json
   etc/xdg/zls.json
   etc/xdg/aqueous/wm.toml
+  usr/local/libexec/dinx-seed-aqueous-live-effects
   usr/lib/zls/zig-env
   usr/lib/zls/zig-env.zon
   usr/lib/zls/zig/std/std.zig
@@ -846,6 +847,8 @@ grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' <<<"$aqueous_wrapper" \
 grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed Qt6ct for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
 grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
+grep -Fq 'dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"' <<<"$aqueous_wrapper" \
+  || fail 'Live session does not disable blur and opacity in the initial Aqueous config'
 aqueous_wm_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/wm.toml)
 grep -Fqx 'spawn_terminal = "deetty"' <<<"$aqueous_wm_config" || fail 'Aqueous terminal action does not launch Deetty'
 grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' <<<"$aqueous_wm_config" || fail 'Aqueous stacking layout keyboard binding is missing'

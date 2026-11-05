@@ -10,10 +10,14 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 - Persistir o log completo da build local e anexá-lo aos diagnósticos do P0; `dinx-build-timing` separa preparação de fontes, contratos, pré-requisitos, builder, pacotes, repositório, montagem e qualificação. Reutilizar imagem Artix com digest fixado/refresh diário, BuildKit no GitHub Actions, arquivos de pacotes validados e toolchains Zig verificadas. Versionar caches GitHub por execução para artifacts assinados, fontes makepkg, Cargo (registry/alvos), Zig e toolchains; salvar cada categoria somente quando seu marcador registra mudança. Manter só a chave atual por pacote no cache local e compilar hardware opcional em paralelo à montagem, incorporando-o ao banco assinado depois. O ganho ainda precisa ser medido num build completo quente.
 
 - Usar `rufl/DEETTY` como origem canônica, com `DEETTY_SOURCE_READ_TOKEN` opcional, e renomear saídas dos executáveis de smoke/qualificação, marcadores de fixture e variáveis de teste de display do Deetty; identificadores upstream de módulo, ABI, configuração e recursos continuam internos à fonte fixada.
+- Tornar determinístico o prompt da qualificação TUI do SQLite no Deetty; o teste não depende mais do prompt padrão específico da versão.
+- Manter consistente o nome do fixture de man da qualificação do Deetty com o caminho de entrada, para que `man` abra a página e chegue ao pager.
+- Gerar o archive fonte do Deetty no modo `0644`, permitindo leitura por verificações e builds sem root após a preparação privilegiada.
 - Incluir entradas externas declaradas nos hashes do cache de pacotes; alterações em licenças ou na marca de boot invalidam o artefato consumidor.
 - Registrar hashes dos bancos sync Artix, do arquivo de pin da fonte Deetty e fingerprint da árvore de fontes nos metadados; aguardar o servidor assinado de pacotes antes da montagem e exigir uma ISO com metadados adjacentes.
 - Verificar espaço e inodes nos outputs, caches, chroots e armazenamento Docker; testar attachment privilegiado de loop, preservar chroots customizados não vazios após falha e rejeitar valores inválidos na flag que pula a qualificação pós-build.
 - Confirmar por OCR o TTY de recuperação instalado e documentar que o smoke BIOS/UEFI simula a instalação a partir do rootfs, sem exercitar o Calamares de ponta a ponta.
+- Comparar paths obrigatórios do rootfs instalado e do livefs com campos exatos nas listagens longas do SquashFS; as colunas de metadados faziam arquivos válidos da ISO parecerem ausentes.
 
 - Definir `logind` como backend libseat padrão do Pearl Greeter em sessões greetd sob dinit, preservando um backend explicitamente configurado.
 - Encerrar o ramo `version` do shim Zig do ZLS antes de delegar ao compilador opcional; o rootfs instalado informa a versão fixada sem exigir o pacote opcional `zig`.

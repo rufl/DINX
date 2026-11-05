@@ -92,13 +92,13 @@ grep -Fq '"${ZIG:-zig}" build' "$phyto_dir/PKGBUILD" || fail 'Phyto package does
 grep -Fq 'zig_version=0.17.0' "$builder" || fail 'ISO builder does not pin Zig 0.17 for Pori'
 grep -Fq 'zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026' "$builder" \
   || fail 'ISO builder does not verify the Zig 0.17 archive'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig' "$builder" \
+grep -Fq 'extra_env+=("ZIG=$zig_root/zig")' "$builder" \
   || fail 'ISO builder does not pass Zig 0.17 to Pori'
 grep -Fq 'PEARL_ZIG_VERSION=0.16.0' "$pearl_dir/source.env" \
   || fail 'Pearl/Dome/Phyto toolchain is not pinned to Zig 0.16'
 grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$builder" \
   || fail 'ISO builder does not select Pearl Zig toolchain for Phyto and Dome'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+grep -Fq 'extra_env+=("ZIG=$pearl_zig_root/zig")' "$builder" \
   || fail 'ISO builder does not pass Pearl Zig toolchain to Phyto and Dome'
 grep -Fq 'scripts/smoke_pori_zig.sh' "$workflow" || fail 'workflow does not run the Pori Zig source smoke'
 grep -Fq 'scripts/check_pori_phyto.sh' "$workflow" || fail 'workflow does not run the Pori/Phyto contract'

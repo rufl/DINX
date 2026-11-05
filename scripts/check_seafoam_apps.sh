@@ -105,10 +105,10 @@ grep -Fq 'build_package dome' "$builder" || fail 'ISO builder does not build Dom
 grep -Fq 'build_package zls' "$builder" || fail 'ISO builder does not build ZLS for the base package repository'
 grep -Fq 'build_package seafoam-settings' "$builder" || fail 'ISO builder does not build Seafoam Settings for the base package repository'
 grep -Fq 'zig_version=0.17.0' "$builder" || fail 'ISO builder does not pin Zig 0.17 for native DINX packages'
-grep -Fq 'extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")' "$builder" || fail 'ISO builder does not pass the pinned Zig toolchain to native packages'
+grep -Fq 'extra_env+=("ZIG=$zig_root/zig")' "$builder" || fail 'ISO builder does not pass the pinned Zig toolchain to native packages'
 grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$builder" \
   || fail 'ISO builder does not select the Pearl Zig toolchain for Dome'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+grep -Fq 'extra_env+=("ZIG=$pearl_zig_root/zig")' "$builder" \
   || fail 'ISO builder does not pass Pearl Zig toolchain to Dome'
 grep -Fq 'ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh' "$builder" || fail 'Artix builder does not smoke-test ZLS'
 grep -Fq 'scripts/check_seafoam_apps.sh' "$workflow" || fail 'workflow does not run the Seafoam app contract'

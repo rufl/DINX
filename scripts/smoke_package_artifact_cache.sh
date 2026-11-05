@@ -66,6 +66,15 @@ unset DINX_ARTIX_IMAGE
   printf 'smoke_package_artifact_cache: restoring external inputs did not restore the key\n' >&2
   exit 1
 }
+export DINX_BUILDER_RECIPE_SHA256=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+builder_image_key=$(cache_key)
+export DINX_BUILDER_RECIPE_SHA256=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+builder_image_key_changed=$(cache_key)
+[[ "$builder_image_key_changed" != "$builder_image_key" ]] || {
+  printf 'smoke_package_artifact_cache: builder image recipe did not invalidate cache key\n' >&2
+  exit 1
+}
+unset DINX_BUILDER_RECIPE_SHA256
 direct_source_key=$(dinx_package_cache_key dinitui "$package_dir" "$makepkg_conf_sha256" \
   "$builder_sha256" "$installed_packages_sha256" "$source_root" --nodeps -- 'FEATURE=one')
 mkdir -p "$package_dir/.zig-cache/o" "$package_dir/zig-cache" \
@@ -98,7 +107,12 @@ else
   [[ $status -eq 1 ]] || { printf 'smoke_package_artifact_cache: empty cache returned %s\n' "$status" >&2; exit 1; }
 fi
 
+old_key=$(printf 'obsolete package key\n' | sha256sum)
+old_key=${old_key%% *}
+dinx_package_cache_store "$cache_root" demo "$old_key" "$archive_one"
 dinx_package_cache_store "$cache_root" demo "$key" "$archive_one" "$archive_two"
+[[ ! -e "$cache_root/demo/$old_key" ]] \
+  || { printf 'smoke_package_artifact_cache: stale package key was not pruned\n' >&2; exit 1; }
 cache_entry="$cache_root/demo/$key"
 [[ -f "$cache_entry/metadata" && -f "$cache_entry/SHA256SUMS" ]]
 [[ ! -e "$cache_entry/$(basename -- "$archive_one").sig" ]]
@@ -193,4 +207,4 @@ if find "$cache_root/demo" -maxdepth 1 -type d -name ".$partial_key.tmp.*" -prin
   exit 1
 fi
 
-printf 'smoke_package_artifact_cache: miss, verified hit, corruption eviction, key invalidation and incomplete-store checks passed\n'
+printf 'smoke_package_artifact_cache: miss, verified hit, corruption eviction, key invalidation, stale-key pruning and incomplete-store checks passed\n'

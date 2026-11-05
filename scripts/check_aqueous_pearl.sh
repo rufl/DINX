@@ -224,11 +224,12 @@ fi
 grep -Fq 'build_package aqueous' "$builder" || fail 'ISO builder does not build Aqueous'
 grep -Fq 'build_package pearl' "$builder" || fail 'ISO builder does not build Pearl'
 grep -Fq 'PEARL_ZIG_SOURCE_SHA256' "$builder" || fail 'ISO builder does not verify the pinned Pearl Zig archive'
-grep -Fq 'ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig' "$builder" \
+grep -Fq 'extra_env+=("ZIG=$pearl_zig_root/zig")' "$builder" \
   || fail "ISO builder does not select Pearl's declared Zig toolchain"
-grep -Fq '                scdoc \' "$builder" || fail 'builder does not install Aqueous man-page builder'
-if grep -Fq '                systemd-libs \' "$builder"; then
-  fail 'builder still installs systemd-libs for Aqueous'
+grep -Fqx 'scdoc' "$root/scripts/iso-builder/packages.txt" \
+  || fail 'builder image manifest does not install Aqueous man-page builder'
+if grep -Fqx 'systemd-libs' "$root/scripts/iso-builder/packages.txt"; then
+  fail 'builder image manifest still installs systemd-libs for Aqueous'
 fi
 grep -Fq 'scripts/check_aqueous_pearl.sh' "$workflow" || fail 'workflow does not run the Aqueous/Pearl contract'
 grep -Fq 'scripts/check_dinx_session.sh' "$workflow" || fail 'workflow does not run the session contract'

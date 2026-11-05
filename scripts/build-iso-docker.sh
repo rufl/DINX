@@ -6,8 +6,6 @@ repo_root=$(git -C "$script_dir/.." rev-parse --show-toplevel 2>/dev/null) || {
   printf 'build-iso-docker: run this from a DINX Git checkout\n' >&2
   exit 1
 }
-repo_root=$(CDPATH= cd -- "$repo_root" && pwd -P)
-
 fail() {
   printf 'build-iso-docker: %s\n' "$*" >&2
   exit 1
@@ -25,8 +23,8 @@ with an ephemeral key and is not a release repository.
 Options are controlled through environment variables:
   DINX_LOCAL_BUILD_DIR       Choose an output directory under checkout dist/.
   DINX_ISO_OUTPUT            Override the ISO output directory under dist/.
-  DINX_PACKAGE_OUTPUT        Override package directory under dist/ (must end in /packages).
   DINX_BUILD_CACHE_DIR       Reuse package, source, Cargo and toolchain caches under dist/.
+  DINX_BUILD_LOG             Persist the complete host/container build log (defaults under the build directory).
   DINX_ARTIX_IMAGE           Override the digest-pinned Artix builder image.
   DINX_ISO_CHROOTS           Use a chroot directory outside the checkout or under dist/.
   DINX_KEEP_CHROOTS=1        Keep the temporary chroot after a successful build.
@@ -53,12 +51,21 @@ case "$skip_postbuild_checks" in
   false|0) skip_postbuild_checks=false ;;
   *) fail 'DINX_SKIP_POSTBUILD_CHECKS must be true/false or 1/0' ;;
 esac
+wrapper_started=$SECONDS
+wrapper_finish() {
+  local status=${1:-$?}
+  trap - EXIT
+  printf 'dinx-build-timing phase=wrapper-total elapsed_seconds=%s exit_status=%s\n' \
+    "$((SECONDS - wrapper_started))" "$status"
+  exit "$status"
+}
+trap wrapper_finish EXIT
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "required host command not found: $1"
 }
 
-for command in docker git realpath sha256sum tar find; do
+for command in docker git realpath sha256sum tar find tee; do
   require_command "$command"
 done
 if ! docker info --format '{{.ServerVersion}}' >/dev/null 2>&1; then
@@ -69,11 +76,30 @@ image=${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de
 [[ "$image" =~ ^[[:alnum:]./_-]+@sha256:[0-9a-f]{64}$ ]] \
   || fail 'DINX_ARTIX_IMAGE must be an OCI image pinned by sha256 digest'
 
+builder_dockerfile="$repo_root/scripts/iso-builder/Dockerfile"
+builder_packages="$repo_root/scripts/iso-builder/packages.txt"
+builder_recipe_sha256=$(cd "$repo_root" && sha256sum scripts/iso-builder/Dockerfile scripts/iso-builder/packages.txt | sha256sum)
+builder_recipe_sha256=${builder_recipe_sha256%% *}
+builder_refresh_date=${DINX_BUILDER_REFRESH_DATE:-$(date -u +%F)}
+[[ "$builder_refresh_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] \
+  || fail 'DINX_BUILDER_REFRESH_DATE must be YYYY-MM-DD'
+builder_image=${DINX_BUILDER_IMAGE:-dinx-iso-builder:local}
+[[ "$builder_image" =~ ^[a-z0-9][a-z0-9./:_-]*$ ]] \
+  || fail 'DINX_BUILDER_IMAGE must be a local Docker image tag'
+builder_prebuilt=${DINX_BUILDER_PREBUILT:-false}
+case "$builder_prebuilt" in
+  true|false|1|0) ;;
+  *) fail 'DINX_BUILDER_PREBUILT must be true/false or 1/0' ;;
+esac
+
 commit=$(git -C "$repo_root" rev-parse HEAD)
 [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail 'could not resolve the checked-out commit'
 run_id=${DINX_RUN_ID:-${GITHUB_RUN_ID:-$(date +%s)}}
 [[ "$run_id" =~ ^[0-9]+$ ]] || fail 'DINX_RUN_ID must contain only digits'
 
+cache_marker_attempt=${GITHUB_RUN_ATTEMPT:-$BASHPID}
+[[ "$cache_marker_attempt" =~ ^[0-9]+$ ]] || fail 'cache marker attempt must contain only digits'
+cache_marker_suffix="$run_id-$cache_marker_attempt"
 repository=${DINX_REPOSITORY:-${GITHUB_REPOSITORY:-}}
 if [[ -z "$repository" ]]; then
   remote=$(git -C "$repo_root" config --get remote.origin.url || true)
@@ -131,6 +157,18 @@ else
   package_output_host=$(resolve_repo_path "${DINX_PACKAGE_OUTPUT:-$build_root/packages}")
   package_bundle_host=$(resolve_repo_path "${DINX_PACKAGE_BUNDLE:-$build_root/dinx-package-repository.tar}")
 fi
+
+build_log_host=$(resolve_repo_path "${DINX_BUILD_LOG:-$build_root/dinx-build.log}")
+case "$build_log_host" in
+  "$repo_root"/dist/*) ;;
+  *) fail "build logs must be under $repo_root/dist: $build_log_host" ;;
+esac
+[[ ! -e "$build_log_host" ]] || fail "build log already exists; choose a fresh build path: $build_log_host"
+mkdir -p -- "$(dirname -- "$build_log_host")"
+: > "$build_log_host"
+exec > >(tee -a -- "$build_log_host") 2>&1
+printf 'dinx-build-timing phase=wrapper-start commit=%s context=%s\n' "$commit" "$build_context"
+printf 'build-iso-docker: complete build log: %s\n' "$build_log_host"
 if [[ "$build_context" == local-docker ]]; then
   for path in "$build_root" "$iso_output_host" "$package_output_host" "$package_bundle_host"; do
     case "$path" in
@@ -142,6 +180,9 @@ fi
 iso_output_container=$(container_path "$iso_output_host")
 package_output_container=$(container_path "$package_output_host")
 cache_host=$(resolve_repo_path "${DINX_BUILD_CACHE_DIR:-$repo_root/dist/.cache/dinx}")
+cache_build_data_marker="/var/cache/dinx/.dinx-build-data-updated-$cache_marker_suffix"
+cache_package_marker="/var/cache/dinx/package-artifacts/.dinx-package-cache-updated-$cache_marker_suffix"
+cache_toolchain_marker="/var/cache/dinx/toolchains/.dinx-toolchain-cache-updated-$cache_marker_suffix"
 case "$cache_host" in
   "$repo_root"/dist/*) ;;
   *) fail "toolchain cache must be under $repo_root/dist: $cache_host" ;;
@@ -174,12 +215,28 @@ source_checkout=${DEETTY_SOURCE_CHECKOUT:-"$repo_root/third_party/deetty"}
 if [[ "$source_checkout" != /* ]]; then
   source_checkout="$repo_root/$source_checkout"
 fi
+source_preparation_started=$SECONDS
 "$repo_root/scripts/prepare_first_party_apps.sh" "$source_checkout"
 "$repo_root/scripts/check_first_party_apps.sh"
+printf 'dinx-build-timing phase=source-preparation elapsed_seconds=%s exit_status=0\n' \
+  "$((SECONDS - source_preparation_started))"
 
+contracts_started=$SECONDS
 case ${DINX_SKIP_CONTRACTS:-false} in
-  true|1) ;;
-  false|0) ZIG=${ZIG:-zig} "$repo_root/scripts/check_dinx_contracts.sh" ;;
+  true|1)
+    printf 'dinx-build-timing phase=static-contracts elapsed_seconds=0 exit_status=0 skipped=true\n'
+    ;;
+  false|0)
+    if ZIG=${ZIG:-zig} "$repo_root/scripts/check_dinx_contracts.sh"; then
+      printf 'dinx-build-timing phase=static-contracts elapsed_seconds=%s exit_status=0\n' \
+        "$((SECONDS - contracts_started))"
+    else
+      status=$?
+      printf 'dinx-build-timing phase=static-contracts elapsed_seconds=%s exit_status=%s\n' \
+        "$((SECONDS - contracts_started))" "$status"
+      exit "$status"
+    fi
+    ;;
   *) fail 'DINX_SKIP_CONTRACTS must be true/false or 1/0' ;;
 esac
 
@@ -242,15 +299,60 @@ if [[ -n "$chroots_dir" && ( -e "$chroots_dir" || -L "$chroots_dir" ) ]]; then
   [[ -z $(find "$chroots_dir" -mindepth 1 -maxdepth 1 -print -quit) ]] \
     || fail "buildiso chroot path must be empty to avoid deleting unrelated data: $chroots_dir"
 fi
+qualification_host_started=$SECONDS
 if [[ "$qualification_mode" == full ]]; then
-  "$repo_root/scripts/check-iso-qualification-host.sh" full \
+  if "$repo_root/scripts/check-iso-qualification-host.sh" full \
     --build-path "$iso_output_host" \
     --build-path "$package_output_host" \
     --build-path "$cache_host" \
     --build-path "$chroots_preflight_path" \
-    --build-path "$(docker info --format '{{.DockerRootDir}}')"
+    --build-path "$(docker info --format '{{.DockerRootDir}}')"; then
+    printf 'dinx-build-timing phase=host-qualification elapsed_seconds=%s exit_status=0\n' \
+      "$((SECONDS - qualification_host_started))"
+  else
+    status=$?
+    printf 'dinx-build-timing phase=host-qualification elapsed_seconds=%s exit_status=%s\n' \
+      "$((SECONDS - qualification_host_started))" "$status"
+    exit "$status"
+  fi
 fi
-if ! docker run --rm --privileged --entrypoint /bin/bash "$image" -eu -c '
+builder_image_started=$SECONDS
+if [[ "$builder_prebuilt" == true || "$builder_prebuilt" == 1 ]]; then
+  printf 'dinx-builder-image: using prebuilt image %s\n' "$builder_image"
+else
+  if docker build \
+    --build-arg "DINX_ARTIX_IMAGE=$image" \
+    --build-arg "DINX_BUILDER_REFRESH=$builder_refresh_date" \
+    --build-arg "DINX_BUILDER_RECIPE_SHA256=$builder_recipe_sha256" \
+    --file "$builder_dockerfile" \
+    --tag "$builder_image" \
+    "$(dirname -- "$builder_dockerfile")"; then
+    :
+  else
+    build_status=$?
+    printf 'build-iso-docker: builder image creation failed with exit status %s; log: %s\n' \
+      "$build_status" "$build_log_host" >&2
+    exit "$build_status"
+  fi
+fi
+for label in artix-image refresh-date recipe-sha256; do
+  case "$label" in
+    artix-image) expected_value=$image ;;
+    refresh-date) expected_value=$builder_refresh_date ;;
+    recipe-sha256) expected_value=$builder_recipe_sha256 ;;
+  esac
+  actual_value=$(docker image inspect --format \
+    "{{ index .Config.Labels \"org.dinx.builder.$label\" }}" "$builder_image") \
+    || fail "could not inspect builder image label $label"
+  [[ "$actual_value" == "$expected_value" ]] \
+    || fail "builder image label $label mismatch: $actual_value != $expected_value"
+done
+builder_image_id=$(docker image inspect --format '{{.Id}}' "$builder_image")
+[[ "$builder_image_id" =~ ^sha256:[0-9a-f]{64}$ ]] \
+  || fail "invalid builder image ID: $builder_image_id"
+printf 'dinx-build-timing phase=builder-image-build elapsed_seconds=%s exit_status=0 image_id=%s refresh_date=%s\n' \
+  "$((SECONDS - builder_image_started))" "$builder_image_id" "$builder_refresh_date"
+if ! docker run --rm --privileged --entrypoint /bin/bash "$builder_image" -eu -c '
   probe=$(mktemp)
   loop=
   trap '\''if [[ -n "$loop" ]]; then losetup -d "$loop"; fi; rm -f "$probe"'\'' EXIT
@@ -262,7 +364,7 @@ if ! docker run --rm --privileged --entrypoint /bin/bash "$image" -eu -c '
   losetup -d "$loop"
   loop=
 '; then
-  fail "privileged Docker loop-device preflight failed for image $image"
+  fail "privileged Docker loop-device preflight failed for image $builder_image"
 fi
 if [[ "$created_chroots" == true ]]; then
   chroots_dir=$(mktemp -d "${TMPDIR:-/tmp}/dinx-artools.XXXXXX")
@@ -285,13 +387,20 @@ cleanup() {
       printf 'build-iso-docker: keeping non-empty buildiso chroots at %s\n' "$chroots_dir" >&2
     fi
   fi
-  exit "$status"
+  if [[ "$build_context" == local-docker ]]; then
+    rm -f -- \
+      "$cache_host/.dinx-build-data-updated-$cache_marker_suffix" \
+      "$cache_host/package-artifacts/.dinx-package-cache-updated-$cache_marker_suffix" \
+      "$cache_host/toolchains/.dinx-toolchain-cache-updated-$cache_marker_suffix" \
+      || status=1
+  fi
+  wrapper_finish "$status"
 }
 trap cleanup EXIT
-assert_disjoint "$chroots_dir" "$iso_output_host" "$package_output_host" "$cache_host" "$package_bundle_host"
 mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bundle_host")" \
+  "$(dirname -- "$build_log_host")" \
   "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
-  "$cache_host/package-artifacts" "$cache_host/cargo" "$cache_host/zig"
+  "$cache_host/package-artifacts" "$cache_host/cargo" "$cache_host/cargo-target" "$cache_host/zig"
 
 if [[ ${SUDO_UID:-} =~ ^[0-9]+$ && ${SUDO_GID:-} =~ ^[0-9]+$ ]]; then
   host_uid=$SUDO_UID
@@ -300,7 +409,7 @@ else
   host_uid=$(id -u)
   host_gid=$(id -g)
 fi
-docker run --rm --privileged \
+if docker run --rm --privileged \
   --volume "$repo_root:/workspace" \
   --volume "$cache_host:/var/cache/dinx" \
   --volume "$cache_host/pacman/pkg:/var/cache/pacman/pkg" \
@@ -316,12 +425,27 @@ docker run --rm --privileged \
   --env DINX_HOST_UID="$host_uid" \
   --env DINX_HOST_GID="$host_gid" \
   --env DINX_REMOVE_CHROOTS_AFTER_BUILD="$remove_chroots_after_build" \
+  --env DINX_CACHE_DIRTY_MARKER="$cache_build_data_marker" \
+  --env DINX_PACKAGE_CACHE_DIRTY_MARKER="$cache_package_marker" \
+  --env DINX_TOOLCHAIN_CACHE_DIRTY_MARKER="$cache_toolchain_marker" \
   --env DINX_PACKAGE_SIGNING_KEY \
   --env DINX_PACKAGE_SIGNING_FINGERPRINT \
   --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING="$require_persistent" \
   --env DINX_ARTIX_IMAGE="$image" \
-  "$image" \
-  bash /workspace/scripts/build-iso-container.sh
+  --env DINX_BUILDER_RECIPE_SHA256="$builder_recipe_sha256" \
+  --env DINX_BUILDER_IMAGE_ID="$builder_image_id" \
+  --env DINX_BUILDER_REFRESH_DATE="$builder_refresh_date" \
+  "$builder_image" \
+  bash /workspace/scripts/build-iso-container.sh; then
+  :
+else
+  build_status=$?
+  printf 'build-iso-docker: container build failed with exit status %s; full log: %s\n' \
+    "$build_status" "$build_log_host" >&2
+  exit "$build_status"
+fi
+printf 'build-iso-docker: complete build log: %s\n' "$build_log_host"
+package_bundle_started=$SECONDS
 if [[ "$build_context" == local-docker ]]; then
   [[ -s "$package_output_host/dinx.db" && -s "$package_output_host/dinx.db.sig" ]] \
     || fail "local package repository database or signature is missing: $package_output_host"
@@ -335,6 +459,8 @@ if [[ "$build_context" == local-docker ]]; then
   printf 'DINX local signed package repository: %s\nSHA-256: %s\n' \
     "$package_bundle_host" "$package_bundle_sha256"
 fi
+printf 'dinx-build-timing phase=package-repository-bundle elapsed_seconds=%s exit_status=0\n' \
+  "$((SECONDS - package_bundle_started))"
 
 
 if [[ "$skip_postbuild_checks" != true ]]; then
@@ -348,7 +474,16 @@ if [[ "$skip_postbuild_checks" != true ]]; then
   if [[ "$qualification_mode" == static ]]; then
     qualification_args=(--static "$iso_path")
   fi
-  DINX_EXPECTED_COMMIT="$commit" "$repo_root/scripts/qualify-iso.sh" "${qualification_args[@]}"
+  qualification_started=$SECONDS
+  if DINX_EXPECTED_COMMIT="$commit" "$repo_root/scripts/qualify-iso.sh" "${qualification_args[@]}"; then
+    printf 'dinx-build-timing phase=postbuild-qualification elapsed_seconds=%s exit_status=0\n' \
+      "$((SECONDS - qualification_started))"
+  else
+    status=$?
+    printf 'dinx-build-timing phase=postbuild-qualification elapsed_seconds=%s exit_status=%s\n' \
+      "$((SECONDS - qualification_started))" "$status"
+    exit "$status"
+  fi
   printf '\nDINX local ISO: %s\nSHA-512: %s\nBuild metadata: %s\nSigned package repository: %s (ephemeral key)\n' \
     "$iso_path" "$(cut -d ' ' -f 1 "$(dirname -- "$iso_path")/$(basename -- "$iso_path").sha512")" \
     "$metadata_path" "$package_bundle_host"

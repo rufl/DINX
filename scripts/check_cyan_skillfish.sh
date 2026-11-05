@@ -54,7 +54,8 @@ done
 builder=scripts/build-iso-container.sh
 grep -Fq 'build_package cyan-skillfish-governor-smu' "$builder" || fail 'ISO builder does not build the governor'
 grep -Fq 'build_package cyan-skillfish-governor-smu-dinit' "$builder" || fail 'ISO builder does not build dinit governor integration'
-grep -Fq '                rust' "$builder" || fail 'ISO builder does not install Rust for source builds'
+grep -Fxq 'rust' scripts/iso-builder/packages.txt \
+  || fail 'builder image manifest does not install Rust for source builds'
 
 printf 'cyan_skillfish_contract pci=1002:13fe firmware=amdgpu vulkan=radv governor=%s iso=false signed_repository=true dinit=true systemd=false\n' \
   "$CYAN_SKILLFISH_GOVERNOR_VERSION"

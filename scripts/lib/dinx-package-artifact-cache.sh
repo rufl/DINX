@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_DINX_PACKAGE_CACHE_SCHEMA=dinx-package-artifact-cache/v2
+_DINX_PACKAGE_CACHE_SCHEMA=dinx-package-artifact-cache/v3
 
 _dinx_package_cache_valid_name() {
   [[ "$1" =~ ^[a-z0-9][a-z0-9+_-]*$ ]]
@@ -20,15 +20,18 @@ dinx_package_cache_key() {
   local package=$1
   local package_dir=$2
   local makepkg_conf_sha256=$3
-  local builder_sha256=$4
+  local package_recipe_sha256=$4
   local installed_packages_sha256=$5
   local source_root=$6
   shift 6
   _dinx_package_cache_valid_name "$package" || return 2
   [[ -d "$package_dir" && ! -L "$package_dir" ]] || return 2
   [[ "$makepkg_conf_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
-  [[ "$builder_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
+  [[ "$package_recipe_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
   [[ "$installed_packages_sha256" =~ ^[0-9a-f]{64}$ ]] || return 2
+  local builder_image_recipe_sha256=${DINX_BUILDER_RECIPE_SHA256:-unset}
+  [[ "$builder_image_recipe_sha256" == unset || "$builder_image_recipe_sha256" =~ ^[0-9a-f]{64}$ ]] \
+    || return 2
   source_root=$(realpath -e -- "$source_root") || return 2
   [[ -d "$source_root" ]] || return 2
 
@@ -103,8 +106,9 @@ dinx_package_cache_key() {
       printf 'schema=%s\n' "$_DINX_PACKAGE_CACHE_SCHEMA"
       printf 'package=%s\n' "$package"
       printf 'makepkg_conf_sha256=%s\n' "$makepkg_conf_sha256"
-      printf 'builder_sha256=%s\n' "$builder_sha256"
+      printf 'package_build_recipe_sha256=%s\n' "$package_recipe_sha256"
       printf 'artix_image=%s\n' "${DINX_ARTIX_IMAGE:-unset}"
+      printf 'builder_image_recipe_sha256=%s\n' "$builder_image_recipe_sha256"
       printf 'cache_implementation_sha256=%s\n' "$library_sha256"
       local index=0
       for ((index = 0; index < ${#external_inputs[@]}; index++)); do
@@ -265,6 +269,16 @@ dinx_package_cache_store() {
     rm -rf -- "$entry" || { rm -rf -- "$temporary"; return 1; }
   fi
   if mv -T -- "$temporary" "$entry"; then
+    local old_entry old_key
+    while IFS= read -r -d '' old_entry; do
+      old_key=${old_entry##*/}
+      [[ "$old_key" =~ ^[0-9a-f]{64}$ && "$old_key" != "$key" ]] || continue
+      if rm -rf -- "$old_entry"; then
+        printf 'dinx-package-cache: pruned stale package=%s key=%s\n' "$package" "$old_key"
+      else
+        printf 'dinx-package-cache: could not prune stale package=%s key=%s\n' "$package" "$old_key" >&2
+      fi
+    done < <(find "$package_root" -mindepth 1 -maxdepth 1 -type d -print0)
     printf 'dinx-package-cache: stored package=%s archives=%s\n' "$package" "${#archive_names[@]}"
     return 0
   fi

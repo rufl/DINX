@@ -38,5 +38,9 @@ actual_sha256=${actual_sha256%% *}
 [[ "$actual_sha256" == "$expected_sha256" ]] \
   || fail "SHA256 mismatch for $url: expected $expected_sha256, got $actual_sha256"
 mv -f -- "$temporary" "$destination"
+if [[ -n ${DINX_CACHE_DIRTY_MARKER:-} ]]; then
+  mkdir -p -- "$(dirname -- "$DINX_CACHE_DIRTY_MARKER")"
+  touch -- "$DINX_CACHE_DIRTY_MARKER"
+fi
 trap - EXIT
 printf 'cache-verified-download: downloaded and verified sha256=%s path=%s\n' "$actual_sha256" "$destination"

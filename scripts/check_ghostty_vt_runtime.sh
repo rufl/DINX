@@ -7,13 +7,14 @@ profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$root/.github/workflows/p0-iso.yml"
 builder="$root/scripts/build-iso-container.sh"
+builder_packages="$root/scripts/iso-builder/packages.txt"
 
 fail() {
   printf 'ghostty_vt_runtime_contract: %s\n' "$*" >&2
   exit 1
 }
 
-for path in "$pkgbuild" "$profile" "$groups" "$workflow" "$builder"; do
+for path in "$pkgbuild" "$profile" "$groups" "$workflow" "$builder" "$builder_packages"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 
@@ -57,7 +58,8 @@ dinxpanel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | cut -d: -
 (( runtime_build_line < remove_ghostty_line && remove_ghostty_line < install_runtime_line \
   && install_runtime_line < deetty_build_line && deetty_build_line < dinxpanel_build_line )) \
   || fail 'Ghostty runtime must replace the full app before Deetty and dependent desktop packages are built'
-grep -Fq '                ghostty \' "$builder" || fail 'builder does not install the full Ghostty build-only extraction source'
+grep -Fqx 'ghostty' "$builder_packages" \
+  || fail 'builder image manifest does not install Ghostty as the build-only extraction source'
 
 if [[ $# -gt 1 ]]; then
   fail 'usage: check_ghostty_vt_runtime.sh [PACKAGE]'

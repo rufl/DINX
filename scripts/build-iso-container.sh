@@ -6,12 +6,19 @@ host_gid=${DINX_HOST_GID:-}
 build_uid=
 build_gid=
 repo_pid=
+optional_build_pids=()
 builder_started=$SECONDS
 finish() {
   local status=$?
   local elapsed=$((SECONDS - builder_started))
-  local path
+  local path pid
   trap - EXIT
+  for pid in "${optional_build_pids[@]}"; do
+    if kill -0 "$pid" 2>/dev/null; then
+      kill "$pid" 2>/dev/null || true
+    fi
+    wait "$pid" 2>/dev/null || true
+  done
   if [[ -n "$repo_pid" ]]; then
     kill "$repo_pid" 2>/dev/null || true
   fi
@@ -44,7 +51,12 @@ trap finish EXIT
               set -euxo pipefail
               DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"
               export DINX_ARTIX_IMAGE
-              : "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"
+              : "${DINX_BUILDER_RECIPE_SHA256:?builder recipe checksum was not forwarded}"
+              : "${DINX_BUILDER_IMAGE_ID:?builder image ID was not forwarded}"
+              : "${DINX_BUILDER_REFRESH_DATE:?builder refresh date was not forwarded}"
+              [[ "$DINX_BUILDER_RECIPE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+              [[ "$DINX_BUILDER_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]
+              [[ "$DINX_BUILDER_REFRESH_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
               artix_mirrorlist_source=official-artix-https-tier1
               {
                 printf '%s\n' '# DINX official Artix HTTPS mirrors'
@@ -67,170 +79,74 @@ trap finish EXIT
               }
               source /workspace/scripts/lib/pacman-local-install.sh
               source /workspace/scripts/lib/dinx-package-artifact-cache.sh
-              builder_pacman_started=$SECONDS
-              pacman_retry -Syyu --noconfirm
-              pacman_retry -S --needed --noconfirm \
-                artools \
-                iso-profiles \
-                mkinitcpio \
-                base-devel \
-                bubblewrap \
-                bash-completion \
-                btop \
-                curl \
-                clang \
-                brightnessctl \
-                cairo \
-                cjson \
-                calamares \
-                calamares-extensions \
-                dbus \
-                dialog \
-                dinit \
-                fzf \
-                gdk-pixbuf2 \
-                glances \
-                glib2 \
-                go-md2man \
-                gettext \
-                git \
-                gnupg \
-                glslang \
-                glycin \
-                gtk-layer-shell \
-                gamescope \
-                fontconfig \
-                freetype2 \
-                gtk3 \
-                gtk4 \
-                libadwaita \
-                libarchive \
-                libcups \
-                libdecor \
-                libevdev \
-                libinih \
-                lcms2 \
-                libpulse \
-                libsecret \
-                libxml2 \
-                pam \
-                playerctl \
-                polkit \
-                qt5-base \
-                qt6-base \
-                shaderc \
-                scdoc \
-                vulkan-headers \
-                vulkan-icd-loader \
-                gtk4-layer-shell \
-                gtksourceview5 \
-                enchant \
-                hunspell \
-                gtksourceview4 \
-                vte3 \
-                ghostty \
-                hicolor-icon-theme \
-                adwaita-icon-theme \
-                less \
-                libdisplay-info \
-                libdrm \
-                libepoxy \
-                libglvnd \
-                libinput \
-                libliftoff \
-                libnewt \
-                libpng \
-                librsvg \
-                libxcb \
-                libxkbcommon \
-                luajit \
-                man-db \
-                mesa \
-                meson \
-                nano \
-                ninja \
-                openssh \
-                pango \
-                pcre2 \
-                pixman \
-                pkgconf \
-                procps-ng \
-                pipewire \
-                python \
-                seatd \
-                shared-mime-info \
-                sqlite \
-                texinfo \
-                tmux \
-                util-linux \
-                wayland \
-                wayland-protocols \
-                vim \
-                xcb-util-errors \
-                xcb-util-renderutil \
-                xcb-util-wm \
-                xorg-xwayland \
-                xdg-desktop-portal \
-                xdg-utils \
-                xorg-server-xvfb \
-                xz \
-                zlib \
-                rust
-              printf 'dinx-build-timing phase=builder-pacman-setup elapsed_seconds=%s exit_status=0\n' \
-                "$((SECONDS - builder_pacman_started))"
+              builder_image_verify_started=$SECONDS
+              builder_image_marker=/etc/dinx-builder-image/metadata
+              grep -Fqx "artix_image=$DINX_ARTIX_IMAGE" "$builder_image_marker"
+              grep -Fqx "recipe_sha256=$DINX_BUILDER_RECIPE_SHA256" "$builder_image_marker"
+              grep -Fqx "refresh_date=$DINX_BUILDER_REFRESH_DATE" "$builder_image_marker"
+              command -v buildiso >/dev/null
+              xargs -r pacman -Q < /workspace/scripts/iso-builder/packages.txt >/dev/null
               scripts/check_artix_initcpio_patch.sh --check-installed
+              printf 'dinx-build-timing phase=builder-image-verify elapsed_seconds=%s exit_status=0 image_id=%s\n' \
+                "$((SECONDS - builder_image_verify_started))" "$DINX_BUILDER_IMAGE_ID"
               update-mime-database /usr/share/mime
               mkdir -p /usr/lib/gdk-pixbuf-2.0/2.10.0
               gdk-pixbuf-query-loaders --update-cache
+              toolchain_started=$SECONDS
               zig_version=0.17.0
               zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
               zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
               toolchain_cache="${DINX_BUILD_CACHE_DIR:-/var/cache/dinx}/toolchains"
-              mkdir -p "$toolchain_cache"
+              toolchain_extraction_cache="$toolchain_cache/extracted"
+              mkdir -p "$toolchain_cache" "$toolchain_extraction_cache"
+              toolchain_dirty_marker=${DINX_TOOLCHAIN_CACHE_DIRTY_MARKER:-${DINX_CACHE_DIRTY_MARKER:-}}
               zig_archive_path="$toolchain_cache/$zig_archive"
-              scripts/cache-verified-download.sh \
-                "$zig_archive_path" \
-                "https://ziglang.org/download/${zig_version}/${zig_archive}" \
-                "$zig_sha256"
-              actual_zig_sha=$(sha256sum "$zig_archive_path" | cut -d " " -f 1)
-              printf "zig_sha256=%s\n" "$actual_zig_sha"
-              test "$actual_zig_sha" = "$zig_sha256"
-              tar -xJf "$zig_archive_path" --directory /tmp
-              export PATH="/tmp/zig-x86_64-linux-${zig_version}:$PATH"
-              actual_zig_version=$(zig version)
-              printf "zig_version=%s\n" "$actual_zig_version"
-              test "$actual_zig_version" = "$zig_version"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-download.sh \
+                  "$zig_archive_path" \
+                  "https://ziglang.org/download/${zig_version}/${zig_archive}" \
+                  "$zig_sha256"
+              zig_root="$toolchain_extraction_cache/zig-${zig_version}-${zig_sha256}"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-extract.sh \
+                  "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
+              export PATH="$zig_root:$PATH"
+              printf "zig_version=%s\n" "$(zig version)"
               source /workspace/distro/packages/pearl/source.env
               : "${PEARL_ZIG_VERSION:?PEARL_ZIG_VERSION is missing}"
               : "${PEARL_ZIG_SOURCE_URL:?PEARL_ZIG_SOURCE_URL is missing}"
               : "${PEARL_ZIG_SOURCE_SHA256:?PEARL_ZIG_SOURCE_SHA256 is missing}"
               pearl_zig_archive="zig-x86_64-linux-${PEARL_ZIG_VERSION}.tar.xz"
               pearl_zig_archive_path="$toolchain_cache/$pearl_zig_archive"
-              scripts/cache-verified-download.sh \
-                "$pearl_zig_archive_path" \
-                "$PEARL_ZIG_SOURCE_URL" \
-                "$PEARL_ZIG_SOURCE_SHA256"
-              actual_pearl_zig_sha=$(sha256sum "$pearl_zig_archive_path" | cut -d " " -f 1)
-              printf "pearl_zig_sha256=%s\n" "$actual_pearl_zig_sha"
-              test "$actual_pearl_zig_sha" = "$PEARL_ZIG_SOURCE_SHA256"
-              tar -xJf "$pearl_zig_archive_path" --directory /tmp
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-download.sh \
+                  "$pearl_zig_archive_path" \
+                  "$PEARL_ZIG_SOURCE_URL" \
+                  "$PEARL_ZIG_SOURCE_SHA256"
+              pearl_zig_root="$toolchain_extraction_cache/zig-${PEARL_ZIG_VERSION}-${PEARL_ZIG_SOURCE_SHA256}"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-extract.sh \
+                  "$pearl_zig_archive_path" "$PEARL_ZIG_SOURCE_SHA256" \
+                  "$PEARL_ZIG_VERSION" zig "$pearl_zig_root"
+              printf 'dinx-build-timing phase=toolchain-setup elapsed_seconds=%s exit_status=0\n' \
+                "$((SECONDS - toolchain_started))"
 
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_dinx_theme.sh
               package_repo=${DINX_PACKAGE_OUTPUT:-/workspace/dist/packages}
               rm -rf "$package_repo"
               mkdir -p "$package_repo"
-              makepkg_conf=/tmp/dinx-makepkg.conf
-              cp /etc/makepkg.conf "$makepkg_conf"
-              makepkg_base_conf_sha256=$(sha256sum "$makepkg_conf" | cut -d " " -f 1)
+              makepkg_base_conf=/tmp/dinx-makepkg-base.conf
+              cp /etc/makepkg.conf "$makepkg_base_conf"
+              makepkg_base_conf_sha256=$(sha256sum "$makepkg_base_conf" | cut -d " " -f 1)
               makepkg_source_cache=/var/cache/dinx/makepkg-sources
               cargo_cache=/var/cache/dinx/cargo
               cargo_target_cache=/var/cache/dinx/cargo-target
               zig_cache=/var/cache/dinx/zig
               package_artifact_cache=/var/cache/dinx/package-artifacts
-              mkdir -p "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" "$zig_cache" "$package_artifact_cache"
-              printf '%q\n' "PKGDEST=$package_repo" "SRCDEST=$makepkg_source_cache" >> "$makepkg_conf"
-              chmod 644 "$makepkg_conf"
+              mkdir -p "$makepkg_source_cache" "$cargo_cache" "$cargo_target_cache" \
+                "$zig_cache" "$package_artifact_cache"
+              chmod 644 "$makepkg_base_conf"
               useradd --create-home --user-group dinxbuild
               build_uid=$(id -u dinxbuild)
               build_gid=$(id -g dinxbuild)
@@ -291,7 +207,6 @@ trap finish EXIT
               pacman-key --init
               pacman-key --add "$package_repo/dinx-package-signing-key.gpg"
               pacman-key --lsign-key "$signing_key"
-              package_cache_builder_sha256=$(sha256sum /workspace/scripts/build-iso-container.sh | cut -d " " -f 1)
               package_cache_as_build_user() {
                 local operation="$1"
                 shift
@@ -310,14 +225,16 @@ trap finish EXIT
                 local package_name="$1"
                 local package_dir="/workspace/distro/packages/$package_name"
                 local package_started=$SECONDS
+                local package_output="/tmp/dinx-package-output/$package_name"
+                local package_source_cache="$makepkg_source_cache/$package_name"
+                local package_makepkg_conf="/tmp/dinx-makepkg-$package_name.conf"
                 local status archive archive_name installed_packages_sha256 cache_key
                 local -a extra_env=(
                   "CARGO_HOME=/var/cache/dinx/cargo"
                   "CARGO_TARGET_DIR=/var/cache/dinx/cargo-target/$package_name"
-                  "ZIG_GLOBAL_CACHE_DIR=/var/cache/dinx/zig"
+                  "ZIG_GLOBAL_CACHE_DIR=/var/cache/dinx/zig/$package_name"
                 )
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
-                local -A existing_archives=()
                 local -a package_archives=()
                 case "$package_name" in
                   dinitui|dinxpanel|seafoam-settings)
@@ -335,17 +252,20 @@ trap finish EXIT
                   extra_env+=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                   makepkg_options+=(--cleanbuild)
                 fi
+                if [[ "$package_name" == cyan-skillfish-governor-smu ]]; then
+                  extra_env+=(CARGO_BUILD_JOBS=1)
+                fi
                 if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then
-                  extra_env+=("ZIG=/tmp/zig-x86_64-linux-${PEARL_ZIG_VERSION}/zig")
+                  extra_env+=("ZIG=$pearl_zig_root/zig")
                 elif [[ "$package_name" == pori || "$package_name" == aqueous ]]; then
-                  extra_env+=("ZIG=/tmp/zig-x86_64-linux-${zig_version}/zig")
+                  extra_env+=("ZIG=$zig_root/zig")
                 fi
 
                 installed_packages_sha256=$(pacman -Q | LC_ALL=C sort | sha256sum)
                 installed_packages_sha256=${installed_packages_sha256%% *}
                 cache_key=$(dinx_package_cache_key \
                   "$package_name" "$package_dir" "$makepkg_base_conf_sha256" \
-                  "$package_cache_builder_sha256" "$installed_packages_sha256" /workspace \
+                  "$package_cache_recipe_sha256" "$installed_packages_sha256" /workspace \
                   "${makepkg_options[@]}" -- "${extra_env[@]}")
                 if package_cache_as_build_user dinx_package_cache_restore \
                   "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
@@ -360,32 +280,55 @@ trap finish EXIT
                     return "$status"
                   fi
                 fi
+                if [[ -n ${DINX_CACHE_DIRTY_MARKER:-} ]]; then
+                  touch -- "$DINX_CACHE_DIRTY_MARKER"
+                fi
 
-                while IFS= read -r -d '' archive; do
-                  existing_archives["$(basename -- "$archive")"]=1
-                done < <(find "$package_repo" -maxdepth 1 -type f -name '*.pkg.tar.zst' -print0)
+                rm -rf -- "$package_output"
+                mkdir -p -- "$package_output" "$package_source_cache" \
+                  "$cargo_target_cache/$package_name" "$zig_cache/$package_name"
+                chown -R dinxbuild:dinxbuild \
+                  "$package_output" "$package_source_cache" \
+                  "$cargo_target_cache/$package_name" "$zig_cache/$package_name"
+                cp -- "$makepkg_base_conf" "$package_makepkg_conf"
+                printf '%q\n' "PKGDEST=$package_output" "SRCDEST=$package_source_cache" \
+                  >> "$package_makepkg_conf"
+                chmod 644 "$package_makepkg_conf"
                 if (
                   cd "$package_dir"
                   runuser -u dinxbuild -- env "${extra_env[@]}" \
-                    MAKEPKG_CONF="$makepkg_conf" \
+                    MAKEPKG_CONF="$package_makepkg_conf" \
                     GNUPGHOME="$signing_home" \
                     makepkg "${makepkg_options[@]}" \
                     --sign --key "$signing_key"
                 ); then
-                  while IFS= read -r -d '' archive; do
-                    archive_name=$(basename -- "$archive")
-                    if [[ -z ${existing_archives[$archive_name]+present} ]]; then
-                      package_archives+=("$archive")
-                    fi
-                  done < <(find "$package_repo" -maxdepth 1 -type f -name '*.pkg.tar.zst' -print0)
+                  mapfile -d '' package_archives < <(
+                    find "$package_output" -maxdepth 1 -type f -name '*.pkg.tar.zst' -print0
+                  )
                   if ((${#package_archives[@]} == 0)); then
                     printf 'build-iso-container: makepkg produced no package archive for %s\n' "$package_name" >&2
                     return 1
                   fi
-                  if ! package_cache_as_build_user dinx_package_cache_store \
+                  for archive in "${package_archives[@]}"; do
+                    [[ -f "$archive.sig" && ! -L "$archive.sig" ]] || {
+                      printf 'build-iso-container: makepkg produced no signature for %s\n' "$archive" >&2
+                      return 1
+                    }
+                  done
+                  if package_cache_as_build_user dinx_package_cache_store \
                     "$package_artifact_cache" "$package_name" "$cache_key" "${package_archives[@]}"; then
+                    if [[ -n ${DINX_PACKAGE_CACHE_DIRTY_MARKER:-} ]]; then
+                      touch -- "$DINX_PACKAGE_CACHE_DIRTY_MARKER"
+                    fi
+                  else
                     printf 'dinx-package-cache: store skipped package=%s key=%s\n' "$package_name" "$cache_key" >&2
                   fi
+                  for archive in "${package_archives[@]}"; do
+                    archive_name=$(basename -- "$archive")
+                    mv -- "$archive" "$package_repo/$archive_name"
+                    mv -- "$archive.sig" "$package_repo/$archive_name.sig"
+                  done
+                  rm -rf -- "$package_output"
                   printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=miss\n' \
                     "$package_name" "$((SECONDS - package_started))"
                 else
@@ -395,6 +338,10 @@ trap finish EXIT
                   return "$status"
                 fi
               }
+              package_cache_recipe_sha256=$(
+                { declare -f package_cache_as_build_user; declare -f build_package; } | sha256sum
+              )
+              package_cache_recipe_sha256=${package_cache_recipe_sha256%% *}
               build_package ghostty-vt-runtime
               ghostty_vt_package=$(find "$package_repo" -maxdepth 1 -type f -name 'ghostty-vt-runtime-*.pkg.tar.zst' -print -quit)
               [[ -n "$ghostty_vt_package" ]]
@@ -416,9 +363,6 @@ trap finish EXIT
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
               build_package opensnitch-dinit
-              build_package cyan-skillfish-governor-smu
-              build_package cyan-skillfish-governor-smu-dinit
-              build_package bc250-control-center
               build_package topgrade
               build_package paru
               build_package shelly
@@ -457,39 +401,14 @@ trap finish EXIT
               build_package swayimg
               pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good
               build_package gapless
+              repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
               rm -f "$package_repo/dinx.db" "$package_repo/dinx.db.sig"
               cp -- "$package_repo/dinx.db.tar.gz" "$package_repo/dinx.db"
               cp -- "$package_repo/dinx.db.tar.gz.sig" "$package_repo/dinx.db.sig"
-              package_count=$(find "$package_repo" -maxdepth 1 -type f \
-                -name "*.pkg.tar.zst" | awk 'END { print NR }')
-              package_repository_snapshot=$(
-                find "$package_repo" -maxdepth 1 -type f -name "*.pkg.tar.zst" -printf "%f\n" \
-                  | LC_ALL=C sort \
-                  | while IFS= read -r package_name; do
-                      digest=$(sha256sum "$package_repo/$package_name" | cut -d " " -f 1)
-                      printf "%s  %s\n" "$digest" "$package_name"
-                    done \
-                  | LC_ALL=C sort \
-                  | sha256sum \
-                  | cut -d " " -f 1
-              )
-              package_repository_db_sha256=$(sha256sum "$package_repo/dinx.db.tar.gz" | cut -d " " -f 1)
-              package_repository_key_sha256=$(sha256sum "$package_repo/dinx-package-signing-key.gpg" | cut -d " " -f 1)
-              {
-                printf "schema=dinx-package-repository/v1\n"
-                printf "channel=%s\n" "$package_repository_channel"
-                printf "snapshot=%s\n" "$package_repository_snapshot"
-                printf "signing_fingerprint=%s\n" "$signing_key"
-                printf "package_count=%s\n" "$package_count"
-                printf "publication=github-release-assets/v1\n"
-                printf "database_sha256=%s\n" "$package_repository_db_sha256"
-                printf "key_sha256=%s\n" "$package_repository_key_sha256"
-              } > "$package_repo/dinx-repository-metadata.txt"
-              scripts/check_dinx_package_repository.sh "$package_repo"
-              scripts/smoke_dinx_update.sh "$package_repo"
-              dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg
+              printf 'dinx-build-timing phase=package-repository-seed elapsed_seconds=%s exit_status=0\n' \
+                "$((SECONDS - repository_seed_started))"
 
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
@@ -555,6 +474,13 @@ trap finish EXIT
                 printf 'build-iso-container: signed package repository HTTP server did not become ready\n' >&2
                 exit 1
               fi
+              optional_build_started=$SECONDS
+              build_package cyan-skillfish-governor-smu &
+              optional_build_pids+=("$!")
+              build_package cyan-skillfish-governor-smu-dinit &
+              optional_build_pids+=("$!")
+              build_package bc250-control-center &
+              optional_build_pids+=("$!")
 
               mksquashfs_path=$(command -v mksquashfs)
               real_mksquashfs=$(readlink -f "$mksquashfs_path")
@@ -576,6 +502,60 @@ trap finish EXIT
                   "$((SECONDS - iso_assembly_started))" "$status"
                 exit "$status"
               fi
+              optional_build_status=0
+              for optional_pid in "${optional_build_pids[@]}"; do
+                if wait "$optional_pid"; then
+                  :
+                else
+                  optional_build_status=$?
+                fi
+              done
+              optional_build_pids=()
+              printf 'dinx-build-timing phase=optional-hardware-packages elapsed_seconds=%s exit_status=%s\n' \
+                "$((SECONDS - optional_build_started))" "$optional_build_status"
+              (( optional_build_status == 0 )) || exit "$optional_build_status"
+              kill "$repo_pid" 2>/dev/null || true
+              wait "$repo_pid" 2>/dev/null || true
+              repo_pid=
+              repository_finalize_started=$SECONDS
+              GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
+                "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
+              rm -f "$package_repo/dinx.db" "$package_repo/dinx.db.sig"
+              cp -- "$package_repo/dinx.db.tar.gz" "$package_repo/dinx.db"
+              cp -- "$package_repo/dinx.db.tar.gz.sig" "$package_repo/dinx.db.sig"
+              package_count=$(find "$package_repo" -maxdepth 1 -type f \
+                -name "*.pkg.tar.zst" | awk 'END { print NR }')
+              package_repository_snapshot=$(
+                find "$package_repo" -maxdepth 1 -type f -name "*.pkg.tar.zst" -printf "%f\n" \
+                  | LC_ALL=C sort \
+                  | while IFS= read -r package_name; do
+                      digest=$(sha256sum "$package_repo/$package_name" | cut -d " " -f 1)
+                      printf "%s  %s\n" "$digest" "$package_name"
+                    done \
+                  | LC_ALL=C sort \
+                  | sha256sum \
+                  | cut -d " " -f 1
+              )
+              package_repository_db_sha256=$(sha256sum "$package_repo/dinx.db.tar.gz" | cut -d " " -f 1)
+              package_repository_key_sha256=$(sha256sum "$package_repo/dinx-package-signing-key.gpg" | cut -d " " -f 1)
+              {
+                printf "schema=dinx-package-repository/v1\n"
+                printf "channel=%s\n" "$package_repository_channel"
+                printf "snapshot=%s\n" "$package_repository_snapshot"
+                printf "signing_fingerprint=%s\n" "$signing_key"
+                printf "package_count=%s\n" "$package_count"
+                printf "publication=github-release-assets/v1\n"
+                printf "database_sha256=%s\n" "$package_repository_db_sha256"
+                printf "key_sha256=%s\n" "$package_repository_key_sha256"
+              } > "$package_repo/dinx-repository-metadata.txt"
+              repository_checks_started=$SECONDS
+              scripts/check_dinx_package_repository.sh "$package_repo"
+              scripts/smoke_dinx_update.sh "$package_repo"
+              dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg
+              printf 'dinx-build-timing phase=package-repository-validation elapsed_seconds=%s exit_status=0\n' \
+                "$((SECONDS - repository_checks_started))"
+              printf 'dinx-build-timing phase=package-repository-finalize elapsed_seconds=%s exit_status=0\n' \
+                "$((SECONDS - repository_finalize_started))"
               mapfile -t iso_paths < <(find "$DINX_ISO_OUTPUT" -type f -name '*.iso' -print | LC_ALL=C sort)
               [[ ${#iso_paths[@]} -eq 1 ]] || {
                 printf 'build-iso-container: expected exactly one ISO, found %s\n' "${#iso_paths[@]}" >&2
@@ -610,6 +590,9 @@ trap finish EXIT
                 printf "deetty_source_env_sha256=%s\n" "$deetty_source_env_sha256"
                 printf "workflow_run=%s\n" "$DINX_RUN_ID"
                 printf "artix_image=%s\n" "$DINX_ARTIX_IMAGE"
+                printf "builder_image_id=%s\n" "$DINX_BUILDER_IMAGE_ID"
+                printf "builder_image_recipe_sha256=%s\n" "$DINX_BUILDER_RECIPE_SHA256"
+                printf "builder_image_refresh_date=%s\n" "$DINX_BUILDER_REFRESH_DATE"
                 printf "builder_pacman_conf_sha256=%s\n" "$builder_pacman_conf_sha256"
                 printf "builder_mirrorlist_sha256=%s\n" "$builder_mirrorlist_sha256"
                 printf "builder_mirrorlist_source=%s\n" "$builder_mirrorlist_source"

@@ -84,9 +84,31 @@ for required in \
   'scripts/check_dinx_package_repository.sh' \
   'scripts/smoke_dinx_update.sh' \
   'scripts/cache-verified-download.sh' \
+  'scripts/cache-verified-extract.sh' \
+  'scripts/smoke_cache_verified_extract.sh' \
+  'scripts/iso-builder/**' \
+  'Compute reusable build-cache input digest' \
+  'Detect changed build caches' \
+  'steps.cache-inputs.outputs.recipe_sha256' \
+  'steps.cache-dirty.outputs.package_artifacts' \
+  'steps.cache-dirty.outputs.build_data' \
+  'steps.cache-dirty.outputs.toolchains' \
+  'github.run_attempt' \
+  'dist/.cache/dinx/cargo-target' \
+  'DINX_CACHE_DIRTY_MARKER:' \
+  'Restore verified DINX package artifacts' \
+  'Restore makepkg, Cargo and Zig build caches' \
+  'Restore verified Zig toolchains' \
+  'Save verified DINX package artifacts' \
+  'Save makepkg, Cargo and Zig build caches' \
+  'Save verified Zig toolchains' \
+  'Build and cache Artix builder image' \
+  'docker/build-push-action@' \
+  'DINX_BUILDER_PREBUILT: '\''true'\''' \
+  'dist/dinx-build.log' \
   'scripts/qualify-iso.sh' \
   'scripts/check-iso-qualification-host.sh' \
-  'scripts/smoke_cache_verified_download.sh' \
+  'smoke_cache_verified_download.sh' \
   'DINX_PACKAGE_SIGNING_KEY' \
   'DINX_PACKAGE_SIGNING_FINGERPRINT' \
   'DINX_BUILD_CONTEXT: github-actions' \
@@ -103,6 +125,23 @@ for required in \
   'Bundle signed package repository for artifact portability' \
   'dist/dinx-package-repository.tar'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
+done
+for cache_helper in scripts/cache-verified-download.sh scripts/cache-verified-extract.sh; do
+  grep -Fq 'DINX_CACHE_DIRTY_MARKER' "$cache_helper" \
+    || fail "verified cache helper does not report cache changes: $cache_helper"
+done
+
+builder_packages=scripts/iso-builder/packages.txt
+[[ -r "$builder_packages" ]] || fail 'reusable Artix builder package manifest is missing'
+awk '
+  NF == 0 { next }
+  $0 !~ /^[a-z0-9][a-z0-9+_-]*$/ || seen[$0]++ { exit 1 }
+  { count++ }
+  END { if (count == 0) exit 1 }
+' "$builder_packages" || fail 'builder package manifest has invalid or duplicate entries'
+for package in artools iso-profiles mkinitcpio rust; do
+  grep -Fxq -- "$package" "$builder_packages" \
+    || fail "builder image manifest is missing required package: $package"
 done
 for required in \
   'repository: rufl/DEETTY' \
@@ -144,6 +183,8 @@ for required in \
   grep -Fq -- "$required" "$cache_helper" \
     || fail "package artifact cache helper is missing stale-signature handling: $required"
 done
+grep -Fq 'pruned stale package=%s key=%s' "$cache_helper" \
+  || fail 'package artifact cache retains unused historical keys'
 for required in \
   'set +x' \
   'package_repository_publication=github-release-assets/v1' \
@@ -163,6 +204,9 @@ for required in \
   'dinx_package_cache_key' \
   'dinx_package_cache_restore' \
   'dinx_package_cache_store' \
+  'touch -- "$DINX_CACHE_DIRTY_MARKER"' \
+  'toolchain_dirty_marker=${DINX_TOOLCHAIN_CACHE_DIRTY_MARKER:-${DINX_CACHE_DIRTY_MARKER:-}}' \
+  'touch -- "$DINX_PACKAGE_CACHE_DIRTY_MARKER"' \
   'package_cache_as_build_user() {' \
   'runuser -u dinxbuild -- bash -c' \
   'makepkg_options+=(--cleanbuild)' \
@@ -175,7 +219,11 @@ for required in \
   'pacman-key --init' \
   'SigLevel = Required' \
   'DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"' \
-  ': "${DINX_ARTIX_IMAGE:?DINX_ARTIX_IMAGE was not forwarded into the builder container}"' \
+  ': "${DINX_BUILDER_RECIPE_SHA256:?builder recipe checksum was not forwarded}"' \
+  ': "${DINX_BUILDER_IMAGE_ID:?builder image ID was not forwarded}"' \
+  'grep -Fqx "artix_image=$DINX_ARTIX_IMAGE" "$builder_image_marker"' \
+  'grep -Fqx "recipe_sha256=$DINX_BUILDER_RECIPE_SHA256" "$builder_image_marker"' \
+  'grep -Fqx "refresh_date=$DINX_BUILDER_REFRESH_DATE" "$builder_image_marker"' \
   'printf "deetty_source_env_sha256=%s\n"' \
   'mksquashfs_path=$(command -v mksquashfs)' \
   'real_mksquashfs=$(readlink -f "$mksquashfs_path")' \
@@ -187,8 +235,8 @@ for required in \
   'Server = https://mirror2.artixlinux.org/$repo/os/$arch' \
   'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch' \
   'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs' \
-  '"PKGDEST=$package_repo"' \
-  'MAKEPKG_CONF="$makepkg_conf"'; do
+  '"PKGDEST=$package_output"' \
+  'MAKEPKG_CONF="$package_makepkg_conf"'; do
   grep -Fq -- "$required" "$builder" \
     || fail "Artix container builder is missing provenance/build wiring: $required"
 done
@@ -205,12 +253,16 @@ for required in \
   '--env DINX_BUILD_CONTEXT="$build_context"' \
   '--env DINX_SOURCE_TREE_SHA256="$source_tree_sha256"' \
   '--env DINX_ARTIX_IMAGE="$image"' \
+  '--env DINX_CACHE_DIRTY_MARKER="$cache_build_data_marker"' \
+  '--env DINX_PACKAGE_CACHE_DIRTY_MARKER="$cache_package_marker"' \
+  '--env DINX_TOOLCHAIN_CACHE_DIRTY_MARKER="$cache_toolchain_marker"' \
   'bash /workspace/scripts/build-iso-container.sh'; do
   grep -Fq -- "$required" "$docker_builder" || fail "Docker wrapper is missing container wiring: $required"
 done
 for required in \
   '- "scripts/build-iso-docker.sh"' \
-  '- "scripts/build-iso-container.sh"'; do
+  '- "scripts/build-iso-container.sh"' \
+  '- "scripts/cache-verified-download.sh"'; do
   grep -Fq -- "$required" "$workflow" \
     || fail "P0 push path filters are missing build input: $required"
 done

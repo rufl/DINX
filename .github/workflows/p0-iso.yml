@@ -29,6 +29,10 @@ on:
       - "scripts/build-iso.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/build-iso-container.sh"
+      - "scripts/iso-builder/**"
+      - "scripts/cache-verified-download.sh"
+      - "scripts/cache-verified-extract.sh"
+      - "scripts/smoke_cache_verified_extract.sh"
       - "scripts/lib/dinx-package-artifact-cache.sh"
       - "scripts/smoke_package_artifact_cache.sh"
       - "scripts/iso-tools/mksquashfs"
@@ -122,16 +126,48 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Prepare verified toolchain cache
-        run: mkdir -p dist/.cache/dinx/toolchains
-      - name: Restore verified toolchain archives
-        id: toolchain-cache
+      - name: Compute reusable build-cache input digest
+        id: cache-inputs
+        run: |
+          cache_input_hash=$(
+            git ls-files -z -- distro/packages scripts/build-iso-container.sh \
+              scripts/cache-verified-download.sh scripts/cache-verified-extract.sh \
+              scripts/lib/dinx-package-artifact-cache.sh scripts/iso-builder \
+              | LC_ALL=C sort -z \
+              | xargs -0 sha256sum \
+              | sha256sum \
+              | cut -d ' ' -f 1
+          )
+          [[ "$cache_input_hash" =~ ^[0-9a-f]{64}$ ]]
+          printf 'recipe_sha256=%s\n' "$cache_input_hash" >> "$GITHUB_OUTPUT"
+      - name: Prepare reusable DINX build caches
+        run: mkdir -p dist/.cache/dinx/{package-artifacts,makepkg-sources,cargo,cargo-target,zig,toolchains}
+      - name: Restore verified DINX package artifacts
+        id: package-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/package-artifacts
+          key: dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
+          restore-keys: |
+            dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore makepkg, Cargo and Zig build caches
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: |
+            dist/.cache/dinx/makepkg-sources
+            dist/.cache/dinx/cargo
+            dist/.cache/dinx/cargo-target
+            dist/.cache/dinx/zig
+          key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
+          restore-keys: |
+            dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore verified Zig toolchains
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
         with:
           path: dist/.cache/dinx/toolchains
-          key: dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/p0-iso.yml', 'scripts/build-iso-container.sh', 'scripts/cache-verified-download.sh', 'distro/packages/pearl/source.env') }}
+          key: dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
           restore-keys: |
-            dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-
+            dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-
       - name: Read pinned Deetty/Dintor source revision
         id: deetty-source
         run: |
@@ -171,6 +207,8 @@ jobs:
         run: ./scripts/check_seafoam_settings.sh
 
       - name: Install pinned Zig for native session contracts
+        env:
+          DINX_CACHE_DIRTY_MARKER: ${{ github.workspace }}/dist/.cache/dinx/toolchains/.dinx-toolchain-cache-updated-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           zig_version=0.17.0
           zig_archive="zig-x86_64-linux-${zig_version}.tar.xz"
@@ -180,10 +218,10 @@ jobs:
             "$zig_archive_path" \
             "https://ziglang.org/download/${zig_version}/${zig_archive}" \
             "$zig_sha256"
-          tar -xJf "$zig_archive_path" --directory "$RUNNER_TEMP"
-          zig_bin="$RUNNER_TEMP/zig-x86_64-linux-${zig_version}/zig"
-          test "$("$zig_bin" version)" = "$zig_version"
-          echo "$RUNNER_TEMP/zig-x86_64-linux-${zig_version}" >> "$GITHUB_PATH"
+          zig_root="$GITHUB_WORKSPACE/dist/.cache/dinx/toolchains/extracted/zig-${zig_version}-${zig_sha256}"
+          scripts/cache-verified-extract.sh \
+            "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
+          echo "$zig_root" >> "$GITHUB_PATH"
       - name: Verify Aqueous/Pearl direct dinit session contract
         run: ./scripts/check_aqueous_pearl.sh
       - name: Verify wdisplays to Shikane persistence contract
@@ -198,6 +236,10 @@ jobs:
         run: ./scripts/check_wizp_package.sh
       - name: Verify DINX package provenance policy
         run: scripts/check_dinx_package_provenance.sh
+      - name: Smoke-test verified package-artifact cache
+        run: ./scripts/smoke_package_artifact_cache.sh
+      - name: Smoke-test verified toolchain extraction cache
+        run: ./scripts/smoke_cache_verified_extract.sh
       - name: Verify DINX feature-group coverage
         run: scripts/check_dinx_feature_groups.sh
       - name: Verify Cyan Skillfish and BC-250 support contract
@@ -248,8 +290,33 @@ jobs:
       - name: Smoke-test Windows side-by-side and manual partition transactions
         run: sudo ./scripts/smoke_calamares_windows.sh
 
+      - name: Prepare pinned builder image identity
+        id: builder-image
+        run: |
+          printf 'refresh_date=%s\n' "$(date -u +%F)" >> "$GITHUB_OUTPUT"
+          recipe_sha256=$(sha256sum scripts/iso-builder/Dockerfile scripts/iso-builder/packages.txt | sha256sum | cut -d ' ' -f 1)
+          printf 'recipe_sha256=%s\n' "$recipe_sha256" >> "$GITHUB_OUTPUT"
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - name: Build and cache Artix builder image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ./scripts/iso-builder
+          file: ./Dockerfile
+          tags: dinx-iso-builder:ci
+          load: true
+          build-args: |
+            DINX_ARTIX_IMAGE=artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
+            DINX_BUILDER_REFRESH=${{ steps.builder-image.outputs.refresh_date }}
+            DINX_BUILDER_RECIPE_SHA256=${{ steps.builder-image.outputs.recipe_sha256 }}
+          cache-from: type=gha,scope=dinx-iso-builder
+          cache-to: type=gha,scope=dinx-iso-builder,mode=max
       - name: Build with Artix artools
+        id: iso-build
         env:
+          DINX_BUILDER_IMAGE: dinx-iso-builder:ci
+          DINX_BUILDER_PREBUILT: 'true'
+          DINX_BUILDER_REFRESH_DATE: ${{ steps.builder-image.outputs.refresh_date }}
           DINX_PACKAGE_SIGNING_KEY: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_KEY || '' }}
           DINX_PACKAGE_SIGNING_FINGERPRINT: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_FINGERPRINT || '' }}
           DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING: ${{ inputs.require_persistent_package_signing }}
@@ -258,7 +325,52 @@ jobs:
           DINX_SKIP_CONTRACTS: 'true'
           DINX_SKIP_POSTBUILD_CHECKS: 'true'
           DINX_BUILD_CACHE_DIR: ${{ github.workspace }}/dist/.cache/dinx
+          DINX_BUILDER_RECIPE_SHA256: ${{ steps.builder-image.outputs.recipe_sha256 }}
         run: scripts/build-iso-docker.sh
+      - name: Detect changed build caches
+        id: cache-dirty
+        if: always()
+        run: |
+          package_marker="dist/.cache/dinx/package-artifacts/.dinx-package-cache-updated-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          data_marker="dist/.cache/dinx/.dinx-build-data-updated-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          toolchain_marker="dist/.cache/dinx/toolchains/.dinx-toolchain-cache-updated-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          package_dirty=false
+          data_dirty=false
+          toolchains_dirty=false
+          [[ ! -f "$package_marker" ]] || package_dirty=true
+          [[ ! -f "$data_marker" ]] || data_dirty=true
+          [[ ! -f "$toolchain_marker" ]] || toolchains_dirty=true
+          printf 'package_artifacts=%s\n' "$package_dirty" >> "$GITHUB_OUTPUT"
+          printf 'build_data=%s\n' "$data_dirty" >> "$GITHUB_OUTPUT"
+          printf 'toolchains=%s\n' "$toolchains_dirty" >> "$GITHUB_OUTPUT"
+          if [[ -d dist/.cache/dinx ]]; then
+            find dist/.cache/dinx -maxdepth 2 -type f \
+              \( -name '.dinx-package-cache-updated-*' -o -name '.dinx-build-data-updated-*' \
+                -o -name '.dinx-toolchain-cache-updated-*' \) \
+              -delete
+          fi
+      - name: Save verified DINX package artifacts
+        if: always() && steps.iso-build.outcome != 'skipped' && steps.cache-dirty.outputs.package_artifacts == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/package-artifacts
+          key: dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save makepkg, Cargo and Zig build caches
+        if: always() && steps.iso-build.outcome != 'skipped' && steps.cache-dirty.outputs.build_data == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: |
+            dist/.cache/dinx/makepkg-sources
+            dist/.cache/dinx/cargo
+            dist/.cache/dinx/cargo-target
+            dist/.cache/dinx/zig
+          key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save verified Zig toolchains
+        if: always() && steps.iso-build.outcome != 'skipped' && steps.cache-dirty.outputs.toolchains == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/toolchains
+          key: dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Generate checksum and locate ISO
         id: artifact
@@ -295,12 +407,6 @@ jobs:
           DINX_QEMU_TIMEOUT: 110
           DINX_INSTALL_TIMEOUT: 180
         run: scripts/qualify-iso.sh "$DINX_ISO"
-      - name: Save verified toolchain archives
-        if: success() && steps.toolchain-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
-        with:
-          path: dist/.cache/dinx/toolchains
-          key: dinx-toolchains-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/p0-iso.yml', 'scripts/build-iso-container.sh', 'scripts/cache-verified-download.sh', 'distro/packages/pearl/source.env') }}
 
       - name: Attest ISO, package repository and checksum provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -324,3 +430,4 @@ jobs:
             dist/iso/dinx/*.qemu.log
             dist/iso/dinx/*.ppm
             dist/dinx-package-repository.tar
+            dist/dinx-build.log

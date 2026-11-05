@@ -312,6 +312,8 @@ grep -Fq 'grub_theme=/boot/grub/themes/artix/theme.txt' "$live_grub_variable" \
   || fail 'live ISO GRUB does not define exactly one default DINX boot option'
 grep -Fq 'menuentry "Start DINX Linux"' "$live_grub_kernels" \
   || fail 'DINX default boot option is missing'
+[[ $(grep -Fc 'menuentry ' "$live_grub_cfg") -eq 1 ]] \
+  || fail 'live ISO GRUB has unexpected entries outside its single firmware option'
 grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$live_grub_cfg" \
   || fail 'live ISO GRUB firmware option is not limited to UEFI'
 grep -Fq 'menuentry "Boot to the Firmware/BIOS"' "$live_grub_cfg" \

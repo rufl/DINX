@@ -10,7 +10,12 @@ import sys
 from pathlib import Path
 
 BACKGROUND = (11, 13, 18)
-    r"\bstart\s+din[xvy]\b|\b(?:iso\s*/\s*dvd|usb\s*/\s*hdd)\b|\bboot\s+to\s+the\s+firmware\s*/\s*bios\b|\badvanced\s+options\b",
+GRUB_MENU = re.compile(
+    r"\bstart\s+din[xvy]\b|"
+    r"\b(?:iso\s*/\s*dvd|usb\s*/\s*hdd)\b|"
+    r"\bboot\s+to\s+the\s+firmware\s*/\s*bios\b|"
+    r"\badvanced\s+options\b",
+    re.IGNORECASE,
 )
 
 

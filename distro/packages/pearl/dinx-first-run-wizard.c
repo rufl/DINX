@@ -3,6 +3,7 @@
 
 struct Wizard {
     GtkApplication *application;
+    GtkCssProvider *style_provider;
     GtkWidget *window;
     GtkWidget *stack;
     GtkWidget *dock_enabled;
@@ -16,6 +17,93 @@ struct Wizard {
 };
 
 typedef struct Wizard Wizard;
+
+static const char dark_css[] =
+    ".dinx-wizard { background-color: #0b0d12; color: #d7dde8; }\n"
+    ".dinx-wizard label { color: #d7dde8; }\n"
+    ".dinx-wizard label.dim-label { color: #7f8a9c; }\n"
+    ".dinx-wizard button, .dinx-wizard dropdown { background-color: #11151d; color: #d7dde8; border-color: #222a38; background-image: none; }\n"
+    ".dinx-wizard dropdown button { background-color: #11151d; color: #d7dde8; border-color: #222a38; background-image: none; }\n"
+    ".dinx-wizard dropdown button label { color: #d7dde8; }\n"
+    ".dinx-wizard dropdown listview row:selected { background-color: #263249; color: #d7dde8; }\n"
+    ".dinx-wizard dropdown listview row:selected label { color: #d7dde8; }\n"
+    ".dinx-wizard button:disabled { background-color: #11151d; color: #7f8a9c; border-color: #222a38; }\n"
+    ".dinx-wizard button:hover, .dinx-wizard dropdown:hover { background-color: #263249; color: #d7dde8; }\n"
+    ".dinx-wizard button.suggested-action, .dinx-wizard button.default { background-color: #8fb8ff; color: #0b0d12; border-color: #8fb8ff; }\n"
+    ".dinx-wizard checkbutton { color: #d7dde8; }\n"
+    ".dinx-wizard checkbutton check { background-color: #11151d; border-color: #222a38; }\n"
+    ".dinx-wizard checkbutton check:checked { background-color: #8fb8ff; border-color: #8fb8ff; }\n"
+    ".dinx-wizard button:focus-visible, .dinx-wizard dropdown:focus-visible, .dinx-wizard checkbutton:focus-visible { outline: 2px solid #8fb8ff; outline-offset: 2px; }\n"
+    ".dinx-wizard popover, .dinx-wizard popover contents, .dinx-wizard listview, .dinx-wizard row { background-color: #11151d; color: #d7dde8; }\n"
+    ".dinx-wizard row:hover { background-color: #263249; color: #d7dde8; }\n";
+
+static const char light_css[] =
+    ".dinx-wizard { background-color: #f7f8fa; color: #202631; }\n"
+    ".dinx-wizard label { color: #202631; }\n"
+    ".dinx-wizard label.dim-label { color: #687386; }\n"
+    ".dinx-wizard button, .dinx-wizard dropdown { background-color: #eef1f6; color: #202631; border-color: #d9dee8; background-image: none; }\n"
+    ".dinx-wizard dropdown button { background-color: #eef1f6; color: #202631; border-color: #d9dee8; background-image: none; }\n"
+    ".dinx-wizard dropdown button label { color: #202631; }\n"
+    ".dinx-wizard dropdown listview row:selected { background-color: #d9e5ff; color: #202631; }\n"
+    ".dinx-wizard dropdown listview row:selected label { color: #202631; }\n"
+    ".dinx-wizard button:disabled { background-color: #eef1f6; color: #687386; border-color: #d9dee8; }\n"
+    ".dinx-wizard button:hover, .dinx-wizard dropdown:hover { background-color: #d9e5ff; color: #202631; }\n"
+    ".dinx-wizard button.suggested-action, .dinx-wizard button.default { background-color: #2859a8; color: #f7f8fa; border-color: #2859a8; }\n"
+    ".dinx-wizard checkbutton { color: #202631; }\n"
+    ".dinx-wizard checkbutton check { background-color: #eef1f6; border-color: #d9dee8; }\n"
+    ".dinx-wizard checkbutton check:checked { background-color: #2859a8; border-color: #2859a8; }\n"
+    ".dinx-wizard button:focus-visible, .dinx-wizard dropdown:focus-visible, .dinx-wizard checkbutton:focus-visible { outline: 2px solid #2859a8; outline-offset: 2px; }\n"
+    ".dinx-wizard popover, .dinx-wizard popover contents, .dinx-wizard listview, .dinx-wizard row { background-color: #eef1f6; color: #202631; }\n"
+    ".dinx-wizard row:hover { background-color: #d9e5ff; color: #202631; }\n";
+
+static void
+apply_theme(Wizard *wizard)
+{
+    guint selected;
+    gboolean light;
+
+    if (wizard->style_provider == NULL)
+        return;
+    selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->theme));
+    light = selected == 1 || selected == 3;
+    gtk_css_provider_load_from_string(wizard->style_provider,
+                                     light ? light_css : dark_css);
+}
+
+static void
+on_theme_changed(GObject *object, GParamSpec *property, gpointer user_data)
+{
+    Wizard *wizard = user_data;
+    (void)object;
+    (void)property;
+    apply_theme(wizard);
+}
+
+static void
+install_theme(Wizard *wizard)
+{
+    GdkDisplay *display = gdk_display_get_default();
+    if (display == NULL)
+        return;
+
+    wizard->style_provider = gtk_css_provider_new();
+    gtk_style_context_add_provider_for_display(
+        display, GTK_STYLE_PROVIDER(wizard->style_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+}
+
+static void
+remove_theme(Wizard *wizard)
+{
+    GdkDisplay *display = gdk_display_get_default();
+    if (wizard->style_provider == NULL)
+        return;
+    if (display != NULL)
+        gtk_style_context_remove_provider_for_display(
+            display, GTK_STYLE_PROVIDER(wizard->style_provider));
+    g_object_unref(wizard->style_provider);
+}
+
 
 static const char *
 text(Wizard *wizard, const char *portuguese, const char *english)
@@ -125,6 +213,8 @@ on_activate(GtkApplication *application, gpointer user_data)
     wizard->application = application;
     wizard->portuguese = g_str_has_prefix(languages[0], "pt");
     wizard->window = gtk_application_window_new(application);
+    install_theme(wizard);
+    gtk_widget_add_css_class(wizard->window, "dinx-wizard");
     gtk_window_set_title(GTK_WINDOW(wizard->window),
                          text(wizard, "Configuração inicial do Pearl", "Pearl first-run setup"));
     gtk_window_set_default_size(GTK_WINDOW(wizard->window), 560, 390);
@@ -132,6 +222,7 @@ on_activate(GtkApplication *application, gpointer user_data)
     g_signal_connect(wizard->window, "close-request", G_CALLBACK(on_close_request), wizard);
 
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_add_css_class(root, "dinx-wizard");
     gtk_window_set_child(GTK_WINDOW(wizard->window), root);
     wizard->stack = gtk_stack_new();
     gtk_stack_set_transition_type(GTK_STACK(wizard->stack), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
@@ -174,6 +265,9 @@ on_activate(GtkApplication *application, gpointer user_data)
     gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);
     gtk_widget_set_halign(wizard->theme, GTK_ALIGN_FILL);
     gtk_box_append(GTK_BOX(theme_page), wizard->theme);
+    g_signal_connect(wizard->theme, "notify::selected",
+                     G_CALLBACK(on_theme_changed), wizard);
+    apply_theme(wizard);
     gtk_stack_add_named(GTK_STACK(wizard->stack), theme_page, "theme");
 
     gtk_box_append(GTK_BOX(root), wizard->stack);
@@ -205,6 +299,7 @@ main(int argc, char **argv)
     int status = g_application_run(G_APPLICATION(application), argc, argv);
     if (!wizard.completed)
         puts("skip");
+    remove_theme(&wizard);
     g_object_unref(application);
     return status;
 }

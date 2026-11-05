@@ -334,6 +334,30 @@ env "${pearl_shell_test_env[@]}" "$pearl_shell"
 [[ $(wc -l <"$pearl_shell_test/wizard-calls") == 1 ]] \
   || fail 'Pearl first-run wizard runs again after completion'
 printf 'pearl_first_run_smoke dock=off bar=bottom theme=material-light preserves_settings=true once=true\n'
+pearl_shell_top_test="$pearl_shell_test/top"
+mkdir -p "$pearl_shell_top_test/bin" "$pearl_shell_top_test/home" \
+  "$pearl_shell_top_test/config/pearl" "$pearl_shell_top_test/state"
+cat >"$pearl_shell_top_test/wizard" <<'SH'
+#!/bin/sh
+printf 'on top material-dark\n'
+SH
+cat >"$pearl_shell_top_test/bin/pearl" <<'SH'
+#!/bin/sh
+exit 0
+SH
+chmod +x "$pearl_shell_top_test/wizard" "$pearl_shell_top_test/bin/pearl"
+printf '{}\n' >"$pearl_shell_top_test/config/pearl/preferences.json"
+env \
+  "PATH=$pearl_shell_top_test/bin:$PATH" \
+  "HOME=$pearl_shell_top_test/home" \
+  "XDG_CONFIG_HOME=$pearl_shell_top_test/config" \
+  "XDG_STATE_HOME=$pearl_shell_top_test/state" \
+  "DINX_FIRST_RUN_WIZARD=$pearl_shell_top_test/wizard" \
+  "$pearl_shell"
+jq -e '.bar.edge == "top" and .dock.edge == "bottom" and .theme.variant == "dark"' \
+  "$pearl_shell_top_test/config/pearl/preferences.json" >/dev/null \
+  || fail 'Pearl top-bar selection did not preserve the bar edge and opposite dock edge'
+printf 'pearl_bar_edge_smoke top=true bottom=true exclusive_edge=selected\n'
 qemu_screen="$pearl_shell_test/qemu-client-window.ppm"
 printf 'P6\n2 2\n255\n\377\377\377\377\377\377\377\377\377\377\377\377' >"$qemu_screen"
 cat >"$pearl_shell_test/bin/tesseract" <<'SH'

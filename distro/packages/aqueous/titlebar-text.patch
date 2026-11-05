@@ -6,10 +6,8 @@
 +        river.root_module.addCSourceFile(.{ .file = b.path("aqueous/titlebar_text.c"), .flags = &.{ "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror" } });
 --- a/compositor/aqueous/Window.zig
 +++ b/compositor/aqueous/Window.zig
-@@ -23,2 +23,3 @@
- const pointer_drag = @import("wm/input/drag.zig");
+@@ -24,0 +25,1 @@
 +const titlebar_text = @import("titlebar_text.zig");
- const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
 @@ -140,2 +141,3 @@
      close_glyph: [9]*wlr.SceneRect,
 +    title_text: *wlr.SceneBuffer,

@@ -588,7 +588,7 @@ fn onNetworkClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 }
 
 fn onBluetoothClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{"blueman-manager"});
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-bluetooth-manager"});
 }
 
 fn onAudioClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
@@ -616,7 +616,7 @@ fn onServicesClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 
 
 fn onFirewallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{"gufw"});
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-gufw"});
 }
 fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).runUpgradeCheck();

@@ -267,6 +267,7 @@ required_paths=(
   usr/bin/zathura
   usr/bin/pwvucontrol
   usr/bin/blueman-manager
+  usr/bin/bluetoothctl
   usr/bin/upower
   usr/bin/inxi
   usr/bin/lspci
@@ -311,6 +312,7 @@ required_paths=(
   usr/share/applications/com.shellyorg.shelly-notifications.desktop
   usr/bin/ufw
   usr/bin/gufw
+  usr/bin/gufw-pkexec
   usr/bin/qps
   usr/bin/opensnitchd
   usr/bin/opensnitch-ui
@@ -320,6 +322,7 @@ required_paths=(
   usr/share/applications/gufw.desktop
   usr/share/applications/qps.desktop
   usr/local/share/applications/gufw.desktop
+  usr/local/libexec/dinx-gufw
   usr/local/share/applications/qps.desktop
   usr/local/share/applications/opensnitch_ui.desktop
   usr/share/applications/opensnitch_ui.desktop
@@ -387,6 +390,7 @@ required_paths=(
   usr/local/share/applications/com.github.neithern.g4music.desktop
   usr/local/share/applications/vlc.desktop
   usr/local/share/applications/blueman-manager.desktop
+  usr/local/libexec/dinx-bluetooth-manager
   usr/local/share/applications/nm-connection-editor.desktop
   usr/local/share/applications/com.saivert.pwvucontrol.desktop
   usr/local/share/applications/mimeinfo.cache
@@ -1108,7 +1112,7 @@ usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagen
 usr/local/share/applications/org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
-usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|blueman-manager
+usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
 usr/local/share/applications/org.gnome.FileRoller.desktop|Archive Manager|Descompactador|file-roller %U

@@ -142,8 +142,8 @@
  const util = @import("util.zig");
  const scaling = @import("scaling");
 +const pointer_drag = @import("wm/input/drag.zig");
- const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
 +const decoration_policy = @import("wm/window_decoration_policy.zig");
+ const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
 @@ -41,2 +41,32 @@ const log = std.log.scoped(.wm);
@@ -327,7 +327,7 @@
  
 @@ -1314,0 +1315,1 @@
 +                .corner_radius = pearlCornerRadius(),
-@@ -2666,6 +2716,133 @@
+@@ -2666,6 +2716,138 @@
      } };
  }
  
@@ -355,8 +355,13 @@
 +
 +fn usesServerTitlebar(window: *const Window) bool {
 +    return switch (window.impl) {
-+        .toplevel => decoration_policy.shouldDrawServerTitlebar(false, window.wm_requested.ssd),
-+        .xwayland => decoration_policy.shouldDrawServerTitlebar(true, false),
++        .toplevel => window.wm_requested.ssd,
++        .xwayland => decoration_policy.useServerSideDecorations(
++            false,
++            true,
++            window.wm_scheduled.decoration_hint == .prefers_csd or
++                window.wm_scheduled.decoration_hint == .only_supports_csd,
++        ),
 +        .destroying => false,
 +    };
 +}
@@ -669,20 +674,16 @@ diff --git a/compositor/aqueous/wm/window_decoration_policy.zig b/compositor/aqu
 new file mode 100644
 --- /dev/null
 +++ b/compositor/aqueous/wm/window_decoration_policy.zig
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,17 @@
 +const std = @import("std");
 +
-+/// Keep client titlebars for CSD clients unless the user explicitly forces SSD.
++/// Honor client CSD unless server decorations are explicitly forced.
 +pub fn useServerSideDecorations(
 +    force_ssd: bool,
-+    has_xdg_decoration: bool,
++    server_decorations_available: bool,
 +    client_requires_csd: bool,
 +) bool {
-+    return has_xdg_decoration and (force_ssd or !client_requires_csd);
-+}
-+
-+pub fn shouldDrawServerTitlebar(is_xwayland: bool, ssd: bool) bool {
-+    return is_xwayland or ssd;
++    return server_decorations_available and (force_ssd or !client_requires_csd);
 +}
 +
 +test "server decorations honor client CSD preference" {
@@ -690,10 +691,4 @@ new file mode 100644
 +    try std.testing.expect(!useServerSideDecorations(false, true, true));
 +    try std.testing.expect(useServerSideDecorations(false, true, false));
 +    try std.testing.expect(useServerSideDecorations(true, true, true));
-+}
-+
-+test "XWayland keeps server titlebars while xdg CSD does not" {
-+    try std.testing.expect(!shouldDrawServerTitlebar(false, false));
-+    try std.testing.expect(shouldDrawServerTitlebar(true, false));
-+    try std.testing.expect(shouldDrawServerTitlebar(false, true));
 +}

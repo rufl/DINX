@@ -219,6 +219,12 @@ grep -Fq 'force_ssd = false' "$aqueous_layout" \
   || fail 'Aqueous must honor client-side GTK decorations by default'
 grep -Fq 'client_requires_csd' "$aqueous_decoration_patch" \
   || fail 'Aqueous decoration policy does not distinguish client-side decorations'
+grep -Fq '.xwayland => decoration_policy.useServerSideDecorations(' "$aqueous_decoration_patch" \
+  || fail 'Aqueous XWayland decoration policy ignores client CSD hints'
+grep -Fq 'window.wm_scheduled.decoration_hint == .prefers_csd or' "$aqueous_decoration_patch" \
+  || fail 'Aqueous XWayland decoration policy misses preferred CSD'
+grep -Fq 'window.wm_scheduled.decoration_hint == .only_supports_csd' "$aqueous_decoration_patch" \
+  || fail 'Aqueous XWayland decoration policy misses required CSD'
 grep -Fq 'if (!window.usesServerTitlebar()) return null;' "$aqueous_decoration_patch" \
   || fail 'Aqueous titlebar hit testing is active without server-side decorations'
 for gtk_settings in "$gtk3_system" "$gtk3_skel" "$gtk4_system" "$gtk4_skel"; do
@@ -350,4 +356,4 @@ if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true xwayland_csd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

@@ -5,9 +5,10 @@ This file records meaningful DINX changes in direct language. It does not claim 
 ## Unreleased
 
 - Draw Aqueous titlebars above client content and extend the continuous rounded frame around titlebar and client surfaces. Double-clicking the titlebar toggles maximize/restore; restore returns the saved floating geometry, keeps focus, and raises the window. Pearl's `window_corner_radius` applies at the next Vulkan-effects Aqueous session; CPU-compatibility rendering remains square.
-- Default GNOME/libadwaita to dark mode only when dconf has no explicit user choice; honor xdg-decoration CSD requests so GTK-owned titlebars do not overlap compositor titlebars, content offsets or controls.
+- Default GNOME/libadwaita to dark mode only when dconf has no explicit user choice; honor xdg-decoration CSD requests and XWayland Motif CSD hints so client-owned titlebars do not overlap compositor titlebars, content offsets or controls.
 - Hide the upstream Artix Calamares desktop entry and run `Install DINX` through a Wayland/D-Bus-preserving polkit helper with visible startup errors; seed an `Install DINX` desktop shortcut for the live user and new installed users.
 - Include `squashfs-tools` in the live rootfs because Calamares `unpackfs` requires `unsquashfs`; remove the installer-only dependency from the installed system and verify both sides in ISO and install-smoke checks.
+- Launch Gapless directly so it inherits the live Wayland environment; route Gufw through a helper that resolves its pkexec executable consistently; show a localized diagnostic when Bluetooth is unavailable, including VirtualBox USB passthrough guidance.
 
 
 - Use canonical `rufl/DEETTY` source access with an optional `DEETTY_SOURCE_READ_TOKEN`, and rename Deetty smoke/qualification executable outputs, fixture markers and isolated-display test variables; upstream module, ABI, config and resource identifiers remain pinned source internals.

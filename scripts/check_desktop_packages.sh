@@ -8,17 +8,27 @@ mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
 file_roller_mime_cache="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/mimeinfo.cache"
 gufw_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/gufw.desktop"
+gufw_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gufw"
+bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
 qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
 opensnitch_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/opensnitch_ui.desktop"
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
 desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
+display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
   exit 1
 }
+[[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
+sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
+[[ -x "$gufw_helper" ]] || fail 'DINX GUFW launcher is missing or not executable'
+sh -n "$gufw_helper" || fail 'DINX GUFW launcher has invalid shell syntax'
+grep -Fqx 'PATH=/usr/bin:/usr/local/bin:/usr/sbin:/sbin' "$gufw_helper" || fail 'GUFW launcher does not prioritize the canonical polkit executable path'
+grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
+grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
 for package in file-roller galculator gapless gparted sane fwupd flatpak kolourpaint phyto pori shikane udisks2 udisks2-btrfs wdisplays; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
@@ -39,6 +49,9 @@ grep -Fqx 'pkgver=4.6.2' "$gapless_recipe" || fail 'Gapless package version is n
 grep -Fqx 'GAPLESS_VERSION=4.6.2' "$gapless_source" || fail 'Gapless source version is not pinned to 4.6.2'
 grep -Fqx '  gst-plugins-base' "$gapless_recipe" || fail 'Gapless package does not require GStreamer base codecs'
 grep -Fqx '  gst-plugins-good' "$gapless_recipe" || fail 'Gapless package does not require GStreamer good codecs'
+if grep -Fqx 'DBusActivatable=true' "$local_apps/com.github.neithern.g4music.desktop"; then
+  fail 'Gapless must inherit the active Wayland environment instead of using session D-Bus activation'
+fi
 grep -Fqx 'Name=Archive Manager' "$file_roller_override" || fail 'File Roller English desktop name is missing'
 grep -Fqx 'Name[pt_BR]=Descompactador' "$file_roller_override" || fail 'File Roller Portuguese desktop name is missing'
 grep -Fqx 'TryExec=file-roller' "$file_roller_override" || fail 'File Roller override does not resolve the installed binary'
@@ -46,8 +59,10 @@ grep -Fqx 'Exec=file-roller %U' "$file_roller_override" || fail 'File Roller ove
 grep -Fqx 'Icon=org.gnome.FileRoller' "$file_roller_override" || fail 'File Roller override icon is missing'
 grep -Fqx 'Name=Firewall' "$gufw_override" || fail 'Gufw English desktop name is missing'
 grep -Fqx 'Name[pt_BR]=Firewall' "$gufw_override" || fail 'Gufw Portuguese desktop name is missing'
-grep -Fqx 'TryExec=gufw' "$gufw_override" || fail 'Gufw override does not resolve the installed binary'
-grep -Fqx 'Exec=gufw' "$gufw_override" || fail 'Gufw override command is missing'
+grep -Fqx 'TryExec=/usr/local/libexec/dinx-gufw' "$gufw_override" || fail 'Gufw override does not resolve its DINX launcher'
+grep -Fq 'bluetoothctl list' "$bluetooth_helper" || fail 'Bluetooth launcher does not detect available controllers'
+grep -Fq 'exec blueman-manager' "$bluetooth_helper" || fail 'Bluetooth launcher does not open Blueman when a controller exists'
+grep -Fqx 'Exec=/usr/local/libexec/dinx-gufw' "$gufw_override" || fail 'Gufw override does not use the path-safe DINX launcher'
 grep -Fqx 'Icon=gufw' "$gufw_override" || fail 'Gufw override icon is missing'
 grep -Fqx 'Name=Process Manager' "$qps_override" || fail 'Qps English desktop name is missing'
 grep -Fqx 'Name[pt_BR]=Processos' "$qps_override" || fail 'Qps Portuguese desktop name is missing'
@@ -78,7 +93,7 @@ swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
 com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
-blueman-manager.desktop|Bluetooth|Bluetooth|blueman-manager
+blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
 EOF

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+# GUFW passes `which gufw-pkexec` to pkexec; keep /usr/bin ahead of merged-/usr aliases.
+PATH=/usr/bin:/usr/local/bin:/usr/sbin:/sbin
+export PATH
+
+exec /usr/bin/gufw "$@"

@@ -39,7 +39,7 @@ User scope uses `dinitctl --user`. System scope uses `dinitctl --system` and ret
 
 ## Aqueous/Pearl session contract
 
-Aqueous draws DINX titlebars and controls for xdg-decoration clients whose negotiated mode is server-side. By default, clients that request or require client-side decorations keep their own titlebars; Aqueous omits its titlebar, 36-pixel content offset and titlebar hit regions for those windows. Clients with no CSD preference or a server-side preference receive DINX chrome. `force_ssd=true` remains an explicit override. `GTK_CSD=0` disables GTK's default CSD, not application-owned custom headerbars. The session seeds `org.gnome.desktop.interface color-scheme='prefer-dark'` only when dconf has no user value, preserving explicit light/dark choices. Dragging an unobstructed server titlebar moves the window and uses Aqueous floating-window snapping: side/bottom edges snap to halves, corners to quarters, and the top edge maximizes. Fullscreen windows hide the titlebar. Menus and popups keep their own behavior.
+Aqueous draws DINX titlebars and controls for XDG clients whose negotiated xdg-decoration mode is server-side. By default, clients that request or require client-side decorations keep their own titlebars; Aqueous omits its titlebar, 36-pixel content offset and titlebar hit regions for those windows. XWayland clients use their Motif decoration hints: CSD clients keep their own titlebars, while SSD/no-CSD clients receive DINX chrome. `force_ssd=true` explicitly overrides CSD for XDG clients. `GTK_CSD=0` disables GTK's default CSD, not application-owned custom headerbars. The session seeds `org.gnome.desktop.interface color-scheme='prefer-dark'` only when dconf has no user value, preserving explicit light/dark choices. Dragging an unobstructed server titlebar moves the window and uses Aqueous floating-window snapping: side/bottom edges snap to halves, corners to quarters, and the top edge maximizes. Fullscreen windows hide the titlebar. Menus and popups keep their own behavior.
 
 Pearl Settings avoids its own client-side headerbar in this session, leaving one compositor decoration. GTK-theme mode sets an opaque theme background. The Pearl border-sync option synchronizes colors, not geometry: the `aqueous-cpu` compatibility build disables Vulkan effects and keeps square corners; rounded compositor corners require Aqueous with Vulkan effects enabled.
 
@@ -68,6 +68,7 @@ DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO 
 | --- | --- |
 | Terminal discovery | `$TERMINAL` launches Deetty with a shell and requested directory |
 | Desktop metadata | `.desktop` entries are valid and discoverable |
+| Optional desktop app launch | Gapless inherits the active Wayland session; Gufw uses a stable `gufw-pkexec` path; Bluetooth Manager explains missing daemon/controller instead of failing silently (VirtualBox needs USB Bluetooth passthrough) |
 | Launch arguments | file, line and working-directory behavior is deterministic |
 | Theme contract | static DINX palette, system-wide GTK 3/4 dark defaults, session GTK dark selection, Qt6ct DINX palette, and GTK 3/4 fallback titlebar controls are configured |
 | Greeter/installer/boot | Pearl Greeter, Calamares and GRUB expose DINX surface, text, selection and focus states |

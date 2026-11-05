@@ -206,6 +206,8 @@ DEETTY_SOURCE_CHECKOUT=/caminho/para/DEETTY bash scripts/build-iso-docker.sh
 
 O build do pacote Deetty limpa a árvore de fontes em cache antes de aplicar patches. Uma tentativa com falha não deixa fontes modificadas que quebrem a próxima execução.
 
+A criação local da imagem do builder tenta novamente no máximo duas vezes (três tentativas no total), somente para o erro transitório de gateway do BuildKit `forwarding Ping: no such job`, com três segundos entre tentativas. Outros erros encerram imediatamente.
+
 Requisitos: Docker rootful acessível, suporte a `--privileged` e dispositivos loop, rede e espaço livre para o rootfs/ISO. Por padrão, o build local executa a qualificação completa usada pelo workflow P0. Isso também exige os comandos listados em `scripts/check-iso-qualification-host.sh full`, QEMU com o dispositivo `virtio-vga`, Tesseract com o modelo `eng`, firmware OVMF e `sudo` (ou root). Confira antes de começar:
 
 ```sh

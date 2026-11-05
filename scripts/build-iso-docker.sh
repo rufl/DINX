@@ -51,10 +51,15 @@ case "$skip_postbuild_checks" in
   false|0) skip_postbuild_checks=false ;;
   *) fail 'DINX_SKIP_POSTBUILD_CHECKS must be true/false or 1/0' ;;
 esac
+builder_attempt_log=
 wrapper_started=$SECONDS
 wrapper_finish() {
   local status=${1:-$?}
   trap - EXIT
+  if [[ -n "$builder_attempt_log" ]]; then
+    rm -f -- "$builder_attempt_log" || status=1
+    builder_attempt_log=
+  fi
   printf 'dinx-build-timing phase=wrapper-total elapsed_seconds=%s exit_status=%s\n' \
     "$((SECONDS - wrapper_started))" "$status"
   exit "$status"
@@ -320,20 +325,47 @@ builder_image_started=$SECONDS
 if [[ "$builder_prebuilt" == true || "$builder_prebuilt" == 1 ]]; then
   printf 'dinx-builder-image: using prebuilt image %s\n' "$builder_image"
 else
-  if docker build \
-    --build-arg "DINX_ARTIX_IMAGE=$image" \
-    --build-arg "DINX_BUILDER_REFRESH=$builder_refresh_date" \
-    --build-arg "DINX_BUILDER_RECIPE_SHA256=$builder_recipe_sha256" \
-    --file "$builder_dockerfile" \
-    --tag "$builder_image" \
-    "$(dirname -- "$builder_dockerfile")"; then
-    :
-  else
-    build_status=$?
+  builder_attempt_log=$(mktemp "${TMPDIR:-/tmp}/dinx-builder-image.XXXXXX")
+  builder_image_attempt=1
+  while :; do
+    printf 'dinx-builder-image: attempt=%s/3 image=%s\n' \
+      "$builder_image_attempt" "$builder_image"
+    if docker build \
+      --build-arg "DINX_ARTIX_IMAGE=$image" \
+      --build-arg "DINX_BUILDER_REFRESH=$builder_refresh_date" \
+      --build-arg "DINX_BUILDER_RECIPE_SHA256=$builder_recipe_sha256" \
+      --file "$builder_dockerfile" \
+      --tag "$builder_image" \
+      "$(dirname -- "$builder_dockerfile")" 2>&1 | tee "$builder_attempt_log"; then
+      build_status=0
+      tee_status=0
+    else
+      pipeline_status=("${PIPESTATUS[@]}")
+      build_status=${pipeline_status[0]}
+      tee_status=${pipeline_status[1]}
+    fi
+    if (( tee_status != 0 )); then
+      printf 'build-iso-docker: failed to capture builder image build output with exit status %s; log: %s\n' \
+        "$tee_status" "$build_log_host" >&2
+      exit "$tee_status"
+    fi
+    if (( build_status == 0 )); then
+      break
+    fi
+    if (( builder_image_attempt < 3 )) \
+      && grep -Fq -- 'forwarding Ping: no such job ' "$builder_attempt_log"; then
+      printf 'dinx-builder-image: transient BuildKit gateway Ping failure; retrying attempt %s/3 after 3 seconds\n' \
+        "$((builder_image_attempt + 1))"
+      sleep 3
+      ((builder_image_attempt += 1))
+      continue
+    fi
     printf 'build-iso-docker: builder image creation failed with exit status %s; log: %s\n' \
       "$build_status" "$build_log_host" >&2
     exit "$build_status"
-  fi
+  done
+  rm -f -- "$builder_attempt_log"
+  builder_attempt_log=
 fi
 for label in artix-image refresh-date recipe-sha256; do
   case "$label" in

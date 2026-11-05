@@ -145,7 +145,7 @@
  const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
-@@ -41,2 +41,38 @@ const log = std.log.scoped(.wm);
+@@ -41,2 +41,45 @@ const log = std.log.scoped(.wm);
 +var pearl_corner_radius_cache: ?u31 = null;
 +
 +fn pearlCornerRadius() u31 {
@@ -171,7 +171,14 @@
 +        defer util.gpa.free(path);
 +        var arena = std.heap.ArenaAllocator.init(util.gpa);
 +        defer arena.deinit();
-+        const bytes = std.fs.cwd().readFileAlloc(arena.allocator(), path, 65536) catch return radius;
++        const io = std.Io.Threaded.global_single_threaded.io();
++        const bytes = std.Io.Dir.readFileAlloc(
++            std.Io.Dir.cwd(),
++            io,
++            path,
++            arena.allocator(),
++            .limited(65536),
++        ) catch return radius;
 +        const root = std.json.parseFromSliceLeaky(std.json.Value, arena.allocator(), bytes, .{}) catch return radius;
 +        if (root == .object) if (root.object.get("window_corner_radius")) |value| {
 +            if (value == .integer and value.integer >= 0 and value.integer <= 32) {
@@ -184,7 +191,7 @@
 +}
  
  pub const Dimensions = struct {
-@@ -97,6 +105,14 @@
+@@ -97,6 +112,14 @@
      right: *wlr.SceneRect,
      top: *wlr.SceneRect,
      bottom: *wlr.SceneRect,
@@ -199,9 +206,9 @@
  };
  
  /// Windowing state requested by the wm.
-@@ -653,0 +660,1 @@
+@@ -653,0 +667,1 @@
 +        .corner_radius = pearlCornerRadius(),
-@@ -787,14 +803,47 @@
+@@ -787,14 +810,47 @@
      hasher.update(std.mem.asBytes(&workspace_id));
  }
  
@@ -251,7 +258,7 @@
  }
  
  pub fn create(impl: Impl) error{OutOfMemory}!*Window {
-@@ -820,9 +869,16 @@
+@@ -820,9 +876,16 @@
          try anim_tree.createSceneRect(0, 0, &.{ 0, 0, 0, 1.0 / 255.0 });
      const anim_surfaces_tree = try anim_tree.createSceneTree();
      const anim_border_tree = try anim_tree.createSceneTree();
@@ -269,7 +276,7 @@
  
      window.* = .{
          .ref = .{ .key = key },
-@@ -830,28 +886,22 @@
+@@ -830,28 +893,22 @@
          .impl = impl,
          .tree = tree,
          .backdrop_blur = backdrop_blur,
@@ -305,9 +312,9 @@
          .workspace_link = undefined,
      };
  
-@@ -1314,0 +1321,1 @@
+@@ -1314,0 +1328,1 @@
 +                .corner_radius = pearlCornerRadius(),
-@@ -2666,6 +2716,125 @@
+@@ -2666,6 +2723,125 @@
      } };
  }
  
@@ -433,7 +440,7 @@
  fn disableBorderNodes(nodes: *const BorderNodes) void {
      inline for (.{
          "rounded_outline",
-@@ -2673,9 +2832,17 @@
+@@ -2673,9 +2839,17 @@
          "right",
          "top",
          "bottom",
@@ -451,7 +458,7 @@
  }
  
  fn drawBorderNodes(
-@@ -2693,6 +2860,10 @@
+@@ -2693,6 +2867,10 @@
      };
 +    drawTitlebar(window, nodes, clip);
 +    const titlebar_height_i: i32 = @intCast(pointer_drag.titlebar_height);
@@ -462,7 +469,7 @@
  
      // f32 cannot represent all u32 values exactly, therefore we must initially use f64
      // (which can) and then cast to f32, potentially losing precision.
-@@ -2843,6 +3014,27 @@
+@@ -2843,6 +3021,27 @@
  /// Returns null if the window is currently being destroyed and no longer has
  /// an associated surface.
  /// May also return null for Xwayland windows that are not currently mapped.

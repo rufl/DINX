@@ -201,7 +201,8 @@ zls_environment=$(chroot "$target_dir" /usr/bin/zls env) \
 grep -Eq '/etc/(zls|xdg/zls)\.json' <<<"$zls_environment" \
   || fail 'installed ZLS configuration is not selected'
 printf 'smoke-install: checking installed runtime libraries\n'
-for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings /usr/bin/zls; do
+# The pinned ZLS release is statically linked; ldd exits 1 for it as "not a dynamic executable".
+for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings; do
   [[ -x "$target_dir$binary" ]] || fail "installed binary is missing: ${binary##*/}"
   ldd_output=$(chroot "$target_dir" /usr/bin/ldd "$binary" 2>&1) \
     || fail "installed library check failed: ${binary##*/}"

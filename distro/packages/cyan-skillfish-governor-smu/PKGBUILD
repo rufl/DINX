@@ -1,5 +1,11 @@
 pkgname=cyan-skillfish-governor-smu
-pkgver=0.4.14
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${CYAN_SKILLFISH_GOVERNOR_VERSION:?missing version}"
+: "${CYAN_SKILLFISH_GOVERNOR_SOURCE_URL:?missing source URL}"
+: "${CYAN_SKILLFISH_GOVERNOR_SOURCE_B2:?missing source checksum}"
+pkgver="$CYAN_SKILLFISH_GOVERNOR_VERSION"
 pkgrel=1
 pkgdesc='SMU-based GPU governor for AMD Cyan Skillfish APUs'
 arch=('x86_64')
@@ -10,8 +16,8 @@ conflicts=('cyan-skillfish-governor-tt' 'oberon-governor')
 depends=('libdrm')
 makedepends=('cargo')
 backup=('etc/cyan-skillfish-governor-smu/config.toml')
-source=("https://github.com/filippor/cyan-skillfish-governor/archive/refs/tags/v${pkgver}.tar.gz")
-b2sums=('794aa04522c28db72462a347d1033ec22e8b6fad8f4b912c8229d1d1d773b49c1b8325bb46b5b2b3a254751f25c5548dc27b6ab76142e902c70ff17dd42e806e')
+source=("$CYAN_SKILLFISH_GOVERNOR_SOURCE_URL")
+b2sums=("$CYAN_SKILLFISH_GOVERNOR_SOURCE_B2")
 
 prepare() {
   cd "$srcdir/cyan-skillfish-governor-$pkgver"

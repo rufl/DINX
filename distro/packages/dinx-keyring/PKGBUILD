@@ -1,0 +1,45 @@
+pkgname=dinx-keyring
+pkgver=20261031
+pkgrel=1
+pkgdesc='DINX pacman repository trust and mirror configuration'
+arch=('any')
+url='https://github.com/rufl/DINX'
+license=('Apache-2.0')
+depends=('pacman')
+backup=('etc/pacman.d/dinx-mirrorlist')
+install=dinx-keyring.install
+source=(
+  'dinx.gpg::https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.12/dinx-package-signing-key.gpg'
+  'dinx-mirrorlist'
+  'dinx-configure-repository'
+)
+sha256sums=(
+  'dcebc6d08e1e46738e768bcd91ece5beb3ef4f8752079f0babba864fb41a6445'
+  '709cce87bcef0560e63e6e7545a6306aa72fdb82f92f711f45bbe2c443b9a011'
+  '34605f506fafb74cd509f597b6cf794795751c76019698a6d5e4d0b4229b22a8'
+)
+
+build() {
+  local key_home="$srcdir/key-verification"
+  install -d -m 700 "$key_home"
+  gpg --batch --homedir "$key_home" --import "$srcdir/dinx.gpg" >/dev/null 2>&1
+  local fingerprint
+  fingerprint=$(gpg --batch --homedir "$key_home" --with-colons --list-keys \
+    | awk -F: '$1 == "fpr" { print toupper($10); exit }')
+  [[ "$fingerprint" == D8F294B7367BD0DAF626E4DCD411E36494CB9CEB ]] || {
+    printf 'DINX package key fingerprint mismatch: %s\n' "$fingerprint" >&2
+    return 1
+  }
+}
+
+package() {
+  local keyring_dir="$pkgdir/usr/share/pacman/keyrings"
+  install -Dm644 "$srcdir/dinx.gpg" "$keyring_dir/dinx.gpg"
+  printf '%s:4\n' D8F294B7367BD0DAF626E4DCD411E36494CB9CEB \
+    > "$keyring_dir/dinx-trusted"
+  : > "$keyring_dir/dinx-revoked"
+  install -Dm644 "$srcdir/dinx-mirrorlist" \
+    "$pkgdir/etc/pacman.d/dinx-mirrorlist"
+  install -Dm755 "$srcdir/dinx-configure-repository" \
+    "$pkgdir/usr/lib/dinx-keyring/configure-repository"
+}

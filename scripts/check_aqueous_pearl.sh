@@ -34,16 +34,33 @@ for path in \
 done
 
 source "$aqueous_dir/source.env"
-[[ "$AQUEOUS_VERSION" == 1.0.5 ]] || fail "unexpected Aqueous version: $AQUEOUS_VERSION"
-[[ "$AQUEOUS_SOURCE_SHA256" == 7f71b328c191657a441b6c4ee3a18343f1751a5f2dacec229bf3d50c9de561d8 ]] \
-  || fail 'Aqueous source checksum changed'
+[[ "$AQUEOUS_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Aqueous version: $AQUEOUS_VERSION"
+[[ "$AQUEOUS_SOURCE_URL" == "$AQUEOUS_REPOSITORY/archive/refs/tags/"*".tar.gz" ]] \
+  || fail 'Aqueous source URL is not an upstream tagged archive'
+[[ "$AQUEOUS_SOURCE_URL" == *"${AQUEOUS_VERSION}.tar.gz" ]] \
+  || fail 'Aqueous source URL does not match the version pin'
+[[ "$AQUEOUS_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Aqueous source checksum is invalid'
+grep -Fq 'pkgver="$AQUEOUS_VERSION"' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous PKGBUILD version is not wired to source.env'
+grep -Fq '"$AQUEOUS_SOURCE_URL"' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous PKGBUILD URL is not wired to source.env'
+grep -Fq '"$AQUEOUS_SOURCE_SHA256"' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous PKGBUILD checksum is not wired to source.env'
 [[ "$AQUEOUS_WLROOTS_SHA256" == 972c7ac44b17828f4702bfae7cd8347346a3fb5b2c1076cfa2c3fcedac5ec343 ]] \
   || fail 'Aqueous wlroots checksum changed'
 source "$pearl_dir/source.env"
-[[ "$PEARL_VERSION" == 0.3.0 ]] || fail "unexpected Pearl version: $PEARL_VERSION"
-
-[[ "$PEARL_SOURCE_SHA256" == afb15f5650cdd0aa00a9d6ee697dec1cde2cb9eaa77b1631e4876c125caba24a ]] \
-  || fail 'Pearl source checksum changed'
+[[ "$PEARL_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pearl version: $PEARL_VERSION"
+[[ "$PEARL_SOURCE_URL" == "$PEARL_REPOSITORY/archive/refs/tags/"*".tar.gz" ]] \
+  || fail 'Pearl source URL is not an upstream tagged archive'
+[[ "$PEARL_SOURCE_URL" == *"${PEARL_VERSION}.tar.gz" ]] \
+  || fail 'Pearl source URL does not match the version pin'
+[[ "$PEARL_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Pearl source checksum is invalid'
+grep -Fq 'pkgver="$PEARL_VERSION"' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl PKGBUILD version is not wired to source.env'
+grep -Fq '"$PEARL_SOURCE_URL"' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl PKGBUILD URL is not wired to source.env'
+grep -Fq '"$PEARL_SOURCE_SHA256"' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl PKGBUILD checksum is not wired to source.env'
 [[ "$PEARL_ZIG_VERSION" == 0.16.0 ]] || fail "unexpected Pearl Zig version: $PEARL_ZIG_VERSION"
 [[ "$PEARL_ZIG_SOURCE_URL" == https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz ]] \
   || fail 'Pearl Zig source URL changed'
@@ -56,8 +73,10 @@ grep -Fq "  'libglvnd'" "$aqueous_dir/PKGBUILD" \
 if grep -Eq 'pixman-rounded-corners|0034-pixman-rounded-window-corners' "$aqueous_dir/PKGBUILD"; then
   fail 'Aqueous package still applies the custom Pixman scene-buffer patch'
 fi
-aqueous_archive="$aqueous_dir/Aqueous-$AQUEOUS_VERSION.tar.gz"
-[[ -r "$aqueous_archive" ]] || fail "missing pinned Aqueous source archive: ${aqueous_archive#$root/}"
+source_cache="${DINX_PACKAGE_SOURCE_CACHE_DIR:-$root/dist/.cache/dinx/makepkg-sources}"
+aqueous_archive="$source_cache/aqueous/Aqueous-$AQUEOUS_VERSION.tar.gz"
+"$root/scripts/cache-verified-download.sh" \
+  "$aqueous_archive" "$AQUEOUS_SOURCE_URL" "$AQUEOUS_SOURCE_SHA256"
 for command_name in tar patch; do
   command -v "$command_name" >/dev/null 2>&1 || fail "required command not found: $command_name"
 done

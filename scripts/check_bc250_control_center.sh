@@ -19,10 +19,16 @@ for path in \
 done
 
 source distro/packages/bc250-control-center/source.env
-[[ "$BC250_CONTROL_CENTER_VERSION" == 1.21.1 ]] || fail "unexpected version: $BC250_CONTROL_CENTER_VERSION"
-[[ "$BC250_CONTROL_CENTER_SOURCE_URL" == "https://github.com/movacx/bc250-control-center/archive/refs/tags/v${BC250_CONTROL_CENTER_VERSION}.tar.gz" ]] || fail 'source URL is not pinned to the release tag'
-grep -Fq "pkgver=${BC250_CONTROL_CENTER_VERSION}" distro/packages/bc250-control-center/PKGBUILD || fail 'PKGBUILD version is not pinned'
-grep -Fq "$BC250_CONTROL_CENTER_SOURCE_SHA256" distro/packages/bc250-control-center/PKGBUILD || fail 'source SHA-256 is not pinned'
+[[ "$BC250_CONTROL_CENTER_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid version: $BC250_CONTROL_CENTER_VERSION"
+[[ "$BC250_CONTROL_CENTER_SOURCE_URL" == https://github.com/movacx/bc250-control-center/archive/refs/tags/*".tar.gz" ]] \
+  || fail 'source URL is not an upstream release archive'
+[[ "$BC250_CONTROL_CENTER_SOURCE_URL" == *"${BC250_CONTROL_CENTER_VERSION}.tar.gz" ]] \
+  || fail 'source URL does not match the version pin'
+[[ "$BC250_CONTROL_CENTER_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'source SHA-256 is invalid'
+grep -Fq 'pkgver="$BC250_CONTROL_CENTER_VERSION"' distro/packages/bc250-control-center/PKGBUILD \
+  || fail 'PKGBUILD version is not wired to source.env'
+grep -Fq '"$BC250_CONTROL_CENTER_SOURCE_SHA256"' distro/packages/bc250-control-center/PKGBUILD \
+  || fail 'source SHA-256 is not wired to source.env'
 grep -Fq "license=('MIT')" distro/packages/bc250-control-center/PKGBUILD || fail 'MIT license is missing'
 for dependency in python-pyqt6 python-psutil qt6-svg polkit pciutils kmod; do
   grep -Fq "  '$dependency'" distro/packages/bc250-control-center/PKGBUILD || fail "runtime dependency is missing: $dependency"

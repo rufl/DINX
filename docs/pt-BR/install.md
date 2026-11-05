@@ -173,6 +173,36 @@ fi
 
 O governor verifica o PCI `1002:13fe` antes de aplicar configurações. A proteção acima impede que a instalação rode em outro hardware. Nenhum dos pacotes BC-250 vem pré-instalado na ISO genérica.
 
+## Atualizações seguras de pacotes
+
+As atualizações de pacotes customizados da DINX devem usar um repositório
+pacman assinado, publicado separadamente na URL móvel da GitHub Release
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. A
+atualização semanal das origens abre um pull request para revisão; alterações
+de pacotes integradas podem ser publicadas independentemente dos releases da
+ISO. Ainda não há confirmação de execução do workflow nem de publicação do
+canal móvel.
+
+Quando `dinx-keyring` estiver disponível, instale-o e atualize pelo Shelly:
+
+```bash
+sudo pacman -Syu --needed dinx-keyring
+shelly sync
+```
+
+Depois use o fluxo de atualização do Shelly para aplicar as atualizações
+disponíveis ou execute `sudo pacman -Syu`. O Shelly delega as operações de
+pacotes ao pacman, que verifica as assinaturas dos pacotes `[dinx]` com a
+política de assinatura obrigatória.
+
+Para preparar o sistema quando o repositório móvel estiver publicado, mas
+`dinx-keyring` ainda não estiver disponível, siga a verificação manual da
+chave pública e a configuração do repositório no
+[guia de release](../release.md). Verifique o SHA-256 da chave e o fingerprint
+completo `D8F294B7367BD0DAF626E4DCD411E36494CB9CEB` antes de confiar localmente
+nela. `dinx-keyring` configura `[dinx]` e `/etc/pacman.d/dinx-mirrorlist`; o
+arquivo de mirrors pode ser editado para adicionar mirrors futuramente.
+
 ## 5. Instalação persistente experimental
 
 A partir do desktop live:

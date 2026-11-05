@@ -26,8 +26,8 @@ finish() {
     for path in "${DINX_ISO_OUTPUT:-}" "${DINX_PACKAGE_OUTPUT:-}" /var/lib/artools/buildiso /var/cache/dinx /workspace/distro/packages; do
       [[ -n "$path" && -e "$path" ]] || continue
       if [[ "$path" == /var/lib/artools/buildiso \
-        && "$status" -eq 0 \
-        && "${DINX_REMOVE_CHROOTS_AFTER_BUILD:-false}" == true ]]; then
+        && ( ( "$status" -eq 0 && "${DINX_REMOVE_CHROOTS_AFTER_BUILD:-false}" == true ) \
+          || "${DINX_PACKAGE_REPOSITORY_ONLY:-false}" == true ) ]]; then
         continue
       fi
       if [[ "$host_uid" == "$build_uid" && "$host_gid" == "$build_gid" \
@@ -49,6 +49,8 @@ finish() {
 }
 trap finish EXIT
               set -euxo pipefail
+              package_repository_only=${DINX_PACKAGE_REPOSITORY_ONLY:-false}
+              [[ "$package_repository_only" == true || "$package_repository_only" == false ]]
               DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"
               export DINX_ARTIX_IMAGE
               : "${DINX_BUILDER_RECIPE_SHA256:?builder recipe checksum was not forwarded}"
@@ -401,6 +403,8 @@ trap finish EXIT
               build_package swayimg
               pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good
               build_package gapless
+              build_package dinx-keyring
+              if [[ "$package_repository_only" != true ]]; then
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
@@ -474,6 +478,7 @@ trap finish EXIT
                 printf 'build-iso-container: signed package repository HTTP server did not become ready\n' >&2
                 exit 1
               fi
+              fi
               optional_build_started=$SECONDS
               build_package cyan-skillfish-governor-smu &
               optional_build_pids+=("$!")
@@ -482,6 +487,7 @@ trap finish EXIT
               build_package bc250-control-center &
               optional_build_pids+=("$!")
 
+              if [[ "$package_repository_only" != true ]]; then
               mksquashfs_path=$(command -v mksquashfs)
               real_mksquashfs=$(readlink -f "$mksquashfs_path")
               test -x "$real_mksquashfs"
@@ -502,6 +508,7 @@ trap finish EXIT
                   "$((SECONDS - iso_assembly_started))" "$status"
                 exit "$status"
               fi
+              fi
               optional_build_status=0
               for optional_pid in "${optional_build_pids[@]}"; do
                 if wait "$optional_pid"; then
@@ -514,9 +521,11 @@ trap finish EXIT
               printf 'dinx-build-timing phase=optional-hardware-packages elapsed_seconds=%s exit_status=%s\n' \
                 "$((SECONDS - optional_build_started))" "$optional_build_status"
               (( optional_build_status == 0 )) || exit "$optional_build_status"
-              kill "$repo_pid" 2>/dev/null || true
-              wait "$repo_pid" 2>/dev/null || true
-              repo_pid=
+              if [[ -n "$repo_pid" ]]; then
+                kill "$repo_pid" 2>/dev/null || true
+                wait "$repo_pid" 2>/dev/null || true
+                repo_pid=
+              fi
               repository_finalize_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
@@ -556,6 +565,13 @@ trap finish EXIT
                 "$((SECONDS - repository_checks_started))"
               printf 'dinx-build-timing phase=package-repository-finalize elapsed_seconds=%s exit_status=0\n' \
                 "$((SECONDS - repository_finalize_started))"
+              if [[ "$package_repository_only" == true ]]; then
+                printf 'dinx-package-repository channel=%s snapshot=%s packages=%s output=%s\n' \
+                  "$package_repository_channel" "$package_repository_snapshot" "$package_count" "$package_repo"
+                printf 'dinx-build-timing phase=package-repository-only elapsed_seconds=%s exit_status=0\n' \
+                  "$((SECONDS - builder_started))"
+                exit 0
+              fi
               mapfile -t iso_paths < <(find "$DINX_ISO_OUTPUT" -type f -name '*.iso' -print | LC_ALL=C sort)
               [[ ${#iso_paths[@]} -eq 1 ]] || {
                 printf 'build-iso-container: expected exactly one ISO, found %s\n' "${#iso_paths[@]}" >&2

@@ -54,50 +54,93 @@ Each alpha release contains:
   signatures, `dinx-package-signing-key.gpg`, `dinx-repository-metadata.txt` and
   the custom `*.pkg.tar.zst` archives with detached signatures;
 
-## Signed package repository
+## Signed rolling package repository
 
-Tagged releases require the GitHub Actions secret `DINX_PACKAGE_SIGNING_KEY`
-containing the unencrypted armored production private key. The workflow fails
-before package publication when the secret is absent; the non-tag P0 workflow
-continues to use an ephemeral CI key and a `ci` channel.
+DINX custom packages are planned for a signed rolling pacman repository hosted
+as GitHub Release assets under the rolling tag `dinx-packages-latest`, at
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. This
+repository is separate from ISO releases: after a package-source change is
+merged, it can be published independently of an ISO. The package-source refresh
+opens a weekly reviewed pull request; it does not update pins directly. This
+workflow and rolling channel are not yet confirmed as having run or published.
 
-Provision the secrets from a trusted release operator machine; never commit the
-private key or place it in an artifact:
+`dinx-keyring` configures the `[dinx]` repository with required package
+signatures and `/etc/pacman.d/dinx-mirrorlist`. That editable mirrorlist lets
+operators add future mirrors without changing repository configuration. The
+trusted production signing fingerprint is
+`D8F294B7367BD0DAF626E4DCD411E36494CB9CEB`; the published public-key file's
+expected SHA-256 is
+`dcebc6d08e1e46738e768bcd91ece5beb3ef4f8752079f0babba864fb41a6445`.
+
+### Configure the production signing secret
+
+Before enabling publication, a trusted release operator must configure the
+GitHub Actions secret `DINX_PACKAGE_SIGNING_KEY` with the unencrypted armored
+production private key and `DINX_PACKAGE_SIGNING_FINGERPRINT` with its exact
+fingerprint. The key must be usable non-interactively by `makepkg --sign`.
+Provision secrets from a trusted operator machine; never commit or upload the
+private key:
 
 ```bash
-fingerprint='<40-hex production fingerprint>'
+fingerprint='D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
 gpg --armor --export-secret-keys "$fingerprint" > /tmp/dinx-package-signing-key.asc
 gh secret set DINX_PACKAGE_SIGNING_KEY --repo rufl/DINX < /tmp/dinx-package-signing-key.asc
 gh secret set DINX_PACKAGE_SIGNING_FINGERPRINT --repo rufl/DINX --body "$fingerprint"
 shred -u /tmp/dinx-package-signing-key.asc
 ```
 
-The key must be usable non-interactively by `makepkg --sign`; keep the offline
-master-key backup separately and rotate deliberately because the fingerprint is
-recorded in every repository snapshot and release metadata.
+Keep the offline master-key backup separately and rotate deliberately. P0
+qualification uses an ephemeral CI key; it is not the production update key.
 
-The release repository is a static pacman repository hosted by GitHub release
-assets. It contains DINX custom packages only; Artix repositories remain
-separate. Install the public key and configure the release URL:
+### Bootstrap package trust
 
+When the rolling repository is published but `dinx-keyring` is not yet
+available, configure trust manually on a system that needs the packages.
+Download the public key, verify both its SHA-256 and full OpenPGP fingerprint
+before importing or locally trusting it:
 ```bash
-release_url='https://github.com/rufl/DINX/releases/download/v<version>'
-curl --fail --location "$release_url/dinx-package-signing-key.gpg" \
-  --output /tmp/dinx-package-signing-key.gpg
-pacman-key --add /tmp/dinx-package-signing-key.gpg
-pacman-key --lsign-key <signing-fingerprint>
+set -euo pipefail
+repo_url='https://github.com/rufl/DINX/releases/download/dinx-packages-latest'
+key=/tmp/dinx-package-signing-key.gpg
+curl --fail --location "$repo_url/dinx-package-signing-key.gpg" --output "$key"
+printf '%s  %s\n' \
+  'dcebc6d08e1e46738e768bcd91ece5beb3ef4f8752079f0babba864fb41a6445' "$key" |
+  sha256sum --check
+gpg --show-keys --with-colons "$key" |
+  awk -F: '$1 == "fpr" { print $10; exit }' |
+  grep --fixed-strings --line-regexp 'D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
+sudo pacman-key --add "$key"
+sudo pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
 ```
+
+Add the repository to `/etc/pacman.conf` after the Artix repositories:
 
 ```ini
 [dinx]
 SigLevel = Required
-Server = https://github.com/rufl/DINX/releases/download/v<version>
+Include = /etc/pacman.d/dinx-mirrorlist
 ```
 
-Run `pacman -Syu` after refreshing the databases. The P0 workflow performs a
-real signed install, update and package downgrade transaction with the pacman
-repository contract. That qualifies package transactions, not a full installed
-ISO upgrade, filesystem rollback or physical recovery procedure.
+Create `/etc/pacman.d/dinx-mirrorlist` with the rolling release URL:
+
+```ini
+Server = https://github.com/rufl/DINX/releases/download/dinx-packages-latest
+```
+
+Refresh databases and install the keyring when it becomes available:
+
+```bash
+sudo pacman -Syu --needed dinx-keyring
+```
+
+After setup, Shelly uses pacman to synchronize and update packages; use
+`shelly sync` to synchronize databases, then Shelly's update flow (or
+`sudo pacman -Syu`) to apply updates. Required signatures make pacman reject
+unsigned or untrusted repository packages.
+
+The currently documented tagged-release workflow may also attach signed
+repository assets to an ISO release. Those assets do not establish that the
+separate rolling repository or its update workflow has been published.
 
 For a direct ISO, verify the matching checksum:
 
@@ -232,10 +275,12 @@ qualification fails explicitly instead of silently substituting another renderer
 Before tagging the next alpha, the tag commit must pass the current local P0 workflow, including the lock/idle/brightness contracts, budget checks and the Calamares partitioning contract. The resulting ISO must pass SquashFS content validation, the 90-second QEMU boot/capture path, the disposable Calamares installation and recovery-TTY smoke, the BIOS/UEFI/Btrfs transaction smoke with pre-existing subvolumes, the Windows side-by-side NTFS-shrink and manual-layout smoke with preserved ESP/Microsoft boot data, checksum generation, artifact attestation and release-asset assembly.
 The automated gate also runs real DinitUI daemon/GTK qualification and a bounded Calamares startup smoke under Xvfb. These complement the partition and offline-rootfs transaction smokes; `scripts/smoke-install.sh` remains a rootfs/install-contract test and does not claim a complete Calamares UI installation.
 
-The P0 builder signs the custom pacman repository and records its content snapshot,
-database checksum, public-key checksum and signing fingerprint in build metadata.
-Non-tag builds use the ephemeral `ci` key. Tagged release builds require the
-production key secret and publish the `stable` repository assets described above.
+The P0 builder signs its temporary custom pacman repository and records the
+snapshot, database checksum, public-key checksum and signing fingerprint in
+build metadata. This qualification is distinct from the planned rolling
+repository. Configure the production signing secrets before enabling that
+publication path; it publishes package changes independently of the ISO after
+reviewed source-pin changes are merged.
 
 The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
 

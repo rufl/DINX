@@ -25,19 +25,32 @@ source distro/packages/topgrade/source.env
 source distro/packages/paru/source.env
 source distro/packages/shelly/source.env
 
-[[ "$TOPGRADE_VERSION" == 17.12.3 ]] || fail "unexpected topgrade version: $TOPGRADE_VERSION"
-[[ "$TOPGRADE_SOURCE_URL" == *"topgrade/releases/download/v${TOPGRADE_VERSION}/topgrade-v${TOPGRADE_VERSION}-x86_64-unknown-linux-musl.tar.gz" ]] || fail 'topgrade release URL is not pinned'
-[[ "$TOPGRADE_SOURCE_B2" == b1e9610c7c0f59a753888c204ffc1980ad7766f5a7c0f98d7c93e87d4ef0d3078fee5df3900a9cafdbdd1c8297b9e77523b353264b7d43583cf1c7360be3f02c ]] || fail 'topgrade release BLAKE2 checksum changed'
-grep -Fq "pkgver=${TOPGRADE_VERSION}" distro/packages/topgrade/PKGBUILD || fail 'topgrade PKGBUILD version is not pinned'
-grep -Fq "$TOPGRADE_SOURCE_B2" distro/packages/topgrade/PKGBUILD || fail 'topgrade PKGBUILD checksum is not pinned'
+[[ "$TOPGRADE_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid topgrade version: $TOPGRADE_VERSION"
+[[ "$TOPGRADE_SOURCE_URL" == *"/topgrade-${TOPGRADE_VERSION}-x86_64-unknown-linux-musl.tar.gz" ]] \
+  || fail 'topgrade release URL does not match the pinned version'
+[[ "$TOPGRADE_SOURCE_B2" =~ ^[0-9a-f]{128}$ ]] || fail 'topgrade release BLAKE2 checksum is invalid'
+grep -Fq '. "$source_env"' distro/packages/topgrade/PKGBUILD \
+  || fail 'topgrade PKGBUILD does not load source.env'
+grep -Fq 'pkgver="$TOPGRADE_VERSION"' distro/packages/topgrade/PKGBUILD \
+  || fail 'topgrade PKGBUILD version is not wired to source.env'
+grep -Fq '"$TOPGRADE_SOURCE_B2"' distro/packages/topgrade/PKGBUILD \
+  || fail 'topgrade PKGBUILD checksum is not wired to source.env'
 
-[[ "$PARU_SOURCE_URL" == *"Morganamilo/paru/archive/v${PARU_VERSION}.tar.gz" ]] || fail 'paru source URL is not pinned to the source release'
-grep -Fq "pkgver=${PARU_VERSION}" distro/packages/paru/PKGBUILD || fail 'paru PKGBUILD version is not pinned'
-grep -Fq "$PARU_SOURCE_SHA256" distro/packages/paru/PKGBUILD || fail 'paru source checksum is not pinned'
+[[ "$PARU_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid paru version: $PARU_VERSION"
+[[ "$PARU_SOURCE_URL" == *"Morganamilo/paru/archive/"*"${PARU_VERSION}.tar.gz" ]] \
+  || fail 'paru source URL is not pinned to the source release'
+grep -Fq 'pkgver="$PARU_VERSION"' distro/packages/paru/PKGBUILD \
+  || fail 'paru PKGBUILD version is not wired to source.env'
+grep -Fq '"$PARU_SOURCE_SHA256"' distro/packages/paru/PKGBUILD \
+  || fail 'paru PKGBUILD checksum is not wired to source.env'
 
-[[ "$SHELLY_SOURCE_URL" == *"Seafoam-Labs/Shelly-ALPM/releases/download/v${SHELLY_VERSION}/Shelly-ALPM-linux-x64.tar.gz" ]] || fail 'shelly release source is not pinned'
-grep -Fq "pkgver=${SHELLY_VERSION}" distro/packages/shelly/PKGBUILD || fail 'shelly PKGBUILD version is not pinned'
-grep -Fq "$SHELLY_SOURCE_SHA256" distro/packages/shelly/PKGBUILD || fail 'shelly release source checksum is not pinned'
+[[ "$SHELLY_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Shelly version: $SHELLY_VERSION"
+[[ "$SHELLY_SOURCE_URL" == *"Seafoam-Labs/Shelly-ALPM/releases/download/"*"/Shelly-ALPM-linux-x64.tar.gz" ]] \
+  || fail 'Shelly release source URL is malformed'
+grep -Fq 'pkgver="$SHELLY_VERSION"' distro/packages/shelly/PKGBUILD \
+  || fail 'Shelly PKGBUILD version is not wired to source.env'
+grep -Fq '"$SHELLY_SOURCE_SHA256"' distro/packages/shelly/PKGBUILD \
+  || fail 'Shelly release source checksum is not wired to source.env'
 aur_sources=(
   'shellybuild.conf'
   'com.shellyorg.shelly.desktop'

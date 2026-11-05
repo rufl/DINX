@@ -1,0 +1,158 @@
+{
+  "schema": "dinx-upstream-package-updates/v1",
+  "packages": [
+    {
+      "name": "aqueous",
+      "provider": "github",
+      "repository": "Seafoam-Labs/Aqueous",
+      "source_file": "distro/packages/aqueous/source.env",
+      "version_key": "AQUEOUS_VERSION",
+      "package_version_key": "AQUEOUS_VERSION",
+      "source_url_key": "AQUEOUS_SOURCE_URL",
+      "checksum_key": "AQUEOUS_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Seafoam-Labs/Aqueous/archive/refs/tags/{tag}.tar.gz"
+    },
+    {
+      "name": "pearl",
+      "provider": "github",
+      "repository": "Seafoam-Labs/pearl",
+      "source_file": "distro/packages/pearl/source.env",
+      "version_key": "PEARL_VERSION",
+      "package_version_key": "PEARL_VERSION",
+      "source_url_key": "PEARL_SOURCE_URL",
+      "checksum_key": "PEARL_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Seafoam-Labs/pearl/archive/refs/tags/{tag}.tar.gz"
+    },
+    {
+      "name": "dome",
+      "provider": "github",
+      "repository": "Seafoam-Labs/pearl",
+      "source_file": "distro/packages/dome/source.env",
+      "version_key": "DOME_SOURCE_VERSION",
+      "checksum_key": "DOME_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Seafoam-Labs/pearl/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/dome/PKGBUILD"
+    },
+    {
+      "name": "phyto",
+      "provider": "github",
+      "repository": "Seafoam-Labs/pearl",
+      "source_file": "distro/packages/phyto/source.env",
+      "version_key": "PHYTO_SOURCE_VERSION",
+      "checksum_key": "PHYTO_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Seafoam-Labs/pearl/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/phyto/PKGBUILD"
+    },
+    {
+      "name": "pori",
+      "provider": "github",
+      "repository": "Seafoam-Labs/Pori",
+      "source_file": "distro/packages/pori/source.env",
+      "version_key": "PORI_VERSION",
+      "package_version_key": "PORI_VERSION",
+      "checksum_key": "PORI_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Seafoam-Labs/Pori/archive/refs/tags/{tag}.tar.gz"
+    },
+    {
+      "name": "matugen",
+      "provider": "github",
+      "repository": "InioX/matugen",
+      "source_file": "distro/packages/matugen/source.env",
+      "version_key": "MATUGEN_VERSION",
+      "package_version_key": "MATUGEN_VERSION",
+      "source_url_key": "MATUGEN_SOURCE_URL",
+      "checksum_key": "MATUGEN_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/InioX/matugen/archive/refs/tags/{tag}.tar.gz"
+    },
+    {
+      "name": "shelly",
+      "provider": "github",
+      "repository": "Seafoam-Labs/Shelly-ALPM",
+      "source_file": "distro/packages/shelly/source.env",
+      "version_key": "SHELLY_VERSION",
+      "package_version_key": "SHELLY_VERSION",
+      "source_url_key": "SHELLY_SOURCE_URL",
+      "checksum_key": "SHELLY_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Seafoam-Labs/Shelly-ALPM/releases/download/{tag}/Shelly-ALPM-linux-x64.tar.gz"
+    },
+    {
+      "name": "topgrade",
+      "provider": "github",
+      "repository": "topgrade-rs/topgrade",
+      "source_file": "distro/packages/topgrade/source.env",
+      "version_key": "TOPGRADE_VERSION",
+      "package_version_key": "TOPGRADE_VERSION",
+      "source_url_key": "TOPGRADE_SOURCE_URL",
+      "checksum_key": "TOPGRADE_SOURCE_B2",
+      "checksum": "blake2b",
+      "url_template": "https://github.com/topgrade-rs/topgrade/releases/download/{tag}/topgrade-{tag}-x86_64-unknown-linux-musl.tar.gz"
+    },
+    {
+      "name": "swayimg",
+      "provider": "github",
+      "repository": "artemsen/swayimg",
+      "source_file": "distro/packages/swayimg/source.env",
+      "version_key": "SWAYIMG_VERSION",
+      "package_version_key": "SWAYIMG_VERSION",
+      "source_url_key": "SWAYIMG_SOURCE_URL",
+      "checksum_key": "SWAYIMG_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/artemsen/swayimg/archive/{tag}.tar.gz"
+    },
+    {
+      "name": "gapless",
+      "provider": "gitlab",
+      "repository": "neithern/g4music",
+      "source_file": "distro/packages/gapless/source.env",
+      "version_key": "GAPLESS_VERSION",
+      "package_version_key": "GAPLESS_VERSION",
+      "source_url_key": "GAPLESS_SOURCE_URL",
+      "checksum_key": "GAPLESS_SOURCE_B2",
+      "checksum": "blake2b",
+      "url_template": "https://gitlab.gnome.org/neithern/g4music/-/archive/{tag}/g4music-{tag}.tar.gz"
+    },
+    {
+      "name": "bc250-control-center",
+      "provider": "github",
+      "repository": "movacx/bc250-control-center",
+      "source_file": "distro/packages/bc250-control-center/source.env",
+      "version_key": "BC250_CONTROL_CENTER_VERSION",
+      "package_version_key": "BC250_CONTROL_CENTER_VERSION",
+      "source_url_key": "BC250_CONTROL_CENTER_SOURCE_URL",
+      "checksum_key": "BC250_CONTROL_CENTER_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/movacx/bc250-control-center/archive/refs/tags/{tag}.tar.gz"
+    },
+    {
+      "name": "cyan-skillfish-governor-smu",
+      "provider": "github",
+      "repository": "filippor/cyan-skillfish-governor",
+      "source_file": "distro/packages/cyan-skillfish-governor-smu/source.env",
+      "version_key": "CYAN_SKILLFISH_GOVERNOR_VERSION",
+      "package_version_key": "CYAN_SKILLFISH_GOVERNOR_VERSION",
+      "source_url_key": "CYAN_SKILLFISH_GOVERNOR_SOURCE_URL",
+      "checksum_key": "CYAN_SKILLFISH_GOVERNOR_SOURCE_B2",
+      "checksum": "blake2b",
+      "url_template": "https://github.com/filippor/cyan-skillfish-governor/archive/refs/tags/{tag}.tar.gz"
+    },
+    {
+      "name": "paru",
+      "provider": "github",
+      "repository": "Morganamilo/paru",
+      "source_file": "distro/packages/paru/source.env",
+      "version_key": "PARU_VERSION",
+      "package_version_key": "PARU_VERSION",
+      "source_url_key": "PARU_SOURCE_URL",
+      "checksum_key": "PARU_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://github.com/Morganamilo/paru/archive/{tag}.tar.gz"
+    }
+  ]
+}

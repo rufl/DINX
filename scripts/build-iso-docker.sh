@@ -21,6 +21,7 @@ dist/local-iso-<UTC-time>-<pid>/ directory. The package repository is signed
 with an ephemeral key and is not a release repository.
 
 Options are controlled through environment variables:
+  DINX_PACKAGE_REPOSITORY_ONLY=true Build/sign packages and stop before ISO assembly.
   DINX_LOCAL_BUILD_DIR       Choose an output directory under checkout dist/.
   DINX_ISO_OUTPUT            Override the ISO output directory under dist/.
   DINX_BUILD_CACHE_DIR       Reuse package, source, Cargo and toolchain caches under dist/.
@@ -44,6 +45,12 @@ qualification_mode=${DINX_ISO_QUALIFICATION:-full}
 case "$qualification_mode" in
   full|static) ;;
   *) fail 'DINX_ISO_QUALIFICATION must be full or static' ;;
+esac
+package_repository_only=${DINX_PACKAGE_REPOSITORY_ONLY:-false}
+case "$package_repository_only" in
+  true|1) package_repository_only=true ;;
+  false|0) package_repository_only=false ;;
+  *) fail 'DINX_PACKAGE_REPOSITORY_ONLY must be true/false or 1/0' ;;
 esac
 skip_postbuild_checks=${DINX_SKIP_POSTBUILD_CHECKS:-false}
 case "$skip_postbuild_checks" in
@@ -74,7 +81,10 @@ for command in docker git realpath sha256sum tar find tee; do
   require_command "$command"
 done
 if ! docker info --format '{{.ServerVersion}}' >/dev/null 2>&1; then
-  fail 'Docker Engine is not reachable. Start a rootful Docker daemon and grant this user access; the ISO build requires --privileged and loop-device support.'
+  if [[ "$package_repository_only" == true ]]; then
+    fail 'Docker Engine is not reachable. Start a rootful Docker daemon and grant this user access.'
+  fi
+  fail 'Docker Engine is not reachable. Start a rootful Docker daemon and grant this user access; ISO assembly requires --privileged and loop-device support.'
 fi
 
 image=${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}
@@ -130,7 +140,9 @@ fi
 [[ "$build_context" == local-docker || "$build_context" == github-actions ]] \
   || fail 'DINX_BUILD_CONTEXT must be local-docker or github-actions'
 if [[ "$build_context" == local-docker ]]; then
-  "$repo_root/scripts/check-iso-qualification-host.sh" "$qualification_mode" \
+  qualification_host_mode=$qualification_mode
+  [[ "$package_repository_only" != true ]] || qualification_host_mode=static
+  "$repo_root/scripts/check-iso-qualification-host.sh" "$qualification_host_mode" \
     --build-path "$repo_root/dist" --build-path "${TMPDIR:-/tmp}"
 fi
 
@@ -280,32 +292,36 @@ assert_disjoint "$package_output_host" "$cache_host" "$package_bundle_host"
 assert_disjoint "$cache_host" "$package_bundle_host"
 
 created_chroots=false
-if [[ -n ${DINX_ISO_CHROOTS:-} ]]; then
-  [[ ! -L "$DINX_ISO_CHROOTS" ]] || fail "custom buildiso chroot path must not be a symlink: $DINX_ISO_CHROOTS"
-  chroots_dir=$(realpath -m -- "$DINX_ISO_CHROOTS")
-elif [[ "$build_context" == github-actions ]]; then
-  chroots_dir=$(realpath -m -- "${RUNNER_TEMP:-/tmp}/dinx-artools")
+chroots_dir=
+if [[ "$package_repository_only" != true ]]; then
+  if [[ -n ${DINX_ISO_CHROOTS:-} ]]; then
+    [[ ! -L "$DINX_ISO_CHROOTS" ]] || fail "custom buildiso chroot path must not be a symlink: $DINX_ISO_CHROOTS"
+    chroots_dir=$(realpath -m -- "$DINX_ISO_CHROOTS")
+  elif [[ "$build_context" == github-actions ]]; then
+    chroots_dir=$(realpath -m -- "${RUNNER_TEMP:-/tmp}/dinx-artools")
+  else
+    created_chroots=true
+  fi
+  chroots_preflight_path=${chroots_dir:-${TMPDIR:-/tmp}}
+  case "$chroots_preflight_path" in
+    "$repo_root"|"$repo_root"/*)
+      case "$chroots_preflight_path" in
+        "$repo_root"/dist/*) ;;
+        *) fail "buildiso chroots inside the checkout must be under $repo_root/dist: $chroots_preflight_path" ;;
+      esac
+      ;;
+  esac
+  if [[ -n "$chroots_dir" && ( -e "$chroots_dir" || -L "$chroots_dir" ) ]]; then
+    [[ -d "$chroots_dir" && ! -L "$chroots_dir" ]] \
+      || fail "buildiso chroot path must be a real directory: $chroots_dir"
+    [[ -z $(find "$chroots_dir" -mindepth 1 -maxdepth 1 -print -quit) ]] \
+      || fail "buildiso chroot path must be empty to avoid deleting unrelated data: $chroots_dir"
+  fi
 else
-  chroots_dir=
-  created_chroots=true
-fi
-chroots_preflight_path=${chroots_dir:-${TMPDIR:-/tmp}}
-case "$chroots_preflight_path" in
-  "$repo_root"|"$repo_root"/*)
-    case "$chroots_preflight_path" in
-      "$repo_root"/dist/*) ;;
-      *) fail "buildiso chroots inside the checkout must be under $repo_root/dist: $chroots_preflight_path" ;;
-    esac
-    ;;
-esac
-if [[ -n "$chroots_dir" && ( -e "$chroots_dir" || -L "$chroots_dir" ) ]]; then
-  [[ -d "$chroots_dir" && ! -L "$chroots_dir" ]] \
-    || fail "buildiso chroot path must be a real directory: $chroots_dir"
-  [[ -z $(find "$chroots_dir" -mindepth 1 -maxdepth 1 -print -quit) ]] \
-    || fail "buildiso chroot path must be empty to avoid deleting unrelated data: $chroots_dir"
+  chroots_preflight_path=${TMPDIR:-/tmp}
 fi
 qualification_host_started=$SECONDS
-if [[ "$qualification_mode" == full ]]; then
+if [[ "$qualification_mode" == full && "$package_repository_only" != true ]]; then
   if "$repo_root/scripts/check-iso-qualification-host.sh" full \
     --build-path "$iso_output_host" \
     --build-path "$package_output_host" \
@@ -384,28 +400,30 @@ builder_image_id=$(docker image inspect --format '{{.Id}}' "$builder_image")
   || fail "invalid builder image ID: $builder_image_id"
 printf 'dinx-build-timing phase=builder-image-build elapsed_seconds=%s exit_status=0 image_id=%s refresh_date=%s\n' \
   "$((SECONDS - builder_image_started))" "$builder_image_id" "$builder_refresh_date"
-if ! docker run --rm --privileged --entrypoint /bin/bash "$builder_image" -eu -c '
-  probe=$(mktemp)
-  loop=
-  trap '\''if [[ -n "$loop" ]]; then losetup -d "$loop"; fi; rm -f "$probe"'\'' EXIT
-  truncate -s 1048576 "$probe"
-  loop=$(losetup --find --show "$probe") || {
-    printf "privileged Docker loop-device attach failed\n" >&2
-    exit 1
-  }
-  losetup -d "$loop"
-  loop=
-'; then
-  fail "privileged Docker loop-device preflight failed for image $builder_image"
-fi
-if [[ "$created_chroots" == true ]]; then
-  chroots_dir=$(mktemp -d "${TMPDIR:-/tmp}/dinx-artools.XXXXXX")
-else
-  mkdir -p -- "$chroots_dir"
-fi
-remove_chroots_after_build=false
-if [[ "$created_chroots" == true && "$keep_chroots" != true && "$keep_chroots" != 1 ]]; then
-  remove_chroots_after_build=true
+if [[ "$package_repository_only" != true ]]; then
+  if ! docker run --rm --privileged --entrypoint /bin/bash "$builder_image" -eu -c '
+    probe=$(mktemp)
+    loop=
+    trap '\''if [[ -n "$loop" ]]; then losetup -d "$loop"; fi; rm -f "$probe"'\'' EXIT
+    truncate -s 1048576 "$probe"
+    loop=$(losetup --find --show "$probe") || {
+      printf "privileged Docker loop-device attach failed\n" >&2
+      exit 1
+    }
+    losetup -d "$loop"
+    loop=
+  '; then
+    fail "privileged Docker loop-device preflight failed for image $builder_image"
+  fi
+  if [[ "$created_chroots" == true ]]; then
+    chroots_dir=$(mktemp -d "${TMPDIR:-/tmp}/dinx-artools.XXXXXX")
+  else
+    mkdir -p -- "$chroots_dir"
+  fi
+  remove_chroots_after_build=false
+  if [[ "$created_chroots" == true && "$keep_chroots" != true && "$keep_chroots" != 1 ]]; then
+    remove_chroots_after_build=true
+  fi
 fi
 cleanup() {
   local status=$?
@@ -433,6 +451,7 @@ mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bu
   "$(dirname -- "$build_log_host")" \
   "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
   "$cache_host/package-artifacts" "$cache_host/cargo" "$cache_host/cargo-target" "$cache_host/zig"
+remove_chroots_after_build=false
 
 if [[ ${SUDO_UID:-} =~ ^[0-9]+$ && ${SUDO_GID:-} =~ ^[0-9]+$ ]]; then
   host_uid=$SUDO_UID
@@ -441,14 +460,21 @@ else
   host_uid=$(id -u)
   host_gid=$(id -g)
 fi
-if docker run --rm --privileged \
-  --volume "$repo_root:/workspace" \
-  --volume "$cache_host:/var/cache/dinx" \
-  --volume "$cache_host/pacman/pkg:/var/cache/pacman/pkg" \
-  --volume "$chroots_dir:/var/lib/artools/buildiso" \
+docker_run_args=(--rm)
+docker_mount_args=(
+  --volume "$repo_root:/workspace"
+  --volume "$cache_host:/var/cache/dinx"
+  --volume "$cache_host/pacman/pkg:/var/cache/pacman/pkg"
+)
+if [[ "$package_repository_only" != true ]]; then
+  docker_run_args+=(--privileged)
+  docker_mount_args+=(--volume "$chroots_dir:/var/lib/artools/buildiso")
+fi
+if docker run "${docker_run_args[@]}" "${docker_mount_args[@]}" \
   --workdir /workspace \
   --env DINX_ISO_OUTPUT="$iso_output_container" \
   --env DINX_PACKAGE_OUTPUT="$package_output_container" \
+  --env DINX_PACKAGE_REPOSITORY_ONLY="$package_repository_only" \
   --env DINX_COMMIT="$commit" \
   --env DINX_RUN_ID="$run_id" \
   --env DINX_REPOSITORY="$repository" \
@@ -495,7 +521,7 @@ printf 'dinx-build-timing phase=package-repository-bundle elapsed_seconds=%s exi
   "$((SECONDS - package_bundle_started))"
 
 
-if [[ "$skip_postbuild_checks" != true ]]; then
+if [[ "$skip_postbuild_checks" != true && "$package_repository_only" != true ]]; then
   mapfile -t iso_paths < <(find "$iso_output_host" -type f -name '*.iso' -print | LC_ALL=C sort)
   (( ${#iso_paths[@]} == 1 )) \
     || fail "expected exactly one ISO under $iso_output_host; found ${#iso_paths[@]}"
@@ -519,6 +545,8 @@ if [[ "$skip_postbuild_checks" != true ]]; then
   printf '\nDINX local ISO: %s\nSHA-512: %s\nBuild metadata: %s\nSigned package repository: %s (ephemeral key)\n' \
     "$iso_path" "$(cut -d ' ' -f 1 "$(dirname -- "$iso_path")/$(basename -- "$iso_path").sha512")" \
     "$metadata_path" "$package_bundle_host"
+elif [[ "$package_repository_only" == true ]]; then
+  printf 'build-iso-docker: signed DINX package repository build completed; ISO assembly was not requested\n'
 else
   printf 'build-iso-docker: Artix ISO build completed; post-build checks were skipped by request\n'
 fi

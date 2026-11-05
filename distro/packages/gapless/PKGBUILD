@@ -2,7 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pkgname=gapless
-pkgver=4.6.2
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${GAPLESS_VERSION:?missing GAPLESS_VERSION}"
+: "${GAPLESS_SOURCE_URL:?missing GAPLESS_SOURCE_URL}"
+: "${GAPLESS_SOURCE_B2:?missing GAPLESS_SOURCE_B2}"
+pkgver="$GAPLESS_VERSION"
 pkgrel=1
 pkgdesc="Lightweight, adaptive GTK4 music player (G4Music)"
 arch=('x86_64')
@@ -33,8 +39,8 @@ optdepends=(
 )
 provides=('g4music')
 conflicts=('g4music')
-source=("g4music-v${pkgver}.tar.gz::${url}/-/archive/v${pkgver}/g4music-v${pkgver}.tar.gz")
-b2sums=('db8a9b96a47d3c7b394589ae41add66aaed2822855561c10b266a102bfe00d82d3343a6f8aeb01c0c8f83d6fadf92139fe2aee6cd23147a2c48205bd14da2178')
+source=("g4music-v${pkgver}.tar.gz::${GAPLESS_SOURCE_URL}")
+b2sums=("$GAPLESS_SOURCE_B2")
 
 build() {
   meson setup --prefix=/usr --buildtype=plain build "${srcdir}/g4music-v${pkgver}"

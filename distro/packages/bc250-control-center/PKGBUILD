@@ -1,5 +1,11 @@
 pkgname=bc250-control-center
-pkgver=1.21.1
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${BC250_CONTROL_CENTER_VERSION:?missing version}"
+: "${BC250_CONTROL_CENTER_SOURCE_URL:?missing source URL}"
+: "${BC250_CONTROL_CENTER_SOURCE_SHA256:?missing source checksum}"
+pkgver="$BC250_CONTROL_CENTER_VERSION"
 pkgrel=1
 pkgdesc='BC-250 monitoring, tuning and recovery control center'
 arch=('any')
@@ -19,8 +25,8 @@ depends=(
   'pciutils'
   'kmod'
 )
-source=("https://github.com/movacx/bc250-control-center/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('41992335ca3224fae3bb1318f02cd3a381e132fc82169c5f05148706972ddc07')
+source=("${BC250_CONTROL_CENTER_SOURCE_URL}")
+sha256sums=("$BC250_CONTROL_CENTER_SOURCE_SHA256")
 
 package() {
   cd "$srcdir/bc250-control-center-$pkgver"

@@ -1,0 +1,9 @@
+post_install() {
+  /usr/lib/dinx-keyring/configure-repository
+  /usr/bin/pacman-key --populate dinx
+  /usr/bin/pacman-key --updatedb
+}
+
+post_upgrade() {
+  post_install
+}

@@ -1,5 +1,11 @@
 pkgname=paru
-pkgver=2.1.0
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${PARU_VERSION:?missing PARU_VERSION}"
+: "${PARU_SOURCE_URL:?missing PARU_SOURCE_URL}"
+: "${PARU_SOURCE_SHA256:?missing PARU_SOURCE_SHA256}"
+pkgver="$PARU_VERSION"
 pkgrel=2
 pkgdesc='Feature packed Artix ALPM/AUR helper'
 arch=('x86_64')
@@ -12,11 +18,11 @@ makedepends=('cargo')
 optdepends=('bat: colored PKGBUILD printing' 'devtools: build in chroot and downloading PKGBUILDs')
 source=(
   'paru.conf'
-  "paru-${pkgver}.tar.gz::https://github.com/Morganamilo/paru/archive/v${pkgver}.tar.gz"
+  "paru-${pkgver}.tar.gz::${PARU_SOURCE_URL}"
 )
 sha256sums=(
   '9fe6a23af4a459ee9529353debe8fbd21a9c928a41b3f0890f61c11c42adaa22'
-  'eea4dbb524db765d5316f540f9ee670c0bf81aae4827b5417eebb4c9b5651727'
+  "$PARU_SOURCE_SHA256"
 )
 
 prepare() {

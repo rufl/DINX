@@ -44,9 +44,17 @@ if grep -Fqx '    - strawberry' "$profile"; then
 fi
 gapless_recipe="$root/distro/packages/gapless/PKGBUILD"
 gapless_source="$root/distro/packages/gapless/source.env"
-grep -Fqx 'pkgname=gapless' "$gapless_recipe" || fail 'Gapless package recipe is missing'
-grep -Fqx 'pkgver=4.6.2' "$gapless_recipe" || fail 'Gapless package version is not pinned to 4.6.2'
-grep -Fqx 'GAPLESS_VERSION=4.6.2' "$gapless_source" || fail 'Gapless source version is not pinned to 4.6.2'
+source "$gapless_source"
+[[ "$GAPLESS_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Gapless version: $GAPLESS_VERSION"
+[[ "$GAPLESS_SOURCE_URL" == *"/g4music-${GAPLESS_VERSION}.tar.gz" ]] \
+  || fail 'Gapless source URL does not match its version pin'
+[[ "$GAPLESS_SOURCE_B2" =~ ^[0-9a-f]{128}$ ]] || fail 'Gapless BLAKE2 checksum is invalid'
+grep -Fq 'pkgver="$GAPLESS_VERSION"' "$gapless_recipe" \
+  || fail 'Gapless package version is not wired to source.env'
+grep -Fq '"$GAPLESS_SOURCE_URL"' "$gapless_recipe" \
+  || fail 'Gapless package URL is not wired to source.env'
+grep -Fq '"$GAPLESS_SOURCE_B2"' "$gapless_recipe" \
+  || fail 'Gapless package checksum is not wired to source.env'
 grep -Fqx '  gst-plugins-base' "$gapless_recipe" || fail 'Gapless package does not require GStreamer base codecs'
 grep -Fqx '  gst-plugins-good' "$gapless_recipe" || fail 'Gapless package does not require GStreamer good codecs'
 if grep -Fqx 'DBusActivatable=true' "$local_apps/com.github.neithern.g4music.desktop"; then

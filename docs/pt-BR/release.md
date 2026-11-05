@@ -52,50 +52,99 @@ Cada release alpha contém:
   assinaturas, `dinx-package-signing-key.gpg`, `dinx-repository-metadata.txt` e
   os arquivos customizados `*.pkg.tar.zst` com assinaturas destacadas;
 
-## Repositório de pacotes assinado
+## Repositório móvel de pacotes assinado
 
-Releases com tag exigem o segredo do GitHub Actions `DINX_PACKAGE_SIGNING_KEY`,
-contendo a chave privada de produção em formato armored sem senha. O workflow falha
-antes da publicação dos pacotes quando o segredo não existe; o workflow P0 sem tag
-continua usando uma chave CI efêmera e o canal `ci`.
+Os pacotes customizados da DINX estão planejados para um repositório pacman
+móvel e assinado, hospedado como assets de uma GitHub Release sob a tag móvel
+`dinx-packages-latest`, em
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. Esse
+repositório é separado dos releases da ISO: após a integração de uma alteração
+de pacote, ela pode ser publicada independentemente de uma ISO. A atualização
+das origens dos pacotes abre um pull request semanal para revisão; não altera
+os pins diretamente. Ainda não há confirmação de execução desse workflow nem
+de publicação desse canal móvel.
 
-Provisione os segredos a partir de uma máquina confiável do responsável pelo
-release; nunca faça commit da chave privada nem a coloque em um artefato:
+`dinx-keyring` configura o repositório `[dinx]` com assinaturas de pacotes
+obrigatórias e `/etc/pacman.d/dinx-mirrorlist`. Esse arquivo de mirrors
+editável permite que operadores adicionem mirrors futuramente sem alterar a
+configuração do repositório. O fingerprint de confiança da chave de assinatura
+de produção é `D8F294B7367BD0DAF626E4DCD411E36494CB9CEB`; o SHA-256 esperado do
+arquivo da chave pública publicado é
+`dcebc6d08e1e46738e768bcd91ece5beb3ef4f8752079f0babba864fb41a6445`.
+
+### Configurar o segredo de assinatura de produção
+
+Antes de habilitar a publicação, um operador confiável de release deve
+configurar o segredo do GitHub Actions `DINX_PACKAGE_SIGNING_KEY` com a chave
+privada de produção armored sem senha e `DINX_PACKAGE_SIGNING_FINGERPRINT` com
+seu fingerprint exato. A chave deve poder ser usada sem interação pelo
+`makepkg --sign`. Configure os segredos em uma máquina confiável do operador;
+nunca faça commit nem upload da chave privada:
 
 ```bash
-fingerprint='<fingerprint de 40 hex da produção>'
+fingerprint='D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
 gpg --armor --export-secret-keys "$fingerprint" > /tmp/dinx-package-signing-key.asc
 gh secret set DINX_PACKAGE_SIGNING_KEY --repo rufl/DINX < /tmp/dinx-package-signing-key.asc
 gh secret set DINX_PACKAGE_SIGNING_FINGERPRINT --repo rufl/DINX --body "$fingerprint"
 shred -u /tmp/dinx-package-signing-key.asc
 ```
 
-A chave deve poder ser usada sem interação pelo `makepkg --sign`; mantenha o
-backup da master key offline e faça rotações deliberadas, pois o fingerprint é
-registrado em cada snapshot do repositório e metadado do release.
+Mantenha separadamente o backup offline da master key e faça rotações
+deliberadas. A qualificação P0 usa uma chave CI efêmera, não a chave de
+atualização de produção.
 
-O repositório de release é um repositório pacman estático hospedado nos assets do
-release do GitHub. Ele contém somente os pacotes customizados da DINX; os
-repositórios Artix continuam separados. Instale a chave pública e configure a URL:
+### Preparar a confiança dos pacotes
+
+Quando o repositório móvel estiver publicado, mas `dinx-keyring` ainda não
+estiver disponível, configure a confiança manualmente no sistema que precisa
+dos pacotes. Baixe a chave pública e verifique seu SHA-256 e fingerprint
+OpenPGP completo antes de importá-la ou confiar localmente nela:
 
 ```bash
-release_url='https://github.com/rufl/DINX/releases/download/v<versão>'
-curl --fail --location "$release_url/dinx-package-signing-key.gpg" \
-  --output /tmp/dinx-package-signing-key.gpg
-pacman-key --add /tmp/dinx-package-signing-key.gpg
-pacman-key --lsign-key <fingerprint-da-assinatura>
+set -euo pipefail
+repo_url='https://github.com/rufl/DINX/releases/download/dinx-packages-latest'
+key=/tmp/dinx-package-signing-key.gpg
+curl --fail --location "$repo_url/dinx-package-signing-key.gpg" --output "$key"
+printf '%s  %s\n' \
+  'dcebc6d08e1e46738e768bcd91ece5beb3ef4f8752079f0babba864fb41a6445' "$key" |
+  sha256sum --check
+gpg --show-keys --with-colons "$key" |
+  awk -F: '$1 == "fpr" { print $10; exit }' |
+  grep --fixed-strings --line-regexp 'D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
+sudo pacman-key --add "$key"
+sudo pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
 ```
+
+Adicione o repositório a `/etc/pacman.conf`, depois dos repositórios Artix:
 
 ```ini
 [dinx]
 SigLevel = Required
-Server = https://github.com/rufl/DINX/releases/download/v<versão>
+Include = /etc/pacman.d/dinx-mirrorlist
 ```
 
-Execute `pacman -Syu` após atualizar os bancos. O workflow P0 executa uma
-transação real assinada de instalação, atualização e downgrade com os mesmos
-requisitos de assinatura. Isso qualifica transações de pacotes, não uma atualização
-completa da ISO instalada, rollback do filesystem ou recuperação física.
+Crie `/etc/pacman.d/dinx-mirrorlist` com a URL móvel do release:
+
+```ini
+Server = https://github.com/rufl/DINX/releases/download/dinx-packages-latest
+```
+
+Atualize os bancos e instale o keyring quando estiver disponível:
+
+```bash
+sudo pacman -Syu --needed dinx-keyring
+```
+
+Depois da configuração, o Shelly usa pacman para sincronizar e atualizar
+pacotes; use `shelly sync` para sincronizar os bancos e, em seguida, o fluxo de
+atualização do Shelly (ou `sudo pacman -Syu`) para aplicar atualizações.
+Assinaturas obrigatórias fazem o pacman rejeitar pacotes não assinados ou não
+confiáveis.
+
+O workflow de releases marcados atualmente documentado também pode anexar assets
+de repositório assinado a um release da ISO. Esses assets não significam que o
+repositório móvel separado ou seu workflow de atualização já tenham sido
+publicados.
 
 Para uma ISO direta, verifique o checksum correspondente:
 
@@ -232,10 +281,13 @@ em vez de substituir silenciosamente o renderer.
 Antes de criar a próxima tag alpha, o commit da tag deve passar pelo workflow P0 local atual, incluindo os contratos de lock/idle/brilho, os checks de orçamento e o contrato de particionamento do Calamares. A ISO resultante deve passar a validação de conteúdo SquashFS, o caminho de boot/captura QEMU de 90 segundos, o smoke de instalação Calamares/TTY de recuperação em disco descartável, o smoke transacional BIOS/UEFI/Btrfs com subvolumes preexistentes, o smoke Windows side-by-side com encolhimento NTFS e layout manual preservando ESP/dados de boot Microsoft, geração de checksum, atestação do artefato e montagem dos assets de release.
 O gate automatizado também executa a qualificação real do daemon/GTK do DinitUI e um smoke limitado de inicialização do Calamares com Xvfb. Eles complementam os smokes transacionais de particionamento e rootfs offline; `scripts/smoke-install.sh` continua sendo um teste de contrato de rootfs/instalação e não afirma uma instalação completa pela interface do Calamares.
 
-O builder P0 assina o repositório pacman customizado e registra seu snapshot de
-conteúdo, checksum do banco, checksum da chave pública e fingerprint da assinatura
-nos metadados do build. Builds sem tag usam a chave CI efêmera. Builds de release
-com tag exigem o segredo da chave de produção e publicam os assets do canal `stable`.
+O builder P0 assina seu repositório pacman temporário e registra o snapshot, o
+checksum do banco, o checksum da chave pública e o fingerprint da assinatura
+nos metadados do build. Essa qualificação é distinta do repositório móvel
+planejado. Configure os segredos de assinatura de produção antes de habilitar
+esse caminho de publicação; ele publica alterações de pacotes
+independentemente da ISO após a integração de mudanças revisadas nos pins das
+origens.
 
 O responsável pelo release deve registrar manualmente uma qualificação real de sessão Wayland: `Super+L`, lock após 600 segundos de idle, lock antes da suspensão, desbloqueio após resume e brilho físico para cima/baixo. Uma VM pode qualificar a ordem da sessão; hardware físico é necessário para afirmar suporte a brilho e suspensão.
 

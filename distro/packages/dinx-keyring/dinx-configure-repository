@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pacman_conf=${DINX_PACMAN_CONF:-/etc/pacman.conf}
+include_line='Include = /etc/pacman.d/dinx-mirrorlist'
+
+[[ -f "$pacman_conf" && ! -L "$pacman_conf" ]] || {
+  printf 'dinx-keyring: pacman configuration is not a regular file: %s\n' "$pacman_conf" >&2
+  exit 1
+}
+if grep -Eq '^[[:space:]]*\[dinx\][[:space:]]*$' "$pacman_conf"; then
+  printf 'dinx-keyring: existing [dinx] repository configuration retained\n'
+  exit 0
+fi
+
+temporary=$(mktemp "${pacman_conf}.dinx.XXXXXX")
+cleanup() {
+  rm -f -- "$temporary"
+}
+trap cleanup EXIT HUP INT TERM
+cat -- "$pacman_conf" > "$temporary"
+printf '\n[dinx]\nSigLevel = Required\n%s\n' "$include_line" >> "$temporary"
+chmod --reference="$pacman_conf" "$temporary"
+chown --reference="$pacman_conf" "$temporary"
+mv -f -- "$temporary" "$pacman_conf"
+trap - EXIT HUP INT TERM
+printf 'dinx-keyring: configured signed DINX package repository\n'

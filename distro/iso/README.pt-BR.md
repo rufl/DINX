@@ -110,6 +110,18 @@ O livefs adiciona o pacote dinit `dinx-live-autologin`, exclusivo da sessão liv
 
 `iso-profiles/dinx/feature-groups.json` registra os grupos foundation, desktop, gaming, hardware e opcional sem substituir o `profile.yaml` do Artix. O builder do CI assina cada pacote customizado e o banco temporário do repositório `dinx` com uma chave efêmera, verifica assinaturas e caminhos duplicados dos archives e registra o snapshot imutável dos pacotes em `build-metadata.txt`. Isso é qualificação do build; a chave do repositório pacman de produção e o canal de atualização do sistema instalado continuam sendo pré-requisitos separados do release.
 
+A atualização das origens de pacotes da DINX deve abrir pull requests semanais
+para revisão, em vez de alterar os pins diretamente. Após integrar uma
+alteração revisada, os pacotes customizados podem ser publicados em um
+repositório pacman móvel e assinado, separado, sob a tag de GitHub Release
+`dinx-packages-latest`, independentemente da publicação da ISO. Ainda não há
+confirmação de execução desse workflow nem de publicação desse canal.
+`dinx-keyring` configura `[dinx]` e o arquivo editável
+`/etc/pacman.d/dinx-mirrorlist`; Shelly usa pacman para sincronizar e atualizar
+pacotes. Consulte o [guia de release](../../docs/pt-BR/release.md) para
+configurar o segredo de assinatura do operador e verificar o fingerprint/
+preparar manualmente a confiança da chave.
+
 O perfil controla bridges visuais estáticas DINX: `/usr/share/dinx/theme/DINX.json` é a fonte das cores semânticas e ANSI; GTK e Qt consomem arquivos DINX versionados, e `DINX_COLOR_SCHEME` é o contrato de cor da sessão do usuário. `qt6ct`, `adw-gtk-theme` e Noto Sans 10 são instalados para esses consumidores, alinhados à tipografia GTK padrão do CachyOS; Noto Sans Mono é usado nos campos de largura fixa. O host do Pearl Greeter lê `/etc/pearl/greeter.json`, usa a bridge GTK DINX e força `Aqueous + Pearl (DINX)` com X11 e UWSM desativados; Aqueous/Pearl é o único contrato de sessão do usuário. `scripts/check_dinx_theme.sh` valida esse contrato antes do build da ISO.
 
 O Pearl Greeter e a área de trabalho inicial usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo do produto e na tela de boas-vindas. O símbolo reduzido D com raio é mantido como SVG transparente em `design/brand/dinx-ray-mark.svg`, copiado para os assets de marca da ISO e renderizado como logo do GRUB; o Calamares usa-o como ícone do produto. Ícones de aplicativos e da área de trabalho permanecem upstream/Adwaita.

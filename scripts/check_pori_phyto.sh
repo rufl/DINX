@@ -71,7 +71,24 @@ grep -Fq 'Pori-What:' "$pori_dir/units-dinit.zig" || fail 'Pori mount metadata p
 grep -Fq 'Pori-Where:' "$pori_dir/units-dinit.zig" || fail 'Pori mount target metadata parser is missing'
 grep -Fq 'dinit mount service' "$pori_dir/pori-dinit.patch" || fail 'Pori UI does not describe dinit mount services'
 
-grep -Fqx 'inode/directory=org.aqueous.Phyto.desktop;' "$mimeapps" || fail 'Phyto is not the default directory handler'
+source "$pori_dir/source.env"
+[[ "$PORI_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pori version: $PORI_VERSION"
+[[ "$PORI_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Pori source checksum is invalid'
+grep -Fq 'pkgver="$PORI_VERSION"' "$pori_dir/PKGBUILD" \
+  || fail 'Pori package version is not wired to source.env'
+grep -Fq '"$PORI_SOURCE_SHA256"' "$pori_dir/PKGBUILD" \
+  || fail 'Pori package checksum is not wired to source.env'
+source "$phyto_dir/source.env"
+[[ "$PHYTO_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Phyto version: $PHYTO_VERSION"
+[[ "$PHYTO_SOURCE_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] \
+  || fail "invalid Phyto source version: $PHYTO_SOURCE_VERSION"
+[[ "$PHYTO_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Phyto source checksum is invalid'
+grep -Fq 'pkgver="$PHYTO_VERSION"' "$phyto_dir/PKGBUILD" \
+  || fail 'Phyto package version is not wired to source.env'
+grep -Fq '"$PHYTO_SOURCE_SHA256"' "$phyto_dir/PKGBUILD" \
+  || fail 'Phyto source checksum is not wired to source.env'
+grep -Fq 'source=("pearl-$PHYTO_SOURCE_VERSION.tar.gz::${PHYTO_REPOSITORY}/archive/refs/tags/v${PHYTO_SOURCE_VERSION}.tar.gz")' \
+  "$phyto_dir/PKGBUILD" || fail 'Phyto source archive is not wired to source.env'
 
 for required in \
   '  usr/bin/phyto' \

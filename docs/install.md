@@ -175,6 +175,33 @@ fi
 
 The governor checks PCI `1002:13fe` before applying settings. The guard above prevents the install command from running on other hardware. Neither BC-250 package is preinstalled in the generic ISO.
 
+## Secure package updates
+
+DINX custom-package updates are intended to use a separately published signed
+pacman repository at the rolling GitHub Release URL
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. A weekly
+package-source refresh opens a reviewed pull request; merged package changes
+can publish independently of ISO releases. The workflow and rolling channel
+are not yet confirmed as run or published.
+
+Once `dinx-keyring` is available, install it and update through Shelly:
+
+```bash
+sudo pacman -Syu --needed dinx-keyring
+shelly sync
+```
+
+Then use Shelly's update flow to apply available updates, or run `sudo pacman
+-Syu`. Shelly delegates package operations to pacman, so `[dinx]` package
+signatures are checked under pacman's required-signature policy.
+
+For bootstrap when the rolling repository is published but `dinx-keyring` is
+not yet available, follow the manual public-key verification and repository
+setup in the [release guide](release.md). Verify the key SHA-256 and full
+fingerprint `D8F294B7367BD0DAF626E4DCD411E36494CB9CEB` before local trust.
+`dinx-keyring` configures `[dinx]` and `/etc/pacman.d/dinx-mirrorlist`; that
+mirrorlist is editable for future mirrors.
+
 ## 5. Experimental persistent installation
 
 From the live desktop:

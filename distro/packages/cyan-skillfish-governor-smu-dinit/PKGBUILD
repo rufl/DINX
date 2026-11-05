@@ -1,5 +1,9 @@
 pkgname=cyan-skillfish-governor-smu-dinit
-pkgver=0.4.14
+source_env="$startdir/../cyan-skillfish-governor-smu/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${CYAN_SKILLFISH_GOVERNOR_VERSION:?missing version}"
+pkgver="$CYAN_SKILLFISH_GOVERNOR_VERSION"
 pkgrel=1
 pkgdesc='dinit service for the Cyan Skillfish SMU governor'
 arch=('any')

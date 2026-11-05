@@ -19,10 +19,16 @@ for path in \
 done
 
 source distro/packages/cyan-skillfish-governor-smu/source.env
-[[ "$CYAN_SKILLFISH_GOVERNOR_VERSION" == 0.4.14 ]] || fail 'unexpected governor version'
-[[ "$CYAN_SKILLFISH_GOVERNOR_SOURCE_URL" == *"filippor/cyan-skillfish-governor/archive/refs/tags/v${CYAN_SKILLFISH_GOVERNOR_VERSION}.tar.gz" ]] || fail 'governor source URL is not pinned'
-grep -Fq "pkgver=${CYAN_SKILLFISH_GOVERNOR_VERSION}" distro/packages/cyan-skillfish-governor-smu/PKGBUILD || fail 'governor version is not pinned'
-grep -Fq "$CYAN_SKILLFISH_GOVERNOR_SOURCE_B2" distro/packages/cyan-skillfish-governor-smu/PKGBUILD || fail 'governor checksum is not pinned'
+[[ "$CYAN_SKILLFISH_GOVERNOR_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail 'invalid governor version'
+[[ "$CYAN_SKILLFISH_GOVERNOR_SOURCE_URL" == https://github.com/filippor/cyan-skillfish-governor/archive/refs/tags/*".tar.gz" ]] \
+  || fail 'governor source URL is not an upstream release archive'
+[[ "$CYAN_SKILLFISH_GOVERNOR_SOURCE_URL" == *"${CYAN_SKILLFISH_GOVERNOR_VERSION}.tar.gz" ]] \
+  || fail 'governor source URL does not match its version pin'
+[[ "$CYAN_SKILLFISH_GOVERNOR_SOURCE_B2" =~ ^[0-9a-f]{128}$ ]] || fail 'governor checksum is invalid'
+grep -Fq 'pkgver="$CYAN_SKILLFISH_GOVERNOR_VERSION"' distro/packages/cyan-skillfish-governor-smu/PKGBUILD \
+  || fail 'governor version is not wired to source.env'
+grep -Fq '"$CYAN_SKILLFISH_GOVERNOR_SOURCE_B2"' distro/packages/cyan-skillfish-governor-smu/PKGBUILD \
+  || fail 'governor checksum is not wired to source.env'
 
 for path in \
   distro/packages/cyan-skillfish-governor-smu/PKGBUILD \

@@ -1,5 +1,11 @@
 pkgname=shelly
-pkgver=3.1.6
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${SHELLY_VERSION:?missing SHELLY_VERSION}"
+: "${SHELLY_SOURCE_URL:?missing SHELLY_SOURCE_URL}"
+: "${SHELLY_SOURCE_SHA256:?missing SHELLY_SOURCE_SHA256}"
+pkgver="$SHELLY_VERSION"
 pkgrel=2
 pkgdesc='Modern Artix-compatible ALPM package manager'
 arch=('x86_64')
@@ -36,14 +42,14 @@ optdepends=(
 )
 _aur_revision='f89d773125357baaa1d2fae715286ce9e00e2cb4'
 source=(
-  "Shelly-ALPM-linux-x64-${pkgver}.tar.gz::https://github.com/Seafoam-Labs/Shelly-ALPM/releases/download/v${pkgver}/Shelly-ALPM-linux-x64.tar.gz"
+  "Shelly-ALPM-linux-x64-${pkgver}.tar.gz::${SHELLY_SOURCE_URL}"
   "shellybuild.conf::https://aur.archlinux.org/cgit/aur.git/plain/shellybuild.conf?h=${_aur_revision}"
   "com.shellyorg.shelly.desktop::https://aur.archlinux.org/cgit/aur.git/plain/com.shellyorg.shelly.desktop?h=${_aur_revision}"
   "com.shellyorg.shelly-notifications.desktop::https://aur.archlinux.org/cgit/aur.git/plain/com.shellyorg.shelly-notifications.desktop?h=${_aur_revision}"
   "shelly-flatpak-integrate::https://aur.archlinux.org/cgit/aur.git/plain/shelly-flatpak-integrate?h=${_aur_revision}"
 )
 sha256sums=(
-  'cd6443eb5cce22560dca583b4b935891379e8b8ce4836f3ba85eaa52adb6da47'
+  "$SHELLY_SOURCE_SHA256"
   '9f551f28d79748c7e255a35cb577081b3263e65d290b4809e10066ed17ce30e5'
   '4b7cb0e42eb322de9eb616d22ca05823f91d178db5b8b67497d497ed495aca9c'
   'cf0dc0a6d1865b9010054b36941e7bf4d445c3e7549219889f07ab08283c5c0f'

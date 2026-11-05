@@ -1,5 +1,11 @@
 pkgname=swayimg
-pkgver=5.6
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${SWAYIMG_VERSION:?missing SWAYIMG_VERSION}"
+: "${SWAYIMG_SOURCE_URL:?missing SWAYIMG_SOURCE_URL}"
+: "${SWAYIMG_SOURCE_SHA256:?missing SWAYIMG_SOURCE_SHA256}"
+pkgver="$SWAYIMG_VERSION"
 pkgrel=2
 pkgdesc="A lightweight image viewer for Wayland display servers"
 arch=(x86_64)
@@ -24,9 +30,9 @@ makedepends=(
   wayland-protocols
 )
 source=(
-  "swayimg-${pkgver}.tar.gz::https://github.com/artemsen/swayimg/archive/v${pkgver}.tar.gz"
+  "swayimg-${pkgver}.tar.gz::${SWAYIMG_SOURCE_URL}"
 )
-sha256sums=('0f70cbc665217a747e8a098e1a881239e96df270930f47c262ab2ecff290e428')
+sha256sums=("$SWAYIMG_SOURCE_SHA256")
 
 build() {
   meson setup build "${srcdir}/${pkgname}-${pkgver}" \

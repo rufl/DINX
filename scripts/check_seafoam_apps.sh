@@ -26,10 +26,14 @@ for path in "$profile" "$groups" "$iso_check" "$workflow" "$builder" \
 done
 
 source "$dome_dir/source.env"
-[[ "$DOME_VERSION" == 0.1.1 ]] || fail "unexpected Dome version: $DOME_VERSION"
-[[ "$DOME_SOURCE_VERSION" == 0.3.0 ]] || fail "unexpected Pearl source version: $DOME_SOURCE_VERSION"
-[[ "$DOME_SOURCE_SHA256" == afb15f5650cdd0aa00a9d6ee697dec1cde2cb9eaa77b1631e4876c125caba24a ]] \
-  || fail 'Dome source checksum changed'
+[[ "$DOME_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Dome package version: $DOME_VERSION"
+[[ "$DOME_SOURCE_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] \
+  || fail "invalid Dome source version: $DOME_SOURCE_VERSION"
+[[ "$DOME_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Dome source checksum is invalid'
+grep -Fq 'pkgver="$DOME_VERSION"' "$dome_dir/PKGBUILD" || fail 'Dome package version is not wired to source.env'
+grep -Fq '"$DOME_SOURCE_SHA256"' "$dome_dir/PKGBUILD" || fail 'Dome source checksum is not wired to source.env'
+grep -Fq 'source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz")' \
+  "$dome_dir/PKGBUILD" || fail 'Dome source archive is not wired to source.env'
 source "$pearl_source"
 [[ "$PEARL_ZIG_VERSION" == 0.16.0 ]] || fail "unexpected Pearl/Dome/Phyto Zig version: $PEARL_ZIG_VERSION"
 

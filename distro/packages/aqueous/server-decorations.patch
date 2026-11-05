@@ -526,6 +526,12 @@
  pub fn rootSurface(window: Window) ?*wlr.Surface {
      return switch (window.impl) {
          .toplevel => |toplevel| toplevel.wlr_toplevel.base.surface,
+@@ -3084,0 +3085,5 @@
++    if (window.usesServerTitlebar()) {
++        const mask = decoration_policy.includeServerTitlebarInSurfaceMask(content.y, content.height, pointer_drag.titlebar_height);
++        content.y = mask.y;
++        content.height = mask.height;
++    }
 --- a/compositor/aqueous/wm/input/drag.zig
 +++ b/compositor/aqueous/wm/input/drag.zig
 @@ -10,6 +10,97 @@
@@ -674,7 +680,7 @@ diff --git a/compositor/aqueous/wm/window_decoration_policy.zig b/compositor/aqu
 new file mode 100644
 --- /dev/null
 +++ b/compositor/aqueous/wm/window_decoration_policy.zig
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,45 @@
 +const std = @import("std");
 +
 +/// Honor client CSD unless server decorations are explicitly forced.
@@ -686,9 +692,37 @@ new file mode 100644
 +    return server_decorations_available and (force_ssd or !client_requires_csd);
 +}
 +
++pub const SurfaceMaskBox = struct {
++    y: i32,
++    height: i32,
++};
++
++/// Extend the rounded client mask upward to the compositor-owned titlebar.
++pub fn includeServerTitlebarInSurfaceMask(
++    y: i32,
++    height: i32,
++    titlebar_height: u31,
++) SurfaceMaskBox {
++    const titlebar_height_i: i32 = @intCast(titlebar_height);
++    return .{
++        .y = y - titlebar_height_i,
++        .height = @min(height, std.math.maxInt(i32) - titlebar_height_i) + titlebar_height_i,
++    };
++}
++
 +test "server decorations honor client CSD preference" {
 +    try std.testing.expect(!useServerSideDecorations(true, false, false));
 +    try std.testing.expect(!useServerSideDecorations(false, true, true));
 +    try std.testing.expect(useServerSideDecorations(false, true, false));
 +    try std.testing.expect(useServerSideDecorations(true, true, true));
++}
++
++test "server titlebar extends surface mask beyond client top edge" {
++    const full = includeServerTitlebarInSurfaceMask(0, 600, 36);
++    try std.testing.expectEqual(@as(i32, -36), full.y);
++    try std.testing.expectEqual(@as(i32, 636), full.height);
++
++    const clipped = includeServerTitlebarInSurfaceMask(24, 80, 36);
++    try std.testing.expectEqual(@as(i32, -12), clipped.y);
++    try std.testing.expectEqual(@as(i32, 116), clipped.height);
 +}

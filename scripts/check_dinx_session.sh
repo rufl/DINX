@@ -217,6 +217,8 @@ for setting in 'snap_gap = 0' 'snap_threshold = 24' 'resistance = 12' 'top_edge_
 done
 grep -Fq 'force_ssd = false' "$aqueous_layout" \
   || fail 'Aqueous must honor client-side GTK decorations by default'
+grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not force Firefox to use the system/compositor titlebar'
 grep -Fq 'client_requires_csd' "$aqueous_decoration_patch" \
   || fail 'Aqueous decoration policy does not distinguish client-side decorations'
 grep -Fq '.xwayland => decoration_policy.useServerSideDecorations(' "$aqueous_decoration_patch" \

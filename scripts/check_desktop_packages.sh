@@ -46,12 +46,12 @@ gapless_recipe="$root/distro/packages/gapless/PKGBUILD"
 gapless_source="$root/distro/packages/gapless/source.env"
 source "$gapless_source"
 [[ "$GAPLESS_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Gapless version: $GAPLESS_VERSION"
-[[ "$GAPLESS_SOURCE_URL" == *"/g4music-${GAPLESS_VERSION}.tar.gz" ]] \
+[[ "$GAPLESS_SOURCE_URL" == *"/g4music-v${GAPLESS_VERSION}.tar.gz" ]] \
   || fail 'Gapless source URL does not match its version pin'
 [[ "$GAPLESS_SOURCE_B2" =~ ^[0-9a-f]{128}$ ]] || fail 'Gapless BLAKE2 checksum is invalid'
 grep -Fq 'pkgver="$GAPLESS_VERSION"' "$gapless_recipe" \
   || fail 'Gapless package version is not wired to source.env'
-grep -Fq '"$GAPLESS_SOURCE_URL"' "$gapless_recipe" \
+grep -Fq '${GAPLESS_SOURCE_URL}' "$gapless_recipe" \
   || fail 'Gapless package URL is not wired to source.env'
 grep -Fq '"$GAPLESS_SOURCE_B2"' "$gapless_recipe" \
   || fail 'Gapless package checksum is not wired to source.env'
@@ -64,7 +64,7 @@ source "$matugen_source"
 [[ "$MATUGEN_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Matugen source checksum is invalid'
 grep -Fq 'pkgver="$MATUGEN_VERSION"' "$matugen_recipe" \
   || fail 'Matugen package version is not wired to source.env'
-grep -Fq '"$MATUGEN_SOURCE_URL"' "$matugen_recipe" \
+grep -Fq '${MATUGEN_SOURCE_URL}' "$matugen_recipe" \
   || fail 'Matugen source URL is not wired to source.env'
 grep -Fq '"$MATUGEN_SOURCE_SHA256"' "$matugen_recipe" \
   || fail 'Matugen source checksum is not wired to source.env'

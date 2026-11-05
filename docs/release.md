@@ -82,7 +82,12 @@ GitHub Actions secret `DINX_PACKAGE_SIGNING_KEY` with the unencrypted armored
 production private key and `DINX_PACKAGE_SIGNING_FINGERPRINT` with its exact
 fingerprint. The key must be usable non-interactively by `makepkg --sign`.
 Provision secrets from a trusted operator machine; never commit or upload the
-private key:
+private key.
+
+If `rufl/DEETTY` remains private, configure the Actions secret
+`DEETTY_SOURCE_READ_TOKEN` with read-only Contents access to that repository.
+The contracts and publisher need it to fetch the pinned source; the DINX
+`GITHUB_TOKEN` can be used only if repository policy grants it that access.
 
 ```bash
 fingerprint='D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'

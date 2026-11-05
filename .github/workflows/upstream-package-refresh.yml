@@ -6,9 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: dinx-upstream-package-refresh
@@ -17,6 +15,9 @@ concurrency:
 jobs:
   refresh:
     name: Refresh pinned upstream sources
+    permissions:
+      actions: write
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -82,6 +83,9 @@ jobs:
 
   open-review:
     name: Open reviewed source-update PR
+    permissions:
+      contents: read
+      pull-requests: write
     needs: refresh
     if: needs.refresh.outputs.changed == 'true' && needs.refresh.outputs.validated == 'true'
     runs-on: ubuntu-24.04

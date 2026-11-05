@@ -49,8 +49,12 @@ done
 for required in \
   'cron: "17 4 * * 1"' \
   'scripts/refresh_package_sources.py' \
+  'gh workflow run contracts.yml' \
+  'gh run watch "$contract_run"' \
   'gh pr create' \
-  'source_ref'; do
+  'source_ref' \
+  '      actions: write' \
+  '      pull-requests: write'; do
   grep -Fq -- "$required" "$refresh_workflow" \
     || fail "scheduled upstream review workflow is missing: $required"
 done

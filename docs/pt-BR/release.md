@@ -81,7 +81,13 @@ configurar o segredo do GitHub Actions `DINX_PACKAGE_SIGNING_KEY` com a chave
 privada de produção armored sem senha e `DINX_PACKAGE_SIGNING_FINGERPRINT` com
 seu fingerprint exato. A chave deve poder ser usada sem interação pelo
 `makepkg --sign`. Configure os segredos em uma máquina confiável do operador;
-nunca faça commit nem upload da chave privada:
+nunca faça commit nem upload da chave privada.
+
+Se `rufl/DEETTY` continuar privado, configure o segredo do Actions
+`DEETTY_SOURCE_READ_TOKEN` com acesso Contents somente de leitura a esse
+repositório. Os contratos e o publicador precisam dele para buscar a fonte
+fixada; o `GITHUB_TOKEN` da DINX só pode ser usado se a política do repositório
+conceder esse acesso.
 
 ```bash
 fingerprint='D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'

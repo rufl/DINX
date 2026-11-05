@@ -25,7 +25,6 @@ on:
       - ".github/workflows/p0-iso.yml"
       - ".github/workflows/release.yml"
       - "distro/iso/**"
-      - "distro/packages/**"
       - "scripts/build-iso.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/build-iso-container.sh"

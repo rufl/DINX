@@ -77,6 +77,8 @@ builder=scripts/build-iso-container.sh
 docker_builder=scripts/build-iso-docker.sh
 release_workflow=.github/workflows/release.yml
 contracts_workflow=.github/workflows/contracts.yml
+refresh_workflow=.github/workflows/upstream-package-refresh.yml
+package_workflow=.github/workflows/publish-dinx-packages.yml
 update_smoke=scripts/smoke_dinx_update.sh
 for required in \
   'scripts/check_dinx_package_provenance.sh' \
@@ -126,6 +128,26 @@ for required in \
   'dist/dinx-package-repository.tar'; do
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
 done
+for required in \
+  'cron: "17 4 * * 1"' \
+  'scripts/refresh_package_sources.py' \
+  'gh pr create' \
+  'source_ref'; do
+  grep -Fq -- "$required" "$refresh_workflow" \
+    || fail "upstream source refresh workflow is missing: $required"
+done
+for required in \
+  'DINX_PACKAGE_REPOSITORY_ONLY: "true"' \
+  'DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING:' \
+  'dinx-packages-latest' \
+  'gh release upload' \
+  'actions/attest@' \
+  'scripts/build-iso-docker.sh'; do
+  grep -Fq -- "$required" "$package_workflow" \
+    || fail "package-only publication workflow is missing: $required"
+done
+grep -Fq 'workflow_call:' "$contracts_workflow" \
+  || fail 'contracts workflow cannot validate scheduled source update branches'
 for cache_helper in scripts/cache-verified-download.sh scripts/cache-verified-extract.sh; do
   grep -Fq 'DINX_CACHE_DIRTY_MARKER' "$cache_helper" \
     || fail "verified cache helper does not report cache changes: $cache_helper"
@@ -250,6 +272,7 @@ if ! awk '
 fi
 for required in \
   '--privileged' \
+  '--env DINX_PACKAGE_REPOSITORY_ONLY="$package_repository_only"' \
   '--env DINX_BUILD_CONTEXT="$build_context"' \
   '--env DINX_SOURCE_TREE_SHA256="$source_tree_sha256"' \
   '--env DINX_ARTIX_IMAGE="$image"' \
@@ -266,6 +289,9 @@ for required in \
   grep -Fq -- "$required" "$workflow" \
     || fail "P0 push path filters are missing build input: $required"
 done
+if grep -Fq -- '      - "distro/packages/**"' "$workflow"; then
+  fail 'package-source changes must use the package-only publication workflow, not trigger ISO assembly'
+fi
 grep -Fq '/workspace/distro/packages' "$builder" \
   || fail 'Artix builder cleanup does not restore ownership of bind-mounted package sources'
 for required in \

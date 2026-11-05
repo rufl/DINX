@@ -19,8 +19,8 @@ checks=(
   check_aqueous_pearl.sh
   check_dinx_display_persistence.sh
   check_wizp_package.sh
+  check_dinx_package_channel.sh
   check_dinx_package_provenance.sh
-  check_dinx_feature_groups.sh
   check_cyan_skillfish.sh
   check_bc250_control_center.sh
   check_firewall_tools.sh
@@ -82,9 +82,12 @@ for smoke in \
   smoke_pacman_local_install.sh \
   smoke_cache_verified_download.sh \
   smoke_cache_verified_extract.sh \
-  smoke_package_artifact_cache.sh; do
+  smoke_package_artifact_cache.sh \
+  smoke_dinx_keyring_config.sh; do
   "$root/scripts/$smoke"
 done
+printf 'dinx_contracts: run=test_refresh_package_sources.py\n'
+PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_refresh_package_sources.py"
 printf 'dinx_contracts: run=test_initramfs_manifest.py\n'
 PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_initramfs_manifest.py"
 printf 'dinx_contracts: run=test_dinx_plymouth_screen.py\n'

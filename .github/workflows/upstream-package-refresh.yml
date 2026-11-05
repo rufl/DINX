@@ -1,0 +1,103 @@
+name: Refresh upstream package sources
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dinx-upstream-package-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh pinned upstream sources
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      changed: ${{ steps.refresh.outputs.changed }}
+      branch: ${{ steps.refresh.outputs.branch }}
+      source_ref: ${{ steps.refresh.outputs.source_ref }}
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Test updater and source manifest
+        run: |
+          python3 scripts/check_package_update_manifest.py
+          python3 scripts/test_refresh_package_sources.py
+      - name: Fetch and pin newer stable upstream releases
+        id: refresh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          scripts/refresh_package_sources.py
+          if git diff --quiet -- distro/packages; then
+            printf 'changed=false\n' >> "$GITHUB_OUTPUT"
+            printf 'package-source-update changed=false\n'
+            exit 0
+          fi
+          git diff --check
+          branch=automation/upstream-source-refresh
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch --create "$branch"
+          git add -- distro/packages
+          git commit --message 'chore: refresh upstream package sources'
+          expected=$(git ls-remote --heads origin "refs/heads/$branch" | awk 'NR == 1 { print $1 }')
+          if [[ -n "$expected" ]]; then
+            git push --force-with-lease="refs/heads/$branch:$expected" origin "HEAD:refs/heads/$branch"
+          else
+            git push origin "HEAD:refs/heads/$branch"
+          fi
+          printf 'changed=true\n' >> "$GITHUB_OUTPUT"
+          printf 'branch=%s\n' "$branch" >> "$GITHUB_OUTPUT"
+          printf 'source_ref=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  validate:
+    name: Validate refreshed package pins
+    needs: refresh
+    if: needs.refresh.outputs.changed == 'true'
+    uses: ./.github/workflows/contracts.yml
+    with:
+      source_ref: ${{ needs.refresh.outputs.source_ref }}
+    secrets: inherit
+
+  open-review:
+    name: Open reviewed source-update PR
+    needs: [refresh, validate]
+    if: needs.refresh.outputs.changed == 'true' && needs.validate.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create or update the reviewed source PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPDATE_BRANCH: ${{ needs.refresh.outputs.branch }}
+          UPDATE_COMMIT: ${{ needs.refresh.outputs.source_ref }}
+        run: |
+          set -euo pipefail
+          body=$(cat <<EOF
+          Automated upstream release-pin refresh, validated against commit \`${UPDATE_COMMIT}\` by the reusable DINX contract workflow.
+
+          Review source versions, checksums, package changelogs, and runtime compatibility before merging. This workflow never writes package pins directly to \`main\`.
+          EOF
+          )
+          existing=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$UPDATE_BRANCH" --json number --jq '.[0].number // empty')
+          if [[ -n "$existing" ]]; then
+            gh pr edit "$existing" --repo "$GITHUB_REPOSITORY" \
+              --title 'chore: refresh upstream package sources' --body "$body"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$UPDATE_BRANCH" \
+              --title 'chore: refresh upstream package sources' --body "$body"
+          fi

@@ -1,0 +1,279 @@
+name: Publish DINX packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/package-updates.json"
+      - ".github/workflows/contracts.yml"
+      - ".github/workflows/publish-dinx-packages.yml"
+      - ".github/workflows/upstream-package-refresh.yml"
+      - "distro/packages/**"
+      - "scripts/build-iso-container.sh"
+      - "scripts/build-iso-docker.sh"
+      - "scripts/cache-verified-download.sh"
+      - "scripts/cache-verified-extract.sh"
+      - "scripts/check_dinx_package_channel.sh"
+      - "scripts/check_dinx_package_repository.sh"
+      - "scripts/check_dinx_package_provenance.sh"
+      - "scripts/check_package_update_manifest.py"
+      - "scripts/iso-builder/**"
+      - "scripts/lib/dinx-package-artifact-cache.sh"
+      - "scripts/prepare_first_party_apps.sh"
+      - "scripts/refresh_package_sources.py"
+      - "scripts/smoke_dinx_update.sh"
+      - "scripts/test_refresh_package_sources.py"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: dinx-package-repository
+  cancel-in-progress: false
+
+jobs:
+  contracts:
+    name: Validate package source and integration contracts
+    if: github.repository == 'rufl/DINX' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/contracts.yml
+    with:
+      source_ref: ${{ github.sha }}
+    secrets: inherit
+
+  build-and-publish:
+    name: Build and publish signed packages without an ISO
+    needs: contracts
+    if: github.repository == 'rufl/DINX' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate production signing key before building
+        env:
+          DINX_PACKAGE_SIGNING_KEY: ${{ secrets.DINX_PACKAGE_SIGNING_KEY }}
+          DINX_PACKAGE_SIGNING_FINGERPRINT: ${{ secrets.DINX_PACKAGE_SIGNING_FINGERPRINT }}
+        run: |
+          set -euo pipefail
+          expected=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+          [[ -n "$DINX_PACKAGE_SIGNING_KEY" ]] || { printf 'Missing Actions secret DINX_PACKAGE_SIGNING_KEY\n' >&2; exit 1; }
+          [[ "${DINX_PACKAGE_SIGNING_FINGERPRINT^^}" == "$expected" ]] \
+            || { printf 'DINX_PACKAGE_SIGNING_FINGERPRINT must equal %s\n' "$expected" >&2; exit 1; }
+          gpg_home=$(mktemp -d "$RUNNER_TEMP/dinx-package-signing.XXXXXX")
+          trap 'rm -rf -- "$gpg_home"' EXIT
+          chmod 700 "$gpg_home"
+          printf '%s\n' "$DINX_PACKAGE_SIGNING_KEY" > "$gpg_home/private.asc"
+          gpg --batch --homedir "$gpg_home" --import "$gpg_home/private.asc" >/dev/null 2>&1
+          actual=$(gpg --batch --homedir "$gpg_home" --with-colons --list-secret-keys \
+            | awk -F: '$1 == "fpr" { print toupper($10); exit }')
+          [[ "$actual" == "$expected" ]] || { printf 'Signing secret fingerprint mismatch: %s\n' "$actual" >&2; exit 1; }
+          printf 'signing-test' > "$gpg_home/test-data"
+          gpg --batch --homedir "$gpg_home" --local-user "$expected" \
+            --detach-sign --output "$gpg_home/test-data.sig" "$gpg_home/test-data"
+          printf 'dinx_package_signing_preflight fingerprint=%s noninteractive_signing=true\n' "$actual"
+      - name: Compute reusable build-cache input digest
+        id: cache-inputs
+        run: |
+          cache_input_hash=$(
+            git ls-files -z -- distro/packages scripts/build-iso-container.sh \
+              scripts/cache-verified-download.sh scripts/cache-verified-extract.sh \
+              scripts/lib/dinx-package-artifact-cache.sh scripts/iso-builder \
+              | LC_ALL=C sort -z \
+              | xargs -0 sha256sum \
+              | sha256sum \
+              | cut -d ' ' -f 1
+          )
+          [[ "$cache_input_hash" =~ ^[0-9a-f]{64}$ ]]
+          printf 'recipe_sha256=%s\n' "$cache_input_hash" >> "$GITHUB_OUTPUT"
+      - name: Prepare reusable DINX build caches
+        run: mkdir -p dist/.cache/dinx/{package-artifacts,makepkg-sources,cargo,cargo-target,zig,toolchains}
+      - name: Restore verified DINX package artifacts
+        id: package-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/package-artifacts
+          key: dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
+          restore-keys: |
+            dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore makepkg, Cargo and Zig build caches
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: |
+            dist/.cache/dinx/makepkg-sources
+            dist/.cache/dinx/cargo
+            dist/.cache/dinx/cargo-target
+            dist/.cache/dinx/zig
+          key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
+          restore-keys: |
+            dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore verified Zig toolchains
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/toolchains
+          key: dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
+          restore-keys: |
+            dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-
+      - name: Read pinned Deetty/Dintor source revision
+        id: deetty-source
+        run: |
+          ref=$(awk -F= '$1 == "DEETTY_REF" { print $2; exit }' distro/packages/deetty/source.env)
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { printf 'Invalid DEETTY_REF in source.env\n' >&2; exit 1; }
+          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
+      - name: Checkout pinned Deetty source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: rufl/DEETTY
+          ref: ${{ steps.deetty-source.outputs.ref }}
+          token: ${{ secrets.DEETTY_SOURCE_READ_TOKEN || github.token }}
+          path: third_party/deetty
+          persist-credentials: false
+      - name: Prepare and verify pinned Deetty source archive
+        run: |
+          ./scripts/prepare_first_party_apps.sh third_party/deetty
+          ./scripts/check_first_party_apps.sh
+          ./scripts/check_deetty_integration.sh
+      - name: Prepare pinned builder image identity
+        id: builder-image
+        run: |
+          printf 'refresh_date=%s\n' "$(date -u +%F)" >> "$GITHUB_OUTPUT"
+          recipe_sha256=$(sha256sum scripts/iso-builder/Dockerfile scripts/iso-builder/packages.txt | sha256sum | cut -d ' ' -f 1)
+          printf 'recipe_sha256=%s\n' "$recipe_sha256" >> "$GITHUB_OUTPUT"
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - name: Build and cache Artix builder image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ./scripts/iso-builder
+          file: ./Dockerfile
+          tags: dinx-iso-builder:ci
+          load: true
+          build-args: |
+            DINX_ARTIX_IMAGE=artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
+            DINX_BUILDER_REFRESH=${{ steps.builder-image.outputs.refresh_date }}
+            DINX_BUILDER_RECIPE_SHA256=${{ steps.builder-image.outputs.recipe_sha256 }}
+          cache-from: type=gha,scope=dinx-iso-builder
+          cache-to: type=gha,scope=dinx-iso-builder,mode=max
+      - name: Build and sign package repository without ISO assembly
+        id: package-build
+        env:
+          DINX_BUILDER_IMAGE: dinx-iso-builder:ci
+          DINX_BUILDER_PREBUILT: 'true'
+          DINX_BUILDER_REFRESH_DATE: ${{ steps.builder-image.outputs.refresh_date }}
+          DINX_PACKAGE_SIGNING_KEY: ${{ secrets.DINX_PACKAGE_SIGNING_KEY }}
+          DINX_PACKAGE_SIGNING_FINGERPRINT: ${{ secrets.DINX_PACKAGE_SIGNING_FINGERPRINT }}
+          DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING: 'true'
+          DINX_PACKAGE_REPOSITORY_ONLY: "true"
+          DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
+          DINX_BUILD_CONTEXT: github-actions
+          DINX_SKIP_CONTRACTS: 'true'
+          DINX_SKIP_POSTBUILD_CHECKS: 'true'
+          DINX_BUILD_CACHE_DIR: ${{ github.workspace }}/dist/.cache/dinx
+          DINX_BUILDER_RECIPE_SHA256: ${{ steps.builder-image.outputs.recipe_sha256 }}
+        run: scripts/build-iso-docker.sh
+      - name: Detect changed build caches
+        id: cache-dirty
+        if: always()
+        run: |
+          package_marker="dist/.cache/dinx/package-artifacts/.dinx-package-cache-updated-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          data_marker="dist/.cache/dinx/.dinx-build-data-updated-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          toolchain_marker="dist/.cache/dinx/toolchains/.dinx-toolchain-cache-updated-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          package_dirty=false
+          data_dirty=false
+          toolchains_dirty=false
+          [[ ! -f "$package_marker" ]] || package_dirty=true
+          [[ ! -f "$data_marker" ]] || data_dirty=true
+          [[ ! -f "$toolchain_marker" ]] || toolchains_dirty=true
+          printf 'package_artifacts=%s\n' "$package_dirty" >> "$GITHUB_OUTPUT"
+          printf 'build_data=%s\n' "$data_dirty" >> "$GITHUB_OUTPUT"
+          printf 'toolchains=%s\n' "$toolchains_dirty" >> "$GITHUB_OUTPUT"
+          find dist/.cache/dinx -maxdepth 2 -type f \
+            \( -name '.dinx-package-cache-updated-*' -o -name '.dinx-build-data-updated-*' \
+              -o -name '.dinx-toolchain-cache-updated-*' \) -delete
+      - name: Save verified DINX package artifacts
+        if: always() && steps.package-build.outcome != 'skipped' && steps.cache-dirty.outputs.package_artifacts == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/package-artifacts
+          key: dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save makepkg, Cargo and Zig build caches
+        if: always() && steps.package-build.outcome != 'skipped' && steps.cache-dirty.outputs.build_data == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: |
+            dist/.cache/dinx/makepkg-sources
+            dist/.cache/dinx/cargo
+            dist/.cache/dinx/cargo-target
+            dist/.cache/dinx/zig
+          key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save verified Zig toolchains
+        if: always() && steps.package-build.outcome != 'skipped' && steps.cache-dirty.outputs.toolchains == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/toolchains
+          key: dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Validate signed repository and generate release checksums
+        id: repository
+        run: |
+          set -euo pipefail
+          scripts/check_dinx_package_repository.sh dist/packages
+          metadata=dist/packages/dinx-repository-metadata.txt
+          grep -Fqx 'channel=stable' "$metadata"
+          grep -Fqx 'signing_fingerprint=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB' "$metadata"
+          [[ -z $(find dist/iso -type f -name '*.iso' -print -quit) ]] \
+            || { printf 'Package-only workflow unexpectedly produced an ISO\n' >&2; exit 1; }
+          (cd dist/packages && find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\0' \
+            | LC_ALL=C sort -z | xargs -0 sha256sum > SHA256SUMS)
+          snapshot=$(awk -F= '$1 == "snapshot" { print $2; exit }' "$metadata")
+          [[ "$snapshot" =~ ^[0-9a-f]{64}$ ]]
+          printf 'snapshot=%s\n' "$snapshot" >> "$GITHUB_OUTPUT"
+      - name: Attest signed package repository assets
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/packages/*
+      - name: Publish rolling package repository assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_SNAPSHOT: ${{ steps.repository.outputs.snapshot }}
+          PACKAGE_TAG: dinx-packages-latest
+        run: |
+          set -euo pipefail
+          command -v gh >/dev/null
+          notes=$(printf 'Signed DINX pacman package repository.\n\nSnapshot: `%s`\nSource commit: `%s`\nPackages are published independently of ISO assembly.\n' "$PACKAGE_SNAPSHOT" "$GITHUB_SHA")
+          if gh release view "$PACKAGE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$PACKAGE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --title 'DINX rolling package repository' --notes "$notes"
+          else
+            gh release create "$PACKAGE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --title 'DINX rolling package repository' --notes "$notes" \
+              --target "$GITHUB_SHA" --prerelease
+          fi
+          shopt -s nullglob
+          package_assets=(dist/packages/*.pkg.tar.zst dist/packages/*.pkg.tar.zst.sig \
+            dist/packages/dinx-package-signing-key.gpg dist/packages/dinx-repository-metadata.txt \
+            dist/packages/SHA256SUMS)
+          ((${#package_assets[@]} > 0))
+          gh release upload "$PACKAGE_TAG" --repo "$GITHUB_REPOSITORY" \
+            "${package_assets[@]}" --clobber
+          gh release upload "$PACKAGE_TAG" --repo "$GITHUB_REPOSITORY" \
+            dist/packages/dinx.db.tar.gz.sig dist/packages/dinx.db.tar.gz --clobber
+          gh release upload "$PACKAGE_TAG" --repo "$GITHUB_REPOSITORY" \
+            dist/packages/dinx.db.sig dist/packages/dinx.db --clobber
+          printf 'dinx_package_repository_published tag=%s snapshot=%s commit=%s\n' \
+            "$PACKAGE_TAG" "$PACKAGE_SNAPSHOT" "$GITHUB_SHA"
+      - name: Upload package build diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dinx-package-build-${{ job.status }}-${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            dist/dinx-build.log
+            dist/packages/dinx-repository-metadata.txt
+            dist/packages/SHA256SUMS

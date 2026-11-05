@@ -245,6 +245,8 @@ grep -Fq '[ ! -e "$config_home/aqueous/wm.toml" ]' <<<"$aqueous_wm_seed_block" \
   || fail 'Aqueous session may overwrite an existing live-user window-manager config'
 grep -Fq 'install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
   || fail 'Aqueous session does not seed the system window-manager config for a new user'
+grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then' <<<"$aqueous_wm_seed_block" \
+  || fail 'Aqueous live effects defaults are not restricted to the live session'
 grep -Fq 'dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
   || fail 'Aqueous session does not disable live-only blur and opacity only for a new user'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \

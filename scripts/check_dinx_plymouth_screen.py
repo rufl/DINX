@@ -10,9 +10,7 @@ import sys
 from pathlib import Path
 
 BACKGROUND = (11, 13, 18)
-GRUB_MENU = re.compile(
-    r"\bstart\s+din[xvy]\b|\b(?:iso\s*/\s*dvd|usb\s*/\s*hdd)\b|\badvanced\s+options\b",
-    re.IGNORECASE,
+    r"\bstart\s+din[xvy]\b|\b(?:iso\s*/\s*dvd|usb\s*/\s*hdd)\b|\bboot\s+to\s+the\s+firmware\s*/\s*bios\b|\badvanced\s+options\b",
 )
 
 
@@ -75,10 +73,10 @@ def read_ppm(path: Path) -> tuple[int, int, bytes]:
     return width, height, pixels
 
 
-def main(argv: list[str]) -> int:
-    if len(argv) not in (2, 3):
-        print("usage: check_dinx_plymouth_screen.py SCREEN.ppm [TESSERACT_LANG]", file=sys.stderr)
-        return 2
+        self.assertTrue(has_grub_menu("Start DINX Linux"))
+        self.assertTrue(has_grub_menu("Boot to the Firmware/BIOS"))
+        self.assertTrue(has_grub_menu("Advanced options"))
+        self.assertFalse(has_grub_menu("Pearl Greeter"))
 
     path = Path(argv[1])
     language = argv[2] if len(argv) == 3 else "eng"

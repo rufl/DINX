@@ -54,7 +54,7 @@ substitui a qualificação em hardware.
 
 A smoke de boot no QEMU captura a superfície VGA e usa OCR do Tesseract para exigir um marcador da área de trabalho Pearl/Aqueous/DINX, rejeitando Pearl Greeter, prompts de login e falhas visíveis do Dinit. Ela envia `Alt+F4` após a primeira captura para dispensar a configuração inicial do Pearl e verifica o quadro da área de trabalho em seguida. Smokes locais exigem `qemu-system-x86_64`, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`:
 
-O menu da ISO oferece duas opções DINX live (ISO/DVD e USB/HDD), seleciona ISO/DVD por padrão e inicia automaticamente após seis segundos visíveis. A qualificação completa do QEMU deixa o menu sem teclas injetadas para verificar esse timeout.
+O menu de boot mostra `Start DINX Linux` e, em sistemas UEFI, `Boot to the Firmware/BIOS`. DINX é a opção padrão e inicia após uma contagem regressiva visível de seis segundos. No BIOS legado não existe a opção de configuração do firmware UEFI. A qualificação completa do QEMU deixa o menu sem teclas injetadas para verificar a contagem.
 
 ```bash
 DINX_QEMU_TIMEOUT=110 \

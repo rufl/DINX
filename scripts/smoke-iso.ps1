@@ -302,9 +302,6 @@ if ([string]::IsNullOrWhiteSpace($display)) {
     $display = if ($visual) { 'sdl' } else { 'none' }
 }
 $bootKeys = [Environment]::GetEnvironmentVariable('DINX_QEMU_BOOT_KEYS')
-if ([string]::IsNullOrWhiteSpace($bootKeys)) {
-    $bootKeys = 'down,down,ret'
-}
 $postKeys = [Environment]::GetEnvironmentVariable('DINX_QEMU_POST_KEYS')
 if ($null -eq $postKeys) {
     $postKeys = ''
@@ -337,8 +334,10 @@ try {
         Start-Sleep -Seconds $bootScreenshotDelay
         Capture-Screen $monitor $bootScreenshotPath 'boot'
     }
-    Send-Keys $monitor $bootKeys
-    Write-Host "smoke-iso: sent QEMU boot keys: $bootKeys"
+    if (-not [string]::IsNullOrWhiteSpace($bootKeys)) {
+        Send-Keys $monitor $bootKeys
+        Write-Host "smoke-iso: sent QEMU boot keys: $bootKeys"
+    }
 
     if ($visual) {
         Start-Sleep -Seconds $screenshotDelay

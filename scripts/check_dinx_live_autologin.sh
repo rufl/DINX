@@ -56,8 +56,8 @@ grep -Fqx '    - render' "$users_conf" \
 
 grep -Fq "AUTOLOGIN=true" "$wrapper" || fail 'live wrapper does not guard on AUTOLOGIN=true'
 grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure greetd initial_session'
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
-  || fail 'live initial Aqueous/Pearl command is missing'
+grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
+  || fail 'live initial Aqueous/Pearl command does not mark the live session'
 grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
 grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
   || fail 'live user is missing DRM render-node access'

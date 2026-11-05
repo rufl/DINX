@@ -100,8 +100,8 @@ live_conf=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/ar
 grep -Eq '^AUTOLOGIN=true$' <<<"$live_conf" \
   || fail 'livefs does not enable DINX autologin'
 live_autologin=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin" \
-  || fail 'livefs autologin does not select Aqueous/Pearl'
+grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin" \
+  || fail 'livefs autologin does not mark its Aqueous/Pearl session as live'
 grep -Fq 'user = "dinx"' <<<"$live_autologin" \
   || fail 'livefs autologin does not select the dinx user'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
@@ -399,6 +399,7 @@ required_paths=(
   usr/share/applications/network.cycles.wdisplays.desktop
   usr/share/grub/themes/artix/theme.txt
   etc/pearl/greeter.json
+  etc/issue
   etc/skel/.config/pearl/preferences.json
   etc/calamares/branding/dinx/dinx.svg
   etc/calamares/branding/dinx/dinx-ray-mark.svg
@@ -414,6 +415,11 @@ for path in "${required_paths[@]}"; do
     END { exit !found }
   ' <<<"$manifest" || fail "missing ISO path (exact path required): $path"
 done
+cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/issue)
+grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'
+if grep -Eiq 'Artix' <<<"$cli_issue"; then
+  fail 'CLI login banner still identifies Artix'
+fi
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for strawberry_path in usr/bin/strawberry usr/share/applications/org.strawberrymusicplayer.strawberry.desktop; do
     if grep -Fq "/$strawberry_path" <<<"$image_manifest"; then
@@ -670,9 +676,9 @@ xorriso -osirrox on \
 [[ -s "$tmp_dir/iso-grub-theme.txt" && -s "$tmp_dir/iso-grub-logo.png" ]] \
   || fail 'built ISO omits its DINX GRUB theme or boot mark'
 [[ -s "$tmp_dir/iso-grub.cfg" && -s "$tmp_dir/iso-grub-kernels.cfg" && -s "$tmp_dir/iso-grub-variable.cfg" ]] \
-  || fail 'built ISO omits its DINX two-choice GRUB boot menu'
+  || fail 'built ISO omits the DINX live/firmware GRUB boot menu'
 grep -Fq 'set default=0' "$tmp_dir/iso-grub.cfg" \
-  || fail 'DINX ISO GRUB does not select the first live option by default'
+  || fail 'DINX ISO GRUB does not select the live boot option by default'
 grep -Fq 'set timeout=6' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB timeout is not six seconds'
 grep -Fq 'set timeout_style=menu' "$tmp_dir/iso-grub.cfg" \
@@ -681,15 +687,18 @@ grep -Fq 'source /boot/grub/kernels.cfg' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB does not load its live boot choices'
 grep -Fq 'set kopts="quiet splash"' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO boot menu does not enable Plymouth and silent boot'
-[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 2 ]] \
-  || fail 'DINX ISO GRUB does not contain exactly two live boot choices'
-grep -Fq 'menuentry "Start DINX live (ISO/DVD)"' "$tmp_dir/iso-grub-kernels.cfg" \
-  || fail 'DINX ISO/DVD boot choice is missing'
-grep -Fq 'menuentry "Start DINX live (USB/HDD)"' "$tmp_dir/iso-grub-kernels.cfg" \
-  || fail 'DINX USB/HDD boot choice is missing'
-if grep -Fq 'menuentry ' "$tmp_dir/iso-grub.cfg"; then
-  fail 'DINX ISO GRUB adds unexpected menu entries outside its two live choices'
-fi
+[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 1 ]] \
+  || fail 'DINX ISO GRUB does not contain exactly one default live boot choice'
+grep -Fq 'menuentry "Start DINX Linux"' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX default live boot choice is missing'
+[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub.cfg") -eq 1 ]] \
+  || fail 'DINX ISO GRUB does not contain exactly one firmware choice'
+grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB firmware choice is not limited to UEFI'
+grep -Fq 'menuentry "Boot to the Firmware/BIOS"' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB firmware choice is missing'
+grep -Fq 'fwsetup' "$tmp_dir/iso-grub.cfg" \
+  || fail 'DINX ISO GRUB firmware choice does not invoke fwsetup'
 grep -Fq 'DINX GRUB theme override.' "$tmp_dir/iso-grub-theme.txt" \
   || fail 'built ISO GRUB theme is not DINX-branded'
 if grep -Eiq 'artix' "$tmp_dir/iso-grub-theme.txt"; then
@@ -847,6 +856,8 @@ grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' <<<"$aqueous_wrapper" \
 grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed Qt6ct for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
 grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
+grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then' <<<"$aqueous_wrapper" \
+  || fail 'live effects defaults are not restricted to the live session'
 grep -Fq 'dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"' <<<"$aqueous_wrapper" \
   || fail 'Live session does not disable blur and opacity in the initial Aqueous config'
 aqueous_wm_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/wm.toml)
@@ -1177,7 +1188,7 @@ grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not din
 
 live_autologin_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
 grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologin initial session is missing'
-grep -Fq 'command = "dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin command is incorrect'
+grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin does not mark its Aqueous/Pearl session as live'
 grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" <<<"$live_autologin_wrapper" \
   || fail 'live autologin does not persist hostname dinxlive'
 grep -Fq 'hostname dinxlive' <<<"$live_autologin_wrapper" \

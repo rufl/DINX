@@ -79,7 +79,9 @@ chmod 0700 "$XDG_RUNTIME_DIR"
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then
   install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
-/usr/local/libexec/dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"
+  if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then
+    /usr/local/libexec/dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"
+  fi
 fi
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/layout.toml" ] && [ -r /etc/xdg/aqueous/layout.toml ]; then
   install -Dm644 /etc/xdg/aqueous/layout.toml "$config_home/aqueous/layout.toml"

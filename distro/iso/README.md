@@ -54,7 +54,7 @@ for hardware qualification.
 
 The full QEMU qualifier captures default VGA and Virtio-VGA and uses Tesseract OCR to require a Pearl/Aqueous/DINX desktop marker while rejecting Pearl Greeter, login prompts and visible Dinit failures. It reads the first-run Pearl GTK4 setup window's `Dock` title, sends `Alt+F4` to dismiss it, then checks the desktop frame. These are live-session graphics smokes, not direct VirtualBox qualification. Local runs need `qemu-system-x86_64`, `socat`, `tesseract-ocr` and `tesseract-ocr-eng`:
 
-The ISO menu offers two DINX live choices (ISO/DVD and USB/HDD), defaults to ISO/DVD, and boots it after a visible six-second timeout. Full QEMU qualification leaves the menu untouched to verify that timeout.
+The boot menu shows `Start DINX Linux` and, on UEFI systems, `Boot to the Firmware/BIOS`. DINX is the default and boots after a visible six-second countdown. Legacy BIOS has no UEFI firmware-setup option. Full QEMU qualification leaves the menu untouched to verify the countdown.
 
 ```bash
 DINX_QEMU_TIMEOUT=110 \

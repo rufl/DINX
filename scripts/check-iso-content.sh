@@ -80,6 +80,7 @@ for live_path in \
   etc/dinit.d/root-ro \
   etc/dinit.d/early-root-rw.target \
   usr/local/libexec/dinx-live-autologin \
+  etc/polkit-1/rules.d/00-dinx-live-passwordless.rules \
   etc/issue; do
   grep -Fq "squashfs-root/$live_path" <<<"$livefs_manifest" \
     || fail "missing livefs path: $live_path"
@@ -96,6 +97,18 @@ grep -Fq 'squashfs-root/etc/dinit.d/boot.d/greetd -> /etc/dinit.d/greetd' <<<"$l
 if grep -Fq '/etc/dinit.d/root-ro' <<<"$manifest" \
   || grep -Fq '/etc/dinit.d/early-root-rw.target' <<<"$manifest"; then
   fail 'live-only root remount overrides leaked into the installed rootfs'
+fi
+live_policy_path=etc/polkit-1/rules.d/00-dinx-live-passwordless.rules
+if grep -Fq "squashfs-root/$live_policy_path" <<<"$manifest"; then
+  fail 'live-only Polkit authorization leaked into the installed rootfs'
+fi
+live_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" "$live_policy_path")
+grep -Fq 'subject.user === "dinx" && subject.local && subject.active' <<<"$live_policy" \
+  || fail 'live Polkit rule is not scoped to the active local dinx user'
+grep -Fq 'return polkit.Result.YES;' <<<"$live_policy" \
+  || fail 'live Polkit rule does not authorize without credentials'
+if grep -Eq 'auth_(admin|self)' <<<"$live_policy"; then
+  fail 'live Polkit rule still requires authentication'
 fi
 for target in root-ro early-root-rw.target; do
   live_root_mount=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" "etc/dinit.d/$target")

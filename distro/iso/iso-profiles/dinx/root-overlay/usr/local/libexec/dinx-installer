@@ -49,7 +49,7 @@ output=$(pkexec env \
 status=$?
 if [ "$status" -ne 0 ]; then
     if [ -n "$output" ]; then
-        fail "$(printf 'Calamares could not be started (exit status %s). Check that the lxqt-policykit-agent is running and approve the authorization prompt.\n\n%s' "$status" "$output")"
+        fail "$(printf 'Calamares could not be started (exit status %s). Check that the lxqt-policykit-agent is running and that PolicyKit permits this action.\n\n%s' "$status" "$output")"
     fi
-    fail "Calamares could not be started (exit status $status). Check that the lxqt-policykit-agent is running and approve the authorization prompt."
+    fail "Calamares could not be started (exit status $status). Check that the lxqt-policykit-agent is running and that PolicyKit permits this action."
 fi

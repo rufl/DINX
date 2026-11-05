@@ -12,6 +12,8 @@ root_rw="$package_dir/early-root-rw.target"
 pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 live_overlay="$root/distro/iso/iso-profiles/dinx/live-overlay"
+live_policy="$live_overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
+root_policy="$root_overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
 service="$package_dir/dinx-live-autologin.service"
 workflow="$root/.github/workflows/p0-iso.yml"
 builder="$root/scripts/build-iso-container.sh"
@@ -22,7 +24,7 @@ fail() {
 }
 
 for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow" \
-  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname"; do
+  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -100,6 +102,15 @@ for unit in "$root_overlay/etc/dinit.d/root-ro" "$root_overlay/etc/dinit.d/early
 done
 [[ ! -e "$root_overlay/etc/dinit.d/greetd" ]] \
   || fail 'live greetd dependency override leaked into installed rootfs overlay'
+[[ ! -e "$root_policy" ]] \
+  || fail 'live-only Polkit authorization leaked into the installed rootfs overlay'
+grep -Fq 'subject.user === "dinx" && subject.local && subject.active' "$live_policy" \
+  || fail 'live Polkit rule is not scoped to the active local dinx user'
+grep -Fq 'return polkit.Result.YES;' "$live_policy" \
+  || fail 'live Polkit rule does not authorize without credentials'
+if grep -Eq 'auth_(admin|self)' "$live_policy"; then
+  fail 'live Polkit rule still requires authentication'
+fi
 
 grep -Fq 'build_package dinx-live-autologin' "$builder" \
   || fail 'ISO builder does not build the live autologin package'
@@ -108,4 +119,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_ordering=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true dinit=true\n'
+printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_ordering=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'

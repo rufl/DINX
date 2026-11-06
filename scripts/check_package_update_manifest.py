@@ -91,7 +91,22 @@ def main() -> None:
                     fail(f"{name}: duplicate source pin key {key}")
                 source_keys.add(key)
             additional_template = source.get("url_template", "")
-            if not additional_template.startswith("https://") or "{tag}" not in additional_template:
+            manifest_url = source.get("manifest_url")
+            artifact_name = source.get("artifact_name")
+            refresh_always = source.get("refresh_always", False)
+            if not isinstance(refresh_always, bool):
+                fail(f"{name}: additional source {index} refresh_always must be boolean")
+            if manifest_url is not None or artifact_name is not None or refresh_always:
+                if (
+                    not refresh_always
+                    or not isinstance(manifest_url, str)
+                    or not manifest_url.startswith("https://")
+                    or not isinstance(artifact_name, str)
+                    or not re.fullmatch(r"[A-Za-z0-9_.-]+", artifact_name)
+                    or additional_template
+                ):
+                    fail(f"{name}: additional source {index} has invalid manifest refresh settings")
+            elif not additional_template.startswith("https://") or "{tag}" not in additional_template:
                 fail(f"{name}: additional source {index} URL template is not pinned to an HTTPS release tag")
         if entry.get("provider") not in {"github", "gitlab"}:
             fail(f"{name}: unsupported provider")
@@ -116,7 +131,7 @@ def main() -> None:
     print(
         "package_update_manifest_contract "
         f"upstream_packages={len(names)} manual_source_pins={len(MANUAL_SOURCE_PINS)} "
-        "checksums=true https_release_tags=true multi_source=true"
+        "checksums=true https_release_tags=true multi_source=true manifest_sources=true"
     )
 
 

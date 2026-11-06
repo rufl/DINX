@@ -290,7 +290,9 @@
         {
           "source_url_key": "PORTMASTER_ASSETS_SOURCE_URL",
           "checksum_key": "PORTMASTER_ASSETS_SOURCE_SHA256",
-          "url_template": "https://updates.safing.io/all/ui/modules/assets_v0-3-9.zip"
+          "manifest_url": "https://updates.safing.io/stable.v3.json",
+          "artifact_name": "assets.zip",
+          "refresh_always": true
         },
         {
           "source_url_key": "PORTMASTER_LICENSE_SOURCE_URL",

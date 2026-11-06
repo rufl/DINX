@@ -124,6 +124,43 @@ def bump_pkgrel(text: str, path: Path) -> str:
     return pattern.sub(f"pkgrel={value}", text, count=1)
 
 
+def manifest_artifact(
+    source: dict,
+    get_json: Callable[[str, str], dict],
+    cache: dict[str, dict],
+) -> tuple[str, str]:
+    manifest_url = source.get("manifest_url", "")
+    artifact_name = source.get("artifact_name", "")
+    if not isinstance(manifest_url, str) or not manifest_url.startswith("https://"):
+        fail("manifest source URL must use HTTPS")
+    if not isinstance(artifact_name, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+", artifact_name):
+        fail("manifest artifact name is invalid")
+    if manifest_url not in cache:
+        try:
+            # Never send the GitHub API token to an upstream artifact host.
+            cache[manifest_url] = get_json(manifest_url, "")
+        except urllib.error.HTTPError as error:
+            fail(f"artifact manifest lookup returned HTTP {error.code}: {manifest_url}")
+    artifacts = cache[manifest_url].get("Artifacts")
+    if not isinstance(artifacts, list):
+        fail(f"artifact manifest has no Artifacts array: {manifest_url}")
+    matches = [item for item in artifacts if isinstance(item, dict) and item.get("Filename") == artifact_name]
+    if len(matches) != 1:
+        fail(f"artifact manifest must contain exactly one {artifact_name}: {manifest_url}")
+    artifact = matches[0]
+    urls = artifact.get("URLs")
+    if not isinstance(urls, list) or not urls or not isinstance(urls[0], str):
+        fail(f"artifact manifest has no download URL for {artifact_name}")
+    url = urls[0]
+    parsed_url = urllib.parse.urlsplit(url)
+    if parsed_url.scheme != "https" or not parsed_url.netloc or parsed_url.username is not None:
+        fail(f"artifact manifest has an invalid HTTPS URL for {artifact_name}")
+    checksum = artifact.get("SHA256")
+    if not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum):
+        fail(f"artifact manifest has an invalid SHA256 for {artifact_name}")
+    return url, checksum
+
+
 def plan_updates(
     root: Path,
     manifest: dict,
@@ -138,6 +175,7 @@ def plan_updates(
         fail("package update manifest has no packages")
 
     release_cache: dict[tuple[str, str], str] = {}
+    artifact_manifest_cache: dict[str, dict] = {}
     output: dict[Path, str] = {}
     changed: list[str] = []
     seen_names: set[str] = set()
@@ -160,45 +198,94 @@ def plan_updates(
         source_path = (root / entry["source_file"]).resolve()
         if root.resolve() not in source_path.parents:
             fail(f"{name}: source file escapes the checkout")
-        source_text = output.get(source_path, source_path.read_text(encoding="utf-8"))
+        original_source_text = output.get(source_path, source_path.read_text(encoding="utf-8"))
+        source_text = original_source_text
         assignments = read_assignments(source_path)
         version_key = entry["version_key"]
         current = assignments.get(version_key)
         if current is None:
             fail(f"{name}: {source_path} has no {version_key}")
         current_version = source_version(current)
-        if version_tuple(version) <= version_tuple(current_version):
-            print(f"package-source-update package={name} current={current_version} latest={version} action=unchanged")
-            continue
+        release_is_newer = version_tuple(version) > version_tuple(current_version)
 
         additional_sources = entry.get("additional_sources", [])
         if not isinstance(additional_sources, list):
             fail(f"{name}: additional_sources must be an array")
-        sources = [(entry.get("source_url_key"), entry["checksum_key"], entry["url_template"])]
-        for source in additional_sources:
+        sources = [
+            {
+                "source_url_key": entry.get("source_url_key"),
+                "checksum_key": entry["checksum_key"],
+                "url_template": entry["url_template"],
+            },
+            *additional_sources,
+        ]
+        source_changed = False
+        last_checksum = ""
+        for source in sources:
             if not isinstance(source, dict):
-                fail(f"{name}: each additional source must be an object")
-            sources.append((source.get("source_url_key"), source["checksum_key"], source["url_template"]))
+                fail(f"{name}: each source must be an object")
+            refresh_always = source.get("refresh_always", False)
+            if not isinstance(refresh_always, bool):
+                fail(f"{name}: source refresh_always must be boolean")
+            if not release_is_newer and not refresh_always:
+                continue
 
-        for source_url_key, checksum_key, url_template in sources:
-            url = url_template.format(
-                tag=tag,
-                version=version,
-                version_dash=version.replace(".", "-"),
-            )
-            checksum = hash_source(url, entry["checksum"])
-            expected_length = 64 if entry["checksum"] in ("sha256", "blake2b") else 0
+            source_url_key = source.get("source_url_key")
+            checksum_key = source.get("checksum_key")
+            checksum_algorithm = source.get("checksum", entry["checksum"])
+            if not isinstance(checksum_key, str):
+                fail(f"{name}: source checksum key is invalid")
+            if checksum_algorithm not in ("sha256", "blake2b"):
+                fail(f"{name}: unsupported source checksum algorithm {checksum_algorithm!r}")
+            if source.get("manifest_url"):
+                if not refresh_always or checksum_algorithm != "sha256":
+                    fail(f"{name}: manifest sources must be always refreshed with SHA256")
+                url, advertised_checksum = manifest_artifact(
+                    source, get_json, artifact_manifest_cache
+                )
+            else:
+                url_template = source.get("url_template", "")
+                if not isinstance(url_template, str):
+                    fail(f"{name}: source URL template is invalid")
+                url = url_template.format(
+                    tag=tag,
+                    version=version,
+                    version_dash=version.replace(".", "-"),
+                )
+                advertised_checksum = ""
+
+            pinned_url = assignments.get(source_url_key, "") if source_url_key else ""
+            pinned_checksum = assignments.get(checksum_key, "")
+            if advertised_checksum and url == pinned_url and advertised_checksum == pinned_checksum:
+                checksum = advertised_checksum
+            else:
+                checksum = hash_source(url, checksum_algorithm)
+                if advertised_checksum and checksum != advertised_checksum:
+                    fail(f"{name}: artifact manifest SHA256 mismatch for {url}")
+            expected_length = 64 if checksum_algorithm in ("sha256", "blake2b") else 0
             if len(checksum) != expected_length or not re.fullmatch(r"[0-9a-f]+", checksum):
                 fail(f"{name}: generated checksum has an invalid format")
             if source_url_key:
+                if pinned_url != url:
+                    source_changed = True
                 source_text = replace_assignment(source_text, source_url_key, url, source_path)
+            if pinned_checksum != checksum:
+                source_changed = True
             source_text = replace_assignment(source_text, checksum_key, checksum, source_path)
+            last_checksum = checksum
 
-        source_text = replace_assignment(source_text, version_key, version, source_path)
-        if entry.get("package_version_key"):
-            source_text = replace_assignment(source_text, entry["package_version_key"], version, source_path)
+        if release_is_newer:
+            source_text = replace_assignment(source_text, version_key, version, source_path)
+            if entry.get("package_version_key"):
+                source_text = replace_assignment(source_text, entry["package_version_key"], version, source_path)
+        if source_text == original_source_text:
+            print(
+                f"package-source-update package={name} current={current_version} "
+                f"latest={version} action=unchanged"
+            )
+            continue
+
         output[source_path] = source_text
-
         rel_path = entry.get("bump_pkgrel_path")
         if rel_path:
             package_path = (root / rel_path).resolve()
@@ -208,7 +295,11 @@ def plan_updates(
             output[package_path] = bump_pkgrel(package_text, package_path)
 
         changed.append(name)
-        print(f"package-source-update package={name} current={current_version} latest={version} checksum={checksum} action=review-pr")
+        action = "review-pr" if release_is_newer else "artifact-refresh"
+        print(
+            f"package-source-update package={name} current={current_version} latest={version} "
+            f"checksum={last_checksum} action={action}"
+        )
 
     return output, changed
 

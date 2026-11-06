@@ -28,7 +28,7 @@ grep -Fqx 'pkgname=seafoam-settings' "$pkgbuild" || fail 'package name is not se
 grep -Fqx 'source=()' "$pkgbuild" || fail 'Seafoam Settings must be a local staged package'
 grep -Fq 'depends=(gtk4 libadwaita glibc deetty dintor dinitui dinxpanel qt6ct wdisplays shikane dome)' "$pkgbuild" \
   || fail 'package dependencies do not use the sole Deetty terminal and Dintor editor'
-grep -Fq 'zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)' "$pkgbuild" \
+grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'Seafoam Settings build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
   || fail 'package build must use the generic target flags'

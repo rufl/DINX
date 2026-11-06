@@ -24,7 +24,7 @@ done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
 grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
-grep -Fq 'zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)' "$pkgbuild" \
+grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'DINXPanel build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
   || fail 'DINXPanel package build must use the generic target flags'

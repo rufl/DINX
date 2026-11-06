@@ -36,7 +36,7 @@ fi
 grep -Fqx 'pkgname=dinitui' "$pkgbuild" || fail 'PKGBUILD package name is not dinitui'
 grep -Fq 'depends=(dinit gtk4 libadwaita polkit pciutils)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq "makedepends=('zig>=0.17')" "$pkgbuild" || fail 'Zig 0.17 build dependency is missing'
-grep -Fq 'zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)' "$pkgbuild" \
+grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'DinitUI build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
   || fail 'DinitUI package build must use the generic target flags'

@@ -13,7 +13,7 @@ sha256sums=()
 
   cd "$startdir"
   rm -rf "$srcdir/stage"
-  local -a zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)
+  local -a zig_target_flags=(-Dcpu=baseline)
   zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
 }
 

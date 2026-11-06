@@ -23,9 +23,10 @@ for path in \
   "$profile" "$groups" "$workflow" "$iso_check" "$session_check" \
   "$aqueous_dir/PKGBUILD" "$aqueous_dir/source.env" \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
-  "$aqueous_dir/gles2-renderer.patch" \
+  "$aqueous_dir/gles2-renderer.patch" "$aqueous_dir/live-session-lock.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
   "$aqueous_dir/window_policy_test.zig" \
+  "$aqueous_dir/live_lock_policy.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
   "$pearl_dir/server-decorations.patch" \
   "$graphics_helper" "$graphics_environment" "$greeter_wrapper" \
@@ -88,11 +89,13 @@ source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
 tar -xzf "$aqueous_archive" -C "$window_test_tmp"
 for patch_file in \
   dinit.patch gles2-renderer.patch server-decorations.patch \
-  titlebar-text.patch two-default-workspaces.patch; do
+  titlebar-text.patch two-default-workspaces.patch live-session-lock.patch; do
   patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+"$zig_bin" test "$aqueous_dir/live_lock_policy.zig" \
+  || fail 'live-session lock policy unit test failed'
 wlroots_build_hook="$source_root/compositor/scripts/build-wlroots-render-hook.sh"
 grep -Fq -- '-Drenderers=gles2,vulkan \' "$wlroots_build_hook" \
   || fail 'wlroots does not compile both GLES2 and Vulkan renderers'
@@ -123,8 +126,12 @@ install -Dm644 "$aqueous_dir/titlebar_text.c" \
   "$source_root/compositor/aqueous/titlebar_text.c"
 install -Dm644 "$aqueous_dir/titlebar_text.zig" \
   "$source_root/compositor/aqueous/titlebar_text.zig"
+install -Dm644 "$aqueous_dir/live_lock_policy.zig" \
+  "$source_root/compositor/aqueous/live_lock_policy.zig"
 "$zig_bin" fmt --check \
   "$source_root/compositor/aqueous/Cursor.zig" \
+  "$source_root/compositor/aqueous/LockManager.zig" \
+  "$source_root/compositor/aqueous/live_lock_policy.zig" \
   "$source_root/compositor/aqueous/Window.zig" \
   "$source_root/compositor/aqueous/titlebar_text.zig" \
   "$source_root/compositor/aqueous/wm/input/drag.zig" \
@@ -195,6 +202,10 @@ grep -Fq 'patch --forward --fuzz=0 -Np1' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous patches are not applied reproducibly'
 grep -Fq 'server-decorations.patch' "$aqueous_dir/PKGBUILD" \
   || fail 'Aqueous compositor decorations are not applied reproducibly'
+grep -Fq 'live-session-lock.patch' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous does not reject session-lock requests in live mode'
+grep -Fq 'live_lock_policy.zig' "$aqueous_dir/PKGBUILD" \
+  || fail 'Aqueous package does not compile the live lock policy'
 grep -Fq '@@ -718,1 +718,0 @@' "$aqueous_dir/dinit.patch" \
   || fail 'Aqueous keyboard test still links systemd'
 grep -Fq 'compositor/aqueous/activity_bootstrap.c' "$aqueous_dir/dinit.patch" \
@@ -304,5 +315,5 @@ grep -Fq 'wait_for_wayland' \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'session supervisor does not gate Wayland readiness'
 
-printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_maximize_restore=true pearl_window_radius_session_start=true cpu_corners_square=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true graphics_fallback=cpu systemd_units=false uwsm=false sources_pinned=true\n' \
+printf 'aqueous_pearl_contract aqueous=%s pearl=%s pearl_greeter=true direct_dinit=true initial_workspaces=2 titlebar_double_click_maximize_restore=true pearl_window_radius_session_start=true cpu_corners_square=true qemu_virgl_gles=true gtk4_auto=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true graphics_fallback=cpu live_session_lock=denied live_blank=preserved systemd_units=false uwsm=false sources_pinned=true\n' \
   "$AQUEOUS_VERSION" "$PEARL_VERSION"

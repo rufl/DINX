@@ -106,7 +106,7 @@ Fresh Aqueous outputs start with two workspaces. This changes the startup defaul
 
 ### Session safety and payload budgets
 
-The Aqueous/Pearl session starts the fixed `dinx-idle` wrapper. It uses `swayidle` to lock after 600 seconds and on `before-sleep`; `dinx-lock`, `Super+L`, Pearl's lock surface and DINXPanel use the same `swaylock` path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
+The Aqueous/Pearl session starts the fixed `dinx-idle` wrapper. In the live session, `swayidle` runs `wlopm` to power off displays after 600 seconds and before suspend, then powers them on after activity or resume. Aqueous rejects session-lock requests in live mode; the default lock binding and DINXPanel/desktop lock actions are disabled. Installed sessions retain the `swaylock` timeout and suspend lock path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
 
 The profile has one combined Artix package payload because `buildiso` consumes one YAML profile. DinitUI separates Normal/Lite/Gaming service policy at runtime, while `scripts/check_dinx_budget.sh` prevents package/startup/binary growth. `scripts/measure_dinx_session.sh` is a runtime observation tool; it reports RSS/CPU only when a real session exists and does not substitute for hardware qualification.
 

@@ -258,7 +258,7 @@ required_paths=(
   etc/zls.json
   etc/xdg/zls.json
   etc/xdg/aqueous/wm.toml
-  usr/local/libexec/dinx-seed-aqueous-live-effects
+  usr/local/libexec/dinx-seed-aqueous-live-config
   usr/lib/zls/zig-env
   usr/lib/zls/zig-env.zon
   usr/lib/zls/zig/std/std.zig
@@ -395,6 +395,7 @@ required_paths=(
   usr/bin/brightnessctl
   usr/bin/swayidle
   usr/bin/swaylock
+  usr/bin/wlopm
   usr/share/applications/com.pori.app.desktop
   usr/share/applications/org.aqueous.Phyto.desktop
   usr/share/applications/org.gnome.FileRoller.desktop
@@ -876,9 +877,9 @@ grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed se
 grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
 grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
 grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then' <<<"$aqueous_wrapper" \
-  || fail 'live effects defaults are not restricted to the live session'
-grep -Fq 'dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"' <<<"$aqueous_wrapper" \
-  || fail 'Live session does not disable blur and opacity in the initial Aqueous config'
+  || fail 'live-only Aqueous safety config is not restricted to the live session'
+grep -Fq 'dinx-seed-aqueous-live-config "$config_home/aqueous/wm.toml"' <<<"$aqueous_wrapper" \
+  || fail 'Live session does not disable lock actions and visual effects in Aqueous config'
 aqueous_wm_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/wm.toml)
 grep -Fqx 'spawn_terminal = "deetty"' <<<"$aqueous_wm_config" || fail 'Aqueous terminal action does not launch Deetty'
 grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' <<<"$aqueous_wm_config" || fail 'Aqueous stacking layout keyboard binding is missing'
@@ -894,8 +895,8 @@ $session_supervisor"; then
   fail 'Aqueous/Pearl session contains a retired session or init integration'
 fi
 idle_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-idle)
-grep -Fq 'timeout 600 /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock timeout is missing'
-grep -Fq 'before-sleep /usr/local/libexec/dinx-lock' <<<"$idle_wrapper" || fail 'DINX idle manager lock-before-suspend hook is missing'
+grep -Fq 'wlopm --off "*"' <<<"$idle_wrapper" || fail 'DINX live idle manager does not blank displays'
+grep -Fq 'wlopm --on "*"' <<<"$idle_wrapper" || fail 'DINX live idle manager does not wake displays'
 lock_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-lock.desktop)
 grep -Fq 'Exec=/usr/local/libexec/dinx-lock' <<<"$lock_desktop" || fail 'DINX lock launcher is missing'
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)

@@ -20,41 +20,51 @@ typedef struct Wizard Wizard;
 
 static const char dark_css[] =
     ".dinx-wizard { background-color: #0b0d12; color: #d7dde8; }\n"
-    ".dinx-wizard label { color: #d7dde8; }\n"
-    ".dinx-wizard label.dim-label { color: #7f8a9c; }\n"
-    ".dinx-wizard button, .dinx-wizard dropdown { background-color: #11151d; color: #d7dde8; border-color: #222a38; background-image: none; }\n"
-    ".dinx-wizard dropdown button { background-color: #11151d; color: #d7dde8; border-color: #222a38; background-image: none; }\n"
-    ".dinx-wizard dropdown button label { color: #d7dde8; }\n"
-    ".dinx-wizard dropdown listview row:selected { background-color: #263249; color: #d7dde8; }\n"
-    ".dinx-wizard dropdown listview row:selected label { color: #d7dde8; }\n"
-    ".dinx-wizard button:disabled { background-color: #11151d; color: #7f8a9c; border-color: #222a38; }\n"
-    ".dinx-wizard button:hover, .dinx-wizard dropdown:hover { background-color: #263249; color: #d7dde8; }\n"
-    ".dinx-wizard button.suggested-action, .dinx-wizard button.default { background-color: #8fb8ff; color: #0b0d12; border-color: #8fb8ff; }\n"
-    ".dinx-wizard checkbutton { color: #d7dde8; }\n"
-    ".dinx-wizard checkbutton check { background-color: #11151d; border-color: #222a38; }\n"
-    ".dinx-wizard checkbutton check:checked { background-color: #8fb8ff; border-color: #8fb8ff; }\n"
-    ".dinx-wizard button:focus-visible, .dinx-wizard dropdown:focus-visible, .dinx-wizard checkbutton:focus-visible { outline: 2px solid #8fb8ff; outline-offset: 2px; }\n"
-    ".dinx-wizard popover, .dinx-wizard popover contents, .dinx-wizard listview, .dinx-wizard row { background-color: #11151d; color: #d7dde8; }\n"
-    ".dinx-wizard row:hover { background-color: #263249; color: #d7dde8; }\n";
+    ".dinx-wizard-label { color: #d7dde8; }\n"
+    ".dinx-wizard-muted { color: #7f8a9c; }\n"
+    ".dinx-wizard-control { background-color: #11151d; color: #d7dde8; border: 1px solid #222a38; background-image: none; }\n"
+    ".dinx-wizard-control label { color: #d7dde8; }\n"
+    ".dinx-wizard-control:hover { background-color: #263249; color: #d7dde8; }\n"
+    ".dinx-wizard-control:focus, .dinx-wizard-control:focus-visible { outline: 2px solid #8fb8ff; outline-offset: 2px; }\n"
+    ".dinx-wizard-control:disabled { background-color: #11151d; color: #7f8a9c; border-color: #222a38; }\n"
+    ".dinx-wizard-control.suggested-action { background-color: #8fb8ff; color: #0b0d12; border-color: #8fb8ff; }\n"
+    ".dinx-wizard-control.suggested-action label { color: #0b0d12; }\n"
+    ".dinx-wizard-theme-select { background-color: #11151d; color: #d7dde8; border: 1px solid #222a38; }\n"
+    ".dinx-wizard-theme-select button { background-color: #11151d; color: #d7dde8; border-color: #222a38; background-image: none; }\n"
+    ".dinx-wizard-theme-select label { color: #d7dde8; }\n"
+    ".dinx-wizard-theme-select selection, .dinx-wizard-theme-select *:selected { background-color: #263249; color: #d7dde8; }\n"
+    ".dinx-wizard-theme-select popover, .dinx-wizard-theme-select listview, .dinx-wizard-theme-select row { background-color: #11151d; color: #d7dde8; }\n"
+    ".dinx-wizard-theme-select row:selected { background-color: #263249; color: #d7dde8; }\n"
+    ".dinx-wizard-check { color: #d7dde8; }\n"
+    ".dinx-wizard-check label { color: #d7dde8; }\n"
+    ".dinx-wizard-check check { background-color: #11151d; border-color: #222a38; }\n"
+    ".dinx-wizard-check check:checked { background-color: #8fb8ff; border-color: #8fb8ff; }\n"
+    ".dinx-wizard-check:focus-visible { outline: 2px solid #8fb8ff; outline-offset: 2px; }\n"
+    ".dinx-wizard-control:focus-visible, .dinx-wizard-theme-select:focus-visible { outline: 2px solid #8fb8ff; outline-offset: 2px; }\n";
 
 static const char light_css[] =
     ".dinx-wizard { background-color: #f7f8fa; color: #202631; }\n"
-    ".dinx-wizard label { color: #202631; }\n"
-    ".dinx-wizard label.dim-label { color: #687386; }\n"
-    ".dinx-wizard button, .dinx-wizard dropdown { background-color: #eef1f6; color: #202631; border-color: #d9dee8; background-image: none; }\n"
-    ".dinx-wizard dropdown button { background-color: #eef1f6; color: #202631; border-color: #d9dee8; background-image: none; }\n"
-    ".dinx-wizard dropdown button label { color: #202631; }\n"
-    ".dinx-wizard dropdown listview row:selected { background-color: #d9e5ff; color: #202631; }\n"
-    ".dinx-wizard dropdown listview row:selected label { color: #202631; }\n"
-    ".dinx-wizard button:disabled { background-color: #eef1f6; color: #687386; border-color: #d9dee8; }\n"
-    ".dinx-wizard button:hover, .dinx-wizard dropdown:hover { background-color: #d9e5ff; color: #202631; }\n"
-    ".dinx-wizard button.suggested-action, .dinx-wizard button.default { background-color: #2859a8; color: #f7f8fa; border-color: #2859a8; }\n"
-    ".dinx-wizard checkbutton { color: #202631; }\n"
-    ".dinx-wizard checkbutton check { background-color: #eef1f6; border-color: #d9dee8; }\n"
-    ".dinx-wizard checkbutton check:checked { background-color: #2859a8; border-color: #2859a8; }\n"
-    ".dinx-wizard button:focus-visible, .dinx-wizard dropdown:focus-visible, .dinx-wizard checkbutton:focus-visible { outline: 2px solid #2859a8; outline-offset: 2px; }\n"
-    ".dinx-wizard popover, .dinx-wizard popover contents, .dinx-wizard listview, .dinx-wizard row { background-color: #eef1f6; color: #202631; }\n"
-    ".dinx-wizard row:hover { background-color: #d9e5ff; color: #202631; }\n";
+    ".dinx-wizard-label { color: #202631; }\n"
+    ".dinx-wizard-muted { color: #687386; }\n"
+    ".dinx-wizard-control { background-color: #eef1f6; color: #202631; border: 1px solid #d9dee8; background-image: none; }\n"
+    ".dinx-wizard-control label { color: #202631; }\n"
+    ".dinx-wizard-control:hover { background-color: #d9e5ff; color: #202631; }\n"
+    ".dinx-wizard-control:focus, .dinx-wizard-control:focus-visible { outline: 2px solid #2859a8; outline-offset: 2px; }\n"
+    ".dinx-wizard-control:disabled { background-color: #eef1f6; color: #687386; border-color: #d9dee8; }\n"
+    ".dinx-wizard-control.suggested-action { background-color: #2859a8; color: #f7f8fa; border-color: #2859a8; }\n"
+    ".dinx-wizard-control.suggested-action label { color: #f7f8fa; }\n"
+    ".dinx-wizard-theme-select { background-color: #eef1f6; color: #202631; border: 1px solid #d9dee8; }\n"
+    ".dinx-wizard-theme-select button { background-color: #eef1f6; color: #202631; border-color: #d9dee8; background-image: none; }\n"
+    ".dinx-wizard-theme-select label { color: #202631; }\n"
+    ".dinx-wizard-theme-select selection, .dinx-wizard-theme-select *:selected { background-color: #d9e5ff; color: #202631; }\n"
+    ".dinx-wizard-theme-select popover, .dinx-wizard-theme-select listview, .dinx-wizard-theme-select row { background-color: #eef1f6; color: #202631; }\n"
+    ".dinx-wizard-theme-select row:selected { background-color: #d9e5ff; color: #202631; }\n"
+    ".dinx-wizard-check { color: #202631; }\n"
+    ".dinx-wizard-check label { color: #202631; }\n"
+    ".dinx-wizard-check check { background-color: #eef1f6; border-color: #d9dee8; }\n"
+    ".dinx-wizard-check check:checked { background-color: #2859a8; border-color: #2859a8; }\n"
+    ".dinx-wizard-check:focus-visible { outline: 2px solid #2859a8; outline-offset: 2px; }\n"
+    ".dinx-wizard-control:focus-visible, .dinx-wizard-theme-select:focus-visible { outline: 2px solid #2859a8; outline-offset: 2px; }\n";
 
 static void
 apply_theme(Wizard *wizard)
@@ -89,7 +99,7 @@ install_theme(Wizard *wizard)
     wizard->style_provider = gtk_css_provider_new();
     gtk_style_context_add_provider_for_display(
         display, GTK_STYLE_PROVIDER(wizard->style_provider),
-        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        GTK_STYLE_PROVIDER_PRIORITY_USER + 1);
 }
 
 static void
@@ -119,10 +129,12 @@ make_page(Wizard *wizard, const char *title, const char *description)
     GtkWidget *body = gtk_label_new(description);
 
     gtk_widget_set_halign(heading, GTK_ALIGN_START);
+    gtk_widget_add_css_class(heading, "dinx-wizard-label");
     gtk_widget_add_css_class(heading, "title-1");
     gtk_label_set_wrap(GTK_LABEL(body), TRUE);
     gtk_widget_set_halign(body, GTK_ALIGN_START);
     gtk_widget_add_css_class(body, "dim-label");
+    gtk_widget_add_css_class(body, "dinx-wizard-muted");
     gtk_box_append(GTK_BOX(page), heading);
     gtk_box_append(GTK_BOX(page), body);
     gtk_widget_set_margin_top(page, 28);
@@ -234,6 +246,7 @@ on_activate(GtkApplication *application, gpointer user_data)
                      "Choose whether to show the application dock in this session."));
     wizard->dock_enabled = gtk_check_button_new_with_label(
         text(wizard, "Mostrar o dock", "Show the dock"));
+    gtk_widget_add_css_class(wizard->dock_enabled, "dinx-wizard-check");
     gtk_check_button_set_active(GTK_CHECK_BUTTON(wizard->dock_enabled), TRUE);
     gtk_box_append(GTK_BOX(dock_page), wizard->dock_enabled);
     gtk_stack_add_named(GTK_STACK(wizard->stack), dock_page, "dock");
@@ -244,7 +257,9 @@ on_activate(GtkApplication *application, gpointer user_data)
                      "Choose the bar position. When enabled, the dock will use the opposite edge."));
     wizard->bar_top = gtk_check_button_new_with_label(text(wizard, "Em cima", "Top"));
     bar_choice = gtk_check_button_new_with_label(text(wizard, "Em baixo", "Bottom"));
+    gtk_widget_add_css_class(wizard->bar_top, "dinx-wizard-check");
     gtk_check_button_set_group(GTK_CHECK_BUTTON(bar_choice), GTK_CHECK_BUTTON(wizard->bar_top));
+    gtk_widget_add_css_class(bar_choice, "dinx-wizard-check");
     gtk_check_button_set_active(GTK_CHECK_BUTTON(wizard->bar_top), TRUE);
     gtk_box_append(GTK_BOX(bar_page), wizard->bar_top);
     gtk_box_append(GTK_BOX(bar_page), bar_choice);
@@ -263,6 +278,7 @@ on_activate(GtkApplication *application, gpointer user_data)
     wizard->theme = gtk_drop_down_new(G_LIST_MODEL(theme_model), NULL);
     g_object_unref(theme_model);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);
+    gtk_widget_add_css_class(wizard->theme, "dinx-wizard-theme-select");
     gtk_widget_set_halign(wizard->theme, GTK_ALIGN_FILL);
     gtk_box_append(GTK_BOX(theme_page), wizard->theme);
     g_signal_connect(wizard->theme, "notify::selected",
@@ -279,8 +295,10 @@ on_activate(GtkApplication *application, gpointer user_data)
     gtk_widget_set_margin_end(navigation, 28);
     wizard->back_button = gtk_button_new_with_label(text(wizard, "Voltar", "Back"));
     gtk_widget_set_sensitive(wizard->back_button, FALSE);
+    gtk_widget_add_css_class(wizard->back_button, "dinx-wizard-control");
     wizard->next_button = gtk_button_new_with_label(text(wizard, "Próximo", "Next"));
     gtk_widget_add_css_class(wizard->next_button, "suggested-action");
+    gtk_widget_add_css_class(wizard->next_button, "dinx-wizard-control");
     g_signal_connect(wizard->back_button, "clicked", G_CALLBACK(on_back_clicked), wizard);
     g_signal_connect(wizard->next_button, "clicked", G_CALLBACK(on_next_clicked), wizard);
     gtk_box_append(GTK_BOX(navigation), wizard->back_button);

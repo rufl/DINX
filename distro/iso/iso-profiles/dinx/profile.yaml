@@ -126,6 +126,7 @@ rootfs:
     - topgrade
     - swayidle
     - swaylock
+    - wlopm
     - vlc
     - vlc-cli
     - ufw

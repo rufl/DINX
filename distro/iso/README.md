@@ -201,7 +201,7 @@ DinitUI installs `normal`, `lite` and `gaming` service profiles and supports cus
 The dedicated Pearl Greeter host provides the login surface for greetd. Pearl owns the active user shell; Aqueous/Pearl is the sole user session.
 ### Session safety, hierarchy and resource guard
 
-The session installs `swaylock`, `swayidle` and `brightnessctl`. `/usr/local/libexec/dinx-idle` locks after 600 seconds and locks again on `before-sleep`; `/usr/local/libexec/dinx-lock`, `Super+L`, Pearl's lock surface and DINXPanel provide the explicit lock path. Standard brightness keys and DINXPanel use fixed 5-percent `brightnessctl` steps; specialist tools remain in the launcher.
+In the live session, `swayidle` and `wlopm` power off all displays after 600 seconds idle and before suspend, then restore them on input or resume. Aqueous rejects session-lock requests; the default lock shortcut, DINXPanel button and desktop lock launcher are disabled for the live user. Installed sessions retain `swaylock` for idle and suspend locking, with explicit locking through `dinx-lock`, `Super+L`, Pearl and DINXPanel. Standard brightness keys and DINXPanel use fixed 5-percent `brightnessctl` steps; specialist tools remain in the launcher.
 
 `scripts/check_dinx_budget.sh` keeps the current profile at or below 128 rootfs package entries and 24 dinit startup entries, caps built DINXPanel/DinitUI binaries at 6 MiB each, limits the QEMU boot qualification window to 120 seconds, and enforces a built ISO below 2 GiB (`2147483647` bytes) when `DINX_ISO_PATH` is supplied. These are regression ceilings, not measured hardware performance claims. `scripts/measure_dinx_session.sh` records RSS/CPU snapshots from `/proc` when a DINX session is actually running.
 

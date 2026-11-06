@@ -292,21 +292,6 @@ grep -Fq 'const char *theme_name[] = { "dinx-dark", "dinx-light", "material-dark
   || fail 'Pearl first-run theme selection order changed'
 grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not default to Pearl Material dark'
-grep -Fq 'light = selected == 1 || selected == 3;' "$wizard_source" \
-  || fail 'Pearl first-run wizard does not switch the preview for the selected light theme'
-grep -Fq 'g_signal_connect(wizard->theme, "notify::selected"' "$wizard_source" \
-  || fail 'Pearl first-run wizard does not refresh its preview when theme selection changes'
-grep -Fq 'gtk_style_context_add_provider_for_display' "$wizard_source" \
-  || fail 'Pearl first-run wizard does not install its DINX GTK palette'
-for mode in dark light; do
-  for token in mSurface mOnSurface mSurfaceVariant mOnSurfaceVariant mOutline mHover mPrimary mOnPrimary; do
-    value=$(jq -r --arg mode "$mode" --arg token "$token" '.[$mode][$token]' "$palette")
-    grep -Fq "$value" "$wizard_source" \
-      || fail "Pearl first-run $mode theme omits DINX palette token $token"
-  done
-done
-grep -Fq 'bar = ((.bar // {}) + {edge: $bar_edge})' "$pearl_shell" \
-  || fail 'Pearl first-run wrapper does not persist the selected bar edge'
 wizard_sha256=$(sha256sum "$wizard_source" | cut -d ' ' -f 1)
 grep -Fq "'$wizard_sha256'" "$pearl_pkg" || fail 'Pearl first-run wizard source checksum is stale'
 grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'

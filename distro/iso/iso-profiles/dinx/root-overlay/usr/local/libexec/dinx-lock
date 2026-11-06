@@ -1,4 +1,9 @@
 #!/bin/sh
 set -eu
 
+if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then
+    printf '%s\n' 'dinx-lock: screen locking is disabled in the live session' >&2
+    exit 0
+fi
+
 exec swaylock -f

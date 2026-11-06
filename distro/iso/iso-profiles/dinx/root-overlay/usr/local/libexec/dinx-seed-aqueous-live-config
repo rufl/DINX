@@ -2,13 +2,13 @@
 set -eu
 
 if [ "$#" -ne 1 ]; then
-  printf 'dinx-seed-aqueous-live-effects: expected one Aqueous wm.toml path\n' >&2
+  printf 'dinx-seed-aqueous-live-config: expected one Aqueous wm.toml path\n' >&2
   exit 2
 fi
 
 config=$1
 if [ ! -f "$config" ] || [ -L "$config" ]; then
-  printf 'dinx-seed-aqueous-live-effects: config must be a regular file: %s\n' "$config" >&2
+  printf 'dinx-seed-aqueous-live-config: config must be a regular file: %s\n' "$config" >&2
   exit 1
 fi
 
@@ -22,6 +22,9 @@ function flush_section() {
   } else if (section == "opacity" && !opacity_enabled) {
     print "enabled = false"
     opacity_enabled = 1
+  } else if (section == "keybinds" && !lock_screen_enabled) {
+    print "lock_screen = []"
+    lock_screen_enabled = 1
   }
 }
 {
@@ -36,8 +39,10 @@ function flush_section() {
     sub(/\][[:space:]]*$/, "", section)
     blur_enabled = 0
     opacity_enabled = 0
+    lock_screen_enabled = 0
     if (section == "blur") blur_section = 1
     if (section == "opacity") opacity_section = 1
+    if (section == "keybinds") keybinds_section = 1
   }
   if ((section == "blur" || section == "opacity") && line ~ /^[[:space:]]*enabled[[:space:]]*=/) {
     equals = index(line, "=")
@@ -49,6 +54,15 @@ function flush_section() {
     if (comment != "") line = line " " comment
     if (section == "blur") blur_enabled = 1
     if (section == "opacity") opacity_enabled = 1
+  } else if (section == "keybinds" && line ~ /^[[:space:]]*lock_screen[[:space:]]*=/) {
+    equals = index(line, "=")
+    prefix = substr(line, 1, equals)
+    value = substr(line, equals + 1)
+    comment_at = index(value, "#")
+    comment = comment_at ? substr(value, comment_at) : ""
+    line = prefix " []"
+    if (comment != "") line = line " " comment
+    lock_screen_enabled = 1
   }
   print line
 }
@@ -56,6 +70,7 @@ END {
   flush_section()
   if (!blur_section) print "\n[blur]\nenabled = false"
   if (!opacity_section) print "\n[opacity]\nenabled = false"
+  if (!keybinds_section) print "\n[keybinds]\nlock_screen = []"
 }' "$config" >"$temporary"
 chmod --reference="$config" "$temporary"
 mv -f -- "$temporary" "$config"

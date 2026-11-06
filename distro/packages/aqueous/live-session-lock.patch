@@ -1,0 +1,36 @@
+--- a/compositor/aqueous/LockManager.zig
++++ b/compositor/aqueous/LockManager.zig
+@@ -16,10 +16,12 @@
+ 
+ const LockSurface = @import("LockSurface.zig");
+ const Output = @import("Output.zig");
++const live_lock_policy = @import("live_lock_policy.zig");
+ 
+ const log = std.log.scoped(.lock);
+ 
+ wlr_manager: *wlr.SessionLockManagerV1,
++live_lock_disabled: bool = false,
+ 
+ state: enum {
+     /// No lock request has been made and the session is unlocked.
+@@ -55,6 +57,7 @@
+ 
+     manager.* = .{
+         .wlr_manager = try wlr.SessionLockManagerV1.create(server.wl_server),
++        .live_lock_disabled = live_lock_policy.isDisabled(),
+         .lock_surfaces_timer = timer,
+     };
+ 
+@@ -74,6 +77,12 @@
+     const manager: *LockManager = @fieldParentPtr("new_lock", listener);
+ 
+     log.debug("session lock client made lock request", .{});
++
++    if (manager.live_lock_disabled) {
++        log.info("denying session lock request in the live session", .{});
++        lock.destroy();
++        return;
++    }
+ 
+     if (manager.lock != null) {
+         log.info("denying new session lock client, an active one already exists", .{});

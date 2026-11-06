@@ -8,7 +8,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Apply DINX semantic dark/light colors to the Pearl GTK4 first-run wizard and update its preview when the theme changes; keep Pearl's work-area reservation on the selected bar edge.
 - Brand the CLI login banner as DINX Linux; reduce the live GRUB menu to the default DINX entry and a UEFI firmware option with a visible six-second countdown.
 - Grant passwordless Polkit authorization to the active local `dinx` user in the livefs only; installed systems retain normal authentication.
-
+- Keep the live ISO recoverable after inactivity: blank displays through `wlopm`, wake them on activity/resume, and deny session locking; preserve installed-system locking.
 
 - Draw Aqueous titlebars above client content and extend the continuous rounded frame around titlebar and client surfaces. Double-clicking the titlebar toggles maximize/restore; restore returns the saved floating geometry, keeps focus, and raises the window. Pearl's `window_corner_radius` applies at the next Vulkan-effects Aqueous session; CPU-compatibility rendering remains square.
 - Default GNOME/libadwaita to dark mode only when dconf has no explicit user choice; honor xdg-decoration CSD requests and XWayland Motif CSD hints so client-owned titlebars do not overlap compositor titlebars, content offsets or controls.

@@ -79,8 +79,21 @@ chmod 0700 "$XDG_RUNTIME_DIR"
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then
   install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"
-  if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then
-    /usr/local/libexec/dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"
+fi
+if [ "${DINX_LIVE_SESSION:-}" = 1 ] && [ -n "${HOME:-}" ] \
+  && [ -f "$config_home/aqueous/wm.toml" ] && [ ! -L "$config_home/aqueous/wm.toml" ]; then
+  /usr/local/libexec/dinx-seed-aqueous-live-config "$config_home/aqueous/wm.toml" \
+    || printf '%s\n' 'dinx-aqueous-pearl: could not apply live-only lock/effects policy' >&2
+
+  data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+  applications_dir="$data_home/applications"
+  mkdir -p "$applications_dir"
+  lock_desktop_override="$applications_dir/dinx-lock.desktop"
+  if [ ! -e "$lock_desktop_override" ] && [ ! -L "$lock_desktop_override" ]; then
+    lock_desktop_tmp="$applications_dir/.dinx-lock.desktop.$$"
+    (umask 022; printf '[Desktop Entry]\nType=Application\nName=Lock screen\nHidden=true\n' > "$lock_desktop_tmp")
+    mv -n "$lock_desktop_tmp" "$lock_desktop_override"
+    rm -f -- "$lock_desktop_tmp"
   fi
 fi
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/layout.toml" ] && [ -r /etc/xdg/aqueous/layout.toml ]; then

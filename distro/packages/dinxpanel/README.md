@@ -31,7 +31,7 @@ does not accept arbitrary package names.
 
 ## Session controls
 
-The panel's `Brightness down`, `Brightness up` and `Lock screen` buttons use direct argv for `brightnessctl set 5%-`, `brightnessctl set 5%+` and `swaylock -f`. The session also exposes the same lock path through `Super+L`; idle and suspend ordering are owned by `/usr/local/libexec/dinx-idle`.
+In installed sessions, `Brightness down`, `Brightness up` and `Lock screen` use fixed argv for `brightnessctl set 5%-`, `brightnessctl set 5%+` and `swaylock -f`. The live session hides the `Lock screen` button and disables session locking; it retains display blanking through `/usr/local/libexec/dinx-idle`. Installed-session idle and suspend ordering are owned by the same wrapper.
 
 ## CLI-backed operations
 

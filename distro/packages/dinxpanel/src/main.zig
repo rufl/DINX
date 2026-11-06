@@ -9,6 +9,7 @@ const App = struct {
     application: *c.AdwApplication,
     io: std.Io,
     home: []const u8,
+    live_session: bool,
     kernel_dropdown: *c.GtkDropDown = undefined,
     kernel_status: *c.GtkLabel = undefined,
     output_view: *c.GtkTextView = undefined,
@@ -21,9 +22,10 @@ const App = struct {
     busy: bool = false,
     active_tasks: usize = 0,
 
-    fn init(application: *c.AdwApplication, io: std.Io, home: []const u8, smoke: bool) App {
-        return .{ .application = application, .io = io, .home = home, .smoke = smoke };
+    fn init(application: *c.AdwApplication, io: std.Io, home: []const u8, smoke: bool, live_session: bool) App {
+        return .{ .application = application, .io = io, .home = home, .smoke = smoke, .live_session = live_session };
     }
+
 
     fn buildWindow(self: *App) void {
         if (self.window_ready) return;
@@ -82,7 +84,9 @@ const App = struct {
         c.gtk_box_append(@ptrCast(desktop), makeButton("Audio", "Open PipeWire volume controls", &onAudioClicked, self));
         c.gtk_box_append(@ptrCast(desktop), makeButton("Brightness down", "Lower display brightness by 5 percent", &onBrightnessDownClicked, self));
         c.gtk_box_append(@ptrCast(desktop), makeButton("Brightness up", "Raise display brightness by 5 percent", &onBrightnessUpClicked, self));
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Lock screen", "Lock the DINX session immediately", &onLockClicked, self));
+        if (!self.live_session) {
+            c.gtk_box_append(@ptrCast(desktop), makeButton("Lock screen", "Lock the DINX session immediately", &onLockClicked, self));
+        }
         c.gtk_box_append(@ptrCast(desktop), makeButton("Qt appearance", "Open Qt6 appearance settings", &onQtClicked, self));
         c.gtk_box_append(@ptrCast(content), desktop);
 
@@ -684,7 +688,8 @@ pub fn main(init: std.process.Init) !void {
     }
     const application = c.adw_application_new("org.dinx.DinxPanel", c.G_APPLICATION_DEFAULT_FLAGS) orelse return error.ApplicationCreationFailed;
     const app = try allocator.create(App);
-    app.* = App.init(application, init.io, init.environ_map.get("HOME") orelse "", smoke);
+    const live_session = std.mem.eql(u8, init.environ_map.get("DINX_LIVE_SESSION") orelse "", "1");
+    app.* = App.init(application, init.io, init.environ_map.get("HOME") orelse "", smoke, live_session);
     defer {
         allocator.destroy(app);
         c.g_object_unref(@ptrCast(application));

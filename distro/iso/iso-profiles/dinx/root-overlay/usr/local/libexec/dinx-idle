@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eu
 
+if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then
+    exec swayidle -w \
+        timeout 600 'wlopm --off "*"' resume 'wlopm --on "*"' \
+        before-sleep 'wlopm --off "*"' \
+        after-resume 'wlopm --on "*"'
+fi
+
 exec swayidle -w \
     timeout 600 /usr/local/libexec/dinx-lock \
     before-sleep /usr/local/libexec/dinx-lock

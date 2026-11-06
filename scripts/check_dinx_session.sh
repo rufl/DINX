@@ -13,7 +13,7 @@ graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/
 greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
 gtk_dark_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gtk-dark-mode-seed"
-effects_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-effects"
+live_config_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-config"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 aqueous_decoration_patch="$root/distro/packages/aqueous/server-decorations.patch"
 gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
@@ -48,7 +48,7 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$gtk_dark_seed" "$effects_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$aqueous_wrapper" "$gtk_dark_seed" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
@@ -82,7 +82,7 @@ sh -n "$gtk_dark_seed" || fail 'GTK dark-mode preference seeder has invalid shel
 [[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
 sh -n "$greeter_wrapper" || fail 'Pearl Greeter wrapper has invalid shell syntax'
 
-for package in greetd brightnessctl swayidle swaylock fish aqueous pearl vulkan-swrast dconf gsettings-desktop-schemas; do
+for package in greetd brightnessctl swayidle swaylock wlopm fish aqueous pearl vulkan-swrast dconf gsettings-desktop-schemas; do
   grep -Fq "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in labwc noctalia aqueous-core aqueous-session uwsm greetd-regreet; do
@@ -245,17 +245,13 @@ grep -Fq '[ ! -e "$config_home/aqueous/wm.toml" ]' <<<"$aqueous_wm_seed_block" \
   || fail 'Aqueous session may overwrite an existing live-user window-manager config'
 grep -Fq 'install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
   || fail 'Aqueous session does not seed the system window-manager config for a new user'
-grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then' <<<"$aqueous_wm_seed_block" \
-  || fail 'Aqueous live effects defaults are not restricted to the live session'
-grep -Fq 'dinx-seed-aqueous-live-effects "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
-  || fail 'Aqueous session does not disable live-only blur and opacity only for a new user'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
   || fail 'Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
   || fail 'session supervisor does not launch the Pearl first-run wrapper'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
-[[ -x "$effects_seed" ]] || fail 'live Aqueous effects seed helper is not executable'
-sh -n "$effects_seed" || fail 'live Aqueous effects seed helper has invalid shell syntax'
+[[ -x "$live_config_seed" ]] || fail 'live Aqueous config seed helper is not executable'
+sh -n "$live_config_seed" || fail 'live Aqueous config seed helper has invalid shell syntax'
 pearl_shell_test=$(mktemp -d)
 trap 'rm -rf "$pearl_shell_test"' EXIT
 mkdir -p "$pearl_shell_test/bin" "$pearl_shell_test/config/pearl"
@@ -268,38 +264,47 @@ radius = 9
 enabled = true
 [opacity]
 enabled = true # preserve opacity note
-value = 0.8
+  value = 0.8
+[keybinds]
+lock_screen = "Super+Ctrl+L"
+focus_left = "Super+H"
 TOML
 chmod 0640 "$pearl_shell_test/config/aqueous/wm.toml"
-"$effects_seed" "$pearl_shell_test/config/aqueous/wm.toml"
+"$live_config_seed" "$pearl_shell_test/config/aqueous/wm.toml"
 [[ $(stat -c '%a' "$pearl_shell_test/config/aqueous/wm.toml") == 640 ]] \
   || fail 'live Aqueous effects seed did not preserve config permissions'
 grep -Fqx 'enabled = false # preserve blur note' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous effects seed did not disable backdrop blur or preserve its comment'
+  || fail 'live Aqueous config seed did not disable backdrop blur or preserve its comment'
 grep -Fqx 'enabled = false # preserve opacity note' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous effects seed did not disable window opacity or preserve its comment'
+  || fail 'live Aqueous config seed did not disable window opacity or preserve its comment'
 grep -Fqx 'radius = 9' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous effects seed changed the blur radius'
-grep -Fqx 'value = 0.8' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous effects seed changed the opacity value'
+  || fail 'live Aqueous config seed changed the blur radius'
+grep -Eq '^[[:space:]]*value = 0\.8$' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous config seed changed the opacity value'
 grep -Fqx 'enabled = true' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous effects seed changed an unrelated enabled setting'
-effects_seed_hash=$(sha256sum "$pearl_shell_test/config/aqueous/wm.toml")
-"$effects_seed" "$pearl_shell_test/config/aqueous/wm.toml"
-[[ $(sha256sum "$pearl_shell_test/config/aqueous/wm.toml") == "$effects_seed_hash" ]] \
-  || fail 'live Aqueous effects seed is not idempotent'
+  || fail 'live Aqueous config seed changed an unrelated enabled setting'
+grep -Fqx 'lock_screen = []' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous config seed did not disable the lock-screen keybind'
+grep -Fqx 'focus_left = "Super+H"' "$pearl_shell_test/config/aqueous/wm.toml" \
+  || fail 'live Aqueous config seed changed an unrelated keybind'
+live_config_seed_hash=$(sha256sum "$pearl_shell_test/config/aqueous/wm.toml")
+"$live_config_seed" "$pearl_shell_test/config/aqueous/wm.toml"
+[[ $(sha256sum "$pearl_shell_test/config/aqueous/wm.toml") == "$live_config_seed_hash" ]] \
+  || fail 'live Aqueous config seed is not idempotent'
 printf '[unrelated]\nvalue = 1\n' >"$pearl_shell_test/aqueous-wm-missing-sections.toml"
-"$effects_seed" "$pearl_shell_test/aqueous-wm-missing-sections.toml"
+"$live_config_seed" "$pearl_shell_test/aqueous-wm-missing-sections.toml"
 awk '
   /^\[blur\]$/ { section = "blur"; next }
   /^\[opacity\]$/ { section = "opacity"; next }
+  /^\[keybinds\]$/ { section = "keybinds"; next }
   /^\[/ { section = "" }
   section == "blur" && $0 == "enabled = false" { blur = 1 }
   section == "opacity" && $0 == "enabled = false" { opacity = 1 }
-  END { exit !(blur && opacity) }
+  section == "keybinds" && $0 == "lock_screen = []" { lock = 1 }
+  END { exit !(blur && opacity && lock) }
 ' "$pearl_shell_test/aqueous-wm-missing-sections.toml" \
-  || fail 'live Aqueous effects seed did not add disabled missing sections'
-printf 'aqueous_live_effects_seed blur=disabled opacity=disabled preserves_settings=true idempotent=true\n'
+  || fail 'live Aqueous config seed did not add missing disabled settings'
+printf 'aqueous_live_config_seed blur=disabled opacity=disabled lock_keybind=disabled preserves_settings=true idempotent=true\n'
 cat >"$pearl_shell_test/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"
@@ -430,13 +435,11 @@ grep -Fq 'Hidden=true' "$gaming_session" || fail 'gaming session is not hidden'
 grep -Fq 'NoDisplay=true' "$gaming_session" || fail 'gaming session remains visible'
 grep -Fq '    - libayatana-appindicator' "$profile" || fail 'profile is missing AppIndicator compatibility'
 
-grep -Fq 'timeout 600 /usr/local/libexec/dinx-lock' "$idle" || fail 'idle lock timeout is missing'
-grep -Fq 'before-sleep /usr/local/libexec/dinx-lock' "$idle" || fail 'lock-before-suspend hook is missing'
-grep -Fq 'Exec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock action is missing'
-grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock TryExec is missing'
-
 if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
+grep -Fq 'Exec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock action is missing'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock TryExec is missing'
+bash "$root/scripts/smoke_dinx_session.sh"
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true xwayland_csd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true lock=true idle=true before_suspend=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true xwayland_csd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true live_lock=false live_blank=true installed_lock=true idle=true before_suspend_blank=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

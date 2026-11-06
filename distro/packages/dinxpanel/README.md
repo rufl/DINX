@@ -47,3 +47,5 @@ dinxpanel
 ```
 
 The display shortcut targets DINX's `dinx-wdisplays` wrapper. It opens `wdisplays`; closing it replaces the DINX-owned `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the session's Shikane daemon. Use `dinx-save-shikane-profile` to save without reopening the editor.
+
+The Firewall button opens `firewall-config`; Artix's `firewalld-dinit` service is enabled at boot in both live and installed root filesystems.

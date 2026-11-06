@@ -23,7 +23,7 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"
 export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"
 export GTK_CSD=0
-# Firefox chooses CSD early on Wayland, before consulting GTK_CSD.
+# Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
 export QT_QPA_PLATFORMTHEME=qt6ct
 export AQUEOUS_MOD="${AQUEOUS_MOD:-Super}"

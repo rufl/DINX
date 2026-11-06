@@ -23,7 +23,6 @@ packages-base:
   - grub
   - artix-grub-theme
   - inetutils
-  - iptables
   - jfsutils
   - linux
   - linux-headers

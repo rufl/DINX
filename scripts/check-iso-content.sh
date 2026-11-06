@@ -193,7 +193,6 @@ required_paths=(
   usr/bin/fwupdmgr
   usr/bin/vainfo
   usr/bin/scanimage
-  usr/lib/libayatana-appindicator3.so.1
   usr/bin/impasto
   opt/impasto/Impasto-x86_64.AppImage
   usr/share/applications/com.github.zbcoding.Impasto.desktop
@@ -359,6 +358,19 @@ required_paths=(
   etc/paru.conf
   etc/shellybuild.conf
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
+  usr/bin/floorp
+  usr/lib/floorp/floorp
+  usr/lib/floorp/distribution/policies.json
+  usr/share/applications/floorp.desktop
+  usr/share/icons/hicolor/128x128/apps/floorp.png
+  usr/bin/opensnitchd
+  usr/bin/opensnitch-ui
+  etc/opensnitchd/default-config.json
+  usr/share/applications/opensnitch_ui.desktop
+  etc/dinit.d/opensnitchd
+  etc/dinit.d/boot.d/opensnitchd
+  etc/xdg/autostart/opensnitch-ui.desktop
+  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/share/applications/org.kde.haruna.desktop
   usr/share/licenses/haruna/LICENSE
   usr/share/applications/com.github.neithern.g4music.desktop
@@ -369,16 +381,12 @@ required_paths=(
   usr/share/applications/swayimg.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
   usr/share/applications/com.shellyorg.shelly-notifications.desktop
-  usr/bin/portmaster
-  usr/lib/portmaster/portmaster
-  usr/lib/portmaster/portmaster-core
-  usr/lib/portmaster/portmaster.zip
-  usr/lib/portmaster/assets.zip
-  usr/share/licenses/portmaster/LICENSE
-  usr/share/doc/portmaster/SOURCE
-  usr/local/libexec/dinx-portmaster-core-service
-  etc/dinit.d/portmaster
-  usr/share/applications/portmaster.desktop
+  usr/bin/firewall-cmd
+  usr/bin/firewall-offline-cmd
+  usr/bin/firewalld
+  usr/bin/firewall-config
+  usr/share/applications/firewall-config.desktop
+  etc/dinit.d/firewalld
   usr/bin/qps
   usr/share/applications/qps.desktop
   usr/local/share/applications/qps.desktop
@@ -939,28 +947,68 @@ grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fai
 grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 desktop icons do not retain Adwaita'
 aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
 grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floating layout default is missing'
-for disabled_service in portmaster; do
-  if grep -Fq "/etc/dinit.d/boot.d/$disabled_service" <<<"$manifest"; then
-    fail "firewall service is enabled by default: $disabled_service"
-  fi
+for firewall_link_manifest in "$manifest" "$livefs_manifest"; do
+  grep -Fq 'squashfs-root/etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewall_link_manifest" \
+    || fail 'Firewalld Dinit service is not enabled for both installed rootfs and livefs'
+  grep -Fq 'squashfs-root/etc/dinit.d/boot.d/opensnitchd -> /etc/dinit.d/opensnitchd' <<<"$firewall_link_manifest" \
+    || fail 'OpenSnitch Dinit service is not enabled for both installed rootfs and livefs'
 done
-for retired_path in \
-  usr/bin/ufw \
-  usr/bin/gufw \
-  usr/bin/gufw-pkexec \
-  usr/bin/opensnitchd \
-  usr/bin/opensnitch-ui \
-  etc/ufw/ufw.conf \
-  etc/dinit.d/ufw \
-  etc/dinit.d/opensnitchd \
-  usr/share/applications/gufw.desktop \
-  usr/local/share/applications/gufw.desktop \
-  usr/local/libexec/dinx-gufw \
-  usr/share/applications/opensnitch_ui.desktop \
-  usr/local/share/applications/opensnitch_ui.desktop \
-  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg; do
-  if grep -Fq "$retired_path" <<<"$manifest"; then
-    fail "retired firewall payload remains in the ISO: $retired_path"
+for firewall_package in firewalld firewall-config firewalld-dinit; do
+  grep -Eq "/var/lib/pacman/local/${firewall_package}-[^/]*/" <<<"$manifest" \
+    || fail "Firewalld package is missing from installed rootfs: $firewall_package"
+done
+for required_package in floorp opensnitch opensnitch-dinit; do
+  grep -Eq "/var/lib/pacman/local/${required_package}-[^/]*/" <<<"$manifest" \
+    || fail "required package metadata is missing from installed rootfs: $required_package"
+done
+unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/opensnitchd/default-config.json \
+  > "$tmp_dir/opensnitch-config.json"
+if grep -Fq '"Firewall": "nftables"' "$tmp_dir/opensnitch-config.json" \
+  && grep -Fq '"DefaultAction": "allow"' "$tmp_dir/opensnitch-config.json" \
+  && grep -Fq '"InterceptUnknown": false' "$tmp_dir/opensnitch-config.json"; then
+  :
+else
+  fail 'OpenSnitch defaults must use nftables, allow traffic and avoid intercepting unknown apps'
+fi
+opensnitch_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/autostart/opensnitch-ui.desktop)
+grep -Fqx 'Exec=opensnitch-ui --background' <<<"$opensnitch_autostart" \
+  || fail 'OpenSnitch tray UI is not configured to start in the background'
+grep -Fqx 'TryExec=opensnitch-ui' <<<"$opensnitch_autostart" \
+  || fail 'OpenSnitch autostart entry does not guard the UI executable'
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  if grep -Eq '/var/lib/pacman/local/firefox-[^/]*/' <<<"$image_manifest"; then
+    fail 'Firefox package metadata is present after replacement with Floorp'
+  fi
+  for retired_path in \
+    usr/bin/portmaster \
+    usr/lib/portmaster/portmaster \
+    usr/lib/portmaster/portmaster-core \
+    usr/lib/portmaster/portmaster.zip \
+    usr/lib/portmaster/assets.zip \
+    usr/local/libexec/dinx-portmaster-core-service \
+    etc/dinit.d/portmaster \
+    etc/dinit.d/boot.d/portmaster \
+    usr/share/applications/portmaster.desktop \
+    usr/share/licenses/portmaster/LICENSE \
+    usr/share/doc/portmaster/SOURCE \
+    usr/lib/libayatana-appindicator3.so.1 \
+    usr/bin/firefox \
+    usr/share/applications/firefox.desktop \
+    etc/firefox/policies/policies.json \
+    usr/bin/ufw \
+    usr/bin/gufw \
+    usr/bin/gufw-pkexec \
+    etc/ufw/ufw.conf \
+    etc/dinit.d/ufw \
+    usr/share/applications/gufw.desktop \
+    usr/local/share/applications/gufw.desktop \
+    usr/local/libexec/dinx-gufw; do
+    if grep -Fq "$retired_path" <<<"$image_manifest"; then
+      fail "retired firewall payload remains in the ISO: $retired_path"
+    fi
+  done
+  if grep -Eq '/var/lib/pacman/local/(portmaster|libayatana-appindicator|webkit2gtk-4\.1|iptables)-[^/]*/' <<<"$image_manifest"; then
+    fail 'Portmaster or its exclusive runtime dependencies remain in a final ISO filesystem'
   fi
 done
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
@@ -1021,9 +1069,12 @@ grep -Fq 'shell: /bin/fish' <<<"$users_config" || fail 'Calamares user shell is 
 grep -Fq '    - render' <<<"$users_config" || fail 'Calamares users are missing DRM render-node access'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || fail 'Phyto is not the default directory handler'
-grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
-grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
-grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
+grep -Fq 'text/html=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default HTML handler'
+grep -Fq 'application/xhtml+xml=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default XHTML handler'
+grep -Fq 'x-scheme-handler/http=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default HTTP handler'
+grep -Fq 'x-scheme-handler/https=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default HTTPS handler'
+floorp_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/floorp/distribution/policies.json)
+grep -Fq '"DisableAppUpdate": true' <<<"$floorp_policy" || fail 'Floorp updates are not managed by the DINX package source refresh'
 grep -Fq 'application/pdf=onlyoffice.desktop;' <<<"$mimeapps_config" || fail 'ONLYOFFICE is not the default PDF handler'
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'

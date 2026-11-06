@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=opensnitch-dinit
+pkgver=1.7.2
+pkgrel=1
+pkgdesc='Dinit service for the OpenSnitch application firewall'
+arch=('any')
+url='https://github.com/evilsocket/opensnitch'
+license=('GPL-3.0-or-later')
+depends=('dinit' 'opensnitch')
+source=('opensnitchd')
+sha256sums=('500538ba3e3cc6212b557deb84fdd2b68dcaaa5db7ecf3918f515c1fb5aa51e2')
+
+package() {
+  install -Dm644 "$srcdir/opensnitchd" \
+    "$pkgdir/etc/dinit.d/opensnitchd"
+  install -d "$pkgdir/etc/dinit.d/boot.d"
+  ln -s /etc/dinit.d/opensnitchd \
+    "$pkgdir/etc/dinit.d/boot.d/opensnitchd"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/opensnitch-dinit/SOURCE" <<'EOF'
+The Dinit service definition follows the upstream OpenSnitch service file:
+https://github.com/evilsocket/opensnitch/blob/a1353848ba1b660320e90cefea782c3fba272c00/daemon/data/init/opensnitchd-dinit
+EOF
+}

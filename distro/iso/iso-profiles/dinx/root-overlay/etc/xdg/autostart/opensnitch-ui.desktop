@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OpenSnitch UI
+Comment=Monitor application network connections
+Exec=opensnitch-ui --background
+TryExec=opensnitch-ui
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

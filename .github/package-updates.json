@@ -95,6 +95,20 @@
       "url_template": "https://github.com/topgrade-rs/topgrade/releases/download/{tag}/topgrade-{tag}-x86_64-unknown-linux-musl.tar.gz"
     },
     {
+      "name": "floorp",
+      "provider": "github",
+      "repository": "Floorp-Projects/Floorp",
+      "source_file": "distro/packages/floorp/source.env",
+      "version_key": "FLOORP_VERSION",
+      "package_version_key": "FLOORP_VERSION",
+      "source_url_key": "FLOORP_SOURCE_URL",
+      "checksum_key": "FLOORP_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/Floorp-Projects/Floorp/releases/download/{tag}/floorp-linux-x86_64.tar.xz",
+      "bump_pkgrel_path": "distro/packages/floorp/PKGBUILD"
+    },
+    {
       "name": "swayimg",
       "provider": "github",
       "repository": "artemsen/swayimg",
@@ -304,44 +318,6 @@
           "source_url_key": "PIXELORAMA_MIME_URL",
           "checksum_key": "PIXELORAMA_MIME_SHA256",
           "url_template": "https://raw.githubusercontent.com/Orama-Interactive/Pixelorama/{tag}/Misc/Linux/com.orama_interactive.Pixelorama.xml"
-        }
-      ]
-    },
-    {
-      "name": "portmaster",
-      "provider": "github",
-      "repository": "safing/portmaster",
-      "source_file": "distro/packages/portmaster/source.env",
-      "version_key": "PORTMASTER_VERSION",
-      "package_version_key": "PORTMASTER_VERSION",
-      "source_url_key": "PORTMASTER_APP_SOURCE_URL",
-      "checksum_key": "PORTMASTER_APP_SOURCE_SHA256",
-      "checksum": "sha256",
-      "tag_prefix": "v",
-      "url_template": "https://updates.safing.io/linux_amd64/app2/portmaster_v{version_dash}",
-      "bump_pkgrel_path": "distro/packages/portmaster/PKGBUILD",
-      "additional_sources": [
-        {
-          "source_url_key": "PORTMASTER_CORE_SOURCE_URL",
-          "checksum_key": "PORTMASTER_CORE_SOURCE_SHA256",
-          "url_template": "https://updates.safing.io/linux_amd64/core/portmaster-core_v{version_dash}"
-        },
-        {
-          "source_url_key": "PORTMASTER_UI_SOURCE_URL",
-          "checksum_key": "PORTMASTER_UI_SOURCE_SHA256",
-          "url_template": "https://updates.safing.io/all/ui/modules/portmaster_v{version_dash}.zip"
-        },
-        {
-          "source_url_key": "PORTMASTER_ASSETS_SOURCE_URL",
-          "checksum_key": "PORTMASTER_ASSETS_SOURCE_SHA256",
-          "manifest_url": "https://updates.safing.io/stable.v3.json",
-          "artifact_name": "assets.zip",
-          "refresh_always": true
-        },
-        {
-          "source_url_key": "PORTMASTER_LICENSE_SOURCE_URL",
-          "checksum_key": "PORTMASTER_LICENSE_SOURCE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/safing/portmaster/{tag}/LICENSE"
         }
       ]
     },

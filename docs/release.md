@@ -66,11 +66,10 @@ Each alpha release contains:
 
 DINX source now configures a signed rolling pacman repository hosted as GitHub
 Release assets under `dinx-packages-latest` at
-`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. The
-weekly updater checks 20 release-based packages every Monday at
-04:17 UTC and opens one reviewed pull request; it never writes pins to `main`.
-Portmaster's independently versioned `assets.zip` is resolved from Safing's
-stable artifact manifest on every run, even when the main release tag is unchanged.
+`https://github.com/rufl/DINX/releases/download/dinx-packages-latest`.
+The weekly updater opens one reviewed pull request for 21 configured custom-package
+source pins every Monday at 04:17 UTC; the Noto Latin subset is refreshed
+monthly. It never writes pins to `main`.
 Deetty's private commit pin and the ZLS/Zig 0.16 coupled pins remain manually
 maintained. After package changes merge, a separate workflow builds and signs
 the package repository without assembling an ISO; package-only changes no

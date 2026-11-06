@@ -25,6 +25,13 @@ for path in "$pkgbuild" "$backend" "$gpu" "$profiles" "$frontend" "$profile_conf
   "$readme" "$profile" "$workflow" "$qualification"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
+grep -Fq 'Firewalld and OpenSnitch stay enabled and outside built-in profile policy.' "$profile_conf" \
+  || fail 'DinitUI built-in profiles do not explicitly preserve firewall services'
+grep -Fq 'Firewalld and OpenSnitch are boot-enabled and remain outside built-in profile policy.' "$readme" \
+  || fail 'DinitUI firewall profile boundary is not documented'
+if grep -Eq '(^|[[:space:]])(firewalld|opensnitchd)([[:space:]]|$)' "$profile_conf"; then
+  fail 'DinitUI built-in profiles must not toggle Firewalld or OpenSnitch'
+fi
 
 grep -Fqx 'pkgname=dinitui' "$pkgbuild" || fail 'PKGBUILD package name is not dinitui'
 grep -Fq 'depends=(dinit gtk4 libadwaita polkit pciutils)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'

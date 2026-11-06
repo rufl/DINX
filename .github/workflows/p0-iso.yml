@@ -73,7 +73,8 @@ on:
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
       - "tools/dinx-qemu-launcher.c"
-      - "scripts/check_firefox.sh"
+      - "scripts/check_floorp.sh"
+      - "scripts/check_opensnitch.sh"
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
@@ -189,8 +190,10 @@ jobs:
         run: ./scripts/check_deetty_integration.sh
       - name: Verify VT-only runtime packaging and sole-terminal build order
         run: ./scripts/check_ghostty_vt_runtime.sh
-      - name: Verify Firefox defaults and pro-user policy
-        run: ./scripts/check_firefox.sh
+      - name: Verify Floorp defaults and managed browser policy
+        run: ./scripts/check_floorp.sh
+      - name: Verify OpenSnitch Dinit service and live UI autostart
+        run: ./scripts/check_opensnitch.sh
 
       - name: Verify pinned swayimg source and package contract
         run: ./scripts/check_swayimg.sh

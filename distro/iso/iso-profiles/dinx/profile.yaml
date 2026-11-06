@@ -75,7 +75,7 @@ rootfs:
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
-    - firefox
+    - floorp
     - pipewire
     - pipewire-pulse
     - zenity
@@ -93,7 +93,6 @@ rootfs:
     - bluez-utils
     - blueman
     - blockbench
-    - libayatana-appindicator
     - btop
     - brightnessctl
     - clang
@@ -115,7 +114,9 @@ rootfs:
     - curl
     - git
     - galculator
-    - portmaster
+    - firewalld
+    - firewall-config
+    - opensnitch
     - inxi
     - inkscape
     - jq
@@ -153,6 +154,8 @@ rootfs:
       - wireplumber-dinit
       - greetd-dinit
       - artix-live-dinit
+      - firewalld-dinit
+      - opensnitch-dinit
 livefs:
   packages:
     - artix-grub-live
@@ -164,6 +167,8 @@ livefs:
       - networkmanager-dinit
       - dbus-dinit
       - elogind-dinit
+      - firewalld-dinit
+      - opensnitch-dinit
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit

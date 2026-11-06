@@ -219,7 +219,7 @@ done
 grep -Fq 'force_ssd = false' "$aqueous_layout" \
   || fail 'Aqueous must honor client-side GTK decorations by default'
 grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not force Firefox to use the system/compositor titlebar'
+  || fail 'Aqueous session does not force Gecko browsers to use the system/compositor titlebar'
 grep -Fq 'client_requires_csd' "$aqueous_decoration_patch" \
   || fail 'Aqueous decoration policy does not distinguish client-side decorations'
 grep -Fq '.xwayland => decoration_policy.useServerSideDecorations(' "$aqueous_decoration_patch" \
@@ -433,7 +433,6 @@ grep -Fq 'DesktopNames=Aqueous;Pearl' "$aqueous_session" \
   || fail 'Aqueous/Pearl desktop identity is missing'
 grep -Fq 'Hidden=true' "$gaming_session" || fail 'gaming session is not hidden'
 grep -Fq 'NoDisplay=true' "$gaming_session" || fail 'gaming session remains visible'
-grep -Fq '    - libayatana-appindicator' "$profile" || fail 'profile is missing AppIndicator compatibility'
 
 if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
   fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'

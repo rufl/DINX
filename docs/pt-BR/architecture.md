@@ -59,11 +59,11 @@ Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig,
 
 DinitUI é o frontend DINX do dinit. Descobre serviços carregados e arquivos de descrição, exibe status, logs em buffer, dependências, ambiente, sinais e ações do daemon por argv validado do `dinitctl`. Nunca interpola texto do usuário em shell.
 
-O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --system` e recorre a `pkexec` somente após falha explícita de autorização. Os perfis `normal`, `lite`, `gaming` e customizados persistem em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente o Bluetooth opcional e `gaming` habilita Bluetooth para controles. O Portmaster é um serviço separado, iniciado pelo usuário, fora desses perfis.
+O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --system` e recorre a `pkexec` somente após falha explícita de autorização. Os perfis `normal`, `lite`, `gaming` e customizados persistem em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente o Bluetooth opcional e `gaming` habilita Bluetooth para controles. O Firewalld é um serviço de sistema separado, habilitado no boot e fora desses perfis.
 
 ### DINXPanel
 
-A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, serviços dinit, upgrades e firmware, além do catálogo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Checks de upgrade são somente leitura; ações explícitas usam argv fixo e confirmação do usuário. Kernels nunca são removidos, e mudanças informam a necessidade de reinicialização.
+A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, serviços dinit, upgrades e firmware, além do catálogo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). O botão Firewall abre a interface `firewall-config`; `firewalld-dinit` habilita o daemon no boot. Checks de upgrade são somente leitura; ações explícitas usam argv fixo e confirmação do usuário. Kernels nunca são removidos, e mudanças informam a necessidade de reinicialização.
 
 CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuário habilita o serviço pelo DinitUI quando necessário.
 

@@ -1,9 +1,9 @@
 [Default Applications]
 inode/directory=org.aqueous.Phyto.desktop;
-text/html=firefox.desktop;
-application/xhtml+xml=firefox.desktop;
-x-scheme-handler/http=firefox.desktop;
-x-scheme-handler/https=firefox.desktop;
+text/html=floorp.desktop;
+application/xhtml+xml=floorp.desktop;
+x-scheme-handler/http=floorp.desktop;
+x-scheme-handler/https=floorp.desktop;
 application/pdf=onlyoffice.desktop;
 image/png=swayimg.desktop;
 image/jpeg=swayimg.desktop;

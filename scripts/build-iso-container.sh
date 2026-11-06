@@ -404,8 +404,8 @@ trap finish EXIT
               build_package swayimg
               build_package gapless
               build_package dinx-keyring
-              build_package portmaster
-              pacman_install_local "$package_repo"/portmaster-*.pkg.tar.zst
+              build_package opensnitch-dinit
+              build_package floorp
               build_package patchy
               build_package blockbench
               build_package impasto
@@ -513,7 +513,7 @@ trap finish EXIT
               mksquashfs_path=$(command -v mksquashfs)
               test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs
               printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$mksquashfs_path" "$DINX_MKSQUASHFS_REAL"
-              scripts/smoke_final_rootfs_package_exclusions.sh
+              scripts/smoke_final_squashfs_package_exclusions.sh
               iso_assembly_started=$SECONDS
               if scripts/build-iso.sh; then
                 printf 'dinx-build-timing phase=iso-assembly elapsed_seconds=%s exit_status=0\n' \

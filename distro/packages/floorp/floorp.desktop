@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Floorp
+Name[pt_BR]=Floorp
+GenericName=Web Browser
+GenericName[pt_BR]=Navegador Web
+Comment=Browse the Web
+Comment[pt_BR]=Navegue na Internet
+Exec=floorp %u
+TryExec=floorp
+Icon=floorp
+Terminal=false
+StartupNotify=true
+StartupWMClass=floorp
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;

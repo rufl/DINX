@@ -1,5 +1,0 @@
-type               = process
-command            = /usr/local/libexec/dinx-portmaster-core-service
-restart            = on-failure
-restart-delay      = 5
-smooth-recovery    = true

@@ -67,7 +67,7 @@ prune_build_only_headers() {
     printf 'dinx mksquashfs wrapper: linux-headers package record remains in %s\n' "$root" >&2
     return 1
   }
-  printf 'dinx-final-rootfs: removed build-only package=linux-headers root=%s\n' "$root"
+  printf 'dinx-final-squashfs: removed build-only package=linux-headers root=%s\n' "$root"
 }
 
 if [[ -n "$source_root" ]]; then

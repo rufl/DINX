@@ -8,8 +8,6 @@ iso_check="$root/scripts/check-iso-content.sh"
 mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
 file_roller_mime_cache="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/mimeinfo.cache"
-portmaster_desktop="$root/distro/packages/portmaster/portmaster.desktop"
-portmaster_launcher="$root/distro/packages/portmaster/dinx-portmaster"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
 qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
@@ -24,13 +22,10 @@ fail() {
 }
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
-[[ -x "$portmaster_launcher" ]] || fail 'DINX Portmaster launcher is missing or not executable'
-bash -n "$portmaster_launcher" || fail 'DINX Portmaster launcher has invalid shell syntax'
-grep -Fq '/usr/bin/pkexec /usr/bin/dinitctl start portmaster' "$portmaster_launcher" || fail 'Portmaster launcher does not start its service on demand'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in breeze-icons zathura zathura-pdf-mupdf libmupdf; do
@@ -209,11 +204,6 @@ grep -Fqx 'Name[pt_BR]=Descompactador' "$file_roller_override" || fail 'File Rol
 grep -Fqx 'TryExec=file-roller' "$file_roller_override" || fail 'File Roller override does not resolve the installed binary'
 grep -Fqx 'Exec=file-roller %U' "$file_roller_override" || fail 'File Roller override does not preserve file opening'
 grep -Fqx 'Icon=org.gnome.FileRoller' "$file_roller_override" || fail 'File Roller override icon is missing'
-grep -Fqx 'Name=Portmaster' "$portmaster_desktop" || fail 'Portmaster English desktop name is missing'
-grep -Fqx 'Name[pt_BR]=Portmaster' "$portmaster_desktop" || fail 'Portmaster Portuguese desktop name is missing'
-grep -Fqx 'Exec=portmaster' "$portmaster_desktop" || fail 'Portmaster desktop entry does not use the Dinit-aware launcher'
-grep -Fqx 'TryExec=portmaster' "$portmaster_desktop" || fail 'Portmaster desktop entry prerequisite is incorrect'
-grep -Fqx 'Icon=security-high' "$portmaster_desktop" || fail 'Portmaster desktop icon is missing'
 grep -Fq 'bluetoothctl list' "$bluetooth_helper" || fail 'Bluetooth launcher does not detect available controllers'
 grep -Fq 'exec blueman-manager' "$bluetooth_helper" || fail 'Bluetooth launcher does not open Blueman when a controller exists'
 grep -Fqx 'Name=Process Manager' "$qps_override" || fail 'Qps English desktop name is missing'
@@ -327,7 +317,7 @@ grep -Fqx '  usr/local/share/applications/org.gnome.FileRoller.desktop' "$iso_ch
 grep -Fqx '  usr/local/share/applications/mimeinfo.cache' "$iso_check" || fail 'ISO payload is missing the localized File Roller MIME cache'
 grep -Fqx '  usr/share/applications/gparted.desktop' "$iso_check" || fail 'ISO payload is missing the GParted desktop entry'
 grep -Fqx '  usr/share/applications/network.cycles.wdisplays.desktop' "$iso_check" || fail 'ISO payload is missing the wdisplays desktop entry'
-grep -Fqx '  usr/share/applications/portmaster.desktop' "$iso_check" || fail 'ISO payload is missing the Portmaster desktop entry'
+grep -Fqx '  usr/share/applications/firewall-config.desktop' "$iso_check" || fail 'ISO payload is missing the firewall-config desktop entry'
 grep -Fqx '  usr/local/share/applications/qps.desktop' "$iso_check" || fail 'ISO payload is missing the localized Qps desktop override'
 if grep -Fq 'strawberry' "$mimeapps"; then
   fail 'Strawberry remains in the audio handler defaults'
@@ -349,4 +339,4 @@ if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
   || grep -Fq 'application/vnd.visio' "$office_launcher"; then
   fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
 fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false breeze_icons=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false breeze_icons=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

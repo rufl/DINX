@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 - Maximize ISO SquashFS compaction with xz, x86 BCJ, 1 MiB blocks and a 1 MiB dictionary (the largest SquashFS values supported by the builder); retain the mksquashfs XZ tool default because it exposes no compression-level control. Metadata and ISO qualification now verify the new settings.
+- Validate Pearl's Deetty and server-decoration patch stack against the checksum-pinned v0.3.0 source before ISO builds; repair the stale insertion hunks and verify the package patch checksum.
 - Require Calamares to remain alive through the bounded startup smoke; allow silent startup logging while still rejecting emitted module/configuration errors.
 - Restore DinitUI's missing makepkg `build()` phase; its build command previously ran while sourcing `PKGBUILD`, targeting `/stage` and leaving invalid shell syntax.
 - Restore makepkg `build()` phases in DINXPanel and Seafoam Settings; both recipes previously ran `zig build` while makepkg sourced them, causing writes to `/stage` and an invalid closing brace. Bump `pkgrel` so existing installs receive the corrected packages, and syntax-check all package recipes in the provenance contract.

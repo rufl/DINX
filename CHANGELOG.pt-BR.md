@@ -4,6 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 - Maximizar a compactação SquashFS da ISO com xz, BCJ x86, blocos de 1 MiB e dicionário de 1 MiB (maiores valores SquashFS suportados pelo builder); manter o padrão XZ do `mksquashfs`, que não expõe controle de nível. Os metadados e a qualificação da ISO agora verificam as novas configurações.
+- Validar a sequência de patches do Deetty e das decorações do servidor do Pearl contra a fonte v0.3.0 fixada por checksum antes das builds da ISO; corrigir os hunks de inserção desatualizados e verificar o checksum do patch do pacote.
 - Corrigir a leitura da preferência de raio do Pearl no Aqueous para Zig 0.17: usar libc para o ambiente e `std.Io.Dir` para ler o arquivo de preferências; `std.posix.getenv` e `std.fs.cwd()` não estão disponíveis.
 - Corrigir o caminho do Dockerfile do Buildx no publisher GitHub de pacotes para usar a mesma receita Artix versionada e validada pelo job P0 da ISO.
 - Incluir `jq` na imagem Artix do builder: `check_dinx_theme.sh` precisa dele para validar os padrões do tema escuro do Pearl antes de montar a ISO, e o contrato de procedência agora o exige.

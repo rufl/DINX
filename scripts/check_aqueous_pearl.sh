@@ -94,6 +94,17 @@ for patch_file in \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+pearl_archive="$source_cache/pearl/pearl-$PEARL_VERSION.tar.gz"
+"$root/scripts/cache-verified-download.sh" \
+  "$pearl_archive" "$PEARL_SOURCE_URL" "$PEARL_SOURCE_SHA256"
+pearl_source_root="$window_test_tmp/pearl-$PEARL_VERSION"
+tar -xzf "$pearl_archive" -C "$window_test_tmp"
+patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
+  -i "$pearl_dir/deetty-terminal.patch" >/dev/null \
+  || fail 'pinned Pearl source rejects deetty-terminal.patch'
+patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
+  -i "$pearl_dir/server-decorations.patch" >/dev/null \
+  || fail 'pinned Pearl source rejects server-decorations.patch'
 window_source="$source_root/compositor/aqueous/Window.zig"
 if grep -Fq 'posix.getenv(' "$window_source"; then
   fail 'Aqueous window decoration uses the removed Zig std.posix.getenv API'

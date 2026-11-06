@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg" alt="DINX Linux" width="420">
+  <img src="design/brand/dinx-linux-logo.svg" alt="DINX Linux" width="420">
 </h1>
 
 <p align="center">

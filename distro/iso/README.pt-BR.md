@@ -97,8 +97,10 @@ pacman e logs de build também ficam fora da imagem. O root overlay recria
 `/var/log/dinit` por tmpfiles antes de os serviços Dinit iniciarem, e o check da
 ISO exige essa regra. O pacote `dinx-live-autologin`, exclusivo do livefs, fornece
 unidades no-op `root-ro` e `early-root-rw.target` para seu overlay gravável; essas
-substituições não entram no rootfs instalado pelo Calamares. O `squashfs-tools`,
-exclusivo do build, permanece no builder. O CI instala o wrapper em
+substituições não entram no rootfs instalado pelo Calamares. O rootfs live inclui
+`squashfs-tools` porque o módulo `unpackfs` do Calamares precisa de `unsquashfs`;
+o contrato da instalação remove o pacote da raiz instalada. O builder mantém sua
+própria cópia. O CI instala o wrapper em
 `/usr/bin/mksquashfs` após preservar o binário real, pois o `buildiso` do Artix
 pode invocar esse caminho absoluto. A inspeção pós-build verifica xz e blocos de
 256 KiB nos dois superblocos SquashFS.
@@ -128,7 +130,7 @@ confiança da chave.
 
 O perfil controla bridges visuais estáticas DINX: `/usr/share/dinx/theme/DINX.json` é a fonte das cores semânticas e ANSI; GTK e Qt consomem arquivos DINX versionados, e `DINX_COLOR_SCHEME` é o contrato de cor da sessão do usuário. `qt6ct`, `adw-gtk-theme` e `dinx-noto-latin` são instalados para esses consumidores, alinhados à tipografia GTK padrão do CachyOS. O pacote fornece Noto Sans 10 regular/negrito/itálico/negrito itálico e Noto Sans Mono 10, subsetados para latim, marcas combinantes, pontuação comum e moedas; ele substitui o pacote completo `noto-fonts`. O host do Pearl Greeter lê `/etc/pearl/greeter.json`, usa a bridge GTK DINX e força `Aqueous + Pearl (DINX)` com X11 e UWSM desativados; Aqueous/Pearl é o único contrato de sessão do usuário. `scripts/check_dinx_theme.sh` valida esse contrato antes do build da ISO.
 
-O Pearl Greeter e a área de trabalho inicial usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo do produto e na tela de boas-vindas. O símbolo reduzido D com raio é mantido como SVG transparente em `design/brand/dinx-ray-mark.svg`, copiado para os assets de marca da ISO e renderizado como logo do GRUB; o Calamares usa-o como ícone do produto. Ícones de aplicativos e da área de trabalho permanecem upstream/Adwaita.
+O Pearl Greeter e a área de trabalho inicial usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo do produto e na tela de boas-vindas. O símbolo reduzido D com raio continua como arte-fonte em `design/brand/dinx-ray-mark.svg` e é usado pelo Calamares como ícone do produto. O GRUB usa o PNG separado do boot-mark em gradiente. Ícones de aplicativos e da área de trabalho permanecem upstream/Adwaita.
 Na primeira sessão Pearl, um wizard exibido uma vez permite ativar ou ocultar o dock, posicionar a barra em cima ou em baixo e escolher DINX claro/escuro ou Pearl Material claro/escuro; Pearl Material escuro fica pré-selecionado. O Pearl reserva a área de trabalho somente na borda escolhida para a barra; o dock fica na borda oposta. As escolhas são salvas em `~/.config/pearl/preferences.json`.
 O D-ray em ASCII em `/usr/share/dinx/branding/dinx-ray-mark.txt` é gerado por densidade a partir do SVG original da DINX e funciona como logo em texto puro:
 ```sh
@@ -211,7 +213,7 @@ O host dedicado do Pearl Greeter fornece a interface de login do greetd. Pearl �
 
 A sessão live usa `swayidle` e `wlopm` para desligar todas as telas após 600 segundos sem atividade e antes da suspensão, restaurando-as com atividade ou ao retomar. O Aqueous rejeita solicitações de bloqueio de sessão; o atalho padrão de bloqueio, o botão da DINXPanel e o launcher de bloqueio da área de trabalho ficam desativados para o usuário live. As sessões instaladas mantêm o `swaylock` para bloqueio por inatividade e suspensão, com bloqueio explícito por `dinx-lock`, `Super+L`, Pearl e DINXPanel. As teclas padrão de brilho e a DINXPanel usam passos fixos de 5% com `brightnessctl`; ferramentas especializadas permanecem no launcher.
 
-`scripts/check_dinx_budget.sh` mantém o perfil atual em 125 de 128 entradas de pacotes rootfs e no máximo 24 entradas de inicialização dinit, limita os binários compilados da DINXPanel/DinitUI a 6 MiB cada, limita a janela de qualificação de boot QEMU a 120 segundos e exige que uma ISO construída fique abaixo de 2 GiB (`2147483647` bytes) quando `DINX_ISO_PATH` é fornecido. Passar no limite de contagem de pacotes não garante passar no limite de tamanho da ISO; o artefato final deve passar ambos. Esses limites são barreiras de regressão, não medições de desempenho em hardware. `scripts/measure_dinx_session.sh` registra snapshots de RSS/CPU via `/proc` quando uma sessão DINX está realmente em execução.
+`scripts/check_dinx_budget.sh` mantém o perfil atual em 122 de 128 entradas de pacotes rootfs e no máximo 24 entradas de inicialização dinit, limita os binários compilados da DINXPanel/DinitUI a 6 MiB cada, limita a janela de qualificação de boot QEMU a 120 segundos e exige que uma ISO construída fique abaixo de 2 GiB (`2147483647` bytes) quando `DINX_ISO_PATH` é fornecido. Passar no limite de contagem de pacotes não garante passar no limite de tamanho da ISO; o artefato final deve passar ambos. Esses limites são barreiras de regressão, não medições de desempenho em hardware. `scripts/measure_dinx_session.sh` registra snapshots de RSS/CPU via `/proc` quando uma sessão DINX está realmente em execução.
 
 O builder Artix ainda consome um único `profile.yaml`; o manifesto de grupos é um contrato, não um mecanismo de composição de pacotes. O perfil da ISO genérica contém os grupos foundation e desktop, enquanto gaming e pacotes específicos da BC-250 ficam fora da imagem base. As políticas de serviço Normal/Lite/Gaming do DinitUI continuam separando serviços em runtime.
 

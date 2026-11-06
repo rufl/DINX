@@ -245,7 +245,6 @@ required_paths=(
   etc/skel/.bash_profile
   etc/skel/.config/gtk-3.0/settings.ini
   etc/skel/.config/gtk-4.0/settings.ini
-  etc/skel/.config/dinx/theme.json
   etc/skel/.config/qt6ct/qt6ct.conf
   etc/skel/.config/qt6ct/colors/DINX.conf
   etc/skel/.config/swayimg/init.lua
@@ -446,8 +445,6 @@ required_paths=(
   etc/skel/.config/pearl/preferences.json
   etc/calamares/branding/dinx/dinx.svg
   etc/calamares/branding/dinx/dinx-ray-mark.svg
-  usr/share/dinx/branding/dinx-linux-logo.svg
-  usr/share/dinx/branding/dinx-ray-mark.svg
   usr/share/dinx/branding/dinx-ray-mark.txt
   usr/share/grub/themes/artix/logo.png
 )
@@ -457,6 +454,16 @@ for path in "${required_paths[@]}"; do
     { for (i = 1; i <= NF; i++) if ($i == wanted || $i == wanted "/") found = 1 }
     END { exit !found }
   ' <<<"$manifest" || fail "missing ISO path (exact path required): $path"
+done
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  for unused_path in \
+    etc/skel/.config/dinx/theme.json \
+    usr/share/dinx/branding/dinx-linux-logo.svg \
+    usr/share/dinx/branding/dinx-ray-mark.svg; do
+    if grep -Fq "/$unused_path" <<<"$image_manifest"; then
+      fail "unreferenced branding/config payload remains in the ISO: $unused_path"
+    fi
+  done
 done
 for package in krita inkscape godot patchy blockbench impasto onlyoffice zrythm; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
@@ -1073,10 +1080,12 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gvfs|gvfs-gphoto2|gvfs-mt
   printf '%s\n' "$forbidden_matches" >&2
   fail 'removed file-manager, volume-mounter or partition-manager package metadata is present'
 fi
-for removed_package in dhclient ecryptfs-utils exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail zsh; do
-  if grep -Fq "/var/lib/pacman/local/$removed_package-" <<<"$manifest"; then
-    fail "trimmed common package metadata remains in the ISO: $removed_package"
-  fi
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  for removed_package in dhclient ecryptfs-utils exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail zsh; do
+    if grep -Fq "/var/lib/pacman/local/$removed_package-" <<<"$image_manifest"; then
+      fail "trimmed common package metadata remains in the ISO: $removed_package"
+    fi
+  done
 done
 for exfat_path in usr/bin/fsck.exfat usr/bin/mkfs.exfat; do
   grep -Fq "/$exfat_path" <<<"$manifest" || fail "kernel exFAT utility is missing from the ISO: $exfat_path"

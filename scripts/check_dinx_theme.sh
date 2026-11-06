@@ -20,11 +20,10 @@ calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/cal
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 qt_palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/colors/DINX.conf"
 qt_palette_seed="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-qt6ct-palette-seed"
-brand_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-linux-logo.svg"
+brand_wordmark="$repo_root/design/brand/dinx-linux-logo.svg"
 cli_issue="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/issue"
 live_cli_issue="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/etc/issue"
 brand_ray_source="$repo_root/design/brand/dinx-ray-mark.svg"
-brand_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.svg"
 fastfetch_logo="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/dinx/branding/dinx-ray-mark.txt"
 calamares_wordmark="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx.svg"
 calamares_ray="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/dinx-ray-mark.svg"
@@ -54,7 +53,7 @@ fail() {
 
 for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg" \
   "$grub" "$grub_defaults" "$grub_logo" "$boot_mark_source" "$calamares" "$calamares_branding" "$calamares_wordmark" \
-  "$calamares_ray" "$brand_wordmark" "$brand_ray" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
+  "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
@@ -105,7 +104,7 @@ for mode in ("dark", "light"):
         raise SystemExit(f"{mode} palette is missing bright ANSI colors")
 PY
 
-python - "$repo_root" "$brand_ray_source" "$pearl_greeter" "$pearl_preferences" "$brand_wordmark" "$brand_ray" \
+python - "$repo_root" "$brand_ray_source" "$pearl_greeter" "$pearl_preferences" "$brand_wordmark" \
   "$calamares_wordmark" "$calamares_ray" "$grub_logo" "$fastfetch_logo" "$boot_mark_source" <<'PY'
 import json
 import pathlib
@@ -113,7 +112,7 @@ import struct
 import sys
 import xml.etree.ElementTree as ET
 
-(root, ray_source_path, greeter_path, prefs_path, wordmark_path, ray_path,
+(root, ray_source_path, greeter_path, prefs_path, wordmark_path,
  cal_wordmark_path, cal_ray_path, grub_logo_path, fastfetch_logo_path, boot_mark_path) = map(pathlib.Path, sys.argv[1:])
 brand = root / "design/brand/dinx-wordmark-compact.svg"
 ns = "{http://www.w3.org/2000/svg}"
@@ -153,13 +152,11 @@ def d_path(path):
 
 wordmark = d_path(wordmark_path)
 ray_source = d_path(ray_source_path)
-ray = d_path(ray_path)
 assert ray_source.find(f".//{ns}path[@fill='{accent}']") is not None, "reduced D-ray source has no DINX coral bolt"
 assert not ray_source.findall(f".//{ns}rect"), "reduced D-ray source paints an opaque background"
 assert all(node.attrib.get("fill") != "#000000" for node in ray_source.iter()), "reduced D-ray source contains a black background fill"
-assert ray_source_path.read_bytes() == ray_path.read_bytes(), "installed reduced mark differs from canonical DINX artwork"
 assert cal_wordmark_path.read_bytes() == wordmark_path.read_bytes(), "Calamares wordmark diverges from DINX Linux artwork"
-assert cal_ray_path.read_bytes() == ray_path.read_bytes(), "Calamares D-ray mark diverges from DINX artwork"
+assert cal_ray_path.read_bytes() == ray_source_path.read_bytes(), "Calamares D-ray mark diverges from DINX artwork"
 ascii_logo_lines = fastfetch_logo_path.read_text(encoding="ascii").splitlines()
 assert 8 <= len(ascii_logo_lines) <= 20, "DINX D-ray ASCII logo has unexpected height"
 assert 15 <= max(map(len, ascii_logo_lines)) <= 40, "DINX D-ray ASCII logo has unexpected width"

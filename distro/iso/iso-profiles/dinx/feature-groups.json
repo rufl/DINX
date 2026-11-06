@@ -132,7 +132,6 @@
         "wdisplays",
         "wlopm",
         "udisks2",
-        "udisks2-btrfs",
         "udisks2-btrfs"
       ]
     },

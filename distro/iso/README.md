@@ -96,8 +96,9 @@ and build logs are also excluded. The root overlay recreates `/var/log/dinit`
 through tmpfiles before Dinit services start, and the ISO-content check requires
 that rule. The livefs-only `dinx-live-autologin` package supplies no-op `root-ro`
 and `early-root-rw.target` units for its writable overlay; these overrides are not
-included in the Calamares-installed rootfs. Build-only `squashfs-tools` stays in
-the builder, not the runtime payload. CI installs the wrapper at
+included in the Calamares-installed rootfs. The live rootfs includes `squashfs-tools`
+because Calamares `unpackfs` requires `unsquashfs`; the install contract removes it
+from the installed root. The builder keeps its own copy. CI installs the wrapper at
 `/usr/bin/mksquashfs` after preserving the real binary, because Artix `buildiso`
 may invoke that absolute path. Post-build inspection checks both SquashFS
 superblocks for xz compression and 256 KiB blocks.
@@ -124,7 +125,7 @@ for signing-secret setup and manual key verification/bootstrap.
 
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and `dinx-noto-latin` are installed for the corresponding consumers, matching CachyOS's default GTK typography. The custom package provides Noto Sans 10 regular/bold/italic/bold-italic and Noto Sans Mono 10, subset to Latin, combining marks, common punctuation and currency; it replaces the full `noto-fonts` package. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 
-The Pearl Greeter and initial desktop use solid backgrounds without wallpaper images or a DINX logo; Calamares retains the full wordmark on its product logo/welcome surface. The reduced D-and-ray symbol is maintained as a transparent SVG at `design/brand/dinx-ray-mark.svg`, copied into the ISO branding assets, and rendered as the GRUB logo; Calamares uses it as the product icon. Desktop and app-launcher icons remain upstream/Adwaita.
+The Pearl Greeter and initial desktop use solid backgrounds without wallpaper images or a DINX logo; Calamares retains the full wordmark on its product logo/welcome surface. The reduced D-and-ray symbol remains canonical artwork at `design/brand/dinx-ray-mark.svg` and is used by Calamares as the product icon. GRUB uses the separate gradient boot-mark PNG. Desktop and app-launcher icons remain upstream/Adwaita.
 On the first Pearl session, a one-time setup wizard lets each user enable or hide the dock, place the Pearl bar at the top or bottom, and choose DINX dark/light or Pearl Material dark/light; Pearl Material dark is preselected. Pearl reserves work area only at the selected bar edge, and the dock uses the opposite edge. Choices are saved in `~/.config/pearl/preferences.json`.
 The ASCII D-ray at `/usr/share/dinx/branding/dinx-ray-mark.txt` is density-mapped from DINX's source SVG and works as a plain-text logo:
 ```sh
@@ -210,7 +211,7 @@ The dedicated Pearl Greeter host provides the login surface for greetd. Pearl ow
 
 In the live session, `swayidle` and `wlopm` power off all displays after 600 seconds idle and before suspend, then restore them on input or resume. Aqueous rejects session-lock requests; the default lock shortcut, DINXPanel button and desktop lock launcher are disabled for the live user. Installed sessions retain `swaylock` for idle and suspend locking, with explicit locking through `dinx-lock`, `Super+L`, Pearl and DINXPanel. Standard brightness keys and DINXPanel use fixed 5-percent `brightnessctl` steps; specialist tools remain in the launcher.
 
-`scripts/check_dinx_budget.sh` keeps the current profile at 123 of 128 rootfs package entries and at or below 24 dinit startup entries, caps built DINXPanel/DinitUI binaries at 6 MiB each, limits the QEMU boot qualification window to 120 seconds, and enforces a built ISO below 2 GiB (`2147483647` bytes) when `DINX_ISO_PATH` is supplied. Passing the package-count budget does not guarantee the ISO-size budget; the final artifact must pass both. These are regression ceilings, not measured hardware performance claims. `scripts/measure_dinx_session.sh` records RSS/CPU snapshots from `/proc` when a DINX session is actually running.
+`scripts/check_dinx_budget.sh` keeps the current profile at 122 of 128 rootfs package entries and at or below 24 dinit startup entries, caps built DINXPanel/DinitUI binaries at 6 MiB each, limits the QEMU boot qualification window to 120 seconds, and enforces a built ISO below 2 GiB (`2147483647` bytes) when `DINX_ISO_PATH` is supplied. Passing the package-count budget does not guarantee the ISO-size budget; the final artifact must pass both. These are regression ceilings, not measured hardware performance claims. `scripts/measure_dinx_session.sh` records RSS/CPU snapshots from `/proc` when a DINX session is actually running.
 
 The Artix builder still consumes one `profile.yaml`; the feature-group manifest is a contract, not a package-composition mechanism. The generic ISO profile contains the foundation and desktop groups while gaming and BC-250-specific packages remain outside the base image. DinitUI's Normal/Lite/Gaming service policies continue to provide runtime service separation.
 

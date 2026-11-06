@@ -461,6 +461,10 @@ required_paths=(
   etc/skel/.config/pearl/preferences.json
   etc/calamares/branding/dinx/dinx.svg
   etc/calamares/branding/dinx/dinx-ray-mark.svg
+  usr/lib/calamares/modules/services-artix/main.py
+  usr/lib/calamares/modules/services-artix/module.desc
+  usr/lib/calamares/modules/postcfg/main.py
+  usr/lib/calamares/modules/postcfg/module.desc
   usr/share/dinx/branding/dinx-ray-mark.txt
   usr/share/grub/themes/artix/logo.png
 )
@@ -480,6 +484,14 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
       fail "unreferenced branding/config payload remains in the ISO: $unused_path"
     fi
   done
+  unused_calamares_matches=$(
+    grep -E 'squashfs-root/(etc/calamares-config-switcher\.conf|usr/bin/calamares-config-switcher|usr/share/applications/calamares-config-switcher\.desktop|usr/lib/calamares/modules/basestrap/[^/[:space:]]+|usr/share/calamares/modules/basestrap\.conf|usr/share/calamares/branding/(artix|artix-next)/[^/[:space:]]+)' \
+      <<<"$image_manifest" | grep -v '^d' || true
+  )
+  if [[ -n "$unused_calamares_matches" ]]; then
+    printf '%s\n' "$unused_calamares_matches" >&2
+    fail 'unused Artix Calamares branding, switcher or basestrap payload remains in the ISO'
+  fi
 done
 for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoffice zrythm haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \

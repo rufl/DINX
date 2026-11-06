@@ -80,6 +80,12 @@ require_text 'images:' "$branding_conf"
 require_text 'productIcon: "dinx-ray-mark.svg"' "$branding_conf"
 require_text 'productLogo: "dinx.svg"' "$branding_conf"
 require_text 'productWelcome: "dinx.svg"' "$branding_conf"
+require_text 'branding: dinx' "$settings_conf"
+require_text '  - services-artix' "$settings_conf"
+require_text '  - postcfg' "$settings_conf"
+if grep -Eq '^[[:space:]]+- basestrap$' "$settings_conf"; then
+  fail 'Calamares settings select the unused basestrap module'
+fi
 
 require_text 'mountPoint: /' "$mount_conf"
 require_text 'subvolume: ""' "$mount_conf"

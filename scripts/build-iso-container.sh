@@ -451,6 +451,13 @@ trap finish EXIT
                   print "NoExtract = usr/bin/systemctl"
                   print "NoExtract = usr/share/wayland-sessions/plasma.desktop"
                   print "NoExtract = usr/bin/uwsm"
+                  print "NoExtract = etc/calamares-config-switcher.conf"
+                  print "NoExtract = usr/bin/calamares-config-switcher"
+                  print "NoExtract = usr/share/applications/calamares-config-switcher.desktop"
+                  print "NoExtract = usr/lib/calamares/modules/basestrap/*"
+                  print "NoExtract = usr/share/calamares/modules/basestrap.conf"
+                  print "NoExtract = usr/share/calamares/branding/artix/*"
+                  print "NoExtract = usr/share/calamares/branding/artix-next/*"
                   injected = 1
                   next
                 }
@@ -466,6 +473,16 @@ trap finish EXIT
               grep -Fqx 'NoExtract = etc/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/share/uwsm/*' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/share/wayland-sessions/plasma.desktop' "$pacman_conf"
+              for excluded_path in \
+                'NoExtract = etc/calamares-config-switcher.conf' \
+                'NoExtract = usr/bin/calamares-config-switcher' \
+                'NoExtract = usr/share/applications/calamares-config-switcher.desktop' \
+                'NoExtract = usr/lib/calamares/modules/basestrap/*' \
+                'NoExtract = usr/share/calamares/modules/basestrap.conf' \
+                'NoExtract = usr/share/calamares/branding/artix/*' \
+                'NoExtract = usr/share/calamares/branding/artix-next/*'; do
+                grep -Fqx "$excluded_path" "$pacman_conf"
+              done
               builder_pacman_conf_sha256=$(sha256sum "$pacman_conf" | cut -d " " -f 1)
               builder_mirrorlist=/etc/pacman.d/mirrorlist
               test -r "$builder_mirrorlist"

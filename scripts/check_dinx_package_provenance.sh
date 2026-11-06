@@ -220,6 +220,13 @@ for required in \
   'NoExtract = etc/systemd/*' \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
   'NoExtract = usr/share/uwsm/*' \
+  'NoExtract = etc/calamares-config-switcher.conf' \
+  'NoExtract = usr/bin/calamares-config-switcher' \
+  'NoExtract = usr/share/applications/calamares-config-switcher.desktop' \
+  'NoExtract = usr/lib/calamares/modules/basestrap/*' \
+  'NoExtract = usr/share/calamares/modules/basestrap.conf' \
+  'NoExtract = usr/share/calamares/branding/artix/*' \
+  'NoExtract = usr/share/calamares/branding/artix-next/*' \
   'DownloadUser = root' \
   '^[[:space:]]*DownloadUser[[:space:]]*=' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \

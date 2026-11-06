@@ -13,7 +13,7 @@ profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 workflow="$root/.github/workflows/p0-iso.yml"
 builder="$root/scripts/build-iso-container.sh"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
-gufw_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gufw"
+portmaster_launcher="$root/distro/packages/portmaster/dinx-portmaster"
 fail() {
   printf 'check_dinxpanel: %s\n' "$*" >&2
   exit 1
@@ -24,7 +24,7 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
-grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct gufw topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct portmaster topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq "cups-dinit: optional CUPS printing support; downloads cups and dinit service files after installation" "$pkgbuild" || fail 'optional CUPS package metadata is missing'
 if grep -Fq 'wdisplays: Wayland display control panel' "$pkgbuild"; then
   fail 'wdisplays must be a runtime dependency now that the display control is in the base ISO'
@@ -33,10 +33,10 @@ grep -Fq 'Exec=dinxpanel' "$desktop" || fail 'desktop launcher is incorrect'
 grep -Fqx 'Name[pt_BR]=Central de Controle' "$desktop" || fail 'localized desktop name is incorrect'
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
-for helper in "$bluetooth_helper" "$gufw_helper"; do
-  [[ -x "$helper" ]] || fail "desktop helper is missing or not executable: $helper"
-  sh -n "$helper" || fail "desktop helper has invalid shell syntax: $helper"
-done
+[[ -x "$bluetooth_helper" ]] || fail 'desktop helper is missing or not executable: $bluetooth_helper'
+sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
+[[ -x "$portmaster_launcher" ]] || fail 'Portmaster launcher is missing or not executable'
+bash -n "$portmaster_launcher" || fail 'Portmaster launcher has invalid shell syntax'
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
 for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
@@ -46,7 +46,7 @@ if grep -Fq 'launch(&.{"wdisplays"})' "$frontend"; then
   fail 'display action bypasses the DINX persistence wrapper'
 fi
 grep -Fq 'launch(&.{"/usr/local/libexec/dinx-bluetooth-manager"})' "$frontend" || fail 'Bluetooth action does not use the DINX adapter-aware launcher'
-grep -Fq 'launch(&.{"/usr/local/libexec/dinx-gufw"})' "$frontend" || fail 'Firewall action does not use the GUFW polkit-path launcher'
+grep -Fq 'launch(&.{"portmaster"})' "$frontend" || fail 'Firewall action does not launch Portmaster'
 grep -Fq 'dinitui_command = command' "$frontend" || fail 'GPU command is not retained for the asynchronous task'
 grep -Fq 'const argv = [_][]const u8{ "dinitui", task.dinitui_command }' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
 grep -Fq -- '--gpu-status' "$frontend" || fail 'GPU detection action is missing'

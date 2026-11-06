@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+core_pid=
+cleanup() {
+  local status=$?
+  trap - EXIT TERM INT HUP
+  if [[ -n "$core_pid" ]] && kill -0 "$core_pid" 2>/dev/null; then
+    kill -TERM "$core_pid" 2>/dev/null || true
+    wait "$core_pid" 2>/dev/null || true
+  fi
+  /usr/lib/portmaster/portmaster-core -recover-iptables || true
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 0' TERM INT HUP
+
+install -d -m700 /var/lib/portmaster/log
+/usr/lib/portmaster/portmaster-core --log-dir=/var/lib/portmaster/log &
+core_pid=$!
+wait "$core_pid"

@@ -93,7 +93,7 @@ const App = struct {
         appendSectionTitle(content, "DINX services and compositor");
         const services = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(services), makeButton("Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self));
-        c.gtk_box_append(@ptrCast(services), makeButton("Firewall", "Open the UFW graphical policy editor", &onFirewallClicked, self));
+        c.gtk_box_append(@ptrCast(services), makeButton("Firewall", "Manage network access with Portmaster", &onFirewallClicked, self));
         c.gtk_box_append(@ptrCast(content), services);
 
         appendSectionTitle(content, "Updates and firmware");
@@ -620,7 +620,7 @@ fn onServicesClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 
 
 fn onFirewallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{"/usr/local/libexec/dinx-gufw"});
+    asApp(data).launch(&.{"portmaster"});
 }
 fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).runUpgradeCheck();

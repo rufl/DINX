@@ -364,7 +364,6 @@ trap finish EXIT
               rm -f "$icon_svg"
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
-              build_package opensnitch-dinit
               build_package topgrade
               build_package paru
               build_package shelly
@@ -405,6 +404,8 @@ trap finish EXIT
               build_package swayimg
               build_package gapless
               build_package dinx-keyring
+              build_package portmaster
+              pacman_install_local "$package_repo"/portmaster-*.pkg.tar.zst
               build_package patchy
               build_package blockbench
               build_package impasto

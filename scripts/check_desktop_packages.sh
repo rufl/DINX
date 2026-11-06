@@ -7,11 +7,10 @@ iso_check="$root/scripts/check-iso-content.sh"
 mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
 file_roller_mime_cache="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/mimeinfo.cache"
-gufw_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/gufw.desktop"
-gufw_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gufw"
+portmaster_desktop="$root/distro/packages/portmaster/portmaster.desktop"
+portmaster_launcher="$root/distro/packages/portmaster/dinx-portmaster"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
 qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
-opensnitch_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/opensnitch_ui.desktop"
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
@@ -24,9 +23,9 @@ fail() {
 }
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
-[[ -x "$gufw_helper" ]] || fail 'DINX GUFW launcher is missing or not executable'
-sh -n "$gufw_helper" || fail 'DINX GUFW launcher has invalid shell syntax'
-grep -Fqx 'PATH=/usr/bin:/usr/local/bin:/usr/sbin:/sbin' "$gufw_helper" || fail 'GUFW launcher does not prioritize the canonical polkit executable path'
+[[ -x "$portmaster_launcher" ]] || fail 'DINX Portmaster launcher is missing or not executable'
+bash -n "$portmaster_launcher" || fail 'DINX Portmaster launcher has invalid shell syntax'
+grep -Fq '/usr/bin/pkexec /usr/bin/dinitctl start portmaster' "$portmaster_launcher" || fail 'Portmaster launcher does not start its service on demand'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
@@ -111,25 +110,18 @@ grep -Fqx 'Name[pt_BR]=Descompactador' "$file_roller_override" || fail 'File Rol
 grep -Fqx 'TryExec=file-roller' "$file_roller_override" || fail 'File Roller override does not resolve the installed binary'
 grep -Fqx 'Exec=file-roller %U' "$file_roller_override" || fail 'File Roller override does not preserve file opening'
 grep -Fqx 'Icon=org.gnome.FileRoller' "$file_roller_override" || fail 'File Roller override icon is missing'
-grep -Fqx 'Name=Firewall' "$gufw_override" || fail 'Gufw English desktop name is missing'
-grep -Fqx 'Name[pt_BR]=Firewall' "$gufw_override" || fail 'Gufw Portuguese desktop name is missing'
-grep -Fqx 'TryExec=/usr/local/libexec/dinx-gufw' "$gufw_override" || fail 'Gufw override does not resolve its DINX launcher'
+grep -Fqx 'Name=Portmaster' "$portmaster_desktop" || fail 'Portmaster English desktop name is missing'
+grep -Fqx 'Name[pt_BR]=Portmaster' "$portmaster_desktop" || fail 'Portmaster Portuguese desktop name is missing'
+grep -Fqx 'Exec=portmaster' "$portmaster_desktop" || fail 'Portmaster desktop entry does not use the Dinit-aware launcher'
+grep -Fqx 'TryExec=portmaster' "$portmaster_desktop" || fail 'Portmaster desktop entry prerequisite is incorrect'
+grep -Fqx 'Icon=security-high' "$portmaster_desktop" || fail 'Portmaster desktop icon is missing'
 grep -Fq 'bluetoothctl list' "$bluetooth_helper" || fail 'Bluetooth launcher does not detect available controllers'
 grep -Fq 'exec blueman-manager' "$bluetooth_helper" || fail 'Bluetooth launcher does not open Blueman when a controller exists'
-grep -Fqx 'Exec=/usr/local/libexec/dinx-gufw' "$gufw_override" || fail 'Gufw override does not use the path-safe DINX launcher'
-grep -Fqx 'Icon=gufw' "$gufw_override" || fail 'Gufw override icon is missing'
 grep -Fqx 'Name=Process Manager' "$qps_override" || fail 'Qps English desktop name is missing'
 grep -Fqx 'Name[pt_BR]=Processos' "$qps_override" || fail 'Qps Portuguese desktop name is missing'
 grep -Fqx 'TryExec=qps' "$qps_override" || fail 'Qps override does not resolve the installed binary'
 grep -Fqx 'Exec=qps' "$qps_override" || fail 'Qps override command is missing'
 grep -Fqx 'Icon=qps' "$qps_override" || fail 'Qps override icon is missing'
-grep -Fqx 'Name=Traffic Monitor' "$opensnitch_override" || fail 'OpenSnitch English desktop name is missing'
-grep -Fqx 'Name[pt_BR]=Monitor de Tráfego' "$opensnitch_override" || fail 'OpenSnitch Portuguese desktop name is missing'
-grep -Fqx 'Exec=opensnitch-ui' "$opensnitch_override" || fail 'OpenSnitch override command is incorrect'
-grep -Fqx 'Icon=opensnitch-ui' "$opensnitch_override" || fail 'OpenSnitch override icon is missing'
-grep -Fqx 'Categories=System;Security;Monitor;' "$opensnitch_override" || fail 'OpenSnitch launcher must remain in one menu category'
-grep -Fqx 'X-GNOME-Autostart-enabled=true' "$opensnitch_override" || fail 'OpenSnitch upstream autostart behavior is missing'
-grep -Fqx 'X-GNOME-Autostart-Delay=3' "$opensnitch_override" || fail 'OpenSnitch upstream autostart delay is missing'
 while IFS='|' read -r desktop_id english portuguese command; do
   desktop="$local_apps/$desktop_id"
   [[ -f "$desktop" ]] || fail "missing localized desktop override: $desktop_id"
@@ -237,9 +229,8 @@ grep -Fqx '  usr/local/share/applications/org.gnome.FileRoller.desktop' "$iso_ch
 grep -Fqx '  usr/local/share/applications/mimeinfo.cache' "$iso_check" || fail 'ISO payload is missing the localized File Roller MIME cache'
 grep -Fqx '  usr/share/applications/gparted.desktop' "$iso_check" || fail 'ISO payload is missing the GParted desktop entry'
 grep -Fqx '  usr/share/applications/network.cycles.wdisplays.desktop' "$iso_check" || fail 'ISO payload is missing the wdisplays desktop entry'
-grep -Fqx '  usr/local/share/applications/gufw.desktop' "$iso_check" || fail 'ISO payload is missing the localized Gufw desktop override'
+grep -Fqx '  usr/share/applications/portmaster.desktop' "$iso_check" || fail 'ISO payload is missing the Portmaster desktop entry'
 grep -Fqx '  usr/local/share/applications/qps.desktop' "$iso_check" || fail 'ISO payload is missing the localized Qps desktop override'
-grep -Fqx '  usr/local/share/applications/opensnitch_ui.desktop' "$iso_check" || fail 'ISO payload is missing the localized OpenSnitch desktop override'
 if grep -Fq 'strawberry' "$mimeapps"; then
   fail 'Strawberry remains in the audio handler defaults'
 fi

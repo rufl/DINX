@@ -110,15 +110,13 @@ rootfs:
     - curl
     - git
     - galculator
-    - gufw
+    - portmaster
     - inxi
     - inkscape
     - jq
     - less
     - nm-connection-editor
     - nvtop
-    - opensnitch
-    - opensnitch-dinit
     - paru
     - pciutils
     - pwvucontrol
@@ -134,8 +132,7 @@ rootfs:
     - wlopm
     - vlc
     - vlc-cli
-    - ufw
-    - ufw-dinit
+
     - upower
     - usbutils
     - wl-clipboard

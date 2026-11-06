@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+if ! /usr/bin/pkexec /usr/bin/dinitctl start portmaster; then
+  printf '%s\n' 'Portmaster could not start its system service.' >&2
+  exit 1
+fi
+
+export WEBKIT_DISABLE_COMPOSITING_MODE=1
+exec /usr/lib/portmaster/portmaster "$@"

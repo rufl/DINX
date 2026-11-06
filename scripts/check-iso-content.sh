@@ -352,23 +352,17 @@ required_paths=(
   usr/share/applications/swayimg.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
   usr/share/applications/com.shellyorg.shelly-notifications.desktop
-  usr/bin/ufw
-  usr/bin/gufw
-  usr/bin/gufw-pkexec
+  usr/bin/portmaster
+  usr/lib/portmaster/portmaster
+  usr/lib/portmaster/portmaster-core
+  usr/lib/portmaster/portmaster.zip
+  usr/lib/portmaster/assets.zip
+  usr/local/libexec/dinx-portmaster-core-service
+  etc/dinit.d/portmaster
+  usr/share/applications/portmaster.desktop
   usr/bin/qps
-  usr/bin/opensnitchd
-  usr/bin/opensnitch-ui
-  etc/ufw/ufw.conf
-  etc/dinit.d/ufw
-  etc/dinit.d/opensnitchd
-  usr/share/applications/gufw.desktop
   usr/share/applications/qps.desktop
-  usr/local/share/applications/gufw.desktop
-  usr/local/libexec/dinx-gufw
   usr/local/share/applications/qps.desktop
-  usr/local/share/applications/opensnitch_ui.desktop
-  usr/share/applications/opensnitch_ui.desktop
-  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/bin/wl-copy
   usr/bin/wl-paste
   usr/lib/bluetooth/bluetoothd
@@ -893,11 +887,25 @@ grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fai
 grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 desktop icons do not retain Adwaita'
 aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
 grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floating layout default is missing'
-ufw_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/ufw/ufw.conf)
-grep -Fq 'ENABLED=no' <<<"$ufw_config" || fail 'UFW is not disabled by default for safe manual configuration'
-for disabled_service in ufw opensnitchd; do
+for disabled_service in portmaster; do
   if grep -Fq "/etc/dinit.d/boot.d/$disabled_service" <<<"$manifest"; then
     fail "firewall service is enabled by default: $disabled_service"
+  fi
+done
+for retired_path in \
+  usr/bin/ufw \
+  usr/bin/gufw \
+  usr/bin/gufw-pkexec \
+  usr/bin/opensnitchd \
+  usr/bin/opensnitch-ui \
+  etc/ufw/ufw.conf \
+  etc/dinit.d/ufw \
+  etc/dinit.d/opensnitchd \
+  usr/share/applications/gufw.desktop \
+  usr/local/libexec/dinx-gufw \
+  usr/share/applications/opensnitch_ui.desktop; do
+  if grep -Fq "$retired_path" <<<"$manifest"; then
+    fail "retired firewall payload remains in the ISO: $retired_path"
   fi
 done
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)

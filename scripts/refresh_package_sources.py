@@ -181,7 +181,11 @@ def plan_updates(
             sources.append((source.get("source_url_key"), source["checksum_key"], source["url_template"]))
 
         for source_url_key, checksum_key, url_template in sources:
-            url = url_template.format(tag=tag, version=version)
+            url = url_template.format(
+                tag=tag,
+                version=version,
+                version_dash=version.replace(".", "-"),
+            )
             checksum = hash_source(url, entry["checksum"])
             expected_length = 64 if entry["checksum"] in ("sha256", "blake2b") else 0
             if len(checksum) != expected_length or not re.fullmatch(r"[0-9a-f]+", checksum):

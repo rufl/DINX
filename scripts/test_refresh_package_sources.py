@@ -84,6 +84,28 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertIn("EXAMPLE_VERSION=1.3.0", self.source_path.read_text(encoding="utf-8"))
         self.assertIn("pkgrel=5", self.package_path.read_text(encoding="utf-8"))
 
+    def test_dotted_release_version_can_render_hyphenated_binary_paths(self) -> None:
+        entry = self.manifest["packages"][0]
+        entry["tag_prefix"] = "v"
+        entry["url_template"] = "https://example.invalid/releases/tool_v{version_dash}"
+        self.latest_tag = "v1.3.0"
+
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+
+        self.assertEqual(changed, ["example"])
+        self.assertEqual(
+            self.hash_calls,
+            [("https://example.invalid/releases/tool_v1-3-0", "sha256")],
+        )
+        updated = dict(line.split("=", 1) for line in changes[self.source_path].splitlines())
+        self.assertEqual(updated["EXAMPLE_VERSION"], "1.3.0")
+        self.assertEqual(
+            updated["EXAMPLE_SOURCE_URL"],
+            "https://example.invalid/releases/tool_v1-3-0",
+        )
+
+
     def test_prefixed_release_updates_all_additional_source_pins(self) -> None:
         source_keys = (
             ("BOLD", "bold.ttf"),

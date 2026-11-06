@@ -191,7 +191,6 @@ required_paths=(
   usr/share/wayland-sessions/dinx-gaming.desktop
   usr/bin/flatpak
   usr/bin/fwupdmgr
-  usr/bin/vainfo
   usr/bin/scanimage
   usr/bin/impasto
   opt/impasto/Impasto-x86_64.AppImage

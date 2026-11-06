@@ -46,6 +46,7 @@ compression_level=tool-default
 compression_block=256K
 compression_dictionary=256K
 compression_bcj=x86
+final_rootfs_removed_packages=linux-headers
 compression_excludes=kernel-source,pacman-cache,logs
 compression_wrapper_sha256=$compression_wrapper_sha
 package_repository_schema=dinx-package-repository/v1

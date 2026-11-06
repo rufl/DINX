@@ -505,6 +505,11 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'an alternative terminal emulator package is installed in the ISO'
   fi
 done
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  if grep -Eq '/var/lib/pacman/local/linux-headers-[^/]*/' <<<"$image_manifest"; then
+    fail 'linux-headers package metadata is present in a final ISO filesystem'
+  fi
+done
 terminal_desktops=$(grep -oE 'squashfs-root/usr/share/applications/[^[:space:]]+\.desktop' <<<"$manifest" | sort -u || true)
 while IFS= read -r desktop_path; do
   [[ -n "$desktop_path" ]] || continue

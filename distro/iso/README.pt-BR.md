@@ -88,17 +88,20 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 ## Meta de tamanho da ISO
 
 O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
-do builder. Ele força imagens SquashFS com preset xz suportado pela ferramenta,
-BCJ x86, blocos de 256 KiB e dicionário de 256 KiB. Fontes do kernel, caches de
-pacotes pacman e logs de build ficam fora da imagem final. O root overlay recria
-`/var/log/dinit` por tmpfiles antes de os serviços Dinit iniciarem, e o check de
-conteúdo da ISO exige essa regra. O pacote `dinx-live-autologin`, exclusivo do
-livefs, fornece unidades no-op `root-ro` e `early-root-rw.target` para seu overlay
-gravável; essas substituições não entram no rootfs instalado pelo Calamares. O
-`squashfs-tools` exclusivo do build permanece no builder, não no payload de runtime.
-O CI instala o wrapper em `/usr/bin/mksquashfs` após preservar o binário real,
-pois o `buildiso` do Artix pode invocar esse caminho absoluto. A inspeção
-pós-build verifica xz e blocos de 256 KiB nos dois superblocos SquashFS.
+do builder. Ele força imagens SquashFS com xz, BCJ x86, blocos de 256 KiB e
+dicionário de 256 KiB. O Artix mantém `linux-headers` disponível até gerar o
+initramfs; depois, o wrapper remove o pacote transacionalmente de cada rootfs
+preparado antes de compactá-lo. O check de conteúdo rejeita bancos de pacotes
+finais que ainda contenham `linux-headers`. Fontes do kernel, caches de pacotes
+pacman e logs de build também ficam fora da imagem. O root overlay recria
+`/var/log/dinit` por tmpfiles antes de os serviços Dinit iniciarem, e o check da
+ISO exige essa regra. O pacote `dinx-live-autologin`, exclusivo do livefs, fornece
+unidades no-op `root-ro` e `early-root-rw.target` para seu overlay gravável; essas
+substituições não entram no rootfs instalado pelo Calamares. O `squashfs-tools`,
+exclusivo do build, permanece no builder. O CI instala o wrapper em
+`/usr/bin/mksquashfs` após preservar o binário real, pois o `buildiso` do Artix
+pode invocar esse caminho absoluto. A inspeção pós-build verifica xz e blocos de
+256 KiB nos dois superblocos SquashFS.
 O orçamento P0 rejeita ISOs no limite ou acima de 2 GiB por asset do GitHub; a
 Alpha 12 tem 1.836.830.720 bytes (310.652.928 bytes abaixo do limite).
 

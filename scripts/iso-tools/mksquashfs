@@ -17,6 +17,11 @@ real_path=$(readlink -f "$real_mksquashfs")
   exit 125
 }
 
+source_root=${1:-}
+if [[ -d "$source_root" ]]; then
+  source_root=$(CDPATH= cd -- "$source_root" && pwd -P)
+fi
+
 filtered=()
 while (($#)); do
   case "$1" in
@@ -37,8 +42,39 @@ while (($#)); do
   esac
 done
 
-# Keep linux-headers available for Artix initramfs generation, but omit build-only
-# source/cache/log payloads from the final SquashFS image.
+# Artix needs headers to generate the live and installed initramfs, but they are
+# build-only. Remove the package from each staged package root before compression.
+prune_build_only_headers() {
+  local root=$1
+  local local_db="$root/var/lib/pacman/local"
+  local -a header_records
+
+  [[ "$root" != / && -d "$local_db" ]] || return 0
+  header_records=("$local_db"/linux-headers-*)
+  [[ -d "${header_records[0]}" ]] || return 0
+  [[ -r "$root/etc/pacman.conf" ]] || {
+    printf 'dinx mksquashfs wrapper: missing staged pacman.conf for %s\n' "$root" >&2
+    return 1
+  }
+
+  if ! pacman --root "$root" --config "$root/etc/pacman.conf" \
+    -R --noconfirm --noscriptlet linux-headers; then
+    printf 'dinx mksquashfs wrapper: cannot safely remove linux-headers from %s\n' "$root" >&2
+    return 1
+  fi
+  header_records=("$local_db"/linux-headers-*)
+  [[ ! -d "${header_records[0]}" ]] || {
+    printf 'dinx mksquashfs wrapper: linux-headers package record remains in %s\n' "$root" >&2
+    return 1
+  }
+  printf 'dinx-final-rootfs: removed build-only package=linux-headers root=%s\n' "$root"
+}
+
+if [[ -n "$source_root" ]]; then
+  prune_build_only_headers "$source_root"
+fi
+
+# Keep package caches and logs out of the compressed filesystem.
 exec "$real_mksquashfs" "${filtered[@]}" \
   -comp xz \
   -b 256K \

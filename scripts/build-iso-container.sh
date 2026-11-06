@@ -498,6 +498,7 @@ trap finish EXIT
               mksquashfs_path=$(command -v mksquashfs)
               test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs
               printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$mksquashfs_path" "$DINX_MKSQUASHFS_REAL"
+              scripts/smoke_final_rootfs_package_exclusions.sh
               iso_assembly_started=$SECONDS
               if scripts/build-iso.sh; then
                 printf 'dinx-build-timing phase=iso-assembly elapsed_seconds=%s exit_status=0\n' \
@@ -625,6 +626,7 @@ trap finish EXIT
                 printf "compression_dictionary=256K\n"
                 printf "compression_bcj=x86\n"
                 printf "compression_excludes=kernel-source,pacman-cache,logs\n"
+                printf "final_rootfs_removed_packages=linux-headers\n"
                 printf "compression_wrapper_sha256=%s\n" "$(sha256sum /workspace/scripts/iso-tools/mksquashfs | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"

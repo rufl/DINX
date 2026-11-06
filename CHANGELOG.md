@@ -16,6 +16,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Include `squashfs-tools` in the live rootfs because Calamares `unpackfs` requires `unsquashfs`; remove the installer-only dependency from the installed system and verify both sides in ISO and install-smoke checks.
 - Launch Gapless directly so it inherits the live Wayland environment; route Gufw through a helper that resolves its pkexec executable consistently; show a localized diagnostic when Bluetooth is unavailable, including VirtualBox USB passthrough guidance.
 - Force Firefox's GTK system-decoration mode on Wayland to prevent duplicate client window controls; extend server-decorated Aqueous surface masks through the compositor titlebar so client top edges stay square within one rounded outer silhouette.
+- Keep `linux-headers` in the Artix build root through initramfs generation, then remove it transactionally from staged root filesystems before SquashFS creation; verify the final ISO package databases and record the omission in build metadata.
 
 
 - Use canonical `rufl/DEETTY` source access with an optional `DEETTY_SOURCE_READ_TOKEN`, and rename Deetty smoke/qualification executable outputs, fixture markers and isolated-display test variables; upstream module, ABI, config and resource identifiers remain pinned source internals.

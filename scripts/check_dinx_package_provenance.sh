@@ -257,6 +257,7 @@ for required in \
   'Server = https://mirror2.artixlinux.org/$repo/os/$arch' \
   'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch' \
   'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs' \
+  'scripts/smoke_final_rootfs_package_exclusions.sh' \
   '"PKGDEST=$package_output"' \
   'MAKEPKG_CONF="$package_makepkg_conf"'; do
   grep -Fq -- "$required" "$builder" \

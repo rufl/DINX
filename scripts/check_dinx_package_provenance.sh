@@ -105,6 +105,7 @@ for required in \
   'Save makepkg, Cargo and Zig build caches' \
   'Save verified Zig toolchains' \
   'Build and cache Artix builder image' \
+  'file: ./scripts/iso-builder/Dockerfile' \
   'docker/build-push-action@' \
   'DINX_BUILDER_PREBUILT: '\''true'\''' \
   'dist/dinx-build.log' \

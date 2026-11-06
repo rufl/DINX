@@ -98,11 +98,17 @@ window_source="$source_root/compositor/aqueous/Window.zig"
 if grep -Fq 'posix.getenv(' "$window_source"; then
   fail 'Aqueous window decoration uses the removed Zig std.posix.getenv API'
 fi
+if grep -Fq 'std.fs.cwd()' "$window_source"; then
+  fail 'Aqueous window decoration uses the removed Zig std.fs.cwd API'
+fi
 for required in \
   'std.c.getenv("XDG_CONFIG_HOME")' \
   'std.c.getenv("HOME")' \
   'std.mem.span(path)' \
-  'std.mem.span(home)'; do
+  'std.mem.span(home)' \
+  'std.Io.Threaded.global_single_threaded.io()' \
+  'std.Io.Dir.cwd().readFileAlloc(' \
+  '.limited(65536)'; do
   grep -Fq "$required" "$window_source" \
     || fail "Aqueous window decoration environment lookup is missing: $required"
 done

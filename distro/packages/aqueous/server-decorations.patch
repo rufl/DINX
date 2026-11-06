@@ -137,8 +137,9 @@
  const std = @import("std");
  const assert = std.debug.assert;
  const math = std.math;
-@@ -19,6 +20,8 @@
+@@ -19,6 +20,9 @@
  const server = &@import("main.zig").server;
++const io = std.Io.Threaded.global_single_threaded.io();
  const util = @import("util.zig");
  const scaling = @import("scaling");
 +const pointer_drag = @import("wm/input/drag.zig");
@@ -146,7 +147,7 @@
  const OverlayPreference = @import("wm/rules/engine.zig").OverlayPreference;
  
  extern fn wlr_scene_node_set_position_f64(node: *wlr.SceneNode, x: f64, y: f64) void;
-@@ -41,2 +41,32 @@ const log = std.log.scoped(.wm);
+@@ -41,2 +41,37 @@ const log = std.log.scoped(.wm);
 +var pearl_corner_radius_cache: ?u31 = null;
 +
 +fn pearlCornerRadius() u31 {
@@ -166,7 +167,12 @@
 +        defer util.gpa.free(path);
 +        var arena = std.heap.ArenaAllocator.init(util.gpa);
 +        defer arena.deinit();
-+        const bytes = std.fs.cwd().readFileAlloc(arena.allocator(), path, 65536) catch return radius;
++        const bytes = std.Io.Dir.cwd().readFileAlloc(
++            io,
++            path,
++            arena.allocator(),
++            .limited(65536),
++        ) catch return radius;
 +        const root = std.json.parseFromSliceLeaky(std.json.Value, arena.allocator(), bytes, .{}) catch return radius;
 +        if (root == .object) if (root.object.get("window_corner_radius")) |value| {
 +            if (value == .integer and value.integer >= 0 and value.integer <= 32) {

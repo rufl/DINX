@@ -150,7 +150,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./scripts/iso-builder
-          file: ./Dockerfile
+          file: ./scripts/iso-builder/Dockerfile
           tags: dinx-iso-builder:ci
           load: true
           build-args: |

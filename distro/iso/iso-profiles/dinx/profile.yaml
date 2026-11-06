@@ -132,7 +132,6 @@ rootfs:
     - wlopm
     - vlc
     - vlc-cli
-
     - upower
     - usbutils
     - wl-clipboard

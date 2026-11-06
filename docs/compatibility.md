@@ -68,7 +68,7 @@ DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO 
 | --- | --- |
 | Terminal discovery | `$TERMINAL` launches Deetty with a shell and requested directory |
 | Desktop metadata | `.desktop` entries are valid and discoverable |
-| Optional desktop app launch | Gapless inherits the active Wayland session; Gufw uses a stable `gufw-pkexec` path; Bluetooth Manager explains missing daemon/controller instead of failing silently (VirtualBox needs USB Bluetooth passthrough) |
+| Optional desktop app launch | Gapless inherits the active Wayland session; Portmaster starts through the Dinit-aware launcher only when opened; Bluetooth Manager explains missing daemon/controller instead of failing silently (VirtualBox needs USB Bluetooth passthrough) |
 | Launch arguments | file, line and working-directory behavior is deterministic |
 | Theme contract | static DINX palette, system-wide GTK 3/4 dark defaults, session GTK dark selection, Qt6ct DINX palette, and GTK 3/4 fallback titlebar controls are configured |
 | Greeter/installer/boot | Pearl Greeter, Calamares and GRUB expose DINX surface, text, selection and focus states |
@@ -82,7 +82,7 @@ DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO 
 | Display persistence | wdisplays changes atomically update and reload the named Shikane profile |
 | ZLS | Dintor finds the bundled matching Zig standard library without a full compiler |
 | Package management | pacman, Shelly, paru and Topgrade use Artix configuration and remain user-invoked |
-| Firewall/process monitoring | Gufw, Qps and OpenSnitch are discoverable; services remain disabled until configured |
+| Firewall/process monitoring | Portmaster and Qps are discoverable; Portmaster's service remains stopped until its launcher is opened |
 | DinitUI | service discovery and control use validated dinitctl argv with scoped pkexec fallback |
 | Gaming | hidden launcher retained, optional package group excluded from base, missing Gamescope/Steam fail before profile changes; real gaming remains unqualified |
 | Failure isolation | unavailable optional helpers or D-Bus endpoints produce visible failure without shell-dependent startup |

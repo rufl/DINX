@@ -59,7 +59,7 @@ Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig,
 
 DinitUI é o frontend DINX do dinit. Descobre serviços carregados e arquivos de descrição, exibe status, logs em buffer, dependências, ambiente, sinais e ações do daemon por argv validado do `dinitctl`. Nunca interpola texto do usuário em shell.
 
-O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --system` e recorre a `pkexec` somente após falha explícita de autorização. Os perfis `normal`, `lite`, `gaming` e customizados persistem em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente Bluetooth opcional e `gaming` habilita Bluetooth para controles, preservando política de firewall/processos.
+O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --system` e recorre a `pkexec` somente após falha explícita de autorização. Os perfis `normal`, `lite`, `gaming` e customizados persistem em `~/.config/dinx/dinitui/profiles.conf`; `lite` desabilita somente o Bluetooth opcional e `gaming` habilita Bluetooth para controles. O Portmaster é um serviço separado, iniciado pelo usuário, fora desses perfis.
 
 ### DINXPanel
 

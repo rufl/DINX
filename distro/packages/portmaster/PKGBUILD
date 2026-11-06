@@ -21,7 +21,7 @@ pkgdesc='Application firewall and network privacy suite'
 arch=('x86_64')
 url='https://safing.io/portmaster'
 license=('GPL-3.0-only')
-depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libappindicator-gtk3' 'libsoup' 'pango' 'webkit2gtk-4.1' 'iptables' 'polkit' 'dinit')
+depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libayatana-appindicator' 'libsoup3' 'pango' 'webkit2gtk-4.1' 'iptables' 'polkit' 'dinit')
 options=('!strip' '!emptydirs')
 source=(
   "portmaster::${PORTMASTER_APP_SOURCE_URL}"

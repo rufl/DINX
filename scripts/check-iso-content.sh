@@ -357,6 +357,8 @@ required_paths=(
   usr/lib/portmaster/portmaster-core
   usr/lib/portmaster/portmaster.zip
   usr/lib/portmaster/assets.zip
+  usr/share/licenses/portmaster/LICENSE
+  usr/share/doc/portmaster/SOURCE
   usr/local/libexec/dinx-portmaster-core-service
   etc/dinit.d/portmaster
   usr/share/applications/portmaster.desktop
@@ -902,8 +904,11 @@ for retired_path in \
   etc/dinit.d/ufw \
   etc/dinit.d/opensnitchd \
   usr/share/applications/gufw.desktop \
+  usr/local/share/applications/gufw.desktop \
   usr/local/libexec/dinx-gufw \
-  usr/share/applications/opensnitch_ui.desktop; do
+  usr/share/applications/opensnitch_ui.desktop \
+  usr/local/share/applications/opensnitch_ui.desktop \
+  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg; do
   if grep -Fq "$retired_path" <<<"$manifest"; then
     fail "retired firewall payload remains in the ISO: $retired_path"
   fi

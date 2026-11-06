@@ -68,7 +68,7 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 | --- | --- |
 | Descoberta do terminal | `$TERMINAL` inicia o Deetty com shell e diretório solicitado |
 | Metadados desktop | entradas `.desktop` são válidas e descobertas |
-| Inicialização de apps opcionais | Gapless herda a sessão Wayland ativa; Gufw usa um caminho estável para `gufw-pkexec`; o Gerenciador Bluetooth explica a ausência do daemon/controlador em vez de falhar silenciosamente (VirtualBox precisa de passthrough USB Bluetooth) |
+| Inicialização de apps opcionais | Gapless herda a sessão Wayland ativa; Portmaster inicia pelo launcher compatível com Dinit somente quando aberto; o Gerenciador Bluetooth explica a ausência do daemon/controlador (VirtualBox precisa de passthrough USB Bluetooth) |
 | Argumentos de inicialização | comportamento de arquivo, linha e diretório é determinístico |
 | Contrato de tema | paleta DINX estática, defaults escuros GTK 3/4 no sistema, seleção GTK escura na sessão, paleta DINX do Qt6ct e controles de fallback na barra de título GTK 3/4 estão configurados |
 | Greeter/instalador/boot | Pearl Greeter, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
@@ -82,7 +82,7 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 | Persistência de display | mudanças do wdisplays atualizam atomicamente e recarregam o perfil nomeado do Shikane |
 | ZLS | Dintor encontra a biblioteca Zig correspondente sem compilador completo |
 | Gerenciamento de pacotes | pacman, Shelly, paru e Topgrade usam a configuração Artix e são executados pelo usuário |
-| Firewall/monitoramento | Gufw, Qps e OpenSnitch são descobertos; serviços ficam desabilitados até configuração |
+| Firewall/monitoramento | Portmaster e Qps são descobertos; o serviço Portmaster permanece parado até abrir seu launcher |
 | DinitUI | descoberta e controle usam argv validado do dinitctl com fallback pkexec restrito |
 | Gaming | launcher oculto mantido, grupo de pacotes opcional fora da base, falta de Gamescope/Steam falha antes da mudança de perfil; gaming real permanece sem qualificação |
 | Isolamento de falhas | helpers ou endpoints D-Bus opcionais indisponíveis produzem falha visível sem bloquear o startup |

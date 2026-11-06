@@ -33,7 +33,7 @@ grep -Fq 'Exec=dinxpanel' "$desktop" || fail 'desktop launcher is incorrect'
 grep -Fqx 'Name[pt_BR]=Central de Controle' "$desktop" || fail 'localized desktop name is incorrect'
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
-[[ -x "$bluetooth_helper" ]] || fail 'desktop helper is missing or not executable: $bluetooth_helper'
+[[ -x "$bluetooth_helper" ]] || fail "desktop helper is missing or not executable: $bluetooth_helper"
 sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
 [[ -x "$portmaster_launcher" ]] || fail 'Portmaster launcher is missing or not executable'
 bash -n "$portmaster_launcher" || fail 'Portmaster launcher has invalid shell syntax'

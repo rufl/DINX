@@ -219,6 +219,10 @@ jobs:
         with:
           path: dist/.cache/dinx/toolchains
           key: dinx-toolchains-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Install package repository validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libarchive-tools
       - name: Validate signed repository and generate release checksums
         id: repository
         run: |

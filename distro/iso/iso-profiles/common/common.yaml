@@ -136,4 +136,6 @@ packages-init:
 packages-boot:
   - dinx-plymouth-theme
   - iso-initcpio
+  # Artix artools 0.40 copies this bootfs artifact unconditionally; DINX has no Memtest menu entry.
+  - memtest86+
   - plymouth

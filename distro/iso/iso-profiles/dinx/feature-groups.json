@@ -246,6 +246,7 @@
     "common_boot": [
       "dinx-plymouth-theme",
       "iso-initcpio",
+      "memtest86+",
       "plymouth"
     ],
     "profile_init": [

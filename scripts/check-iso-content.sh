@@ -229,6 +229,14 @@ required_paths=(
   usr/share/licenses/blockbench/LICENSE.MD
   usr/share/doc/patchy/SOURCE
   usr/share/doc/blockbench/SOURCE
+  usr/bin/pixelorama
+  opt/pixelorama/Pixelorama.x86_64
+  opt/pixelorama/Pixelorama.pck
+  usr/share/applications/com.orama_interactive.Pixelorama.desktop
+  usr/share/icons/hicolor/256x256/apps/pixelorama.png
+  usr/share/mime/packages/com.orama_interactive.Pixelorama.xml
+  usr/share/licenses/pixelorama/LICENSE
+  usr/share/doc/pixelorama/SOURCE
   etc/dinit.d/bluetoothd
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
@@ -465,7 +473,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fi
   done
 done
-for package in krita inkscape godot patchy blockbench impasto onlyoffice zrythm haruna; do
+for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoffice zrythm haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -1259,6 +1267,7 @@ usr/share/applications/com.github.zbcoding.Impasto.desktop|Impasto|Impasto|impas
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
+usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol

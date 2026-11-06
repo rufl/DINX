@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Pixelorama
+Name[pt_BR]=Pixelorama
+GenericName=Pixel Art & Animation
+GenericName[pt_BR]=Editor de sprites 2D
+Comment=Create and edit static or animated 2D sprites
+Comment[pt_BR]=Crie e edite sprites 2D estáticos ou animados
+Exec=pixelorama %u
+TryExec=pixelorama
+Icon=pixelorama
+StartupWMClass=Pixelorama
+Terminal=false
+Type=Application
+Categories=Graphics;2DGraphics;RasterGraphics;
+MimeType=application/x-pixelorama;image/png;image/bmp;image/vnd.radiance;image/jpeg;image/svg+xml;image/x-tga;image/webp;x-scheme-handler/lospec-palette;

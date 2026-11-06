@@ -30,7 +30,7 @@ grep -Fq '/usr/bin/pkexec /usr/bin/dinitctl start portmaster' "$portmaster_launc
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
+for package in file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in breeze-icons zathura zathura-pdf-mupdf libmupdf; do
@@ -92,6 +92,35 @@ for package in patchy blockbench impasto; do
     fail "$package desktop launcher is hidden"
   fi
 done
+pixelorama_source="$root/distro/packages/pixelorama/source.env"
+pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"
+pixelorama_launcher="$root/distro/packages/pixelorama/pixelorama"
+pixelorama_desktop="$root/distro/packages/pixelorama/pixelorama.desktop"
+source "$pixelorama_source"
+[[ "$PIXELORAMA_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pixelorama version: $PIXELORAMA_VERSION"
+[[ "$PIXELORAMA_SOURCE_URL" == "https://github.com/Orama-Interactive/Pixelorama/releases/download/v${PIXELORAMA_VERSION}/Pixelorama-Linux-64bit.tar.gz" ]] \
+  || fail 'Pixelorama source URL does not match its pinned release'
+for checksum in "$PIXELORAMA_SOURCE_SHA256" "$PIXELORAMA_LICENSE_SHA256" "$PIXELORAMA_ICON_SHA256" "$PIXELORAMA_MIME_SHA256"; do
+  [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || fail 'Pixelorama source checksum is invalid'
+done
+grep -Fq 'pkgver="$PIXELORAMA_VERSION"' "$pixelorama_recipe" || fail 'Pixelorama package version is not wired to source.env'
+for pin in PIXELORAMA_SOURCE_SHA256 PIXELORAMA_LICENSE_SHA256 PIXELORAMA_ICON_SHA256 PIXELORAMA_MIME_SHA256; do
+  grep -Fq "\"\$$pin\"" "$pixelorama_recipe" || fail "Pixelorama package does not verify $pin"
+done
+grep -Fq '!strip' "$pixelorama_recipe" || fail 'Pixelorama release binary must not be stripped'
+grep -Fq '${PIXELORAMA_SOURCE_URL}' "$pixelorama_recipe" || fail 'Pixelorama source URL is not wired to source.env'
+[[ -x "$pixelorama_launcher" ]] || fail 'Pixelorama launcher is missing or not executable'
+bash -n "$pixelorama_launcher" || fail 'Pixelorama launcher has invalid shell syntax'
+grep -Fqx 'exec /opt/pixelorama/Pixelorama.x86_64 "$@"' "$pixelorama_launcher" || fail 'Pixelorama launcher does not pass arguments to the packaged binary'
+grep -Fqx 'Name=Pixelorama' "$pixelorama_desktop" || fail 'Pixelorama desktop name is missing'
+grep -Fqx 'Name[pt_BR]=Pixelorama' "$pixelorama_desktop" || fail 'Pixelorama Portuguese desktop name is missing'
+grep -Fqx 'Exec=pixelorama %u' "$pixelorama_desktop" || fail 'Pixelorama desktop command is incorrect'
+grep -Fqx 'TryExec=pixelorama' "$pixelorama_desktop" || fail 'Pixelorama desktop prerequisite is incorrect'
+if grep -Eq '^(Hidden|NoDisplay)=true$' "$pixelorama_desktop"; then
+  fail 'Pixelorama desktop entry is hidden'
+fi
+grep -Fq 'build_package pixelorama' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Pixelorama'
+
 
 for package in onlyoffice zrythm; do
   launcher="$root/distro/packages/$package/$package.desktop"
@@ -320,4 +349,4 @@ if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
   || grep -Fq 'application/vnd.visio' "$office_launcher"; then
   fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
 fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true kolourpaint=false breeze_icons=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false breeze_icons=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

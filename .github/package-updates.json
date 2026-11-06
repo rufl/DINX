@@ -277,6 +277,37 @@
       ]
     },
     {
+      "name": "pixelorama",
+      "provider": "github",
+      "repository": "Orama-Interactive/Pixelorama",
+      "source_file": "distro/packages/pixelorama/source.env",
+      "version_key": "PIXELORAMA_VERSION",
+      "package_version_key": "PIXELORAMA_VERSION",
+      "source_url_key": "PIXELORAMA_SOURCE_URL",
+      "checksum_key": "PIXELORAMA_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/Orama-Interactive/Pixelorama/releases/download/{tag}/Pixelorama-Linux-64bit.tar.gz",
+      "bump_pkgrel_path": "distro/packages/pixelorama/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "PIXELORAMA_LICENSE_URL",
+          "checksum_key": "PIXELORAMA_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/Orama-Interactive/Pixelorama/{tag}/LICENSE"
+        },
+        {
+          "source_url_key": "PIXELORAMA_ICON_URL",
+          "checksum_key": "PIXELORAMA_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/Orama-Interactive/Pixelorama/{tag}/assets/graphics/icons/icon.png"
+        },
+        {
+          "source_url_key": "PIXELORAMA_MIME_URL",
+          "checksum_key": "PIXELORAMA_MIME_SHA256",
+          "url_template": "https://raw.githubusercontent.com/Orama-Interactive/Pixelorama/{tag}/Misc/Linux/com.orama_interactive.Pixelorama.xml"
+        }
+      ]
+    },
+    {
       "name": "portmaster",
       "provider": "github",
       "repository": "safing/portmaster",

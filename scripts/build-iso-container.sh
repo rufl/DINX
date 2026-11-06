@@ -409,6 +409,7 @@ trap finish EXIT
               build_package patchy
               build_package blockbench
               build_package impasto
+              build_package pixelorama
               build_package onlyoffice
               build_package zrythm
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.

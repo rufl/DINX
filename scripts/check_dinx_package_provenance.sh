@@ -239,6 +239,7 @@ for required in \
   'build_package patchy' \
   'build_package blockbench' \
   'build_package impasto' \
+  'build_package pixelorama' \
   'build_package portmaster' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \

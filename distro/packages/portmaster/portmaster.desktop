@@ -10,5 +10,5 @@ TryExec=portmaster
 Icon=security-high
 Terminal=false
 Type=Application
-Categories=Network;Security;
+Categories=Network;
 StartupNotify=true

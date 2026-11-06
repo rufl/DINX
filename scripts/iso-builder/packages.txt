@@ -55,6 +55,7 @@ gtk4-layer-shell
 gtksourceview5
 enchant
 hunspell
+jq
 gtksourceview4
 vte3
 ghostty

@@ -161,7 +161,7 @@ awk '
   { count++ }
   END { if (count == 0) exit 1 }
 ' "$builder_packages" || fail 'builder package manifest has invalid or duplicate entries'
-for package in artools-iso iso-profiles mkinitcpio rust; do
+for package in artools-iso iso-profiles jq mkinitcpio rust; do
   grep -Fxq -- "$package" "$builder_packages" \
     || fail "builder image manifest is missing required package: $package"
 done

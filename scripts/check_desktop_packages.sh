@@ -62,7 +62,7 @@ for dependency in ffmpeg mpvqt qt6-base qt6-declarative; do
   grep -Fqx "  $dependency" "$haruna_recipe" || fail "Haruna dependency is missing: $dependency"
 done
 grep -Fqx 'makedepends=(extra-cmake-modules)' "$haruna_recipe" || fail 'Haruna extra-cmake-modules build dependency is missing'
-grep -Fqx 'extra-cmake-modules' "$root/scripts/iso-builder/packages.txt" || fail 'Artix builder omits Haruna's build dependency'
+grep -Fqx 'extra-cmake-modules' "$root/scripts/iso-builder/packages.txt" || fail "Artix builder omits Haruna's build dependency"
 grep -Fq 'video/mp4=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default MP4 handler'
 grep -Fq 'video/x-matroska=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default Matroska handler'
 if grep -Fq 'vlc.desktop' "$mimeapps"; then
@@ -250,7 +250,7 @@ grep -Fqx 'Type=Application' "$calamares_launcher" || fail 'Calamares desktop-ID
 grep -Fqx 'Name=Calamares' "$calamares_launcher" || fail 'Calamares desktop-ID mask is missing its desktop name'
 grep -Fqx 'Hidden=true' "$calamares_launcher" || fail 'Calamares Artix launcher is not deleted from the desktop namespace'
 grep -Fqx 'NoDisplay=true' "$calamares_launcher" || fail 'Calamares Artix launcher remains visible in application menus'
-if grep -Eiq 'Install Artix|Instalar Artix|^(Exec|TryExec)=' "$calamares_launcher"; then
+if grep -Eiq "Install Artix|Instalar Artix|^(Exec|TryExec)=" "$calamares_launcher"; then
   fail 'Calamares desktop-ID mask retains an Artix identity or executable'
 fi
 artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/artix-installer.desktop"

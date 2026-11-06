@@ -19,6 +19,13 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def valid_release_template(value: object) -> bool:
+    if not isinstance(value, str) or not value.startswith("https://"):
+        return False
+    fields = re.findall(r"\{([^{}]+)\}", value)
+    return bool(fields) and all(field in {"tag", "version", "version_dash"} for field in fields)
+
+
 def assignments(path: Path) -> dict[str, str]:
     values: dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -106,8 +113,8 @@ def main() -> None:
                     or additional_template
                 ):
                     fail(f"{name}: additional source {index} has invalid manifest refresh settings")
-            elif not additional_template.startswith("https://") or "{tag}" not in additional_template:
-                fail(f"{name}: additional source {index} URL template is not pinned to an HTTPS release tag")
+            elif not valid_release_template(additional_template):
+                fail(f"{name}: additional source {index} URL is not pinned to an HTTPS release")
         if entry.get("provider") not in {"github", "gitlab"}:
             fail(f"{name}: unsupported provider")
         if entry.get("checksum") not in {"sha256", "blake2b"}:
@@ -116,8 +123,8 @@ def main() -> None:
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
             fail(f"{name}: invalid upstream repository")
         template = entry.get("url_template", "")
-        if not template.startswith("https://") or "{tag}" not in template:
-            fail(f"{name}: source URL template is not pinned to an HTTPS release tag")
+        if not valid_release_template(template):
+            fail(f"{name}: source URL is not pinned to an HTTPS release")
         bump_path = entry.get("bump_pkgrel_path")
         if bump_path is not None and bump_path != f"distro/packages/{name}/PKGBUILD":
             fail(f"{name}: pkgrel bump target is outside its package directory")
@@ -131,7 +138,7 @@ def main() -> None:
     print(
         "package_update_manifest_contract "
         f"upstream_packages={len(names)} manual_source_pins={len(MANUAL_SOURCE_PINS)} "
-        "checksums=true https_release_tags=true multi_source=true manifest_sources=true"
+        "checksums=true https_release_pins=true multi_source=true manifest_sources=true"
     )
 
 

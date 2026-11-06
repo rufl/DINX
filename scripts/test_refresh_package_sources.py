@@ -243,7 +243,8 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertEqual(updated_pins["EXAMPLE_SOURCE_SHA256"], self.checksum)
         self.assertIn("pkgrel=5\n", changes[self.package_path])
 
-    
+
+    def test_release_prefix_mismatch_fails_before_hashing(self) -> None:
         original = self.source_path.read_bytes()
         self.manifest["packages"][0]["tag_prefix"] = "noto-monthly-release-"
         self.latest_tag = "v1.3.0"

@@ -141,7 +141,10 @@ def manifest_artifact(
             cache[manifest_url] = get_json(manifest_url, "")
         except urllib.error.HTTPError as error:
             fail(f"artifact manifest lookup returned HTTP {error.code}: {manifest_url}")
-    artifacts = cache[manifest_url].get("Artifacts")
+    manifest = cache[manifest_url]
+    if not isinstance(manifest, dict):
+        fail(f"artifact manifest is not a JSON object: {manifest_url}")
+    artifacts = manifest.get("Artifacts")
     if not isinstance(artifacts, list):
         fail(f"artifact manifest has no Artifacts array: {manifest_url}")
     matches = [item for item in artifacts if isinstance(item, dict) and item.get("Filename") == artifact_name]
@@ -219,7 +222,6 @@ def plan_updates(
             },
             *additional_sources,
         ]
-        source_changed = False
         last_checksum = ""
         for source in sources:
             if not isinstance(source, dict):
@@ -266,11 +268,7 @@ def plan_updates(
             if len(checksum) != expected_length or not re.fullmatch(r"[0-9a-f]+", checksum):
                 fail(f"{name}: generated checksum has an invalid format")
             if source_url_key:
-                if pinned_url != url:
-                    source_changed = True
                 source_text = replace_assignment(source_text, source_url_key, url, source_path)
-            if pinned_checksum != checksum:
-                source_changed = True
             source_text = replace_assignment(source_text, checksum_key, checksum, source_path)
             last_checksum = checksum
 

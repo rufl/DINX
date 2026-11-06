@@ -1021,7 +1021,10 @@ if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
-grep -Fq 'video/mp4=org.kde.haruna.desktop;' <<<"$mimeapps_config" || fail 'Haruna is not the default MP4 handler'
+for video_mime in video/mp4 video/mpeg video/webm video/x-matroska; do
+  grep -Fq "$video_mime=org.kde.haruna.desktop;" <<<"$mimeapps_config" \
+    || fail "Haruna is not the default video handler for $video_mime"
+done
 for audio_mime in audio/mpeg audio/x-mpeg audio/x-mp3 audio/ogg audio/x-vorbis audio/x-vorbis+ogg audio/x-opus+ogg audio/flac audio/x-flac audio/wav audio/x-wav; do
   grep -Fq "$audio_mime=com.github.neithern.g4music.desktop;" <<<"$mimeapps_config" \
     || fail "Gapless is not the default audio handler for $audio_mime"

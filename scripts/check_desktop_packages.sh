@@ -63,8 +63,9 @@ for dependency in ffmpeg mpvqt qt6-base qt6-declarative; do
 done
 grep -Fqx 'makedepends=(extra-cmake-modules)' "$haruna_recipe" || fail 'Haruna extra-cmake-modules build dependency is missing'
 grep -Fqx 'extra-cmake-modules' "$root/scripts/iso-builder/packages.txt" || fail "Artix builder omits Haruna's build dependency"
-grep -Fq 'video/mp4=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default MP4 handler'
-grep -Fq 'video/x-matroska=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default Matroska handler'
+for mime in video/mp4 video/mpeg video/webm video/x-matroska; do
+  grep -Fqx "$mime=org.kde.haruna.desktop;" "$mimeapps" || fail "Haruna is not the default video handler for $mime"
+done
 if grep -Fq 'vlc.desktop' "$mimeapps"; then
   fail 'MIME defaults retain the retired VLC desktop entry'
 fi

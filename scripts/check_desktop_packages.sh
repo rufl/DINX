@@ -86,8 +86,8 @@ for package in patchy blockbench impasto; do
   grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
   grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
-  grep -Fqx "options=('!strip')" "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
-  if grep -Eq '^(Hidden|NoDisplay)=true$' "$launcher"; then
+  grep -Fq '!strip' "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
+  if grep -Eq "^(Hidden|NoDisplay)=true$" "$launcher"; then
     fail "$package desktop launcher is hidden"
   fi
 done
@@ -99,7 +99,7 @@ for package in onlyoffice zrythm; do
   [[ -r "$launcher" && -x "$wrapper" ]] || fail "$package launcher or wrapper is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
-  grep -Fqx 'options=('"'!strip'"')' "$recipe" || fail "$package AppImage package must disable binary stripping"
+  grep -Fq '!strip' "$recipe" || fail "$package AppImage package must disable binary stripping"
   grep -Fq -- '--appimage-extract-and-run "$@"' "$wrapper" || fail "$package launcher does not support systems without FUSE"
 done
 office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"

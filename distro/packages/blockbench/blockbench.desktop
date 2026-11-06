@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Blockbench
+Comment=Low-poly 3D model editor
+Exec=blockbench %U
+TryExec=blockbench
+Icon=applications-graphics
+Terminal=false
+Categories=Graphics;3DGraphics;

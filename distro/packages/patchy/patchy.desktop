@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Patchy
+Comment=PSD-focused image editor
+Exec=patchy %F
+TryExec=patchy
+Icon=applications-graphics
+Terminal=false
+Categories=Graphics;2DGraphics;RasterGraphics;

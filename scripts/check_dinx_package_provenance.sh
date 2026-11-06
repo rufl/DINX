@@ -25,6 +25,7 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
   package_dir=$(dirname "$pkgbUILD")
   package=$(basename "$package_dir")
   package_count=$((package_count + 1))
+  bash -n "$pkgbUILD" || fail "$package has invalid PKGBUILD shell syntax"
   grep -Eq '^pkgname=[^[:space:]]+' "$pkgbUILD" || fail "$package is missing pkgname"
   grep -Eq '^pkgver=[^[:space:]]+' "$pkgbUILD" || fail "$package is missing pkgver"
   grep -Eq '^pkgrel=[^[:space:]]+' "$pkgbUILD" || fail "$package is missing pkgrel"

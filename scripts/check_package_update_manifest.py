@@ -116,6 +116,7 @@ def main() -> None:
             elif not valid_release_template(additional_template):
                 fail(f"{name}: additional source {index} URL is not pinned to an HTTPS release")
         if entry.get("provider") not in {"github", "gitlab", "zrythm", "kde"}:
+            fail(f"{name}: unsupported provider")
         if entry.get("checksum") not in {"sha256", "blake2b"}:
             fail(f"{name}: unsupported checksum algorithm")
         repository = entry.get("repository", "")

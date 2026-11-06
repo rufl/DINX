@@ -119,6 +119,19 @@
       "url_template": "https://gitlab.gnome.org/neithern/g4music/-/archive/{tag}/g4music-{tag}.tar.gz"
     },
     {
+      "name": "haruna",
+      "provider": "kde",
+      "repository": "multimedia/haruna",
+      "source_file": "distro/packages/haruna/source.env",
+      "version_key": "HARUNA_VERSION",
+      "package_version_key": "HARUNA_VERSION",
+      "source_url_key": "HARUNA_SOURCE_URL",
+      "checksum_key": "HARUNA_SOURCE_SHA256",
+      "checksum": "sha256",
+      "url_template": "https://download.kde.org/stable/haruna/{version}/haruna-{version}.tar.xz",
+      "bump_pkgrel_path": "distro/packages/haruna/PKGBUILD"
+    },
+    {
       "name": "bc250-control-center",
       "provider": "github",
       "repository": "movacx/bc250-control-center",

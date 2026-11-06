@@ -284,7 +284,7 @@ O log fornecido do VirtualBox 7.2.22/Windows 11 informa VT-x indisponível e mod
 
 ### Gráficos, drivers e mídia
 
-A DINX fornece Mesa/RADV para hardware, Lavapipe para aplicativos Vulkan por CPU, diagnóstico Vulkan, FFmpeg e VLC para o caminho de mídia open source suportado. Se faltar aceleração em outro hardware ou um driver proprietário de GPU, abra **DINXPanel → GPU drivers**, execute a detecção, revise o plano fixo de pacotes Artix e reinicie quando for informada uma mudança de kernel ou driver. A DINX não instala drivers proprietários silenciosamente nem afirma que hardware não suportado está funcionando. Anexe a saída de `dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou falha ao iniciar um jogo.
+A DINX fornece Mesa/RADV para hardware, Lavapipe para aplicativos Vulkan por CPU, diagnóstico Vulkan, FFmpeg e Haruna (Qt/QML sobre libmpv) para o caminho de mídia open source suportado. Se faltar aceleração em outro hardware ou um driver proprietário de GPU, abra **DINXPanel → GPU drivers**, execute a detecção, revise o plano fixo de pacotes Artix e reinicie quando for informada uma mudança de kernel ou driver. A DINX não instala drivers proprietários silenciosamente nem afirma que hardware não suportado está funcionando. Anexe a saída de `dinx-alpha7-hardware-report` ao relatar vídeo vazio, fallback de renderização ou falha ao iniciar um jogo.
 
 Para QEMU virgl, use uma build do QEMU no host com GTK/OpenGL e suporte a virgl, depois solicite `virtio-vga-gl`, por exemplo:
 

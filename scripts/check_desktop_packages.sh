@@ -55,7 +55,7 @@ source "$haruna_source"
   || fail 'Haruna source URL does not match its stable release pin'
 [[ "$HARUNA_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Haruna source checksum is invalid'
 grep -Fq 'pkgver="$HARUNA_VERSION"' "$haruna_recipe" || fail 'Haruna package version is not wired to source.env'
-grep -Fq '"$HARUNA_SOURCE_URL"' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
+grep -Fq '${HARUNA_SOURCE_URL}' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
 grep -Fq '"$HARUNA_SOURCE_SHA256"' "$haruna_recipe" || fail 'Haruna checksum is not wired to source.env'
 grep -Fq 'build_package haruna' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Haruna'
 for dependency in ffmpeg extra-cmake-modules mpvqt qt6-base qt6-declarative; do

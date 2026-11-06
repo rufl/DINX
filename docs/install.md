@@ -283,7 +283,7 @@ The supplied VirtualBox 7.2.22/Windows 11 log reports VT-x unavailable and Hyper
 
 ### Graphics, drivers and media
 
-DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and VLC for the supported open-source media path. If other hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
+DINX ships Mesa/RADV for hardware, Lavapipe for CPU Vulkan applications, Vulkan diagnostics, FFmpeg and Haruna (Qt/QML on libmpv) for the supported open-source media path. If other hardware acceleration or a proprietary GPU driver is missing, open **DINXPanel → GPU drivers**, run detection, review the fixed Artix package plan, and reboot when it reports that a kernel or driver change requires it. DINX does not silently install proprietary drivers or claim unsupported hardware is working. Attach `dinx-alpha7-hardware-report` output when reporting blank video, rendering fallback or game-launch failures.
 
 For QEMU virgl, use a host QEMU build with GTK/OpenGL and virgl support, then request `virtio-vga-gl`, for example:
 

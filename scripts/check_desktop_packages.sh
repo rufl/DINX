@@ -3,6 +3,7 @@ set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
+feature_groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 iso_check="$root/scripts/check-iso-content.sh"
 mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
@@ -29,8 +30,16 @@ grep -Fq '/usr/bin/pkexec /usr/bin/dinitctl start portmaster' "$portmaster_launc
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm; do
+for package in file-roller galculator gapless gparted sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
+done
+for package in breeze-icons zathura zathura-pdf-mupdf libmupdf; do
+  if grep -Fqx "    - $package" "$profile"; then
+    fail "$package remains explicitly selected in the DINX profile"
+  fi
+  if grep -Fq "\"$package\"" "$feature_groups"; then
+    fail "$package remains in an ISO feature group"
+  fi
 done
 if grep -Fqx '    - kolourpaint' "$profile"; then
   fail 'KolourPaint remains in the DINX profile'
@@ -168,7 +177,6 @@ com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/
 galculator.desktop|Calculator|Calculadora|galculator
 gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
 com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
 blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
@@ -223,7 +231,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop org.pwmt.zathura.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
@@ -271,6 +279,10 @@ for mime in audio/mpeg audio/x-mpeg audio/x-mp3 audio/ogg audio/x-vorbis audio/x
   grep -Fqx "$mime=com.github.neithern.g4music.desktop;" "$mimeapps" || fail "Gapless is not the default audio handler for $mime"
 done
 grep -Fqx 'image/png=swayimg.desktop;' "$mimeapps" || fail 'Swayimg is no longer the default image viewer'
+grep -Fqx 'application/pdf=onlyoffice.desktop;' "$mimeapps" || fail 'ONLYOFFICE is not the default PDF handler'
+if grep -Fq 'application/epub+zip=' "$mimeapps"; then
+  fail 'EPUB handler still points to the removed Zathura application'
+fi
 grep -Fqx 'inode/directory=org.aqueous.Phyto.desktop;' "$mimeapps" || fail 'Phyto is no longer the default directory handler'
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
@@ -280,4 +292,4 @@ if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
   || grep -Fq 'application/vnd.visio' "$office_launcher"; then
   fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
 fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true kolourpaint=false graphics_apps=impasto+krita+inkscape+godot+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true kolourpaint=false breeze_icons=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

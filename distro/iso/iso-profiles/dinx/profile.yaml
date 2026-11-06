@@ -67,6 +67,8 @@ rootfs:
     - impasto
     - krita
     - adw-gtk-theme
+    - papirus-icon-theme
+    - qogir-icon-theme
     - onlyoffice
     - zrythm
     - dconf
@@ -137,9 +139,6 @@ rootfs:
     - upower
     - usbutils
     - wl-clipboard
-    - zathura
-    - zathura-pdf-mupdf
-    - mkinitcpio-nfs-utils
     - os-prober
   packages-init:
     dinit:
@@ -157,7 +156,6 @@ rootfs:
 livefs:
   packages:
     - artix-grub-live
-    - mkinitcpio-nfs-utils
     - dinx-live-autologin
   packages-init:
     dinit:

@@ -318,7 +318,6 @@ required_paths=(
   usr/share/kio/servicemenus/deettyhere.desktop
   usr/lib/ssh/sftp-server
   usr/bin/nvtop
-  usr/bin/zathura
   usr/bin/pwvucontrol
   usr/bin/blueman-manager
   usr/bin/bluetoothctl
@@ -379,9 +378,6 @@ required_paths=(
   usr/bin/wl-copy
   usr/bin/wl-paste
   usr/lib/bluetooth/bluetoothd
-  usr/lib/zathura/libpdf-mupdf.so
-  usr/share/applications/org.pwmt.zathura.desktop
-  usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop
   usr/share/applications/com.saivert.pwvucontrol.desktop
   usr/lib/libghostty-vt.so.0
   usr/include/ghostty/vt.h
@@ -435,7 +431,6 @@ required_paths=(
   usr/local/share/applications/galculator.desktop
   usr/local/share/applications/gparted.desktop
   usr/local/share/applications/swayimg.desktop
-  usr/local/share/applications/org.pwmt.zathura.desktop
   usr/local/share/applications/com.github.neithern.g4music.desktop
   usr/local/share/applications/vlc.desktop
   usr/local/share/applications/blueman-manager.desktop
@@ -472,6 +467,22 @@ grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded a
 if grep -Eiq 'Artix' <<<"$cli_issue"; then
   fail 'CLI login banner still identifies Artix'
 fi
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(breeze-icons|zathura|zathura-pdf-mupdf|libmupdf)-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'retired Breeze Icons, Zathura or MuPDF package metadata remains in the ISO'
+  fi
+  for retired_pdf_path in \
+    usr/bin/zathura \
+    usr/lib/zathura/libpdf-mupdf.so \
+    usr/share/applications/org.pwmt.zathura.desktop \
+    usr/share/applications/org.pwmt.zathura-pdf-mupdf.desktop \
+    usr/local/share/applications/org.pwmt.zathura.desktop; do
+    if grep -Fq "/$retired_pdf_path" <<<"$image_manifest"; then
+      fail "retired Zathura/MuPDF payload remains in the ISO: $retired_pdf_path"
+    fi
+  done
+done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for strawberry_path in usr/bin/strawberry usr/share/applications/org.strawberrymusicplayer.strawberry.desktop; do
     if grep -Fq "/$strawberry_path" <<<"$image_manifest"; then
@@ -985,7 +996,10 @@ grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || f
 grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
-grep -Fq 'application/pdf=org.pwmt.zathura.desktop;' <<<"$mimeapps_config" || fail 'Zathura is not the default PDF handler'
+grep -Fq 'application/pdf=onlyoffice.desktop;' <<<"$mimeapps_config" || fail 'ONLYOFFICE is not the default PDF handler'
+if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
+  fail 'orphan EPUB handler remains after Zathura removal'
+fi
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
 grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
 for audio_mime in audio/mpeg audio/x-mpeg audio/x-mp3 audio/ogg audio/x-vorbis audio/x-vorbis+ogg audio/x-opus+ogg audio/flac audio/x-flac audio/wav audio/x-wav; do
@@ -1059,6 +1073,15 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gvfs|gvfs-gphoto2|gvfs-mt
   printf '%s\n' "$forbidden_matches" >&2
   fail 'removed file-manager, volume-mounter or partition-manager package metadata is present'
 fi
+for removed_package in dhclient ecryptfs-utils exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail zsh; do
+  if grep -Fq "/var/lib/pacman/local/$removed_package-" <<<"$manifest"; then
+    fail "trimmed common package metadata remains in the ISO: $removed_package"
+  fi
+done
+for exfat_path in usr/bin/fsck.exfat usr/bin/mkfs.exfat; do
+  grep -Fq "/$exfat_path" <<<"$manifest" || fail "kernel exFAT utility is missing from the ISO: $exfat_path"
+done
+
 if forbidden_matches=$(grep -E '/var/lib/pacman/local/(labwc|noctalia)-[^/]*/' <<<"$manifest"); then
   printf '%s\n' "$forbidden_matches" >&2
   fail 'retired Labwc/Noctalia package metadata is present'
@@ -1209,7 +1232,6 @@ usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculato
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 usr/share/applications/com.github.zbcoding.Impasto.desktop|Impasto|Impasto|impasto %F
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-usr/local/share/applications/org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager

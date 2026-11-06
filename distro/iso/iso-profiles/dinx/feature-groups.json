@@ -49,6 +49,8 @@
       "iso": true,
       "packages": [
         "adw-gtk-theme",
+        "papirus-icon-theme",
+        "qogir-icon-theme",
         "dconf",
         "gsettings-desktop-schemas",
         "blueman",
@@ -129,11 +131,9 @@
         "wl-clipboard",
         "wdisplays",
         "wlopm",
-        "zathura",
-        "zathura-pdf-mupdf",
         "udisks2",
         "udisks2-btrfs",
-        "mkinitcpio-nfs-utils"
+        "udisks2-btrfs"
       ]
     },
     "gaming": {
@@ -184,14 +184,11 @@
       "base",
       "btrfs-progs",
       "crda",
-      "dhclient",
       "diffutils",
       "dmraid",
       "dosfstools",
       "e2fsprogs",
-      "ecryptfs-utils",
       "efibootmgr",
-      "exfat-utils",
       "f2fs-tools",
       "grub",
       "inetutils",
@@ -205,15 +202,12 @@
       "lsb-release",
       "man-db",
       "man-pages",
-      "memtest86+",
       "mkinitcpio",
       "mkinitcpio-openswap",
       "modemmanager",
       "nano",
-      "nbd",
       "net-tools",
       "os-prober",
-      "s-nail",
       "sudo",
       "sysfsutils",
       "terminus-font",
@@ -230,8 +224,7 @@
       "xdg-user-dirs",
       "xdg-utils",
       "xfsprogs",
-      "xorg-xwayland",
-      "zsh"
+      "xorg-xwayland"
     ],
     "common_init": [
       "acpid-dinit",
@@ -277,7 +270,6 @@
       "dbus-dinit",
       "dinx-live-autologin",
       "elogind-dinit",
-      "mkinitcpio-nfs-utils",
       "networkmanager-dinit",
       "pipewire-dinit",
       "pipewire-pulse-dinit",

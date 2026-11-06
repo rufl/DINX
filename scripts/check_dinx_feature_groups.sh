@@ -87,6 +87,13 @@ check_input_set common_init "$common_init_file"
 check_input_set common_boot "$common_boot_file"
 check_input_set profile_init "$profile_init_file"
 check_input_set livefs "$livefs_file"
+for package in dhclient ecryptfs-utils exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail zsh; do
+  if grep -Fqx "$package" "$common_file" || grep -Fqx "$package" "$profile_file" || grep -Fqx "$package" "$livefs_file"; then
+    fail "trimmed common package remains selected: $package"
+  fi
+done
+grep -Fqx exfatprogs "$profile_file" || fail 'kernel exFAT utilities are missing from the profile'
+
 
 while IFS= read -r group; do
   iso=$(jq -r --arg group "$group" '.groups[$group].iso' "$manifest")

@@ -14,14 +14,11 @@ packages-base:
   - b43-fwcutter
   - btrfs-progs
   - crda
-  - dhclient
   - diffutils
   - dmraid
   - dosfstools
   - efibootmgr
   - e2fsprogs
-  - ecryptfs-utils
-  - exfat-utils
   - f2fs-tools
   - grub
   - artix-grub-theme
@@ -34,15 +31,12 @@ packages-base:
   - logrotate
   - man-db
   - man-pages
-  - memtest86+
   - mkinitcpio
   - mkinitcpio-openswap
   - modemmanager
   - nano
-  - nbd
   - net-tools
   - os-prober
-  - s-nail
   - sudo
   - sysfsutils
   - texinfo
@@ -50,7 +44,6 @@ packages-base:
   - vi
   - which
   - xfsprogs
-  - zsh
 packages-apps:
   - inxi
 packages-misc:

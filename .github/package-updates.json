@@ -300,6 +300,52 @@
           "url_template": "https://raw.githubusercontent.com/safing/portmaster/{tag}/LICENSE"
         }
       ]
+    },
+    {
+      "name": "onlyoffice",
+      "provider": "github",
+      "repository": "ONLYOFFICE/appimage-desktopeditors",
+      "source_file": "distro/packages/onlyoffice/source.env",
+      "version_key": "ONLYOFFICE_VERSION",
+      "package_version_key": "ONLYOFFICE_VERSION",
+      "source_url_key": "ONLYOFFICE_SOURCE_URL",
+      "checksum_key": "ONLYOFFICE_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/ONLYOFFICE/appimage-desktopeditors/releases/download/v{version}/DesktopEditors-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/onlyoffice/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "ONLYOFFICE_LICENSE_URL",
+          "checksum_key": "ONLYOFFICE_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/ONLYOFFICE/appimage-desktopeditors/v{version}/LICENSE"
+        }
+      ]
+    },
+    {
+      "name": "zrythm",
+      "provider": "zrythm",
+      "repository": "zrythm/zrythm",
+      "source_file": "distro/packages/zrythm/source.env",
+      "version_key": "ZRYTHM_VERSION",
+      "source_url_key": "ZRYTHM_SOURCE_URL",
+      "checksum_key": "ZRYTHM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://www.zrythm.org/downloads/Zrythm-{version}-Linux-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/zrythm/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "ZRYTHM_LICENSE_URL",
+          "checksum_key": "ZRYTHM_LICENSE_SHA256",
+          "url_template": "https://gitlab.zrythm.org/zrythm/zrythm/-/raw/{tag}/LICENSES/LicenseRef-ZrythmLicense.txt"
+        },
+        {
+          "source_url_key": "ZRYTHM_TRADEMARKS_URL",
+          "checksum_key": "ZRYTHM_TRADEMARKS_SHA256",
+          "url_template": "https://gitlab.zrythm.org/zrythm/zrythm/-/raw/{tag}/TRADEMARKS.md"
+        }
+      ]
     }
   ]
 }

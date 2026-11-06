@@ -115,7 +115,7 @@ def main() -> None:
                     fail(f"{name}: additional source {index} has invalid manifest refresh settings")
             elif not valid_release_template(additional_template):
                 fail(f"{name}: additional source {index} URL is not pinned to an HTTPS release")
-        if entry.get("provider") not in {"github", "gitlab"}:
+        if entry.get("provider") not in {"github", "gitlab", "zrythm"}:
             fail(f"{name}: unsupported provider")
         if entry.get("checksum") not in {"sha256", "blake2b"}:
             fail(f"{name}: unsupported checksum algorithm")

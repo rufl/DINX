@@ -8,8 +8,8 @@ max_rootfs_packages=${DINX_MAX_ROOTFS_PACKAGES:-128}
 max_dinit_entries=${DINX_MAX_DINIT_ENTRIES:-24}
 max_native_binary_bytes=${DINX_MAX_NATIVE_BINARY_BYTES:-6291456}
 max_boot_window_seconds=${DINX_MAX_BOOT_WINDOW_SECONDS:-120}
-# Keep the single-file ISO strictly below GitHub's 2 GiB release-asset limit.
-max_iso_bytes=${DINX_MAX_ISO_BYTES:-2147483647}
+# Allow a 3 GiB ISO; tagged releases split images above GitHub's 2 GiB asset limit.
+max_iso_bytes=${DINX_MAX_ISO_BYTES:-3221225472}
 boot_window_seconds=${DINX_QEMU_TIMEOUT:-60}
 
 fail() {

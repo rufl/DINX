@@ -202,6 +202,17 @@ required_paths=(
   usr/share/licenses/impasto/license-lgpl.txt
   usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md
   usr/share/doc/impasto/SOURCE
+  usr/bin/onlyoffice
+  usr/bin/zrythm
+  opt/onlyoffice/DesktopEditors.AppImage
+  opt/zrythm/Zrythm.AppImage
+  usr/share/applications/onlyoffice.desktop
+  usr/share/applications/zrythm.desktop
+  usr/share/licenses/onlyoffice/LICENSE
+  usr/share/licenses/zrythm/LicenseRef-ZrythmLicense.txt
+  usr/share/licenses/zrythm/TRADEMARKS.md
+  usr/share/doc/onlyoffice/SOURCE
+  usr/share/doc/zrythm/SOURCE
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
@@ -452,9 +463,9 @@ for path in "${required_paths[@]}"; do
     END { exit !found }
   ' <<<"$manifest" || fail "missing ISO path (exact path required): $path"
 done
-for package in krita inkscape godot patchy blockbench impasto; do
+for package in krita inkscape godot patchy blockbench impasto onlyoffice zrythm; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
-    || fail "required graphics application is not installed in rootfs: $package"
+    || fail "required desktop application is not installed in rootfs: $package"
 done
 cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/issue)
 grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'

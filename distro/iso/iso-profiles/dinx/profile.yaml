@@ -67,6 +67,8 @@ rootfs:
     - impasto
     - krita
     - adw-gtk-theme
+    - onlyoffice
+    - zrythm
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin

@@ -11,3 +11,20 @@ Icon=x-office-document
 Terminal=false
 Categories=Office;WordProcessor;Spreadsheet;Presentation;
 MimeType=application/msword;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.oasis.opendocument.text;application/rtf;application/vnd.ms-excel;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.oasis.opendocument.spreadsheet;text/csv;application/vnd.ms-powerpoint;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.oasis.opendocument.presentation;application/pdf;
+
+Actions=NewDocument;NewSpreadsheet;NewPresentation;
+
+[Desktop Action NewDocument]
+Name=New document
+Name[pt_BR]=Novo documento
+Exec=onlyoffice --new:word
+
+[Desktop Action NewSpreadsheet]
+Name=New spreadsheet
+Name[pt_BR]=Nova planilha
+Exec=onlyoffice --new:cell
+
+[Desktop Action NewPresentation]
+Name=New presentation
+Name[pt_BR]=Nova apresentação
+Exec=onlyoffice --new:slide

@@ -29,7 +29,7 @@ grep -Fq '/usr/bin/pkexec /usr/bin/dinitctl start portmaster' "$portmaster_launc
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays; do
+for package in file-roller galculator gapless gparted sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 if grep -Fqx '    - kolourpaint' "$profile"; then
@@ -55,6 +55,39 @@ for package in patchy blockbench impasto; do
     fail "$package desktop launcher is hidden"
   fi
 done
+
+for package in onlyoffice zrythm; do
+  launcher="$root/distro/packages/$package/$package.desktop"
+  wrapper="$root/distro/packages/$package/$package"
+  recipe="$root/distro/packages/$package/PKGBUILD"
+  [[ -r "$launcher" && -x "$wrapper" ]] || fail "$package launcher or wrapper is missing"
+  grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
+  grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
+  grep -Fqx 'options=('"'!strip'"')' "$recipe" || fail "$package AppImage package must disable binary stripping"
+  grep -Fq -- '--appimage-extract-and-run "$@"' "$wrapper" || fail "$package launcher does not support systems without FUSE"
+done
+office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"
+for mime in \
+  application/msword \
+  application/vnd.openxmlformats-officedocument.wordprocessingml.document \
+  application/vnd.oasis.opendocument.text \
+  application/rtf \
+  application/vnd.ms-excel \
+  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet \
+  application/vnd.oasis.opendocument.spreadsheet \
+  text/csv \
+  application/vnd.ms-powerpoint \
+  application/vnd.openxmlformats-officedocument.presentationml.presentation \
+  application/vnd.oasis.opendocument.presentation \
+  application/pdf; do
+  grep -Fq "$mime;" "$office_launcher" || fail "ONLYOFFICE is missing supported MIME type $mime"
+done
+grep -Fqx 'Actions=NewDocument;NewSpreadsheet;NewPresentation;' "$office_launcher" || fail 'ONLYOFFICE quick-create actions expose an unexpected editor'
+grep -Fqx 'Exec=onlyoffice --new:word' "$office_launcher" || fail 'ONLYOFFICE document action is incorrect'
+grep -Fqx 'Exec=onlyoffice --new:cell' "$office_launcher" || fail 'ONLYOFFICE spreadsheet action is incorrect'
+grep -Fqx 'Exec=onlyoffice --new:slide' "$office_launcher" || fail 'ONLYOFFICE presentation action is incorrect'
+grep -Fq 'Forms and Diagram Viewer' "$root/distro/packages/onlyoffice/PKGBUILD" || fail 'ONLYOFFICE package does not document retained upstream modules'
+
 grep -Fqx 'Exec=patchy %F' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy launcher does not preserve file arguments'
 grep -Fqx 'Comment[pt_BR]=Editor de imagens com foco em PSD' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy Portuguese description is missing'
 grep -Fqx 'Exec=blockbench %U' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench launcher does not preserve URI arguments'
@@ -243,4 +276,8 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true kolourpaint=false graphics_apps=impasto+krita+inkscape+godot+patchy+blockbench phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
+  || grep -Fq 'application/vnd.visio' "$office_launcher"; then
+  fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
+fi
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=portmaster process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true kolourpaint=false graphics_apps=impasto+krita+inkscape+godot+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

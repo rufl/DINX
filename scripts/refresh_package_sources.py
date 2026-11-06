@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare reviewed source-pin updates from upstream stable releases."""
+"""Prepare reviewed source-pin updates from upstream releases."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import urllib.request
 from pathlib import Path
 from typing import Callable
 
-VERSION_RE = re.compile(r"^[0-9]+(?:\.[0-9]+)*$")
+VERSION_RE = re.compile(r"^[0-9]+(?:\.[0-9]+)*(?:-(?:alpha|beta|rc)\.[0-9]+)?$")
 MAX_SOURCE_BYTES = 1024 * 1024 * 1024
 USER_AGENT = "DINX-upstream-package-refresh/1"
 
@@ -25,16 +25,24 @@ def fail(message: str) -> None:
     raise ValueError(message)
 
 
-def version_tuple(value: str) -> tuple[int, ...]:
-    if not VERSION_RE.fullmatch(value):
-        fail(f"unsupported stable release version: {value}")
-    return tuple(int(component) for component in value.split("."))
+def version_tuple(value: str) -> tuple[tuple[int, ...], int, int]:
+    match = VERSION_RE.fullmatch(value)
+    if not match:
+        fail(f"unsupported release version: {value}")
+    version, separator, prerelease = value.partition("-")
+    components = tuple(int(component) for component in version.split("."))
+    components += (0,) * max(0, 3 - len(components))
+    if not separator:
+        return components, 3, 0
+    stage, stage_number = prerelease.split(".", 1)
+    stage_rank = {"alpha": 0, "beta": 1, "rc": 2}[stage]
+    return components, stage_rank, int(stage_number)
 
 
 def source_version(tag: str, tag_prefix: str = "") -> str:
     if tag_prefix:
         if not tag.startswith(tag_prefix):
-            fail(f"unsupported stable release tag: {tag}")
+            fail(f"unsupported release tag: {tag}")
         value = tag[len(tag_prefix) :]
     else:
         value = tag[1:] if tag.startswith("v") else tag
@@ -51,7 +59,18 @@ def read_text(url: str, token: str = "") -> dict:
         return json.load(response)
 
 
-def latest_tag(entry: dict, token: str, get_json: Callable[[str, str], dict]) -> str:
+def read_body(url: str) -> str:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return response.read().decode("utf-8")
+
+
+def latest_tag(
+    entry: dict,
+    token: str,
+    get_json: Callable[[str, str], dict],
+    get_body: Callable[[str], str] = read_body,
+) -> str:
     provider = entry["provider"]
     repository = entry["repository"]
     if provider == "github":
@@ -59,6 +78,18 @@ def latest_tag(entry: dict, token: str, get_json: Callable[[str, str], dict]) ->
     elif provider == "gitlab":
         project = urllib.parse.quote(repository, safe="")
         endpoint = f"https://gitlab.gnome.org/api/v4/projects/{project}/releases/permalink/latest"
+    elif provider == "zrythm":
+        endpoint = "https://www.zrythm.org/en/download-v2-alpha.html"
+        try:
+            page = get_body(endpoint)
+        except urllib.error.HTTPError as error:
+            fail(f"{entry['name']}: upstream release lookup returned HTTP {error.code}: {endpoint}")
+        match = re.search(r"\bVersion:\s*v?([0-9]+(?:\.[0-9]+)*-(?:alpha|beta|rc)\.[0-9]+)", page)
+        if not match:
+            fail(f"{entry['name']}: official download page has no supported version: {endpoint}")
+        tag = f"v{match.group(1)}"
+        source_version(tag)
+        return tag
     else:
         fail(f"{entry['name']}: unsupported release provider {provider!r}")
     try:
@@ -170,6 +201,7 @@ def plan_updates(
     token: str = "",
     get_json: Callable[[str, str], dict] = read_text,
     hash_source: Callable[[str, str], str] = digest_url,
+    get_body: Callable[[str], str] = read_body,
 ) -> tuple[dict[Path, str], list[str]]:
     if manifest.get("schema") != "dinx-upstream-package-updates/v1":
         fail("unsupported package update manifest schema")
@@ -192,7 +224,7 @@ def plan_updates(
         release_key = (provider, repository)
         tag = release_cache.get(release_key)
         if tag is None:
-            tag = latest_tag(entry, token, get_json)
+            tag = latest_tag(entry, token, get_json, get_body)
             release_cache[release_key] = tag
         tag_prefix = entry.get("tag_prefix", "")
         if not isinstance(tag_prefix, str) or "\n" in tag_prefix or "\r" in tag_prefix:

@@ -53,6 +53,8 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.latest_tag = "v1.3.0"
         self.checksum = "b" * 64
         self.lookup_calls: list[tuple[str, str]] = []
+        self.body_calls: list[str] = []
+        self.release_page = "Version: v2.0.0-alpha.7"
         self.hash_calls: list[tuple[str, str]] = []
         self.artifact_manifest_url = "https://updates.example.invalid/stable.json"
         self.artifact_manifest = {
@@ -71,13 +73,22 @@ class RefreshPackageSourcesTests(unittest.TestCase):
             return self.artifact_manifest
         return {"tag_name": self.latest_tag}
 
+    def fake_body(self, url: str) -> str:
+        self.body_calls.append(url)
+        return self.release_page
+
     def fake_hash(self, url: str, algorithm: str) -> str:
         self.hash_calls.append((url, algorithm))
         return self.checksum
 
     def plan(self):
         return updater.plan_updates(
-            self.root, self.manifest, token="offline-token", get_json=self.fake_json, hash_source=self.fake_hash
+            self.root,
+            self.manifest,
+            token="offline-token",
+            get_json=self.fake_json,
+            hash_source=self.fake_hash,
+            get_body=self.fake_body,
         )
 
     def test_newer_source_only_release_updates_pins_and_bumps_pkgrel(self) -> None:
@@ -249,7 +260,7 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.manifest["packages"][0]["tag_prefix"] = "noto-monthly-release-"
         self.latest_tag = "v1.3.0"
 
-        with self.assertRaisesRegex(ValueError, "unsupported stable release tag"), patch("builtins.print"):
+        with self.assertRaisesRegex(ValueError, "unsupported release tag"), patch("builtins.print"):
             self.plan()
 
         self.assertEqual(self.hash_calls, [])
@@ -314,8 +325,91 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertEqual(self.source_path.read_bytes(), original)
         self.checksum = "b" * 64
         self.latest_tag = "release-candidate"
-        with self.assertRaisesRegex(ValueError, "unsupported stable release version"), patch("builtins.print"):
+        with self.assertRaisesRegex(ValueError, "unsupported release version"), patch("builtins.print"):
             self.plan()
         self.assertEqual(self.source_path.read_bytes(), original)
+
+    def test_zrythm_official_page_refreshes_prerelease_appimage(self) -> None:
+        self.source_path.write_text(
+            "\n".join(
+                [
+                    "EXAMPLE_VERSION=2.0.0-alpha.6",
+                    "EXAMPLE_SOURCE_URL=https://example.invalid/Zrythm-2.0.0-alpha.6-Linux-x86_64.AppImage",
+                    f"EXAMPLE_SOURCE_SHA256={'a' * 64}",
+                    "EXAMPLE_LICENSE_URL=https://example.invalid/license/v2.0.0-alpha.6.txt",
+                    f"EXAMPLE_LICENSE_SHA256={'c' * 64}",
+                    "EXAMPLE_TRADEMARKS_URL=https://example.invalid/trademarks/v2.0.0-alpha.6.md",
+                    f"EXAMPLE_TRADEMARKS_SHA256={'d' * 64}",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        entry = self.manifest["packages"][0]
+        entry["provider"] = "zrythm"
+        entry["repository"] = "zrythm/zrythm"
+        entry["url_template"] = (
+            "https://www.zrythm.org/downloads/Zrythm-{version}-Linux-x86_64.AppImage"
+        )
+        self.release_page = "Version: v2.0.0-alpha.7"
+        entry["additional_sources"] = [
+            {
+                "source_url_key": "EXAMPLE_LICENSE_URL",
+                "checksum_key": "EXAMPLE_LICENSE_SHA256",
+                "url_template": "https://example.invalid/license/{tag}.txt",
+            },
+            {
+                "source_url_key": "EXAMPLE_TRADEMARKS_URL",
+                "checksum_key": "EXAMPLE_TRADEMARKS_SHA256",
+                "url_template": "https://example.invalid/trademarks/{tag}.md",
+            },
+        ]
+
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+
+        self.assertEqual(changed, ["example"])
+        self.assertEqual(
+            self.body_calls,
+            ["https://www.zrythm.org/en/download-v2-alpha.html"],
+        )
+        self.assertEqual(
+            self.hash_calls,
+            [
+                (
+                    "https://www.zrythm.org/downloads/Zrythm-2.0.0-alpha.7-Linux-x86_64.AppImage",
+                    "sha256",
+                ),
+                ("https://example.invalid/license/v2.0.0-alpha.7.txt", "sha256"),
+                ("https://example.invalid/trademarks/v2.0.0-alpha.7.md", "sha256"),
+            ],
+        )
+        updated = dict(line.split("=", 1) for line in changes[self.source_path].splitlines())
+        self.assertEqual(updated["EXAMPLE_VERSION"], "2.0.0-alpha.7")
+        self.assertEqual(
+            updated["EXAMPLE_SOURCE_URL"],
+            "https://www.zrythm.org/downloads/Zrythm-2.0.0-alpha.7-Linux-x86_64.AppImage",
+        )
+
+        self.assertEqual(
+            updated["EXAMPLE_LICENSE_URL"],
+            "https://example.invalid/license/v2.0.0-alpha.7.txt",
+        )
+        self.assertEqual(
+            updated["EXAMPLE_TRADEMARKS_URL"],
+            "https://example.invalid/trademarks/v2.0.0-alpha.7.md",
+        )
+
+    def test_prerelease_order_is_semver_compatible(self) -> None:
+        self.assertLess(
+            updater.version_tuple("2.0.0-alpha.7"),
+            updater.version_tuple("2.0.0-beta.1"),
+        )
+        self.assertLess(
+            updater.version_tuple("2.0.0-rc.1"),
+            updater.version_tuple("2.0.0"),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

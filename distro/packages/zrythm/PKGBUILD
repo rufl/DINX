@@ -30,8 +30,8 @@ sha256sums=(
   "$ZRYTHM_SOURCE_SHA256"
   "$ZRYTHM_LICENSE_SHA256"
   "$ZRYTHM_TRADEMARKS_SHA256"
-  '54bf59c093bc60f3019503b6a8130bd308aeb4edff0a5e54e396ecbf3bb0b145'
-  'e8ca2d2bf4c98b5c2f5a6e82ee4dc94ac77344db50c1972e8cda7d39e51b4a10'
+  '7d37bf860521f2426091b2e965941b856126791dac955fd05ffd50f20b40c744'
+  '9f66952396f3efc587dc7ac3b34e619d6ef399aa1a336a7dd8c71d3145ba03ca'
 )
 
 package() {
@@ -48,8 +48,9 @@ package() {
 Zrythm ${ZRYTHM_VERSION} official Linux AppImage:
 ${ZRYTHM_SOURCE_URL}
 
-The DINX package redistributes the unmodified upstream AppImage. Zrythm v2 is
-pre-release software; projects are not compatible with v1, and upstream warns
-of possible crashes or data loss. Source: https://www.zrythm.org/
+The DINX package redistributes the unmodified upstream AppImage. Corresponding
+source: https://gitlab.zrythm.org/zrythm/zrythm/-/tree/v${ZRYTHM_VERSION}
+Zrythm v2 is pre-release software; projects are not compatible with v1, and
+upstream warns of possible crashes or data loss.
 EOF
 }

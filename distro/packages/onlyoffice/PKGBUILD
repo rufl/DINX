@@ -26,8 +26,8 @@ source=(
 sha256sums=(
   "$ONLYOFFICE_SOURCE_SHA256"
   "$ONLYOFFICE_LICENSE_SHA256"
-  '47505526b1cb05da89d0886325e8c6170b431eb12144d0f4b7862e78ec38c52f'
-  'a875ee7b929e4b94c89fc3edcfe3204b306ed57def90a7a962908f01de061b04'
+  '4983d3ef56b2e78a7957742880051ad0c2c85d186986bdfb8b4de3556edfb204'
+  '062418e7ee4798b302726c65fa20fd1800584eef3e68f72acb4e8bd95ca8d56b'
 )
 
 package() {
@@ -45,5 +45,7 @@ ${ONLYOFFICE_SOURCE_URL}
 The DINX package redistributes the unmodified upstream AppImage. The launcher
 registers document, spreadsheet, presentation and PDF file types only; the
 upstream integrated app also contains its Forms and Diagram Viewer features.
+Corresponding application source: https://github.com/ONLYOFFICE/DesktopEditors/tree/v${ONLYOFFICE_VERSION}
+AppImage packaging source: https://github.com/ONLYOFFICE/appimage-desktopeditors/tree/v${ONLYOFFICE_VERSION}
 EOF
 }

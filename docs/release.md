@@ -39,6 +39,14 @@ blocks and a 1 MiB dictionary. Alpha 10 uses 256 KiB blocks and a 256 KiB
 dictionary, keeping the direct ISO below GitHub's 2 GiB per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
+The current profile also ships official Zrythm v2.0.0-alpha.7 and ONLYOFFICE
+Desktop Editors 10.0.0 AppImages, together about 518 MB before SquashFS
+compression. Zrythm v2 is pre-release software and may crash or lose data.
+ONLYOFFICE's integrated application retains Forms and Diagram Viewer; DINX
+registers only document, spreadsheet, presentation and PDF file types. Images
+over GitHub's 2 GiB per-asset limit use the split release path; the rolling
+single-file alias advances only for a qualifying single-image release.
+
 ## Published assets
 
 Each alpha release contains:
@@ -59,7 +67,7 @@ Each alpha release contains:
 DINX source now configures a signed rolling pacman repository hosted as GitHub
 Release assets under `dinx-packages-latest` at
 `https://github.com/rufl/DINX/releases/download/dinx-packages-latest`. The
-weekly updater checks 18 release-based packages every Monday at
+weekly updater checks 20 release-based packages every Monday at
 04:17 UTC and opens one reviewed pull request; it never writes pins to `main`.
 Portmaster's independently versioned `assets.zip` is resolved from Safing's
 stable artifact manifest on every run, even when the main release tag is unchanged.

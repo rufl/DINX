@@ -35,7 +35,7 @@ jobs:
         run: |
           python3 scripts/check_package_update_manifest.py
           python3 scripts/test_refresh_package_sources.py
-      - name: Fetch and pin newer stable upstream releases
+      - name: Fetch newer upstream releases and refresh pinned sources
         id: refresh
         env:
           GH_TOKEN: ${{ github.token }}

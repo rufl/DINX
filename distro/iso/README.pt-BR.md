@@ -88,10 +88,11 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 ## Meta de tamanho da ISO
 
 O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
-do builder. Ele força imagens SquashFS com xz, BCJ x86, blocos de 256 KiB e
-dicionário de 256 KiB. O Artix mantém `linux-headers` disponível até gerar o
-initramfs; depois, o wrapper remove o pacote transacionalmente de cada rootfs
-preparado antes de compactá-lo. O check de conteúdo rejeita bancos de pacotes
+do builder. Ele força imagens SquashFS com xz, BCJ x86, blocos e dicionário de
+1 MiB, os maiores valores suportados. O `mksquashfs` não expõe controle de nível
+do xz, então mantém o padrão da ferramenta. O Artix mantém `linux-headers` até
+gerar o initramfs; depois o wrapper o remove transacionalmente de cada rootfs
+preparado antes da compactação. O check de conteúdo rejeita bancos de pacotes
 finais que ainda contenham `linux-headers`. Fontes do kernel, caches de pacotes
 pacman e logs de build também ficam fora da imagem. O root overlay recria
 `/var/log/dinit` por tmpfiles antes de os serviços Dinit iniciarem, e o check da
@@ -103,7 +104,7 @@ o contrato da instalação remove o pacote da raiz instalada. O builder mantém 
 própria cópia. O CI instala o wrapper em
 `/usr/bin/mksquashfs` após preservar o binário real, pois o `buildiso` do Artix
 pode invocar esse caminho absoluto. A inspeção pós-build verifica xz e blocos de
-256 KiB nos dois superblocos SquashFS.
+1 MiB nos dois superblocos SquashFS.
 O orçamento P0 rejeita ISOs no limite ou acima de 2 GiB por asset do GitHub; a
 Alpha 12 tem 1.836.830.720 bytes (310.652.928 bytes abaixo do limite).
 

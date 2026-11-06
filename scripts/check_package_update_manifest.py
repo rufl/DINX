@@ -71,6 +71,28 @@ def main() -> None:
         source_url_key = entry.get("source_url_key")
         if source_url_key is not None and (source_url_key not in pins or not pins[source_url_key]):
             fail(f"{name}: source URL pin is missing")
+        tag_prefix = entry.get("tag_prefix", "")
+        if not isinstance(tag_prefix, str) or "\n" in tag_prefix or "\r" in tag_prefix:
+            fail(f"{name}: invalid release tag prefix")
+        additional_sources = entry.get("additional_sources", [])
+        if not isinstance(additional_sources, list):
+            fail(f"{name}: additional_sources must be an array")
+        source_keys = {entry["checksum_key"]}
+        if source_url_key is not None:
+            source_keys.add(source_url_key)
+        for index, source in enumerate(additional_sources):
+            if not isinstance(source, dict):
+                fail(f"{name}: additional source {index} must be an object")
+            for field in ("source_url_key", "checksum_key"):
+                key = source.get(field)
+                if not isinstance(key, str) or key not in pins or not pins[key]:
+                    fail(f"{name}: additional source {index} has an invalid {field}")
+                if key in source_keys:
+                    fail(f"{name}: duplicate source pin key {key}")
+                source_keys.add(key)
+            additional_template = source.get("url_template", "")
+            if not additional_template.startswith("https://") or "{tag}" not in additional_template:
+                fail(f"{name}: additional source {index} URL template is not pinned to an HTTPS release tag")
         if entry.get("provider") not in {"github", "gitlab"}:
             fail(f"{name}: unsupported provider")
         if entry.get("checksum") not in {"sha256", "blake2b"}:
@@ -94,7 +116,7 @@ def main() -> None:
     print(
         "package_update_manifest_contract "
         f"upstream_packages={len(names)} manual_source_pins={len(MANUAL_SOURCE_PINS)} "
-        "checksums=true https_release_tags=true"
+        "checksums=true https_release_tags=true multi_source=true"
     )
 
 

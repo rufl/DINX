@@ -31,8 +31,13 @@ def version_tuple(value: str) -> tuple[int, ...]:
     return tuple(int(component) for component in value.split("."))
 
 
-def source_version(tag: str) -> str:
-    value = tag[1:] if tag.startswith("v") else tag
+def source_version(tag: str, tag_prefix: str = "") -> str:
+    if tag_prefix:
+        if not tag.startswith(tag_prefix):
+            fail(f"unsupported stable release tag: {tag}")
+        value = tag[len(tag_prefix) :]
+    else:
+        value = tag[1:] if tag.startswith("v") else tag
     version_tuple(value)
     return value
 
@@ -148,7 +153,10 @@ def plan_updates(
         if tag is None:
             tag = latest_tag(entry, token, get_json)
             release_cache[release_key] = tag
-        version = source_version(tag)
+        tag_prefix = entry.get("tag_prefix", "")
+        if not isinstance(tag_prefix, str) or "\n" in tag_prefix or "\r" in tag_prefix:
+            fail(f"{name}: invalid release tag prefix")
+        version = source_version(tag, tag_prefix)
         source_path = (root / entry["source_file"]).resolve()
         if root.resolve() not in source_path.parents:
             fail(f"{name}: source file escapes the checkout")
@@ -163,20 +171,28 @@ def plan_updates(
             print(f"package-source-update package={name} current={current_version} latest={version} action=unchanged")
             continue
 
-        url_template = entry["url_template"]
-        url = url_template.format(tag=tag, version=version)
-        checksum_key = entry["checksum_key"]
-        checksum = hash_source(url, entry["checksum"])
-        expected_length = 64 if entry["checksum"] in ("sha256", "blake2b") else 0
-        if len(checksum) != expected_length or not re.fullmatch(r"[0-9a-f]+", checksum):
-            fail(f"{name}: generated checksum has an invalid format")
+        additional_sources = entry.get("additional_sources", [])
+        if not isinstance(additional_sources, list):
+            fail(f"{name}: additional_sources must be an array")
+        sources = [(entry.get("source_url_key"), entry["checksum_key"], entry["url_template"])]
+        for source in additional_sources:
+            if not isinstance(source, dict):
+                fail(f"{name}: each additional source must be an object")
+            sources.append((source.get("source_url_key"), source["checksum_key"], source["url_template"]))
+
+        for source_url_key, checksum_key, url_template in sources:
+            url = url_template.format(tag=tag, version=version)
+            checksum = hash_source(url, entry["checksum"])
+            expected_length = 64 if entry["checksum"] in ("sha256", "blake2b") else 0
+            if len(checksum) != expected_length or not re.fullmatch(r"[0-9a-f]+", checksum):
+                fail(f"{name}: generated checksum has an invalid format")
+            if source_url_key:
+                source_text = replace_assignment(source_text, source_url_key, url, source_path)
+            source_text = replace_assignment(source_text, checksum_key, checksum, source_path)
 
         source_text = replace_assignment(source_text, version_key, version, source_path)
         if entry.get("package_version_key"):
             source_text = replace_assignment(source_text, entry["package_version_key"], version, source_path)
-        if entry.get("source_url_key"):
-            source_text = replace_assignment(source_text, entry["source_url_key"], url, source_path)
-        source_text = replace_assignment(source_text, checksum_key, checksum, source_path)
         output[source_path] = source_text
 
         rel_path = entry.get("bump_pkgrel_path")

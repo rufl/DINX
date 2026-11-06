@@ -153,6 +153,40 @@
       "checksum_key": "PARU_SOURCE_SHA256",
       "checksum": "sha256",
       "url_template": "https://github.com/Morganamilo/paru/archive/{tag}.tar.gz"
+    },
+    {
+      "name": "dinx-noto-latin",
+      "provider": "github",
+      "repository": "notofonts/notofonts.github.io",
+      "source_file": "distro/packages/dinx-noto-latin/source.env",
+      "version_key": "DINX_NOTO_VERSION",
+      "source_url_key": "DINX_NOTO_REGULAR_SOURCE_URL",
+      "checksum_key": "DINX_NOTO_REGULAR_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "noto-monthly-release-",
+      "url_template": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/{tag}/fonts/NotoSans/hinted/ttf/NotoSans-Regular.ttf",
+      "additional_sources": [
+        {
+          "source_url_key": "DINX_NOTO_BOLD_SOURCE_URL",
+          "checksum_key": "DINX_NOTO_BOLD_SOURCE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/{tag}/fonts/NotoSans/hinted/ttf/NotoSans-Bold.ttf"
+        },
+        {
+          "source_url_key": "DINX_NOTO_ITALIC_SOURCE_URL",
+          "checksum_key": "DINX_NOTO_ITALIC_SOURCE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/{tag}/fonts/NotoSans/hinted/ttf/NotoSans-Italic.ttf"
+        },
+        {
+          "source_url_key": "DINX_NOTO_BOLD_ITALIC_SOURCE_URL",
+          "checksum_key": "DINX_NOTO_BOLD_ITALIC_SOURCE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/{tag}/fonts/NotoSans/hinted/ttf/NotoSans-BoldItalic.ttf"
+        },
+        {
+          "source_url_key": "DINX_NOTO_MONO_REGULAR_SOURCE_URL",
+          "checksum_key": "DINX_NOTO_MONO_REGULAR_SOURCE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/{tag}/fonts/NotoSansMono/hinted/ttf/NotoSansMono-Regular.ttf"
+        }
+      ]
     }
   ]
 }

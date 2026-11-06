@@ -47,7 +47,6 @@ rootfs:
     - godot
     - pixelorama
     - libva
-    - libva-utils
     - phyto
     - pori
     - greetd

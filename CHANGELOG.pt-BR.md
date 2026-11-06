@@ -4,6 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 - Enxugar o conjunto genérico do rootfs: remover o cliente DHCP ISC independente sem uso (o NetworkManager usa o cliente DHCP interno por padrão), utilitários eCryptfs, exfat-utils legado (manter exfatprogs), Memtest86+ exclusivo de BIOS ausente do menu DINX de duas opções, ferramentas NFS-root do initramfs, ferramentas NBD, s-nail sem entrega de e-mail configurada e Zsh (Fish continua como padrão). Nenhum serviço ou launcher DINX depende desses pacotes; eles continuam disponíveis para instalação posterior pelo Artix.
+- Remover `libva-utils` e o `net-tools` legado da ISO. Manter `libva` para aplicativos VA-API e `iproute2` para administração de rede; nenhum helper DINX ou contrato de perfil usa `vainfo`, `ifconfig` ou `netstat`. Somente esses comandos de diagnóstico/legados saem.
 - Substituir Firefox pelo release oficial x86_64 do Floorp, fixado por checksum; torná-lo o manipulador web padrão e transferir políticas/atualizações ao fluxo de fontes de pacotes DINX. Reintegrar OpenSnitch ao live e ao sistema instalado: habilitar o daemon pelo Dinit, iniciar a interface na tray da sessão e manter o padrão upstream nftables que permite tráfego junto ao Firewalld.
 
 - Adicionar os temas de ícones Papirus e Qogir ao perfil da sessão live e do sistema instalado; manter Adwaita como tema de ícones inicial.

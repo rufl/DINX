@@ -34,7 +34,6 @@ packages-base:
   - mkinitcpio-openswap
   - modemmanager
   - nano
-  - net-tools
   - os-prober
   - sudo
   - sysfsutils

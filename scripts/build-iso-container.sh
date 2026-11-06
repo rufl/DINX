@@ -398,10 +398,11 @@ trap finish EXIT
                 "$package_repo"/zls-*.pkg.tar.zst
               SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
+              pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
+              build_package dinx-noto-latin
               build_package dinx-plymouth-theme
               build_package dinx-live-autologin
               build_package swayimg
-              pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good
               build_package gapless
               build_package dinx-keyring
               if [[ "$package_repository_only" != true ]]; then

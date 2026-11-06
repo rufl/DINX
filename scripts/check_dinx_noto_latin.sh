@@ -32,24 +32,27 @@ for index in "${!font_keys[@]}"; do
   checksum_key="DINX_NOTO_${key}_SOURCE_SHA256"
   url=${!url_key}
   checksum=${!checksum_key}
+  url_ref="\${${url_key}}"
+  checksum_ref="\${${checksum_key}}"
   [[ "$url" == "https://raw.githubusercontent.com/notofonts/notofonts.github.io/noto-monthly-release-${DINX_NOTO_VERSION}/fonts/"*"/hinted/ttf/$file" ]] \
     || fail "source URL is not pinned to the selected Noto monthly release: $url_key"
   [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || fail "invalid source checksum: $checksum_key"
-  grep -Fq "${file}::\${${url_key}}" "$pkgbuild" \
+  grep -Fq "${file}::${url_ref}" "$pkgbuild" \
     || fail "PKGBUILD does not package the pinned font source: $file"
-  grep -Fq "\${${checksum_key}}" "$pkgbuild" \
+  grep -Fq "\"${checksum_ref}\"" "$pkgbuild" \
     || fail "PKGBUILD does not verify the font source: $checksum_key"
-done
-
-for file in "${font_files[@]}"; do
-  grep -Fq "\"$file\"" "$pkgbuild" || grep -Fq "$file" "$pkgbuild" \
-    || fail "PKGBUILD does not install expected font: $file"
+  grep -Fq "pyftsubset \"\$srcdir/$file\"" "$pkgbuild" \
+    || fail "PKGBUILD does not subset the source font: $file"
+  grep -Fq -- "--output-file=\"\$font_dir/$file\"" "$pkgbuild" \
+    || fail "PKGBUILD does not install the subset font: $file"
 done
 for required in \
   "pkgname=dinx-noto-latin" \
   "license=('OFL-1.1-no-RFN')" \
+  "makedepends=('python-fonttools')" \
   'install -Dm644 "$startdir/OFL.txt"' \
-  'fontconfig'; do
+  'fontconfig' \
+  "U+0000-024F,U+0300-036F,U+1E00-1EFF,U+2000-206F,U+20A0-20CF,U+2116,U+2122,U+2126,U+212A,U+212B"; do
   grep -Fq -- "$required" "$pkgbuild" || fail "PKGBUILD is missing: $required"
 done
 grep -Fq 'SIL OPEN FONT LICENSE Version 1.1' "$license" || fail 'OFL 1.1 license text is missing'
@@ -61,10 +64,15 @@ fi
 jq -e '
   [.groups[].packages[]] | index("dinx-noto-latin") != null and index("noto-fonts") == null
 ' "$groups" >/dev/null || fail 'feature groups do not select only the DINX subset package'
+grep -Fq 'pacman_retry -S --needed --noconfirm python-fonttools' "$builder" \
+  || fail 'ISO builder does not install the font subsetting tool'
+fonttools_line=$(grep -nF 'pacman_retry -S --needed --noconfirm python-fonttools' "$builder" | cut -d: -f1)
+package_line=$(grep -nF 'build_package dinx-noto-latin' "$builder" | cut -d: -f1)
+(( fonttools_line < package_line )) || fail 'font subsetting tool is installed after package build'
 grep -Fq 'build_package dinx-noto-latin' "$builder" || fail 'ISO package repository does not build the subset package'
 jq -e '
   .packages[] | select(.name == "dinx-noto-latin" and .tag_prefix == "noto-monthly-release-" and (.additional_sources | length) == 4)
 ' "$update_manifest" >/dev/null || fail 'monthly source refresh does not track all font files'
 
-printf 'dinx_noto_latin_contract package=true monthly_source=true font_files=%s families=NotoSans+NotoSansMono license=OFL-1.1 refresh=true full_package=false\n' \
+printf 'dinx_noto_latin_contract package=true monthly_source=true font_files=%s families=NotoSans+NotoSansMono unicode_subset=true license=OFL-1.1 refresh=true full_package=false\n' \
   "${#font_files[@]}"

@@ -213,7 +213,7 @@ PY
 
 grep -Fqx '    - qt6ct' "$profile" || fail 'profile does not install qt6ct'
 grep -Fqx '    - adw-gtk-theme' "$profile" || fail 'profile does not install adw-gtk-theme'
-grep -Fqx '    - noto-fonts' "$profile" || fail 'profile does not install Noto fonts'
+grep -Fqx '    - dinx-noto-latin' "$profile" || fail 'profile does not install the custom Noto Latin subset'
 grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
 grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt" || fail 'Qt6ct does not consume DINX colors'
 python - "$qt_palette" "$palette" <<'PY'

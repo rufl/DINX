@@ -233,9 +233,9 @@ for required in \
   'runuser -u dinxbuild -- bash -c' \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
-  'pacman_retry -S --needed --noconfirm vala gst-plugins-base gst-plugins-good' \
+  'pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good' \
+  'build_package dinx-noto-latin' \
   'build_package dinx-plymouth-theme' \
-  'build_package gapless' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

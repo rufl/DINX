@@ -58,9 +58,11 @@ grep -Fq 'pkgver="$HARUNA_VERSION"' "$haruna_recipe" || fail 'Haruna package ver
 grep -Fq '${HARUNA_SOURCE_URL}' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
 grep -Fq '"$HARUNA_SOURCE_SHA256"' "$haruna_recipe" || fail 'Haruna checksum is not wired to source.env'
 grep -Fq 'build_package haruna' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Haruna'
-for dependency in ffmpeg extra-cmake-modules mpvqt qt6-base qt6-declarative; do
+for dependency in ffmpeg mpvqt qt6-base qt6-declarative; do
   grep -Fqx "  $dependency" "$haruna_recipe" || fail "Haruna dependency is missing: $dependency"
 done
+grep -Fqx 'makedepends=(extra-cmake-modules)' "$haruna_recipe" || fail 'Haruna extra-cmake-modules build dependency is missing'
+grep -Fqx 'extra-cmake-modules' "$root/scripts/iso-builder/packages.txt" || fail 'Artix builder omits Haruna's build dependency'
 grep -Fq 'video/mp4=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default MP4 handler'
 grep -Fq 'video/x-matroska=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default Matroska handler'
 if grep -Fq 'vlc.desktop' "$mimeapps"; then

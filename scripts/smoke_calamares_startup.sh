@@ -54,4 +54,6 @@ for pattern in \
   fi
 done
 
-printf 'calamares_startup_smoke launched=true config=true module_errors=false timeout_seconds=%s\n' "$timeout_seconds"
+logs_present=false
+[[ ! -s "$work_dir/calamares.log" ]] || logs_present=true
+printf 'calamares_startup_smoke launched=true config=true module_errors=false timeout_seconds=%s status=%s logs_present=%s\n' "$timeout_seconds" "$status" "$logs_present"

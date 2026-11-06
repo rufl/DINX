@@ -54,9 +54,21 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.checksum = "b" * 64
         self.lookup_calls: list[tuple[str, str]] = []
         self.hash_calls: list[tuple[str, str]] = []
+        self.artifact_manifest_url = "https://updates.example.invalid/stable.json"
+        self.artifact_manifest = {
+            "Artifacts": [
+                {
+                    "Filename": "assets.zip",
+                    "SHA256": self.checksum,
+                    "URLs": ["https://updates.example.invalid/assets_v0-4-0.zip"],
+                }
+            ]
+        }
 
     def fake_json(self, url: str, token: str) -> dict:
         self.lookup_calls.append((url, token))
+        if url == self.artifact_manifest_url:
+            return self.artifact_manifest
         return {"tag_name": self.latest_tag}
 
     def fake_hash(self, url: str, algorithm: str) -> str:
@@ -105,6 +117,67 @@ class RefreshPackageSourcesTests(unittest.TestCase):
             "https://example.invalid/releases/tool_v1-3-0",
         )
 
+
+    def add_refreshable_asset_source(self) -> None:
+        self.source_path.write_text(
+            self.source_path.read_text(encoding="utf-8")
+            + "EXAMPLE_ASSETS_URL=https://updates.example.invalid/assets_v0-3-9.zip\n"
+            + "EXAMPLE_ASSETS_SHA256="
+            + "a" * 64
+            + "\n",
+            encoding="utf-8",
+        )
+        self.manifest["packages"][0]["additional_sources"] = [
+            {
+                "source_url_key": "EXAMPLE_ASSETS_URL",
+                "checksum_key": "EXAMPLE_ASSETS_SHA256",
+                "manifest_url": self.artifact_manifest_url,
+                "artifact_name": "assets.zip",
+                "refresh_always": True,
+            }
+        ]
+
+    def test_manifest_asset_refreshes_independently_and_is_idempotent(self) -> None:
+        self.add_refreshable_asset_source()
+        self.latest_tag = "v1.2.0"
+
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+
+        self.assertEqual(changed, ["example"])
+        self.assertIn((self.artifact_manifest_url, ""), self.lookup_calls)
+        self.assertEqual(
+            self.hash_calls,
+            [("https://updates.example.invalid/assets_v0-4-0.zip", "sha256")],
+        )
+        updated_pins = dict(line.split("=", 1) for line in changes[self.source_path].splitlines())
+        self.assertEqual(updated_pins["EXAMPLE_VERSION"], "1.2.0")
+        self.assertEqual(
+            updated_pins["EXAMPLE_ASSETS_URL"],
+            "https://updates.example.invalid/assets_v0-4-0.zip",
+        )
+        self.assertEqual(updated_pins["EXAMPLE_ASSETS_SHA256"], self.checksum)
+        self.assertIn("pkgrel=5\n", changes[self.package_path])
+
+        with patch("builtins.print"):
+            updater.write_updates(changes, dry_run=False)
+        self.hash_calls.clear()
+        with patch("builtins.print"):
+            unchanged, unchanged_packages = self.plan()
+        self.assertEqual(unchanged, {})
+        self.assertEqual(unchanged_packages, [])
+        self.assertEqual(self.hash_calls, [])
+
+    def test_manifest_checksum_mismatch_fails_without_changing_pins(self) -> None:
+        self.add_refreshable_asset_source()
+        self.latest_tag = "v1.2.0"
+        self.artifact_manifest["Artifacts"][0]["SHA256"] = "c" * 64
+        original = self.source_path.read_bytes()
+
+        with self.assertRaisesRegex(ValueError, "artifact manifest SHA256 mismatch"), patch("builtins.print"):
+            self.plan()
+
+        self.assertEqual(self.source_path.read_bytes(), original)
 
     def test_prefixed_release_updates_all_additional_source_pins(self) -> None:
         source_keys = (
@@ -170,7 +243,7 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertEqual(updated_pins["EXAMPLE_SOURCE_SHA256"], self.checksum)
         self.assertIn("pkgrel=5\n", changes[self.package_path])
 
-    def test_release_prefix_mismatch_fails_before_hashing(self) -> None:
+    
         original = self.source_path.read_bytes()
         self.manifest["packages"][0]["tag_prefix"] = "noto-monthly-release-"
         self.latest_tag = "v1.3.0"

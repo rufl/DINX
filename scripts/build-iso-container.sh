@@ -87,7 +87,7 @@ trap finish EXIT
               grep -Fqx "recipe_sha256=$DINX_BUILDER_RECIPE_SHA256" "$builder_image_marker"
               grep -Fqx "refresh_date=$DINX_BUILDER_REFRESH_DATE" "$builder_image_marker"
               command -v buildiso >/dev/null
-              xargs -r pacman -Q < /workspace/scripts/iso-builder/packages.txt >/dev/null
+              scripts/check_iso_builder_packages.sh /workspace/scripts/iso-builder/packages.txt
               scripts/check_artix_initcpio_patch.sh --check-installed
               printf 'dinx-build-timing phase=builder-image-verify elapsed_seconds=%s exit_status=0 image_id=%s\n' \
                 "$((SECONDS - builder_image_verify_started))" "$DINX_BUILDER_IMAGE_ID"

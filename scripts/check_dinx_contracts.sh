@@ -85,7 +85,8 @@ for smoke in \
   smoke_cache_verified_download.sh \
   smoke_cache_verified_extract.sh \
   smoke_package_artifact_cache.sh \
-  smoke_dinx_keyring_config.sh; do
+  smoke_dinx_keyring_config.sh \
+  smoke_iso_builder_packages.sh; do
   "$root/scripts/$smoke"
 done
 printf 'dinx_contracts: run=test_refresh_package_sources.py\n'

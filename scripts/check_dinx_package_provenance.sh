@@ -171,6 +171,10 @@ grep -Fqx 'ARG DINX_ARTIX_IMAGE=artixlinux/artixlinux@sha256:e746e31ffe48f952675
 if grep -Fqx artools "$builder_packages"; then
   fail 'builder image manifest must name installed packages, not the artools group'
 fi
+grep -Fq 'scripts/check_iso_builder_packages.sh /workspace/scripts/iso-builder/packages.txt' scripts/build-iso-container.sh \
+  || fail 'builder image does not verify manifest packages and group members'
+grep -Fq 'smoke_iso_builder_packages.sh' scripts/check_dinx_contracts.sh \
+  || fail 'builder package group preflight smoke test is not in the contract runner'
 for required in \
   'repository: rufl/DEETTY' \
   'if: github.event_name != '\''pull_request'\'' || github.event.pull_request.head.repo.full_name == github.repository' \

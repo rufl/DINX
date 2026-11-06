@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+pkgname=dinx-noto-latin
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${DINX_NOTO_VERSION:?missing DINX_NOTO_VERSION}"
+: "${DINX_NOTO_REGULAR_SOURCE_URL:?missing regular Noto Sans URL}"
+: "${DINX_NOTO_REGULAR_SOURCE_SHA256:?missing regular Noto Sans checksum}"
+: "${DINX_NOTO_BOLD_SOURCE_URL:?missing bold Noto Sans URL}"
+: "${DINX_NOTO_BOLD_SOURCE_SHA256:?missing bold Noto Sans checksum}"
+: "${DINX_NOTO_ITALIC_SOURCE_URL:?missing italic Noto Sans URL}"
+: "${DINX_NOTO_ITALIC_SOURCE_SHA256:?missing italic Noto Sans checksum}"
+: "${DINX_NOTO_BOLD_ITALIC_SOURCE_URL:?missing bold italic Noto Sans URL}"
+: "${DINX_NOTO_BOLD_ITALIC_SOURCE_SHA256:?missing bold italic Noto Sans checksum}"
+: "${DINX_NOTO_MONO_REGULAR_SOURCE_URL:?missing regular Noto Sans Mono URL}"
+: "${DINX_NOTO_MONO_REGULAR_SOURCE_SHA256:?missing regular Noto Sans Mono checksum}"
+
+pkgver="$DINX_NOTO_VERSION"
+pkgrel=1
+pkgdesc="Core Noto Sans Latin styles for the DINX desktop"
+arch=('any')
+url="https://github.com/notofonts/notofonts.github.io"
+license=('OFL-1.1-no-RFN')
+depends=('fontconfig')
+provides=('ttf-font')
+source=(
+  "NotoSans-Regular.ttf::${DINX_NOTO_REGULAR_SOURCE_URL}"
+  "NotoSans-Bold.ttf::${DINX_NOTO_BOLD_SOURCE_URL}"
+  "NotoSans-Italic.ttf::${DINX_NOTO_ITALIC_SOURCE_URL}"
+  "NotoSans-BoldItalic.ttf::${DINX_NOTO_BOLD_ITALIC_SOURCE_URL}"
+  "NotoSansMono-Regular.ttf::${DINX_NOTO_MONO_REGULAR_SOURCE_URL}"
+)
+sha256sums=(
+  "$DINX_NOTO_REGULAR_SOURCE_SHA256"
+  "$DINX_NOTO_BOLD_SOURCE_SHA256"
+  "$DINX_NOTO_ITALIC_SOURCE_SHA256"
+  "$DINX_NOTO_BOLD_ITALIC_SOURCE_SHA256"
+  "$DINX_NOTO_MONO_REGULAR_SOURCE_SHA256"
+)
+
+package() {
+  local font_dir="$pkgdir/usr/share/fonts/noto"
+  install -d "$font_dir"
+  install -m644 \
+    "$srcdir/NotoSans-Regular.ttf" \
+    "$srcdir/NotoSans-Bold.ttf" \
+    "$srcdir/NotoSans-Italic.ttf" \
+    "$srcdir/NotoSans-BoldItalic.ttf" \
+    "$srcdir/NotoSansMono-Regular.ttf" \
+    "$font_dir/"
+  install -Dm644 "$startdir/OFL.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/OFL.txt"
+}

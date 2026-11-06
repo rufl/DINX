@@ -67,7 +67,7 @@ rootfs:
     - adw-gtk-theme
     - dconf
     - gsettings-desktop-schemas
-    - noto-fonts
+    - dinx-noto-latin
     - firefox
     - pipewire
     - pipewire-pulse

@@ -5,3 +5,9 @@ path = "**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 DINX Contributors"
 SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "distro/packages/dinx-noto-latin/OFL.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "2022 The Noto Project Authors"
+SPDX-License-Identifier = "OFL-1.1-no-RFN"

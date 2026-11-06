@@ -98,7 +98,7 @@ Os contratos compartilhados são versionados independentemente dos detalhes inte
 - adaptadores D-Bus padrão para notificações;
 - convenções de logs e diagnósticos.
 
-O tema DINX v1 é estático em `/usr/share/dinx/theme/DINX.json`, com papéis de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa, Noto Sans 10, geometria quadrada e ícones Adwaita. GTK usa o tema DINX; Qt usa `~/.config/qt6ct/colors/DINX.conf`; o Pearl Greeter usa `/etc/pearl/greeter.json` com a bridge GTK DINX. Pearl, Pearl Greeter, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. Noto Sans Mono 10 em campos fixos, logs monoespaçados e `u_vga16 16` do GRUB são exceções intencionais.
+O tema DINX v1 é estático em `/usr/share/dinx/theme/DINX.json`, com papéis de superfície/texto/primário/erro, variantes claro/escuro, paleta ANSI completa, Noto Sans 10, geometria quadrada e ícones Adwaita. GTK usa o tema DINX; Qt usa `~/.config/qt6ct/colors/DINX.conf`; o Pearl Greeter usa `/etc/pearl/greeter.json` com a bridge GTK DINX. Pearl, Pearl Greeter, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. `dinx-noto-latin` fornece estilos Noto Sans e Noto Sans Mono a partir de subset latino/latim estendido; Noto Sans Mono 10 em campos fixos, logs monoespaçados e `u_vga16 16` do GRUB são exceções intencionais.
 
 ## Sessão gaming
 

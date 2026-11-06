@@ -3,7 +3,8 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
-- Configure weekly reviewed upstream source-pin PRs for 13 release-based custom packages, a signed package-only GitHub Release publisher at `dinx-packages-latest`, and `dinx-keyring`/Shelly pacman integration. The workflows remain unverified until required production signing secrets are configured and a publication run succeeds.
+- Configure weekly reviewed upstream source-pin PRs for 14 release-based custom packages, including a monthly-refreshed Noto Latin subset; publish signed packages through the GitHub Release tag `dinx-packages-latest` and configure `dinx-keyring`/Shelly pacman integration. The workflows remain unverified until required production signing secrets are configured and a publication run succeeds.
+- Replace full `noto-fonts` with `dinx-noto-latin`: five pinned Noto Sans/Noto Sans Mono source fonts are subset at package build time to Latin, combining marks and common punctuation/currency ranges; only the resulting subset is installed in the ISO.
 - Disable Aqueous backdrop blur and window opacity only when seeding a fresh live Pearl user's config; preserve saved user settings.
 - Apply DINX semantic dark/light colors to the Pearl GTK4 first-run wizard and update its preview when the theme changes; keep Pearl's work-area reservation on the selected bar edge.
 - Brand the CLI login banner as DINX Linux; reduce the live GRUB menu to the default DINX entry and a UEFI firmware option with a visible six-second countdown.

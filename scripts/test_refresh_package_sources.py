@@ -84,6 +84,81 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertIn("EXAMPLE_VERSION=1.3.0", self.source_path.read_text(encoding="utf-8"))
         self.assertIn("pkgrel=5", self.package_path.read_text(encoding="utf-8"))
 
+    def test_prefixed_release_updates_all_additional_source_pins(self) -> None:
+        source_keys = (
+            ("BOLD", "bold.ttf"),
+            ("ITALIC", "italic.ttf"),
+            ("BOLD_ITALIC", "bold-italic.ttf"),
+            ("MONO", "mono.ttf"),
+        )
+        pins = [
+            "EXAMPLE_VERSION=1.2.0",
+            "EXAMPLE_SOURCE_URL=https://example.invalid/noto-monthly-release-1.2.0/regular.ttf",
+            "EXAMPLE_SOURCE_SHA256=" + "a" * 64,
+        ]
+        additional_sources = []
+        for suffix, filename in source_keys:
+            pins.extend(
+                (
+                    f"EXAMPLE_{suffix}_URL=https://example.invalid/noto-monthly-release-1.2.0/{filename}",
+                    f"EXAMPLE_{suffix}_SHA256=" + "a" * 64,
+                )
+            )
+            additional_sources.append(
+                {
+                    "source_url_key": f"EXAMPLE_{suffix}_URL",
+                    "checksum_key": f"EXAMPLE_{suffix}_SHA256",
+                    "url_template": f"https://example.invalid/{{tag}}/{filename}",
+                }
+            )
+        self.source_path.write_text("\n".join(pins) + "\n", encoding="utf-8")
+        entry = self.manifest["packages"][0]
+        entry["tag_prefix"] = "noto-monthly-release-"
+        entry["url_template"] = "https://example.invalid/{tag}/regular.ttf"
+        entry["additional_sources"] = additional_sources
+        self.latest_tag = "noto-monthly-release-1.3.0"
+
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+
+        self.assertEqual(changed, ["example"])
+        self.assertEqual(len(self.hash_calls), 5)
+        self.assertEqual(
+            self.hash_calls,
+            [
+                ("https://example.invalid/noto-monthly-release-1.3.0/regular.ttf", "sha256"),
+                *[
+                    (f"https://example.invalid/noto-monthly-release-1.3.0/{filename}", "sha256")
+                    for _, filename in source_keys
+                ],
+            ],
+        )
+        updated_pins = dict(line.split("=", 1) for line in changes[self.source_path].splitlines())
+        self.assertEqual(updated_pins["EXAMPLE_VERSION"], "1.3.0")
+        self.assertEqual(
+            updated_pins["EXAMPLE_SOURCE_URL"],
+            "https://example.invalid/noto-monthly-release-1.3.0/regular.ttf",
+        )
+        for suffix, filename in source_keys:
+            self.assertEqual(
+                updated_pins[f"EXAMPLE_{suffix}_URL"],
+                f"https://example.invalid/noto-monthly-release-1.3.0/{filename}",
+            )
+            self.assertEqual(updated_pins[f"EXAMPLE_{suffix}_SHA256"], self.checksum)
+        self.assertEqual(updated_pins["EXAMPLE_SOURCE_SHA256"], self.checksum)
+        self.assertIn("pkgrel=5\n", changes[self.package_path])
+
+    def test_release_prefix_mismatch_fails_before_hashing(self) -> None:
+        original = self.source_path.read_bytes()
+        self.manifest["packages"][0]["tag_prefix"] = "noto-monthly-release-"
+        self.latest_tag = "v1.3.0"
+
+        with self.assertRaisesRegex(ValueError, "unsupported stable release tag"), patch("builtins.print"):
+            self.plan()
+
+        self.assertEqual(self.hash_calls, [])
+        self.assertEqual(self.source_path.read_bytes(), original)
+
     def test_same_and_older_releases_do_not_downgrade(self) -> None:
         original = self.source_path.read_bytes()
         for tag in ("v1.2.0", "v1.1.9"):

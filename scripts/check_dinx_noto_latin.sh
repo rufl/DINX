@@ -33,7 +33,7 @@ for index in "${!font_keys[@]}"; do
   url=${!url_key}
   checksum=${!checksum_key}
   url_ref="\${${url_key}}"
-  checksum_ref="\${${checksum_key}}"
+  checksum_ref="\$${checksum_key}"
   [[ "$url" == "https://raw.githubusercontent.com/notofonts/notofonts.github.io/noto-monthly-release-${DINX_NOTO_VERSION}/fonts/"*"/hinted/ttf/$file" ]] \
     || fail "source URL is not pinned to the selected Noto monthly release: $url_key"
   [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || fail "invalid source checksum: $checksum_key"

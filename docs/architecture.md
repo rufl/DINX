@@ -128,7 +128,7 @@ Shared contracts are versioned independently from application internals:
 
 A contract must have a documented version and a compatibility test before applications rely on it.
 
-The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry and Adwaita icon bridging. GTK uses the installed DINX theme; Qt uses the checked-in `DINX.conf`; Pearl Greeter uses `/etc/pearl/greeter.json` with the GTK DINX bridge. Pearl, Pearl Greeter, Calamares, Swayimg and GRUB use static bridges with the same tokens. Qt's Fusion backend, fixed-width Noto Sans Mono 10 fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
+The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry and Adwaita icon bridging. GTK uses the installed DINX theme; Qt uses the checked-in `DINX.conf`; Pearl Greeter uses `/etc/pearl/greeter.json` with the GTK DINX bridge. Pearl, Pearl Greeter, Calamares, Swayimg and GRUB use static bridges with the same tokens. `dinx-noto-latin` supplies Noto Sans styles and Noto Sans Mono from a generated Latin/Latin Extended subset; fixed-width fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
 
 ## Gaming session
 

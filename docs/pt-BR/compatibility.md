@@ -23,8 +23,8 @@ O contrato do tema estático DINX é a fonte de verdade:
 - paleta: `/usr/share/dinx/theme/DINX.json`;
 - escolha de cor do usuário: `DINX_COLOR_SCHEME=light|dark`, com `DINTOR_THEME=prefer-light` aceito pelo Dintor;
 - cores Qt6ct: `~/.config/qt6ct/colors/DINX.conf`;
-- tema GTK: Adwaita com Noto Sans 10; a sessão define o esquema `prefer-dark` do GNOME somente quando o usuário não tem uma escolha explícita de esquema de cores.
-- texto de largura fixa: Noto Sans Mono 10 quando exigido pelo aplicativo;
+- tema GTK: Adwaita com Noto Sans 10 do subset latino/latim estendido DINX; a sessão define o esquema `prefer-dark` do GNOME somente quando o usuário não tem uma escolha explícita de esquema de cores.
+- texto de largura fixa: Noto Sans Mono 10 do mesmo subset quando exigido pelo aplicativo;
 - bridges gráficas: estados DINX de superfície, controle, hover, primário e erro, com ícones Adwaita quando disponíveis.
 
 `DINX_COLOR_SCHEME=light` ou `DINTOR_THEME=prefer-light` seleciona o esquema claro empacotado do editor. Os demais valores usam o esquema escuro DINX. O Dintor não interpreta arquivos privados de shell e continua funcional sem nenhuma variável.

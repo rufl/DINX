@@ -308,6 +308,13 @@ cmp -s "$grub_logo" "$live_grub_logo" || fail 'live ISO and installed DINX boot 
 grep -Fq 'set default=0' "$live_grub_cfg" || fail 'live ISO GRUB default is not the DINX boot option'
 grep -Fq 'set timeout=6' "$live_grub_cfg" || fail 'live ISO GRUB timeout is not six seconds'
 grep -Fq 'set timeout_style=menu' "$live_grub_cfg" || fail 'live ISO GRUB menu is not visible during timeout'
+
+awk '
+  /^rootfs:/ { in_rootfs = 1; next }
+  /^livefs:/ { in_rootfs = 0 }
+  in_rootfs && /^    - dinx-plymouth-theme$/ { found = 1 }
+  END { exit !found }
+' "$profile" || fail 'DINX Plymouth theme package is missing from the live rootfs profile'
 grep -Fq 'set kopts="quiet splash"' "$live_grub_cfg" || fail 'live ISO GRUB does not enable Plymouth and quiet boot'
 grep -Fq 'grub_theme=/boot/grub/themes/artix/theme.txt' "$live_grub_variable" \
   || fail 'live ISO GRUB does not select the DINX boot theme'

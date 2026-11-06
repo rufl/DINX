@@ -300,10 +300,10 @@ Para hardware real, use a matriz de dispositivos e o procedimento de relatório 
 
 A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,
-Flatpak para fontes de aplicativos escolhidas pelo usuário e o KolourPaint como
-editor de imagens Qt simples. O Swayimg continua sendo o visualizador padrão;
-o KolourPaint fica disponível no launcher e não substitui esse default de
-visualização.
+Flatpak para fontes de aplicativos escolhidas pelo usuário e Impasto como editor
+de imagens. O Impasto é um AppImage upstream com versão e avisos de licença
+fixados, inclui GTK e inicia sem FUSE. O Swayimg continua sendo o visualizador
+padrão.
 
 ### Pacotes gaming opcionais
 

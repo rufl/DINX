@@ -299,9 +299,9 @@ For real hardware, use the device matrix and report procedure in [DINX hardware 
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected
-application sources, and KolourPaint as the simple Qt image editor. Swayimg
-remains the default image viewer; KolourPaint is available from the launcher
-and does not replace that viewer default.
+application sources, and Impasto as the image editor. Impasto is a version-pinned
+upstream AppImage with bundled GTK and preserved license notices; it launches
+without FUSE. Swayimg remains the default image viewer.
 
 ### Optional gaming stack
 

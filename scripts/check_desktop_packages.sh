@@ -30,16 +30,23 @@ grep -Fqx 'PATH=/usr/bin:/usr/local/bin:/usr/sbin:/sbin' "$gufw_helper" || fail 
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted sane fwupd flatpak kolourpaint krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays; do
+for package in file-roller galculator gapless gparted sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-for package in patchy blockbench; do
+if grep -Fqx '    - kolourpaint' "$profile"; then
+  fail 'KolourPaint remains in the DINX profile'
+fi
+if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
+  fail 'retired KolourPaint desktop override remains in the ISO overlay'
+fi
+for package in patchy blockbench impasto; do
   launcher="$root/distro/packages/$package/$package.desktop"
   [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
   case "$package" in
     patchy) expected_name=Patchy ;;
     blockbench) expected_name=Blockbench ;;
+    impasto) expected_name=Impasto ;;
   esac
   grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
   grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
@@ -53,6 +60,10 @@ grep -Fqx 'Exec=patchy %F' "$root/distro/packages/patchy/patchy.desktop" || fail
 grep -Fqx 'Comment[pt_BR]=Editor de imagens com foco em PSD' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy Portuguese description is missing'
 grep -Fqx 'Exec=blockbench %U' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench launcher does not preserve URI arguments'
 grep -Fqx 'Comment[pt_BR]=Editor de modelos 3D low-poly' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench Portuguese description is missing'
+grep -Fqx 'Exec=impasto %F' "$root/distro/packages/impasto/impasto.desktop" || fail 'Impasto launcher does not preserve image file arguments'
+grep -Fqx 'Comment[pt_BR]=Pinte, crie e edite imagens' "$root/distro/packages/impasto/impasto.desktop" || fail 'Impasto Portuguese description is missing'
+grep -Fqx 'exec /opt/impasto/Impasto-x86_64.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/impasto/impasto" || fail 'Impasto launcher does not use the no-FUSE AppImage runtime'
+grep -Fqx "depends=('glibc')" "$root/distro/packages/impasto/PKGBUILD" || fail 'Impasto package does not declare its glibc runtime'
 grep -Fqx 'exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/patchy/patchy" || fail 'Patchy launcher does not use the no-FUSE AppImage runtime'
 grep -Fqx 'exec /opt/blockbench/Blockbench.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/blockbench/blockbench" || fail 'Blockbench launcher does not use the no-FUSE AppImage runtime'
 
@@ -131,7 +142,6 @@ org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
 com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 galculator.desktop|Calculator|Calculadora|galculator
 gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
-org.kde.kolourpaint.desktop|Drawing|Desenho|kolourpaint %u
 swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
 com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
@@ -188,7 +198,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop org.kde.kolourpaint.desktop swayimg.desktop org.pwmt.zathura.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop org.pwmt.zathura.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
@@ -201,13 +211,18 @@ done
 grep -Fqx '  usr/bin/scanimage' "$iso_check" || fail 'ISO payload is missing scanimage'
 grep -Fqx '  usr/bin/fwupdmgr' "$iso_check" || fail 'ISO payload is missing fwupdmgr'
 grep -Fqx '  usr/bin/flatpak' "$iso_check" || fail 'ISO payload is missing flatpak'
-grep -Fqx '  usr/bin/kolourpaint' "$iso_check" || fail 'ISO payload is missing kolourpaint'
+grep -Fqx '  usr/bin/impasto' "$iso_check" || fail 'ISO payload is missing Impasto'
+grep -Fqx '  opt/impasto/Impasto-x86_64.AppImage' "$iso_check" || fail 'ISO payload is missing the Impasto AppImage'
+grep -Fqx '  usr/share/licenses/impasto/license-mit.txt' "$iso_check" || fail 'ISO payload is missing the Impasto license'
+grep -Fqx '  usr/share/licenses/impasto/license-mit-pinta.txt' "$iso_check" || fail 'ISO payload is missing the Pinta-derived license'
+grep -Fqx '  usr/share/licenses/impasto/license-lgpl.txt' "$iso_check" || fail 'ISO payload is missing the bundled GTK license text'
+grep -Fqx '  usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md' "$iso_check" || fail 'ISO payload is missing Impasto third-party notices'
 grep -Fqx '  usr/bin/phyto' "$iso_check" || fail 'ISO payload is missing Phyto'
 grep -Fqx '  usr/bin/pori' "$iso_check" || fail 'ISO payload is missing Pori'
 grep -Fqx '  usr/bin/g4music' "$iso_check" || fail 'ISO payload is missing Gapless'
 grep -Fqx '  usr/bin/galculator' "$iso_check" || fail 'ISO payload is missing Galculator'
 grep -Fqx '  usr/share/flatpak/remotes.d/flathub.flatpakrepo' "$iso_check" || fail 'ISO payload is missing the Flatpak source descriptor'
-grep -Fqx '  usr/share/applications/org.kde.kolourpaint.desktop' "$iso_check" || fail 'ISO payload is missing the KolourPaint desktop entry'
+grep -Fqx '  usr/share/applications/com.github.zbcoding.Impasto.desktop' "$iso_check" || fail 'ISO payload is missing the Impasto desktop entry'
 grep -Fqx '  usr/share/applications/com.pori.app.desktop' "$iso_check" || fail 'ISO payload is missing the Pori desktop entry'
 grep -Fqx '  usr/share/applications/org.aqueous.Phyto.desktop' "$iso_check" || fail 'ISO payload is missing the Phyto desktop entry'
 grep -Fqx '  usr/share/applications/com.github.neithern.g4music.desktop' "$iso_check" || fail 'ISO payload is missing the Gapless desktop entry'
@@ -237,4 +252,4 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=localized process_manager=localized traffic_monitor=localized sane=true fwupd=true flatpak=true kolourpaint=true graphics_apps=krita+inkscape+godot+patchy+blockbench phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=localized process_manager=localized traffic_monitor=localized sane=true fwupd=true flatpak=true impasto=true kolourpaint=false graphics_apps=impasto+krita+inkscape+godot+patchy+blockbench phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

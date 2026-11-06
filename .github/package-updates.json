@@ -227,6 +227,41 @@
           "url_template": "https://raw.githubusercontent.com/JannisX11/Blockbench/{tag}/LICENSE.MD"
         }
       ]
+    },
+    {
+      "name": "impasto",
+      "provider": "github",
+      "repository": "zbcoding/ImpastoPaint",
+      "source_file": "distro/packages/impasto/source.env",
+      "version_key": "IMPASTO_VERSION",
+      "package_version_key": "IMPASTO_VERSION",
+      "source_url_key": "IMPASTO_SOURCE_URL",
+      "checksum_key": "IMPASTO_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/zbcoding/ImpastoPaint/releases/download/{tag}/Impasto-x86_64.AppImage",
+      "additional_sources": [
+        {
+          "source_url_key": "IMPASTO_LICENSE_URL",
+          "checksum_key": "IMPASTO_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/license-mit.txt"
+        },
+        {
+          "source_url_key": "IMPASTO_PINTA_LICENSE_URL",
+          "checksum_key": "IMPASTO_PINTA_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/license-mit-pinta.txt"
+        },
+        {
+          "source_url_key": "IMPASTO_LGPL_LICENSE_URL",
+          "checksum_key": "IMPASTO_LGPL_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/license-lgpl.txt"
+        },
+        {
+          "source_url_key": "IMPASTO_NOTICES_URL",
+          "checksum_key": "IMPASTO_NOTICES_SHA256",
+          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/THIRD-PARTY-NOTICES.md"
+        }
+      ]
     }
   ]
 }

@@ -3,7 +3,8 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
-- Adicionar Krita, Inkscape, Godot, Patchy e Blockbench ao perfil de aplicativos da sessão live e do sistema instalado; fixar e validar por checksum os AppImages e licenças do Patchy/Blockbench, iniciá-los sem exigir FUSE e exigir os cinco aplicativos no gate de conteúdo da ISO.
+- Adicionar Krita, Inkscape, Godot, Impasto, Patchy e Blockbench ao perfil de aplicativos da sessão live e do sistema instalado; fixar e validar por checksum os AppImages do Impasto/Patchy/Blockbench e seus avisos completos de licença, iniciá-los sem exigir FUSE e exigir os aplicativos gráficos no gate de conteúdo da ISO.
+- Substituir KolourPaint pelo Impasto: AppImage upstream fixado com GTK incluído, execução sem FUSE e todos os avisos upstream MIT/LGPL/de terceiros. O Pacman resolve as dependências do perfil, removendo as usadas somente pelo KolourPaint e mantendo as bibliotecas compartilhadas.
 - Manter `linux-headers` no ambiente de build Artix até gerar os initramfs e removê-lo transacionalmente dos rootfs preparados antes de criar o SquashFS; verificar os bancos de pacotes finais da ISO e registrar a remoção nos metadados.
 
 - Desenhar titlebars do Aqueous acima do conteúdo do cliente e estender o contorno arredondado contínuo por titlebar e conteúdo. O duplo clique alterna maximizar/restaurar; restaurar recupera a geometria flutuante salva, mantém o foco e eleva a janela. `window_corner_radius` do Pearl passa a valer na próxima sessão Aqueous com efeitos Vulkan; o renderer CPU de compatibilidade continua quadrado.

@@ -64,7 +64,7 @@ rootfs:
     - qt6ct
     - shikane
     - wdisplays
-    - kolourpaint
+    - impasto
     - krita
     - adw-gtk-theme
     - dconf

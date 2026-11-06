@@ -194,7 +194,14 @@ required_paths=(
   usr/bin/vainfo
   usr/bin/scanimage
   usr/lib/libayatana-appindicator3.so.1
-  usr/bin/kolourpaint
+  usr/bin/impasto
+  opt/impasto/Impasto-x86_64.AppImage
+  usr/share/applications/com.github.zbcoding.Impasto.desktop
+  usr/share/licenses/impasto/license-mit.txt
+  usr/share/licenses/impasto/license-mit-pinta.txt
+  usr/share/licenses/impasto/license-lgpl.txt
+  usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md
+  usr/share/doc/impasto/SOURCE
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
@@ -343,7 +350,6 @@ required_paths=(
   usr/share/dbus-1/services/com.github.neithern.g4music.service
   usr/share/glib-2.0/schemas/com.github.neithern.g4music.gschema.xml
   usr/share/applications/swayimg.desktop
-  usr/share/applications/org.kde.kolourpaint.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
   usr/share/applications/com.shellyorg.shelly-notifications.desktop
   usr/bin/ufw
@@ -421,7 +427,6 @@ required_paths=(
   usr/local/share/applications/com.shellyorg.shelly.desktop
   usr/local/share/applications/galculator.desktop
   usr/local/share/applications/gparted.desktop
-  usr/local/share/applications/org.kde.kolourpaint.desktop
   usr/local/share/applications/swayimg.desktop
   usr/local/share/applications/org.pwmt.zathura.desktop
   usr/local/share/applications/com.github.neithern.g4music.desktop
@@ -451,7 +456,7 @@ for path in "${required_paths[@]}"; do
     END { exit !found }
   ' <<<"$manifest" || fail "missing ISO path (exact path required): $path"
 done
-for package in krita inkscape godot patchy blockbench; do
+for package in krita inkscape godot patchy blockbench impasto; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required graphics application is not installed in rootfs: $package"
 done
@@ -469,6 +474,18 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
   if forbidden_matches=$(grep -E '/var/lib/pacman/local/strawberry-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired Strawberry package metadata remains in the ISO'
+  fi
+  for kolourpaint_path in \
+    usr/bin/kolourpaint \
+    usr/share/applications/org.kde.kolourpaint.desktop \
+    usr/local/share/applications/org.kde.kolourpaint.desktop; do
+    if grep -Fq "/$kolourpaint_path" <<<"$image_manifest"; then
+      fail "retired KolourPaint payload remains in the ISO: $kolourpaint_path"
+    fi
+  done
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/kolourpaint-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'retired KolourPaint package metadata remains in the ISO'
   fi
   for bc250_path in \
     usr/bin/cyan-skillfish-governor-smu \
@@ -1166,7 +1183,7 @@ usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
-usr/local/share/applications/org.kde.kolourpaint.desktop|Drawing|Desenho|kolourpaint %u
+usr/share/applications/com.github.zbcoding.Impasto.desktop|Impasto|Impasto|impasto %F
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/org.pwmt.zathura.desktop|PDF Reader|Leitor de PDF|zathura %U
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U

@@ -238,6 +238,7 @@ for required in \
   'build_package dinx-plymouth-theme' \
   'build_package patchy' \
   'build_package blockbench' \
+  'build_package impasto' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

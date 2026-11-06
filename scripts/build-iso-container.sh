@@ -407,6 +407,7 @@ trap finish EXIT
               build_package dinx-keyring
               build_package patchy
               build_package blockbench
+              build_package impasto
               if [[ "$package_repository_only" != true ]]; then
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \

@@ -49,6 +49,10 @@ grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' "$session_launcher" || fail 'se
 grep -Fq 'export EDITOR="${EDITOR:-dintor}"' "$shell_profile" || fail 'EDITOR default is missing'
 grep -Fq 'export VISUAL="${VISUAL:-$EDITOR}"' "$shell_profile" || fail 'VISUAL default is missing'
 grep -Fq "makedepends=('ghostty-vt-runtime'" "$pkgbuild" || fail 'Deetty build does not use the isolated VT runtime'
+grep -Fq 'zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)' "$pkgbuild" \
+  || fail 'Deetty build target must be generic x86_64 GNU/Linux'
+[[ $(grep -Fc 'zig build "${zig_target_flags[@]}"' "$pkgbuild") == 6 ]] \
+  || fail 'every Deetty build and package invocation must use the generic target flags'
 grep -Fq "'ghostty-vt-runtime'" "$pkgbuild" || fail 'Deetty does not depend on the isolated VT runtime'
 if grep -Fq "'ghostty'" "$pkgbuild"; then
   fail 'Deetty still depends on the Ghostty terminal application'

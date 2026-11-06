@@ -28,7 +28,10 @@ grep -Fqx 'pkgname=seafoam-settings' "$pkgbuild" || fail 'package name is not se
 grep -Fqx 'source=()' "$pkgbuild" || fail 'Seafoam Settings must be a local staged package'
 grep -Fq 'depends=(gtk4 libadwaita glibc deetty dintor dinitui dinxpanel qt6ct wdisplays shikane dome)' "$pkgbuild" \
   || fail 'package dependencies do not use the sole Deetty terminal and Dintor editor'
-grep -Fq 'zig build -Doptimize=ReleaseSafe' "$pkgbuild" || fail 'package does not use the release-safe Zig build'
+grep -Fq 'zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)' "$pkgbuild" \
+  || fail 'Seafoam Settings build target must be generic x86_64 GNU/Linux'
+grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
+  || fail 'package build must use the generic target flags'
 grep -Fq 'install -Dm755 "$srcdir/stage/bin/seafoam-settings"' "$pkgbuild" || fail 'package does not install the binary'
 grep -Fq 'Name=Desktop Settings' "$desktop" || fail 'desktop name is missing'
 grep -Fqx 'Name[pt_BR]=Ajustes do Desktop' "$desktop" || fail 'localized desktop name is missing'

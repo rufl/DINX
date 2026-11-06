@@ -5,7 +5,7 @@ source_env="$startdir/source.env"
 : "${DEETTY_VERSION:?missing DEETTY_VERSION}"
 : "${DEETTY_SOURCE_SHA256:?missing DEETTY_SOURCE_SHA256}"
 pkgver="$DEETTY_VERSION"
-pkgrel=4
+pkgrel=5
 pkgdesc='Native Zig terminal workspace and Dintor editor for DINX'
 arch=('x86_64')
 url='https://github.com/rufl/DEETTY'
@@ -26,12 +26,12 @@ prepare() {
 }
 
 build() {
-  cd "$srcdir/deetty-$pkgver"
-  zig build -Doptimize=ReleaseSafe
-  zig build -Doptimize=ReleaseSafe test
-  zig build -Doptimize=ReleaseSafe deetty-smoke-binary
-  zig build -Doptimize=ReleaseSafe terminal-session-qualification-binary
-  zig build -Doptimize=ReleaseSafe terminal-compatibility-binary
+  local -a zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe test
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe deetty-smoke-binary
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe terminal-session-qualification-binary
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe terminal-compatibility-binary
   qualification_script="$startdir/../../../scripts/deetty_p2_qualification.sh"
   [[ -x "$qualification_script" ]] || {
     printf 'PKGBUILD: missing P2 qualification script: %s\n' "$qualification_script" >&2
@@ -77,7 +77,7 @@ build() {
 }
 
 package() {
-  cd "$srcdir/deetty-$pkgver"
-  zig build -Doptimize=ReleaseSafe --prefix "$pkgdir/usr"
+  local -a zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe --prefix "$pkgdir/usr"
   rm -rf "$pkgdir/usr/share/deetty/noctalia"
 }

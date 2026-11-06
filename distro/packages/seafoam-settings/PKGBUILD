@@ -1,6 +1,6 @@
 pkgname=seafoam-settings
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Native DINX settings launcher for Seafoam desktop tools'
 arch=(x86_64)
 url='https://github.com/rufl/DINX'
@@ -10,10 +10,10 @@ makedepends=('zig>=0.17')
 source=()
 sha256sums=()
 
-build() {
   cd "$startdir"
   rm -rf "$srcdir/stage"
-  zig build -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
+  local -a zig_target_flags=(-Dtarget=x86_64-linux-gnu -Dcpu=baseline)
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
 }
 
 package() {

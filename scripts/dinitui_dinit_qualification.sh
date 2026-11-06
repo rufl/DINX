@@ -69,6 +69,7 @@ list_output=$("${ctl[@]}" list)
 grep -Fq 'fixture' <<<"$list_output" || fail 'real dinitctl list omitted fixture'
 status_output=$("${ctl[@]}" status fixture)
 grep -Fq 'STARTED' <<<"$status_output" || fail 'real dinitctl status did not report STARTED'
+set +e
 ui_output=$(
   PATH="$tmp/bin:$PATH" \
     DINIT_REAL="$dinitctl_bin" \
@@ -80,7 +81,10 @@ ui_output=$(
     XDG_CACHE_HOME="$home/.cache" \
     xvfb-run -a "$dinitui_bin" --smoke 2>&1
 )
+ui_status=$?
+set -e
 printf '%s\n' "$ui_output"
+[[ "$ui_status" == 0 ]] || fail "GTK smoke exited with status $ui_status"
 ui_service_count=0
 if [[ "$ui_output" =~ dinitui_smoke[[:space:]]surface=true[[:space:]]services=([0-9]+) ]]; then
   ui_service_count=${BASH_REMATCH[1]}

@@ -48,20 +48,29 @@ prune_build_only_headers() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
   local -a header_records
+  local pacman_config
 
   [[ "$root" != / && -d "$local_db" ]] || return 0
   header_records=("$local_db"/linux-headers-*)
   [[ -d "${header_records[0]}" ]] || return 0
-  [[ -r "$root/etc/pacman.conf" ]] || {
-    printf 'dinx mksquashfs wrapper: missing staged pacman.conf for %s\n' "$root" >&2
+
+  pacman_config=$(mktemp "${TMPDIR:-/tmp}/dinx-pacman-prune.XXXXXX") || {
+    printf 'dinx mksquashfs wrapper: cannot create isolated pacman config\n' >&2
     return 1
   }
-
-  if ! pacman --root "$root" --config "$root/etc/pacman.conf" \
+  if ! printf '[options]\nArchitecture = auto\n' > "$pacman_config"; then
+    rm -f -- "$pacman_config"
+    printf 'dinx mksquashfs wrapper: cannot write isolated pacman config\n' >&2
+    return 1
+  fi
+  if ! pacman --root "$root" --config "$pacman_config" \
     -R --noconfirm --noscriptlet linux-headers; then
+    rm -f -- "$pacman_config"
     printf 'dinx mksquashfs wrapper: cannot safely remove linux-headers from %s\n' "$root" >&2
     return 1
   fi
+  rm -f -- "$pacman_config"
+
   header_records=("$local_db"/linux-headers-*)
   [[ ! -d "${header_records[0]}" ]] || {
     printf 'dinx mksquashfs wrapper: linux-headers package record remains in %s\n' "$root" >&2

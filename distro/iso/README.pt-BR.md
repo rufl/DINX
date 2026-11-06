@@ -103,7 +103,10 @@ substituições não entram no rootfs instalado pelo Calamares. O rootfs live in
 o contrato da instalação remove o pacote da raiz instalada. O builder mantém sua
 própria cópia. O CI instala o wrapper em
 `/usr/bin/mksquashfs` após preservar o binário real, pois o `buildiso` do Artix
-pode invocar esse caminho absoluto. A inspeção pós-build verifica xz e blocos de
+pode invocar esse caminho absoluto. A poda de pacotes usa uma configuração
+`pacman` mínima e isolada, pois includes absolutos do `/etc/pacman.conf`
+preparado resolveriam no host do builder. A montagem falha se o Artix não gerar
+um `/LiveOS/rootfs.img` não vazio; a inspeção pós-build verifica xz e blocos de
 1 MiB nos dois superblocos SquashFS.
 O orçamento P0 rejeita ISOs no limite ou acima de 2 GiB por asset do GitHub; a
 Alpha 12 tem 1.836.830.720 bytes (310.652.928 bytes abaixo do limite).

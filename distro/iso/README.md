@@ -100,7 +100,10 @@ included in the Calamares-installed rootfs. The live rootfs includes `squashfs-t
 because Calamares `unpackfs` requires `unsquashfs`; the install contract removes it
 from the installed root. The builder keeps its own copy. CI installs the wrapper at
 `/usr/bin/mksquashfs` after preserving the real binary, because Artix `buildiso`
-may invoke that absolute path. Post-build inspection checks both SquashFS
+may invoke that absolute path. Build-only package pruning uses an isolated
+minimal pacman config so absolute includes from staged `/etc/pacman.conf` do not
+resolve on the builder host. Assembly fails if Artix does not produce a
+nonempty `/LiveOS/rootfs.img`; post-build inspection checks both SquashFS
 superblocks for xz compression and 1 MiB blocks.
 The P0 budget rejects ISOs at or above GitHub's 2 GiB asset limit; Alpha 12 is
 1,836,830,720 bytes (310,652,928 bytes below the limit).

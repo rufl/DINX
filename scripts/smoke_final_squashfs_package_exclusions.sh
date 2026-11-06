@@ -26,7 +26,7 @@ header_file="$root/usr/src/linux-fixture/include/dinx-fixture.h"
 other_file="$root/usr/share/dinx-prune-smoke/keep"
 mkdir -p -- "$header_db" "$other_db" "$(dirname -- "$header_file")" "$(dirname -- "$other_file")" "$root/etc"
 cp -- /var/lib/pacman/local/ALPM_DB_VERSION "$root/var/lib/pacman/local/ALPM_DB_VERSION"
-printf '[options]\nArchitecture = auto\n' > "$root/etc/pacman.conf"
+printf '[options]\nArchitecture = auto\nInclude = %s/missing-dinx-mirrorlist\n' "$work_dir" > "$root/etc/pacman.conf"
 printf 'fixture header\n' > "$header_file"
 printf 'preserved runtime file\n' > "$other_file"
 

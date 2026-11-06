@@ -3,6 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Usar uma configuração `pacman` mínima e isolada para remover `linux-headers` exclusivo do build; includes absolutos do `/etc/pacman.conf` staged resolvem no host do builder, não na raiz alvo. Falhar a montagem imediatamente se o Artix não gerar um `/LiveOS/rootfs.img` não vazio, em vez de deixar uma ISO inválida chegar à qualificação.
 - Instalar `libarchive-tools` no job de publicação de pacotes assinados antes de validar os archives do repositório; o runner do GitHub não incluía `bsdtar`, causando falha no gate do repositório.
 - Manter `memtest86+` somente em `packages-boot` porque o `make_bootfs()` do artools 0.40 do Artix copia esse artefato de boot incondicionalmente; ele continua ausente do rootfs/livefs e do menu DINX.
 - Maximizar a compactação SquashFS da ISO com xz, BCJ x86, blocos de 1 MiB e dicionário de 1 MiB (maiores valores SquashFS suportados pelo builder); manter o padrão XZ do `mksquashfs`, que não expõe controle de nível. Os metadados e a qualificação da ISO agora verificam as novas configurações.

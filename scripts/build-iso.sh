@@ -132,3 +132,7 @@ PATH="$iso_tools_path" WORKSPACE_DIR="$workspace_dir" \
   -r "$chroots_dir" \
   -t "$output_dir" \
   "$@"
+
+rootfs_image="$chroots_dir/dinx/iso/LiveOS/rootfs.img"
+[[ -s "$rootfs_image" ]] \
+  || fail "Artix buildiso did not produce a non-empty /LiveOS/rootfs.img: $rootfs_image"

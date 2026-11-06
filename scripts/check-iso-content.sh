@@ -195,6 +195,22 @@ required_paths=(
   usr/bin/scanimage
   usr/lib/libayatana-appindicator3.so.1
   usr/bin/kolourpaint
+  usr/bin/krita
+  usr/bin/inkscape
+  usr/bin/godot
+  usr/bin/patchy
+  usr/bin/blockbench
+  opt/patchy/PatchyLinux.AppImage
+  opt/blockbench/Blockbench.AppImage
+  usr/share/applications/org.kde.krita.desktop
+  usr/share/applications/org.inkscape.Inkscape.desktop
+  usr/share/applications/org.godotengine.Godot.desktop
+  usr/share/applications/patchy.desktop
+  usr/share/applications/blockbench.desktop
+  usr/share/licenses/patchy/LICENSE
+  usr/share/licenses/blockbench/LICENSE.MD
+  usr/share/doc/patchy/SOURCE
+  usr/share/doc/blockbench/SOURCE
   etc/dinit.d/bluetoothd
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
@@ -434,6 +450,10 @@ for path in "${required_paths[@]}"; do
     { for (i = 1; i <= NF; i++) if ($i == wanted || $i == wanted "/") found = 1 }
     END { exit !found }
   ' <<<"$manifest" || fail "missing ISO path (exact path required): $path"
+done
+for package in krita inkscape godot patchy blockbench; do
+  grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
+    || fail "required graphics application is not installed in rootfs: $package"
 done
 cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/issue)
 grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'

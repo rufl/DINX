@@ -16,6 +16,7 @@ arch=('x86_64')
 url='https://github.com/SethRobinson/Patchy'
 license=('MIT')
 depends=('glibc')
+options=('!strip')
 source=(
   "PatchyLinux.AppImage::${PATCHY_SOURCE_URL}"
   "LICENSE::${PATCHY_LICENSE_URL}"
@@ -25,8 +26,8 @@ source=(
 sha256sums=(
   "$PATCHY_SOURCE_SHA256"
   "$PATCHY_LICENSE_SHA256"
-  'SKIP'
-  'SKIP'
+  'a6223a45e0841e778eb9ff4d90a1b2df3c77642129dbdfd7075bd99ab8e6527b'
+  '0388fd7d0c685f16ec56258d087fcfdd4bb4ac2e3df344806d0b80ba80bd6f30'
 )
 
 package() {

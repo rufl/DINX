@@ -2,7 +2,9 @@
 Type=Application
 Version=1.0
 Name=Patchy
+Name[pt_BR]=Patchy
 Comment=PSD-focused image editor
+Comment[pt_BR]=Editor de imagens com foco em PSD
 Exec=patchy %F
 TryExec=patchy
 Icon=applications-graphics

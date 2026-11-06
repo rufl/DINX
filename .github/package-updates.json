@@ -187,6 +187,46 @@
           "url_template": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/{tag}/fonts/NotoSansMono/hinted/ttf/NotoSansMono-Regular.ttf"
         }
       ]
+    },
+    {
+      "name": "patchy",
+      "provider": "github",
+      "repository": "SethRobinson/Patchy",
+      "source_file": "distro/packages/patchy/source.env",
+      "version_key": "PATCHY_VERSION",
+      "package_version_key": "PATCHY_VERSION",
+      "source_url_key": "PATCHY_SOURCE_URL",
+      "checksum_key": "PATCHY_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/SethRobinson/Patchy/releases/download/{tag}/PatchyLinux.AppImage",
+      "additional_sources": [
+        {
+          "source_url_key": "PATCHY_LICENSE_URL",
+          "checksum_key": "PATCHY_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/SethRobinson/Patchy/{tag}/LICENSE"
+        }
+      ]
+    },
+    {
+      "name": "blockbench",
+      "provider": "github",
+      "repository": "JannisX11/Blockbench",
+      "source_file": "distro/packages/blockbench/source.env",
+      "version_key": "BLOCKBENCH_VERSION",
+      "package_version_key": "BLOCKBENCH_VERSION",
+      "source_url_key": "BLOCKBENCH_SOURCE_URL",
+      "checksum_key": "BLOCKBENCH_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/JannisX11/Blockbench/releases/download/{tag}/Blockbench_{version}.AppImage",
+      "additional_sources": [
+        {
+          "source_url_key": "BLOCKBENCH_LICENSE_URL",
+          "checksum_key": "BLOCKBENCH_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/JannisX11/Blockbench/{tag}/LICENSE.MD"
+        }
+      ]
     }
   ]
 }

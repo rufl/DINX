@@ -236,6 +236,8 @@ for required in \
   'pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good' \
   'build_package dinx-noto-latin' \
   'build_package dinx-plymouth-theme' \
+  'build_package patchy' \
+  'build_package blockbench' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

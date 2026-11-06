@@ -2,7 +2,9 @@
 Type=Application
 Version=1.0
 Name=Blockbench
+Name[pt_BR]=Blockbench
 Comment=Low-poly 3D model editor
+Comment[pt_BR]=Editor de modelos 3D low-poly
 Exec=blockbench %U
 TryExec=blockbench
 Icon=applications-graphics

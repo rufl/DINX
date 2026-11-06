@@ -44,6 +44,7 @@ rootfs:
     - flatpak
     - fwupd
     - gparted
+    - godot
     - libva
     - libva-utils
     - phyto
@@ -64,6 +65,7 @@ rootfs:
     - shikane
     - wdisplays
     - kolourpaint
+    - krita
     - adw-gtk-theme
     - dconf
     - gsettings-desktop-schemas
@@ -85,6 +87,7 @@ rootfs:
     - bluez
     - bluez-utils
     - blueman
+    - blockbench
     - libayatana-appindicator
     - btop
     - brightnessctl
@@ -95,6 +98,7 @@ rootfs:
     - libnewt
     - man-db
     - openssh
+    - patchy
     - procps-ng
     - sqlite
     - texinfo
@@ -108,6 +112,7 @@ rootfs:
     - galculator
     - gufw
     - inxi
+    - inkscape
     - jq
     - less
     - nm-connection-editor

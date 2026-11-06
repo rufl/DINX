@@ -30,9 +30,31 @@ grep -Fqx 'PATH=/usr/bin:/usr/local/bin:/usr/sbin:/sbin' "$gufw_helper" || fail 
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted sane fwupd flatpak kolourpaint phyto pori shikane udisks2 udisks2-btrfs wdisplays; do
+for package in file-roller galculator gapless gparted sane fwupd flatpak kolourpaint krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
+for package in patchy blockbench; do
+  launcher="$root/distro/packages/$package/$package.desktop"
+  [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
+  grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
+  case "$package" in
+    patchy) expected_name=Patchy ;;
+    blockbench) expected_name=Blockbench ;;
+  esac
+  grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
+  grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
+  grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
+  grep -Fqx "options=('!strip')" "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
+  if grep -Eq '^(Hidden|NoDisplay)=true$' "$launcher"; then
+    fail "$package desktop launcher is hidden"
+  fi
+done
+grep -Fqx 'Exec=patchy %F' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy launcher does not preserve file arguments'
+grep -Fqx 'Comment[pt_BR]=Editor de imagens com foco em PSD' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy Portuguese description is missing'
+grep -Fqx 'Exec=blockbench %U' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench launcher does not preserve URI arguments'
+grep -Fqx 'Comment[pt_BR]=Editor de modelos 3D low-poly' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench Portuguese description is missing'
+grep -Fqx 'exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/patchy/patchy" || fail 'Patchy launcher does not use the no-FUSE AppImage runtime'
+grep -Fqx 'exec /opt/blockbench/Blockbench.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/blockbench/blockbench" || fail 'Blockbench launcher does not use the no-FUSE AppImage runtime'
 
 for removed in gvfs gvfs-gphoto2 gvfs-mtp gvfs-smb partitionmanager thunar thunar-archive-plugin thunar-volman tumbler; do
   if grep -Fqx "    - $removed" "$profile"; then
@@ -215,4 +237,4 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=localized process_manager=localized traffic_monitor=localized sane=true fwupd=true flatpak=true kolourpaint=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=localized process_manager=localized traffic_monitor=localized sane=true fwupd=true flatpak=true kolourpaint=true graphics_apps=krita+inkscape+godot+patchy+blockbench phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

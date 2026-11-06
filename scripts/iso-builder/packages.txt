@@ -44,6 +44,7 @@ libxml2
 pam
 playerctl
 polkit
+extra-cmake-modules
 qt5-base
 qt6-base
 shaderc

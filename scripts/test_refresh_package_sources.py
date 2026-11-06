@@ -400,6 +400,42 @@ class RefreshPackageSourcesTests(unittest.TestCase):
             "https://example.invalid/trademarks/v2.0.0-alpha.7.md",
         )
 
+    def test_kde_stable_directory_selects_highest_numeric_release(self) -> None:
+        entry = self.manifest["packages"][0]
+        entry["provider"] = "kde"
+        entry["repository"] = "multimedia/haruna"
+        entry["url_template"] = (
+            "https://download.kde.org/stable/haruna/{version}/haruna-{version}.tar.xz"
+        )
+        entry["bump_pkgrel_path"] = "distro/packages/example/PKGBUILD"
+        self.release_page = (
+            '<a href="../">Parent directory</a>'
+            '<a href="1.9.0/">1.9.0/</a>'
+            '<a href="1.10.0/">1.10.0/</a>'
+            '<a href="2.0.0-rc.1/">2.0.0-rc.1/</a>'
+        )
+
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+
+        self.assertEqual(changed, ["example"])
+        self.assertEqual(
+            self.body_calls,
+            ["https://download.kde.org/stable/haruna/"],
+        )
+        self.assertEqual(self.lookup_calls, [])
+        self.assertEqual(
+            self.hash_calls,
+            [("https://download.kde.org/stable/haruna/1.10.0/haruna-1.10.0.tar.xz", "sha256")],
+        )
+        updated = dict(line.split("=", 1) for line in changes[self.source_path].splitlines())
+        self.assertEqual(updated["EXAMPLE_VERSION"], "1.10.0")
+        self.assertEqual(
+            updated["EXAMPLE_SOURCE_URL"],
+            "https://download.kde.org/stable/haruna/1.10.0/haruna-1.10.0.tar.xz",
+        )
+        self.assertIn("pkgrel=5\n", changes[self.package_path])
+
     def test_prerelease_order_is_semver_compatible(self) -> None:
         self.assertLess(
             updater.version_tuple("2.0.0-alpha.7"),

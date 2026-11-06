@@ -331,8 +331,7 @@ required_paths=(
   usr/bin/rsync
   usr/bin/nm-connection-editor
   usr/bin/swayimg
-  usr/bin/vlc
-  usr/bin/qvlc
+  usr/bin/haruna
   usr/bin/g4music
   usr/bin/galculator
   usr/bin/topgrade
@@ -352,7 +351,8 @@ required_paths=(
   etc/paru.conf
   etc/shellybuild.conf
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
-  usr/share/applications/vlc.desktop
+  usr/share/applications/org.kde.haruna.desktop
+  usr/share/licenses/haruna/LICENSE
   usr/share/applications/com.github.neithern.g4music.desktop
   usr/share/applications/galculator.desktop
   usr/share/licenses/gapless/COPYING
@@ -431,7 +431,7 @@ required_paths=(
   usr/local/share/applications/gparted.desktop
   usr/local/share/applications/swayimg.desktop
   usr/local/share/applications/com.github.neithern.g4music.desktop
-  usr/local/share/applications/vlc.desktop
+  usr/local/share/applications/org.kde.haruna.desktop
   usr/local/share/applications/blueman-manager.desktop
   usr/local/libexec/dinx-bluetooth-manager
   usr/local/share/applications/nm-connection-editor.desktop
@@ -465,7 +465,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fi
   done
 done
-for package in krita inkscape godot patchy blockbench impasto onlyoffice zrythm; do
+for package in krita inkscape godot patchy blockbench impasto onlyoffice zrythm haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -479,6 +479,19 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired Breeze Icons, Zathura or MuPDF package metadata remains in the ISO'
   fi
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(vlc|vlc-[^/]+|libvlc)-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'retired VLC package metadata remains in the ISO'
+  fi
+  for retired_media_path in \
+    usr/bin/vlc \
+    usr/bin/qvlc \
+    usr/share/applications/vlc.desktop \
+    usr/local/share/applications/vlc.desktop; do
+    if grep -Fq "/$retired_media_path" <<<"$image_manifest"; then
+      fail "retired VLC payload remains in the ISO: $retired_media_path"
+    fi
+  done
   for retired_pdf_path in \
     usr/bin/zathura \
     usr/lib/zathura/libpdf-mupdf.so \
@@ -848,7 +861,7 @@ if grep -Eiq 'systemd|systemctl' <<<"$root_greetd_config"; then
 fi
 
 grep -Fq '/usr/share/applications/swayimg.desktop' <<<"$manifest" || fail 'Swayimg desktop entry is not in the ISO payload'
-grep -Fq 'vlc.desktop' <<<"$manifest" || fail 'VLC desktop entry is not in the ISO payload'
+grep -Fq 'org.kde.haruna.desktop' <<<"$manifest" || fail 'Haruna desktop entry is not in the ISO payload'
 grep -Fq 'com.github.neithern.g4music.desktop' <<<"$manifest" || fail 'Gapless desktop entry is not in the ISO payload'
 grep -Fq 'galculator.desktop' <<<"$manifest" || fail 'Galculator desktop entry is not in the ISO payload'
 grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
@@ -1008,7 +1021,7 @@ if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
 grep -Fq 'image/png=swayimg.desktop;' <<<"$mimeapps_config" || fail 'Swayimg is not the default PNG handler'
-grep -Fq 'video/mp4=vlc.desktop;' <<<"$mimeapps_config" || fail 'VLC is not the default MP4 handler'
+grep -Fq 'video/mp4=org.kde.haruna.desktop;' <<<"$mimeapps_config" || fail 'Haruna is not the default MP4 handler'
 for audio_mime in audio/mpeg audio/x-mpeg audio/x-mp3 audio/ogg audio/x-vorbis audio/x-vorbis+ogg audio/x-opus+ogg audio/flac audio/x-flac audio/wav audio/x-wav; do
   grep -Fq "$audio_mime=com.github.neithern.g4music.desktop;" <<<"$mimeapps_config" \
     || fail "Gapless is not the default audio handler for $audio_mime"
@@ -1242,7 +1255,7 @@ usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr
 usr/share/applications/com.github.zbcoding.Impasto.desktop|Impasto|Impasto|impasto %F
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
-usr/local/share/applications/vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
+usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol

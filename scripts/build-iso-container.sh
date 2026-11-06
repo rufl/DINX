@@ -411,6 +411,13 @@ trap finish EXIT
               build_package impasto
               build_package onlyoffice
               build_package zrythm
+              # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
+              pacman_retry -S --needed --noconfirm \
+                extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \
+                kdeclarative kdsingleapplication kfilemetadata ki18n kio kirigami \
+                kitemmodels kservice kwindowsystem mpvqt qqc2-desktop-style \
+                qt6-5compat qt6-declarative
+              build_package haruna
               if [[ "$package_repository_only" != true ]]; then
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \

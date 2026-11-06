@@ -90,6 +90,17 @@ def latest_tag(
         tag = f"v{match.group(1)}"
         source_version(tag)
         return tag
+    elif provider == "kde":
+        project = repository.rsplit("/", 1)[-1]
+        endpoint = f"https://download.kde.org/stable/{project}/"
+        try:
+            page = get_body(endpoint)
+        except urllib.error.HTTPError as error:
+            fail(f"{entry['name']}: upstream release lookup returned HTTP {error.code}: {endpoint}")
+        versions = re.findall(r"""href=["']([0-9]+(?:\.[0-9]+)*)/["']""", page)
+        if not versions:
+            fail(f"{entry['name']}: KDE stable directory has no supported release versions: {endpoint}")
+        return max(versions, key=version_tuple)
     else:
         fail(f"{entry['name']}: unsupported release provider {provider!r}")
     try:

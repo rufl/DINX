@@ -30,7 +30,7 @@ grep -Fq '/usr/bin/pkexec /usr/bin/dinitctl start portmaster' "$portmaster_launc
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in file-roller galculator gapless gparted sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
+for package in file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in breeze-icons zathura zathura-pdf-mupdf libmupdf; do
@@ -41,6 +41,31 @@ for package in breeze-icons zathura zathura-pdf-mupdf libmupdf; do
     fail "$package remains in an ISO feature group"
   fi
 done
+for retired in vlc vlc-cli; do
+  if grep -Fqx "    - $retired" "$profile" || grep -Fq "\"$retired\"" "$feature_groups"; then
+    fail "$retired remains explicitly selected for the DINX ISO"
+  fi
+done
+[[ ! -e "$local_apps/vlc.desktop" ]] || fail 'retired VLC desktop override remains in the ISO overlay'
+haruna_recipe="$root/distro/packages/haruna/PKGBUILD"
+haruna_source="$root/distro/packages/haruna/source.env"
+source "$haruna_source"
+[[ "$HARUNA_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Haruna version: $HARUNA_VERSION"
+[[ "$HARUNA_SOURCE_URL" == "https://download.kde.org/stable/haruna/${HARUNA_VERSION}/haruna-${HARUNA_VERSION}.tar.xz" ]] \
+  || fail 'Haruna source URL does not match its stable release pin'
+[[ "$HARUNA_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Haruna source checksum is invalid'
+grep -Fq 'pkgver="$HARUNA_VERSION"' "$haruna_recipe" || fail 'Haruna package version is not wired to source.env'
+grep -Fq '"$HARUNA_SOURCE_URL"' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
+grep -Fq '"$HARUNA_SOURCE_SHA256"' "$haruna_recipe" || fail 'Haruna checksum is not wired to source.env'
+grep -Fq 'build_package haruna' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Haruna'
+for dependency in ffmpeg extra-cmake-modules mpvqt qt6-base qt6-declarative; do
+  grep -Fqx "  $dependency" "$haruna_recipe" || fail "Haruna dependency is missing: $dependency"
+done
+grep -Fq 'video/mp4=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default MP4 handler'
+grep -Fq 'video/x-matroska=org.kde.haruna.desktop;' "$mimeapps" || fail 'Haruna is not the default Matroska handler'
+if grep -Fq 'vlc.desktop' "$mimeapps"; then
+  fail 'MIME defaults retain the retired VLC desktop entry'
+fi
 if grep -Fqx '    - kolourpaint' "$profile"; then
   fail 'KolourPaint remains in the DINX profile'
 fi
@@ -178,7 +203,7 @@ galculator.desktop|Calculator|Calculadora|galculator
 gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
-vlc.desktop|Media Player|Tocador de Mídia|/usr/bin/vlc --started-from-file %U
+org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
@@ -231,7 +256,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop vlc.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do

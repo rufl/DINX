@@ -134,8 +134,7 @@ rootfs:
     - swayidle
     - swaylock
     - wlopm
-    - vlc
-    - vlc-cli
+    - haruna
     - upower
     - usbutils
     - wl-clipboard

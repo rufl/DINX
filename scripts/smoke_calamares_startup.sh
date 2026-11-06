@@ -39,11 +39,11 @@ set -e
 cat "$work_dir/calamares.log"
 
 case "$status" in
-  0|124|137|143) ;;
+  124|137) ;;
+  0) fail 'Calamares exited cleanly before the bounded startup timeout' ;;
   *) fail "Calamares startup exited before the bounded smoke completed: status $status" ;;
 esac
 
-grep -Eiq 'calamares' "$work_dir/calamares.log" || fail 'Calamares produced no startup log output'
 for pattern in \
   'failed to load.*module' \
   'could not find.*settings\.conf' \

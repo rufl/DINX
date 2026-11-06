@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 - Maximize ISO SquashFS compaction with xz, x86 BCJ, 1 MiB blocks and a 1 MiB dictionary (the largest SquashFS values supported by the builder); retain the mksquashfs XZ tool default because it exposes no compression-level control. Metadata and ISO qualification now verify the new settings.
+- Require Calamares to remain alive through the bounded startup smoke; allow silent startup logging while still rejecting emitted module/configuration errors.
 - Fix Aqueous's Pearl-radius preference lookup for Zig 0.17: use libc for environment access and `std.Io.Dir` for reading the preferences file; `std.posix.getenv` and `std.fs.cwd()` are unavailable.
 - Fix the package-only GitHub publisher's Buildx Dockerfile path to use the same checked-in Artix builder recipe as the P0 ISO job.
 - Include `jq` in the Artix builder image: `check_dinx_theme.sh` needs it to verify Pearl's dark-theme defaults before ISO assembly, and builder provenance contracts now require it.

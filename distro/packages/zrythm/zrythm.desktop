@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Zrythm
+Name[pt_BR]=Zrythm
+Comment=Digital audio workstation
+Comment[pt_BR]=Estação de trabalho de áudio digital
+Exec=zrythm %U
+TryExec=zrythm
+Icon=multimedia-audio-player
+Terminal=false
+Categories=AudioVideo;Audio;Midi;

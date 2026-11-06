@@ -4,6 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 - Maximizar a compactação SquashFS da ISO com xz, BCJ x86, blocos de 1 MiB e dicionário de 1 MiB (maiores valores SquashFS suportados pelo builder); manter o padrão XZ do `mksquashfs`, que não expõe controle de nível. Os metadados e a qualificação da ISO agora verificam as novas configurações.
+- Corrigir a leitura da preferência de raio do Pearl no Aqueous para Zig 0.17: usar a API libc de ambiente no lugar de `std.posix.getenv`, removida, preservando o fallback XDG/HOME.
 - Incluir `jq` na imagem Artix do builder: `check_dinx_theme.sh` precisa dele para validar os padrões do tema escuro do Pearl antes de montar a ISO, e o contrato de procedência agora o exige.
 - Enxugar o conjunto genérico do rootfs: remover o cliente DHCP ISC independente sem uso (o NetworkManager usa o cliente DHCP interno por padrão), utilitários eCryptfs, exfat-utils legado (manter exfatprogs), Memtest86+ exclusivo de BIOS ausente do menu DINX de duas opções, ferramentas NFS-root do initramfs, ferramentas NBD, s-nail sem entrega de e-mail configurada e Zsh (Fish continua como padrão). Nenhum serviço ou launcher DINX depende desses pacotes; eles continuam disponíveis para instalação posterior pelo Artix.
 - Remover `libva-utils` e o `net-tools` legado da ISO. Manter `libva` para aplicativos VA-API e `iproute2` para administração de rede; nenhum helper DINX ou contrato de perfil usa `vainfo`, `ifconfig` ou `netstat`. Somente esses comandos de diagnóstico/legados saem.

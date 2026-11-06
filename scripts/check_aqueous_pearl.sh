@@ -94,6 +94,18 @@ for patch_file in \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+window_source="$source_root/compositor/aqueous/Window.zig"
+if grep -Fq 'posix.getenv(' "$window_source"; then
+  fail 'Aqueous window decoration uses the removed Zig std.posix.getenv API'
+fi
+for required in \
+  'std.c.getenv("XDG_CONFIG_HOME")' \
+  'std.c.getenv("HOME")' \
+  'std.mem.span(path)' \
+  'std.mem.span(home)'; do
+  grep -Fq "$required" "$window_source" \
+    || fail "Aqueous window decoration environment lookup is missing: $required"
+done
 "$zig_bin" test "$aqueous_dir/live_lock_policy.zig" \
   || fail 'live-session lock policy unit test failed'
 wlroots_build_hook="$source_root/compositor/scripts/build-wlroots-render-hook.sh"

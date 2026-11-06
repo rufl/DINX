@@ -156,9 +156,9 @@
 +    defer pearl_corner_radius_cache = radius;
 +    var owned_config_dir: ?[]u8 = null;
 +    defer if (owned_config_dir) |dir| util.gpa.free(dir);
-+    const config_dir = posix.getenv("XDG_CONFIG_HOME") orelse blk: {
-+        const home = posix.getenv("HOME") orelse break :blk "";
-+        owned_config_dir = std.fmt.allocPrint(util.gpa, "{s}/.config", .{home}) catch break :blk "";
++    const config_dir: []const u8 = if (std.c.getenv("XDG_CONFIG_HOME")) |path| std.mem.span(path) else blk: {
++        const home = std.c.getenv("HOME") orelse break :blk "";
++        owned_config_dir = std.fmt.allocPrint(util.gpa, "{s}/.config", .{std.mem.span(home)}) catch break :blk "";
 +        break :blk owned_config_dir.?;
 +    };
 +    if (config_dir.len > 0) {

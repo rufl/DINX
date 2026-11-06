@@ -48,6 +48,9 @@ for index in "${!font_keys[@]}"; do
 done
 for required in \
   "pkgname=dinx-noto-latin" \
+  'local font_dir="$pkgdir/usr/share/fonts/dinx-noto-latin"' \
+  "provides=('noto-fonts' 'ttf-font')" \
+  "conflicts=('noto-fonts')" \
   "license=('OFL-1.1-no-RFN')" \
   "makedepends=('python-fonttools')" \
   'install -Dm644 "$startdir/OFL.txt"' \
@@ -74,5 +77,5 @@ jq -e '
   .packages[] | select(.name == "dinx-noto-latin" and .tag_prefix == "noto-monthly-release-" and (.additional_sources | length) == 4)
 ' "$update_manifest" >/dev/null || fail 'monthly source refresh does not track all font files'
 
-printf 'dinx_noto_latin_contract package=true monthly_source=true font_files=%s families=NotoSans+NotoSansMono unicode_subset=true license=OFL-1.1 refresh=true full_package=false\n' \
+printf 'dinx_noto_latin_contract package=true monthly_source=true font_files=%s families=NotoSans+NotoSansMono unicode_subset=true license=OFL-1.1 refresh=true noto_fonts_provider=true upstream_package=false\n' \
   "${#font_files[@]}"

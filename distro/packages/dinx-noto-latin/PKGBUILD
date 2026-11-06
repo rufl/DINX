@@ -19,10 +19,12 @@ source_env="$startdir/source.env"
 
 pkgver="$DINX_NOTO_VERSION"
 pkgrel=1
-pkgdesc="Core Noto Sans Latin styles for the DINX desktop"
+pkgdesc="Latin Noto Sans replacement for the full Noto font package"
 arch=('any')
 url="https://github.com/notofonts/notofonts.github.io"
 license=('OFL-1.1-no-RFN')
+provides=('noto-fonts' 'ttf-font')
+conflicts=('noto-fonts')
 depends=('fontconfig')
 makedepends=('python-fonttools')
 source=(
@@ -41,7 +43,7 @@ sha256sums=(
 )
 
 package() {
-  local font_dir="$pkgdir/usr/share/fonts/noto"
+  local font_dir="$pkgdir/usr/share/fonts/dinx-noto-latin"
   local unicode_ranges='U+0000-024F,U+0300-036F,U+1E00-1EFF,U+2000-206F,U+20A0-20CF,U+2116,U+2122,U+2126,U+212A,U+212B'
   install -d "$font_dir"
   pyftsubset "$srcdir/NotoSans-Regular.ttf" \

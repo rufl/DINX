@@ -466,6 +466,11 @@ required_paths=(
   usr/lib/calamares/modules/postcfg/main.py
   usr/lib/calamares/modules/postcfg/module.desc
   usr/share/dinx/branding/dinx-ray-mark.txt
+  usr/share/fonts/dinx-noto-latin/NotoSans-Regular.ttf
+  usr/share/fonts/dinx-noto-latin/NotoSans-Bold.ttf
+  usr/share/fonts/dinx-noto-latin/NotoSans-Italic.ttf
+  usr/share/fonts/dinx-noto-latin/NotoSans-BoldItalic.ttf
+  usr/share/fonts/dinx-noto-latin/NotoSansMono-Regular.ttf
   usr/share/grub/themes/artix/logo.png
 )
 
@@ -491,6 +496,13 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
   if [[ -n "$unused_calamares_matches" ]]; then
     printf '%s\n' "$unused_calamares_matches" >&2
     fail 'unused Artix Calamares branding, switcher or basestrap payload remains in the ISO'
+  fi
+done
+grep -Eq '/var/lib/pacman/local/dinx-noto-latin-[^/]*/' <<<"$manifest" \
+  || fail 'DINX Noto Latin provider package metadata is missing from the installed rootfs'
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  if grep -Eq '/var/lib/pacman/local/noto-fonts-[0-9][^/]*/' <<<"$image_manifest"; then
+    fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
 for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoffice zrythm haruna; do

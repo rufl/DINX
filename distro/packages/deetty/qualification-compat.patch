@@ -550,3 +550,9 @@
 @@ -33,1 +33,1 @@
 -    if [ "${NOCTTY_DEDICATED_DISPLAY:-0}" != 1 ]; then
 +    if [ "${DEETTY_DEDICATED_DISPLAY:-0}" != 1 ]; then
+--- a/src/terminal/RealTuiQualification.zig
++++ b/src/terminal/RealTuiQualification.zig
+@@ -411,1 +411,1 @@
+-            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache",
++            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache;LC_ALL=C.UTF-8",
+         .{

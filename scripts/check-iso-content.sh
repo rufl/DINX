@@ -257,7 +257,7 @@ required_paths=(
   etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
   etc/skel/.config/shikane/config.toml
-  etc/skel/Desktop/Install DINX.desktop
+  "etc/skel/Desktop/Install DINX.desktop"
   usr/share/themes/DINX/gtk-3.0/gtk.css
   usr/share/themes/DINX/gtk-4.0/gtk.css
   usr/share/themes/DINX/index.theme
@@ -428,7 +428,7 @@ required_paths=(
   usr/bin/ps
   usr/share/applications/dinx-installer.desktop
   usr/share/applications/calamares.desktop
-  etc/skel/Desktop/Install DINX.desktop
+  "etc/skel/Desktop/Install DINX.desktop"
   usr/local/bin/dinx-save-shikane-profile
   usr/local/bin/dinx-wdisplays
   usr/bin/brightnessctl

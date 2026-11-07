@@ -3,6 +3,8 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Quote the spaced `Install DINX.desktop` path in the ISO content manifest; the unquoted Bash array split it and caused the completed ISO to fail qualification. Pin UTF-8 for Deetty's real TUI child environment and run the real `btop` smoke under an inherited ASCII locale, preserving the dashboard and exit assertions while reproducing the CI condition.
+
 - Use an isolated minimal pacman config to prune build-only `linux-headers`; absolute includes from a staged `/etc/pacman.conf` resolve against the builder host, not the target root. Fail assembly immediately if Artix does not produce a nonempty `/LiveOS/rootfs.img`, rather than allowing a malformed ISO to reach qualification.
 - Add `dinx-plymouth-theme` to the live rootfs as well as `packages-boot`; boot-only placement omitted its Dinit handoff and splash assets from `LiveOS/rootfs.img`. Enforce rootfs membership before ISO assembly.
 - Install `libarchive-tools` in the signed-package publishing job before validating repository archives; GitHub's runner did not include `bsdtar`, so package publication failed at the repository gate.

@@ -10,12 +10,12 @@ source_env="$startdir/source.env"
 : "${ONLYOFFICE_LICENSE_URL:?missing ONLYOFFICE_LICENSE_URL}"
 : "${ONLYOFFICE_LICENSE_SHA256:?missing ONLYOFFICE_LICENSE_SHA256}"
 pkgver="$ONLYOFFICE_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Desktop editors for documents, spreadsheets, presentations and PDFs'
 arch=('x86_64')
 url='https://www.onlyoffice.com/desktop'
 license=('AGPL-3.0-only')
-depends=('glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')
+depends=('coreutils' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')
 options=('!strip')
 source=(
   "DesktopEditors-${pkgver}-x86_64.AppImage::${ONLYOFFICE_SOURCE_URL}"
@@ -26,7 +26,7 @@ source=(
 sha256sums=(
   "$ONLYOFFICE_SOURCE_SHA256"
   "$ONLYOFFICE_LICENSE_SHA256"
-  '4983d3ef56b2e78a7957742880051ad0c2c85d186986bdfb8b4de3556edfb204'
+  '4cebeca9349b98ebea0348c7c2da0a9cc6960dc62f771bfffb27400b4f536344'
   '641758d73f4c6c3d12bcacd3abeba01f66a5dfeed78492c80c5f9ca1a1b6f4b2'
 )
 

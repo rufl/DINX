@@ -126,8 +126,11 @@ for package in onlyoffice zrythm; do
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
   grep -Fq '!strip' "$recipe" || fail "$package AppImage package must disable binary stripping"
   grep -Fq -- '--appimage-extract-and-run "$@"' "$wrapper" || fail "$package launcher does not support systems without FUSE"
+  sh -n "$wrapper" || fail "$package AppImage wrapper has invalid shell syntax"
 done
 office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"
+office_recipe="$root/distro/packages/onlyoffice/PKGBUILD"
+grep -Fq "'coreutils'" "$office_recipe" || fail 'ONLYOFFICE runtime does not declare coreutils for AppImage launcher utilities'
 for mime in \
   application/msword \
   application/vnd.openxmlformats-officedocument.wordprocessingml.document \

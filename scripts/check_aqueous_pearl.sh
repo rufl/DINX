@@ -25,6 +25,8 @@ for path in \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
   "$aqueous_dir/gles2-renderer.patch" "$aqueous_dir/live-session-lock.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
+  "$aqueous_dir/client-maximize-readiness.patch" \
+  "$aqueous_dir/client_maximize_request.zig" \
   "$aqueous_dir/window_policy_test.zig" \
   "$aqueous_dir/live_lock_policy.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
@@ -89,11 +91,14 @@ source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
 tar -xzf "$aqueous_archive" -C "$window_test_tmp"
 for patch_file in \
   dinit.patch gles2-renderer.patch server-decorations.patch \
-  titlebar-text.patch two-default-workspaces.patch live-session-lock.patch; do
+  titlebar-text.patch two-default-workspaces.patch live-session-lock.patch \
+  client-maximize-readiness.patch; do
   patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+install -Dm644 "$aqueous_dir/client_maximize_request.zig" \
+  "$source_root/compositor/aqueous/wm/client_maximize_request.zig"
 pearl_archive="$source_cache/pearl/pearl-$PEARL_VERSION.tar.gz"
 "$root/scripts/cache-verified-download.sh" \
   "$pearl_archive" "$PEARL_SOURCE_URL" "$PEARL_SOURCE_SHA256"
@@ -165,6 +170,7 @@ install -Dm644 "$aqueous_dir/live_lock_policy.zig" \
   "$source_root/compositor/aqueous/titlebar_text.zig" \
   "$source_root/compositor/aqueous/wm/input/drag.zig" \
   "$source_root/compositor/aqueous/wm/state/store.zig" \
+  "$source_root/compositor/aqueous/wm/client_maximize_request.zig" \
   "$source_root/compositor/aqueous/wm/window_decoration_policy.zig" \
   || fail 'patched Aqueous Zig sources do not parse or match formatter output'
 (

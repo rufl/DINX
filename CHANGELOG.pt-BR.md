@@ -3,6 +3,10 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Fazer os launchers de URI e workspace do Deetty respeitarem o modo de apresentação salvo, em vez de forçar Dropdown; as opções explícitas `--native-grid`, `--native-grid-windowed` e `--native-grid-zen` permanecem inalteradas. Reconstruir o pacote.
+- Restaurar os caminhos de `coreutils` do host antes de iniciar o AppImage do ONLYOFFICE; o script `desktopeditors` incluído chama `readlink`/`dirname` e falhava quando o runtime do AppImage removia as ferramentas do host de `PATH`. Declarar `coreutils` como dependência e reconstruir o pacote.
+- Manter pedidos de maximizar/restaurar do cliente até o Aqueous atribuir a janela nova a um workspace; caso contrário, o pedido inicial de maximização do Electron no Blockbench pode ser descartado antes de o layout stacking padrão aceitá-lo.
+- Exercitar a extração real do Calamares (SquashFS somente leitura copiado ao destino por rsync) na qualificação BIOS/UEFI, informar espaço em blocos/inodes se a cópia falhar e usar disco descartável de 16 GiB; recomendar ao menos 16 GiB para instalar no VirtualBox o rootfs DINX de cerca de 7 GiB.
 - Usar uma configuração `pacman` mínima e isolada para remover `linux-headers` exclusivo do build; includes absolutos do `/etc/pacman.conf` staged resolvem no host do builder, não na raiz alvo. Falhar a montagem imediatamente se o Artix não gerar um `/LiveOS/rootfs.img` não vazio, em vez de deixar uma ISO inválida chegar à qualificação.
 - Incluir `dinx-plymouth-theme` também no rootfs live, além de `packages-boot`; deixá-lo somente no bootfs omitia o serviço Dinit e os arquivos do splash de `LiveOS/rootfs.img`. Exigir a inclusão no rootfs antes de montar a ISO.
 - Instalar `libarchive-tools` no job de publicação de pacotes assinados antes de validar os archives do repositório; o runner do GitHub não incluía `bsdtar`, causando falha no gate do repositório.

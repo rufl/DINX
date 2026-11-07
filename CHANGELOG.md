@@ -3,6 +3,10 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Have Deetty's desktop URI and workspace launchers honor the saved presentation mode instead of forcing Dropdown; explicit `--native-grid`, `--native-grid-windowed` and `--native-grid-zen` overrides remain unchanged. Rebuild the package.
+- Restore the host `coreutils` paths before launching ONLYOFFICE's AppImage; its bundled `desktopeditors` script calls `readlink`/`dirname` and failed when the AppImage runtime omitted host utilities from `PATH`. Declare `coreutils` as a runtime dependency and rebuild the package.
+- Preserve client maximize/unmaximize requests until Aqueous assigns each new window to a workspace; Blockbench's Electron startup maximize can otherwise be discarded before the default stacking layout accepts it.
+- Exercise Calamares's read-only SquashFS-to-target rsync extraction in BIOS/UEFI install qualification, report target block and inode availability on copy failure, and use a 16 GiB disposable disk; recommend at least 16 GiB for VirtualBox installs of the roughly 7 GiB DINX rootfs.
 - Use an isolated minimal pacman config to prune build-only `linux-headers`; absolute includes from a staged `/etc/pacman.conf` resolve against the builder host, not the target root. Fail assembly immediately if Artix does not produce a nonempty `/LiveOS/rootfs.img`, rather than allowing a malformed ISO to reach qualification.
 - Add `dinx-plymouth-theme` to the live rootfs as well as `packages-boot`; boot-only placement omitted its Dinit handoff and splash assets from `LiveOS/rootfs.img`. Enforce rootfs membership before ISO assembly.
 - Install `libarchive-tools` in the signed-package publishing job before validating repository archives; GitHub's runner did not include `bsdtar`, so package publication failed at the repository gate.

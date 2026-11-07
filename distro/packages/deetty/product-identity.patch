@@ -581,7 +581,6 @@
  }
  
  test "recent workspaces are a fixed deduplicating most-recent-first library" {
-
 --- a/src/main.zig
 +++ b/src/main.zig
 @@ -3698,9 +3698,9 @@
@@ -633,6 +632,56 @@
      std.Io.Dir.cwd().deleteFile(io, workspace_path) catch {};
      std.Io.Dir.cwd().deleteFile(io, config_path) catch {};
 
+@@ -3791,7 +3791,7 @@
+                         allocator,
+                         init.io,
+                         home_dir,
+                         init.environ_map,
+-                        0,
++                        -1,
+                         .visible,
+                     );
+@@ -3803,7 +3803,7 @@
+                 allocator,
+                 init.io,
+                 home_dir,
+                 init.environ_map,
+-                0,
++                -1,
+                 .visible,
+                 parsed.slice(),
+@@ -3824,7 +3824,7 @@
+                 allocator,
+                 init.io,
+                 home_dir,
+                 init.environ_map,
+-                0,
++                -1,
+                 .visible,
+                 parsed.slice(),
+@@ -9152,4 +9152,1 @@
+-    const effective_mode: c_int = if (mode >= 0)
+-        mode
+-    else
+-        @intCast(@backingInt(app.config.default_mode));
++    const effective_mode: c_int = resolveNativeGridMode(mode, app.config.default_mode);
+@@ -9179,3 +9179,16 @@
+     _ = persistNativeGridHotSession(&bridge);
+     if (bridge.callback_failed) return error.NativeGridStateSyncFailed;
+ }
++
++fn resolveNativeGridMode(requested: c_int, configured: noctty.config.WindowMode) c_int {
++    return if (requested >= 0) requested else @intCast(@backingInt(configured));
++}
++
++test "saved presentation mode is used unless launch mode is explicit" {
++    try std.testing.expectEqual(@as(c_int, 0), resolveNativeGridMode(-1, .dropdown));
++    try std.testing.expectEqual(@as(c_int, 1), resolveNativeGridMode(-1, .windowed));
++    try std.testing.expectEqual(@as(c_int, 2), resolveNativeGridMode(-1, .zen_fullscreen));
++    try std.testing.expectEqual(@as(c_int, 0), resolveNativeGridMode(0, .zen_fullscreen));
++    try std.testing.expectEqual(@as(c_int, 1), resolveNativeGridMode(1, .dropdown));
++    try std.testing.expectEqual(@as(c_int, 2), resolveNativeGridMode(2, .windowed));
++}
 --- a/src/gui/native_grid_host.c
 +++ b/src/gui/native_grid_host.c
 @@ -3648,7 +3648,7 @@

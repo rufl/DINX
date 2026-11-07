@@ -4,7 +4,7 @@ set -euo pipefail
 iso_path=${1:-}
 timeout_seconds=${DINX_INSTALL_TIMEOUT:-180}
 memory_mb=${DINX_INSTALL_MEMORY:-2048}
-disk_size=${DINX_INSTALL_DISK_SIZE:-8G}
+disk_size=${DINX_INSTALL_DISK_SIZE:-16G}
 output_dir=${DINX_INSTALL_OUTPUT_DIR:-}
 firmware_mode=${DINX_INSTALL_FIRMWARE:-bios}
 
@@ -23,7 +23,7 @@ esac
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
+for command in xorriso rsync losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 if [[ "$firmware_mode" == uefi ]]; then
@@ -64,6 +64,7 @@ output_dir=$(cd "$output_dir" && pwd -P)
 
 work_dir=$(mktemp -d)
 rootfs_image="$work_dir/rootfs.img"
+source_mount="$work_dir/rootfs-source"
 disk_image="$work_dir/dinx-installed.img"
 output_suffix=
 if [[ "$firmware_mode" == uefi ]]; then
@@ -80,6 +81,7 @@ loop_device=
 root_device=
 efi_device=
 target_dir="$work_dir/target"
+mounted_source=false
 mounted_target=false
 mounted_efi=false
 mounted_dev=false
@@ -96,6 +98,7 @@ cleanup() {
     wait "$qemu_pid" 2>/dev/null || true
   fi
   if [[ -n "$monitor_dir" ]]; then rm -rf "$monitor_dir"; fi
+  if [[ "$mounted_source" == true ]]; then umount "$source_mount" 2>/dev/null || true; fi
   if [[ "$mounted_run" == true ]]; then umount -R "$target_dir/run" 2>/dev/null || umount "$target_dir/run" 2>/dev/null || true; fi
   if [[ "$mounted_sys" == true ]]; then umount -R "$target_dir/sys" 2>/dev/null || umount "$target_dir/sys" 2>/dev/null || true; fi
   if [[ "$mounted_proc" == true ]]; then umount -R "$target_dir/proc" 2>/dev/null || umount "$target_dir/proc" 2>/dev/null || true; fi
@@ -109,6 +112,9 @@ trap cleanup EXIT
 
 printf 'smoke-install: extracting rootfs from ISO\n'
 xorriso -osirrox on -indev "$iso_path" -extract /LiveOS/rootfs.img "$rootfs_image" >/dev/null
+mkdir -p "$source_mount"
+mount -t squashfs -o loop,ro "$rootfs_image" "$source_mount"
+mounted_source=true
 
 printf 'smoke-install: creating disposable %s %s disk\n' "$disk_size" "$firmware_mode"
 truncate -s "$disk_size" "$disk_image"
@@ -139,8 +145,18 @@ mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
 
-printf 'smoke-install: unpacking the same rootfs used by Calamares\n'
-unsquashfs -no-xattrs -no-progress -d "$target_dir" "$rootfs_image" >/dev/null
+printf 'smoke-install: copying rootfs with Calamares unpackfs rsync flags\n'
+if rsync -aHAXSr '--filter=-x trusted.overlay.*' "$source_mount/" "$target_dir/"; then
+  :
+else
+  rsync_status=$?
+  printf 'smoke-install: destination space at rsync failure\n' >&2
+  df -h "$target_dir" >&2 || true
+  df -i "$target_dir" >&2 || true
+  fail "Calamares-compatible rootfs rsync failed with exit status $rsync_status"
+fi
+umount "$source_mount"
+mounted_source=false
 if [[ "$firmware_mode" == uefi ]]; then
   mkdir -p "$target_dir/boot/efi"
   mount "$efi_device" "$target_dir/boot/efi"

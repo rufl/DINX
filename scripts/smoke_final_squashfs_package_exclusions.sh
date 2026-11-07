@@ -106,6 +106,15 @@ usr/share/
 usr/share/dinx-prune-smoke/
 usr/share/dinx-prune-smoke/keep
 EOF
+
+
+fake_mksquashfs="$work_dir/mksquashfs"
+cat > "$fake_mksquashfs" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $# -ge 2 ]]
+EOF
+chmod 0755 "$fake_mksquashfs"
 blocked_root="$work_dir/blocked-rootfs"
 cp -a -- "$root" "$blocked_root"
 blocked_consumer="$blocked_root/var/lib/pacman/local/dinx-pahole-consumer-1.0-1"
@@ -135,15 +144,6 @@ fi
 [[ -d "$blocked_root/var/lib/pacman/local/linux-headers-1.0-1" \
    && -d "$blocked_root/var/lib/pacman/local/pahole-1.0-1" ]] \
   || fail 'failed dependency-safe pruning partially removed package records'
-
-
-fake_mksquashfs="$work_dir/mksquashfs"
-cat > "$fake_mksquashfs" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-[[ $# -ge 2 ]]
-EOF
-chmod 0755 "$fake_mksquashfs"
 live_root="$work_dir/livefs"
 cp -a -- "$root" "$live_root"
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \

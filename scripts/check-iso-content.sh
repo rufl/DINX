@@ -512,6 +512,19 @@ for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoff
 done
 grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
   || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
+source "$script_dir/../distro/packages/calamares/source.env"
+calamares_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' \
+  "$script_dir/../distro/packages/calamares/PKGBUILD")
+[[ "$calamares_pkgrel" =~ ^[1-9][0-9]*$ ]] || fail 'DINX Calamares pkgrel is invalid'
+calamares_package_version="$CALAMARES_VERSION-$calamares_pkgrel"
+calamares_db_dir="var/lib/pacman/local/calamares-$calamares_package_version"
+grep -Fqx "squashfs-root/$calamares_db_dir/desc" <<<"$manifest" \
+  || fail "DINX Calamares package is missing from the ISO rootfs: $calamares_package_version"
+calamares_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
+  "$tmp_dir/rootfs.img" "$calamares_db_dir/desc" \
+  | awk 'previous == "%VERSION%" { print; exit } { previous = $0 }')
+[[ "$calamares_db_version" == "$calamares_package_version" ]] \
+  || fail "DINX Calamares package version mismatch: $calamares_db_version"
 cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/issue)
 grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'
 if grep -Eiq 'Artix' <<<"$cli_issue"; then

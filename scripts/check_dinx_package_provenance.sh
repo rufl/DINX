@@ -45,8 +45,14 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
   else
     grep -Eq '^[[:space:]]*((sha256|sha512)sums|b2sums)(_[[:alnum:]_]+)?=' "$pkgbUILD" \
       || fail "$package has external sources without a checksum array"
-    ! grep -Fq 'SKIP' "$pkgbUILD" \
-      || fail "$package uses SKIP instead of a pinned source checksum"
+    if awk '
+      /^[[:space:]]*((sha256|sha512)sums|b2sums)(_[[:alnum:]_]+)?[[:space:]]*=/ { in_sums=1 }
+      in_sums && /(^|[^[:alnum:]_])SKIP([^[:alnum:]_]|$)/ { found=1 }
+      in_sums && /\)/ { in_sums=0 }
+      END { exit !found }
+    ' "$pkgbUILD"; then
+      fail "$package uses SKIP instead of a pinned source checksum"
+    fi
   fi
 done
 

@@ -3,7 +3,9 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
-- Citar o caminho com espaço `Install DINX.desktop` no manifesto de conteúdo da ISO; o array Bash sem aspas o dividia e fazia a ISO pronta falhar na qualificação. Fixar UTF-8 no ambiente filho do TUI real do Deetty e executar o smoke real do `btop` com locale ASCII herdado, mantendo as verificações do dashboard e do encerramento e reproduzindo a condição do CI.
+- Colocar entre aspas `etc/skel/Desktop/Install DINX.desktop` no array de caminhos obrigatórios e comparar o caminho completo da listagem `unsquashfs`, removendo somente a anotação do alvo de symlink; a divisão por espaços rejeitava o atalho existente e entradas de symlink após montar a ISO. Fixar UTF-8 no ambiente filho do TUI real do Deetty e executar o smoke real do `btop` com locale ASCII herdado, mantendo as verificações do dashboard e do encerramento e reproduzindo a condição do CI.
+
+- Remover as file capabilities do `btop` do Artix somente no builder descartável antes da qualificação TUI real do Deetty; o sandbox do GitHub rejeitava `/usr/sbin/btop` com `Operation not permitted` (exit 126). A ISO instala separadamente o pacote upstream de `btop`, sem alterações.
 
 - Remover as file capabilities do `btop` do Artix somente no builder descartável antes da qualificação TUI real do Deetty; o sandbox do GitHub rejeitava `/usr/sbin/btop` com `Operation not permitted` (exit 126). A ISO instala separadamente o pacote upstream de `btop`, sem alterações.
 

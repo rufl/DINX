@@ -3,7 +3,9 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
-- Quote the spaced `Install DINX.desktop` path in the ISO content manifest; the unquoted Bash array split it and caused the completed ISO to fail qualification. Pin UTF-8 for Deetty's real TUI child environment and run the real `btop` smoke under an inherited ASCII locale, preserving the dashboard and exit assertions while reproducing the CI condition.
+- Quote `etc/skel/Desktop/Install DINX.desktop` in the required-path array and match the complete `unsquashfs` listing path after stripping symlink-target annotations; whitespace-field parsing rejected the existing shortcut and exact symlink entries after ISO assembly. Pin UTF-8 for Deetty's real TUI child environment and run the real `btop` smoke under an inherited ASCII locale, preserving the dashboard and exit assertions while reproducing the CI condition.
+
+- Clear Artix `btop` file capabilities only in the disposable builder before Deetty's real-TUI qualification; GitHub's restricted package sandbox rejected `/usr/sbin/btop` with `Operation not permitted` (exit 126). The ISO installs its own upstream `btop` package unchanged.
 
 - Clear Artix `btop` file capabilities only in the disposable builder before Deetty's real-TUI qualification; GitHub's restricted package sandbox rejected `/usr/sbin/btop` with `Operation not permitted` (exit 126). The ISO installs its own upstream `btop` package unchanged.
 

@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+pkgname=calamares
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${CALAMARES_VERSION:?missing CALAMARES_VERSION}"
+: "${CALAMARES_SOURCE_URL:?missing CALAMARES_SOURCE_URL}"
+: "${CALAMARES_SOURCE_SHA256:?missing CALAMARES_SOURCE_SHA256}"
+pkgver="$CALAMARES_VERSION"
+pkgrel=6
+pkgdesc='Distribution-independent installer framework for DINX'
+arch=('x86_64')
+url='https://calamares.io/'
+license=('BSD-2-Clause' 'CC-BY-4.0' 'CC0-1.0' 'GPL-3.0-or-later' 'LGPL-2.1-only' 'LGPL-3.0-or-later' 'MIT')
+depends=(
+  appstream-qt
+  bash
+  glibc
+  libgcc
+  libstdc++
+  hwinfo
+  icu
+  libxcrypt
+  libpwquality
+  parted
+  yaml-cpp
+  qt6-base
+  qt6-svg
+  qt6-declarative
+  qt6-location
+  kirigami
+  kcoreaddons
+  kconfig
+  kcrash
+  kparts
+  kpackage
+  kpmcore
+  polkit-qt6
+  gtk-update-icon-cache
+  ckbcomp
+  python
+  python-jsonschema
+  python-toml
+  python-pyyaml
+  hicolor-icon-theme
+)
+makedepends=(extra-cmake-modules qt6-tools qt6-translations git)
+provides=('libcalamares.so' 'libcalamaresui.so')
+optdepends=('calamares-extensions: Artix extensions and branding')
+source=("${pkgname}-${pkgver}.tar.gz::${CALAMARES_SOURCE_URL}")
+sha256sums=("$CALAMARES_SOURCE_SHA256")
+
+prepare() {
+  cd "$srcdir/${pkgname}-${pkgver}"
+  sed -e 's|${qtname}|Qt|g' -i CMakeModules/AppStreamHelper.cmake
+}
+
+build() {
+  cmake -S "$srcdir/${pkgname}-${pkgver}" -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_PREFIX_PATH=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DINSTALL_CONFIG:BOOL=ON \
+    -DINSTALL_POLKIT:BOOL=ON \
+    -DBUILD_APPDATA:BOOL=OFF \
+    -DBUILD_APPSTREAM:BOOL=ON \
+    -DWITH_QT6:BOOL=ON \
+    -DSKIP_MODULES="services-systemd oemid initramfs initramfscfg tracking interactiveterminal dummyprocess dummypython dummycpp dummypythonqt"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$srcdir/${pkgname}-${pkgver}/LICENSES/MIT.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 "$srcdir/${pkgname}-${pkgver}/LICENSES/BSD-2-Clause.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-BSD-2-Clause"
+}

@@ -287,6 +287,14 @@ for required in \
     || fail "Artix container builder is missing provenance/build wiring: $required"
 done
 if ! awk '
+  /dinx_invalidate_pacman_package_cache "\$package_repo" \/var\/cache\/pacman\/pkg/ { invalidate_line = NR }
+  /if scripts\/build-iso\.sh/ { iso_assembly_line = NR }
+  END { exit !(invalidate_line && iso_assembly_line && invalidate_line < iso_assembly_line) }
+' "$builder"; then
+  fail 'DINX package signatures must be invalidated before ISO assembly'
+fi
+
+if ! awk '
   /pacman-key --init/ { init_line = NR }
   /pacman-key --add/ { add_line = NR }
   /pacman-key --lsign-key/ { sign_line = NR }

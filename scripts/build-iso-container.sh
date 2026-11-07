@@ -531,6 +531,8 @@ trap finish EXIT
               test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs
               printf 'dinx_mksquashfs_wrapper=%s real=%s\n' "$mksquashfs_path" "$DINX_MKSQUASHFS_REAL"
               scripts/smoke_final_squashfs_package_exclusions.sh
+              dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg
+
               iso_assembly_started=$SECONDS
               if scripts/build-iso.sh; then
                 printf 'dinx-build-timing phase=iso-assembly elapsed_seconds=%s exit_status=0\n' \
@@ -593,7 +595,6 @@ trap finish EXIT
               repository_checks_started=$SECONDS
               scripts/check_dinx_package_repository.sh "$package_repo"
               scripts/smoke_dinx_update.sh "$package_repo"
-              dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg
               printf 'dinx-build-timing phase=package-repository-validation elapsed_seconds=%s exit_status=0\n' \
                 "$((SECONDS - repository_checks_started))"
               printf 'dinx-build-timing phase=package-repository-finalize elapsed_seconds=%s exit_status=0\n' \

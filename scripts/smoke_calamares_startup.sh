@@ -18,6 +18,16 @@ branding_dir="$config_dir/branding/dinx"
 command -v calamares >/dev/null 2>&1 || fail 'calamares is not installed'
 command -v timeout >/dev/null 2>&1 || fail 'timeout is not installed'
 command -v xvfb-run >/dev/null 2>&1 || fail 'xvfb-run is not installed'
+source "$root/distro/packages/calamares/source.env"
+package_release=$(awk -F= '$1 == "pkgrel" { print $2; exit }' "$root/distro/packages/calamares/PKGBUILD")
+[[ "$package_release" =~ ^[1-9][0-9]*$ ]] || fail 'DINX Calamares pkgrel is invalid'
+command -v pacman >/dev/null 2>&1 || fail 'pacman is not installed'
+installed_version=$(pacman -Q calamares | awk '{print $2}')
+[[ "$installed_version" == "$CALAMARES_VERSION-$package_release" ]] \
+  || fail "unexpected Calamares package version: $installed_version"
+if pacman -Qq plasma-integration >/dev/null 2>&1; then
+  fail 'plasma-integration remains installed in the qualified DINX builder'
+fi
 
 work_dir=$(mktemp -d)
 trap 'rm -rf "$work_dir"' EXIT

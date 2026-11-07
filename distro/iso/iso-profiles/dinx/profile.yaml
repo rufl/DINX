@@ -69,7 +69,6 @@ rootfs:
     - krita
     - adw-gtk-theme
     - papirus-icon-theme
-    - qogir-icon-theme
     - onlyoffice
     - zrythm
     - dconf

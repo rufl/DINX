@@ -373,6 +373,11 @@ trap finish EXIT
               build_package dinitui
               pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
+              build_package calamares
+              pacman_install_local "$package_repo"/calamares-*.pkg.tar.zst
+              if pacman -Qq plasma-integration >/dev/null 2>&1; then
+                pacman -Rns --noconfirm plasma-integration
+              fi
               scripts/smoke_calamares_startup.sh
               build_package dinxpanel
               pacman_install_local "$package_repo"/dinxpanel-*.pkg.tar.zst
@@ -659,7 +664,7 @@ trap finish EXIT
                 printf "compression_dictionary=1M\n"
                 printf "compression_bcj=x86\n"
                 printf "compression_excludes=kernel-source,pacman-cache,logs\n"
-                printf "final_rootfs_removed_packages=linux-headers\n"
+                printf "final_rootfs_removed_packages=linux-headers,pahole\n"
                 printf "compression_wrapper_sha256=%s\n" "$(sha256sum /workspace/scripts/iso-tools/mksquashfs | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"

@@ -51,7 +51,6 @@
       "packages": [
         "adw-gtk-theme",
         "papirus-icon-theme",
-        "qogir-icon-theme",
         "dconf",
         "gsettings-desktop-schemas",
         "blueman",

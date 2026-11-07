@@ -510,15 +510,17 @@ for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoff
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
+grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
+  || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
 cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/issue)
 grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'
 if grep -Eiq 'Artix' <<<"$cli_issue"; then
   fail 'CLI login banner still identifies Artix'
 fi
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(breeze-icons|zathura|zathura-pdf-mupdf|libmupdf)-[^/]*/' <<<"$image_manifest"); then
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(breeze|breeze-cursors|breeze-icons|plasma-integration|plasma-workspace|qogir-icon-theme|qqc2-breeze-style|xdg-desktop-portal-kde|zathura|zathura-pdf-mupdf|libmupdf)-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
-    fail 'retired Breeze Icons, Zathura or MuPDF package metadata remains in the ISO'
+    fail 'retired Qogir/Breeze/KDE Plasma theme packages, Zathura or MuPDF remain in the ISO'
   fi
   if forbidden_matches=$(grep -E '/var/lib/pacman/local/(vlc|vlc-[^/]+|libvlc)-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
@@ -622,8 +624,8 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
   fi
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  if grep -Eq '/var/lib/pacman/local/linux-headers-[^/]*/' <<<"$image_manifest"; then
-    fail 'linux-headers package metadata is present in a final ISO filesystem'
+  if grep -Eq '/var/lib/pacman/local/(linux-headers|pahole)-[^/]*/' <<<"$image_manifest"; then
+    fail 'build-only linux-headers or pahole package metadata is present in a final ISO filesystem'
   fi
 done
 terminal_desktops=$(grep -oE 'squashfs-root/usr/share/applications/[^[:space:]]+\.desktop' <<<"$manifest" | sort -u || true)

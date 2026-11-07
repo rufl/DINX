@@ -2,8 +2,8 @@
 # DINX compact common manifest.
 # Keep the runtime base, boot tooling and Wayland/Xwayland compatibility here;
 # DINX adds AMDGPU and Intel GPU firmware explicitly in the profile-specific package list.
-# Keep linux-headers through Artix initramfs generation, then remove the package
-# from the staged rootfs immediately before final SquashFS compression.
+# Keep linux-headers through Artix initramfs generation, then remove it and its
+# build-only pahole dependency from the staged rootfs immediately before compression.
 
 packages-base:
   - base

@@ -5,6 +5,8 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 ## Não lançado
 - Citar o caminho com espaço `Install DINX.desktop` no manifesto de conteúdo da ISO; o array Bash sem aspas o dividia e fazia a ISO pronta falhar na qualificação. Fixar UTF-8 no ambiente filho do TUI real do Deetty e executar o smoke real do `btop` com locale ASCII herdado, mantendo as verificações do dashboard e do encerramento e reproduzindo a condição do CI.
 
+- Remover as file capabilities do `btop` do Artix somente no builder descartável antes da qualificação TUI real do Deetty; o sandbox do GitHub rejeitava `/usr/sbin/btop` com `Operation not permitted` (exit 126). A ISO instala separadamente o pacote upstream de `btop`, sem alterações.
+
 - Usar uma configuração `pacman` mínima e isolada para remover `linux-headers` exclusivo do build; includes absolutos do `/etc/pacman.conf` staged resolvem no host do builder, não na raiz alvo. Falhar a montagem imediatamente se o Artix não gerar um `/LiveOS/rootfs.img` não vazio, em vez de deixar uma ISO inválida chegar à qualificação.
 - Incluir `dinx-plymouth-theme` também no rootfs live, além de `packages-boot`; deixá-lo somente no bootfs omitia o serviço Dinit e os arquivos do splash de `LiveOS/rootfs.img`. Exigir a inclusão no rootfs antes de montar a ISO.
 - Instalar `libarchive-tools` no job de publicação de pacotes assinados antes de validar os archives do repositório; o runner do GitHub não incluía `bsdtar`, causando falha no gate do repositório.

@@ -12,7 +12,7 @@ graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libex
 graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
 greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
-gtk_dark_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gtk-dark-mode-seed"
+theme_sync="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
 live_config_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-config"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 aqueous_decoration_patch="$root/distro/packages/aqueous/server-decorations.patch"
@@ -48,7 +48,7 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$gtk_dark_seed" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$aqueous_wrapper" "$theme_sync" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
@@ -74,8 +74,8 @@ done
 [[ -x "$greeter_wrapper" ]] || fail 'Pearl Greeter wrapper is not executable'
 [[ -x "$aqueous_wrapper" ]] || fail 'Aqueous session wrapper is not executable'
 [[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
-[[ -x "$gtk_dark_seed" ]] || fail 'GTK dark-mode preference seeder is not executable'
-sh -n "$gtk_dark_seed" || fail 'GTK dark-mode preference seeder has invalid shell syntax'
+[[ -x "$theme_sync" ]] || fail 'GTK/Qt session theme synchronizer is not executable'
+sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
 [[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
@@ -250,6 +250,11 @@ grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_ini
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
   || fail 'session supervisor does not launch the Pearl first-run wrapper'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
+if grep -Fq 'dinx-sync-session-theme' "$aqueous_wrapper"; then
+  fail 'toolkit theme synchronization runs before session D-Bus readiness'
+fi
+grep -Fq 'theme_sync_helper=${DINX_THEME_SYNC_HELPER:-/usr/local/libexec/dinx-sync-session-theme}' "$pearl_shell" \
+  || fail 'Pearl shell does not invoke the toolkit theme synchronizer'
 [[ -x "$live_config_seed" ]] || fail 'live Aqueous config seed helper is not executable'
 sh -n "$live_config_seed" || fail 'live Aqueous config seed helper has invalid shell syntax'
 pearl_shell_test=$(mktemp -d)
@@ -325,6 +330,7 @@ pearl_shell_test_env=(
   "XDG_STATE_HOME=$pearl_shell_test/state"
   "DINX_FIRST_RUN_WIZARD=$pearl_shell_test/wizard"
   "DINX_WIZARD_CALLS=$pearl_shell_test/wizard-calls"
+  "DINX_THEME_SYNC_HELPER=/bin/true"
 )
 mkdir -p "$pearl_shell_test/home"
 env "${pearl_shell_test_env[@]}" "$pearl_shell"
@@ -358,6 +364,7 @@ env \
   "XDG_CONFIG_HOME=$pearl_shell_top_test/config" \
   "XDG_STATE_HOME=$pearl_shell_top_test/state" \
   "DINX_FIRST_RUN_WIZARD=$pearl_shell_top_test/wizard" \
+  "DINX_THEME_SYNC_HELPER=/bin/true" \
   "$pearl_shell"
 jq -e '.bar.edge == "top" and .dock.edge == "bottom" and .theme.variant == "dark"' \
   "$pearl_shell_top_test/config/pearl/preferences.json" >/dev/null \
@@ -381,43 +388,6 @@ fi
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run' "$iso_smoke" \
   || fail 'QEMU live smoke does not check readable first-run client-window content'
 printf 'qemu_client_window_smoke readable_first_run=true session_marker=true rejects_missing_title=true\n'
-gtk_seed_test="$pearl_shell_test/gtk-mode"
-mkdir -p "$gtk_seed_test/bin"
-cat >"$gtk_seed_test/bin/dconf" <<'SH'
-#!/bin/sh
-case "$1" in
-  read)
-    if [ -f "$DINX_TEST_DCONF_DB" ]; then cat "$DINX_TEST_DCONF_DB"; fi
-    ;;
-  write)
-    printf '%s\n' "$3" >>"$DINX_TEST_DCONF_WRITES"
-    if [ "${DINX_TEST_DCONF_WRITE_FAIL:-0}" = 1 ]; then exit 1; fi
-    printf '%s\n' "$3" >"$DINX_TEST_DCONF_DB"
-    ;;
-  *) exit 2 ;;
-esac
-SH
-chmod +x "$gtk_seed_test/bin/dconf"
-gtk_seed_path="$gtk_seed_test/bin:$PATH"
-env PATH="$gtk_seed_path" DINX_TEST_DCONF_DB="$gtk_seed_test/color-scheme" \
-  DINX_TEST_DCONF_WRITES="$gtk_seed_test/writes" "$gtk_dark_seed"
-[[ $(cat "$gtk_seed_test/color-scheme") == "'prefer-dark'" ]] \
-  || fail 'GTK dark-mode seeder did not set prefer-dark when no user choice exists'
-printf '%s\n' "'prefer-light'" >"$gtk_seed_test/color-scheme"
-env PATH="$gtk_seed_path" DINX_TEST_DCONF_DB="$gtk_seed_test/color-scheme" \
-  DINX_TEST_DCONF_WRITES="$gtk_seed_test/writes" "$gtk_dark_seed"
-[[ $(cat "$gtk_seed_test/color-scheme") == "'prefer-light'" ]] \
-  || fail 'GTK dark-mode seeder overwrote an explicit user color-scheme'
-[[ $(wc -l <"$gtk_seed_test/writes") == 1 ]] \
-  || fail 'GTK dark-mode seeder wrote a setting after finding a user preference'
-rm "$gtk_seed_test/color-scheme"
-if ! env PATH="$gtk_seed_path" DINX_TEST_DCONF_DB="$gtk_seed_test/color-scheme" \
-  DINX_TEST_DCONF_WRITES="$gtk_seed_test/writes" DINX_TEST_DCONF_WRITE_FAIL=1 "$gtk_dark_seed"; then
-  fail 'GTK dark-mode seeder failure stopped the live session'
-fi
-[[ ! -e "$gtk_seed_test/color-scheme" ]] \
-  || fail 'GTK dark-mode seeder fixture unexpectedly wrote after injected failure'
-printf 'dinx_gtk_dark_mode_smoke default=prefer-dark explicit=preserved failure_safe=true\n'
 grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'

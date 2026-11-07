@@ -76,6 +76,10 @@ grep -Fqx 'depends-on = local.target' "$service" \
   || fail 'live hostname service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live hostname service does not depend on artix-live'
+grep -Fqx 'waits-for = firewalld' "$service" \
+  || fail 'live autologin does not wait for the Firewalld startup attempt'
+grep -Fq "depends=('dinit' 'greetd' 'firewalld-dinit')" "$pkgbuild" \
+  || fail 'live autologin package does not declare its Firewalld service dependency'
 ! grep -Fqx 'depends-on = local.target artix-live' "$service" \
   || fail 'live hostname service combines dependencies into one unresolved service name'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'

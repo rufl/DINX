@@ -95,6 +95,7 @@ on:
       - "scripts/check_dinxpanel.sh"
       - "scripts/check_dinx_live_autologin.sh"
       - "scripts/check_dinx_session.sh"
+      - "scripts/smoke_dinx_theme_sync.sh"
       - "scripts/check_dinx_doctor.sh"
       - "scripts/smoke_dinx_doctor.sh"
       - "scripts/check_dinx_budget.sh"
@@ -284,7 +285,9 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+          sudo apt-get install --yes dbus-daemon dconf-cli dconf-service btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+      - name: Smoke-test GTK and Qt theme synchronization
+        run: ./scripts/smoke_dinx_theme_sync.sh
       - name: Verify full ISO qualification prerequisites
         run: scripts/check-iso-qualification-host.sh full --build-path "$GITHUB_WORKSPACE/dist" --build-path "$RUNNER_TEMP" --build-path "$(docker info --format '{{.DockerRootDir}}')"
       - name: Smoke-test Calamares partition transaction

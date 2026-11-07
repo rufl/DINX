@@ -44,6 +44,7 @@ system_gtk3="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.
 system_gtk4="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.0/settings.ini"
 session_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
 pearl_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
+theme_sync="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
 wizard_source="$repo_root/distro/packages/pearl/dinx-first-run-wizard.c"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
 fail() {
@@ -56,7 +57,7 @@ for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg"
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
-  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
+  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
@@ -341,7 +342,7 @@ grep -Fq 'rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"' "$pearl_pkg
   || fail 'Pearl upstream lifecycle payloads are not removed'
 for gtk_settings in "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4"; do
   grep -Fq 'gtk-theme-name=Adwaita' "$gtk_settings" || fail "GTK settings omit the Adwaita theme: $gtk_settings"
-  grep -Fq 'gtk-icon-theme-name=Adwaita' "$gtk_settings" || fail "GTK settings override upstream icons: $gtk_settings"
+  grep -Fq 'gtk-icon-theme-name=Papirus' "$gtk_settings" || fail "GTK settings omit the Papirus icon default: $gtk_settings"
   grep -Fq 'gtk-font-name=Noto Sans 10' "$gtk_settings" || fail "GTK settings omit Noto Sans 10: $gtk_settings"
   grep -Fq 'gtk-application-prefer-dark-theme=1' "$gtk_settings" || fail "GTK settings omit dark preference: $gtk_settings"
 done
@@ -358,6 +359,13 @@ grep -Fq '[ ! -e "$config_home/pearl/preferences.json" ]' "$session_wrapper" \
   || fail 'Aqueous session may overwrite existing Pearl preferences'
 grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' "$session_wrapper" \
   || fail 'Aqueous session may overwrite Pearl recovery state'
+grep -Fq 'icon_theme=Papirus' "$qt" || fail 'Qt6ct default icon theme is not Papirus'
+[[ -x "$theme_sync" ]] || fail 'GTK/Qt theme synchronizer is not executable'
+sh -n "$theme_sync" || fail 'GTK/Qt theme synchronizer has invalid shell syntax'
+grep -Fq 'dinx-sync-session-theme' "$pearl_shell" || fail 'Pearl shell does not synchronize toolkit appearance'
+grep -Fq 'gtk-application-prefer-dark-theme' "$theme_sync" || fail 'GTK dark preference is not synchronized'
+grep -Fq 'custom_palette true' "$theme_sync" || fail 'Qt dark palette is not enabled for dark Pearl mode'
+grep -Fq 'custom_palette false' "$theme_sync" || fail 'Qt custom palette is not disabled for light Pearl mode'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_WIZARD' "$pearl_shell" || fail 'Pearl shell wrapper lacks a testable wizard path'
 grep -Fq "desktop-color: \"${dark_token[mSurface]}\"" "$grub" || fail 'GRUB surface does not use DINX background'
@@ -410,7 +418,7 @@ grep -Fq "background: ${dark_token[mSurface]}" "$seafoam_settings_source" || fai
 grep -Fq "color: ${dark_token[mOnSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings text does not use DINX foreground'
 grep -Fq "background-color: ${dark_token[mPrimary]}" "$seafoam_settings_source" || fail 'Seafoam Settings action does not use DINX primary'
 grep -Fq 'Name=DINX' "$gtk_index" || fail 'GTK theme index name is missing'
-grep -Fq 'IconTheme=Adwaita' "$gtk_index" || fail 'DINX icon theme bridge is missing'
+grep -Fq 'IconTheme=Papirus' "$gtk_index" || fail 'DINX GTK theme does not select Papirus icons'
 grep -Fqx '@import url("gtk.css");' "$gtk3_dark" || fail 'GTK3 dark theme bridge is missing'
 grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge is missing'
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' "$swayimg" || fail 'Swayimg surface color is missing'

@@ -130,6 +130,8 @@ grep -Fqx 'depends-on = local.target' <<<"$live_autologin_service" \
   || fail 'livefs autologin service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service does not depend on artix-live'
+grep -Fqx 'waits-for = firewalld' <<<"$live_autologin_service" \
+  || fail 'live autologin does not wait for the Firewalld startup attempt'
 ! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service combines dependencies into one unresolved service name'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
@@ -416,7 +418,7 @@ required_paths=(
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
   usr/local/libexec/dinx-aqueous-pearl
-  usr/local/libexec/dinx-gtk-dark-mode-seed
+  usr/local/libexec/dinx-sync-session-theme
   usr/local/libexec/dinx-aqueous-init
   usr/local/libexec/dinx-session-supervisor
   usr/bin/dbus-send
@@ -750,8 +752,13 @@ for graphics_module in virtio-gpu vmwgfx; do
     || fail "ISO kernel DRM module is missing for VM compatibility: $graphics_module"
 done
 grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
-grep -Fq '/usr/local/libexec/dinx-gtk-dark-mode-seed' <<<"$aqueous_launcher" \
-  || fail 'DINX Aqueous session does not seed the system dark preference for GTK/libadwaita'
+pearl_shell=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-pearl-shell)
+grep -Fq '/usr/local/libexec/dinx-sync-session-theme' <<<"$pearl_shell" \
+  || fail 'Pearl session does not synchronize saved GTK/Qt theme preferences'
+theme_sync=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-sync-session-theme)
+grep -Fq 'gtk-application-prefer-dark-theme' <<<"$theme_sync" || fail 'GTK dark/light selection is not synchronized into user settings'
+grep -Fq 'dconf write' <<<"$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
+grep -Fq 'custom_palette' <<<"$theme_sync" || fail 'Qt6ct dark/light palette selection is not synchronized'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'
@@ -912,10 +919,10 @@ grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette 
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
 grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Adwaita'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
-grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 desktop icons do not retain Adwaita'
+grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_settings" || fail 'GTK3 default icon theme is not Papirus'
 grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Adwaita'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
-grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 desktop icons do not retain Adwaita'
+grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_settings" || fail 'GTK4 default icon theme is not Papirus'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
 grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
 grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
@@ -945,6 +952,7 @@ if grep -Eq 'border-radius: [1-9]|#(31415d|151923|2859a8)' <<<"$calamares_styles
 fi
 qt6ct_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/qt6ct.conf)
 grep -Fq 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' <<<"$qt6ct_config" || fail 'Qt6ct DINX color path is missing'
+grep -Fq 'icon_theme=Papirus' <<<"$qt6ct_config" || fail 'Qt6ct default icon theme is not Papirus'
 grep -Fq 'general="Noto Sans,10' <<<"$qt6ct_config" || fail 'Qt6ct Noto Sans font contract is missing'
 qt6ct_palette=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/qt6ct/colors/DINX.conf)
 grep -Fq 'active_colors=#ffd7dde8, #ff11151d' <<<"$qt6ct_palette" || fail 'Qt6ct DINX palette has an incorrect QPalette role order'
@@ -954,7 +962,7 @@ grep -Fq 'swayimg.text.font = "Noto Sans"' <<<"$swayimg_config" || fail 'Swayimg
 grep -Fq 'swayimg.text.size = 10' <<<"$swayimg_config" || fail 'Swayimg text size does not match Noto Sans 10'
 gtk_index=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/index.theme)
 grep -Fq 'Name=DINX' <<<"$gtk_index" || fail 'DINX GTK theme index is missing'
-grep -Fq 'IconTheme=Adwaita' <<<"$gtk_index" || fail 'DINX icon theme bridge is missing'
+grep -Fq 'IconTheme=Papirus' <<<"$gtk_index" || fail 'DINX GTK theme does not select Papirus icons'
 gtk3_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk-dark.css)
 grep -Fqx '@import url("gtk.css");' <<<"$gtk3_dark_theme" || fail 'DINX GTK3 dark bridge is missing'
 gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk-dark.css)
@@ -962,12 +970,12 @@ grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dar
 
 gtk3_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-3.0/settings.ini)
 grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Adwaita'
-grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 desktop icons do not retain Adwaita'
+grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_system_settings" || fail 'System GTK3 icon default is not Papirus'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk3_system_settings" || fail 'System GTK3 dark preference is missing'
 gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-4.0/settings.ini)
 grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Adwaita'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
-grep -Fq 'gtk-icon-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 desktop icons do not retain Adwaita'
+grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_system_settings" || fail 'System GTK4 icon default is not Papirus'
 aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
 grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floating layout default is missing'
 for firewall_link_manifest in "$manifest" "$livefs_manifest"; do

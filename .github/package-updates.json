@@ -14,6 +14,20 @@
       "url_template": "https://github.com/Seafoam-Labs/Aqueous/archive/refs/tags/{tag}.tar.gz"
     },
     {
+      "name": "calamares",
+      "provider": "codeberg",
+      "repository": "Calamares/calamares",
+      "source_file": "distro/packages/calamares/source.env",
+      "version_key": "CALAMARES_VERSION",
+      "package_version_key": "CALAMARES_VERSION",
+      "source_url_key": "CALAMARES_SOURCE_URL",
+      "checksum_key": "CALAMARES_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://codeberg.org/Calamares/calamares/releases/download/{tag}/calamares-{version}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/calamares/PKGBUILD"
+    },
+    {
       "name": "pearl",
       "provider": "github",
       "repository": "Seafoam-Labs/pearl",

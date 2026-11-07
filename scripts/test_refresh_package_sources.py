@@ -135,6 +135,7 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertEqual(updated["EXAMPLE_VERSION"], "1.3.0")
         self.assertEqual(updated["EXAMPLE_SOURCE_URL"], archive_url)
         self.assertIn("pkgrel=5\n", changes[self.package_path])
+
     def test_dotted_release_version_can_render_hyphenated_binary_paths(self) -> None:
         entry = self.manifest["packages"][0]
         entry["tag_prefix"] = "v"

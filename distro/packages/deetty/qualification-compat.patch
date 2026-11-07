@@ -87,6 +87,34 @@
 @@ -123,1 +123,1 @@
 -    const vim_markers = [_][]const u8{"NOCTTY_REAL_TUI_VIM"};
 +    const vim_markers = [_][]const u8{"DEETTY_REAL_TUI_VIM"};
+@@ -292,0 +293,27 @@
++                if (try session.pollExit()) |exit_code| {
++                    std.debug.print("tui_exit_detail app={s} exit_code={d}\n", .{
++                        @tagName(case.app),
++                        exit_code,
++                    });
++                } else {
++                    std.debug.print("tui_exit_detail app={s} exit_code=unavailable\n", .{
++                        @tagName(case.app),
++                    });
++                }
++                var row_bytes: [256]u8 = undefined;
++                if (session.grid.columns <= row_bytes.len) {
++                    for (0..session.grid.rows) |row| {
++                        for (0..session.grid.columns) |column| {
++                            const codepoint = session.grid.cell(column, row).codepoint;
++                            row_bytes[column] = if (codepoint >= 0x20 and codepoint <= 0x7e)
++                                @intCast(codepoint)
++                            else
++                                ' ';
++                        }
++                        std.debug.print("tui_exit_screen app={s} row={d} text={s}\n", .{
++                            @tagName(case.app),
++                            row,
++                            row_bytes[0..session.grid.columns],
++                        });
++                    }
++                }
 --- a/src/terminal/SystemTuiQualification.zig
 +++ b/src/terminal/SystemTuiQualification.zig
 @@ -46,1 +46,1 @@
@@ -552,7 +580,7 @@
 +    if [ "${DEETTY_DEDICATED_DISPLAY:-0}" != 1 ]; then
 --- a/src/terminal/RealTuiQualification.zig
 +++ b/src/terminal/RealTuiQualification.zig
-@@ -411,1 +411,1 @@
+@@ -411,2 +411,2 @@
 -            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache",
 +            "XDG_CACHE_HOME={s}/{s}-cache;TMPDIR={s}/{s}-cache;LC_ALL=C.UTF-8",
          .{

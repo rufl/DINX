@@ -40,9 +40,15 @@ fi
 if [[ -e "$terminal_wrapper" || -e "$terminal_fallback" ]]; then
   fail 'retired terminal fallback wrapper or launcher remains'
 fi
-for package in dialog fzf glances less libnewt man-db nano openssh procps-ng sqlite texinfo tmux; do
+for package in dialog fzf glances less libnewt nano openssh procps-ng sqlite tmux; do
   grep -Fqx "    - $package" "$profile" || fail "profile does not install $package"
 done
+if grep -Eq '^[[:space:]]+- (man-db|man-pages|texinfo)([[:space:]]|$)' "$profile"; then
+  fail 'profile installs removed documentation packages'
+fi
+if jq -e 'any(.groups[].packages[]; . == "man-db" or . == "man-pages" or . == "texinfo")' "$groups" >/dev/null; then
+  fail 'feature groups include removed documentation packages'
+fi
 grep -Fqx '    - zls' "$profile" || fail 'profile does not install the Zig language server'
 if grep -Eq '^[[:space:]]+- (clang|vim)([[:space:]]|$)' "$profile"; then
   fail 'profile installs build-only clang or Vim'

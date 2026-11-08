@@ -314,8 +314,6 @@ required_paths=(
   usr/bin/dialog
   usr/bin/fzf
   usr/bin/glances
-  usr/bin/info
-  usr/bin/man
   usr/bin/sftp
   usr/bin/sqlite3
   usr/bin/tmux
@@ -1209,9 +1207,17 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gvfs|gvfs-gphoto2|gvfs-mt
   fail 'removed file-manager, volume-mounter or partition-manager package metadata is present'
 fi
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  for removed_package in dhcpcd dhcpcd-dinit dhclient ecryptfs-utils ex-vi-compat exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail vi vim vim-runtime zsh; do
+  for removed_package in \
+    dhcpcd dhcpcd-dinit dhclient ecryptfs-utils ex-vi-compat exfat-utils \
+    man-db man-pages memtest86+ mkinitcpio-nfs-utils nbd s-nail texinfo \
+    vi vim vim-runtime zsh; do
     if grep -Fq "/var/lib/pacman/local/$removed_package-" <<<"$image_manifest"; then
       fail "trimmed common package metadata remains in the ISO: $removed_package"
+    fi
+  done
+  for removed_path in usr/bin/info usr/bin/man; do
+    if grep -Fq "/$removed_path" <<<"$image_manifest"; then
+      fail "trimmed documentation executable remains in the ISO: $removed_path"
     fi
   done
 done

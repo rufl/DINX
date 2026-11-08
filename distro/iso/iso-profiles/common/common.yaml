@@ -28,8 +28,6 @@ packages-base:
   - linux-headers
   - lsb-release
   - logrotate
-  - man-db
-  - man-pages
   - mkinitcpio
   - mkinitcpio-openswap
   - modemmanager
@@ -37,7 +35,6 @@ packages-base:
   - os-prober
   - sudo
   - sysfsutils
-  - texinfo
   - usbutils
   - which
   - xfsprogs

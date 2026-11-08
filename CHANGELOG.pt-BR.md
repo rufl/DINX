@@ -3,6 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Remover `man-db`, `man-pages` e `texinfo` do rootfs comum e do perfil DINX. Manter `man-db` e `texinfo` como dependências isoladas de build/qualificação do Deetty. O Calamares instala o mesmo rootfs, portanto essas ferramentas também ficam ausentes do sistema instalado; rejeitar seus registros de pacote e executáveis `man`/`info` nas imagens SquashFS finais.
 - Remover o alias `vi` e `dhcpcd-dinit` do perfil comum: `ex-vi-compat` puxava Vim e seu runtime de 38,81 MiB para a ISO, apesar de Vim estar documentado como ferramenta somente do builder; o NetworkManager já usa o cliente DHCP interno. Manter Nano para recuperação e Vim apenas no builder isolado de qualificação TUI; falhar se pacotes Vim/vi ou dhcpcd permanecerem nos rootfs/livefs finais.
 - Fazer os launchers de URI e workspace do Deetty respeitarem o modo de apresentação salvo, em vez de forçar Dropdown; as opções explícitas `--native-grid`, `--native-grid-windowed` e `--native-grid-zen` permanecem inalteradas. Reconstruir o pacote.
 - Restaurar os caminhos de `coreutils` do host antes de iniciar o AppImage do ONLYOFFICE; o script `desktopeditors` incluído chama `readlink`/`dirname` e falhava quando o runtime do AppImage removia as ferramentas do host de `PATH`. Declarar `coreutils` como dependência e reconstruir o pacote.

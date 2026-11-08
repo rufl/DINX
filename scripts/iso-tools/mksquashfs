@@ -62,6 +62,9 @@ prune_excluded_packages() {
     ex-vi-compat
     vim
     vim-runtime
+    man-db
+    man-pages
+    texinfo
   )
   local -a package_records
   local package

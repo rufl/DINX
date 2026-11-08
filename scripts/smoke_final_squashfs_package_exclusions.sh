@@ -107,6 +107,47 @@ usr/share/dinx-prune-smoke/
 usr/share/dinx-prune-smoke/keep
 EOF
 
+pruned_packages=(
+  breeze
+  breeze-cursors
+  breeze-icons
+  plasma-integration
+  plasma-workspace
+  qogir-icon-theme
+  qqc2-breeze-style
+  xdg-desktop-portal-kde
+)
+add_fixture_package() {
+  local package=$1
+  local dependency=${2:-}
+  local reason=${3:-0}
+  local package_db="$root/var/lib/pacman/local/$package-1.0-1"
+  local payload="usr/share/dinx-prune-fixtures/$package/payload"
+  mkdir -p -- "$package_db" "$root/$(dirname -- "$payload")"
+  printf 'fixture payload for %s\n' "$package" > "$root/$payload"
+  {
+    printf '%%NAME%%\n%s\n\n%%VERSION%%\n1.0-1\n\n%%DESC%%\nprune fixture\n\n' "$package"
+    if [[ -n "$dependency" ]]; then
+      printf '%%DEPENDS%%\n%s\n\n' "$dependency"
+    fi
+    printf '%%REASON%%\n%s\n\n%%SIZE%%\n1\n\n' "$reason"
+  } > "$package_db/desc"
+  {
+    printf '%%FILES%%\nusr/\nusr/share/\nusr/share/dinx-prune-fixtures/\n'
+    printf 'usr/share/dinx-prune-fixtures/%s/\n%s\n' "$package" "$payload"
+  } > "$package_db/files"
+}
+add_fixture_package dinx-breeze-runtime '' 1
+add_fixture_package breeze dinx-breeze-runtime
+for package in "${pruned_packages[@]:1}"; do
+  add_fixture_package "$package"
+done
+
+[[ -f "$root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
+  || fail 'theme runtime fixture payload was not created'
+[[ -f "$root/usr/share/dinx-prune-fixtures/breeze/payload" ]] \
+  || fail 'Breeze fixture payload was not created'
+
 
 fake_mksquashfs="$work_dir/mksquashfs"
 cat > "$fake_mksquashfs" <<'EOF'
@@ -131,6 +172,7 @@ runtime dependency fixture
 
 %DEPENDS%
 pahole
+breeze-icons
 
 %SIZE%
 1
@@ -139,11 +181,16 @@ EOF
 printf '%%FILES%%\n' > "$blocked_consumer/files"
 if DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
   "$wrapper" "$blocked_root" "$work_dir/blocked.sfs" >"$work_dir/blocked.log" 2>&1; then
-  fail 'pruning removed pahole while a retained package depends on it'
+  fail 'pruning removed an excluded package while a retained package depends on it'
 fi
 [[ -d "$blocked_root/var/lib/pacman/local/linux-headers-1.0-1" \
-   && -d "$blocked_root/var/lib/pacman/local/pahole-1.0-1" ]] \
+   && -d "$blocked_root/var/lib/pacman/local/pahole-1.0-1" \
+   && -d "$blocked_root/var/lib/pacman/local/breeze-icons-1.0-1" ]] \
   || fail 'failed dependency-safe pruning partially removed package records'
+for package in "${pruned_packages[@]}"; do
+  [[ -d "$blocked_root/var/lib/pacman/local/$package-1.0-1" ]] \
+    || fail "failed dependency-safe pruning partially removed $package"
+done
 live_root="$work_dir/livefs"
 cp -a -- "$root" "$live_root"
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
@@ -153,6 +200,15 @@ DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
 [[ ! -e "$header_file" ]] || fail 'linux-headers payload remains in final rootfs layer'
 [[ ! -e "$pahole_db" ]] || fail 'pahole package record remains in final rootfs layer'
 [[ ! -e "$pahole_file" ]] || fail 'pahole payload remains in final rootfs layer'
+for package in "${pruned_packages[@]}"; do
+  [[ ! -e "$root/var/lib/pacman/local/$package-1.0-1" ]] \
+    || fail "$package package record remains in final rootfs layer"
+  [[ ! -e "$root/usr/share/dinx-prune-fixtures/$package/payload" ]] \
+    || fail "$package payload remains in final rootfs layer"
+done
+[[ ! -e "$root/var/lib/pacman/local/dinx-breeze-runtime-1.0-1" \
+   && ! -e "$root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
+  || fail 'unused Breeze-only dependency remains in final rootfs layer'
 [[ -d "$other_db" && -f "$other_file" ]] \
   || fail 'pruning modified an unrelated package or runtime file'
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
@@ -165,6 +221,15 @@ DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
   || fail 'pahole package record remains in final livefs layer'
 [[ ! -e "$live_root/usr/bin/pahole" ]] \
   || fail 'pahole payload remains in final livefs layer'
+for package in "${pruned_packages[@]}"; do
+  [[ ! -e "$live_root/var/lib/pacman/local/$package-1.0-1" ]] \
+    || fail "$package package record remains in final livefs layer"
+  [[ ! -e "$live_root/usr/share/dinx-prune-fixtures/$package/payload" ]] \
+    || fail "$package payload remains in final livefs layer"
+done
+[[ ! -e "$live_root/var/lib/pacman/local/dinx-breeze-runtime-1.0-1" \
+   && ! -e "$live_root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
+  || fail 'unused Breeze-only dependency remains in final livefs layer'
 [[ -d "$live_root/var/lib/pacman/local/dinx-prune-smoke-1.0-1" \
    && -f "$live_root/usr/share/dinx-prune-smoke/keep" ]] \
   || fail 'livefs pruning modified an unrelated package or runtime file'
@@ -183,6 +248,6 @@ fi
 [[ "$builder_pahole_after" == "$builder_pahole_before" ]] \
   || fail 'pruning changed pahole in the ISO builder environment'
 
-printf 'final_squashfs_package_prune_smoke builder_headers_unchanged=%s builder_pahole_unchanged=%s rootfs_headers=false rootfs_pahole=false livefs_headers=false livefs_pahole=false unrelated_payload_preserved=true\n' \
+printf 'final_squashfs_package_prune_smoke builder_headers_unchanged=%s builder_pahole_unchanged=%s rootfs_excluded_theme_and_plasma=false livefs_excluded_theme_and_plasma=false unused_theme_dependency=false unrelated_payload_preserved=true\n' \
   "$builder_headers_after" "$builder_pahole_after"
 

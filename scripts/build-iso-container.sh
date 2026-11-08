@@ -664,7 +664,7 @@ trap finish EXIT
                 printf "compression_dictionary=1M\n"
                 printf "compression_bcj=x86\n"
                 printf "compression_excludes=kernel-source,pacman-cache,logs\n"
-                printf "final_rootfs_removed_packages=linux-headers,pahole\n"
+                printf "final_squashfs_prune_candidates=breeze,breeze-cursors,breeze-icons,linux-headers,pahole,plasma-integration,plasma-workspace,qogir-icon-theme,qqc2-breeze-style,xdg-desktop-portal-kde\n"
                 printf "compression_wrapper_sha256=%s\n" "$(sha256sum /workspace/scripts/iso-tools/mksquashfs | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"

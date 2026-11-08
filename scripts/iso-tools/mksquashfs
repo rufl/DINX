@@ -42,23 +42,40 @@ while (($#)); do
   esac
 done
 
-# Artix needs headers to generate the live and installed initramfs, but they are
-# build-only. Remove the headers and their build-only pahole dependency before compression.
-prune_build_only_headers() {
+# Artix needs headers to generate initramfs images, but those and the unused
+# theme/Plasma packages are not part of DINX's final rootfs or livefs.
+prune_excluded_packages() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
-  local -a header_records
-  local -a pahole_records
-  local -a removable_packages=(linux-headers)
+  local -a removable_packages=()
+  local -a prune_candidates=(
+    breeze
+    breeze-cursors
+    breeze-icons
+    plasma-integration
+    plasma-workspace
+    qogir-icon-theme
+    qqc2-breeze-style
+    xdg-desktop-portal-kde
+  )
   local -a package_records
   local package
   local pacman_config
 
   [[ "$root" != / && -d "$local_db" ]] || return 0
-  header_records=("$local_db"/linux-headers-*)
-  [[ -d "${header_records[0]}" ]] || return 0
-  pahole_records=("$local_db"/pahole-*)
-  [[ ! -d "${pahole_records[0]}" ]] || removable_packages+=(pahole)
+
+  package_records=("$local_db"/linux-headers-*)
+  if [[ -d "${package_records[0]}" ]]; then
+    removable_packages+=(linux-headers)
+    package_records=("$local_db"/pahole-*)
+    [[ ! -d "${package_records[0]}" ]] || removable_packages+=(pahole)
+  fi
+
+  for package in "${prune_candidates[@]}"; do
+    package_records=("$local_db"/"$package"-*)
+    [[ ! -d "${package_records[0]}" ]] || removable_packages+=("$package")
+  done
+  ((${#removable_packages[@]})) || return 0
 
   pacman_config=$(mktemp "${TMPDIR:-/tmp}/dinx-pacman-prune.XXXXXX") || {
     printf 'dinx mksquashfs wrapper: cannot create isolated pacman config\n' >&2
@@ -70,9 +87,9 @@ prune_build_only_headers() {
     return 1
   fi
   if ! pacman --root "$root" --config "$pacman_config" \
-    -R --noconfirm --noscriptlet "${removable_packages[@]}"; then
+    -Rns --noconfirm --noscriptlet "${removable_packages[@]}"; then
     rm -f -- "$pacman_config"
-    printf 'dinx mksquashfs wrapper: cannot safely remove build-only packages from %s\n' "$root" >&2
+    printf 'dinx mksquashfs wrapper: cannot safely remove excluded packages from %s\n' "$root" >&2
     return 1
   fi
   rm -f -- "$pacman_config"
@@ -83,12 +100,12 @@ prune_build_only_headers() {
       printf 'dinx mksquashfs wrapper: %s package record remains in %s\n' "$package" "$root" >&2
       return 1
     }
-    printf 'dinx-final-squashfs: removed build-only package=%s root=%s\n' "$package" "$root"
+    printf 'dinx-final-squashfs: removed excluded package=%s root=%s\n' "$package" "$root"
   done
 }
 
 if [[ -n "$source_root" ]]; then
-  prune_build_only_headers "$source_root"
+  prune_excluded_packages "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.

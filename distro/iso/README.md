@@ -116,7 +116,7 @@ The livefs adds the live-only `dinx-live-autologin` dinit package. It enables gr
 `iso-profiles/dinx/feature-groups.json` records the foundation, desktop, gaming, hardware and optional package groups without replacing Artix's `profile.yaml`. The CI builder signs every locally built package and the temporary `dinx` repository database with an ephemeral key, checks package signatures and duplicate archive paths, and records the immutable package snapshot in `build-metadata.txt`. This is build qualification only; the production pacman repository key and installed-system update channel remain separate release prerequisites.
 
 The source tree configures a weekly upstream-pin refresh at Monday 04:17 UTC.
-It opens one reviewed PR for 21 custom-package source pins, including a
+It opens one reviewed PR for 23 custom-package source pins, including a
 monthly-refreshed Noto Latin subset; the private Deetty commit and
 ZLS/Zig 0.16 pins remain manual. After merge, a separate signed package-only
 workflow publishes packages to the GitHub Release tag `dinx-packages-latest`,
@@ -125,6 +125,23 @@ confirmed green or published. `dinx-keyring` configures the required-signature
 `[dinx]` repository and editable `/etc/pacman.d/dinx-mirrorlist`; Shelly uses
 pacman to sync and update packages. See the [release guide](../../docs/release.md)
 for signing-secret setup and manual key verification/bootstrap.
+
+DINX packages are built as signed binary `.pkg.tar.zst` archives. One `deetty`
+package contains the precompiled Deetty terminal and Dintor editor; upstream
+AppImages remain prebuilt payloads inside DINX packages. Local and P0 builds
+restore verified package archives keyed by package source, recipe, builder
+environment and installed dependency set; a cache miss rebuilds the package.
+This avoids recompiling cache hits while retaining pinned inputs and signature
+verification.
+
+Before SquashFS compression, the wrapper runs fail-closed `pacman -Rns`
+transactions on rootfs and livefs for these installed package roots: `breeze`,
+`breeze-cursors`, `breeze-icons`, `plasma-integration`, `plasma-workspace`,
+`qogir-icon-theme`, `qqc2-breeze-style`, `xdg-desktop-portal-kde`,
+`linux-headers` and `pahole` (the latter only with headers). Unneeded
+dependencies are removed only when no retained package requires them; any
+dependency conflict aborts the build. ISO content checks reject excluded
+theme/Plasma package records.
 
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and `dinx-noto-latin` are installed for the corresponding consumers, matching CachyOS's default GTK typography. The custom package provides Noto Sans 10 regular/bold/italic/bold-italic and Noto Sans Mono 10, subset to Latin, combining marks, common punctuation and currency; it replaces the full `noto-fonts` package. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 

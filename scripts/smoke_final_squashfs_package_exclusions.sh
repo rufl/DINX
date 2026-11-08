@@ -116,6 +116,11 @@ pruned_packages=(
   qogir-icon-theme
   qqc2-breeze-style
   xdg-desktop-portal-kde
+  dhcpcd
+  dhcpcd-dinit
+  ex-vi-compat
+  vim
+  vim-runtime
 )
 add_fixture_package() {
   local package=$1
@@ -139,8 +144,15 @@ add_fixture_package() {
 }
 add_fixture_package dinx-breeze-runtime '' 1
 add_fixture_package breeze dinx-breeze-runtime
+add_fixture_package dinx-vim-runtime '' 1
 for package in "${pruned_packages[@]:1}"; do
-  add_fixture_package "$package"
+  case "$package" in
+    dhcpcd-dinit) add_fixture_package "$package" dhcpcd ;;
+    ex-vi-compat) add_fixture_package "$package" vim ;;
+    vim) add_fixture_package "$package" vim-runtime ;;
+    vim-runtime) add_fixture_package "$package" dinx-vim-runtime ;;
+    *) add_fixture_package "$package" ;;
+  esac
 done
 
 [[ -f "$root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
@@ -173,6 +185,8 @@ runtime dependency fixture
 %DEPENDS%
 pahole
 breeze-icons
+ex-vi-compat
+dhcpcd
 
 %SIZE%
 1
@@ -209,6 +223,9 @@ done
 [[ ! -e "$root/var/lib/pacman/local/dinx-breeze-runtime-1.0-1" \
    && ! -e "$root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
   || fail 'unused Breeze-only dependency remains in final rootfs layer'
+[[ ! -e "$root/var/lib/pacman/local/dinx-vim-runtime-1.0-1" \
+   && ! -e "$root/usr/share/dinx-prune-fixtures/dinx-vim-runtime/payload" ]] \
+  || fail 'unused Vim-only dependency remains in final rootfs layer'
 [[ -d "$other_db" && -f "$other_file" ]] \
   || fail 'pruning modified an unrelated package or runtime file'
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
@@ -230,6 +247,9 @@ done
 [[ ! -e "$live_root/var/lib/pacman/local/dinx-breeze-runtime-1.0-1" \
    && ! -e "$live_root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
   || fail 'unused Breeze-only dependency remains in final livefs layer'
+[[ ! -e "$live_root/var/lib/pacman/local/dinx-vim-runtime-1.0-1" \
+   && ! -e "$live_root/usr/share/dinx-prune-fixtures/dinx-vim-runtime/payload" ]] \
+  || fail 'unused Vim-only dependency remains in final livefs layer'
 [[ -d "$live_root/var/lib/pacman/local/dinx-prune-smoke-1.0-1" \
    && -f "$live_root/usr/share/dinx-prune-smoke/keep" ]] \
   || fail 'livefs pruning modified an unrelated package or runtime file'
@@ -248,6 +268,6 @@ fi
 [[ "$builder_pahole_after" == "$builder_pahole_before" ]] \
   || fail 'pruning changed pahole in the ISO builder environment'
 
-printf 'final_squashfs_package_prune_smoke builder_headers_unchanged=%s builder_pahole_unchanged=%s rootfs_excluded_theme_and_plasma=false livefs_excluded_theme_and_plasma=false unused_theme_dependency=false unrelated_payload_preserved=true\n' \
+printf 'final_squashfs_package_prune_smoke builder_headers_unchanged=%s builder_pahole_unchanged=%s rootfs_excluded_theme_plasma_vi_dhcpcd=true livefs_excluded_theme_plasma_vi_dhcpcd=true unused_excluded_dependencies=false unrelated_payload_preserved=true\n' \
   "$builder_headers_after" "$builder_pahole_after"
 

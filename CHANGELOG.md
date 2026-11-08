@@ -3,6 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Remove the common-profile `vi` alias and `dhcpcd-dinit`: `ex-vi-compat` pulled Vim and its 38.81 MiB runtime into the ISO despite Vim being described as builder-only, while NetworkManager already uses its built-in DHCP client. Keep Nano for recovery and Vim only in the isolated TUI-qualification builder; fail closed if Vim/vi or dhcpcd packages remain in the final rootfs/livefs.
 - Synchronize Pearl's saved dark/light choice to dconf, GTK 3/4 and Qt6ct after session D-Bus startup and immediately after first-run selection; preserve unrelated toolkit settings and disable the DINX custom Qt palette in light mode.
 - Have Deetty's desktop URI and workspace launchers honor the saved presentation mode instead of forcing Dropdown; explicit `--native-grid`, `--native-grid-windowed` and `--native-grid-zen` overrides remain unchanged. Rebuild the package.
 - Restore the host `coreutils` paths before launching ONLYOFFICE's AppImage; its bundled `desktopeditors` script calls `readlink`/`dirname` and failed when the AppImage runtime omitted host utilities from `PATH`. Declare `coreutils` as a runtime dependency and rebuild the package.

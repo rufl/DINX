@@ -533,11 +533,11 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired Qogir/Breeze/KDE Plasma theme packages, Zathura or MuPDF remain in the ISO'
   fi
-  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang|ex-vi-compat|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
     fail 'build-only clang or Vim qualification packages remain in the ISO'
   fi
-  for build_only_path in usr/bin/clang usr/bin/clang++ usr/bin/clangd usr/bin/vim; do
+  for build_only_path in usr/bin/clang usr/bin/clang++ usr/bin/clangd usr/bin/vi usr/bin/vim; do
     if grep -Fq "/$build_only_path" <<<"$image_manifest"; then
       fail "build-only qualification executable remains in the ISO: $build_only_path"
     fi
@@ -1209,7 +1209,7 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(gvfs|gvfs-gphoto2|gvfs-mt
   fail 'removed file-manager, volume-mounter or partition-manager package metadata is present'
 fi
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  for removed_package in dhclient ecryptfs-utils exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail zsh; do
+  for removed_package in dhcpcd dhcpcd-dinit dhclient ecryptfs-utils ex-vi-compat exfat-utils memtest86+ mkinitcpio-nfs-utils nbd s-nail vi vim vim-runtime zsh; do
     if grep -Fq "/var/lib/pacman/local/$removed_package-" <<<"$image_manifest"; then
       fail "trimmed common package metadata remains in the ISO: $removed_package"
     fi

@@ -139,14 +139,7 @@ Vim are build-only qualification tools: clangd exercises the generic LSP
 client against a real server, while Vim checks alternate-screen and
 bracketed-paste behavior in a real TUI. Neither ships in the runtime image.
 
-Before SquashFS compression, the wrapper runs fail-closed `pacman -Rns`
-transactions on rootfs and livefs for these installed package roots: `breeze`,
-`breeze-cursors`, `breeze-icons`, `plasma-integration`, `plasma-workspace`,
-`qogir-icon-theme`, `qqc2-breeze-style`, `xdg-desktop-portal-kde`,
-`linux-headers` and `pahole` (the latter only with headers). Unneeded
-dependencies are removed only when no retained package requires them; any
-dependency conflict aborts the build. ISO content checks reject excluded
-theme/Plasma package records.
+Before SquashFS compression, the wrapper runs fail-closed `pacman -Rns` transactions on rootfs and livefs for these installed package roots: `breeze`, `breeze-cursors`, `breeze-icons`, `dhcpcd`, `dhcpcd-dinit`, `ex-vi-compat`, `plasma-integration`, `plasma-workspace`, `qogir-icon-theme`, `qqc2-breeze-style`, `vim`, `vim-runtime`, `xdg-desktop-portal-kde`, `linux-headers` and `pahole` (the latter only with headers). This removes the Artix `vi` selector's Vim dependency and the unused standalone `dhcpcd` client/service adapter; NetworkManager uses its built-in DHCP client. Nano remains the recovery editor; Vim remains isolated to builder qualification. Unneeded dependencies are removed only when no retained package requires them; any dependency conflict aborts the build. ISO content checks reject excluded package records.
 
 The profile owns static DINX visual bridges: `/usr/share/dinx/theme/DINX.json` is the source for semantic and ANSI colors; GTK and Qt consume checked-in DINX theme files, and `DINX_COLOR_SCHEME` is the user-session color contract. `qt6ct`, `adw-gtk-theme` and `dinx-noto-latin` are installed for the corresponding consumers, matching CachyOS's default GTK typography. The custom package provides Noto Sans 10 regular/bold/italic/bold-italic and Noto Sans Mono 10, subset to Latin, combining marks, common punctuation and currency; it replaces the full `noto-fonts` package. The Pearl Greeter host reads `/etc/pearl/greeter.json`, uses the GTK DINX bridge and forces `Aqueous + Pearl (DINX)` with X11 and UWSM disabled; Aqueous/Pearl owns the only user-session contract. `scripts/check_dinx_theme.sh` validates this contract before the ISO build.
 
@@ -254,7 +247,7 @@ In the current source profile, the normal live path is direct autologin; the gre
 
 ## Profile boundary
 
-The common profile omits the standalone `dhclient` package because NetworkManager uses its built-in DHCP client by default, eCryptfs utilities, legacy FUSE `exfat-utils` (the ISO retains kernel-driver `exfatprogs`), BIOS-only `memtest86+` from rootfs/livefs, `mkinitcpio-nfs-utils` because NFS-root boot is not configured, unused NBD tools, `s-nail` without configured mail delivery, and Zsh because Fish is DINX's default shell. Artix artools 0.40 still requires `memtest86+` in `packages-boot`: `make_bootfs()` copies `/boot/memtest86+/memtest.bin` unconditionally. DINX does not expose it in the boot menu. No live service or application launcher selects these packages; Artix packages remain available for later installation.
+The common profile omits the standalone `dhclient` and `dhcpcd` clients because NetworkManager uses its built-in DHCP client by default; it also omits the Artix `vi` selector, which resolves to `ex-vi-compat` and depends on `vim`/`vim-runtime`. Nano remains the recovery editor, and Vim remains only in the isolated builder for TUI qualification. Other common omissions are eCryptfs utilities, legacy FUSE `exfat-utils` (the ISO retains kernel-driver `exfatprogs`), BIOS-only `memtest86+` from rootfs/livefs, `mkinitcpio-nfs-utils` because NFS-root boot is not configured, unused NBD tools, `s-nail` without configured mail delivery, and Zsh because Fish is DINX's default shell. Artix artools 0.40 still requires `memtest86+` in `packages-boot`: `make_bootfs()` copies `/boot/memtest86+/memtest.bin` unconditionally. DINX does not expose it in the boot menu. No live service or application launcher selects these packages; Artix packages remain available for later installation.
 
 A successful post-release main P0 validation is [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on commit `bf773500965c843e014e3bc3ef8fea685e14b91b`. It passed the build, compact SquashFS payload check, QEMU boot and graphical capture, Calamares partition transaction, disposable BIOS/UEFI persistent-install and recovery-TTY smokes, metadata verification, attestation and artifact upload. The earlier UEFI marker race is fixed by ordering the marker after `early-root-rw.target`; this main run did not replace the tagged release ISO.
 

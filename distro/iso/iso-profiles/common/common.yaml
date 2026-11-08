@@ -39,7 +39,6 @@ packages-base:
   - sysfsutils
   - texinfo
   - usbutils
-  - vi
   - which
   - xfsprogs
 packages-apps:
@@ -65,7 +64,6 @@ packages-init:
     - bluez-dinit
     - cronie-dinit
     - cryptsetup-dinit
-    - dhcpcd-dinit
     - haveged-dinit
     - lvm2-dinit
     - mdadm-dinit

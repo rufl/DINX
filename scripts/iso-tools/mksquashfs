@@ -42,8 +42,8 @@ while (($#)); do
   esac
 done
 
-# Artix needs headers to generate initramfs images, but those and the unused
-# theme/Plasma packages are not part of DINX's final rootfs or livefs.
+# Artix needs headers to generate initramfs images; build-only headers and
+# explicitly excluded package roots are removed from DINX's final rootfs/livefs.
 prune_excluded_packages() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
@@ -57,6 +57,11 @@ prune_excluded_packages() {
     qogir-icon-theme
     qqc2-breeze-style
     xdg-desktop-portal-kde
+    dhcpcd
+    dhcpcd-dinit
+    ex-vi-compat
+    vim
+    vim-runtime
   )
   local -a package_records
   local package

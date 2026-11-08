@@ -87,7 +87,7 @@ check_input_set common_init "$common_init_file"
 check_input_set common_boot "$common_boot_file"
 check_input_set profile_init "$profile_init_file"
 check_input_set livefs "$livefs_file"
-for package in dhclient ecryptfs-utils exfat-utils libva-utils memtest86+ mkinitcpio-nfs-utils nbd net-tools s-nail zsh; do
+for package in dhclient dhcpcd dhcpcd-dinit ecryptfs-utils ex-vi-compat exfat-utils libva-utils memtest86+ mkinitcpio-nfs-utils nbd net-tools s-nail vi vim vim-runtime zsh; do
   if grep -Fqx "$package" "$common_file" || grep -Fqx "$package" "$profile_file" \
     || grep -Fqx "$package" "$livefs_file" || grep -Fqx "$package" "$group_file"; then
     fail "trimmed package remains selected: $package"

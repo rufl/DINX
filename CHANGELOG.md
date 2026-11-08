@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 - Restore the Plymouth screen checker's `main()` CLI entry point; add a CLI regression test so QEMU qualification reaches the splash check.
+- Track the local DinitUI, DINXPanel and Seafoam Settings sources; clean CI checkouts must not depend on ignored `src/` directories present only on the builder machine.
 - Reuse the exact SquashFS path matcher for removed `man`/`info`; add `infocmp` and `mandoc` prefix-collision fixtures so valid executables cannot trigger the exclusion gate.
 - Match the actual compound `DINX_LIVE_SESSION` guard in the ISO-content check; its stale semicolon-form expectation stopped qualification after image assembly, before QEMU ran.
 - Recreate Pearl Greeter's state and cache directories as `pearl-greeter` at boot; Aqueous otherwise fails before initialization when its `XDG_STATE_HOME` config-writer lock cannot be created.

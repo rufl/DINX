@@ -21,12 +21,25 @@ for package in firewalld firewall-config; do
   grep -Fq "\"$package\"" "$groups" || fail "$package is missing from the ISO feature groups"
 done
 [[ $(grep -Fxc '      - firewalld-dinit' "$profile") -eq 2 ]] \
-  || fail 'Firewalld Dinit package is not installed/enabled for both rootfs and livefs'
+  || fail 'Firewalld Dinit package is not installed for both rootfs and livefs'
+[[ $(grep -Fxc '      - dinx-firewalld-dinit' "$profile") -eq 2 ]] \
+  || fail 'DINX Firewalld boot-link package is not installed for both rootfs and livefs'
 [[ $(grep -Ecx '[[:space:]]*"firewalld-dinit",[[:space:]]*' "$groups") -eq 2 ]] \
   || fail 'Firewalld Dinit package is missing from profile_init/livefs input inventories'
-firewalld_boot_link=distro/iso/iso-profiles/dinx/root-overlay/etc/dinit.d/boot.d/firewalld
-[[ -L "$firewalld_boot_link" && $(readlink -- "$firewalld_boot_link") == /etc/dinit.d/firewalld ]] \
-  || fail 'DINX root overlay does not enable Firewalld for rootfs and livefs'
+[[ $(grep -Ecx '[[:space:]]*"dinx-firewalld-dinit",[[:space:]]*' "$groups") -eq 2 ]] \
+  || fail 'DINX Firewalld boot-link package is missing from profile_init/livefs input inventories'
+firewalld_boot_pkg=distro/packages/dinx-firewalld-dinit/PKGBUILD
+grep -Fqx 'pkgname=dinx-firewalld-dinit' "$firewalld_boot_pkg" \
+  || fail 'DINX Firewalld boot-link package name is incorrect'
+grep -Fqx "depends=('dinit' 'firewalld-dinit')" "$firewalld_boot_pkg" \
+  || fail 'DINX Firewalld boot-link package dependencies are incorrect'
+grep -Fqx 'ln -s /etc/dinit.d/firewalld "$pkgdir/etc/dinit.d/boot.d/firewalld"' "$firewalld_boot_pkg" \
+  || fail 'DINX Firewalld boot-link package does not own the enabled service symlink'
+grep -Fq 'build_package dinx-firewalld-dinit' "$builder" \
+  || fail 'ISO builder does not build the DINX Firewalld boot-link package'
+firewalld_boot_overlay=distro/iso/iso-profiles/dinx/root-overlay/etc/dinit.d/boot.d/firewalld
+[[ ! -L "$firewalld_boot_overlay" ]] \
+  || fail 'Firewalld boot link is still in the dereferencing root overlay'
 
 if grep -Fq 'iptables' "$common" "$groups"; then
   fail 'Portmaster-only iptables package remains in the common ISO inputs'

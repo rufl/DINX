@@ -150,6 +150,7 @@ rootfs:
       - greetd-dinit
       - artix-live-dinit
       - firewalld-dinit
+      - dinx-firewalld-dinit
       - opensnitch-dinit
 livefs:
   packages:
@@ -163,6 +164,7 @@ livefs:
       - dbus-dinit
       - elogind-dinit
       - firewalld-dinit
+      - dinx-firewalld-dinit
       - opensnitch-dinit
       - pipewire-dinit
       - pipewire-pulse-dinit

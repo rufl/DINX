@@ -421,6 +421,11 @@ trap finish EXIT
               build_package gapless
               build_package dinx-keyring
               build_package opensnitch-dinit
+              build_package dinx-firewalld-dinit
+              firewalld_boot_package=$(find "$package_repo" -maxdepth 1 -type f -name 'dinx-firewalld-dinit-*.pkg.tar.zst' -print -quit)
+              [[ -n "$firewalld_boot_package" ]]
+              firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
+              grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
               build_package floorp
               build_package patchy
               build_package blockbench

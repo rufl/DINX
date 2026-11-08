@@ -4,7 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 - Recriar no boot os diretórios de estado e cache do Pearl Greeter com propriedade de `pearl-greeter`; sem isso, o Aqueous falha antes da inicialização ao não conseguir criar o lock `config-writer` em `XDG_STATE_HOME`.
-- Habilitar explicitamente o Firewalld no `boot.d` do overlay; `firewalld-dinit` instala o serviço, mas não cria o link de boot exigido nos rootfs live e instalado.
+- Instalar o link de boot do Firewalld/Dinit por um pacote DINX assinado. O Artix copia overlays com `cp -LR`, que dereferencia o symlink do overlay e não preserva a ativação no rootfs/livefs.
 - Remover `man-db`, `man-pages` e `texinfo` do rootfs comum e do perfil DINX. Manter `man-db` e `texinfo` como dependências isoladas de build/qualificação do Deetty. O Calamares instala o mesmo rootfs, portanto essas ferramentas também ficam ausentes do sistema instalado; rejeitar seus registros de pacote e executáveis `man`/`info` nas imagens SquashFS finais.
 - Comparar exclusões de executáveis de build com o caminho SquashFS completo; a busca por substring confundia `usr/bin/exiv2` com o executável Vim removido `usr/bin/ex`.
 - Remover o alias `vi` e `dhcpcd-dinit` do perfil comum: `ex-vi-compat` puxava Vim e seu runtime de 38,81 MiB para a ISO, apesar de Vim estar documentado como ferramenta somente do builder; o NetworkManager já usa o cliente DHCP interno. Manter Nano para recuperação e Vim apenas no builder isolado de qualificação TUI; falhar se pacotes Vim/vi ou dhcpcd permanecerem nos rootfs/livefs finais.

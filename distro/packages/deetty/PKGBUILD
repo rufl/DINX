@@ -5,7 +5,7 @@ source_env="$startdir/source.env"
 : "${DEETTY_VERSION:?missing DEETTY_VERSION}"
 : "${DEETTY_SOURCE_SHA256:?missing DEETTY_SOURCE_SHA256}"
 pkgver="$DEETTY_VERSION"
-pkgrel=9
+pkgrel=10
 pkgdesc='Native Zig terminal workspace and Dintor editor for DINX'
 arch=('x86_64')
 url='https://github.com/rufl/DEETTY'
@@ -15,7 +15,7 @@ optdepends=('zls: Zig language server for Dintor' 'clang: optional C/C++ languag
 makedepends=('ghostty-vt-runtime' 'vte3' 'zig>=0.17' 'btop' 'clang' 'dialog' 'fzf' 'git' 'glances' 'less' 'libnewt' 'librsvg' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim' 'xorg-server-xvfb')
 provides=('dintor' 'terminal-emulator')
 source=("deetty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
-sha256sums=("$DEETTY_SOURCE_SHA256" 'fe22dd0c8120c1d2a19dded298c5c313477bf59b599e827fc395e43a24c20f6b' 'c7e752342ad2aedd94e6121711adb69ce1478181c966c73c1a6958460ec8c9a8' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
+sha256sums=("$DEETTY_SOURCE_SHA256" 'b051a7b9956d05935d089592b89bddb94b77c20c75e4f346f027ed4189fbd8f6' 'c7e752342ad2aedd94e6121711adb69ce1478181c966c73c1a6958460ec8c9a8' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
 
 prepare() {
   cd "$srcdir/deetty-$pkgver"

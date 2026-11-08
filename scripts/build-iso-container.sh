@@ -362,6 +362,17 @@ trap finish EXIT
               rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"
               gtk-update-icon-cache -f /usr/share/icons/hicolor
               rm -f "$icon_svg"
+              # Artix btop ships file capabilities. The disposable builder's restricted makepkg
+              # environment rejects that executable; the ISO installs its own btop package.
+              btop_path=$(command -v btop)
+              btop_capability=$(getcap "$btop_path")
+              if [[ -n "$btop_capability" ]]; then
+                setcap -r "$btop_path"
+              fi
+              [[ -z $(getcap "$btop_path") ]] || {
+                printf 'build-iso-container: could not clear builder btop file capabilities: %s\n' "$btop_path" >&2
+                exit 1
+              }
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
               build_package topgrade

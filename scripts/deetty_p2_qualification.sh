@@ -252,7 +252,7 @@ C_FIXTURE
     cc -O2 -std=c11 -Wall -Wextra "$work_dir/codex.c" -o "$work_dir/codex"
     codex_path="$work_dir/codex"
   fi
-  real_output=$(TERM=xterm-256color "$source_dir/zig-out/bin/deetty-terminal-real-tui-qualification" \
+  real_output=$(LC_ALL=C LANG=C TERM=xterm-256color "$source_dir/zig-out/bin/deetty-terminal-real-tui-qualification" \
     "$work_dir/real" "$codex_path" "$vim_path" "$btop_path")
   printf '%s\n' "$real_output"
   grep -Fq 'terminal_real_tui_qualification mode=' <<<"$real_output"

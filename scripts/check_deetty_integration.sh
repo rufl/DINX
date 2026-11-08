@@ -118,6 +118,10 @@ tar -xzf "$archive" -C "$patched_source" --strip-components=1
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$identity_patch"
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$repo_root/distro/packages/deetty/qualification-compat.patch"
 patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$exec_patch"
+grep -Fq 'LC_ALL=C.UTF-8' "$patched_source/src/terminal/RealTuiQualification.zig" \
+  || fail 'Deetty real-TUI environment does not override ASCII locales'
+grep -Fq 'LC_ALL=C LANG=C TERM=xterm-256color' "$repo_root/scripts/deetty_p2_qualification.sh" \
+  || fail 'Deetty real-TUI qualification does not exercise an ASCII parent locale'
 grep -Fq 'DEETTY_DEDICATED_DISPLAY' "$patched_source/scripts/nocted_native_smoke.sh" \
   || fail 'Deetty isolated-display environment name was not patched'
 grep -Fq 'DEETTY_ISOLATED_DISPLAY' "$patched_source/scripts/require_isolated_display.sh" \

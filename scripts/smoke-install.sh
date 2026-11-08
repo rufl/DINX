@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 iso_path=${1:-}
 timeout_seconds=${DINX_INSTALL_TIMEOUT:-180}
@@ -458,6 +459,7 @@ for image in "$screen_path" "$recovery_screen_path"; do
   IFS= read -r magic < "$image" || true
   [[ "$magic" == P6 ]] || fail "invalid QEMU PPM screenshot: $image"
 done
+"$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter
 for service in NetworkManager elogind local.target; do
   if ! grep -Fq "[  OK  ] $service" "$serial_log"; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true

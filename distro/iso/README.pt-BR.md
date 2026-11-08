@@ -243,6 +243,8 @@ O gate de conteúdo do P0 exige que as imagens SquashFS do root e da sessão liv
 
 O gate de sessão live do P0 exige `AUTOLOGIN=true`, o serviço dinit de autologin exclusivo da live e a fronteira inalterada do greeter do sistema instalado.
 
+O smoke do disco instalado em BIOS/UEFI também exige que a captura da tela mostre os controles `Sign in` e `Password` do Pearl; logs de serviços ativos e framebuffer válido não bastam para qualificar o login.
+
 O contrato de payload também exige `wdisplays`, `shikane` e os pontos de entrada DINX de persistência de display. As fontes externas de Dome e ZLS são fixadas; o Seafoam Settings é compilado a partir da fonte versionada no repositório. Os três são obrigatórios e verificados como parte do payload base da ISO.
 
 O workflow armazena uma captura separada `dinx-boot-screen.ppm`, feita antes do envio das teclas do menu de boot. Esse quadro deve ser revisado ao qualificar a superfície GRUB de seleção do kernel; ele é a evidência de regressão do painel opaco removido.

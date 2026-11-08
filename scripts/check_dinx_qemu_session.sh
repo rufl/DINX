@@ -10,11 +10,11 @@ fail() {
   exit 1
 }
 
-[[ $# -le 2 ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm [session|first-run]'
-[[ -n "$screenshot" ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SESSION_SCREENSHOT.ppm [session|first-run]'
+[[ $# -le 2 ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SCREENSHOT.ppm [session|first-run|greeter]'
+[[ -n "$screenshot" ]] || fail 'usage: scripts/check_dinx_qemu_session.sh SCREENSHOT.ppm [session|first-run|greeter]'
 case "$mode" in
-  session|first-run) ;;
-  *) fail 'mode must be session or first-run' ;;
+  session|first-run|greeter) ;;
+  *) fail 'mode must be session, first-run or greeter' ;;
 esac
 [[ -s "$screenshot" ]] || fail "session screenshot is missing or empty: $screenshot"
 command -v python3 >/dev/null 2>&1 || fail 'required command not found: python3'
@@ -82,6 +82,19 @@ PY
 fi
 if [[ -z "${recognized//[[:space:]]/}" ]]; then
   fail "no readable text in QEMU session screenshot: $screenshot"
+fi
+if [[ "$mode" == greeter ]]; then
+  if grep -Eiq 'access[[:space:]]*denied|greeterstartupfailed|broken[[:space:]]+pipe' <<<"$recognized"; then
+    printf 'dinx-qemu-session: rejected greeter startup failure:\n%s\n' "$recognized" >&2
+    exit 1
+  fi
+  if ! grep -Eiq 'sign[[:space:]]*in' <<<"$recognized" \
+    || ! grep -Eiq 'password' <<<"$recognized"; then
+    printf 'dinx-qemu-session: Pearl Greeter sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
+    exit 1
+  fi
+  printf 'dinx-qemu-session: greeter_ready=true marker=Sign in+Password screenshot=%s\n' "$screenshot"
+  exit 0
 fi
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then
   fail 'Pearl reports a missing XDG Desktop directory'

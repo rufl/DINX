@@ -555,7 +555,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     usr/bin/vi \
     usr/bin/view \
     usr/bin/vim; do
-    if grep -Fq "/$build_only_path" <<<"$image_manifest"; then
+    if iso_manifest_contains_path "$build_only_path" <<<"$image_manifest"; then
       fail "build-only qualification or retired Vim executable remains in the ISO: $build_only_path"
     fi
   done

@@ -4,6 +4,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 
 ## Unreleased
 - Parse `unsquashfs -lls` entries by their exact `squashfs-root/` path rather than comparing the whole metadata-prefixed line; this fixes the Calamares package-record gate rejecting a valid DINX `3.4.3-6` rootfs.
+- Match build-only executable exclusions against complete SquashFS paths; the previous substring check mistook `usr/bin/exiv2` for the removed Vim `usr/bin/ex`.
 - Remove `man-db`, `man-pages` and `texinfo` from the common rootfs and DINX profile. Retain `man-db` and `texinfo` as isolated Deetty build/qualification dependencies. Calamares installs the shared rootfs, so these tools are absent from installed base systems too; reject their package records and `man`/`info` executables in final SquashFS images.
 - Remove the common-profile `vi` alias and `dhcpcd-dinit`: `ex-vi-compat` pulled Vim and its 38.81 MiB runtime into the ISO despite Vim being described as builder-only, while NetworkManager already uses its built-in DHCP client. Keep Nano for recovery and Vim only in the isolated TUI-qualification builder; fail closed if Vim/vi or dhcpcd packages remain in the final rootfs/livefs.
 - Remove retired Vim compatibility wrappers/symlinks (`vi`, `ex`, `vedit`, `view`) from final rootfs/livefs layers, including stale aliases left after package metadata is removed; preserve unrelated executables with those names.

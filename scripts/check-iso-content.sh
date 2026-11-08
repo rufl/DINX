@@ -1106,7 +1106,7 @@ grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' <<<"$aqueous_wrapper" \
 grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed Qt6ct for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
 grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
-grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then' <<<"$aqueous_wrapper" \
+grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ] &&' <<<"$aqueous_wrapper" \
   || fail 'live-only Aqueous safety config is not restricted to the live session'
 grep -Fq 'dinx-seed-aqueous-live-config "$config_home/aqueous/wm.toml"' <<<"$aqueous_wrapper" \
   || fail 'Live session does not disable lock actions and visual effects in Aqueous config'

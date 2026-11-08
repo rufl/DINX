@@ -3,6 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Match the actual compound `DINX_LIVE_SESSION` guard in the ISO-content check; its stale semicolon-form expectation stopped qualification after image assembly, before QEMU ran.
 - Recreate Pearl Greeter's state and cache directories as `pearl-greeter` at boot; Aqueous otherwise fails before initialization when its `XDG_STATE_HOME` config-writer lock cannot be created.
 - Install Firewalld's Dinit boot link from a signed DINX package. Artix copies root overlays with `cp -LR`, which dereferences the overlay symlink and does not preserve boot enablement in the rootfs/livefs.
 - Parse `unsquashfs -lls` entries by their exact `squashfs-root/` path rather than comparing the whole metadata-prefixed line; this fixes the Calamares package-record gate rejecting a valid DINX `3.4.3-6` rootfs.

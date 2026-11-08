@@ -1242,7 +1242,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fi
   done
   for removed_path in usr/bin/info usr/bin/man; do
-    if grep -Fq "/$removed_path" <<<"$image_manifest"; then
+    if iso_manifest_contains_path "$removed_path" <<<"$image_manifest"; then
       fail "trimmed documentation executable remains in the ISO: $removed_path"
     fi
   done

@@ -4,6 +4,7 @@ Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele 
 
 ## Não lançado
 - Restaurar a entrada `main()` do verificador de tela do Plymouth; adicionar regressão de CLI para evitar falha da qualificação QEMU antes do teste do splash.
+- Incluir no Git as fontes locais de DinitUI, DINXPanel e Seafoam Settings; o CI em checkout limpo não pode depender de diretórios `src/` ignorados que só existiam na máquina do builder.
 - Reutilizar o comparador exato de caminhos SquashFS para `man`/`info` removidos; adicionar fixtures de colisão com os prefixos `infocmp` e `mandoc` para que executáveis válidos não acionem o gate de exclusão.
 - Alinhar o check de conteúdo à condição composta real de `DINX_LIVE_SESSION`; a expectativa antiga com ponto e vírgula interrompia a qualificação depois de montar a imagem, antes do QEMU.
 - Recriar no boot os diretórios de estado e cache do Pearl Greeter com propriedade de `pearl-greeter`; sem isso, o Aqueous falha antes da inicialização ao não conseguir criar o lock `config-writer` em `XDG_STATE_HOME`.

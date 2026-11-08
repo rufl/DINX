@@ -17,6 +17,7 @@ iso_path=${1:-}
 [[ -n "$iso_path" ]] || fail "usage: $0 ISO"
 [[ -f "$iso_path" ]] || fail "ISO not found: $iso_path"
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+source "$script_dir/lib/iso-content-manifest.sh"
 
 for command in jq mktemp rm xorriso unsquashfs grep cmp python3 zstd; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
@@ -472,18 +473,8 @@ required_paths=(
 )
 
 for path in "${required_paths[@]}"; do
-  awk -v wanted="squashfs-root/$path" '
-    {
-      start = index($0, "squashfs-root/")
-      if (start > 0) {
-        actual = substr($0, start)
-        link = index(actual, " -> ")
-        if (link > 0) actual = substr(actual, 1, link - 1)
-        if (actual == wanted || actual == wanted "/") found = 1
-      }
-    }
-    END { exit !found }
-  ' <<<"$manifest" || fail "missing ISO path (exact path required): $path"
+  iso_manifest_contains_path "$path" <<<"$manifest" \
+    || fail "missing ISO path (exact path required): $path"
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for unused_path in \
@@ -526,7 +517,7 @@ calamares_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' \
 [[ "$calamares_pkgrel" =~ ^[1-9][0-9]*$ ]] || fail 'DINX Calamares pkgrel is invalid'
 calamares_package_version="$CALAMARES_VERSION-$calamares_pkgrel"
 calamares_db_dir="var/lib/pacman/local/calamares-$calamares_package_version"
-grep -Fqx "squashfs-root/$calamares_db_dir/desc" <<<"$manifest" \
+iso_manifest_contains_path "$calamares_db_dir/desc" <<<"$manifest" \
   || fail "DINX Calamares package is missing from the ISO rootfs: $calamares_package_version"
 calamares_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
   "$tmp_dir/rootfs.img" "$calamares_db_dir/desc" \

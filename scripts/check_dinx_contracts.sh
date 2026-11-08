@@ -87,6 +87,7 @@ for smoke in \
   smoke_cache_verified_extract.sh \
   smoke_package_artifact_cache.sh \
   smoke_dinx_keyring_config.sh \
+  smoke_iso_content_manifest.sh \
   smoke_iso_builder_packages.sh; do
   "$root/scripts/$smoke"
 done

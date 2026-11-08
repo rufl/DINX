@@ -33,7 +33,7 @@ grep -Fqx 'pkgname=dinx-firewalld-dinit' "$firewalld_boot_pkg" \
   || fail 'DINX Firewalld boot-link package name is incorrect'
 grep -Fqx "depends=('dinit' 'firewalld-dinit')" "$firewalld_boot_pkg" \
   || fail 'DINX Firewalld boot-link package dependencies are incorrect'
-grep -Fqx 'ln -s /etc/dinit.d/firewalld "$pkgdir/etc/dinit.d/boot.d/firewalld"' "$firewalld_boot_pkg" \
+grep -Fqx '  ln -s /etc/dinit.d/firewalld "$pkgdir/etc/dinit.d/boot.d/firewalld"' "$firewalld_boot_pkg" \
   || fail 'DINX Firewalld boot-link package does not own the enabled service symlink'
 grep -Fq 'build_package dinx-firewalld-dinit' "$builder" \
   || fail 'ISO builder does not build the DINX Firewalld boot-link package'

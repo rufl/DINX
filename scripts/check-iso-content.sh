@@ -1027,7 +1027,7 @@ for firewall_link_manifest in "$manifest" "$livefs_manifest"; do
   grep -Fq 'squashfs-root/etc/dinit.d/boot.d/opensnitchd -> /etc/dinit.d/opensnitchd' <<<"$firewall_link_manifest" \
     || fail 'OpenSnitch Dinit service is not enabled for both installed rootfs and livefs'
 done
-for firewall_package in firewalld firewall-config firewalld-dinit; do
+for firewall_package in firewalld firewall-config firewalld-dinit dinx-firewalld-dinit; do
   grep -Eq "/var/lib/pacman/local/${firewall_package}-[^/]*/" <<<"$manifest" \
     || fail "Firewalld package is missing from installed rootfs: $firewall_package"
 done

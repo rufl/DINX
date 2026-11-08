@@ -13,3 +13,25 @@ iso_manifest_contains_path() {
     END { exit !found }
   '
 }
+# Match a package's metadata directory without matching packages that share its prefix.
+iso_manifest_contains_package() {
+  local wanted_package=$1
+  awk -v wanted="$wanted_package" '
+    {
+      start = index($0, "squashfs-root/")
+      if (start == 0) next
+      actual = substr($0, start)
+      base = "squashfs-root/var/lib/pacman/local/"
+      if (index(actual, base) != 1) next
+      entry = substr(actual, length(base) + 1)
+      slash = index(entry, "/")
+      if (slash == 0) next
+      package_dir = substr(entry, 1, slash - 1)
+      prefix = wanted "-"
+      if (index(package_dir, prefix) != 1) next
+      version = substr(package_dir, length(prefix) + 1)
+      if (version ~ /^[0-9]/) found = 1
+    }
+    END { exit !found }
+  '
+}

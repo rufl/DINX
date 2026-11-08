@@ -1081,9 +1081,12 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
       fail "retired firewall payload remains in the ISO: $retired_path"
     fi
   done
-  if grep -Eq '/var/lib/pacman/local/(portmaster|libayatana-appindicator|webkit2gtk-4\.1|iptables)-[^/]*/' <<<"$image_manifest"; then
-    fail 'Portmaster or its exclusive runtime dependencies remain in a final ISO filesystem'
-  fi
+  # Artix iproute2 requires libxtables; iptables may provide it transitively.
+  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1; do
+    if iso_manifest_contains_package "$retired_package" <<<"$image_manifest"; then
+      fail "retired package remains in a final ISO filesystem: $retired_package"
+    fi
+  done
 done
 topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
 grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'

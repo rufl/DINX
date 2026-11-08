@@ -30,4 +30,14 @@ for path in \
   fi
 done
 
-printf 'iso_content_manifest_smoke exact_paths=true metadata_prefix=true symlink_annotation=true near_matches_rejected=true\n'
+package_manifest=$'drwxr-xr-x root/root 0 2026-11-08 13:34 squashfs-root/var/lib/pacman/local/iptables-1:1.8.13-1/\n-rw-r--r-- root/root 128 2026-11-08 13:34 squashfs-root/var/lib/pacman/local/iptables-1:1.8.13-1/desc\n-rw-r--r-- root/root 128 2026-11-08 13:34 squashfs-root/var/lib/pacman/local/iptables-nft-1:1.8.13-1/desc\n-rw-r--r-- root/root 128 2026-11-08 13:34 squashfs-root/var/lib/pacman/local/portmaster-2.2.6-1/desc'
+iso_manifest_contains_package iptables <<<"$package_manifest" \
+  || fail 'failed to find a package metadata directory'
+iso_manifest_contains_package portmaster <<<"$package_manifest" \
+  || fail 'failed to find a retired package metadata directory'
+iptables_nft_manifest=$(grep -F 'iptables-nft-' <<<"$package_manifest")
+if iso_manifest_contains_package iptables <<<"$iptables_nft_manifest"; then
+  fail 'matched a package with a shared name prefix'
+fi
+
+printf 'iso_content_manifest_smoke exact_paths=true package_metadata=true exact_package_boundary=true symlink_annotation=true near_matches_rejected=true\n'

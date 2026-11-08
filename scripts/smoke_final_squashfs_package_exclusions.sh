@@ -138,6 +138,36 @@ assert_calamares_icon_chain() {
       || fail "$stage removed required Calamares dependency payload: $package"
   done
 }
+create_orphaned_vi_compat_entries() {
+  local root=$1
+  local name
+  mkdir -p -- "$root/usr/bin"
+  cat > "$root/usr/bin/vi" <<'EOF'
+#!/usr/bin/bash
+if [[ -n "${EXINIT}" ]]; then
+  readonly VIMRC="$(mktemp)"
+  trap 'rm "${VIMRC}"' EXIT
+  printf '%s\n' "${EXINIT}" > "${VIMRC}"
+else
+  readonly VIMRC='NONE'
+fi
+exec /usr/bin/vim -C -u "${VIMRC}" "$@"
+EOF
+  chmod 0755 "$root/usr/bin/vi"
+  for name in ex vedit view; do
+    ln -s vim "$root/usr/bin/$name"
+  done
+}
+
+assert_orphaned_vi_compat_entries_removed() {
+  local root=$1
+  local stage=$2
+  local name
+  for name in vi ex vedit view; do
+    [[ ! -e "$root/usr/bin/$name" && ! -L "$root/usr/bin/$name" ]] \
+      || fail "$stage retained an orphaned Vim compatibility entry: $name"
+  done
+}
 pruned_packages=(
   breeze
   breeze-cursors
@@ -176,6 +206,7 @@ for package in "${pruned_packages[@]:1}"; do
     *) add_fixture_package "$package" ;;
   esac
 done
+create_orphaned_vi_compat_entries "$root"
 
 [[ -f "$root/usr/share/dinx-prune-fixtures/dinx-breeze-runtime/payload" ]] \
   || fail 'theme runtime fixture payload was not created'
@@ -231,6 +262,7 @@ live_root="$work_dir/livefs"
 cp -a -- "$root" "$live_root"
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
   "$wrapper" "$root" "$work_dir/rootfs.sfs"
+assert_orphaned_vi_compat_entries_removed "$root" 'rootfs prune'
 
 [[ ! -e "$header_db" ]] || fail 'linux-headers package record remains in final rootfs layer'
 [[ ! -e "$header_file" ]] || fail 'linux-headers payload remains in final rootfs layer'
@@ -248,10 +280,27 @@ for runtime in dinx-breeze-runtime dinx-vim-runtime dinx-man-db-runtime dinx-tex
     || fail "unused $runtime dependency remains in final rootfs layer"
 done
 assert_calamares_icon_chain "$root" 'rootfs prune'
+preserved_vi_root="$work_dir/preserved-vi-rootfs"
+cp -a -- "$root" "$preserved_vi_root"
+printf '#!/usr/bin/bash\nprintf "unrelated vi implementation\\n"\n' \
+  > "$preserved_vi_root/usr/bin/vi"
+chmod 0755 "$preserved_vi_root/usr/bin/vi"
+DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
+  "$wrapper" "$preserved_vi_root" "$work_dir/preserved-vi.sfs"
+[[ -f "$preserved_vi_root/usr/bin/vi" && ! -L "$preserved_vi_root/usr/bin/vi" ]] \
+  || fail 'pruning removed an unrelated vi executable'
+
+# A second pass has no excluded package records; stale compatibility aliases
+# must still be removed from both image layers.
+create_orphaned_vi_compat_entries "$root"
+DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
+  "$wrapper" "$root" "$work_dir/orphan-rootfs.sfs"
+assert_orphaned_vi_compat_entries_removed "$root" 'orphan-only rootfs prune'
 [[ -d "$other_db" && -f "$other_file" ]] \
   || fail 'pruning modified an unrelated package or runtime file'
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
   "$wrapper" "$live_root" "$work_dir/livefs.sfs"
+assert_orphaned_vi_compat_entries_removed "$live_root" 'livefs prune'
 [[ ! -e "$live_root/var/lib/pacman/local/linux-headers-1.0-1" ]] \
   || fail 'linux-headers package record remains in final livefs layer'
 [[ ! -e "$live_root/usr/src/linux-fixture/include/dinx-fixture.h" ]] \
@@ -275,6 +324,10 @@ assert_calamares_icon_chain "$live_root" 'livefs prune'
 [[ -d "$live_root/var/lib/pacman/local/dinx-prune-smoke-1.0-1" \
    && -f "$live_root/usr/share/dinx-prune-smoke/keep" ]] \
   || fail 'livefs pruning modified an unrelated package or runtime file'
+create_orphaned_vi_compat_entries "$live_root"
+DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
+  "$wrapper" "$live_root" "$work_dir/orphan-livefs.sfs"
+assert_orphaned_vi_compat_entries_removed "$live_root" 'orphan-only livefs prune'
 if pacman -Q linux-headers >/dev/null 2>&1; then
   builder_headers_after=present
 else

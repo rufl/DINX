@@ -546,9 +546,17 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'build-only clang or Vim qualification packages remain in the ISO'
   fi
-  for build_only_path in usr/bin/clang usr/bin/clang++ usr/bin/clangd usr/bin/vi usr/bin/vim; do
+  for build_only_path in \
+    usr/bin/clang \
+    usr/bin/clang++ \
+    usr/bin/clangd \
+    usr/bin/ex \
+    usr/bin/vedit \
+    usr/bin/vi \
+    usr/bin/view \
+    usr/bin/vim; do
     if grep -Fq "/$build_only_path" <<<"$image_manifest"; then
-      fail "build-only qualification executable remains in the ISO: $build_only_path"
+      fail "build-only qualification or retired Vim executable remains in the ISO: $build_only_path"
     fi
   done
   if forbidden_matches=$(grep -E '/var/lib/pacman/local/(vlc|vlc-[^/]+|libvlc)-[^/]*/' <<<"$image_manifest"); then

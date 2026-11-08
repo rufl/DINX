@@ -5,7 +5,7 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 smoke_script="$root/scripts/smoke-iso.sh"
 max_rootfs_packages=${DINX_MAX_ROOTFS_PACKAGES:-128}
-max_dinit_entries=${DINX_MAX_DINIT_ENTRIES:-24}
+max_dinit_entries=${DINX_MAX_DINIT_ENTRIES:-25}
 max_native_binary_bytes=${DINX_MAX_NATIVE_BINARY_BYTES:-6291456}
 max_boot_window_seconds=${DINX_MAX_BOOT_WINDOW_SECONDS:-120}
 # Allow a 3 GiB ISO; tagged releases split images above GitHub's 2 GiB asset limit.

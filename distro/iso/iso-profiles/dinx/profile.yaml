@@ -94,7 +94,6 @@ rootfs:
     - blockbench
     - btop
     - brightnessctl
-    - clang
     - dialog
     - fzf
     - glances
@@ -106,7 +105,6 @@ rootfs:
     - sqlite
     - texinfo
     - tmux
-    - vim
     - diffutils
     - kmod
     - python-psutil

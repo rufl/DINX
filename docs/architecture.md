@@ -62,7 +62,7 @@ Dintor is a lightweight code editor, not a full IDE. Its boundaries are:
 - a proven syntax parser such as Tree-sitter;
 - an LSP process/client layer;
 - Git status, bounded unified diff output and per-file change markers are exposed through the editor's Tools action; Git is an optional project capability and never blocks opening or editing a file outside a repository.
-- Dintor's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. Zig uses the bundled `zls`; C/C++ uses `clangd`; diagnostics and navigation remain editor features rather than a shell dependency.
+- Dintor's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. The ISO includes ZLS for Zig; C/C++ support can use `clangd` when the optional `clang` package is installed.
 - The editor selects its documented light/dark scheme from `DINTOR_THEME` and falls back to the DINX dark scheme.
 
 The editor remains useful without a shell session service or private IPC. Presentation and launcher integration are optional and use standard XDG/Wayland boundaries.

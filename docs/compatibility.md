@@ -10,7 +10,7 @@ Required for the base ISO:
 
 - Deetty has desktop ID `org.dinx.Deetty`, is launched by the `deetty` command, is discoverable through `$TERMINAL`, accepts documented terminal-launch arguments and honors a working directory when supplied.
 - Dintor has desktop ID `org.dinx.Dintor`, is launched by the `dintor` command, opens files and directories through standard XDG launchers and accepts supported file/line arguments.
-- Dintor launches the documented LSP for the file type. Zig uses bundled ZLS 0.16.0; C/C++ uses `clangd`.
+- The ISO includes ZLS 0.16.0 for Dintor's Zig LSP integration. C/C++ LSP support uses `clangd` from the optional `clang` package and is not part of the default image.
 - Floorp is the default HTML, XHTML, HTTP and HTTPS handler.
 - OpenSnitch is installed with its UI autostart and Dinit-managed daemon in both live and installed systems. Its nftables defaults allow traffic and do not intercept unknown apps; Firewalld remains a separate service.
 - Phyto is the default directory handler; File Roller owns archive open/create/extract actions; GParted owns standalone partition editing.

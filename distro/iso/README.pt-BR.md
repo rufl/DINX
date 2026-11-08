@@ -141,6 +141,12 @@ e conjunto de dependências instaladas; cache miss recompila o pacote. Assim,
 cache hit evita recompilação sem enfraquecer pins de fonte ou verificação de
 assinatura.
 
+A ISO inclui o ZLS para a integração LSP de Zig do Dintor. `clang`/`clangd` e
+Vim são ferramentas de qualificação usadas somente no builder: o clangd
+exercita o cliente LSP genérico contra um servidor real, enquanto o Vim
+verifica a tela alternativa e o bracketed paste em uma TUI real. Nenhum dos
+dois é distribuído na imagem de execução.
+
 Antes da compressão SquashFS, o wrapper executa transações fail-closed
 `pacman -Rns` no rootfs e no livefs para estas raízes de pacotes instaladas:
 `breeze`, `breeze-cursors`, `breeze-icons`, `plasma-integration`,

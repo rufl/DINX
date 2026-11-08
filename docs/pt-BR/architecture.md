@@ -53,7 +53,7 @@ Pacotes upstream são preferidos. Pacotes e patches específicos da DINX permane
 
 Deetty é responsável pela janela, preferências, atalhos, abas/painéis e sessões de terminal. Seu núcleo Zig possui parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção, paste e ciclo de vida PTY. O pacote `ghostty-vt-runtime` fornece somente o adaptador VT público do Ghostty; o aplicativo de terminal Ghostty não faz parte do payload da DINX.
 
-Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. Zig usa o ZLS incluído; C/C++ usa `clangd`. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `DINTOR_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
+Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. O ISO inclui o ZLS para projetos Zig; C/C++ pode usar `clangd` quando o pacote opcional `clang` estiver instalado. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `DINTOR_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
 
 ### DinitUI
 

@@ -319,7 +319,6 @@ required_paths=(
   usr/bin/sftp
   usr/bin/sqlite3
   usr/bin/tmux
-  usr/bin/vim
   usr/bin/watch
   usr/bin/whiptail
   usr/share/kio/servicemenus/deettyhere.desktop
@@ -400,7 +399,6 @@ required_paths=(
   usr/share/licenses/ghostty-vt-runtime/LICENSE
   usr/bin/deetty
   usr/bin/dintor
-  usr/bin/clangd
   usr/share/applications/org.dinx.Deetty.desktop
   usr/share/applications/org.dinx.Dintor.desktop
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg
@@ -535,6 +533,15 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired Qogir/Breeze/KDE Plasma theme packages, Zathura or MuPDF remain in the ISO'
   fi
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'build-only clang or Vim qualification packages remain in the ISO'
+  fi
+  for build_only_path in usr/bin/clang usr/bin/clang++ usr/bin/clangd usr/bin/vim; do
+    if grep -Fq "/$build_only_path" <<<"$image_manifest"; then
+      fail "build-only qualification executable remains in the ISO: $build_only_path"
+    fi
+  done
   if forbidden_matches=$(grep -E '/var/lib/pacman/local/(vlc|vlc-[^/]+|libvlc)-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired VLC package metadata remains in the ISO'
@@ -1391,7 +1398,6 @@ grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missin
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
-grep -Fq '/usr/bin/clangd' <<<"$manifest" || fail 'clangd runtime is missing'
 grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Dintor light scheme is missing'
 
 

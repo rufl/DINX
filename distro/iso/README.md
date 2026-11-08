@@ -134,6 +134,11 @@ environment and installed dependency set; a cache miss rebuilds the package.
 This avoids recompiling cache hits while retaining pinned inputs and signature
 verification.
 
+The ISO includes ZLS for Dintor's Zig LSP integration. `clang`/`clangd` and
+Vim are build-only qualification tools: clangd exercises the generic LSP
+client against a real server, while Vim checks alternate-screen and
+bracketed-paste behavior in a real TUI. Neither ships in the runtime image.
+
 Before SquashFS compression, the wrapper runs fail-closed `pacman -Rns`
 transactions on rootfs and livefs for these installed package roots: `breeze`,
 `breeze-cursors`, `breeze-icons`, `plasma-integration`, `plasma-workspace`,

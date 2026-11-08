@@ -51,7 +51,6 @@ prune_excluded_packages() {
   local -a prune_candidates=(
     breeze
     breeze-cursors
-    breeze-icons
     plasma-integration
     plasma-workspace
     qogir-icon-theme
@@ -71,16 +70,17 @@ prune_excluded_packages() {
   local pacman_config
 
   [[ "$root" != / && -d "$local_db" ]] || return 0
+  # Pacman local records are <name>-<numeric-version>-<release>; avoid prefix matches such as breeze-icons.
 
-  package_records=("$local_db"/linux-headers-*)
+  package_records=("$local_db"/linux-headers-[0-9]*)
   if [[ -d "${package_records[0]}" ]]; then
     removable_packages+=(linux-headers)
-    package_records=("$local_db"/pahole-*)
+    package_records=("$local_db"/pahole-[0-9]*)
     [[ ! -d "${package_records[0]}" ]] || removable_packages+=(pahole)
   fi
 
   for package in "${prune_candidates[@]}"; do
-    package_records=("$local_db"/"$package"-*)
+    package_records=("$local_db"/"$package"-[0-9]*)
     [[ ! -d "${package_records[0]}" ]] || removable_packages+=("$package")
   done
   ((${#removable_packages[@]})) || return 0
@@ -103,7 +103,7 @@ prune_excluded_packages() {
   rm -f -- "$pacman_config"
 
   for package in "${removable_packages[@]}"; do
-    package_records=("$local_db"/"$package"-*)
+    package_records=("$local_db"/"$package"-[0-9]*)
     [[ ! -d "${package_records[0]}" ]] || {
       printf 'dinx mksquashfs wrapper: %s package record remains in %s\n' "$package" "$root" >&2
       return 1

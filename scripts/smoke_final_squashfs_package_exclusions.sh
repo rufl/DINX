@@ -127,10 +127,20 @@ add_fixture_package() {
     printf 'usr/share/dinx-prune-fixtures/%s/\n%s\n' "$package" "$payload"
   } > "$package_db/files"
 }
+assert_calamares_icon_chain() {
+  local root=$1
+  local stage=$2
+  local package
+  for package in breeze-icons kiconthemes kio kparts calamares-smoke; do
+    [[ -d "$root/var/lib/pacman/local/$package-1.0-1" ]] \
+      || fail "$stage removed required Calamares dependency package: $package"
+    [[ -f "$root/usr/share/dinx-prune-fixtures/$package/payload" ]] \
+      || fail "$stage removed required Calamares dependency payload: $package"
+  done
+}
 pruned_packages=(
   breeze
   breeze-cursors
-  breeze-icons
   plasma-integration
   plasma-workspace
   qogir-icon-theme
@@ -150,6 +160,11 @@ add_fixture_package breeze dinx-breeze-runtime
 add_fixture_package dinx-vim-runtime '' 1
 add_fixture_package dinx-man-db-runtime '' 1
 add_fixture_package dinx-texinfo-runtime '' 1
+add_fixture_package breeze-icons '' 1
+add_fixture_package kiconthemes breeze-icons 1
+add_fixture_package kio kiconthemes 1
+add_fixture_package kparts kio 1
+add_fixture_package calamares-smoke kparts 0
 for package in "${pruned_packages[@]:1}"; do
   case "$package" in
     dhcpcd-dinit) add_fixture_package "$package" dhcpcd ;;
@@ -178,11 +193,11 @@ EOF
 chmod 0755 "$fake_mksquashfs"
 blocked_root="$work_dir/blocked-rootfs"
 cp -a -- "$root" "$blocked_root"
-blocked_consumer="$blocked_root/var/lib/pacman/local/dinx-pahole-consumer-1.0-1"
+blocked_consumer="$blocked_root/var/lib/pacman/local/dinx-excluded-package-consumer-1.0-1"
 mkdir -p -- "$blocked_consumer"
 cat > "$blocked_consumer/desc" <<'EOF'
 %NAME%
-dinx-pahole-consumer
+dinx-excluded-package-consumer
 
 %VERSION%
 1.0-1
@@ -191,13 +206,8 @@ dinx-pahole-consumer
 runtime dependency fixture
 
 %DEPENDS%
-pahole
-breeze-icons
-ex-vi-compat
-dhcpcd
-man-db
-man-pages
-texinfo
+qogir-icon-theme
+
 
 %SIZE%
 1
@@ -216,6 +226,7 @@ for package in "${pruned_packages[@]}"; do
   [[ -d "$blocked_root/var/lib/pacman/local/$package-1.0-1" ]] \
     || fail "failed dependency-safe pruning partially removed $package"
 done
+assert_calamares_icon_chain "$blocked_root" 'failed prune transaction'
 live_root="$work_dir/livefs"
 cp -a -- "$root" "$live_root"
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
@@ -236,6 +247,7 @@ for runtime in dinx-breeze-runtime dinx-vim-runtime dinx-man-db-runtime dinx-tex
      && ! -e "$root/usr/share/dinx-prune-fixtures/$runtime/payload" ]] \
     || fail "unused $runtime dependency remains in final rootfs layer"
 done
+assert_calamares_icon_chain "$root" 'rootfs prune'
 [[ -d "$other_db" && -f "$other_file" ]] \
   || fail 'pruning modified an unrelated package or runtime file'
 DINX_MKSQUASHFS_REAL="$fake_mksquashfs" \
@@ -259,6 +271,7 @@ for runtime in dinx-breeze-runtime dinx-vim-runtime dinx-man-db-runtime dinx-tex
      && ! -e "$live_root/usr/share/dinx-prune-fixtures/$runtime/payload" ]] \
     || fail "unused $runtime dependency remains in final livefs layer"
 done
+assert_calamares_icon_chain "$live_root" 'livefs prune'
 [[ -d "$live_root/var/lib/pacman/local/dinx-prune-smoke-1.0-1" \
    && -f "$live_root/usr/share/dinx-prune-smoke/keep" ]] \
   || fail 'livefs pruning modified an unrelated package or runtime file'
@@ -277,5 +290,5 @@ fi
 [[ "$builder_pahole_after" == "$builder_pahole_before" ]] \
   || fail 'pruning changed pahole in the ISO builder environment'
 
-printf 'final_squashfs_package_prune_smoke builder_headers_unchanged=%s builder_pahole_unchanged=%s rootfs_excluded_theme_plasma_vi_dhcpcd_docs=true livefs_excluded_theme_plasma_vi_dhcpcd_docs=true unused_excluded_dependencies=false unrelated_payload_preserved=true\n' \
+printf 'final_squashfs_package_prune_smoke builder_headers_unchanged=%s builder_pahole_unchanged=%s rootfs_excluded_unused_themes_plasma_vi_dhcpcd_docs=true livefs_excluded_unused_themes_plasma_vi_dhcpcd_docs=true calamares_kiconthemes_breeze_icons_retained=true unrelated_payload_preserved=true\n' \
   "$builder_headers_after" "$builder_pahole_after"

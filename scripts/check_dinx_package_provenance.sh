@@ -87,6 +87,10 @@ contracts_workflow=.github/workflows/contracts.yml
 refresh_workflow=.github/workflows/upstream-package-refresh.yml
 package_workflow=.github/workflows/publish-dinx-packages.yml
 update_smoke=scripts/smoke_dinx_update.sh
+repo_priority_helper=scripts/iso-tools/prioritize-dinx-pacman-repo.sh
+[[ -x "$repo_priority_helper" ]] || fail 'DINX pacman repository priority helper is missing or not executable'
+grep -Fq 'SigLevel = Required' "$repo_priority_helper" \
+  || fail 'DINX pacman repository must require signed package metadata'
 for required in \
   'scripts/check_dinx_package_provenance.sh' \
   'scripts/check_dinx_feature_groups.sh' \
@@ -268,7 +272,6 @@ for required in \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \
-  'SigLevel = Required' \
   'DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"' \
   ': "${DINX_BUILDER_RECIPE_SHA256:?builder recipe checksum was not forwarded}"' \
   ': "${DINX_BUILDER_IMAGE_ID:?builder image ID was not forwarded}"' \
@@ -287,6 +290,7 @@ for required in \
   'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch' \
   'test "$(readlink -f "$mksquashfs_path")" = /usr/bin/mksquashfs' \
   'scripts/smoke_final_squashfs_package_exclusions.sh' \
+  'scripts/iso-tools/prioritize-dinx-pacman-repo.sh' \
   '"PKGDEST=$package_output"' \
   'MAKEPKG_CONF="$package_makepkg_conf"'; do
   grep -Fq -- "$required" "$builder" \
@@ -323,6 +327,7 @@ done
 for required in \
   '- "scripts/build-iso-docker.sh"' \
   '- "scripts/build-iso-container.sh"' \
+  '- "scripts/iso-tools/prioritize-dinx-pacman-repo.sh"' \
   '- "scripts/cache-verified-download.sh"'; do
   grep -Fq -- "$required" "$workflow" \
     || fail "P0 push path filters are missing build input: $required"

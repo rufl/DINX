@@ -516,6 +516,10 @@ for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoff
 done
 grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
   || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
+for package in kparts kio kiconthemes breeze-icons; do
+  grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
+    || fail "Calamares dependency chain package is missing from ISO rootfs: $package"
+done
 source "$script_dir/../distro/packages/calamares/source.env"
 calamares_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' \
   "$script_dir/../distro/packages/calamares/PKGBUILD")
@@ -529,15 +533,23 @@ calamares_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
   | awk 'previous == "%VERSION%" { print; exit } { previous = $0 }')
 [[ "$calamares_db_version" == "$calamares_package_version" ]] \
   || fail "DINX Calamares package version mismatch: $calamares_db_version"
+calamares_depends=$(
+  unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$calamares_db_dir/desc" \
+    | awk '$0 == "%DEPENDS%" { in_depends = 1; next } /^%/ { in_depends = 0 } in_depends'
+)
+if grep -Eq '^plasma-integration([<=>].*)?$' <<<"$calamares_depends"; then
+  fail 'DINX Calamares package still declares the unused plasma-integration dependency'
+fi
 cli_issue=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/issue)
 grep -Fq 'DINX Linux' <<<"$cli_issue" || fail 'CLI login banner is not branded as DINX Linux'
 if grep -Eiq 'Artix' <<<"$cli_issue"; then
   fail 'CLI login banner still identifies Artix'
 fi
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(breeze|breeze-cursors|breeze-icons|plasma-integration|plasma-workspace|qogir-icon-theme|qqc2-breeze-style|xdg-desktop-portal-kde|zathura|zathura-pdf-mupdf|libmupdf)-[^/]*/' <<<"$image_manifest"); then
+  # Calamares -> KParts -> KIO -> KIconThemes requires breeze-icons; Papirus remains the selected theme.
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(breeze-[0-9]|breeze-cursors-|plasma-integration-|plasma-workspace-|qogir-icon-theme-|qqc2-breeze-style-|xdg-desktop-portal-kde-|zathura-|zathura-pdf-mupdf-|libmupdf-)[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
-    fail 'retired Qogir/Breeze/KDE Plasma theme packages, Zathura or MuPDF remain in the ISO'
+    fail 'retired Qogir/Breeze style/cursor, Plasma, Zathura or MuPDF packages remain in the ISO'
   fi
   if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang|ex-vi-compat|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2

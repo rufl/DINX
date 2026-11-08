@@ -448,8 +448,8 @@ trap finish EXIT
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
               test -n "$pacman_conf"
-              printf "\n[dinx]\nSigLevel = Required\nServer = http://127.0.0.1:8765\n" \
-                >> "$pacman_conf"
+              scripts/iso-tools/prioritize-dinx-pacman-repo.sh \
+                "$pacman_conf" http://127.0.0.1:8765
               # Pacman 7's alpm downloader cannot write basestrap's root-owned alternate-root sync DB.
               pacman_options_tmp="$pacman_conf.dinx"
               awk '
@@ -675,7 +675,7 @@ trap finish EXIT
                 printf "compression_dictionary=1M\n"
                 printf "compression_bcj=x86\n"
                 printf "compression_excludes=kernel-source,pacman-cache,logs\n"
-                printf "final_squashfs_prune_candidates=breeze,breeze-cursors,breeze-icons,dhcpcd,dhcpcd-dinit,ex-vi-compat,linux-headers,man-db,man-pages,pahole,plasma-integration,plasma-workspace,qogir-icon-theme,qqc2-breeze-style,texinfo,vim,vim-runtime,xdg-desktop-portal-kde\n"
+                printf "final_squashfs_prune_candidates=breeze,breeze-cursors,dhcpcd,dhcpcd-dinit,ex-vi-compat,linux-headers,man-db,man-pages,pahole,plasma-integration,plasma-workspace,qogir-icon-theme,qqc2-breeze-style,texinfo,vim,vim-runtime,xdg-desktop-portal-kde\n"
                 printf "compression_wrapper_sha256=%s\n" "$(sha256sum /workspace/scripts/iso-tools/mksquashfs | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"

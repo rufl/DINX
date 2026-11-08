@@ -35,6 +35,7 @@ on:
       - "scripts/lib/dinx-package-artifact-cache.sh"
       - "scripts/smoke_package_artifact_cache.sh"
       - "scripts/iso-tools/mksquashfs"
+      - "scripts/iso-tools/prioritize-dinx-pacman-repo.sh"
       - "scripts/check_dinx_compression.sh"
       - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"

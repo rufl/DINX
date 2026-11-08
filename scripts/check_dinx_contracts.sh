@@ -75,6 +75,7 @@ if [[ -n "${DINX_HARDWARE_REPORT:-}" ]]; then
 fi
 
 for smoke in \
+  smoke_dinx_pacman_repo_priority.sh \
   smoke_dinx_display_persistence.sh \
   smoke_dinx_session_supervisor.sh \
   smoke_dinx_qt_palette.sh \

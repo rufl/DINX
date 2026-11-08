@@ -24,6 +24,9 @@ done
   || fail 'Firewalld Dinit package is not installed/enabled for both rootfs and livefs'
 [[ $(grep -Ecx '[[:space:]]*"firewalld-dinit",[[:space:]]*' "$groups") -eq 2 ]] \
   || fail 'Firewalld Dinit package is missing from profile_init/livefs input inventories'
+firewalld_boot_link=distro/iso/iso-profiles/dinx/root-overlay/etc/dinit.d/boot.d/firewalld
+[[ -L "$firewalld_boot_link" && $(readlink -- "$firewalld_boot_link") == /etc/dinit.d/firewalld ]] \
+  || fail 'DINX root overlay does not enable Firewalld for rootfs and livefs'
 
 if grep -Fq 'iptables' "$common" "$groups"; then
   fail 'Portmaster-only iptables package remains in the common ISO inputs'

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -80,6 +81,19 @@ class PlymouthScreenTests(unittest.TestCase):
         self.assertTrue(has_grub_menu("Boot to the Firmware/BIOS"))
         self.assertTrue(has_grub_menu("Advanced options"))
         self.assertFalse(has_grub_menu("Pearl Greeter"))
+
+    def test_cli_reports_invalid_ppm_without_crashing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.ppm"
+            path.write_bytes(b"not a PPM")
+            result = subprocess.run(
+                [sys.executable, str(Path(__file__).with_name("check_dinx_plymouth_screen.py")), str(path)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("screendump is not a binary PPM", result.stderr)
 
 
 if __name__ == "__main__":

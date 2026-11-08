@@ -78,6 +78,7 @@ def read_ppm(path: Path) -> tuple[int, int, bytes]:
 
 
 
+def main(argv: list[str]) -> int:
     path = Path(argv[1])
     language = argv[2] if len(argv) == 3 else "eng"
     try:

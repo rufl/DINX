@@ -3,6 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Recreate Pearl Greeter's state and cache directories as `pearl-greeter` at boot; Aqueous otherwise fails before initialization when its `XDG_STATE_HOME` config-writer lock cannot be created.
 - Parse `unsquashfs -lls` entries by their exact `squashfs-root/` path rather than comparing the whole metadata-prefixed line; this fixes the Calamares package-record gate rejecting a valid DINX `3.4.3-6` rootfs.
 - Match build-only executable exclusions against complete SquashFS paths; the previous substring check mistook `usr/bin/exiv2` for the removed Vim `usr/bin/ex`.
 - Remove `man-db`, `man-pages` and `texinfo` from the common rootfs and DINX profile. Retain `man-db` and `texinfo` as isolated Deetty build/qualification dependencies. Calamares installs the shared rootfs, so these tools are absent from installed base systems too; reject their package records and `man`/`info` executables in final SquashFS images.

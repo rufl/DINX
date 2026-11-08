@@ -702,6 +702,10 @@ fi
 dinit_tmpfiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/tmpfiles.d/dinx-dinit.conf)
 grep -Fqx 'd /var/log/dinit 0755 root root -' <<<"$dinit_tmpfiles" \
   || fail 'ISO does not recreate the Dinit service log directory at boot'
+grep -Fqx 'd /var/lib/pearl-greeter 0700 pearl-greeter pearl-greeter -' <<<"$dinit_tmpfiles" \
+  || fail 'ISO does not create the Pearl Greeter state directory with writable ownership at boot'
+grep -Fqx 'd /var/cache/pearl-greeter 0700 pearl-greeter pearl-greeter -' <<<"$dinit_tmpfiles" \
+  || fail 'ISO does not create the Pearl Greeter cache directory with writable ownership at boot'
 
 
 if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then

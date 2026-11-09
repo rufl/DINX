@@ -702,10 +702,16 @@ fi
 dinit_tmpfiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/tmpfiles.d/dinx-dinit.conf)
 grep -Fqx 'd /var/log/dinit 0755 root root -' <<<"$dinit_tmpfiles" \
   || fail 'ISO does not recreate the Dinit service log directory at boot'
-grep -Fqx 'd /var/lib/pearl-greeter 0700 pearl-greeter pearl-greeter -' <<<"$dinit_tmpfiles" \
-  || fail 'ISO does not create the Pearl Greeter state directory with writable ownership at boot'
-grep -Fqx 'd /var/cache/pearl-greeter 0700 pearl-greeter pearl-greeter -' <<<"$dinit_tmpfiles" \
-  || fail 'ISO does not create the Pearl Greeter cache directory with writable ownership at boot'
+for greeter_directory in \
+  /var/lib/pearl-greeter \
+  /var/lib/pearl-greeter/.config \
+  /var/lib/pearl-greeter/.local \
+  /var/lib/pearl-greeter/.local/share \
+  /var/lib/pearl-greeter/.local/state \
+  /var/cache/pearl-greeter; do
+  grep -Fqx "d $greeter_directory 0700 pearl-greeter pearl-greeter -" <<<"$dinit_tmpfiles" \
+    || fail "ISO does not create writable Pearl Greeter directory at boot: $greeter_directory"
+done
 
 
 if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
@@ -787,10 +793,10 @@ grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' <<<"$greeter_wrap
   || fail 'Pearl Greeter does not select elogind for libseat'
 grep -Fq 'export HOME=/var/empty/pearl-greeter' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter does not use its root-owned trusted home'
-grep -Fq 'export XDG_CONFIG_HOME="$HOME/.config"' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter config home is not under its trusted home'
-grep -Fq 'export XDG_DATA_HOME="$HOME/.local/share"' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter data home is not under its trusted home'
+grep -Fq 'export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter config home is not on its writable private directory'
+grep -Fq 'export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter data home is not on its writable private directory'
 grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter state home is not its dedicated writable state directory'
 grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' <<<"$greeter_wrapper" \

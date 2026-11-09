@@ -3,7 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
-- Manter `HOME` do Pearl Greeter no caminho root-owned e somente leitura `/var/empty/pearl-greeter`; a validação de caminhos confiáveis rejeita o home gravável anterior em `/var/lib/pearl-greeter` com `AccessDenied`. Definir `XDG_STATE_HOME` gravável como `/var/lib/pearl-greeter/.local/state` e o cache como `/var/cache/pearl-greeter`, preservando o namespace de estado isolado anterior.
+- Manter `HOME` do Pearl Greeter no caminho root-owned e somente leitura `/var/empty/pearl-greeter` para satisfazer a validação de caminhos confiáveis; colocar configuração/dados/estado XDG graváveis na árvore privada do Pearl em `/var/lib/pearl-greeter`. Corrigir por patch a sobrescrita upstream do caminho de estado para usar `.local/state` em vez do namespace do diretório pai e provisionar os caminhos do greeter na instalação e no boot; o cache permanece em `/var/cache/pearl-greeter`.
 - Aguardar o marcador `Dock` do primeiro uso do Pearl nos captures QEMU, em vez de tratar um único frame em tempo fixo como falha de boot; manter a janela P0 limitada a 120 segundos.
 - Restaurar a entrada `main()` do verificador de tela do Plymouth; adicionar regressão de CLI para evitar falha da qualificação QEMU antes do teste do splash.
 - Incluir no Git as fontes locais de DinitUI, DINXPanel e Seafoam Settings; o CI em checkout limpo não pode depender de diretórios `src/` ignorados que só existiam na máquina do builder.

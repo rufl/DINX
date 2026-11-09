@@ -127,10 +127,10 @@ grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' "$greeter_wrapper
   || fail 'Pearl Greeter does not default libseat to the active elogind seat'
 grep -Fq 'export HOME=/var/empty/pearl-greeter' "$greeter_wrapper" \
   || fail 'Pearl Greeter does not use its root-owned trusted home'
-grep -Fq 'export XDG_CONFIG_HOME="$HOME/.config"' "$greeter_wrapper" \
-  || fail 'Pearl Greeter config home is not under its trusted home'
-grep -Fq 'export XDG_DATA_HOME="$HOME/.local/share"' "$greeter_wrapper" \
-  || fail 'Pearl Greeter data home is not under its trusted home'
+grep -Fq 'export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config' "$greeter_wrapper" \
+  || fail 'Pearl Greeter config home is not on its writable private directory'
+grep -Fq 'export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share' "$greeter_wrapper" \
+  || fail 'Pearl Greeter data home is not on its writable private directory'
 grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state' "$greeter_wrapper" \
   || fail 'Pearl Greeter state home is not its dedicated writable state directory'
 grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' "$greeter_wrapper" \
@@ -174,8 +174,16 @@ grep -Fq 'usermod --append --groups video,render pearl-greeter' "$pearl_install"
   || fail 'Pearl Greeter account is missing video/render access'
 grep -Fq 'install -d -o root -g root -m 0755 /var/empty/pearl-greeter' "$pearl_install" \
   || fail 'Pearl Greeter trusted home is not provisioned as root-owned and read-only'
-grep -Fq '/var/lib/pearl-greeter /var/cache/pearl-greeter' "$pearl_install" \
-  || fail 'Pearl Greeter writable state/cache parents are not provisioned by its package hook'
+for greeter_path in \
+  /var/lib/pearl-greeter \
+  /var/lib/pearl-greeter/.config \
+  /var/lib/pearl-greeter/.local \
+  /var/lib/pearl-greeter/.local/share \
+  /var/lib/pearl-greeter/.local/state \
+  /var/cache/pearl-greeter; do
+  grep -Fq "$greeter_path" "$pearl_install" \
+    || fail "Pearl Greeter writable path is not provisioned by its package hook: $greeter_path"
+done
 grep -Fq '    - render' "$users_conf" || fail 'Calamares users are missing render-node access'
 grep -Fq 'two-default-workspaces.patch' "$root/distro/packages/aqueous/PKGBUILD" \
   || fail 'Aqueous package does not apply the two-workspace default'

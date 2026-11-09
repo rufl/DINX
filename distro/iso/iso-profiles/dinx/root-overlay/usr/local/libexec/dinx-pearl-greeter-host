@@ -13,5 +13,21 @@ export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config
 export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share
 export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state
 export XDG_CACHE_HOME=/var/cache/pearl-greeter
+state_home=$XDG_STATE_HOME
+lock_path="$state_home/aqueous/config-writer/lock"
+printf 'DINX greeter compositor launch: pid=%s uid=%s HOME=%s XDG_STATE_HOME=%s\n' \
+  "$$" "$(id -u)" "$HOME" "$state_home" >&2
+if [ -e "$lock_path" ]; then
+  lock_inode=$(stat -c '%i' "$lock_path")
+  printf 'DINX greeter lock: path=%s inode=%s\n' "$lock_path" "$lock_inode" >&2
+  awk -v inode="$lock_inode" '$6 ~ (":" inode "$") { print "DINX greeter lock holder: " $0 }' \
+    /proc/locks >&2
+else
+  printf 'DINX greeter lock: absent before launch (%s)\n' "$lock_path" >&2
+fi
+for process_pid in $(pgrep -f '(^|/)(aqueous|aqueous-cpu|aqueous-config)( |$)' || true); do
+  ps -o pid,ppid,uid,comm,args -p "$process_pid" >&2 || true
+done
+
 
 exec /usr/lib/pearl/pearl-greeter-host "$@"

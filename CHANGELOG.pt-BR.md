@@ -3,6 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Executar o greetd no VT 7 nas configurações instalada e live; o `login.target` live do Artix também inicia agetty/autologin no tty1, então compartilhar o VT 1 fazia o greeter e a sessão de login disputarem a mesma tela.
 - Adiar a população do chaveiro DINX do post-install do pacote para um serviço Dinit one-shot ordenado após `pacman-init`; manter a configuração do repositório no hook do pacote para que raízes novas da ISO/instalação não falhem com o chaveiro ainda não inicializado. Desacoplar a inicialização do greetd live da configuração do chaveiro.
 - Manter `HOME` do Pearl Greeter no caminho root-owned e somente leitura `/var/empty/pearl-greeter` para satisfazer a validação de caminhos confiáveis; colocar configuração/dados/estado XDG graváveis na árvore privada do Pearl em `/var/lib/pearl-greeter`. Corrigir por patch a sobrescrita upstream do caminho de estado para usar `.local/state` em vez do namespace do diretório pai e provisionar os caminhos do greeter na instalação e no boot; o cache permanece em `/var/cache/pearl-greeter`.
 - Aguardar o marcador `Dock` do primeiro uso do Pearl nos captures QEMU, em vez de tratar um único frame em tempo fixo como falha de boot; manter a janela P0 limitada a 120 segundos.

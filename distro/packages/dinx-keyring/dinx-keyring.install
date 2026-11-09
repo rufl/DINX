@@ -1,8 +1,13 @@
 post_install() {
+  set -e
   /usr/lib/dinx-keyring/configure-repository
-  /usr/bin/pacman-key --init
-  /usr/bin/pacman-key --populate dinx
-  /usr/bin/pacman-key --updatedb
+  keyring_dir=$(/usr/bin/pacman-conf gpgdir)
+  /usr/bin/install -d -m 0755 "$keyring_dir"
+  /usr/bin/chmod 0755 "$keyring_dir"
+  /usr/bin/pacman-key --gpgdir "$keyring_dir" --init
+  /usr/bin/chmod 0644 "$keyring_dir/pubring.gpg" "$keyring_dir/trustdb.gpg"
+  /usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx
+  /usr/bin/pacman-key --gpgdir "$keyring_dir" --updatedb
 }
 
 post_upgrade() {

@@ -29,6 +29,15 @@ for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root
 done
 
 bash -n "$wrapper" || fail 'live autologin wrapper has invalid shell syntax'
+(
+  cd "$package_dir"
+  source ./PKGBUILD
+  [[ ${#source[@]} -eq ${#sha256sums[@]} ]] || exit 1
+  for index in "${!source[@]}"; do
+    printf '%s  %s\n' "${sha256sums[$index]}" "${source[$index]}" | sha256sum --check --status || exit 1
+  done
+) || fail 'live autologin package source checksums are invalid'
+
 grep -Fq '  autologin: true' "$profile" || fail 'live-session autologin is not enabled'
 
 grep -Fq '  hostname: dinxlive' "$profile" || fail 'live-session profile hostname is not dinxlive'

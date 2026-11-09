@@ -244,6 +244,8 @@ O builder Artix ainda consome um único `profile.yaml`; o manifesto de grupos é
 
 O gate de conteúdo do P0 exige que as imagens SquashFS do root e da sessão live contenham o compositor, shell, greeter, sessão e Deetty como único emulador de terminal, além do editor de recuperação Nano, do gerenciador de armazenamento Pori com dinit, do gerenciador de arquivos Phyto, do suporte `ntfs3` de leitura/escrita, do backend de scanner SANE, das ferramentas de firmware fwupd, do runtime Flatpak, Impasto, Krita, Inkscape, Godot, Patchy e Blockbench, e do payload dinit esperado. Ele rejeita binários, launchers e metadata de pacote do KolourPaint, além de binários e metadata dos pacotes gaming opcionais, nas duas imagens. `scripts/check_desktop_packages.sh` e `scripts/check_pori_phyto.sh` verificam contratos de pacote/perfil antes do build. `scripts/smoke-install.sh` executa o contrato offline em discos BIOS/UEFI efêmeros, verifica o primeiro boot dinit e habilita as TTYs de recuperação. A captura PPM do workflow é evidência visual para inspeção, não qualificação de hardware arbitrária.
 
+O check de bibliotecas de runtime da instalação cobre aplicativos dinamicamente ligados. O release upstream do ZLS, fixado por checksum, é estático; o smoke verifica sua versão e a configuração selecionada dentro do chroot alvo.
+
 O gate de sessão live do P0 exige `AUTOLOGIN=true`, o serviço dinit de autologin exclusivo da live e a fronteira inalterada do greeter do sistema instalado.
 
 O smoke do disco instalado em BIOS/UEFI também exige que a captura da tela mostre os controles `Sign in` e `Password` do Pearl; logs de serviços ativos e framebuffer válido não bastam para qualificar o login.

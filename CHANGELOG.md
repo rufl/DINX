@@ -3,6 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Exclude the checksum-pinned, statically linked ZLS release from the install smoke's `ldd` loop; its version and runtime configuration are checked inside the target chroot. P0 run [42671149066](https://github.com/rufl/DINX/actions/runs/42671149066) built the ISO and passed both QEMU graphics boots, but the install smoke stopped because `ldd` correctly reported that static ZLS is not a dynamic executable.
 - Run greetd on VT 7 in installed and live configs; Artix's live `login.target` also starts agetty/autologin on tty1, so sharing VT 1 let the greeter and login session compete for one display.
 - Defer DINX keyring population from package post-install to a dedicated Dinit one-shot ordered after `pacman-init`; keep repository configuration in the package hook so fresh ISO/install roots do not fail on an uninitialized keyring. Decouple live greetd startup from keyring setup.
 - Keep Pearl Greeter's `HOME` at root-owned, read-only `/var/empty/pearl-greeter` to satisfy its trusted-path check; put writable XDG config/data/state under Pearl's private `/var/lib/pearl-greeter` tree. Patch Pearl's upstream state-home override to use `.local/state` instead of the conflicting parent namespace, and provision all greeter paths at install and boot; cache remains `/var/cache/pearl-greeter`.

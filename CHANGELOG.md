@@ -3,11 +3,14 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
+- Keep Pearl Greeter's `HOME` at root-owned, read-only `/var/empty/pearl-greeter` to satisfy its trusted-path check; put writable XDG config/data/state under Pearl's private `/var/lib/pearl-greeter` tree. Patch Pearl's upstream state-home override to use `.local/state` instead of the conflicting parent namespace, and provision all greeter paths at install and boot; cache remains `/var/cache/pearl-greeter`.
+- Poll QEMU captures for the Pearl first-run `Dock` marker instead of treating one fixed-time frame as a failed boot; allow the bounded 120-second P0 boot window.
 - Restore the Plymouth screen checker's `main()` CLI entry point; add a CLI regression test so QEMU qualification reaches the splash check.
 - Track the local DinitUI, DINXPanel and Seafoam Settings sources; clean CI checkouts must not depend on ignored `src/` directories present only on the builder machine.
 - Reuse the exact SquashFS path matcher for removed `man`/`info`; add `infocmp` and `mandoc` prefix-collision fixtures so valid executables cannot trigger the exclusion gate.
 - Match the actual compound `DINX_LIVE_SESSION` guard in the ISO-content check; its stale semicolon-form expectation stopped qualification after image assembly, before QEMU ran.
 - Create Pearl Greeter's state/cache directories as `pearl-greeter` in the live Dinit startup before greetd; otherwise Aqueous cannot create its `XDG_STATE_HOME` config-writer lock.
+- Set the live greetd `default_session` user to `pearl-greeter`; without it, greetd defaults to `greeter`, which cannot write the Pearl-owned state/cache paths and Aqueous exits with `AccessDenied`.
 - Install Firewalld's Dinit boot link from a signed DINX package. Artix copies root overlays with `cp -LR`, which dereferences the overlay symlink and does not preserve boot enablement in the rootfs/livefs.
 - Parse `unsquashfs -lls` entries by their exact `squashfs-root/` path rather than comparing the whole metadata-prefixed line; this fixes the Calamares package-record gate rejecting a valid DINX `3.4.3-6` rootfs.
 - Match build-only executable exclusions against complete SquashFS paths; the previous substring check mistook `usr/bin/exiv2` for the removed Vim `usr/bin/ex`.

@@ -106,6 +106,30 @@ wait_for_plymouth_splash() {
   done
   fail "centered DINX Plymouth splash not observed within ${plymouth_wait_seconds}s: ${checker_output}"
 }
+wait_for_first_run_client() {
+  local path="$1"
+  local reserve_seconds=5
+  local wait_deadline
+  local checker_output='QEMU did not capture a frame'
+
+  if [[ -n "$post_screenshot_path" ]]; then
+    ((reserve_seconds += post_screenshot_delay))
+  fi
+  wait_deadline=$((qemu_started + timeout_seconds - reserve_seconds))
+  while ((SECONDS < wait_deadline)); do
+    if capture_screen "$path"; then
+      if checker_output=$("$script_dir/check_dinx_qemu_session.sh" "$path" first-run 2>&1); then
+        printf 'smoke-iso: %s\n' "$checker_output"
+        return 0
+      fi
+    else
+      checker_output='QEMU monitor rejected first-run screendump'
+    fi
+    sleep 2
+  done
+  fail "Pearl first-run Dock did not appear before the QEMU timeout: ${checker_output}"
+}
+
 
 validate_screenshot() {
   local path="$1"
@@ -168,6 +192,7 @@ cleanup() {
 trap cleanup EXIT
 
 set +e
+qemu_started=$SECONDS
 timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 \
   "${accel[@]}" \
@@ -219,13 +244,13 @@ if [[ "$monitor_ready" == true ]]; then
 
   if [[ -n "$screenshot_path" ]]; then
     sleep "$screenshot_delay"
-    capture_screen "$screenshot_path"
-    dump_status=$?
-    session_dump_status=$dump_status
+    wait_for_first_run_client "$screenshot_path"
+    dump_status=0
+    session_dump_status=0
   else
     sleep "$screenshot_delay"
-    capture_screen "$session_screenshot_path"
-    session_dump_status=$?
+    wait_for_first_run_client "$session_screenshot_path"
+    session_dump_status=0
   fi
 
   if [[ -n "$post_screenshot_path" ]]; then

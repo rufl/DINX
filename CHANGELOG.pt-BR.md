@@ -3,11 +3,14 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Manter `HOME` do Pearl Greeter no caminho root-owned e somente leitura `/var/empty/pearl-greeter` para satisfazer a validação de caminhos confiáveis; colocar configuração/dados/estado XDG graváveis na árvore privada do Pearl em `/var/lib/pearl-greeter`. Corrigir por patch a sobrescrita upstream do caminho de estado para usar `.local/state` em vez do namespace do diretório pai e provisionar os caminhos do greeter na instalação e no boot; o cache permanece em `/var/cache/pearl-greeter`.
+- Aguardar o marcador `Dock` do primeiro uso do Pearl nos captures QEMU, em vez de tratar um único frame em tempo fixo como falha de boot; manter a janela P0 limitada a 120 segundos.
 - Restaurar a entrada `main()` do verificador de tela do Plymouth; adicionar regressão de CLI para evitar falha da qualificação QEMU antes do teste do splash.
 - Incluir no Git as fontes locais de DinitUI, DINXPanel e Seafoam Settings; o CI em checkout limpo não pode depender de diretórios `src/` ignorados que só existiam na máquina do builder.
 - Reutilizar o comparador exato de caminhos SquashFS para `man`/`info` removidos; adicionar fixtures de colisão com os prefixos `infocmp` e `mandoc` para que executáveis válidos não acionem o gate de exclusão.
 - Alinhar o check de conteúdo à condição composta real de `DINX_LIVE_SESSION`; a expectativa antiga com ponto e vírgula interrompia a qualificação depois de montar a imagem, antes do QEMU.
 - Criar os diretórios de estado/cache do Pearl Greeter como `pearl-greeter` no serviço Dinit live antes do greetd; sem isso, o Aqueous não consegue criar o lock `config-writer` em `XDG_STATE_HOME`.
+- Definir `pearl-greeter` como usuário da `default_session` live do greetd; sem isso, o greetd usa `greeter`, que não pode gravar nos diretórios de estado/cache do Pearl e faz o Aqueous encerrar com `AccessDenied`.
 - Instalar o link de boot do Firewalld/Dinit por um pacote DINX assinado. O Artix copia overlays com `cp -LR`, que dereferencia o symlink do overlay e não preserva a ativação no rootfs/livefs.
 - Remover `man-db`, `man-pages` e `texinfo` do rootfs comum e do perfil DINX. Manter `man-db` e `texinfo` como dependências isoladas de build/qualificação do Deetty. O Calamares instala o mesmo rootfs, portanto essas ferramentas também ficam ausentes do sistema instalado; rejeitar seus registros de pacote e executáveis `man`/`info` nas imagens SquashFS finais.
 - Comparar exclusões de executáveis de build com o caminho SquashFS completo; a busca por substring confundia `usr/bin/exiv2` com o executável Vim removido `usr/bin/ex`.

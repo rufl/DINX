@@ -16,7 +16,11 @@ cat >"$fakebin/mountpoint" <<'EOF'
 #!/bin/sh
 set -eu
 [ "${1:-}" = -q ]
-[ "$(cat "$PORI_SMOKE_STATE/status")" = mounted ]
+if [ "$(cat "$PORI_SMOKE_STATE/status")" = mounted ]; then
+  : >"$PORI_SMOKE_STATE/supervised"
+  exit 0
+fi
+exit 1
 EOF
 cat >"$fakebin/mount" <<'EOF'
 #!/bin/sh
@@ -48,12 +52,12 @@ export PORI_SLEEP_BIN="$fakebin/sleep"
 "$service" "$tmp/source" "$tmp/mnt" ntfs3 defaults,noatime &
 pid=$!
 for _ in $(seq 1 50); do
-  if grep -Fqx mounted "$state/status"; then
+  if [ -e "$state/supervised" ]; then
     break
   fi
   sleep 0.01
 done
-grep -Fqx mounted "$state/status"
+[ -e "$state/supervised" ]
 kill -TERM "$pid"
 if wait "$pid"; then
   exit_code=0

@@ -1,6 +1,6 @@
 pkgname=dinx-keyring
 pkgver=20261031
-pkgrel=1
+pkgrel=2
 pkgdesc='DINX pacman repository trust and mirror configuration'
 arch=('any')
 url='https://github.com/rufl/DINX'

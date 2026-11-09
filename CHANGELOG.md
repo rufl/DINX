@@ -3,7 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
-- Set the greeter's writable `HOME` and XDG config/data/state/cache paths explicitly; its passwd home is intentionally read-only, so the provisioned `/var/lib/pearl-greeter` and `/var/cache/pearl-greeter` directories were otherwise unused and the greeter failed with `AccessDenied`.
+- Keep Pearl Greeter's `HOME` at its root-owned, read-only `/var/empty/pearl-greeter` path; its trusted-path check rejects the previous writable `/var/lib/pearl-greeter` home with `AccessDenied`. Put writable XDG state and cache in the package-provisioned `/var/lib/pearl-greeter` and `/var/cache/pearl-greeter` directories.
 - Poll QEMU captures for the Pearl first-run `Dock` marker instead of treating one fixed-time frame as a failed boot; allow the bounded 120-second P0 boot window.
 - Restore the Plymouth screen checker's `main()` CLI entry point; add a CLI regression test so QEMU qualification reaches the splash check.
 - Track the local DinitUI, DINXPanel and Seafoam Settings sources; clean CI checkouts must not depend on ignored `src/` directories present only on the builder machine.

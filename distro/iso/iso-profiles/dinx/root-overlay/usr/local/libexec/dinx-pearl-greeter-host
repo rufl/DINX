@@ -8,10 +8,10 @@ graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
 dinx_apply_graphics_environment "$graphics_profile"
 
 export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"
-export HOME=/var/lib/pearl-greeter
+export HOME=/var/empty/pearl-greeter
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_STATE_HOME=/var/lib/pearl-greeter
 export XDG_CACHE_HOME=/var/cache/pearl-greeter
 
 exec /usr/lib/pearl/pearl-greeter-host "$@"

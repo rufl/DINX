@@ -12,10 +12,11 @@ refresh_workflow=.github/workflows/upstream-package-refresh.yml
 publish_workflow=.github/workflows/publish-dinx-packages.yml
 contracts_workflow=.github/workflows/contracts.yml
 keyring=distro/packages/dinx-keyring
+live_keyring_service=distro/iso/iso-profiles/dinx/live-overlay/etc/dinit.d/dinx-keyring-populate
 for path in "$manifest" "$updater" "$refresh_workflow" "$publish_workflow" \
   "$contracts_workflow" "$keyring/PKGBUILD" "$keyring/dinx-keyring.install" \
   "$keyring/dinx-configure-repository" "$keyring/dinx-mirrorlist" \
-  "$keyring/dinx-keyring-populate" "$keyring/dinx-keyring-populate.service" \
+  "$keyring/dinx-keyring-populate.service" "$live_keyring_service" \
   scripts/test_refresh_package_sources.py scripts/smoke_dinx_keyring_config.sh; do
   [[ -r "$path" ]] || fail "required package-channel input is missing: $path"
 done
@@ -29,12 +30,16 @@ grep -Fqx 'Server = https://github.com/rufl/DINX/releases/download/dinx-packages
   "$keyring/dinx-mirrorlist" || fail 'keyring mirrorlist does not use the rolling package release'
 grep -Fq 'SigLevel = Required' "$keyring/dinx-configure-repository" \
   || fail 'keyring helper does not require signatures'
-grep -Fqx 'depends-on = pacman-init' "$keyring/dinx-keyring-populate.service" \
-  || fail 'DINX keyring population does not wait for pacman-init'
+grep -Fqx 'depends-on = local.target' "$keyring/dinx-keyring-populate.service" \
+  || fail 'installed DINX keyring population does not depend on local.target'
 grep -Fq 'boot.d/dinx-keyring-populate' "$keyring/PKGBUILD" \
   || fail 'DINX keyring population service is not enabled at boot'
+grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' "$live_keyring_service" \
+  || fail 'live DINX keyring population command is incorrect'
+grep -Fqx 'depends-on = pacman-init' "$live_keyring_service" \
+  || fail 'live DINX keyring population does not wait for pacman-init'
 ! grep -Fq 'pacman-key' "$keyring/dinx-keyring.install" \
-  || fail 'DINX package installation must defer key operations until pacman-init'
+  || fail 'DINX package installation must defer key operations until boot'
 grep -Fq 'dinx-keyring' distro/iso/iso-profiles/dinx/profile.yaml \
   || fail 'DINX live/installed profile does not include the keyring package'
 for required in \

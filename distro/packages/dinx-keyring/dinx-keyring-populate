@@ -3,5 +3,7 @@
 set -eu
 
 keyring_dir=$(/usr/bin/pacman-conf gpgdir)
+/usr/bin/pacman-key --gpgdir "$keyring_dir" --init
+/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate artix
 /usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx
 /usr/bin/pacman-key --gpgdir "$keyring_dir" --updatedb

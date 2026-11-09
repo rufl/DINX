@@ -1,18 +1,7 @@
 post_install() {
   set -e
   /usr/lib/dinx-keyring/configure-repository
-  keyring_dir=$(/usr/bin/pacman-conf gpgdir)
-  /usr/bin/install -d -m 0755 "$keyring_dir"
-  /usr/bin/chmod 0755 "$keyring_dir"
-  for keyring_file in pubring.gpg trustdb.gpg; do
-    if [ -e "$keyring_dir/$keyring_file" ]; then
-      /usr/bin/chmod 0644 "$keyring_dir/$keyring_file"
-    fi
-  done
-  /usr/bin/pacman-key --gpgdir "$keyring_dir" --init
-  /usr/bin/chmod 0644 "$keyring_dir/pubring.gpg" "$keyring_dir/trustdb.gpg"
-  /usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx
-  /usr/bin/pacman-key --gpgdir "$keyring_dir" --updatedb
+  printf '%s\n' 'dinx-keyring: DINX key population is deferred until pacman-init completes at boot'
 }
 
 post_upgrade() {

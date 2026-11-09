@@ -26,6 +26,8 @@ on:
       - ".github/workflows/release.yml"
       - "distro/iso/**"
       - "distro/packages/dinx-firewalld-dinit/**"
+      - "distro/packages/dinx-keyring/**"
+      - "distro/packages/dinx-live-autologin/**"
       - "scripts/build-iso.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/build-iso-container.sh"

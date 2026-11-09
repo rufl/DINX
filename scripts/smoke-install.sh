@@ -207,12 +207,6 @@ mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
 chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls \
   >/dev/null 2>&1 || fail 'installed core packages are missing'
-keyring_fingerprint=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
-keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fingerprint" 2>&1) \
-  || fail 'installed pacman keyring is not readable'
-keyring_output_compact=$(tr -d '[:space:]' <<<"$keyring_output")
-[[ "$keyring_output_compact" == *"$keyring_fingerprint"* ]] \
-  || fail 'installed DINX package signing key is missing from pacman keyring'
 [[ -f "$target_dir/etc/zls.json" || -f "$target_dir/etc/xdg/zls.json" ]] \
   || fail 'installed ZLS configuration is missing'
 [[ -x "$target_dir/usr/lib/zls/zig-env" ]] || fail 'installed ZLS shim is missing'
@@ -452,7 +446,8 @@ if [[ "$monitor_ready" == true ]]; then
   for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
     if grep -Fq '[  OK  ] NetworkManager' "$serial_log" \
       && grep -Fq '[  OK  ] elogind' "$serial_log" \
-      && grep -Fq '[  OK  ] local.target' "$serial_log"; then
+      && grep -Fq '[  OK  ] local.target' "$serial_log" \
+      && grep -Fq '[  OK  ] dinx-keyring-populate' "$serial_log"; then
       if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
         qemu_quit_requested=true
         printf 'smoke-install: requested QEMU shutdown after first-boot checks\n'
@@ -483,7 +478,7 @@ for image in "$screen_path" "$recovery_screen_path"; do
   [[ "$magic" == P6 ]] || fail "invalid QEMU PPM screenshot: $image"
 done
 "$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter
-for service in NetworkManager elogind local.target; do
+for service in NetworkManager elogind local.target dinx-keyring-populate; do
   if ! grep -Fq "[  OK  ] $service" "$serial_log"; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
     fail "installed Dinit service did not start: $service"
@@ -509,4 +504,10 @@ done
 mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
+keyring_fingerprint=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fingerprint" 2>&1) \
+  || fail 'booted installed pacman keyring is not readable'
+keyring_output_compact=$(tr -d '[:space:]' <<<"$keyring_output")
+[[ "$keyring_output_compact" == *"$keyring_fingerprint"* ]] \
+  || fail 'booted DINX package signing key was not populated after pacman-init'
 printf 'smoke-install: installed package payload and booted disk checks passed; this is not a Calamares end-to-end installation (GUI/user/storage modules are not exercised)\n'

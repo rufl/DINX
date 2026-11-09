@@ -15,6 +15,7 @@ keyring=distro/packages/dinx-keyring
 for path in "$manifest" "$updater" "$refresh_workflow" "$publish_workflow" \
   "$contracts_workflow" "$keyring/PKGBUILD" "$keyring/dinx-keyring.install" \
   "$keyring/dinx-configure-repository" "$keyring/dinx-mirrorlist" \
+  "$keyring/dinx-keyring-populate" "$keyring/dinx-keyring-populate.service" \
   scripts/test_refresh_package_sources.py scripts/smoke_dinx_keyring_config.sh; do
   [[ -r "$path" ]] || fail "required package-channel input is missing: $path"
 done
@@ -28,6 +29,12 @@ grep -Fqx 'Server = https://github.com/rufl/DINX/releases/download/dinx-packages
   "$keyring/dinx-mirrorlist" || fail 'keyring mirrorlist does not use the rolling package release'
 grep -Fq 'SigLevel = Required' "$keyring/dinx-configure-repository" \
   || fail 'keyring helper does not require signatures'
+grep -Fqx 'depends-on = pacman-init' "$keyring/dinx-keyring-populate.service" \
+  || fail 'DINX keyring population does not wait for pacman-init'
+grep -Fq 'boot.d/dinx-keyring-populate' "$keyring/PKGBUILD" \
+  || fail 'DINX keyring population service is not enabled at boot'
+! grep -Fq 'pacman-key' "$keyring/dinx-keyring.install" \
+  || fail 'DINX package installation must defer key operations until pacman-init'
 grep -Fq 'dinx-keyring' distro/iso/iso-profiles/dinx/profile.yaml \
   || fail 'DINX live/installed profile does not include the keyring package'
 for required in \

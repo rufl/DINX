@@ -433,8 +433,10 @@ if [[ "$monitor_ready" == true ]]; then
     kill -0 "$qemu_pid" 2>/dev/null || break
     sleep 2
   done
-  [[ "$greeter_ready" == true ]] \
-    || fail "installed Pearl Greeter did not start before the QEMU timeout: ${greeter_output}"
+  if [[ "$greeter_ready" != true ]]; then
+    [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
+    fail "installed Pearl Greeter did not start before the QEMU timeout: ${greeter_output}"
+  fi
   [[ -s "$screen_path" ]] || fail "installed greeter screenshot was not created: $screen_path"
   printf 'sendkey ctrl-alt-f2\n' \
     | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
@@ -510,5 +512,5 @@ keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fin
   || fail 'booted installed pacman keyring is not readable'
 keyring_output_compact=$(tr -d '[:space:]' <<<"$keyring_output")
 [[ "$keyring_output_compact" == *"$keyring_fingerprint"* ]] \
-  || fail 'booted DINX package signing key was not populated after pacman-init'
+  || fail 'booted DINX package signing key was not populated during installed first boot'
 printf 'smoke-install: installed package payload and booted disk checks passed; this is not a Calamares end-to-end installation (GUI/user/storage modules are not exercised)\n'

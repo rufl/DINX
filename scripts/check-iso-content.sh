@@ -76,6 +76,7 @@ fi
 for live_path in \
   etc/artools/live.conf \
   etc/dinit.d/dinx-live-autologin \
+  etc/dinit.d/dinx-keyring-populate \
   etc/dinit.d/boot.d/greetd \
   etc/dinit.d/boot.d/dinx-live-autologin \
   etc/dinit.d/root-ro \
@@ -150,8 +151,13 @@ fi
 keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-populate)
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$keyring_populate_service" \
   || fail 'installed DINX keyring population command is incorrect'
-grep -Fqx 'depends-on = pacman-init' <<<"$keyring_populate_service" \
-  || fail 'installed DINX keyring population does not wait for pacman-init'
+grep -Fqx 'depends-on = local.target' <<<"$keyring_populate_service" \
+  || fail 'installed DINX keyring population does not depend on local.target'
+live_keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-keyring-populate)
+grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$live_keyring_populate_service" \
+  || fail 'live DINX keyring population command is incorrect'
+grep -Fqx 'depends-on = pacman-init' <<<"$live_keyring_populate_service" \
+  || fail 'live DINX keyring population does not wait for pacman-init'
 
 
 required_paths=(

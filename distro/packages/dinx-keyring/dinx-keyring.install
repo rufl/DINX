@@ -1,7 +1,7 @@
 post_install() {
   set -e
   /usr/lib/dinx-keyring/configure-repository
-  printf '%s\n' 'dinx-keyring: DINX key population is deferred until pacman-init completes at boot'
+  printf '%s\n' 'dinx-keyring: Artix and DINX keyrings are initialized and populated during boot'
 }
 
 post_upgrade() {

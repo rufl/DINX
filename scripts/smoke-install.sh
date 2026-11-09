@@ -400,6 +400,7 @@ if [[ "$firmware_mode" == uefi ]]; then
   )
 fi
 set +e
+qemu_started=$SECONDS
 timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 "${qemu_args[@]}" &
 qemu_pid=$!
@@ -414,10 +415,26 @@ done
 qemu_quit_requested=false
 if [[ "$monitor_ready" == true ]]; then
   sleep 30
-  printf 'screendump "%s"\n' "$screen_path" \
-    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
-    || fail "QEMU could not capture the installed desktop screen: $screen_path"
-  [[ -s "$screen_path" ]] || fail "installed desktop screenshot was not created: $screen_path"
+  greeter_ready=false
+  greeter_output='QEMU did not capture a frame'
+  greeter_deadline=$((qemu_started + timeout_seconds - 10))
+  while ((SECONDS < greeter_deadline)); do
+    if printf 'screendump "%s"\n' "$screen_path" \
+      | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
+      if greeter_output=$("$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter 2>&1); then
+        greeter_ready=true
+        printf 'smoke-install: %s\n' "$greeter_output"
+        break
+      fi
+    else
+      greeter_output='QEMU could not capture the installed greeter screen'
+    fi
+    kill -0 "$qemu_pid" 2>/dev/null || break
+    sleep 2
+  done
+  [[ "$greeter_ready" == true ]] \
+    || fail "installed Pearl Greeter did not start before the QEMU timeout: ${greeter_output}"
+  [[ -s "$screen_path" ]] || fail "installed greeter screenshot was not created: $screen_path"
   printf 'sendkey ctrl-alt-f2\n' \
     | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
     || fail 'QEMU could not switch to recovery TTY 2'

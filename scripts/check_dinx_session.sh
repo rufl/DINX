@@ -125,6 +125,16 @@ fi
 
 grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' "$greeter_wrapper" \
   || fail 'Pearl Greeter does not default libseat to the active elogind seat'
+grep -Fq 'export HOME=/var/lib/pearl-greeter' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not use its writable runtime home'
+grep -Fq 'export XDG_CONFIG_HOME="$HOME/.config"' "$greeter_wrapper" \
+  || fail 'Pearl Greeter config home is not writable'
+grep -Fq 'export XDG_DATA_HOME="$HOME/.local/share"' "$greeter_wrapper" \
+  || fail 'Pearl Greeter data home is not writable'
+grep -Fq 'export XDG_STATE_HOME="$HOME/.local/state"' "$greeter_wrapper" \
+  || fail 'Pearl Greeter state home is not writable'
+grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' "$greeter_wrapper" \
+  || fail 'Pearl Greeter cache home is not writable'
 jq -e '
   .version == 1
   and .theme == "gtk"

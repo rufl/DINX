@@ -785,6 +785,16 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$greeter_wrap
 grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' <<<"$greeter_wrapper" || fail 'Pearl Greeter wrapper does not execute its packaged host'
 grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter does not select elogind for libseat'
+grep -Fq 'export HOME=/var/lib/pearl-greeter' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter does not use its writable runtime home'
+grep -Fq 'export XDG_CONFIG_HOME="$HOME/.config"' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter config home is not writable'
+grep -Fq 'export XDG_DATA_HOME="$HOME/.local/share"' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter data home is not writable'
+grep -Fq 'export XDG_STATE_HOME="$HOME/.local/state"' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter state home is not writable'
+grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter cache home is not writable'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
 grep -Fq 'hardware|vulkan)' <<<"$aqueous_launcher" || fail 'DINX full Aqueous compositor is not selected for the Vulkan profile'
 grep -Fq 'virtio_gpu)' <<<"$aqueous_graphics_helper" || fail 'QEMU virtio-gpu render-node driver is not detected'

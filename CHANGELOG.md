@@ -3,7 +3,7 @@
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 ## Unreleased
-- Repair pacman's GPG keyring directory and public-key database permissions before initialization, then populate the DINX trust database; bump `dinx-keyring` so existing installations receive the repair.
+- Defer DINX keyring population from package post-install to a dedicated Dinit one-shot ordered after `pacman-init`; keep repository configuration in the package hook so fresh ISO/install roots do not fail on an uninitialized keyring. Decouple live greetd startup from keyring setup.
 - Keep Pearl Greeter's `HOME` at root-owned, read-only `/var/empty/pearl-greeter` to satisfy its trusted-path check; put writable XDG config/data/state under Pearl's private `/var/lib/pearl-greeter` tree. Patch Pearl's upstream state-home override to use `.local/state` instead of the conflicting parent namespace, and provision all greeter paths at install and boot; cache remains `/var/cache/pearl-greeter`.
 - Poll QEMU captures for the Pearl first-run `Dock` marker instead of treating one fixed-time frame as a failed boot; allow the bounded 120-second P0 boot window.
 - Restore the Plymouth screen checker's `main()` CLI entry point; add a CLI regression test so QEMU qualification reaches the splash check.

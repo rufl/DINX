@@ -80,11 +80,8 @@ grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" \
 grep -Fq 'hostname dinxlive' "$wrapper" || fail 'live wrapper does not set the active dinxlive hostname'
 hostname_setup_line=$(grep -nF "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" | cut -d: -f1)
 autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -f1)
-grep -Fq '/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx' "$wrapper" \
-  || fail 'live startup does not repopulate the DINX package keyring'
-keyring_population_line=$(grep -nF '/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx' "$wrapper" | cut -d: -f1)
-((keyring_population_line < autologin_gate_line)) \
-  || fail 'DINX repository key is not initialized before the autologin gate'
+! grep -Fq '/usr/bin/pacman-key' "$wrapper" \
+  || fail 'live greeter startup must not run keyring operations that can block greetd'
 ((hostname_setup_line < autologin_gate_line)) \
   || fail 'hostname setup is incorrectly gated on autologin'
 grep -Fq 'install -d -o pearl-greeter -g pearl-greeter -m 0700 \' "$wrapper" \
@@ -106,12 +103,12 @@ grep -Fqx 'depends-on = local.target' "$service" \
   || fail 'live hostname service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live hostname service does not depend on artix-live'
-grep -Fqx 'depends-on = pacman-init' "$service" \
-  || fail 'live autologin does not wait for pacman keyring initialization'
+! grep -Fqx 'depends-on = pacman-init' "$service" \
+  || fail 'live autologin must not be gated on pacman keyring setup'
 grep -Fqx 'waits-for = firewalld' "$service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
-grep -Fq "depends=('dinit' 'greetd' 'firewalld-dinit' 'pacman')" "$pkgbuild" \
-  || fail 'live autologin package does not declare its pacman keyring dependency'
+grep -Fq "depends=('dinit' 'greetd' 'firewalld-dinit')" "$pkgbuild" \
+  || fail 'live autologin dependencies must not include pacman keyring setup'
 grep -Fq "'firewalld-dinit'" "$pkgbuild" \
   || fail 'live autologin package does not declare its Firewalld service dependency'
 ! grep -Fqx 'depends-on = local.target artix-live' "$service" \
@@ -165,4 +162,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_hard_ordering=true keyring_bootstrap=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'
+printf 'dinx_live_autologin_contract live=true initial_session=true greetd_hard_ordering=true keyring_independent=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'

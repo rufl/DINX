@@ -124,6 +124,8 @@ grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec
   || fail 'livefs autologin does not mark its Aqueous/Pearl session as live'
 grep -Fq 'user = "dinx"' <<<"$live_autologin" \
   || fail 'livefs autologin does not select the dinx user'
+! grep -Fq '/usr/bin/pacman-key' <<<"$live_autologin" \
+  || fail 'live greeter setup runs keyring operations before greetd'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'command = /usr/local/libexec/dinx-live-autologin' <<<"$live_autologin_service" \
   || fail 'livefs autologin service command is incorrect'
@@ -131,6 +133,8 @@ grep -Fqx 'depends-on = local.target' <<<"$live_autologin_service" \
   || fail 'livefs autologin service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service does not depend on artix-live'
+! grep -Fqx 'depends-on = pacman-init' <<<"$live_autologin_service" \
+  || fail 'live greeter setup must not depend on keyring population'
 grep -Fqx 'waits-for = firewalld' <<<"$live_autologin_service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
 ! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
@@ -143,6 +147,11 @@ grep -Fq 'depends-on      = login.target' <<<"$root_greetd_service" \
 if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then
   fail 'live-only autologin dependency leaked into the installed greetd service'
 fi
+keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-populate)
+grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$keyring_populate_service" \
+  || fail 'installed DINX keyring population command is incorrect'
+grep -Fqx 'depends-on = pacman-init' <<<"$keyring_populate_service" \
+  || fail 'installed DINX keyring population does not wait for pacman-init'
 
 
 required_paths=(
@@ -163,6 +172,13 @@ required_paths=(
   etc/dinit.d/greetd
   etc/dinit.d/dinx-plymouth-quit
   etc/dinit.d/boot.d/dinx-plymouth-quit
+  etc/dinit.d/dinx-keyring-populate
+  etc/dinit.d/boot.d/dinx-keyring-populate
+  usr/local/libexec/dinx-keyring-populate
+  usr/share/pacman/keyrings/dinx.gpg
+  usr/share/pacman/keyrings/dinx-trusted
+  usr/share/pacman/keyrings/dinx-revoked
+  etc/pacman.d/dinx-mirrorlist
   etc/plymouth/plymouthd.conf
   usr/bin/plymouth
   usr/bin/plymouthd

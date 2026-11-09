@@ -43,6 +43,22 @@ The entry points are:
 
 The separate `DINX contracts` workflow runs static/fixture checks and REUSE lint on every pull request and push to `main`. P0 and contracts checkout `rufl/DEETTY` with `DEETTY_SOURCE_READ_TOKEN` when configured, otherwise `GITHUB_TOKEN`; the token must be able to read the source repository. Contracts skips source-dependent checks only for pull requests from external forks that cannot receive repository secrets.
 
+### Live state and handoff
+
+Conversation summaries and this document's history are pointers, not live CI state. Before reporting a PR/run status or dispatching/restarting P0, query GitHub:
+
+```sh
+gh pr view <number> --json state,mergedAt,mergeCommit,headRefOid,url
+gh run list --workflow p0-iso.yml --branch main --limit 20 --json databaseId,status,conclusion,headSha,createdAt,url
+gh run view <run-id> --json status,conclusion,headSha,event,url,updatedAt
+```
+
+After a merge, the push-triggered `main` run is canonical. Reuse a queued/in-progress run for the same workflow and commit; do not dispatch a duplicate. On failure, inspect failed-step logs and published diagnostics/screenshots before changing code; target only a failure those artifacts demonstrate.
+
+Checkpoint, last checked live on 2026-11-09: PR [#28](https://github.com/rufl/DINX/pull/28) merged as `b7ce07a47e55d717f44e4c8f852d17c5c0ced6ad`; canonical P0 [run #42655745162](https://github.com/rufl/DINX/actions/runs/42655745162) on that commit was `in_progress`. Duplicate [run #42657017250](https://github.com/rufl/DINX/actions/runs/42657017250) was cancelled. Previous P0 [run #42647503099](https://github.com/rufl/DINX/actions/runs/42647503099) failed because QEMU did not observe the Pearl first-run Dock before timeout, despite the greeter UI appearing; this does not establish the cause of the separate VirtualBox failure. Re-query GitHub before relying on this checkpoint.
+
+An ISO is verified only after a successful P0 run, retrieval of that run's artifact, checksum/build-metadata verification, and review of the qualification evidence. State which gates ran; QEMU success is not VirtualBox evidence.
+
 The `P0 ISO foundation` workflow runs manually or when profile/build files change. It:
 
 1. checks out DINX;

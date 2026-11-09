@@ -45,6 +45,22 @@ Os pontos de entrada são:
 
 O workflow separado `DINX contracts` executa checks de contrato/fixture e lint REUSE em todo pull request e push para `main`. Os workflows P0 e de contratos fazem checkout de `rufl/DEETTY` usando `DEETTY_SOURCE_READ_TOKEN` quando configurado e, caso contrário, `GITHUB_TOKEN`; o token precisa ter acesso ao repositório de fontes. O workflow de contratos pula somente os checks dependentes da fonte em PRs de forks externos que não podem receber secrets do repositório.
 
+### Estado ao vivo e transferência de contexto
+
+Resumos de conversa e o histórico deste documento são referências, não o estado atual do CI. Antes de informar o status de um PR/build ou iniciar/reiniciar o P0, consulte o GitHub:
+
+```sh
+gh pr view <number> --json state,mergedAt,mergeCommit,headRefOid,url
+gh run list --workflow p0-iso.yml --branch main --limit 20 --json databaseId,status,conclusion,headSha,createdAt,url
+gh run view <run-id> --json status,conclusion,headSha,event,url,updatedAt
+```
+
+Após um merge, o run de `main` disparado pelo push é o canônico. Reutilize um run na fila/em execução para o mesmo workflow e commit; não dispare outro. Em caso de falha, inspecione os logs da etapa e os diagnósticos/capturas publicados antes de alterar código; corrija somente uma falha demonstrada por essas evidências.
+
+Checkpoint, último status consultado ao vivo em 2026-11-09: PR [#28](https://github.com/rufl/DINX/pull/28) mergeado no commit `b7ce07a47e55d717f44e4c8f852d17c5c0ced6ad`; o P0 canônico [run #42655745162](https://github.com/rufl/DINX/actions/runs/42655745162) nesse commit estava `in_progress`. O run duplicado [#42657017250](https://github.com/rufl/DINX/actions/runs/42657017250) foi cancelado. O P0 anterior [run #42647503099](https://github.com/rufl/DINX/actions/runs/42647503099) falhou porque o QEMU não detectou o Dock da primeira sessão Pearl antes do timeout, embora a tela do greeter aparecesse; isso não determina a causa da falha distinta no VirtualBox. Consulte o GitHub novamente antes de confiar neste checkpoint.
+
+Uma ISO só está verificada após um P0 bem-sucedido, o download do artefato desse mesmo run, a verificação do checksum/metadados e a revisão das evidências de qualificação. Informe quais gates foram executados; sucesso no QEMU não comprova funcionamento no VirtualBox.
+
 O workflow `P0 ISO foundation` é executado manualmente ou quando arquivos do perfil/build mudam. Ele:
 
 1. faz checkout da DINX;

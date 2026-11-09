@@ -41,6 +41,7 @@ source_profile = false
 
 [default_session]
 command = "/usr/local/libexec/dinx-pearl-greeter-host"
+user = "pearl-greeter"
 
 [initial_session]
 command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"

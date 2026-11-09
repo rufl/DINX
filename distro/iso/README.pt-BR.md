@@ -117,6 +117,9 @@ Alpha 12 tem 1.836.830.720 bytes (310.652.928 bytes abaixo do limite).
 
 O livefs adiciona o pacote dinit `dinx-live-autologin`, exclusivo da sessão live. Ele habilita o `initial_session` único do greetd para `dinx` com Aqueous + Pearl e fornece unidades no-op de remontagem da raiz, pois o overlay live já é gravável. Essas substituições ficam no `livefs`; o Calamares instala `rootfs.img`, que mantém as unidades genéricas de remontagem do Artix. O fallback do greetd chama `dinx-pearl-greeter-host`, aplica a mesma política gráfica da sessão live e usa `logind` como backend padrão do libseat para que o greeter acesse o elogind sob dinit.
 
+O fallback live do greetd executa como a conta dedicada `pearl-greeter`, proprietária dos diretórios graváveis de estado e cache do Aqueous.
+
+
 `iso-profiles/dinx/feature-groups.json` registra os grupos foundation, desktop, gaming, hardware e opcional sem substituir o `profile.yaml` do Artix. O builder do CI assina cada pacote customizado e o banco temporário do repositório `dinx` com uma chave efêmera, verifica assinaturas e caminhos duplicados dos archives e registra o snapshot imutável dos pacotes em `build-metadata.txt`. Isso é qualificação do build; a chave do repositório pacman de produção e o canal de atualização do sistema instalado continuam sendo pré-requisitos separados do release.
 
 A árvore de código configura a atualização semanal dos pins de origem toda

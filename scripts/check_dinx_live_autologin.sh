@@ -12,6 +12,7 @@ root_rw="$package_dir/early-root-rw.target"
 pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 live_overlay="$root/distro/iso/iso-profiles/dinx/live-overlay"
+live_greetd="$live_overlay/etc/dinit.d/greetd"
 live_policy="$live_overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
 root_policy="$root_overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
 service="$package_dir/dinx-live-autologin.service"
@@ -24,7 +25,7 @@ fail() {
 }
 
 for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow" \
-  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy"; do
+  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy" "$live_greetd"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -79,6 +80,11 @@ grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" \
 grep -Fq 'hostname dinxlive' "$wrapper" || fail 'live wrapper does not set the active dinxlive hostname'
 hostname_setup_line=$(grep -nF "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" | cut -d: -f1)
 autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -f1)
+grep -Fq '/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx' "$wrapper" \
+  || fail 'live startup does not repopulate the DINX package keyring'
+keyring_population_line=$(grep -nF '/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx' "$wrapper" | cut -d: -f1)
+((keyring_population_line < autologin_gate_line)) \
+  || fail 'DINX repository key is not initialized before the autologin gate'
 ((hostname_setup_line < autologin_gate_line)) \
   || fail 'hostname setup is incorrectly gated on autologin'
 grep -Fq 'install -d -o pearl-greeter -g pearl-greeter -m 0700 \' "$wrapper" \
@@ -100,14 +106,26 @@ grep -Fqx 'depends-on = local.target' "$service" \
   || fail 'live hostname service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live hostname service does not depend on artix-live'
+grep -Fqx 'depends-on = pacman-init' "$service" \
+  || fail 'live autologin does not wait for pacman keyring initialization'
 grep -Fqx 'waits-for = firewalld' "$service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
-grep -Fq "depends=('dinit' 'greetd' 'firewalld-dinit')" "$pkgbuild" \
+grep -Fq "depends=('dinit' 'greetd' 'firewalld-dinit' 'pacman')" "$pkgbuild" \
+  || fail 'live autologin package does not declare its pacman keyring dependency'
+grep -Fq "'firewalld-dinit'" "$pkgbuild" \
   || fail 'live autologin package does not declare its Firewalld service dependency'
 ! grep -Fqx 'depends-on = local.target artix-live' "$service" \
   || fail 'live hostname service combines dependencies into one unresolved service name'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'
+grep -Fqx 'type = process' "$live_greetd" \
+  || fail 'live greetd override is not a process service'
+grep -Fqx 'command = /usr/bin/greetd' "$live_greetd" \
+  || fail 'live greetd override does not start greetd'
+grep -Fqx 'depends-on = login.target' "$live_greetd" \
+  || fail 'live greetd override dropped its login target dependency'
+grep -Fqx 'depends-on = dinx-live-autologin' "$live_greetd" \
+  || fail 'live greetd does not wait for greeter configuration to finish'
 ! grep -Fq 'greetd.service' "$pkgbuild" \
   || fail 'live autologin package must not replace greetd-dinit service files'
 ! grep -Fq 'pkgdir/etc/dinit.d/greetd' "$pkgbuild" \
@@ -147,4 +165,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_ordering=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'
+printf 'dinx_live_autologin_contract=live=true initial_session=true greetd_hard_ordering=true keyring_bootstrap=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'

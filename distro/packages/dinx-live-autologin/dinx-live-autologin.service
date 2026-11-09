@@ -3,6 +3,7 @@ command = /usr/local/libexec/dinx-live-autologin
 restart = false
 depends-on = local.target
 depends-on = artix-live
+depends-on = pacman-init
 after = artix-live
 waits-for = firewalld
 before = greetd

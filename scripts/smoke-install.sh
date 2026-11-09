@@ -207,6 +207,12 @@ mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
 chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls \
   >/dev/null 2>&1 || fail 'installed core packages are missing'
+keyring_fingerprint=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fingerprint" 2>&1) \
+  || fail 'installed pacman keyring is not readable'
+keyring_output_compact=$(tr -d '[:space:]' <<<"$keyring_output")
+[[ "$keyring_output_compact" == *"$keyring_fingerprint"* ]] \
+  || fail 'installed DINX package signing key is missing from pacman keyring'
 [[ -f "$target_dir/etc/zls.json" || -f "$target_dir/etc/xdg/zls.json" ]] \
   || fail 'installed ZLS configuration is missing'
 [[ -x "$target_dir/usr/lib/zls/zig-env" ]] || fail 'installed ZLS shim is missing'

@@ -791,8 +791,8 @@ grep -Fq 'export XDG_CONFIG_HOME="$HOME/.config"' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter config home is not under its trusted home'
 grep -Fq 'export XDG_DATA_HOME="$HOME/.local/share"' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter data home is not under its trusted home'
-grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter state home is not on its writable runtime directory'
+grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter state home is not its dedicated writable state directory'
 grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter cache home is not on its writable runtime directory'
 grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'

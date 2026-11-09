@@ -72,6 +72,13 @@ hostname_setup_line=$(grep -nF "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wra
 autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -f1)
 ((hostname_setup_line < autologin_gate_line)) \
   || fail 'hostname setup is incorrectly gated on autologin'
+grep -Fq 'install -d -o pearl-greeter -g pearl-greeter -m 0700 \' "$wrapper" \
+  || fail 'live boot does not provision Pearl Greeter runtime directories'
+grep -Fq '/var/lib/pearl-greeter /var/cache/pearl-greeter' "$wrapper" \
+  || fail 'live boot does not provision Pearl Greeter state and cache paths'
+greeter_dirs_setup_line=$(grep -nF 'install -d -o pearl-greeter' "$wrapper" | cut -d: -f1)
+((greeter_dirs_setup_line < autologin_gate_line)) \
+  || fail 'Pearl Greeter runtime directories are incorrectly gated on autologin'
 grep -Fqx 'depends-on = local.target' "$service" \
   || fail 'live hostname service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' "$service" \

@@ -7,7 +7,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Track the local DinitUI, DINXPanel and Seafoam Settings sources; clean CI checkouts must not depend on ignored `src/` directories present only on the builder machine.
 - Reuse the exact SquashFS path matcher for removed `man`/`info`; add `infocmp` and `mandoc` prefix-collision fixtures so valid executables cannot trigger the exclusion gate.
 - Match the actual compound `DINX_LIVE_SESSION` guard in the ISO-content check; its stale semicolon-form expectation stopped qualification after image assembly, before QEMU ran.
-- Recreate Pearl Greeter's state and cache directories as `pearl-greeter` at boot; Aqueous otherwise fails before initialization when its `XDG_STATE_HOME` config-writer lock cannot be created.
+- Create Pearl Greeter's state/cache directories as `pearl-greeter` in the live Dinit startup before greetd; otherwise Aqueous cannot create its `XDG_STATE_HOME` config-writer lock.
 - Install Firewalld's Dinit boot link from a signed DINX package. Artix copies root overlays with `cp -LR`, which dereferences the overlay symlink and does not preserve boot enablement in the rootfs/livefs.
 - Parse `unsquashfs -lls` entries by their exact `squashfs-root/` path rather than comparing the whole metadata-prefixed line; this fixes the Calamares package-record gate rejecting a valid DINX `3.4.3-6` rootfs.
 - Match build-only executable exclusions against complete SquashFS paths; the previous substring check mistook `usr/bin/exiv2` for the removed Vim `usr/bin/ex`.

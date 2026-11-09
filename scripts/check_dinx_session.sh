@@ -407,9 +407,19 @@ if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop' \
   "$qemu_session_checker" "$qemu_screen" first-run >/dev/null 2>&1; then
   fail 'QEMU first-run client-window check accepts a screenshot without readable client text'
 fi
+env "${pearl_shell_test_env[@]}" DINX_TEST_OCR=$'Aqueous + Pearl (DINX) - Wayland\nPas\n\nrd\nSign in' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null
+if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR=$'Aqueous + Pearl (DINX) - Wayland\nPas\n\nrd\nSign in\nAccessDenied' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
+  fail 'QEMU greeter check accepts an access-denied startup failure'
+fi
+if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop Pas rd Sign in' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
+  fail 'QEMU greeter check accepts controls without Pearl Greeter identity'
+fi
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run' "$iso_smoke" \
   || fail 'QEMU live smoke does not check readable first-run client-window content'
-printf 'qemu_client_window_smoke readable_first_run=true session_marker=true rejects_missing_title=true\n'
+printf 'qemu_client_window_smoke readable_first_run=true session_marker=true greeter_ocr_fragment=true greeter_startup_error_rejected=true rejects_missing_title=true\n'
 grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'

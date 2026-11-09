@@ -84,16 +84,18 @@ if [[ -z "${recognized//[[:space:]]/}" ]]; then
   fail "no readable text in QEMU session screenshot: $screenshot"
 fi
 if [[ "$mode" == greeter ]]; then
-  if grep -Eiq 'access[[:space:]]*denied|greeterstartupfailed|broken[[:space:]]+pipe' <<<"$recognized"; then
+  if grep -Eiq 'access[[:space:]]*denied|greeterstartupfailed|broken[[:space:]]*pipe' <<<"$recognized"; then
     printf 'dinx-qemu-session: rejected greeter startup failure:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  if ! grep -Eiq 'sign[[:space:]]*in' <<<"$recognized" \
-    || ! grep -Eiq 'password' <<<"$recognized"; then
-    printf 'dinx-qemu-session: Pearl Greeter sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
+  greeter_text=$(printf '%s' "$recognized" | tr -cd '[:alnum:]')
+  if ! grep -Eiq 'aqueous.*pearl.*dinx|pearl.*dinx' <<<"$greeter_text" \
+    || ! grep -Eiq 'signin' <<<"$greeter_text" \
+    || ! grep -Eiq 'pas[[:alpha:]]{0,4}rd' <<<"$greeter_text"; then
+    printf 'dinx-qemu-session: Pearl Greeter identity, sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  printf 'dinx-qemu-session: greeter_ready=true marker=Sign in+Password screenshot=%s\n' "$screenshot"
+  printf 'dinx-qemu-session: greeter_ready=true marker=Aqueous+Pearl+SignIn+Password screenshot=%s\n' "$screenshot"
   exit 0
 fi
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then

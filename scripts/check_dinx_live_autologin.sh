@@ -83,8 +83,16 @@ autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -
   || fail 'hostname setup is incorrectly gated on autologin'
 grep -Fq 'install -d -o pearl-greeter -g pearl-greeter -m 0700 \' "$wrapper" \
   || fail 'live boot does not provision Pearl Greeter runtime directories'
-grep -Fq '/var/lib/pearl-greeter /var/cache/pearl-greeter' "$wrapper" \
-  || fail 'live boot does not provision Pearl Greeter state and cache paths'
+for greeter_path in \
+  /var/lib/pearl-greeter \
+  /var/lib/pearl-greeter/.config \
+  /var/lib/pearl-greeter/.local \
+  /var/lib/pearl-greeter/.local/share \
+  /var/lib/pearl-greeter/.local/state \
+  /var/cache/pearl-greeter; do
+  grep -Fq "$greeter_path" "$wrapper" \
+    || fail "live boot does not provision Pearl Greeter runtime path: $greeter_path"
+done
 greeter_dirs_setup_line=$(grep -nF 'install -d -o pearl-greeter' "$wrapper" | cut -d: -f1)
 ((greeter_dirs_setup_line < autologin_gate_line)) \
   || fail 'Pearl Greeter runtime directories are incorrectly gated on autologin'

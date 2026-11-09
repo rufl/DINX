@@ -187,6 +187,40 @@ if chroot "$target_dir" /usr/bin/pacman -Q squashfs-tools >/dev/null 2>&1; then
 fi
 [[ ! -e "$target_dir/usr/bin/unsquashfs" ]] \
   || fail 'Calamares-only unsquashfs executable remains in installed system'
+printf 'smoke-install: applying Calamares Dinit service enablement\n'
+calamares_services_config="$target_dir/etc/calamares/modules/services-artix.conf"
+[[ -r "$calamares_services_config" ]] || fail 'Calamares Dinit service configuration is missing'
+calamares_service_command=$(
+  awk '/^[[:space:]]*command:[[:space:]]+/ { print $2; exit }' "$calamares_services_config"
+)
+[[ "$calamares_service_command" =~ ^[[:alnum:]_-]+$ ]] \
+  || fail "invalid Calamares service command: $calamares_service_command"
+mapfile -t calamares_enabled_services < <(
+  awk '
+    /^[[:space:]]*-[[:space:]]+name:[[:space:]]*"/ {
+      service = $0
+      sub(/^[[:space:]]*-[[:space:]]+name:[[:space:]]*"/, "", service)
+      sub(/".*$/, "", service)
+      next
+    }
+    /^[[:space:]]*action:[[:space:]]*"enable"[[:space:]]*$/ && service != "" {
+      print service
+      service = ""
+    }
+  ' "$calamares_services_config"
+)
+((${#calamares_enabled_services[@]} > 0)) \
+  || fail 'Calamares Dinit service configuration enables no services'
+for calamares_service in "${calamares_enabled_services[@]}"; do
+  [[ "$calamares_service" =~ ^[[:alnum:]@._-]+$ ]] \
+    || fail "invalid Calamares Dinit service name: $calamares_service"
+  printf 'smoke-install: enabling Calamares Dinit service %s\n' "$calamares_service"
+  chroot "$target_dir" "$calamares_service_command" enable "$calamares_service" >/dev/null \
+    || fail "Calamares Dinit service enablement failed: $calamares_service"
+  [[ -e "$target_dir/etc/dinit.d/boot.d/$calamares_service" ]] \
+    || fail "Calamares Dinit service is not enabled: $calamares_service"
+done
+
 printf 'smoke-install: running system-user provisioning before Calamares user creation\n'
 chroot "$target_dir" /usr/bin/esysusers
 printf 'smoke-install: creating the Calamares user and persistent fstab\n'

@@ -98,7 +98,7 @@ This file records meaningful DINX changes in direct language. It does not claim 
 - Declare `local.target` and `artix-live` as separate Dinit dependencies for live autologin, so both services resolve instead of being parsed as one missing service.
 - Ensure the Aqueous/Pearl session exports a UTF-8 character locale when its inherited locale is ASCII, so terminal applications such as `btop` render correctly without overriding valid user locales.
 - Remove a failed Dome build's partial source/cache before retrying, and restore bind-mounted files to the invoking user when the local ISO builder runs through sudo.
-- Pin local post-build metadata checks to the commit and source-tree baseline captured before Docker starts; exclude generated makepkg trees, package archives and staging outputs from that fingerprint while still rejecting changed source inputs.
+- Pin local post-build metadata checks to the commit and source-tree baseline captured before Docker starts; exclude generated makepkg trees, package archives, and the `src/stage` outputs of directly built Zig packages from that fingerprint while still rejecting changed source inputs.
 - Initialize the ISO content checker's GTK settings from the user skeleton before checking theme defaults.
 - Ignore empty compatibility directories in SquashFS manifests while continuing to reject files and symlinks from retired desktops and init systems.
 - Set `DownloadUser = root` only in the temporary Artix `buildiso` pacman config. Pacman 7's `alpm` downloader cannot write the root-owned sync-database staging directory in a fresh basestrap target; host pacman and the installed image remain unchanged.

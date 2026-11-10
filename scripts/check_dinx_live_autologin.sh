@@ -27,6 +27,7 @@ fail() {
 
 for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow" \
   "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy" "$live_greetd" \
+  "$live_overlay/etc/dinit.d/seatd" \
   "$root_greetd_service"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
@@ -133,6 +134,14 @@ grep -Fqx 'depends-on = login.target' "$live_greetd" \
   || fail 'live greetd override dropped its login target dependency'
 grep -Fqx 'depends-on = dinx-live-autologin' "$live_greetd" \
   || fail 'live greetd does not wait for greeter configuration to finish'
+grep -Fqx 'depends-on = seatd' "$live_greetd" \
+  || fail 'live greetd does not wait for the seatd seat manager'
+grep -Fqx 'type = process' "$live_overlay/etc/dinit.d/seatd" \
+  || fail 'live seatd service is not a process service'
+grep -Fqx 'command = /usr/bin/seatd -g seat' "$live_overlay/etc/dinit.d/seatd" \
+  || fail 'live seatd service does not serve the seat group socket'
+grep -Fq 'usermod --append --groups seat' "$wrapper" \
+  || fail 'live autologin helper does not grant seatd access to the session users'
 ! grep -Fq 'greetd.service' "$pkgbuild" \
   || fail 'live autologin package must not replace greetd-dinit service files'
 ! grep -Fq 'pkgdir/etc/dinit.d/greetd' "$pkgbuild" \

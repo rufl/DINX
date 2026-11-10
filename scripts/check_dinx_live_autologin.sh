@@ -140,8 +140,8 @@ grep -Fqx 'type = process' "$live_overlay/etc/dinit.d/seatd" \
   || fail 'live seatd service is not a process service'
 grep -Fqx 'command = /usr/bin/seatd -g seat' "$live_overlay/etc/dinit.d/seatd" \
   || fail 'live seatd service does not serve the seat group socket'
-grep -Fq 'usermod --append --groups seat' "$wrapper" \
-  || fail 'live autologin helper does not grant seatd access to the session users'
+grep -Fq '$1 == "seat"' "$wrapper" \
+  || fail 'live autologin helper does not grant seatd access by editing the seat group entry'
 grep -Fq 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' "$wrapper" \
   || fail 'live autologin helper does not set an explicit PATH for dinit service execution'
 ! grep -Fq 'greetd.service' "$pkgbuild" \

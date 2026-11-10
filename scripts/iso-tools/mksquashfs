@@ -74,6 +74,35 @@ remove_vim_compat_aliases() {
   done
 }
 
+# Documentation payloads are dead weight in the live/install images: man-db,
+# man-pages and texinfo are builder-only, nothing runtime-reads man/info/help
+# pages or API references, and the ISO budget is enforced in
+# scripts/check_dinx_budget.sh. Keep only license artifacts under
+# usr/share/doc for REUSE compliance.
+strip_documentation() {
+  local root=$1
+  local rel doc_dir
+
+  [[ "$root" != / && -d "$root/usr/share" ]] || return 0
+
+  for rel in usr/share/man usr/share/gtk-doc usr/share/help usr/share/info; do
+    if [[ -d "$root/$rel" ]]; then
+      rm -rf -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed documentation path=%s\n' "$rel"
+    fi
+  done
+
+  doc_dir="$root/usr/share/doc"
+  if [[ -d "$doc_dir" ]]; then
+    find "$doc_dir" -mindepth 1 -type f \
+      ! -iname 'COPYING*' ! -iname 'LICENSE*' ! -iname 'LICEN[CS]E*' \
+      ! -iname 'copyright*' ! -iname 'COPYRIGHT*' ! -iname 'licencia*' \
+      -delete
+    find "$doc_dir" -mindepth 1 -depth -type d -empty -delete
+    printf 'dinx-final-squashfs: stripped non-license files under usr/share/doc\n'
+  fi
+}
+
 prune_excluded_packages() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
@@ -148,6 +177,7 @@ prune_excluded_packages() {
 
 if [[ -n "$source_root" ]]; then
   prune_excluded_packages "$source_root"
+  strip_documentation "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.

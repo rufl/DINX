@@ -17,7 +17,10 @@ for required in \
   '-Xdict-size 1M' \
   "'usr/src/linux*'" \
   "'var/cache/pacman/pkg/*'" \
-  "'var/log/*'"; do
+  "'var/log/*'" \
+  'strip_documentation()' \
+  'usr/share/man' \
+  'usr/share/gtk-doc'; do
   grep -Fq -- "$required" "$wrapper" || fail "compression wrapper is missing: $required"
 done
 

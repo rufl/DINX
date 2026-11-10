@@ -168,8 +168,8 @@ fi
 keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-populate)
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$keyring_populate_service" \
   || fail 'installed DINX keyring population command is incorrect'
-grep -Fqx 'depends-on = local.target' <<<"$keyring_populate_service" \
-  || fail 'installed DINX keyring population does not depend on local.target'
+grep -Fqx 'depends-on = pacman-init' <<<"$keyring_populate_service" \
+  || fail 'installed DINX keyring population does not wait for pacman-init'
 live_keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-keyring-populate)
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$live_keyring_populate_service" \
   || fail 'live DINX keyring population command is incorrect'

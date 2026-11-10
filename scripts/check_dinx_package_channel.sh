@@ -30,8 +30,8 @@ grep -Fqx 'Server = https://github.com/rufl/DINX/releases/download/dinx-packages
   "$keyring/dinx-mirrorlist" || fail 'keyring mirrorlist does not use the rolling package release'
 grep -Fq 'SigLevel = Required' "$keyring/dinx-configure-repository" \
   || fail 'keyring helper does not require signatures'
-grep -Fqx 'depends-on = local.target' "$keyring/dinx-keyring-populate.service" \
-  || fail 'installed DINX keyring population does not depend on local.target'
+grep -Fqx 'depends-on = pacman-init' "$keyring/dinx-keyring-populate.service" \
+  || fail 'installed DINX keyring population does not wait for pacman-init'
 grep -Fq 'boot.d/dinx-keyring-populate' "$keyring/PKGBUILD" \
   || fail 'DINX keyring population service is not enabled at boot'
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' "$live_keyring_service" \

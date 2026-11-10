@@ -16,6 +16,7 @@ live_keyring_service=distro/iso/iso-profiles/dinx/live-overlay/etc/dinit.d/dinx-
 for path in "$manifest" "$updater" "$refresh_workflow" "$publish_workflow" \
   "$contracts_workflow" "$keyring/PKGBUILD" "$keyring/dinx-keyring.install" \
   "$keyring/dinx-configure-repository" "$keyring/dinx-mirrorlist" \
+  "$keyring/dinx-keyring-bootstrap" "$keyring/dinx-keyring-bootstrap.service" \
   "$keyring/dinx-keyring-populate.service" "$live_keyring_service" \
   scripts/test_refresh_package_sources.py scripts/smoke_dinx_keyring_config.sh; do
   [[ -r "$path" ]] || fail "required package-channel input is missing: $path"
@@ -30,8 +31,13 @@ grep -Fqx 'Server = https://github.com/rufl/DINX/releases/download/dinx-packages
   "$keyring/dinx-mirrorlist" || fail 'keyring mirrorlist does not use the rolling package release'
 grep -Fq 'SigLevel = Required' "$keyring/dinx-configure-repository" \
   || fail 'keyring helper does not require signatures'
-grep -Fqx 'depends-on = pacman-init' "$keyring/dinx-keyring-populate.service" \
-  || fail 'installed DINX keyring population does not wait for pacman-init'
+grep -Fqx 'depends-on = dinx-keyring-bootstrap' "$keyring/dinx-keyring-populate.service" \
+  || fail 'installed DINX keyring population does not wait for its keyring bootstrap'
+grep -Fqx 'command = /usr/local/libexec/dinx-keyring-bootstrap' \
+  "$keyring/dinx-keyring-bootstrap.service" \
+  || fail 'installed DINX keyring bootstrap command is incorrect'
+grep -Fqx 'depends-on = local.target' "$keyring/dinx-keyring-bootstrap.service" \
+  || fail 'installed DINX keyring bootstrap does not wait for local.target'
 grep -Fq 'boot.d/dinx-keyring-populate' "$keyring/PKGBUILD" \
   || fail 'DINX keyring population service is not enabled at boot'
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' "$live_keyring_service" \

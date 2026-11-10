@@ -165,11 +165,18 @@ grep -Eq '^depends-on[[:space:]]*=[[:space:]]*login\.target$' <<<"$root_greetd_s
 if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then
   fail 'live-only autologin dependency leaked into the installed greetd service'
 fi
+keyring_bootstrap_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-bootstrap)
+grep -Fqx 'command = /usr/local/libexec/dinx-keyring-bootstrap' <<<"$keyring_bootstrap_service" \
+  || fail 'installed DINX keyring bootstrap command is incorrect'
+grep -Fqx 'stop-command = /usr/local/libexec/dinx-keyring-bootstrap stop' <<<"$keyring_bootstrap_service" \
+  || fail 'installed DINX keyring bootstrap does not unmount its temporary keyring'
+grep -Fqx 'depends-on = local.target' <<<"$keyring_bootstrap_service" \
+  || fail 'installed DINX keyring bootstrap does not wait for local.target'
 keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-populate)
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$keyring_populate_service" \
   || fail 'installed DINX keyring population command is incorrect'
-grep -Fqx 'depends-on = pacman-init' <<<"$keyring_populate_service" \
-  || fail 'installed DINX keyring population does not wait for pacman-init'
+grep -Fqx 'depends-on = dinx-keyring-bootstrap' <<<"$keyring_populate_service" \
+  || fail 'installed DINX keyring population does not wait for its keyring bootstrap'
 live_keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-keyring-populate)
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-populate' <<<"$live_keyring_populate_service" \
   || fail 'live DINX keyring population command is incorrect'
@@ -195,8 +202,10 @@ required_paths=(
   etc/dinit.d/greetd
   etc/dinit.d/dinx-plymouth-quit
   etc/dinit.d/boot.d/dinx-plymouth-quit
+  etc/dinit.d/dinx-keyring-bootstrap
   etc/dinit.d/dinx-keyring-populate
   etc/dinit.d/boot.d/dinx-keyring-populate
+  usr/local/libexec/dinx-keyring-bootstrap
   usr/local/libexec/dinx-keyring-populate
   usr/share/pacman/keyrings/dinx.gpg
   usr/share/pacman/keyrings/dinx-trusted

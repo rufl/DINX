@@ -1,6 +1,6 @@
 pkgname=dinx-keyring
 pkgver=20261031
-pkgrel=7
+pkgrel=8
 pkgdesc='DINX pacman repository trust and mirror configuration'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -12,6 +12,8 @@ source=(
   'dinx.gpg::https://github.com/rufl/DINX/releases/download/v0.1.0-alpha.12/dinx-package-signing-key.gpg'
   'dinx-mirrorlist'
   'dinx-configure-repository'
+  'dinx-keyring-bootstrap'
+  'dinx-keyring-bootstrap.service'
   'dinx-keyring-populate'
   'dinx-keyring-populate.service'
 )
@@ -19,8 +21,10 @@ sha256sums=(
   'dcebc6d08e1e46738e768bcd91ece5beb3ef4f8752079f0babba864fb41a6445'
   '709cce87bcef0560e63e6e7545a6306aa72fdb82f92f711f45bbe2c443b9a011'
   '34605f506fafb74cd509f597b6cf794795751c76019698a6d5e4d0b4229b22a8'
+  'cdd67f09763c1427b5c1cafa8f954cbc06ce94f230c513f988c0590d41bcaf1e'
+  '44a402111c9ee53be82f966c6bdc1148bd1f50111bb023a057486e74049eeeff'
   '22dab1ebd0e5ba7074c7011e228e6fb3e8b2a91551f2db1b4fdb38eeac200391'
-  '4df3e4b266a04d09289ed4f3676ae53b84e9748cbc975b209eabe72ade4bdc06'
+  '388e05456d087642a8108c1fd93fa736bd88d8a5476df9e20876c328c4b61f09'
 )
 
 build() {
@@ -46,6 +50,10 @@ package() {
     "$pkgdir/etc/pacman.d/dinx-mirrorlist"
   install -Dm755 "$srcdir/dinx-configure-repository" \
     "$pkgdir/usr/lib/dinx-keyring/configure-repository"
+  install -Dm755 "$srcdir/dinx-keyring-bootstrap" \
+    "$pkgdir/usr/local/libexec/dinx-keyring-bootstrap"
+  install -Dm644 "$srcdir/dinx-keyring-bootstrap.service" \
+    "$pkgdir/etc/dinit.d/dinx-keyring-bootstrap"
   install -Dm755 "$srcdir/dinx-keyring-populate" \
     "$pkgdir/usr/local/libexec/dinx-keyring-populate"
   install -Dm644 "$srcdir/dinx-keyring-populate.service" \

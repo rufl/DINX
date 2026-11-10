@@ -3,3 +3,5 @@ type = scripted
 command = /usr/local/libexec/dinx-keyring-populate
 restart = false
 depends-on = dinx-keyring-bootstrap
+before = greetd
+before = login.target

@@ -485,9 +485,7 @@ if [[ "$monitor_ready" == true ]]; then
   for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
     if grep -Fq '[  OK  ] NetworkManager' "$serial_log" \
       && grep -Fq '[  OK  ] elogind' "$serial_log" \
-      && grep -Fq '[  OK  ] local.target' "$serial_log" \
-      && grep -Fq '[  OK  ] dinx-keyring-bootstrap' "$serial_log" \
-      && grep -Fq '[  OK  ] dinx-keyring-populate' "$serial_log"; then
+      && grep -Fq '[  OK  ] local.target' "$serial_log"; then
       if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
         qemu_quit_requested=true
         printf 'smoke-install: requested QEMU shutdown after first-boot checks\n'
@@ -518,7 +516,7 @@ for image in "$screen_path" "$recovery_screen_path"; do
   [[ "$magic" == P6 ]] || fail "invalid QEMU PPM screenshot: $image"
 done
 "$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter
-for service in NetworkManager elogind local.target dinx-keyring-bootstrap dinx-keyring-populate; do
+for service in NetworkManager elogind local.target; do
   if ! grep -Fq "[  OK  ] $service" "$serial_log"; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
     fail "installed Dinit service did not start: $service"

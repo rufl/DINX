@@ -122,9 +122,14 @@ swap_image "$patched_rootfs" rootfs.img
 swap_image "$patched_livefs" livefs.img
 
 # The report emits one option group per line, sometimes two shell-quoted
-# tokens per line; word-split the full output, then strip the literal single
-# quotes so each token is passed verbatim.
-read -r -a boot_opts <<< "$(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)"
+# tokens per line; word-split each line, then strip the literal single quotes
+# so every token is passed verbatim.
+boot_opts=()
+while IFS= read -r opt_line; do
+  # Intentional word splitting: recorded values contain no spaces.
+  # shellcheck disable=SC2206
+  boot_opts+=($opt_line)
+done < <(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)
 for i in "${!boot_opts[@]}"; do
   boot_opts[$i]=${boot_opts[$i]//\'/}
 done

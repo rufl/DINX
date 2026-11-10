@@ -100,6 +100,24 @@ if grep -Fq '/etc/dinit.d/root-ro' <<<"$manifest" \
   || grep -Fq '/etc/dinit.d/early-root-rw.target' <<<"$manifest"; then
   fail 'live-only root remount overrides leaked into the installed rootfs'
 fi
+# man-db/man-pages/texinfo are builder-only; their payloads are stripped from
+# the final images (see scripts/iso-tools/mksquashfs strip_documentation).
+for stripped_path in \
+  usr/share/man \
+  usr/share/gtk-doc \
+  usr/share/help \
+  usr/share/info; do
+  if grep -Fq "squashfs-root/$stripped_path/" <<<"$manifest" \
+    || grep -Fq "squashfs-root/$stripped_path/" <<<"$livefs_manifest"; then
+    fail "documentation payload survived the final squashfs: $stripped_path"
+  fi
+done
+if grep -F 'squashfs-root/usr/share/doc/' <<<"$manifest" \
+  | grep -E '^-' \
+  | grep -Eiv '/(COPYING|LICEN[CS]E|copyright|licencia)[^/]*$' \
+  | grep -q .; then
+  fail 'non-license files survived under usr/share/doc in the rootfs'
+fi
 live_policy_path=etc/polkit-1/rules.d/00-dinx-live-passwordless.rules
 if grep -Fq "squashfs-root/$live_policy_path" <<<"$manifest"; then
   fail 'live-only Polkit authorization leaked into the installed rootfs'

@@ -28,15 +28,29 @@ else
   printf '%s\n' 'dinx-live-autologin: render group or live user unavailable; session will use CPU graphics' >&2
 fi
 
-for seat_user in dinx pearl-greeter; do
-  if getent group seat >/dev/null 2>&1 && getent passwd "$seat_user" >/dev/null 2>&1; then
-    if ! usermod --append --groups seat "$seat_user"; then
-      printf 'dinx-live-autologin: seat access unavailable for %s; compositor falls back to logind\n' "$seat_user" >&2
+if getent group seat >/dev/null 2>&1; then
+  for seat_user in dinx pearl-greeter; do
+    if getent passwd "$seat_user" >/dev/null 2>&1; then
+      if ! getent group seat | grep -Eq "(^|:|,)$seat_user(,|$)"; then
+        group_tmp=$(mktemp /etc/group.dinx-seat.XXXXXX)
+        awk -F: -v user="$seat_user" '
+          BEGIN { OFS = ":" }
+          $1 == "seat" && $4 !~ "(^|,)" user "(,|$)" {
+            $4 = ($4 == "" ? user : $4 "," user)
+          }
+          { print }
+        ' /etc/group > "$group_tmp"
+        chmod 0644 "$group_tmp"
+        mv -f "$group_tmp" /etc/group
+      fi
+    else
+      printf 'dinx-live-autologin: %s user unavailable; compositor falls back to logind\n' "$seat_user" >&2
     fi
-  else
-    printf 'dinx-live-autologin: seat group or %s user unavailable; compositor falls back to logind\n' "$seat_user" >&2
-  fi
-done
+  done
+  printf 'dinx-live-autologin: %s\n' "$(getent group seat)" >&2
+else
+  printf 'dinx-live-autologin: seat group unavailable; compositor falls back to logind\n' >&2
+fi
 
 if [ ! -r "$config" ]; then
   printf '%s\n' 'dinx-live-autologin: greetd configuration is missing' >&2

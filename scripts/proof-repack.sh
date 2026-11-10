@@ -55,5 +55,8 @@ fakeroot -- sh -c '
     chown 1000:1000 "$tree/var/spool/mail/dinx"
     chown 0:102 "$tree/etc/polkit-1/rules.d"
   fi
-  mksquashfs "$tree" "$out" -noappend -comp xz -b 1048576 -no-progress
+  # Single-threaded: the fakeroot stat interception is not thread-safe, and a
+  # threaded mksquashfs silently drops setuid/setgid bits (sudo, su, passwd).
+  mksquashfs "$tree" "$out" -noappend -comp xz -b 1048576 -no-progress \
+    -processors 1
 ' -- "$tree" "$kind" "$out"

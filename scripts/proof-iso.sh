@@ -122,6 +122,11 @@ swap_image "$patched_rootfs" rootfs.img
 swap_image "$patched_livefs" livefs.img
 
 mapfile -t boot_opts < <(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)
+# The recorded options embed shell-style single quotes; strip them so each
+# element is passed verbatim.
+for i in "${!boot_opts[@]}"; do
+  boot_opts[$i]=${boot_opts[$i]//\'/}
+done
 # Replay the recorded boot configuration; interval references point at the
 # cached ISO file and stay valid across rebuilds.
 rm -f "$output_iso"

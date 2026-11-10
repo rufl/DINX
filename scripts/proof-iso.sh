@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Build a locally patched proof ISO from a canonical P0 run artifact, with
-# same-day caching. Downloaded artifacts, checksum validation and extracted
-# payloads are reused until --force is given; only the final ISO assembly
-# always re-runs.
+# caching. Downloaded artifacts, checksum validation and the extracted ISO
+# tree are reused per run-id until --force is given; only the final ISO
+# assembly always re-runs.
 #
 # Usage:
 #   scripts/proof-iso.sh [--force] [--cache-dir DIR] <run-id> <patched-livefs.img> <output.iso>
@@ -13,10 +13,13 @@
 # Cache layout (default: dist/proof-cache):
 #   <run-id>.iso                    canonical artifact ISO
 #   <run-id>.build-metadata.txt     its build-metadata.txt
-#   <run-id>.validated              stamp written only after sha512 match
+#   <run-id>.validated              stamp holding the validated sha512
+#   <run-id>.tree/                  extracted ISO tree (livefs.img is the
+#                                   original squashfs; replaced per build)
 #
-# The output ISO drops /LiveOS/rootfs.img* (install payload, unused by the
-# live session) so the repacked image fits the original media size.
+# The patched livefs image is dropped into the extracted tree as
+# LiveOS/livefs.img together with its md5, then a fresh ISO is written with
+# mkisofs replaying the original El Torito/grub2-mbr boot configuration.
 set -euo pipefail
 
 force=false
@@ -44,7 +47,7 @@ repo_root=$(git -C "$script_dir/.." rev-parse --show-toplevel)
 cache_dir=${cache_dir:-"$repo_root/dist/proof-cache"}
 mkdir -p "$cache_dir"
 
-for command in gh xorriso sha512sum unzip; do
+for command in gh xorriso sha512sum md5sum unzip; do
   command -v "$command" >/dev/null 2>&1 || { printf 'missing required command: %s\n' "$command" >&2; exit 1; }
 done
 [[ -r $patched_livefs ]] || { printf 'patched livefs image not readable: %s\n' "$patched_livefs" >&2; exit 1; }
@@ -53,10 +56,10 @@ repo=$(git -C "$repo_root" remote get-url origin | sed -E 's#.*github\.com[:/]##
 cached_iso="$cache_dir/$run_id.iso"
 cached_metadata="$cache_dir/$run_id.build-metadata.txt"
 validated_stamp="$cache_dir/$run_id.validated"
+tree_dir="$cache_dir/$run_id.tree"
 
-artifact_iso_rel='iso/dinx/artix-dinx-dinit-20261110-x86_64.iso'
 download_artifact() {
-  local artifacts artifact_id tmp
+  local artifacts artifact_id tmp found metadata
   tmp=$(mktemp -d)
   artifacts=$(gh api "repos/$repo/actions/runs/$run_id/artifacts" --jq '[.artifacts | sort_by(.size_in_bytes) | reverse | .[0] | {id: .id, name: .name}] | .[0]')
   artifact_id=$(jq -r .id <<<"$artifacts")
@@ -69,13 +72,13 @@ download_artifact() {
   mv "$found" "$cached_iso"
   metadata=$(dirname "$found")/build-metadata.txt
   [[ -r $metadata ]] && cp "$metadata" "$cached_metadata"
-  rm -rf "$tmp"
+  rm -rf "$tmp" "$tree_dir"
 }
 
 if [[ ! -r $cached_iso || $force == true ]]; then
   download_artifact
 elif [[ -r $validated_stamp ]]; then
-  printf 'reusing cached validated artifact for run %s (stamp %s); pass --force to re-download\n' "$run_id" "$(cat "$validated_stamp")"
+  printf 'reusing cached validated artifact for run %s; pass --force to re-download\n' "$run_id"
 else
   printf 'cached artifact for run %s was never validated; validating\n' "$run_id"
 fi
@@ -92,20 +95,26 @@ actual_sha512=$(sha512sum "$cached_iso" | cut -d' ' -f1)
 if [[ ! -r $validated_stamp || $(cat "$validated_stamp") != "$expected_sha512" ]]; then
   printf '%s' "$expected_sha512" > "$validated_stamp"
 fi
-printf 'artifact validated: run=%s bytes=%s sha512=%s (stamp %s)\n' "$run_id" "$(grep -E '^iso_bytes=' "$cached_metadata" | cut -d= -f2)" "$expected_sha512" "$(date -u +%F)"
+printf 'artifact validated: run=%s bytes=%s sha512=%s (stamp %s)\n' \
+  "$run_id" "$(grep -E '^iso_bytes=' "$cached_metadata" | cut -d= -f2)" "$expected_sha512" "$(date -u +%F)"
 
-patched_md5=$(mktemp)
-md5sum "$patched_livefs" > "$patched_md5"
+if [[ ! -d $tree_dir/LiveOS ]]; then
+  printf 'extracting ISO tree for run %s (cached afterwards)\n' "$run_id"
+  rm -rf "$tree_dir"
+  mkdir -p "$tree_dir"
+  xorriso -osirrox on -indev "$cached_iso" -extract / "$tree_dir" >/dev/null 2>&1
+  chmod -R u+w "$tree_dir"
+fi
 
+cp "$patched_livefs" "$tree_dir/LiveOS/livefs.img"
+md5sum "$patched_livefs" | cut -d' ' -f1 | tr -d '\n' > "$tree_dir/LiveOS/livefs.img.md5"
+printf ' *%s\n' "$(basename "$patched_livefs")" >> "$tree_dir/LiveOS/livefs.img.md5"
+
+mapfile -t boot_opts < <(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)
+# Replay the recorded boot configuration; interval references point at the
+# cached ISO file and stay valid across rebuilds.
 rm -f "$output_iso"
-xorriso \
-  -indev "$cached_iso" \
-  -outdev "$output_iso" \
-  -rm /LiveOS/rootfs.img /LiveOS/rootfs.img.md5 \
-  -map "$patched_livefs" /LiveOS/livefs.img \
-  -map "$patched_md5" /LiveOS/livefs.img.md5 \
-  -boot_image any replay \
-  -commit -end
-rm -f "$patched_md5"
+xorriso -as mkisofs -r "${boot_opts[@]}" -o "$output_iso" "$tree_dir" >/dev/null 2>&1 \
+  || { printf 'mkisofs replay failed for run %s\n' "$run_id" >&2; exit 1; }
 
 printf 'proof ISO: %s (%s bytes)\n' "$output_iso" "$(stat -c %s "$output_iso")"

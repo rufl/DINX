@@ -140,9 +140,26 @@ grep -Fqx 'waits-for = firewalld' <<<"$live_autologin_service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
 ! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service combines dependencies into one unresolved service name'
+live_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
+grep -Fqx 'type = process' <<<"$live_greetd_service" \
+  || fail 'live greetd service is not a process service'
+grep -Fqx 'command = /usr/bin/greetd' <<<"$live_greetd_service" \
+  || fail 'live greetd service command is incorrect'
+grep -Fqx 'smooth-recovery = true' <<<"$live_greetd_service" \
+  || fail 'live greetd service does not preserve smooth recovery'
+grep -Fqx 'restart-delay = 7' <<<"$live_greetd_service" \
+  || fail 'live greetd service does not wait for Pearl Greeter teardown'
+grep -Fqx 'depends-on = login.target' <<<"$live_greetd_service" \
+  || fail 'live greetd service does not use the login target'
+grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_greetd_service" \
+  || fail 'live greetd service does not wait for greeter configuration'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
 grep -Fq 'command         = /usr/bin/greetd' <<<"$root_greetd_service" \
   || fail 'installed greetd service command is incorrect'
+grep -Fqx 'smooth-recovery  = true' <<<"$root_greetd_service" \
+  || fail 'installed greetd service does not preserve smooth recovery'
+grep -Fqx 'restart-delay    = 7' <<<"$root_greetd_service" \
+  || fail 'installed greetd service does not wait for Pearl Greeter teardown'
 grep -Fq 'depends-on      = login.target' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not use the login target'
 if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then

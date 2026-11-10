@@ -12,6 +12,7 @@ root_rw="$package_dir/early-root-rw.target"
 pkgbuild="$package_dir/PKGBUILD"
 root_overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 live_overlay="$root/distro/iso/iso-profiles/dinx/live-overlay"
+root_greetd_service="$root_overlay/etc/dinit.d/greetd"
 live_greetd="$live_overlay/etc/dinit.d/greetd"
 live_policy="$live_overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
 root_policy="$root_overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
@@ -25,7 +26,8 @@ fail() {
 }
 
 for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow" \
-  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy" "$live_greetd"; do
+  "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy" "$live_greetd" \
+  "$root_greetd_service"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -123,6 +125,10 @@ grep -Fqx 'type = process' "$live_greetd" \
   || fail 'live greetd override is not a process service'
 grep -Fqx 'command = /usr/bin/greetd' "$live_greetd" \
   || fail 'live greetd override does not start greetd'
+grep -Fqx 'smooth-recovery = true' "$live_greetd" \
+  || fail 'live greetd override does not preserve smooth recovery'
+grep -Fqx 'restart-delay = 7' "$live_greetd" \
+  || fail 'live greetd override does not wait for Pearl Greeter teardown'
 grep -Fqx 'depends-on = login.target' "$live_greetd" \
   || fail 'live greetd override dropped its login target dependency'
 grep -Fqx 'depends-on = dinx-live-autologin' "$live_greetd" \
@@ -147,8 +153,18 @@ done
 for unit in "$root_overlay/etc/dinit.d/root-ro" "$root_overlay/etc/dinit.d/early-root-rw.target"; do
   [[ ! -e "$unit" ]] || fail "live-only override leaked into installed rootfs overlay: $unit"
 done
-[[ ! -e "$root_overlay/etc/dinit.d/greetd" ]] \
-  || fail 'live greetd dependency override leaked into installed rootfs overlay'
+grep -Fqx 'type             = process' "$root_greetd_service" \
+  || fail 'installed greetd override is not a process service'
+grep -Fqx 'command          = /usr/bin/greetd' "$root_greetd_service" \
+  || fail 'installed greetd override does not start greetd'
+grep -Fqx 'smooth-recovery  = true' "$root_greetd_service" \
+  || fail 'installed greetd override does not preserve smooth recovery'
+grep -Fqx 'restart-delay    = 7' "$root_greetd_service" \
+  || fail 'installed greetd override does not wait for Pearl Greeter teardown'
+grep -Fqx 'depends-on       = login.target' "$root_greetd_service" \
+  || fail 'installed greetd override dropped its login target dependency'
+! grep -Fq 'dinx-live-autologin' "$root_greetd_service" \
+  || fail 'live-only autologin dependency leaked into the installed greetd service'
 [[ ! -e "$root_policy" ]] \
   || fail 'live-only Polkit authorization leaked into the installed rootfs overlay'
 grep -Fq 'subject.user === "dinx" && subject.local && subject.active' "$live_policy" \

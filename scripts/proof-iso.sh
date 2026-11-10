@@ -121,16 +121,17 @@ swap_image() {
 swap_image "$patched_rootfs" rootfs.img
 swap_image "$patched_livefs" livefs.img
 
-mapfile -t boot_opts < <(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)
-# The recorded options embed shell-style single quotes; strip them so each
-# element is passed verbatim.
+# The report emits one option group per line, sometimes two shell-quoted
+# tokens per line; word-split the full output, then strip the literal single
+# quotes so each token is passed verbatim.
+read -r -a boot_opts <<< "$(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)"
 for i in "${!boot_opts[@]}"; do
   boot_opts[$i]=${boot_opts[$i]//\'/}
 done
 # Replay the recorded boot configuration; interval references point at the
 # cached ISO file and stay valid across rebuilds.
 rm -f "$output_iso"
-xorriso -as mkisofs -r "${boot_opts[@]}" -o "$output_iso" "$tree_dir" >/dev/null 2>&1 \
+xorriso -as mkisofs -r "${boot_opts[@]}" -o "$output_iso" "$tree_dir" >/dev/null \
   || { printf 'mkisofs replay failed for run %s\n' "$run_id" >&2; exit 1; }
 
 printf 'proof ISO: %s (%s bytes)\n' "$output_iso" "$(stat -c %s "$output_iso")"

@@ -48,6 +48,19 @@ if getent group seat >/dev/null 2>&1; then
     fi
   done
   printf 'dinx-live-autologin: %s\n' "$(getent group seat)" >&2
+  # The session wrappers select the seatd backend only when /run/seatd.sock
+  # already exists at exec time. greetd and seatd are sibling dependencies, so
+  # without this wait the first live session races seatd startup and randomly
+  # falls back to the elogind backend, which never marks the greetd
+  # initial_session active under dinit.
+  seatd_wait=0
+  while [ ! -S /run/seatd.sock ] && [ "$seatd_wait" -lt 50 ]; do
+    sleep 0.1
+    seatd_wait=$((seatd_wait + 1))
+  done
+  if [ ! -S /run/seatd.sock ]; then
+    printf '%s\n' 'dinx-live-autologin: seatd socket did not appear; session will use logind' >&2
+  fi
 else
   printf 'dinx-live-autologin: seat group unavailable; compositor falls back to logind\n' >&2
 fi

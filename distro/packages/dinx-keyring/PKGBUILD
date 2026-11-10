@@ -1,6 +1,6 @@
 pkgname=dinx-keyring
 pkgver=20261031
-pkgrel=8
+pkgrel=9
 pkgdesc='DINX pacman repository trust and mirror configuration'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -24,7 +24,7 @@ sha256sums=(
   'cdd67f09763c1427b5c1cafa8f954cbc06ce94f230c513f988c0590d41bcaf1e'
   '44a402111c9ee53be82f966c6bdc1148bd1f50111bb023a057486e74049eeeff'
   '22dab1ebd0e5ba7074c7011e228e6fb3e8b2a91551f2db1b4fdb38eeac200391'
-  '388e05456d087642a8108c1fd93fa736bd88d8a5476df9e20876c328c4b61f09'
+  '0b4fa2fafd184eaebaba04cfdbfeb0d02209eaab17b7ded0764f124a8075f19a'
 )
 
 build() {

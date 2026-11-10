@@ -123,8 +123,8 @@ if grep -Eiq 'systemd|systemctl' "$greetd_config"; then
   fail 'greetd config contains a systemd integration'
 fi
 
-grep -Fq 'if [ -S /run/seatd.sock ]; then' "$greeter_wrapper" \
-  || fail 'Pearl Greeter does not prefer a running seatd for libseat'
+grep -Fq 'grep -qx seat' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not verify seatd group membership before selecting the seatd backend'
 grep -Fq 'export LIBSEAT_BACKEND=seatd' "$greeter_wrapper" \
   || fail 'Pearl Greeter does not select the seatd libseat backend'
 grep -Fq 'export LIBSEAT_BACKEND=logind' "$greeter_wrapper" \

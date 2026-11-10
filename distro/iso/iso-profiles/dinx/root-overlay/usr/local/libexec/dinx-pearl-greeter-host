@@ -8,7 +8,8 @@ graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
 dinx_apply_graphics_environment "$graphics_profile"
 
 if [ -z "${LIBSEAT_BACKEND:-}" ]; then
-  if [ -S /run/seatd.sock ]; then
+  if [ -S /run/seatd.sock ] \
+    && id -nG 2>/dev/null | tr ' ' '\n' | grep -qx seat; then
     export LIBSEAT_BACKEND=seatd
   else
     export LIBSEAT_BACKEND=logind

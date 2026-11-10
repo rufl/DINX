@@ -154,13 +154,13 @@ grep -Fqx 'depends-on = login.target' <<<"$live_greetd_service" \
 grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_greetd_service" \
   || fail 'live greetd service does not wait for greeter configuration'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
-grep -Fq 'command         = /usr/bin/greetd' <<<"$root_greetd_service" \
+grep -Eq '^command[[:space:]]*=[[:space:]]*/usr/bin/greetd$' <<<"$root_greetd_service" \
   || fail 'installed greetd service command is incorrect'
-grep -Fqx 'smooth-recovery  = true' <<<"$root_greetd_service" \
+grep -Eq '^smooth-recovery[[:space:]]*=[[:space:]]*true$' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not preserve smooth recovery'
-grep -Fqx 'restart-delay    = 7' <<<"$root_greetd_service" \
+grep -Eq '^restart-delay[[:space:]]*=[[:space:]]*7$' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not wait for Pearl Greeter teardown'
-grep -Fq 'depends-on      = login.target' <<<"$root_greetd_service" \
+grep -Eq '^depends-on[[:space:]]*=[[:space:]]*login\.target$' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not use the login target'
 if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then
   fail 'live-only autologin dependency leaked into the installed greetd service'

@@ -1026,6 +1026,8 @@ grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general 
 grep -Fq 'source_profile = false' <<<"$root_greetd_config" || fail 'installed greetd sources the greeter profile'
 grep -Fq 'vt = 7' <<<"$root_greetd_config" \
   || fail 'installed greetd does not use the dedicated VT, separate from tty1 getty'
+grep -Fq 'switch = true' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not switch to its VT before starting the greeter'
 grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' <<<"$root_greetd_config" \
   || fail 'installed greetd does not launch the graphics-safe Pearl Greeter wrapper'
 grep -Fq 'user = "pearl-greeter"' <<<"$root_greetd_config" \
@@ -1555,6 +1557,8 @@ live_autologin_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livef
 grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologin initial session is missing'
 grep -Fq 'vt = 7' <<<"$live_autologin_wrapper" \
   || fail 'live greetd does not use the dedicated VT, separate from tty1 getty'
+grep -Fq 'switch = true' <<<"$live_autologin_wrapper" \
+  || fail 'live greetd does not switch to its VT before starting the session'
 grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin does not mark its Aqueous/Pearl session as live'
 grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" <<<"$live_autologin_wrapper" \
   || fail 'live autologin does not persist hostname dinxlive'

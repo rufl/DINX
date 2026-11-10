@@ -1,6 +1,7 @@
 type = process
 command = /usr/bin/greetd
 smooth-recovery = true
+restart-delay = 7
 depends-on = login.target
 depends-on = dinx-live-autologin
 logfile = /var/log/dinit/greetd.log

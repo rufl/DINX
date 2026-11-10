@@ -8,18 +8,20 @@
 # assembly always re-runs.
 #
 # Usage:
-#   scripts/proof-iso.sh [--force] [--cache-dir DIR] <run-id> <patched-livefs.img> <output.iso>
+#   scripts/proof-iso.sh [--force] [--cache-dir DIR] <run-id> <patched-rootfs.img> <patched-livefs.img> <output.iso>
 #
 # Cache layout (default: dist/proof-cache):
 #   <run-id>.iso                    canonical artifact ISO
 #   <run-id>.build-metadata.txt     its build-metadata.txt
 #   <run-id>.validated              stamp holding the validated sha512
-#   <run-id>.tree/                  extracted ISO tree (livefs.img is the
-#                                   original squashfs; replaced per build)
+#   <run-id>.tree/                  extracted ISO tree (both SquashFS images
+#                                   are the originals; replaced per build)
 #
-# The patched livefs image is dropped into the extracted tree as
-# LiveOS/livefs.img together with its md5, then a fresh ISO is written with
-# mkisofs replaying the original El Torito/grub2-mbr boot configuration.
+# The Artix dinit live layout keeps the full system in rootfs.img (live boot
+# base and Calamares install source) and live-only overrides in livefs.img.
+# Both patched images are dropped into the extracted tree together with their
+# md5 files, then a fresh ISO is written with mkisofs replaying the original
+# El Torito/grub2-mbr boot configuration.
 set -euo pipefail
 
 force=false
@@ -37,10 +39,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ ${#positional[@]} -eq 3 ]] || { printf 'usage: %s [--force] [--cache-dir DIR] <run-id> <patched-livefs.img> <output.iso>\n' "$0" >&2; exit 2; }
+[[ ${#positional[@]} -eq 4 ]] || { printf 'usage: %s [--force] [--cache-dir DIR] <run-id> <patched-rootfs.img> <patched-livefs.img> <output.iso>\n' "$0" >&2; exit 2; }
 run_id=${positional[0]}
-patched_livefs=${positional[1]}
-output_iso=${positional[2]}
+patched_rootfs=${positional[1]}
+patched_livefs=${positional[2]}
+output_iso=${positional[3]}
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 repo_root=$(git -C "$script_dir/.." rev-parse --show-toplevel)
@@ -50,6 +53,7 @@ mkdir -p "$cache_dir"
 for command in gh xorriso sha512sum md5sum unzip; do
   command -v "$command" >/dev/null 2>&1 || { printf 'missing required command: %s\n' "$command" >&2; exit 1; }
 done
+[[ -r $patched_rootfs ]] || { printf 'patched rootfs image not readable: %s\n' "$patched_rootfs" >&2; exit 1; }
 [[ -r $patched_livefs ]] || { printf 'patched livefs image not readable: %s\n' "$patched_livefs" >&2; exit 1; }
 
 repo=$(git -C "$repo_root" remote get-url origin | sed -E 's#.*github\.com[:/]##; s#\.git$##')
@@ -106,9 +110,16 @@ if [[ ! -d $tree_dir/LiveOS ]]; then
   chmod -R u+w "$tree_dir"
 fi
 
-cp "$patched_livefs" "$tree_dir/LiveOS/livefs.img"
-md5sum "$patched_livefs" | cut -d' ' -f1 | tr -d '\n' > "$tree_dir/LiveOS/livefs.img.md5"
-printf ' *%s\n' "$(basename "$patched_livefs")" >> "$tree_dir/LiveOS/livefs.img.md5"
+swap_image() {
+  local source=$1 target_name=$2
+  cp "$source" "$tree_dir/LiveOS/$target_name"
+  {
+    md5sum "$source" | cut -d' ' -f1 | tr -d '\n'
+    printf ' *%s\n' "$target_name"
+  } > "$tree_dir/LiveOS/$target_name.md5"
+}
+swap_image "$patched_rootfs" rootfs.img
+swap_image "$patched_livefs" livefs.img
 
 mapfile -t boot_opts < <(xorriso -indev "$cached_iso" -report_el_torito as_mkisofs 2>/dev/null)
 # Replay the recorded boot configuration; interval references point at the

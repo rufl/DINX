@@ -26,6 +26,16 @@ else
   printf '%s\n' 'dinx-live-autologin: render group or live user unavailable; session will use CPU graphics' >&2
 fi
 
+for seat_user in dinx pearl-greeter; do
+  if getent group seat >/dev/null 2>&1 && getent passwd "$seat_user" >/dev/null 2>&1; then
+    if ! usermod --append --groups seat "$seat_user"; then
+      printf 'dinx-live-autologin: seat access unavailable for %s; compositor falls back to logind\n' "$seat_user" >&2
+    fi
+  else
+    printf 'dinx-live-autologin: seat group or %s user unavailable; compositor falls back to logind\n' "$seat_user" >&2
+  fi
+done
+
 if [ ! -r "$config" ]; then
   printf '%s\n' 'dinx-live-autologin: greetd configuration is missing' >&2
   exit 1

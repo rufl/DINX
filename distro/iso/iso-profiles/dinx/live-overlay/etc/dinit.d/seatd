@@ -1,0 +1,5 @@
+type = process
+command = /usr/bin/seatd -g seat
+restart = true
+depends-on = local.target
+logfile = /var/log/dinit/seatd.log

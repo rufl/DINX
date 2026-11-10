@@ -7,7 +7,13 @@ graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
 . /usr/local/libexec/dinx-graphics-environment.sh
 dinx_apply_graphics_environment "$graphics_profile"
 
-export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"
+if [ -z "${LIBSEAT_BACKEND:-}" ]; then
+  if [ -S /run/seatd.sock ]; then
+    export LIBSEAT_BACKEND=seatd
+  else
+    export LIBSEAT_BACKEND=logind
+  fi
+fi
 export HOME=/var/empty/pearl-greeter
 export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config
 export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share

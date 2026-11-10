@@ -4,4 +4,5 @@ smooth-recovery = true
 restart-delay = 7
 depends-on = login.target
 depends-on = dinx-live-autologin
+depends-on = seatd
 logfile = /var/log/dinit/greetd.log

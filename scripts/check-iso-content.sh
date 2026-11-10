@@ -837,8 +837,12 @@ grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$gre
 grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not load the shared renderer policy'
 grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not apply the selected renderer'
 grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' <<<"$greeter_wrapper" || fail 'Pearl Greeter wrapper does not execute its packaged host'
-grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter does not select elogind for libseat'
+grep -Fq 'if [ -S /run/seatd.sock ]; then' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter does not prefer a running seatd for libseat'
+grep -Fq 'export LIBSEAT_BACKEND=seatd' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter does not select the seatd libseat backend'
+grep -Fq 'export LIBSEAT_BACKEND=logind' <<<"$greeter_wrapper" \
+  || fail 'Pearl Greeter does not fall back to elogind for libseat'
 grep -Fq 'export HOME=/var/empty/pearl-greeter' <<<"$greeter_wrapper" \
   || fail 'Pearl Greeter does not use its root-owned trusted home'
 grep -Fq 'export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config' <<<"$greeter_wrapper" \

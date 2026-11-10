@@ -217,8 +217,10 @@ for calamares_service in "${calamares_enabled_services[@]}"; do
   printf 'smoke-install: enabling Calamares Dinit service %s\n' "$calamares_service"
   chroot "$target_dir" "$calamares_service_command" enable "$calamares_service" >/dev/null \
     || fail "Calamares Dinit service enablement failed: $calamares_service"
-  [[ -e "$target_dir/etc/dinit.d/boot.d/$calamares_service" ]] \
-    || fail "Calamares Dinit service is not enabled: $calamares_service"
+  [[ -L "$target_dir/etc/dinit.d/boot.d/$calamares_service" ]] \
+    || fail "Calamares Dinit service link is missing: $calamares_service"
+  chroot "$target_dir" /usr/bin/test -e "/etc/dinit.d/boot.d/$calamares_service" \
+    || fail "Calamares Dinit service link is unresolved: $calamares_service"
 done
 
 printf 'smoke-install: running system-user provisioning before Calamares user creation\n'

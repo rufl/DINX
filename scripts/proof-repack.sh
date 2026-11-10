@@ -6,18 +6,23 @@
 # original ownerships, using fakeroot to apply the ownership exceptions that
 # only root can preserve.
 #
-# Usage: scripts/proof-repack.sh <tree> <rootfs|livefs> <output.img>
+# Usage: scripts/proof-repack.sh <tree> <rootfs|livefs> <output.img> [original.img]
 #
 # rootfs exceptions (from the original image's non-root entries):
 #   polkit rules dir, sgid tty/clock/dbus helpers, service state dirs.
 # livefs exceptions: the live user home (/home/dinx) and its mail spool keep
 # uid/gid 1000; the polkit rules dir keeps group polkitd.
+#
+# unsquashfs as a non-root user drops setuid/setgid bits at extraction time;
+# when [original.img] is given, the bits are restored in the tree from the
+# original image's mode table before packing.
 set -euo pipefail
 
-[[ $# -eq 3 ]] || { printf 'usage: %s <tree> <rootfs|livefs> <output.img>\n' "$0" >&2; exit 2; }
+[[ $# -ge 3 ]] || { printf 'usage: %s <tree> <rootfs|livefs> <output.img> [original.img]\n' "$0" >&2; exit 2; }
 tree=$1
 kind=$2
 out=$3
+orig=${4:-}
 [[ -d $tree ]] || { printf 'tree not found: %s\n' "$tree" >&2; exit 1; }
 case "$kind" in
   rootfs|livefs) ;;
@@ -29,9 +34,25 @@ done
 tree=$(readlink -f "$tree")
 out=$(readlink -f "$out")
 
+# Restore setuid/setgid/sticky bits that a non-root unsquashfs dropped at
+# extraction time, using the original image's mode table. Runs outside
+# fakeroot: the extracted files are owned by the invoking user, so chmod is
+# permitted, and mksquashfs (with fakeroot ownership) preserves the bits.
+if [[ -n $orig && -r $orig ]]; then
+  orig=$(readlink -f "$orig")
+  while read -r perms path; do
+    rel=${path#squashfs-root/}
+    [[ -e $tree/$rel ]] || continue
+    [[ ${perms:3:1} == [sS] ]] && chmod u+s "$tree/$rel"
+    [[ ${perms:6:1} == [sS] ]] && chmod g+s "$tree/$rel"
+    [[ ${perms:9:1} == [tT] ]] && chmod +t "$tree/$rel"
+  done < <(unsquashfs -ll "$orig" 2>/dev/null \
+      | awk '$NF ~ /^squashfs-root\// && $1 ~ /[sStT]/ { print $1, $NF }')
+fi
+
 fakeroot -- sh -c '
   set -e
-  tree=$1; kind=$2; out=$3
+  tree=$1; kind=$2; out=$3; orig=$4
   chown -R 0:0 "$tree"
   if [[ $kind == rootfs ]]; then
     chown 0:102 "$tree/etc/polkit-1/rules.d"
@@ -59,4 +80,4 @@ fakeroot -- sh -c '
   # threaded mksquashfs silently drops setuid/setgid bits (sudo, su, passwd).
   mksquashfs "$tree" "$out" -noappend -comp xz -b 1048576 -no-progress \
     -processors 1
-' -- "$tree" "$kind" "$out"
+' -- "$tree" "$kind" "$out" "$orig"

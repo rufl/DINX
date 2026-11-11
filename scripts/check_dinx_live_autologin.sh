@@ -60,8 +60,6 @@ grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' "$root_greetd"
   || fail 'installed greetd fallback does not launch the graphics-safe Pearl Greeter wrapper'
 grep -Fqx 'vt = 7' "$root_greetd" \
   || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
-grep -Fqx 'switch = true' "$root_greetd" \
-  || fail 'installed greetd must switch to its VT before starting the greeter'
 grep -Fq 'user = "pearl-greeter"' "$root_greetd" \
   || fail 'installed greetd fallback user is not the dedicated Pearl Greeter account'
 ! grep -Fq '[initial_session]' "$root_greetd" \
@@ -76,8 +74,6 @@ grep -Fqx '    - render' "$users_conf" \
 grep -Fq "AUTOLOGIN=true" "$wrapper" || fail 'live wrapper does not guard on AUTOLOGIN=true'
 grep -Fq 'vt = 7' "$wrapper" \
   || fail 'live greetd must use its dedicated VT, separate from tty1 getty'
-grep -Fq 'switch = true' "$wrapper" \
-  || fail 'live greetd must switch to its VT before starting the session'
 grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure greetd initial_session'
 grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
   || fail 'live initial Aqueous/Pearl command does not mark the live session'

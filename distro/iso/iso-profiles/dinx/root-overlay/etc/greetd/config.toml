@@ -1,6 +1,5 @@
 [terminal]
 vt = 7
-switch = true
 
 [general]
 source_profile = false

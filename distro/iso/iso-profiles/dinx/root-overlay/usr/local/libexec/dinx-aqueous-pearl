@@ -112,12 +112,6 @@ if [ -n "${HOME:-}" ]; then
   /usr/local/libexec/dinx-qt6ct-palette-seed \
     "$config_home/qt6ct/colors/DINX.conf" \
     /etc/skel/.config/qt6ct/colors/DINX.conf
-if [ "${DINX_LIVE_SESSION:-}" = 1 ]; then
-  diagnostic_state_home=${XDG_STATE_HOME:-${HOME:-/nonexistent}/.local/state}
-  printf 'DINX live compositor launch: pid=%s uid=%s HOME=%s XDG_STATE_HOME=%s\n' \
-    "$$" "$(id -u)" "${HOME:-<unset>}" "$diagnostic_state_home" >&2
-fi
-
 fi
 
 if [ -n "${HOME:-}" ] \

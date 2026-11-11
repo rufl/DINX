@@ -45,6 +45,7 @@ if [[ "$mode" == static ]]; then
 fi
 
 DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
+DINX_QEMU_BOOT_KEYS=ret \
 DINX_QEMU_VIDEO_DEVICE= \
 DINX_QEMU_LOG="$iso_dir/dinx-vga.qemu.log" \
 DINX_QEMU_BOOT_SCREENSHOT="$iso_dir/dinx-boot-screen.ppm" \
@@ -59,6 +60,7 @@ DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
 
 DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
+DINX_QEMU_BOOT_KEYS=ret \
 DINX_QEMU_VIDEO_DEVICE=virtio-vga \
 DINX_QEMU_LOG="$iso_dir/dinx-virtio-vga.qemu.log" \
 DINX_QEMU_BOOT_SCREENSHOT="$iso_dir/dinx-virtio-vga-boot-screen.ppm" \

@@ -28,8 +28,10 @@ sha256sums=(
 prepare() {
   cd "$srcdir/paru-$pkgver"
   cargo update alpm alpm-utils
-  # Paru 2.1.0 locks openssl-sys 0.9.109, which rejects Artix OpenSSL 4.1.
-  # Keep the upstream release while pinning 4.x support with OpenSSL 4.1 fixes.
+  # Paru 2.1.0 locks Rust OpenSSL bindings that predate Artix OpenSSL 4.1.
+  # Keep the upstream release while pinning the first bindings with 4.x support
+  # and the sys crate containing the later OpenSSL 4.1 fixes.
+  cargo update -p openssl --precise 0.10.78
   cargo update -p openssl-sys --precise 0.9.118
   cargo fetch --locked --target "$(rustc -vV | sed -n 's|host: ||p')"
 }

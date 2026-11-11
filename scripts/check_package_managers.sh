@@ -43,6 +43,8 @@ grep -Fq 'pkgver="$PARU_VERSION"' distro/packages/paru/PKGBUILD \
   || fail 'paru PKGBUILD version is not wired to source.env'
 grep -Fq '"$PARU_SOURCE_SHA256"' distro/packages/paru/PKGBUILD \
   || fail 'paru PKGBUILD checksum is not wired to source.env'
+grep -Fq 'cargo update -p openssl-sys --precise 0.9.118' distro/packages/paru/PKGBUILD \
+  || fail 'paru does not pin an openssl-sys release compatible with Artix OpenSSL 4.1'
 
 [[ "$SHELLY_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Shelly version: $SHELLY_VERSION"
 [[ "$SHELLY_SOURCE_URL" == *"Seafoam-Labs/Shelly-ALPM/releases/download/"*"/Shelly-ALPM-linux-x64.tar.gz" ]] \

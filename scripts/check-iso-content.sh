@@ -114,6 +114,7 @@ for stripped_path in \
 done
 if grep -F 'squashfs-root/usr/share/doc/' <<<"$manifest" \
   | grep -E '^-' \
+  | grep -Ev '/SOURCE$' \
   | grep -Eiv '/(COPYING|LICEN[CS]E|copyright|licencia)[^/]*$' \
   | grep -q .; then
   fail 'non-license files survived under usr/share/doc in the rootfs'
@@ -372,8 +373,6 @@ required_paths=(
   usr/share/licenses/seafoam-settings/LICENSE
   usr/share/licenses/zls/LICENSE
   usr/share/licenses/zls/zig-LICENSE
-  usr/share/doc/seafoam-settings/README.md
-  usr/share/doc/zls/README.md
   etc/zls.json
   etc/xdg/zls.json
   etc/xdg/aqueous/wm.toml

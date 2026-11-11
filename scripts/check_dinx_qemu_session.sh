@@ -117,8 +117,10 @@ marker=identity
 if ! grep -Eiq '(^|[^[:alnum:]_])(pearl|aqueous|dinx)([^[:alnum:]_]|$)' <<<"$recognized"; then
   if grep -Eiq '(^|[^[:alnum:]_])Desktop([^[:alnum:]_]|$)' <<<"$recognized" \
     && grep -Eiq 'English[[:space:]]+\(US\)' <<<"$recognized" \
-    && grep -Eiq '[0-2]?[[:digit:]]:[0-5][[:digit:]]' <<<"$recognized"; then
+    && grep -Eiq '[0-2]?[[:digit:]][:-][0-5][[:digit:]]' <<<"$recognized"; then
     marker=pearl-panel
+  elif grep -Eiq 'dinx' <<<"$recognized"; then
+    marker=dinx-desktop
   else
     printf 'dinx-qemu-session: no Pearl/Aqueous desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
     exit 1

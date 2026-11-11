@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+type = process
+command = /usr/local/libexec/dinx-live-session
+restart = true
+restart-delay = 5
+depends-on = local.target
+depends-on = dinx-live-autologin
+depends-on = seatd
+waits-for = firewalld

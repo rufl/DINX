@@ -73,6 +73,7 @@ for session_path in "$session_dir"/*.desktop; do
 done
 [[ -x "$greeter_wrapper" ]] || fail 'Pearl Greeter wrapper is not executable'
 [[ -x "$aqueous_wrapper" ]] || fail 'Aqueous session wrapper is not executable'
+sh -n "$aqueous_wrapper" || fail 'Aqueous session wrapper has invalid shell syntax'
 [[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
 [[ -x "$theme_sync" ]] || fail 'GTK/Qt session theme synchronizer is not executable'
 sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
@@ -217,6 +218,12 @@ grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
   || fail 'GTK4 renderer selection is not automatic for CPU, virtual GL and Vulkan profiles'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not launch the selected compositor'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$aqueous_wrapper" \
+  || fail 'Aqueous live session does not use its private runtime directory'
+grep -Fq 'lock_path=$XDG_RUNTIME_DIR/dinx-aqueous-pearl.lock' "$aqueous_wrapper" \
+  || fail 'Aqueous compositor lock is not scoped to the session runtime directory'
+grep -Fq 'flock -n 9' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not reject a duplicate compositor instance'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
   fail 'Aqueous session still forces the failing Lavapipe compositor path'
 fi

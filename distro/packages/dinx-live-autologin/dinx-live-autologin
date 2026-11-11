@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
 set -eu
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
@@ -6,19 +7,14 @@ export PATH
 live_conf=/etc/artools/live.conf
 printf '%s\n' 'dinxlive' > /etc/hostname
 hostname dinxlive
-install -d -o pearl-greeter -g pearl-greeter -m 0700 \
-  /var/lib/pearl-greeter \
-  /var/lib/pearl-greeter/.config \
-  /var/lib/pearl-greeter/.local \
-  /var/lib/pearl-greeter/.local/share \
-  /var/lib/pearl-greeter/.local/state \
-  /var/cache/pearl-greeter
 
-config=/etc/greetd/config.toml
+# The live session runs without a display manager; its runtime dir is
+# provisioned here so it never depends on elogind's /run/user/UID lifecycle.
+install -d -o dinx -g dinx -m 0700 /run/dinx-session
+
 if [ ! -r "$live_conf" ] || ! grep -Eq '^[[:space:]]*AUTOLOGIN=true([[:space:]]*)$' "$live_conf"; then
   exit 0
 fi
-
 
 if getent group render >/dev/null 2>&1 && getent passwd dinx >/dev/null 2>&1; then
   if ! usermod --append --groups render dinx; then
@@ -28,31 +24,25 @@ else
   printf '%s\n' 'dinx-live-autologin: render group or live user unavailable; session will use CPU graphics' >&2
 fi
 
-if getent group seat >/dev/null 2>&1; then
-  for seat_user in dinx pearl-greeter; do
-    if getent passwd "$seat_user" >/dev/null 2>&1; then
-      if ! getent group seat | grep -Eq "(^|:|,)$seat_user(,|$)"; then
-        group_tmp=$(mktemp /etc/group.dinx-seat.XXXXXX)
-        awk -F: -v user="$seat_user" '
-          BEGIN { OFS = ":" }
-          $1 == "seat" && $4 !~ "(^|,)" user "(,|$)" {
-            $4 = ($4 == "" ? user : $4 "," user)
-          }
-          { print }
-        ' /etc/group > "$group_tmp"
-        chmod 0644 "$group_tmp"
-        mv -f "$group_tmp" /etc/group
-      fi
-    else
-      printf 'dinx-live-autologin: %s user unavailable; compositor falls back to logind\n' "$seat_user" >&2
-    fi
-  done
+if getent group seat >/dev/null 2>&1 && getent passwd dinx >/dev/null 2>&1; then
+  if ! getent group seat | grep -Eq '(^|:|,)dinx(,|$)'; then
+    group_tmp=$(mktemp /etc/group.dinx-seat.XXXXXX)
+    awk -F: '
+      BEGIN { OFS = ":" }
+      $1 == "seat" && $4 !~ "(^|,)dinx(,|$)" {
+        $4 = ($4 == "" ? "dinx" : $4 ",dinx")
+      }
+      { print }
+    ' /etc/group > "$group_tmp"
+    chmod 0644 "$group_tmp"
+    mv -f "$group_tmp" /etc/group
+  fi
   printf 'dinx-live-autologin: %s\n' "$(getent group seat)" >&2
-  # The session wrappers select the seatd backend only when /run/seatd.sock
-  # already exists at exec time. greetd and seatd are sibling dependencies, so
-  # without this wait the first live session races seatd startup and randomly
-  # falls back to the elogind backend, which never marks the greetd
-  # initial_session active under dinit.
+  # The session wrapper selects the seatd backend only when /run/seatd.sock
+  # already exists at exec time. The session service and seatd are sibling
+  # dependencies, so without this wait the first live session races seatd
+  # startup and can fall back to the elogind backend, which never marks the
+  # session active under dinit.
   seatd_wait=0
   while [ ! -S /run/seatd.sock ] && [ "$seatd_wait" -lt 50 ]; do
     sleep 0.1
@@ -62,36 +52,5 @@ if getent group seat >/dev/null 2>&1; then
     printf '%s\n' 'dinx-live-autologin: seatd socket did not appear; session will use logind' >&2
   fi
 else
-  printf 'dinx-live-autologin: seat group unavailable; compositor falls back to logind\n' >&2
+  printf '%s\n' 'dinx-live-autologin: seat group or live user unavailable; compositor falls back to logind' >&2
 fi
-
-if [ ! -r "$config" ]; then
-  printf '%s\n' 'dinx-live-autologin: greetd configuration is missing' >&2
-  exit 1
-fi
-
-tmp=$(mktemp "${config}.dinx-live.XXXXXX")
-cleanup() {
-  rm -f "$tmp"
-}
-trap cleanup EXIT INT TERM
-
-cat > "$tmp" <<'EOF'
-[terminal]
-vt = 7
-
-[general]
-source_profile = false
-
-[default_session]
-command = "/usr/local/libexec/dinx-pearl-greeter-host"
-user = "pearl-greeter"
-
-[initial_session]
-command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"
-user = "dinx"
-EOF
-
-chmod 0644 "$tmp"
-mv -f "$tmp" "$config"
-trap - EXIT INT TERM

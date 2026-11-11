@@ -72,12 +72,8 @@ grep -Fqx '    - render' "$users_conf" \
   || fail 'installed users are missing DRM render-node access'
 
 grep -Fq "AUTOLOGIN=true" "$wrapper" || fail 'live wrapper does not guard on AUTOLOGIN=true'
-grep -Fq 'vt = 7' "$wrapper" \
-  || fail 'live greetd must use its dedicated VT, separate from tty1 getty'
-grep -Fq '[initial_session]' "$wrapper" || fail 'live wrapper does not configure greetd initial_session'
-grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' "$wrapper" \
-  || fail 'live initial Aqueous/Pearl command does not mark the live session'
-grep -Fq 'user = "dinx"' "$wrapper" || fail 'live initial session user is missing'
+grep -Fq 'install -d -o dinx -g dinx -m 0700 /run/dinx-session' "$wrapper" \
+  || fail 'live wrapper does not provision the private session runtime dir'
 grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
   || fail 'live user is missing DRM render-node access'
 grep -Fq 'getent group render' "$wrapper" \
@@ -91,21 +87,6 @@ autologin_gate_line=$(grep -nF 'if [ ! -r "$live_conf" ]' "$wrapper" | cut -d: -
   || fail 'live greeter startup must not run keyring operations that can block greetd'
 ((hostname_setup_line < autologin_gate_line)) \
   || fail 'hostname setup is incorrectly gated on autologin'
-grep -Fq 'install -d -o pearl-greeter -g pearl-greeter -m 0700 \' "$wrapper" \
-  || fail 'live boot does not provision Pearl Greeter runtime directories'
-for greeter_path in \
-  /var/lib/pearl-greeter \
-  /var/lib/pearl-greeter/.config \
-  /var/lib/pearl-greeter/.local \
-  /var/lib/pearl-greeter/.local/share \
-  /var/lib/pearl-greeter/.local/state \
-  /var/cache/pearl-greeter; do
-  grep -Fq "$greeter_path" "$wrapper" \
-    || fail "live boot does not provision Pearl Greeter runtime path: $greeter_path"
-done
-greeter_dirs_setup_line=$(grep -nF 'install -d -o pearl-greeter' "$wrapper" | cut -d: -f1)
-((greeter_dirs_setup_line < autologin_gate_line)) \
-  || fail 'Pearl Greeter runtime directories are incorrectly gated on autologin'
 grep -Fqx 'depends-on = local.target' "$service" \
   || fail 'live hostname service does not depend on local.target'
 grep -Fqx 'depends-on = artix-live' "$service" \
@@ -114,36 +95,49 @@ grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live autologin must not be gated on pacman keyring setup'
 grep -Fqx 'waits-for = firewalld' "$service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
-grep -Fq "depends=('dinit' 'greetd' 'firewalld-dinit')" "$pkgbuild" \
-  || fail 'live autologin dependencies must not include pacman keyring setup'
+grep -Fq "depends=('dinit' 'seatd' 'firewalld-dinit')" "$pkgbuild" \
+  || fail 'live autologin dependencies must be dinit, seatd and firewalld-dinit only'
 grep -Fq "'firewalld-dinit'" "$pkgbuild" \
   || fail 'live autologin package does not declare its Firewalld service dependency'
 ! grep -Fqx 'depends-on = local.target artix-live' "$service" \
   || fail 'live hostname service combines dependencies into one unresolved service name'
 grep -Fq 'before = greetd' "$service" || fail 'live autologin service does not precede greetd'
 grep -Fq 'before = login.target' "$service" || fail 'live autologin service does not precede the login target'
-grep -Fqx 'type = process' "$live_greetd" \
-  || fail 'live greetd override is not a process service'
-grep -Fqx 'command = /usr/bin/greetd' "$live_greetd" \
-  || fail 'live greetd override does not start greetd'
-grep -Fqx 'smooth-recovery = true' "$live_greetd" \
-  || fail 'live greetd override does not preserve smooth recovery'
-grep -Fqx 'restart-delay = 7' "$live_greetd" \
-  || fail 'live greetd override does not wait for Pearl Greeter teardown'
-grep -Fqx 'depends-on = login.target' "$live_greetd" \
-  || fail 'live greetd override dropped its login target dependency'
-grep -Fqx 'depends-on = dinx-live-autologin' "$live_greetd" \
-  || fail 'live greetd does not wait for greeter configuration to finish'
-grep -Fqx 'depends-on = seatd' "$live_greetd" \
-  || fail 'live greetd does not wait for the seatd seat manager'
+grep -Fqx 'type = scripted' "$live_greetd" \
+  || fail 'live greetd shadow is not a scripted no-op service'
+grep -Fqx 'command = /bin/true' "$live_greetd" \
+  || fail 'live greetd shadow does not disable the display manager'
+session_service="$package_dir/dinx-live-session.service"
+session_launcher="$package_dir/dinx-live-session"
+[[ -r "$session_service" && -r "$session_launcher" ]] || fail 'live session service or launcher is missing'
+[[ -x "$session_launcher" ]] || fail 'live session launcher is not executable'
+sh -n "$session_launcher" || fail 'live session launcher has invalid shell syntax'
+grep -Fqx 'type = process' "$session_service" \
+  || fail 'live session service is not a process service'
+grep -Fqx 'command = /usr/local/libexec/dinx-live-session' "$session_service" \
+  || fail 'live session service command is incorrect'
+grep -Fqx 'depends-on = seatd' "$session_service" \
+  || fail 'live session does not wait for the seatd seat manager'
+grep -Fqx 'depends-on = dinx-live-autologin' "$session_service" \
+  || fail 'live session does not wait for live boot preparation'
+grep -Fq 'runuser -u dinx' "$session_launcher" \
+  || fail 'live session does not start as the dinx user'
+grep -Fq 'DINX_LIVE_SESSION=1' "$session_launcher" \
+  || fail 'live session launcher does not mark the session as live'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' "$session_launcher" \
+  || fail 'live session launcher does not start the Aqueous/Pearl wrapper'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$session_launcher" \
+  || fail 'live session launcher does not select the private runtime dir'
+grep -Fq 'boot.d/dinx-live-session' "$pkgbuild" \
+  || fail 'live session service is not linked into dinit boot'
 grep -Fqx 'type = process' "$live_overlay/etc/dinit.d/seatd" \
   || fail 'live seatd service is not a process service'
 grep -Fqx 'command = /usr/bin/seatd -g seat' "$live_overlay/etc/dinit.d/seatd" \
   || fail 'live seatd service does not serve the seat group socket'
 grep -Fq '$1 == "seat"' "$wrapper" \
-  || fail 'live autologin helper does not grant seatd access by editing the seat group entry'
+  || fail 'live boot helper does not grant the dinx user seatd access'
 grep -Fq 'while [ ! -S /run/seatd.sock ]' "$wrapper" \
-  || fail 'live autologin helper does not wait for the seatd socket before greetd starts'
+  || fail 'live autologin helper does not wait for the seatd socket before the session starts'
 grep -Fq 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' "$wrapper" \
   || fail 'live autologin helper does not set an explicit PATH for dinit service execution'
 ! grep -Fq 'greetd.service' "$pkgbuild" \
@@ -180,8 +174,10 @@ grep -Fqx 'depends-on       = login.target' "$root_greetd_service" \
   || fail 'live-only autologin dependency leaked into the installed greetd service'
 [[ ! -e "$root_policy" ]] \
   || fail 'live-only Polkit authorization leaked into the installed rootfs overlay'
-grep -Fq 'subject.user === "dinx" && subject.local && subject.active' "$live_policy" \
-  || fail 'live Polkit rule is not scoped to the active local dinx user'
+grep -Fq 'subject.user === "dinx" && subject.local' "$live_policy" \
+  || fail 'live Polkit rule is not scoped to the local dinx user'
+! grep -Fq 'subject.active' "$live_policy" \
+  || fail 'live Polkit rule still requires an elogind-active session'
 grep -Fq 'return polkit.Result.YES;' "$live_policy" \
   || fail 'live Polkit rule does not authorize without credentials'
 if grep -Eq 'auth_(admin|self)' "$live_policy"; then
@@ -195,4 +191,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract live=true initial_session=true greetd_hard_ordering=true keyring_independent=true render_group=true fallback_pearl_greeter=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'
+printf 'dinx_live_autologin_contract live=true direct_session=true seatd=true private_runtime_dir=true greeter_installed_only=true keyring_independent=true render_group=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'

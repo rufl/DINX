@@ -45,11 +45,11 @@ O Aqueous desenha titlebars e controles DINX para clientes XDG cujo modo xdg-dec
 O Pearl Settings não cria uma barra de título própria nesta sessão, evitando decoração duplicada; no modo de tema GTK, a janela usa um fundo opaco do tema. A opção de sincronização de bordas do Pearl sincroniza cores, não geometria: a build `aqueous-cpu` de compatibilidade desativa os efeitos Vulkan e mantém cantos quadrados. Cantos arredondados no compositor exigem Aqueous com efeitos Vulkan habilitados.
 
 - Aqueous/Pearl é a única sessão de usuário selecionável e suportada da DINX.
-- A ISO live abre `dinx` diretamente pelo autologin dinit; o rootfs instalado mantém login manual.
+- A ISO live abre `dinx` pelo serviço Dinit reiniciável `dinx-live-session`, com seatd e diretório de runtime privado; o greetd fica exclusivo da instalação e o rootfs instalado mantém login manual.
 - O Pearl Greeter é a interface de login instalada do greetd, não uma segunda sessão de usuário; sua configuração pertencente ao root força `Aqueous + Pearl (DINX)` e não há fallback silencioso.
 - `dinx-aqueous-pearl` inicia o Aqueous diretamente. O filho init espera o Wayland e o D-Bus da sessão; então o supervisor inicia Shikane, PolicyKit, o idle obrigatório e Pearl. O daemon opcional da BC-250 só inicia quando o pacote assinado é instalado separadamente; instale-o somente após detectar o PCI `1002:13fe`. A ISO genérica omite todos os pacotes específicos da BC-250.
 - Falha de helper obrigatório ou do Pearl registra estado explícito e encerra o compositor, em vez de deixar um desktop vazio.
-- A sessão usa elogind/libseat e execução direta sobre dinit; não exige systemd, systemctl, uwsm ou unidades de usuário.
+- A sessão live usa seatd/libseat; sessões instaladas mantêm a seleção de backend em runtime com elogind disponível. Ambos os caminhos executam diretamente sob dinit, sem exigir systemd, systemctl, uwsm ou unidades de usuário.
 
 - `swayidle` bloqueia após 600 segundos e em `before-sleep`; `Super+L`, a ação do launcher e a DINXPanel usam o mesmo caminho `swaylock`. `brightnessctl` fornece passos fixos de 5% para brilho.
 

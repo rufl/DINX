@@ -123,8 +123,10 @@ if grep -Fq "squashfs-root/$live_policy_path" <<<"$manifest"; then
   fail 'live-only Polkit authorization leaked into the installed rootfs'
 fi
 live_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" "$live_policy_path")
-grep -Fq 'subject.user === "dinx" && subject.local && subject.active' <<<"$live_policy" \
-  || fail 'live Polkit rule is not scoped to the active local dinx user'
+grep -Fq 'subject.user === "dinx" && subject.local' <<<"$live_policy" \
+  || fail 'live Polkit rule is not scoped to the local dinx user'
+! grep -Fq 'subject.active' <<<"$live_policy" \
+  || fail 'live Polkit rule still requires an elogind-active session'
 grep -Fq 'return polkit.Result.YES;' <<<"$live_policy" \
   || fail 'live Polkit rule does not authorize without credentials'
 if grep -Eq 'auth_(admin|self)' <<<"$live_policy"; then
@@ -139,10 +141,16 @@ live_conf=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/ar
 grep -Eq '^AUTOLOGIN=true$' <<<"$live_conf" \
   || fail 'livefs does not enable DINX autologin'
 live_autologin=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
-grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin" \
-  || fail 'livefs autologin does not mark its Aqueous/Pearl session as live'
-grep -Fq 'user = "dinx"' <<<"$live_autologin" \
-  || fail 'livefs autologin does not select the dinx user'
+grep -Fq 'install -d -o dinx -g dinx -m 0700 /run/dinx-session' <<<"$live_autologin" \
+  || fail 'livefs autologin does not provision the private session runtime dir'
+live_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-session)
+grep -Fq 'runuser -u dinx' <<<"$live_session" \
+  || fail 'livefs session does not start as the dinx user'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$live_session" \
+  || fail 'livefs session does not start the Aqueous/Pearl wrapper'
+live_greetd_unit=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
+grep -Fq 'command = /bin/true' <<<"$live_greetd_unit" \
+  || fail 'livefs does not shadow greetd with a no-op unit'
 ! grep -Fq '/usr/bin/pacman-key' <<<"$live_autologin" \
   || fail 'live greeter setup runs keyring operations before greetd'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
@@ -159,18 +167,21 @@ grep -Fqx 'waits-for = firewalld' <<<"$live_autologin_service" \
 ! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service combines dependencies into one unresolved service name'
 live_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
-grep -Fqx 'type = process' <<<"$live_greetd_service" \
-  || fail 'live greetd service is not a process service'
-grep -Fqx 'command = /usr/bin/greetd' <<<"$live_greetd_service" \
-  || fail 'live greetd service command is incorrect'
-grep -Fqx 'smooth-recovery = true' <<<"$live_greetd_service" \
-  || fail 'live greetd service does not preserve smooth recovery'
-grep -Fqx 'restart-delay = 7' <<<"$live_greetd_service" \
-  || fail 'live greetd service does not wait for Pearl Greeter teardown'
-grep -Fqx 'depends-on = login.target' <<<"$live_greetd_service" \
-  || fail 'live greetd service does not use the login target'
-grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_greetd_service" \
-  || fail 'live greetd service does not wait for greeter configuration'
+grep -Fqx 'type = scripted' <<<"$live_greetd_service" \
+  || fail 'live greetd shadow is not a scripted no-op service'
+grep -Fqx 'command = /bin/true' <<<"$live_greetd_service" \
+  || fail 'live greetd shadow does not disable the display manager'
+live_session_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-session)
+grep -Fqx 'type = process' <<<"$live_session_service" \
+  || fail 'live session service is not a process service'
+grep -Fqx 'command = /usr/local/libexec/dinx-live-session' <<<"$live_session_service" \
+  || fail 'live session service command is incorrect'
+grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_session_service" \
+  || fail 'live session service does not wait for live boot preparation'
+grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
+  || fail 'live session service does not depend on seatd'
+grep -Fqx 'restart = true' <<<"$live_session_service" \
+  || fail 'live session service does not restart after an unexpected exit'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)
 grep -Eq '^command[[:space:]]*=[[:space:]]*/usr/bin/greetd$' <<<"$root_greetd_service" \
   || fail 'installed greetd service command is incorrect'
@@ -1181,6 +1192,10 @@ grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgra
 
 aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
+grep -Fq 'flock -n 9' <<<"$aqueous_wrapper" \
+  || fail 'Aqueous session does not reject a duplicate compositor instance'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' <<<"$aqueous_wrapper" \
+  || fail 'Aqueous live session does not use its private runtime directory'
 if grep -Eq 'GTK_THEME=' <<<"$aqueous_wrapper"; then
   fail 'Live GUI session overrides the selected GTK theme'
 fi
@@ -1528,11 +1543,14 @@ livefs_required_paths=(
   etc/dinit.d/boot.d/NetworkManager
   etc/dinit.d/boot.d/artix-live
   etc/dinit.d/boot.d/dinx-live-autologin
+  etc/dinit.d/boot.d/dinx-live-session
+  etc/dinit.d/dinx-live-session
   etc/dinit.d/boot.d/greetd
   etc/dinit.d/boot.d/logind
   etc/dinit.d/boot.d/metalog
   etc/dinit.d/boot.d/pacman-init
   etc/dinit.d/boot.d/userspawn
+  usr/local/libexec/dinx-live-session
   usr/share/grub/themes/artix/theme.txt
   usr/share/grub/themes/artix/logo.png
 )
@@ -1552,20 +1570,28 @@ grep -Fq 'AUTOLOGIN=true' <<<"$live_config" || fail 'live session autologin is n
 grep -Fq 'LIVEUSER=dinx' <<<"$live_config" || fail 'live session user is not dinx'
 
 live_autologin_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-autologin)
-grep -Fq '[initial_session]' <<<"$live_autologin_wrapper" || fail 'live autologin initial session is missing'
-grep -Fq 'vt = 7' <<<"$live_autologin_wrapper" \
-  || fail 'live greetd does not use the dedicated VT, separate from tty1 getty'
-grep -Fq 'command = "env DINX_LIVE_SESSION=1 dbus-run-session /usr/local/libexec/dinx-aqueous-pearl"' <<<"$live_autologin_wrapper" || fail 'live autologin does not mark its Aqueous/Pearl session as live'
+grep -Fq 'install -d -o dinx -g dinx -m 0700 /run/dinx-session' <<<"$live_autologin_wrapper" \
+  || fail 'live boot does not provision the private session runtime directory'
 grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" <<<"$live_autologin_wrapper" \
-  || fail 'live autologin does not persist hostname dinxlive'
+  || fail 'live boot does not persist hostname dinxlive'
 grep -Fq 'hostname dinxlive' <<<"$live_autologin_wrapper" \
-  || fail 'live autologin does not set the active hostname to dinxlive'
-grep -Fq 'user = "dinx"' <<<"$live_autologin_wrapper" || fail 'live autologin user is incorrect'
+  || fail 'live boot does not set the active hostname to dinxlive'
+live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-session)
+grep -Fq 'runuser -u dinx' <<<"$live_session_launcher" \
+  || fail 'live session launcher does not switch to the dinx user'
+grep -Fq 'DINX_LIVE_SESSION=1' <<<"$live_session_launcher" \
+  || fail 'live session launcher does not mark the session as live'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' <<<"$live_session_launcher" \
+  || fail 'live session launcher does not use the private runtime directory'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$live_session_launcher" \
+  || fail 'live session launcher does not start Aqueous/Pearl under a session bus'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
-grep -Fq 'before = login.target' <<<"$live_autologin_service" || fail 'live autologin service does not precede the login target'
-grep -Fq 'before = greetd' <<<"$live_autologin_service" || fail 'live autologin service does not precede greetd'
+grep -Fq 'before = login.target' <<<"$live_autologin_service" \
+  || fail 'live boot preparation does not precede the login target'
+grep -Fq 'before = greetd' <<<"$live_autologin_service" \
+  || fail 'live boot preparation does not precede the greetd no-op boundary'
 
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: DINX wordmark/boot-mark branding is present in the live and installed GRUB themes and Calamares; Pearl uses a solid greeter/desktop surface without a logo wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session, direct-dinit Pearl Greeter, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'
+printf 'ISO content check passed: DINX wordmark/boot-mark branding is present in the live and installed GRUB themes and Calamares; Pearl uses a solid greeter/desktop surface without a logo wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session starts directly under dinit, Pearl Greeter remains installed-only, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'

@@ -45,11 +45,11 @@ Aqueous draws DINX titlebars and controls for XDG clients whose negotiated xdg-d
 Pearl Settings avoids its own client-side headerbar in this session, leaving one compositor decoration. GTK-theme mode sets an opaque theme background. The Pearl border-sync option synchronizes colors, not geometry: the `aqueous-cpu` compatibility build disables Vulkan effects and keeps square corners; rounded compositor corners require Aqueous with Vulkan effects enabled.
 
 - Aqueous/Pearl is the only selectable and supported DINX user session.
-- The live ISO opens `dinx` directly through the dinit autologin path; the installed rootfs keeps manual login.
+- The live ISO opens `dinx` from the restartable `dinx-live-session` Dinit service with seatd and a private runtime directory; greetd remains installed-only and the installed rootfs keeps manual login.
 - Pearl Greeter is the installed greetd login UI, not a second user session; its root-owned config forces `Aqueous + Pearl (DINX)` and has no silent session fallback.
 - `dinx-aqueous-pearl` starts Aqueous directly. The init child waits for Wayland and session D-Bus readiness, then the supervisor starts Shikane, PolicyKit, the required idle helper and Pearl. It starts the optional BC-250 daemon only when its separately installed signed package is present; install that package only after PCI `1002:13fe` is detected. The generic ISO omits all BC-250-specific packages.
 - Required-helper or Pearl failure records an explicit failed state and terminates the compositor instead of leaving a blank desktop.
-- The session uses elogind/libseat and direct dinit execution; it does not require systemd, systemctl, uwsm or user units.
+- The live session uses seatd/libseat; installed sessions retain runtime backend selection with elogind available. Both paths execute directly under dinit and require no systemd, systemctl, uwsm or user units.
 
 - `swayidle` locks after 600 seconds and on `before-sleep`; `Super+L`, the launcher action and DINXPanel use the same `swaylock` path. `brightnessctl` supplies fixed 5-percent brightness steps.
 

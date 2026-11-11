@@ -1,0 +1,18 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+set -eu
+
+# Launch the live Aqueous/Pearl session as the live user. runuser performs
+# the PAM session setup; the compositor takes the seat from seatd and the
+# wlroots/seatd backend owns VT handling. There is no display manager in the
+# live path: greetd remains installed-only.
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+exec runuser -u dinx -- env \
+  HOME=/home/dinx \
+  USER=dinx \
+  LOGNAME=dinx \
+  DINX_LIVE_SESSION=1 \
+  XDG_RUNTIME_DIR=/run/dinx-session \
+  /usr/bin/dbus-run-session /usr/local/libexec/dinx-aqueous-pearl

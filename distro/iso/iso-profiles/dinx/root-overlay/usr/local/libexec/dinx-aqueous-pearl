@@ -1,5 +1,7 @@
 #!/bin/sh
 set -eu
+
+
 locale_charmap=$(locale charmap 2>/dev/null || true)
 case "$locale_charmap" in
   *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) ;;
@@ -69,7 +71,13 @@ case "$graphics_profile" in
     ;;
 esac
 
-if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+if [ "${DINX_LIVE_SESSION:-}" = 1 ] && [ -d /run/dinx-session ]; then
+  # Live-only: the private runtime dir is provisioned by dinx-live-autologin
+  # and is independent of elogind's /run/user/UID lifecycle, which can vanish
+  # mid-boot and kill the compositor's Wayland socket (AddSocketFailed).
+  XDG_RUNTIME_DIR=/run/dinx-session
+  export XDG_RUNTIME_DIR
+elif [ -z "${XDG_RUNTIME_DIR:-}" ]; then
   XDG_RUNTIME_DIR="/run/user/$(id -u)"
   export XDG_RUNTIME_DIR
 fi
@@ -81,6 +89,15 @@ if [ "$(stat -c '%u' "$XDG_RUNTIME_DIR")" != "$(id -u)" ]; then
   exit 1
 fi
 chmod 0700 "$XDG_RUNTIME_DIR"
+
+# Only one compositor per user. Racing instances contend for Aqueous's
+# config-writer lock and can kill the live seat.
+lock_path=$XDG_RUNTIME_DIR/dinx-aqueous-pearl.lock
+exec 9>"$lock_path"
+if ! flock -n 9; then
+  printf '%s\n' 'dinx-aqueous-pearl: another compositor instance is running' >&2
+  exit 0
+fi
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/wm.toml" ] && [ -r /etc/xdg/aqueous/wm.toml ]; then

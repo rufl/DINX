@@ -282,6 +282,32 @@ trap finish EXIT
                     return "$status"
                   fi
                 fi
+                if [[ "${DINX_FORCE_REBUILD:-false}" != true ]]; then
+                  local -a precompiled_candidates=()
+                  local all_candidates_found=true
+                  local candidate_archive expected_path
+                  while IFS= read -r expected_path; do
+                    [[ -n "$expected_path" ]] || continue
+                    candidate_archive="/var/cache/pacman/pkg/$(basename -- "$expected_path")"
+                    if [[ -f "$candidate_archive" && ! -L "$candidate_archive" ]]; then
+                      precompiled_candidates+=("$candidate_archive")
+                    else
+                      all_candidates_found=false
+                      break
+                    fi
+                  done < <(cd "$package_dir" && runuser -u dinxbuild -- makepkg --packagelist 2>/dev/null || true)
+
+                  if [[ "$all_candidates_found" == true && ${#precompiled_candidates[@]} -gt 0 ]]; then
+                    if package_cache_as_build_user dinx_package_cache_store \
+                      "$package_artifact_cache" "$package_name" "$cache_key" "${precompiled_candidates[@]}" \
+                      && package_cache_as_build_user dinx_package_cache_restore \
+                        "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
+                      printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=precompiled-hit\n' \
+                        "$package_name" "$((SECONDS - package_started))"
+                      return 0
+                    fi
+                  fi
+                fi
                 if [[ -n ${DINX_CACHE_DIRTY_MARKER:-} ]]; then
                   touch -- "$DINX_CACHE_DIRTY_MARKER"
                 fi

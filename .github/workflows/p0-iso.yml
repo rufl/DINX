@@ -146,7 +146,7 @@ jobs:
           [[ "$cache_input_hash" =~ ^[0-9a-f]{64}$ ]]
           printf 'recipe_sha256=%s\n' "$cache_input_hash" >> "$GITHUB_OUTPUT"
       - name: Prepare reusable DINX build caches
-        run: mkdir -p dist/.cache/dinx/{package-artifacts,makepkg-sources,cargo,cargo-target,zig,toolchains}
+        run: mkdir -p dist/.cache/dinx/{package-artifacts,makepkg-sources,cargo,cargo-target,zig,toolchains,pacman/pkg}
       - name: Restore verified DINX package artifacts
         id: package-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
@@ -163,6 +163,7 @@ jobs:
             dist/.cache/dinx/cargo
             dist/.cache/dinx/cargo-target
             dist/.cache/dinx/zig
+            dist/.cache/dinx/pacman/pkg
           key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
           restore-keys: |
             dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-
@@ -320,6 +321,8 @@ jobs:
             DINX_BUILDER_RECIPE_SHA256=${{ steps.builder-image.outputs.recipe_sha256 }}
           cache-from: type=gha,scope=dinx-iso-builder
           cache-to: type=gha,scope=dinx-iso-builder,mode=max
+      - name: Sync pre-compiled DINX package cache
+        run: scripts/sync_dinx_cache.sh --cache-dir dist/.cache/dinx
       - name: Build with Artix artools
         id: iso-build
         env:
@@ -373,6 +376,7 @@ jobs:
             dist/.cache/dinx/cargo
             dist/.cache/dinx/cargo-target
             dist/.cache/dinx/zig
+            dist/.cache/dinx/pacman/pkg
           key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Save verified Zig toolchains
         if: always() && steps.iso-build.outcome != 'skipped' && steps.cache-dirty.outputs.toolchains == 'true'

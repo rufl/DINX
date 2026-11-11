@@ -485,14 +485,15 @@ if [[ "$monitor_ready" == true ]]; then
   for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
     if grep -Fq '[  OK  ] NetworkManager' "$serial_log" \
       && grep -Fq '[  OK  ] elogind' "$serial_log" \
-      && grep -Fq '[  OK  ] local.target' "$serial_log"; then
+      && grep -Fq '[  OK  ] local.target' "$serial_log" \
+      && grep -Fq '[  OK  ] dinx-keyring-populate' "$serial_log"; then
+      sleep 3
       if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
         qemu_quit_requested=true
         printf 'smoke-install: requested QEMU shutdown after first-boot checks\n'
       fi
       break
     fi
-    kill -0 "$qemu_pid" 2>/dev/null || break
     sleep 1
   done
 else

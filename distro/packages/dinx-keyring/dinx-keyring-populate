@@ -5,3 +5,4 @@ set -eu
 keyring_dir=$(/usr/bin/pacman-conf gpgdir)
 /usr/bin/pacman-key --gpgdir "$keyring_dir" --populate dinx
 /usr/bin/pacman-key --gpgdir "$keyring_dir" --updatedb
+sync

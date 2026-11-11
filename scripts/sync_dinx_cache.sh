@@ -95,7 +95,12 @@ if [[ "$sync_dinx" == true ]]; then
 
       if [[ "$needs_download" == true ]]; then
         printf 'sync_dinx_cache: delta downloading %s\n' "$archive"
-        if curl --fail --silent --show-error --location --retry 3 --output "$target_file" "$release_url/$archive"; then
+        url="$release_url/$archive"
+        if ! curl --fail --silent --show-error --location --retry 2 --output "$target_file" "$url" 2>/dev/null; then
+          url="$release_url/${archive//:/.}"
+          curl --fail --silent --show-error --location --retry 3 --output "$target_file" "$url" || true
+        fi
+        if [[ -f "$target_file" && -s "$target_file" ]]; then
           actual_sha256=$(sha256sum "$target_file" | cut -d' ' -f1)
           if [[ "$actual_sha256" != "$sha256" ]]; then
             rm -f "$target_file"

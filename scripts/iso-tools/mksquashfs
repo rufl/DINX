@@ -77,8 +77,8 @@ remove_vim_compat_aliases() {
 # Documentation payloads are dead weight in the live/install images: man-db,
 # man-pages and texinfo are builder-only, nothing runtime-reads man/info/help
 # pages or API references, and the ISO budget is enforced in
-# scripts/check_dinx_budget.sh. Keep only license artifacts under
-# usr/share/doc for REUSE compliance.
+# scripts/check_dinx_budget.sh. Keep license artifacts and the packages'
+# uppercase SOURCE provenance records under usr/share/doc.
 strip_documentation() {
   local root=$1
   local rel doc_dir
@@ -95,11 +95,12 @@ strip_documentation() {
   doc_dir="$root/usr/share/doc"
   if [[ -d "$doc_dir" ]]; then
     find "$doc_dir" -mindepth 1 -type f \
+      ! -name SOURCE \
       ! -iname 'COPYING*' ! -iname 'LICENSE*' ! -iname 'LICEN[CS]E*' \
       ! -iname 'copyright*' ! -iname 'COPYRIGHT*' ! -iname 'licencia*' \
       -delete
     find "$doc_dir" -mindepth 1 -depth -type d -empty -delete
-    printf 'dinx-final-squashfs: stripped non-license files under usr/share/doc\n'
+    printf 'dinx-final-squashfs: stripped non-license/provenance files under usr/share/doc\n'
   fi
 }
 

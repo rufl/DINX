@@ -19,6 +19,7 @@ for required in \
   "'var/cache/pacman/pkg/*'" \
   "'var/log/*'" \
   'strip_documentation()' \
+  '! -name SOURCE' \
   'usr/share/man' \
   'usr/share/gtk-doc'; do
   grep -Fq -- "$required" "$wrapper" || fail "compression wrapper is missing: $required"
@@ -34,6 +35,24 @@ set -euo pipefail
 printf '%s\n' "$@" > "$DINX_COMPRESSION_ARGS"
 EOF
 chmod +x "$fake"
+
+fixture_root="$work_dir/rootfs"
+mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1"
+printf 'source provenance\n' > "$fixture_root/usr/share/doc/demo/SOURCE"
+printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
+printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
+printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
+DINX_MKSQUASHFS_REAL="$fake" \
+DINX_COMPRESSION_ARGS="$args_file" \
+  "$wrapper" "$fixture_root" "$work_dir/fixture.img"
+[[ -f "$fixture_root/usr/share/doc/demo/SOURCE" ]] \
+  || fail 'source provenance was stripped from the final filesystem'
+[[ -f "$fixture_root/usr/share/doc/demo/LICENSE" ]] \
+  || fail 'license artifact was stripped from the final filesystem'
+[[ ! -e "$fixture_root/usr/share/doc/demo/README" ]] \
+  || fail 'ordinary documentation remains in the final filesystem'
+[[ ! -e "$fixture_root/usr/share/man" ]] \
+  || fail 'manual pages remain in the final filesystem'
 
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \

@@ -543,8 +543,10 @@ mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
 keyring_fingerprint=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
-keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fingerprint" 2>&1) \
-  || fail 'booted installed pacman keyring is not readable'
+if ! keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fingerprint" 2>&1); then
+  printf '%s\n' "$keyring_output" >&2
+  fail 'booted installed pacman keyring is not readable'
+fi
 keyring_output_compact=$(tr -d '[:space:]' <<<"$keyring_output")
 [[ "$keyring_output_compact" == *"$keyring_fingerprint"* ]] \
   || fail 'booted DINX package signing key was not populated during installed first boot'

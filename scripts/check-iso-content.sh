@@ -198,8 +198,8 @@ fi
 keyring_bootstrap_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-bootstrap)
 grep -Fqx 'command = /usr/local/libexec/dinx-keyring-bootstrap' <<<"$keyring_bootstrap_service" \
   || fail 'installed DINX keyring bootstrap command is incorrect'
-grep -Fqx 'stop-command = /usr/local/libexec/dinx-keyring-bootstrap stop' <<<"$keyring_bootstrap_service" \
-  || fail 'installed DINX keyring bootstrap does not unmount its temporary keyring'
+! grep -Fq 'stop-command =' <<<"$keyring_bootstrap_service" \
+  || fail 'installed DINX keyring bootstrap still discards its persistent keyring during shutdown'
 grep -Fqx 'depends-on = local.target' <<<"$keyring_bootstrap_service" \
   || fail 'installed DINX keyring bootstrap does not wait for local.target'
 keyring_populate_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/dinx-keyring-populate)

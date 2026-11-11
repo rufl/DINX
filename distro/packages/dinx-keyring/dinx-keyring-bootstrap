@@ -3,19 +3,6 @@
 set -eu
 
 keyring_dir=$(/usr/bin/pacman-conf gpgdir)
-
-case "${1:-}" in
-  '')
-    /usr/bin/install -d -m 0755 "$keyring_dir"
-    /usr/bin/mount -t tmpfs -o size=10M,mode=0755 tmpfs "$keyring_dir"
-    /usr/bin/pacman-key --gpgdir "$keyring_dir" --init
-    /usr/bin/pacman-key --gpgdir "$keyring_dir" --populate artix
-    ;;
-  stop)
-    exec /usr/bin/umount -l "$keyring_dir"
-    ;;
-  *)
-    printf 'usage: %s [stop]\n' "$0" >&2
-    exit 2
-    ;;
-esac
+/usr/bin/install -d -m 0755 "$keyring_dir"
+/usr/bin/pacman-key --gpgdir "$keyring_dir" --init
+/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate artix

@@ -540,6 +540,7 @@ for _ in {1..20}; do
   sleep 1
 done
 [[ -b "$root_device" ]] || fail "installed partition device did not reappear: $root_device"
+e2fsck -p "$root_device" 2>/dev/null || true
 mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true

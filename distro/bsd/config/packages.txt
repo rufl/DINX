@@ -67,3 +67,4 @@ sysutils/dinx-configure-repository
 sysutils/dinx-mirrorlist
 security/dinx-keyring
 sysutils/dinx-plymouth-quit
+sysutils/dinx-live-root-overrides

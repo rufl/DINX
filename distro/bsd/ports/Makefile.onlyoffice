@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for OnlyOffice Desktop Editors (DINX-BSD)
+PORTNAME=	onlyoffice-desktopEditors
+PORTVERSION=	8.1.0
+CATEGORIES=	editors
+MASTER_SITES=	https://github.com/ONLYOFFICE/DesktopEditors/releases/download/v8.1.0/
+DISTNAME=	DesktopEditors-8.1.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	OnlyOffice document editors for DINX-BSD
+WWW=		https://www.onlyoffice.com
+
+LICENSE=	AGPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	cmake>=3.20:devel/cmake \
+		ninja>=1.10:devel/ninja \
+		qt6-base>=6.0:x11-toolkits/qt6-base
+RUN_DEPENDS=	qt6-base>=6.0:x11-toolkits/qt6-base
+
+USES=		compiler:c++17-lang cmake ninja qt:6 pkgconfig
+USE_QT=		base svg declarative
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/build/bin/DesktopEditors ${STAGEDIR}${PREFIX}/bin/onlyoffice
+
+.include <bsd.port.mk>

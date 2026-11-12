@@ -1,0 +1,31 @@
+# FreeBSD Port Makefile for Floorp Browser (DINX-BSD)
+PORTNAME=	floorp
+PORTVERSION=	11.14.0
+CATEGORIES=	www
+MASTER_SITES=	https://github.com/Floorp-Projects/Floorp/releases/download/v11.14.0/
+DISTNAME=	floorp-11.14.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Floorp advanced privacy browser for DINX-BSD
+WWW=		https://floorp.app
+
+LICENSE=	MPL20
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	rust>=1.75:lang/rust \
+		cbindgen>=0.26:devel/cbindgen \
+		nasm>=2.14:devel/nasm
+RUN_DEPENDS=	gtk3>=3.24:x11-toolkits/gtk3 \
+		alsa-lib>=1.1:audio/alsa-lib
+
+USES=		compiler:c++17-lang pkgconfig python:3.8+,build rust
+USE_GITHUB=	yes
+
+do-build:
+	@cd ${WRKSRC} && ./mach build --optimized
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/obj-x86_64-unknown-freebsd/dist/bin/floorp ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

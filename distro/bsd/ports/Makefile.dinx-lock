@@ -1,0 +1,28 @@
+# FreeBSD Port Makefile for DINX Screen Locker (DINX-BSD)
+PORTNAME=	dinx-lock
+PORTVERSION=	1.0.0
+CATEGORIES=	x11-wm security
+MASTER_SITES=	https://github.com/rufl/dinx-lock/releases/download/v1.0.0/
+DISTNAME=	dinx-lock-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX Wayland screen locker and session security utility for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+RUN_DEPENDS=	wayland>=0:graphics/wayland
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/dinx-lock ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

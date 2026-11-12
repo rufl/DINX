@@ -38,7 +38,7 @@ sysutils/dinx-bluetooth-manager
 games/dinx-gaming
 sysutils/dinx-graphics-profile
 x11-wm/dinx-aqueous-init
-sysutils/dinx-live-autologin
+x11-wm/dinx-live-autologin
 x11/dinx-pearl-greeter-host
 x11-wm/dinx-aqueous-pearl
 sysutils/dinx-package-channel
@@ -58,3 +58,4 @@ security/dinx-keyring-populate
 sysutils/dinx-refresh-package-sources
 sysutils/dinx-alpha7-hardware-report
 x11-wm/dinx-idle
+x11-wm/dinx-lock

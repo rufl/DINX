@@ -69,8 +69,8 @@ optdepends=(
 provides=('pearl-capture-picker=0.3.0' 'pearl-greeter=0.3.0')
 conflicts=('pearl-git')
 options=('!strip' '!debug')
-source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch" "server-decorations.patch" "greeter-state-home.patch" "dinx-first-run-wizard.c")
-sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' 'de543c6c51f6b04bec1437a42fbc497db9eb5c1e3829490f4d63f7c835e8f698' 'f9433c48c1af3c4b9bf95db581b62ab08487fde5ff95ca3f68c08b0581e671f8' 'e0206164c2d447802248062a25a310dd233a26e6c31d40285d608430bc52a550')
+source=("pearl-$pkgver.tar.gz::${PEARL_SOURCE_URL}" "deetty-terminal.patch" "server-decorations.patch" "greeter-state-home.patch" "remove-find-your-next-thing.patch" "dinx-first-run-wizard.c")
+sha256sums=("$PEARL_SOURCE_SHA256" '96bf34fd3f22d2411eb83d755f82e602fde7c36f37de59746e85818a6d1752c4' 'de543c6c51f6b04bec1437a42fbc497db9eb5c1e3829490f4d63f7c835e8f698' 'f9433c48c1af3c4b9bf95db581b62ab08487fde5ff95ca3f68c08b0581e671f8' '9837354b2e6c4893dcd20aa06d5fc8b067c1ad147a1f2497d1d4e8b1cf40cf75' 'e0206164c2d447802248062a25a310dd233a26e6c31d40285d608430bc52a550')
 install=pearl.install
 
 prepare() {
@@ -78,6 +78,7 @@ prepare() {
   patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal.patch"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/server-decorations.patch"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/greeter-state-home.patch"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/remove-find-your-next-thing.patch"
 }
 
 

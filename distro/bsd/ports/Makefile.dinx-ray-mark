@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DINX Ray Mark Branding (DINX-BSD)
+PORTNAME=	dinx-ray-mark
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils graphics
+MASTER_SITES=	https://github.com/rufl/dinx-ray-mark/releases/download/v1.0.0/
+DISTNAME=	dinx-ray-mark-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX ray mark branding and vector assets for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/share/dinx/branding
+	@cp -R ${WRKSRC}/branding/* ${STAGEDIR}${PREFIX}/share/dinx/branding/
+
+.include <bsd.port.mk>

@@ -61,8 +61,8 @@ xorriso -osirrox on \
 
 for squashfs in "$tmp_dir/rootfs.img" "$tmp_dir/livefs.img"; do
   squashfs_stats=$(unsquashfs -no-xattrs -no-progress -s "$squashfs")
-  grep -Eq 'Compression[[:space:]]+xz([[:space:]]|$)' <<<"$squashfs_stats" \
-    || fail "SquashFS image is not xz-compressed: $squashfs"
+  grep -Eq 'Compression[[:space:]]+zstd([[:space:]]|$)' <<<"$squashfs_stats" \
+    || fail "SquashFS image is not zstd-compressed: $squashfs"
   grep -Eq 'Block size[[:space:]]+1048576([[:space:]]|$)' <<<"$squashfs_stats" \
     || fail "SquashFS image does not use 1 MiB blocks: $squashfs"
 done

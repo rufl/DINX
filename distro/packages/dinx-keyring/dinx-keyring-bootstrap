@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+set -eu
+
+keyring_dir=$(/usr/bin/pacman-conf gpgdir)
+/usr/bin/install -d -m 0755 "$keyring_dir"
+/usr/bin/pacman-key --gpgdir "$keyring_dir" --init
+/usr/bin/pacman-key --gpgdir "$keyring_dir" --populate artix

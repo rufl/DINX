@@ -7,6 +7,16 @@ preferences="$config_home/pearl/preferences.json"
 state_dir="$state_home/dinx"
 complete_marker="$state_dir/pearl-first-run-complete"
 wizard=${DINX_FIRST_RUN_WIZARD:-/usr/local/libexec/dinx-first-run-wizard}
+theme_sync_helper=${DINX_THEME_SYNC_HELPER:-/usr/local/libexec/dinx-sync-session-theme}
+
+sync_theme() {
+    if ! "$theme_sync_helper"; then
+        printf '%s\n' 'dinx-pearl-shell: could not synchronize GTK/Qt appearance; starting Pearl anyway' >&2
+    fi
+}
+
+sync_theme
+
 
 mark_complete() {
     mkdir -p "$state_dir"
@@ -107,5 +117,6 @@ if ! jq --arg theme_mode "$theme_mode" \
 fi
 chmod 600 "$preferences_tmp"
 mv -f "$preferences_tmp" "$preferences"
+sync_theme
 mark_complete
 exec pearl "$@"

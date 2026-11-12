@@ -101,11 +101,11 @@ Delivered:
 
 P3 release gate:
 
-- `scripts/dintor_p3_qualification.sh` runs core endurance, project-index scale/delta, worker, state-recovery, task, real `clangd`, native X11 GTK smoke in dark/light modes and a real Git fixture;
+- `scripts/dintor_p3_qualification.sh` runs core endurance, project-index scale/delta, worker, state-recovery, task, a builder-only real `clangd` protocol fixture, native X11 GTK smoke in dark/light modes and a real Git fixture;
 - `PKGBUILD`, the ISO profile, `check_deetty_integration.sh` and `check-iso-content.sh` carry the same Dintor/LSP/Git/theme contract;
 - the P0 workflow remains the required package, ISO, QEMU, persistent-install, recovery and attestation gate.
 
-**Exit criterion:** met. A developer can work on a Zig or C/C++ project, inspect diagnostics and Git changes, and edit without a second editor.
+**Exit criterion:** met. A developer can work on Zig projects with the ISO's ZLS; C/C++ LSP is optional and requires `clangd`.
 
 ## P4 — DinitUI
 

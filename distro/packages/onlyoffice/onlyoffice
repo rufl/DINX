@@ -1,3 +1,4 @@
 #!/bin/sh
 set -eu
+export PATH="${PATH:+$PATH:}/usr/bin:/bin"
 exec /opt/onlyoffice/DesktopEditors.AppImage --appimage-extract-and-run "$@"

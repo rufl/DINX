@@ -42,17 +42,100 @@ while (($#)); do
   esac
 done
 
-# Artix needs headers to generate the live and installed initramfs, but they are
-# build-only. Remove the package from each staged package root before compression.
-prune_build_only_headers() {
+# Artix needs headers to generate initramfs images; build-only headers and
+# explicitly excluded package roots are removed from DINX's final rootfs/livefs.
+remove_vim_compat_aliases() {
+  local root=$1
+  local name path target target_basename
+
+  for name in vi ex vedit view; do
+    path="$root/usr/bin/$name"
+    [[ -e "$path" || -L "$path" ]] || continue
+    if [[ -L "$path" ]]; then
+      target=$(readlink -- "$path") || return 1
+      target_basename=${target##*/}
+      case "$target_basename" in
+        vim*|vi) ;;
+        *) continue ;;
+      esac
+    elif [[ "$name" == vi && -f "$path" ]] \
+      && grep -Fqx '#!/usr/bin/bash' "$path" \
+      && grep -Fq 'exec /usr/bin/vim -C -u ' "$path"; then
+      :
+    else
+      continue
+    fi
+
+    rm -f -- "$path" || {
+      printf 'dinx mksquashfs wrapper: cannot remove Vim compatibility alias %s\n' "$path" >&2
+      return 1
+    }
+    printf 'dinx-final-squashfs: removed Vim compatibility alias path=%s\n' "$path"
+  done
+}
+
+# Documentation payloads are dead weight in the live/install images: man-db,
+# man-pages and texinfo are builder-only, nothing runtime-reads man/info/help
+# pages or API references, and the ISO budget is enforced in
+# scripts/check_dinx_budget.sh. Keep license artifacts and the packages'
+# uppercase SOURCE provenance records under usr/share/doc.
+strip_documentation() {
+  local root=$1
+  local rel doc_dir
+
+  [[ "$root" != / && -d "$root/usr/share" ]] || return 0
+
+  for rel in usr/share/man usr/share/gtk-doc usr/share/help usr/share/info usr/share/locale usr/share/omf usr/share/gnome/help usr/share/doc; do
+    if [[ -d "$root/$rel" ]]; then
+      rm -rf -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed documentation/locale path=%s\n' "$rel"
+    fi
+  done
+}
+
+prune_excluded_packages() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
-  local -a header_records
+  local -a removable_packages=()
+  local -a prune_candidates=(
+    breeze
+    breeze-cursors
+    plasma-integration
+    plasma-workspace
+    qogir-icon-theme
+    qqc2-breeze-style
+    xdg-desktop-portal-kde
+    dhcpcd
+    dhcpcd-dinit
+    ex-vi-compat
+    vim
+    vim-runtime
+    man-db
+    man-pages
+    texinfo
+  )
+  local -a package_records
+  local package
   local pacman_config
 
   [[ "$root" != / && -d "$local_db" ]] || return 0
-  header_records=("$local_db"/linux-headers-*)
-  [[ -d "${header_records[0]}" ]] || return 0
+  # Pacman local records are <name>-<numeric-version>-<release>; avoid prefix matches such as breeze-icons.
+
+  package_records=("$local_db"/linux-headers-[0-9]*)
+  if [[ -d "${package_records[0]}" ]]; then
+    removable_packages+=(linux-headers)
+    package_records=("$local_db"/pahole-[0-9]*)
+    [[ ! -d "${package_records[0]}" ]] || removable_packages+=(pahole)
+  fi
+
+  for package in "${prune_candidates[@]}"; do
+    package_records=("$local_db"/"$package"-[0-9]*)
+    [[ ! -d "${package_records[0]}" ]] || removable_packages+=("$package")
+  done
+  if ((${#removable_packages[@]} == 0)); then
+    remove_vim_compat_aliases "$root"
+    return
+  fi
 
   pacman_config=$(mktemp "${TMPDIR:-/tmp}/dinx-pacman-prune.XXXXXX") || {
     printf 'dinx mksquashfs wrapper: cannot create isolated pacman config\n' >&2
@@ -64,30 +147,33 @@ prune_build_only_headers() {
     return 1
   fi
   if ! pacman --root "$root" --config "$pacman_config" \
-    -R --noconfirm --noscriptlet linux-headers; then
+    -Rns --noconfirm --noscriptlet "${removable_packages[@]}"; then
     rm -f -- "$pacman_config"
-    printf 'dinx mksquashfs wrapper: cannot safely remove linux-headers from %s\n' "$root" >&2
+    printf 'dinx mksquashfs wrapper: cannot safely remove excluded packages from %s\n' "$root" >&2
     return 1
   fi
   rm -f -- "$pacman_config"
 
-  header_records=("$local_db"/linux-headers-*)
-  [[ ! -d "${header_records[0]}" ]] || {
-    printf 'dinx mksquashfs wrapper: linux-headers package record remains in %s\n' "$root" >&2
-    return 1
-  }
-  printf 'dinx-final-squashfs: removed build-only package=linux-headers root=%s\n' "$root"
+  for package in "${removable_packages[@]}"; do
+    package_records=("$local_db"/"$package"-[0-9]*)
+    [[ ! -d "${package_records[0]}" ]] || {
+      printf 'dinx mksquashfs wrapper: %s package record remains in %s\n' "$package" "$root" >&2
+      return 1
+    }
+    printf 'dinx-final-squashfs: removed excluded package=%s root=%s\n' "$package" "$root"
+  done
+  remove_vim_compat_aliases "$root"
 }
 
 if [[ -n "$source_root" ]]; then
-  prune_build_only_headers "$source_root"
+  prune_excluded_packages "$source_root"
+  strip_documentation "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.
 exec "$real_mksquashfs" "${filtered[@]}" \
-  -comp xz \
+  -comp zstd \
+  -Xcompression-level 19 \
   -b 1M \
-  -Xbcj x86 \
-  -Xdict-size 1M \
   -wildcards \
   -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+type = scripted
+command = /usr/local/libexec/dinx-keyring-bootstrap
+restart = false
+depends-on = local.target

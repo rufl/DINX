@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PARU_SOURCE_URL:?missing PARU_SOURCE_URL}"
 : "${PARU_SOURCE_SHA256:?missing PARU_SOURCE_SHA256}"
 pkgver="$PARU_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Feature packed Artix ALPM/AUR helper'
 arch=('x86_64')
 url='https://github.com/Morganamilo/paru'
@@ -28,6 +28,11 @@ sha256sums=(
 prepare() {
   cd "$srcdir/paru-$pkgver"
   cargo update alpm alpm-utils
+  # Paru 2.1.0 locks Rust OpenSSL bindings that predate Artix OpenSSL 4.1.
+  # Keep the upstream release while pinning the first bindings with 4.x support
+  # and the sys crate containing the later OpenSSL 4.1 fixes.
+  cargo update -p openssl --precise 0.10.78
+  cargo update -p openssl-sys --precise 0.9.118
   cargo fetch --locked --target "$(rustc -vV | sed -n 's|host: ||p')"
 }
 

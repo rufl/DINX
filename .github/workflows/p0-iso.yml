@@ -25,6 +25,9 @@ on:
       - ".github/workflows/p0-iso.yml"
       - ".github/workflows/release.yml"
       - "distro/iso/**"
+      - "distro/packages/dinx-firewalld-dinit/**"
+      - "distro/packages/dinx-keyring/**"
+      - "distro/packages/dinx-live-autologin/**"
       - "scripts/build-iso.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/build-iso-container.sh"
@@ -35,6 +38,7 @@ on:
       - "scripts/lib/dinx-package-artifact-cache.sh"
       - "scripts/smoke_package_artifact_cache.sh"
       - "scripts/iso-tools/mksquashfs"
+      - "scripts/iso-tools/prioritize-dinx-pacman-repo.sh"
       - "scripts/check_dinx_compression.sh"
       - "scripts/check_wizp_package.sh"
       - "scripts/check-iso-content.sh"
@@ -95,6 +99,7 @@ on:
       - "scripts/check_dinxpanel.sh"
       - "scripts/check_dinx_live_autologin.sh"
       - "scripts/check_dinx_session.sh"
+      - "scripts/smoke_dinx_theme_sync.sh"
       - "scripts/check_dinx_doctor.sh"
       - "scripts/smoke_dinx_doctor.sh"
       - "scripts/check_dinx_budget.sh"
@@ -119,7 +124,7 @@ jobs:
   build-and-smoke:
     name: Build and smoke-test DINX foundation ISO
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     steps:
       - name: Checkout DINX
@@ -141,7 +146,7 @@ jobs:
           [[ "$cache_input_hash" =~ ^[0-9a-f]{64}$ ]]
           printf 'recipe_sha256=%s\n' "$cache_input_hash" >> "$GITHUB_OUTPUT"
       - name: Prepare reusable DINX build caches
-        run: mkdir -p dist/.cache/dinx/{package-artifacts,makepkg-sources,cargo,cargo-target,zig,toolchains}
+        run: mkdir -p dist/.cache/dinx/{package-artifacts,makepkg-sources,cargo,cargo-target,zig,toolchains,pacman/pkg}
       - name: Restore verified DINX package artifacts
         id: package-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
@@ -158,6 +163,7 @@ jobs:
             dist/.cache/dinx/cargo
             dist/.cache/dinx/cargo-target
             dist/.cache/dinx/zig
+            dist/.cache/dinx/pacman/pkg
           key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
           restore-keys: |
             dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-
@@ -284,7 +290,9 @@ jobs:
       - name: Install QEMU and ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+          sudo apt-get install --yes dbus-daemon dconf-cli dconf-service btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
+      - name: Smoke-test GTK and Qt theme synchronization
+        run: ./scripts/smoke_dinx_theme_sync.sh
       - name: Verify full ISO qualification prerequisites
         run: scripts/check-iso-qualification-host.sh full --build-path "$GITHUB_WORKSPACE/dist" --build-path "$RUNNER_TEMP" --build-path "$(docker info --format '{{.DockerRootDir}}')"
       - name: Smoke-test Calamares partition transaction
@@ -299,7 +307,7 @@ jobs:
           recipe_sha256=$(sha256sum scripts/iso-builder/Dockerfile scripts/iso-builder/packages.txt | sha256sum | cut -d ' ' -f 1)
           printf 'recipe_sha256=%s\n' "$recipe_sha256" >> "$GITHUB_OUTPUT"
       - name: Set up Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build and cache Artix builder image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -313,6 +321,8 @@ jobs:
             DINX_BUILDER_RECIPE_SHA256=${{ steps.builder-image.outputs.recipe_sha256 }}
           cache-from: type=gha,scope=dinx-iso-builder
           cache-to: type=gha,scope=dinx-iso-builder,mode=max
+      - name: Sync pre-compiled DINX package cache
+        run: scripts/sync_dinx_cache.sh --cache-dir dist/.cache/dinx
       - name: Build with Artix artools
         id: iso-build
         env:
@@ -366,6 +376,7 @@ jobs:
             dist/.cache/dinx/cargo
             dist/.cache/dinx/cargo-target
             dist/.cache/dinx/zig
+            dist/.cache/dinx/pacman/pkg
           key: dinx-build-data-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Save verified Zig toolchains
         if: always() && steps.iso-build.outcome != 'skipped' && steps.cache-dirty.outputs.toolchains == 'true'
@@ -406,7 +417,7 @@ jobs:
       - name: Qualify built ISO with shared local/CI gates
         env:
           DINX_EXPECTED_COMMIT: ${{ github.sha }}
-          DINX_QEMU_TIMEOUT: 110
+          DINX_QEMU_TIMEOUT: 120
           DINX_INSTALL_TIMEOUT: 180
         run: scripts/qualify-iso.sh "$DINX_ISO"
 

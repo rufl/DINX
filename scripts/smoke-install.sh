@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 iso_path=${1:-}
 timeout_seconds=${DINX_INSTALL_TIMEOUT:-180}
 memory_mb=${DINX_INSTALL_MEMORY:-2048}
-disk_size=${DINX_INSTALL_DISK_SIZE:-8G}
+disk_size=${DINX_INSTALL_DISK_SIZE:-16G}
 output_dir=${DINX_INSTALL_OUTPUT_DIR:-}
 firmware_mode=${DINX_INSTALL_FIRMWARE:-bios}
 
@@ -23,7 +24,7 @@ esac
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso unsquashfs losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
+for command in xorriso rsync losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 if [[ "$firmware_mode" == uefi ]]; then
@@ -64,6 +65,7 @@ output_dir=$(cd "$output_dir" && pwd -P)
 
 work_dir=$(mktemp -d)
 rootfs_image="$work_dir/rootfs.img"
+source_mount="$work_dir/rootfs-source"
 disk_image="$work_dir/dinx-installed.img"
 output_suffix=
 if [[ "$firmware_mode" == uefi ]]; then
@@ -80,6 +82,7 @@ loop_device=
 root_device=
 efi_device=
 target_dir="$work_dir/target"
+mounted_source=false
 mounted_target=false
 mounted_efi=false
 mounted_dev=false
@@ -96,6 +99,7 @@ cleanup() {
     wait "$qemu_pid" 2>/dev/null || true
   fi
   if [[ -n "$monitor_dir" ]]; then rm -rf "$monitor_dir"; fi
+  if [[ "$mounted_source" == true ]]; then umount "$source_mount" 2>/dev/null || true; fi
   if [[ "$mounted_run" == true ]]; then umount -R "$target_dir/run" 2>/dev/null || umount "$target_dir/run" 2>/dev/null || true; fi
   if [[ "$mounted_sys" == true ]]; then umount -R "$target_dir/sys" 2>/dev/null || umount "$target_dir/sys" 2>/dev/null || true; fi
   if [[ "$mounted_proc" == true ]]; then umount -R "$target_dir/proc" 2>/dev/null || umount "$target_dir/proc" 2>/dev/null || true; fi
@@ -109,6 +113,9 @@ trap cleanup EXIT
 
 printf 'smoke-install: extracting rootfs from ISO\n'
 xorriso -osirrox on -indev "$iso_path" -extract /LiveOS/rootfs.img "$rootfs_image" >/dev/null
+mkdir -p "$source_mount"
+mount -t squashfs -o loop,ro "$rootfs_image" "$source_mount"
+mounted_source=true
 
 printf 'smoke-install: creating disposable %s %s disk\n' "$disk_size" "$firmware_mode"
 truncate -s "$disk_size" "$disk_image"
@@ -139,8 +146,18 @@ mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
 
-printf 'smoke-install: unpacking the same rootfs used by Calamares\n'
-unsquashfs -no-xattrs -no-progress -d "$target_dir" "$rootfs_image" >/dev/null
+printf 'smoke-install: copying rootfs with Calamares unpackfs rsync flags\n'
+if rsync -aHAXSr '--filter=-x trusted.overlay.*' "$source_mount/" "$target_dir/"; then
+  :
+else
+  rsync_status=$?
+  printf 'smoke-install: destination space at rsync failure\n' >&2
+  df -h "$target_dir" >&2 || true
+  df -i "$target_dir" >&2 || true
+  fail "Calamares-compatible rootfs rsync failed with exit status $rsync_status"
+fi
+umount "$source_mount"
+mounted_source=false
 if [[ "$firmware_mode" == uefi ]]; then
   mkdir -p "$target_dir/boot/efi"
   mount "$efi_device" "$target_dir/boot/efi"
@@ -170,6 +187,42 @@ if chroot "$target_dir" /usr/bin/pacman -Q squashfs-tools >/dev/null 2>&1; then
 fi
 [[ ! -e "$target_dir/usr/bin/unsquashfs" ]] \
   || fail 'Calamares-only unsquashfs executable remains in installed system'
+printf 'smoke-install: applying Calamares Dinit service enablement\n'
+calamares_services_config="$target_dir/etc/calamares/modules/services-artix.conf"
+[[ -r "$calamares_services_config" ]] || fail 'Calamares Dinit service configuration is missing'
+calamares_service_command=$(
+  awk '/^[[:space:]]*command:[[:space:]]+/ { print $2; exit }' "$calamares_services_config"
+)
+[[ "$calamares_service_command" =~ ^[[:alnum:]_-]+$ ]] \
+  || fail "invalid Calamares service command: $calamares_service_command"
+mapfile -t calamares_enabled_services < <(
+  awk '
+    /^[[:space:]]*-[[:space:]]+name:[[:space:]]*"/ {
+      service = $0
+      sub(/^[[:space:]]*-[[:space:]]+name:[[:space:]]*"/, "", service)
+      sub(/".*$/, "", service)
+      next
+    }
+    /^[[:space:]]*action:[[:space:]]*"enable"[[:space:]]*$/ && service != "" {
+      print service
+      service = ""
+    }
+  ' "$calamares_services_config"
+)
+((${#calamares_enabled_services[@]} > 0)) \
+  || fail 'Calamares Dinit service configuration enables no services'
+for calamares_service in "${calamares_enabled_services[@]}"; do
+  [[ "$calamares_service" =~ ^[[:alnum:]@._-]+$ ]] \
+    || fail "invalid Calamares Dinit service name: $calamares_service"
+  printf 'smoke-install: enabling Calamares Dinit service %s\n' "$calamares_service"
+  chroot "$target_dir" "$calamares_service_command" enable "$calamares_service" >/dev/null \
+    || fail "Calamares Dinit service enablement failed: $calamares_service"
+  [[ -L "$target_dir/etc/dinit.d/boot.d/$calamares_service" ]] \
+    || fail "Calamares Dinit service link is missing: $calamares_service"
+  chroot "$target_dir" /usr/bin/test -e "/etc/dinit.d/boot.d/$calamares_service" \
+    || fail "Calamares Dinit service link is unresolved: $calamares_service"
+done
+
 printf 'smoke-install: running system-user provisioning before Calamares user creation\n'
 chroot "$target_dir" /usr/bin/esysusers
 printf 'smoke-install: creating the Calamares user and persistent fstab\n'
@@ -205,7 +258,8 @@ zls_environment=$(chroot "$target_dir" /usr/bin/zls env) \
 grep -Eq '/etc/(zls|xdg/zls)\.json' <<<"$zls_environment" \
   || fail 'installed ZLS configuration is not selected'
 printf 'smoke-install: checking installed runtime libraries\n'
-for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings /usr/bin/zls; do
+# ZLS is statically linked; version and configuration are checked above.
+for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings; do
   [[ -x "$target_dir$binary" ]] || fail "installed binary is missing: ${binary##*/}"
   ldd_output=$(chroot "$target_dir" /usr/bin/ldd "$binary" 2>&1) \
     || fail "installed library check failed: ${binary##*/}"
@@ -383,6 +437,7 @@ if [[ "$firmware_mode" == uefi ]]; then
   )
 fi
 set +e
+qemu_started=$SECONDS
 timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 "${qemu_args[@]}" &
 qemu_pid=$!
@@ -397,10 +452,28 @@ done
 qemu_quit_requested=false
 if [[ "$monitor_ready" == true ]]; then
   sleep 30
-  printf 'screendump "%s"\n' "$screen_path" \
-    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
-    || fail "QEMU could not capture the installed desktop screen: $screen_path"
-  [[ -s "$screen_path" ]] || fail "installed desktop screenshot was not created: $screen_path"
+  greeter_ready=false
+  greeter_output='QEMU did not capture a frame'
+  greeter_deadline=$((qemu_started + timeout_seconds - 10))
+  while ((SECONDS < greeter_deadline)); do
+    if printf 'screendump "%s"\n' "$screen_path" \
+      | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
+      if greeter_output=$("$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter 2>&1); then
+        greeter_ready=true
+        printf 'smoke-install: %s\n' "$greeter_output"
+        break
+      fi
+    else
+      greeter_output='QEMU could not capture the installed greeter screen'
+    fi
+    kill -0 "$qemu_pid" 2>/dev/null || break
+    sleep 2
+  done
+  if [[ "$greeter_ready" != true ]]; then
+    [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
+    fail "installed Pearl Greeter did not start before the QEMU timeout: ${greeter_output}"
+  fi
+  [[ -s "$screen_path" ]] || fail "installed greeter screenshot was not created: $screen_path"
   printf 'sendkey ctrl-alt-f2\n' \
     | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1 \
     || fail 'QEMU could not switch to recovery TTY 2'
@@ -412,14 +485,15 @@ if [[ "$monitor_ready" == true ]]; then
   for ((attempt = 0; attempt < timeout_seconds; attempt++)); do
     if grep -Fq '[  OK  ] NetworkManager' "$serial_log" \
       && grep -Fq '[  OK  ] elogind' "$serial_log" \
-      && grep -Fq '[  OK  ] local.target' "$serial_log"; then
+      && grep -Fq '[  OK  ] local.target' "$serial_log" \
+      && grep -Fq '[  OK  ] dinx-keyring-populate' "$serial_log"; then
+      sleep 3
       if printf 'quit\n' | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1; then
         qemu_quit_requested=true
         printf 'smoke-install: requested QEMU shutdown after first-boot checks\n'
       fi
       break
     fi
-    kill -0 "$qemu_pid" 2>/dev/null || break
     sleep 1
   done
 else
@@ -442,6 +516,7 @@ for image in "$screen_path" "$recovery_screen_path"; do
   IFS= read -r magic < "$image" || true
   [[ "$magic" == P6 ]] || fail "invalid QEMU PPM screenshot: $image"
 done
+"$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter
 for service in NetworkManager elogind local.target; do
   if ! grep -Fq "[  OK  ] $service" "$serial_log"; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
@@ -465,7 +540,16 @@ for _ in {1..20}; do
   sleep 1
 done
 [[ -b "$root_device" ]] || fail "installed partition device did not reappear: $root_device"
+e2fsck -p "$root_device" 2>/dev/null || true
 mkdir -p "$target_dir"
 mount "$root_device" "$target_dir"
 mounted_target=true
+keyring_fingerprint=D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+if ! keyring_output=$(chroot "$target_dir" /usr/bin/pacman-key --finger "$keyring_fingerprint" 2>&1); then
+  printf '%s\n' "$keyring_output" >&2
+  fail 'booted installed pacman keyring is not readable'
+fi
+keyring_output_compact=$(tr -d '[:space:]' <<<"$keyring_output")
+[[ "$keyring_output_compact" == *"$keyring_fingerprint"* ]] \
+  || fail 'booted DINX package signing key was not populated during installed first boot'
 printf 'smoke-install: installed package payload and booted disk checks passed; this is not a Calamares end-to-end installation (GUI/user/storage modules are not exercised)\n'

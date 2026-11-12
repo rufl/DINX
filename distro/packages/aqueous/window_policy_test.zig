@@ -4,4 +4,5 @@
 test {
     _ = @import("input/drag.zig");
     _ = @import("state/store.zig");
+    _ = @import("client_maximize_request.zig");
 }

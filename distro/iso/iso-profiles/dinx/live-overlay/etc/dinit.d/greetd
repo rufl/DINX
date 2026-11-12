@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Live boot starts the Aqueous/Pearl session directly under dinit; greetd
+# stays installed-only. This unit shadows the real greetd service in the
+# livefs overlay so nothing pulls the display manager into the live boot.
+type = scripted
+command = /bin/true

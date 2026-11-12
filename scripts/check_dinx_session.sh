@@ -12,7 +12,7 @@ graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libex
 graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
 greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
 aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
-gtk_dark_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-gtk-dark-mode-seed"
+theme_sync="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
 live_config_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-config"
 aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
 aqueous_decoration_patch="$root/distro/packages/aqueous/server-decorations.patch"
@@ -48,7 +48,7 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$gtk_dark_seed" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$aqueous_wrapper" "$theme_sync" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
@@ -73,9 +73,10 @@ for session_path in "$session_dir"/*.desktop; do
 done
 [[ -x "$greeter_wrapper" ]] || fail 'Pearl Greeter wrapper is not executable'
 [[ -x "$aqueous_wrapper" ]] || fail 'Aqueous session wrapper is not executable'
+sh -n "$aqueous_wrapper" || fail 'Aqueous session wrapper has invalid shell syntax'
 [[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
-[[ -x "$gtk_dark_seed" ]] || fail 'GTK dark-mode preference seeder is not executable'
-sh -n "$gtk_dark_seed" || fail 'GTK dark-mode preference seeder has invalid shell syntax'
+[[ -x "$theme_sync" ]] || fail 'GTK/Qt session theme synchronizer is not executable'
+sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
 [[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
@@ -123,8 +124,22 @@ if grep -Eiq 'systemd|systemctl' "$greetd_config"; then
   fail 'greetd config contains a systemd integration'
 fi
 
-grep -Fq 'export LIBSEAT_BACKEND="${LIBSEAT_BACKEND:-logind}"' "$greeter_wrapper" \
-  || fail 'Pearl Greeter does not default libseat to the active elogind seat'
+grep -Fq 'grep -qx seat' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not verify seatd group membership before selecting the seatd backend'
+grep -Fq 'export LIBSEAT_BACKEND=seatd' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not select the seatd libseat backend'
+grep -Fq 'export LIBSEAT_BACKEND=logind' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not fall back to elogind for libseat'
+grep -Fq 'export HOME=/var/empty/pearl-greeter' "$greeter_wrapper" \
+  || fail 'Pearl Greeter does not use its root-owned trusted home'
+grep -Fq 'export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config' "$greeter_wrapper" \
+  || fail 'Pearl Greeter config home is not on its writable private directory'
+grep -Fq 'export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share' "$greeter_wrapper" \
+  || fail 'Pearl Greeter data home is not on its writable private directory'
+grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state' "$greeter_wrapper" \
+  || fail 'Pearl Greeter state home is not its dedicated writable state directory'
+grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' "$greeter_wrapper" \
+  || fail 'Pearl Greeter cache home is not on its writable runtime directory'
 jq -e '
   .version == 1
   and .theme == "gtk"
@@ -162,6 +177,18 @@ grep -Fq 'useradd --system --gid pearl-greeter' "$pearl_install" \
   || fail 'Pearl Greeter account is not provisioned by the package hook'
 grep -Fq 'usermod --append --groups video,render pearl-greeter' "$pearl_install" \
   || fail 'Pearl Greeter account is missing video/render access'
+grep -Fq 'install -d -o root -g root -m 0755 /var/empty/pearl-greeter' "$pearl_install" \
+  || fail 'Pearl Greeter trusted home is not provisioned as root-owned and read-only'
+for greeter_path in \
+  /var/lib/pearl-greeter \
+  /var/lib/pearl-greeter/.config \
+  /var/lib/pearl-greeter/.local \
+  /var/lib/pearl-greeter/.local/share \
+  /var/lib/pearl-greeter/.local/state \
+  /var/cache/pearl-greeter; do
+  grep -Fq "$greeter_path" "$pearl_install" \
+    || fail "Pearl Greeter writable path is not provisioned by its package hook: $greeter_path"
+done
 grep -Fq '    - render' "$users_conf" || fail 'Calamares users are missing render-node access'
 grep -Fq 'two-default-workspaces.patch' "$root/distro/packages/aqueous/PKGBUILD" \
   || fail 'Aqueous package does not apply the two-workspace default'
@@ -191,6 +218,12 @@ grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
   || fail 'GTK4 renderer selection is not automatic for CPU, virtual GL and Vulkan profiles'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not launch the selected compositor'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$aqueous_wrapper" \
+  || fail 'Aqueous live session does not use its private runtime directory'
+grep -Fq 'lock_path=$XDG_RUNTIME_DIR/dinx-aqueous-pearl.lock' "$aqueous_wrapper" \
+  || fail 'Aqueous compositor lock is not scoped to the session runtime directory'
+grep -Fq 'flock -n 9' "$aqueous_wrapper" \
+  || fail 'Aqueous session does not reject a duplicate compositor instance'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
   fail 'Aqueous session still forces the failing Lavapipe compositor path'
 fi
@@ -250,6 +283,11 @@ grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_ini
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
   || fail 'session supervisor does not launch the Pearl first-run wrapper'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
+if grep -Fq 'dinx-sync-session-theme' "$aqueous_wrapper"; then
+  fail 'toolkit theme synchronization runs before session D-Bus readiness'
+fi
+grep -Fq 'theme_sync_helper=${DINX_THEME_SYNC_HELPER:-/usr/local/libexec/dinx-sync-session-theme}' "$pearl_shell" \
+  || fail 'Pearl shell does not invoke the toolkit theme synchronizer'
 [[ -x "$live_config_seed" ]] || fail 'live Aqueous config seed helper is not executable'
 sh -n "$live_config_seed" || fail 'live Aqueous config seed helper has invalid shell syntax'
 pearl_shell_test=$(mktemp -d)
@@ -325,6 +363,7 @@ pearl_shell_test_env=(
   "XDG_STATE_HOME=$pearl_shell_test/state"
   "DINX_FIRST_RUN_WIZARD=$pearl_shell_test/wizard"
   "DINX_WIZARD_CALLS=$pearl_shell_test/wizard-calls"
+  "DINX_THEME_SYNC_HELPER=/bin/true"
 )
 mkdir -p "$pearl_shell_test/home"
 env "${pearl_shell_test_env[@]}" "$pearl_shell"
@@ -358,6 +397,7 @@ env \
   "XDG_CONFIG_HOME=$pearl_shell_top_test/config" \
   "XDG_STATE_HOME=$pearl_shell_top_test/state" \
   "DINX_FIRST_RUN_WIZARD=$pearl_shell_top_test/wizard" \
+  "DINX_THEME_SYNC_HELPER=/bin/true" \
   "$pearl_shell"
 jq -e '.bar.edge == "top" and .dock.edge == "bottom" and .theme.variant == "dark"' \
   "$pearl_shell_top_test/config/pearl/preferences.json" >/dev/null \
@@ -378,46 +418,19 @@ if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop' \
   "$qemu_session_checker" "$qemu_screen" first-run >/dev/null 2>&1; then
   fail 'QEMU first-run client-window check accepts a screenshot without readable client text'
 fi
+env "${pearl_shell_test_env[@]}" DINX_TEST_OCR=$'Aqueous + Pearl (DINX) - Wayland\nPas\n\nrd\nSign in' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null
+if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR=$'Aqueous + Pearl (DINX) - Wayland\nPas\n\nrd\nSign in\nAccessDenied' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
+  fail 'QEMU greeter check accepts an access-denied startup failure'
+fi
+if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop Pas rd Sign in' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
+  fail 'QEMU greeter check accepts controls without Pearl Greeter identity'
+fi
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run' "$iso_smoke" \
   || fail 'QEMU live smoke does not check readable first-run client-window content'
-printf 'qemu_client_window_smoke readable_first_run=true session_marker=true rejects_missing_title=true\n'
-gtk_seed_test="$pearl_shell_test/gtk-mode"
-mkdir -p "$gtk_seed_test/bin"
-cat >"$gtk_seed_test/bin/dconf" <<'SH'
-#!/bin/sh
-case "$1" in
-  read)
-    if [ -f "$DINX_TEST_DCONF_DB" ]; then cat "$DINX_TEST_DCONF_DB"; fi
-    ;;
-  write)
-    printf '%s\n' "$3" >>"$DINX_TEST_DCONF_WRITES"
-    if [ "${DINX_TEST_DCONF_WRITE_FAIL:-0}" = 1 ]; then exit 1; fi
-    printf '%s\n' "$3" >"$DINX_TEST_DCONF_DB"
-    ;;
-  *) exit 2 ;;
-esac
-SH
-chmod +x "$gtk_seed_test/bin/dconf"
-gtk_seed_path="$gtk_seed_test/bin:$PATH"
-env PATH="$gtk_seed_path" DINX_TEST_DCONF_DB="$gtk_seed_test/color-scheme" \
-  DINX_TEST_DCONF_WRITES="$gtk_seed_test/writes" "$gtk_dark_seed"
-[[ $(cat "$gtk_seed_test/color-scheme") == "'prefer-dark'" ]] \
-  || fail 'GTK dark-mode seeder did not set prefer-dark when no user choice exists'
-printf '%s\n' "'prefer-light'" >"$gtk_seed_test/color-scheme"
-env PATH="$gtk_seed_path" DINX_TEST_DCONF_DB="$gtk_seed_test/color-scheme" \
-  DINX_TEST_DCONF_WRITES="$gtk_seed_test/writes" "$gtk_dark_seed"
-[[ $(cat "$gtk_seed_test/color-scheme") == "'prefer-light'" ]] \
-  || fail 'GTK dark-mode seeder overwrote an explicit user color-scheme'
-[[ $(wc -l <"$gtk_seed_test/writes") == 1 ]] \
-  || fail 'GTK dark-mode seeder wrote a setting after finding a user preference'
-rm "$gtk_seed_test/color-scheme"
-if ! env PATH="$gtk_seed_path" DINX_TEST_DCONF_DB="$gtk_seed_test/color-scheme" \
-  DINX_TEST_DCONF_WRITES="$gtk_seed_test/writes" DINX_TEST_DCONF_WRITE_FAIL=1 "$gtk_dark_seed"; then
-  fail 'GTK dark-mode seeder failure stopped the live session'
-fi
-[[ ! -e "$gtk_seed_test/color-scheme" ]] \
-  || fail 'GTK dark-mode seeder fixture unexpectedly wrote after injected failure'
-printf 'dinx_gtk_dark_mode_smoke default=prefer-dark explicit=preserved failure_safe=true\n'
+printf 'qemu_client_window_smoke readable_first_run=true session_marker=true greeter_ocr_fragment=true greeter_startup_error_rejected=true rejects_missing_title=true\n'
 grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'

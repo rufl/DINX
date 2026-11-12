@@ -1,0 +1,127 @@
+#!/bin/sh
+set -eu
+
+config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
+preferences="$config_home/pearl/preferences.json"
+if [ ! -r "$preferences" ]; then
+  preferences="$config_home/pearl/last-good.json"
+fi
+if ! command -v jq >/dev/null 2>&1 || [ ! -r "$preferences" ]; then
+  printf '%s\n' 'dinx-sync-session-theme: saved Pearl theme is unavailable; leaving toolkit settings unchanged' >&2
+  exit 0
+fi
+
+if ! theme_variant=$(jq -er '.theme.variant | select(. == "dark" or . == "light")' "$preferences" 2>/dev/null); then
+  printf '%s\n' 'dinx-sync-session-theme: saved Pearl theme variant is invalid; leaving toolkit settings unchanged' >&2
+  exit 0
+fi
+theme_mode=$(jq -r '.theme.mode // ""' "$preferences" 2>/dev/null || printf '')
+gtk_name=$(jq -r '.theme.gtk_name // ""' "$preferences" 2>/dev/null || printf '')
+gtk_theme=Adwaita
+if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
+  gtk_theme=DINX
+fi
+
+set_ini_value() {
+  ini_file=$1
+  ini_section=$2
+  ini_key=$3
+  ini_value=$4
+
+  if [ -L "$ini_file" ]; then
+    printf 'dinx-sync-session-theme: preserving user-managed symlink: %s\n' "$ini_file" >&2
+    return 0
+  fi
+  if [ -e "$ini_file" ] && [ ! -f "$ini_file" ]; then
+    printf 'dinx-sync-session-theme: not a regular settings file: %s\n' "$ini_file" >&2
+    return 0
+  fi
+  ini_dir=${ini_file%/*}
+  if ! mkdir -p "$ini_dir"; then
+    printf 'dinx-sync-session-theme: cannot create settings directory: %s\n' "$ini_dir" >&2
+    return 1
+  fi
+  ini_tmp="$ini_file.tmp.$$"
+  ini_mode=600
+  if [ -f "$ini_file" ]; then
+    ini_mode=$(stat -c '%a' -- "$ini_file" 2>/dev/null || printf '600')
+    if ! awk -v section="$ini_section" -v key="$ini_key" -v value="$ini_value" '
+      function name_of(line, name) {
+        name = line
+        sub(/^\[/, "", name)
+        sub(/\][[:space:]]*$/, "", name)
+        return name
+      }
+      function write_setting() {
+        print key "=" value
+        written = 1
+      }
+      /^\[[^]]+\][[:space:]]*$/ {
+        if (in_section && !written) write_setting()
+        in_section = (name_of($0) == section)
+        if (in_section) found_section = 1
+        print
+        next
+      }
+      in_section && $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
+        if (!written) write_setting()
+        next
+      }
+      { print }
+      END {
+        if (in_section && !written) write_setting()
+        if (!found_section) {
+          if (NR > 0) print ""
+          print "[" section "]"
+          write_setting()
+        }
+      }
+    ' "$ini_file" >"$ini_tmp"; then
+      rm -f -- "$ini_tmp"
+      printf 'dinx-sync-session-theme: cannot update settings: %s\n' "$ini_file" >&2
+      return 1
+    fi
+  else
+    if ! printf '[%s]\n%s=%s\n' "$ini_section" "$ini_key" "$ini_value" >"$ini_tmp"; then
+      rm -f -- "$ini_tmp"
+      printf 'dinx-sync-session-theme: cannot create settings: %s\n' "$ini_file" >&2
+      return 1
+    fi
+  fi
+  if ! chmod "$ini_mode" "$ini_tmp" || ! mv -f -- "$ini_tmp" "$ini_file"; then
+    rm -f -- "$ini_tmp"
+    printf 'dinx-sync-session-theme: cannot install settings: %s\n' "$ini_file" >&2
+    return 1
+  fi
+}
+
+color_scheme_key=/org/gnome/desktop/interface/color-scheme
+dconf_value="'prefer-$theme_variant'"
+if command -v dconf >/dev/null 2>&1; then
+  dconf write "$color_scheme_key" "$dconf_value" >/dev/null 2>&1 || \
+    printf 'dinx-sync-session-theme: could not set dconf color-scheme=%s\n' "$dconf_value" >&2
+else
+  printf '%s\n' 'dinx-sync-session-theme: dconf is unavailable; GTK color preference was not synchronized' >&2
+fi
+
+gtk_prefer_dark=1
+if [ "$theme_variant" = light ]; then
+  gtk_prefer_dark=0
+fi
+for gtk_version in 3.0 4.0; do
+  gtk_settings="$config_home/gtk-$gtk_version/settings.ini"
+  set_ini_value "$gtk_settings" Settings gtk-theme-name "$gtk_theme" || true
+  set_ini_value "$gtk_settings" Settings gtk-application-prefer-dark-theme "$gtk_prefer_dark" || true
+done
+
+qt_config="$config_home/qt6ct/qt6ct.conf"
+qt_palette="$config_home/qt6ct/colors/DINX.conf"
+if [ "$theme_variant" = dark ]; then
+  set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
+  set_ini_value "$qt_config" Appearance custom_palette true || true
+else
+  set_ini_value "$qt_config" Appearance custom_palette false || true
+fi
+
+printf 'dinx-sync-session-theme: variant=%s gtk_theme=%s qt6ct=%s\n' \
+  "$theme_variant" "$gtk_theme" "$theme_variant"

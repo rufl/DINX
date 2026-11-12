@@ -45,8 +45,8 @@ rootfs:
     - flatpak
     - fwupd
     - gparted
-    - godot
     - pixelorama
+    - godot
     - libva
     - phyto
     - pori
@@ -69,7 +69,6 @@ rootfs:
     - krita
     - adw-gtk-theme
     - papirus-icon-theme
-    - qogir-icon-theme
     - onlyoffice
     - zrythm
     - dconf
@@ -90,24 +89,20 @@ rootfs:
     - xdg-desktop-portal-wlr
     - xorg-xwayland
     - bluez
-    - bluez-utils
     - blueman
     - blockbench
+    - bluez-utils
     - btop
     - brightnessctl
-    - clang
     - dialog
     - fzf
     - glances
     - libnewt
-    - man-db
     - openssh
     - patchy
     - procps-ng
     - sqlite
-    - texinfo
     - tmux
-    - vim
     - diffutils
     - kmod
     - python-psutil
@@ -155,6 +150,7 @@ rootfs:
       - greetd-dinit
       - artix-live-dinit
       - firewalld-dinit
+      - dinx-firewalld-dinit
       - opensnitch-dinit
 livefs:
   packages:
@@ -168,6 +164,7 @@ livefs:
       - dbus-dinit
       - elogind-dinit
       - firewalld-dinit
+      - dinx-firewalld-dinit
       - opensnitch-dinit
       - pipewire-dinit
       - pipewire-pulse-dinit

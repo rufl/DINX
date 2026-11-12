@@ -452,6 +452,13 @@ mkdir -p -- "$iso_output_host" "$package_output_host" "$(dirname -- "$package_bu
   "$cache_host/toolchains" "$cache_host/pacman/pkg" "$cache_host/makepkg-sources" \
   "$cache_host/package-artifacts" "$cache_host/cargo" "$cache_host/cargo-target" "$cache_host/zig"
 remove_chroots_after_build=false
+if [[ "${DINX_SKIP_CACHE_SYNC:-false}" != true ]]; then
+  sync_cmd=("$repo_root/scripts/sync_dinx_cache.sh" --cache-dir "$cache_host")
+  if [[ "${DINX_FORCE_CACHE_UPDATE:-false}" == true ]]; then
+    sync_cmd+=(--force)
+  fi
+  "${sync_cmd[@]}" || printf 'build-iso-docker: warning: cache synchronization failed; proceeding with existing cache\n' >&2
+fi
 
 if [[ ${SUDO_UID:-} =~ ^[0-9]+$ && ${SUDO_GID:-} =~ ^[0-9]+$ ]]; then
   host_uid=$SUDO_UID

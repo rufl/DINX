@@ -75,6 +75,8 @@ def latest_tag(
     repository = entry["repository"]
     if provider == "github":
         endpoint = f"https://api.github.com/repos/{repository}/releases/latest"
+    elif provider == "codeberg":
+        endpoint = f"https://codeberg.org/api/v1/repos/{repository}/releases/latest"
     elif provider == "gitlab":
         project = urllib.parse.quote(repository, safe="")
         endpoint = f"https://gitlab.gnome.org/api/v4/projects/{project}/releases/permalink/latest"

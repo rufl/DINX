@@ -75,6 +75,7 @@ if [[ -n "${DINX_HARDWARE_REPORT:-}" ]]; then
 fi
 
 for smoke in \
+  smoke_dinx_pacman_repo_priority.sh \
   smoke_dinx_display_persistence.sh \
   smoke_dinx_session_supervisor.sh \
   smoke_dinx_qt_palette.sh \
@@ -86,6 +87,7 @@ for smoke in \
   smoke_cache_verified_extract.sh \
   smoke_package_artifact_cache.sh \
   smoke_dinx_keyring_config.sh \
+  smoke_iso_content_manifest.sh \
   smoke_iso_builder_packages.sh; do
   "$root/scripts/$smoke"
 done

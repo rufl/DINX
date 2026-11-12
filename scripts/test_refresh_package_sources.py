@@ -107,6 +107,35 @@ class RefreshPackageSourcesTests(unittest.TestCase):
         self.assertIn("EXAMPLE_VERSION=1.3.0", self.source_path.read_text(encoding="utf-8"))
         self.assertIn("pkgrel=5", self.package_path.read_text(encoding="utf-8"))
 
+    def test_codeberg_release_lookup_refreshes_calamares_pin(self) -> None:
+        entry = self.manifest["packages"][0]
+        entry["provider"] = "codeberg"
+        entry["repository"] = "Calamares/calamares"
+        entry["tag_prefix"] = "v"
+        entry["url_template"] = (
+            "https://codeberg.org/Calamares/calamares/releases/download/"
+            "{tag}/calamares-{version}.tar.gz"
+        )
+        self.latest_tag = "v1.3.0"
+
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+
+        self.assertEqual(changed, ["example"])
+        self.assertEqual(
+            self.lookup_calls,
+            [("https://codeberg.org/api/v1/repos/Calamares/calamares/releases/latest", "")],
+        )
+        archive_url = (
+            "https://codeberg.org/Calamares/calamares/releases/download/"
+            "v1.3.0/calamares-1.3.0.tar.gz"
+        )
+        self.assertEqual(self.hash_calls, [(archive_url, "sha256")])
+        updated = dict(line.split("=", 1) for line in changes[self.source_path].splitlines())
+        self.assertEqual(updated["EXAMPLE_VERSION"], "1.3.0")
+        self.assertEqual(updated["EXAMPLE_SOURCE_URL"], archive_url)
+        self.assertIn("pkgrel=5\n", changes[self.package_path])
+
     def test_dotted_release_version_can_render_hyphenated_binary_paths(self) -> None:
         entry = self.manifest["packages"][0]
         entry["tag_prefix"] = "v"

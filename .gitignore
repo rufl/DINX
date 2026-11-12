@@ -14,6 +14,12 @@ dist/
 /distro/packages/deetty/src/
 /distro/packages/deetty/pkg/
 /distro/packages/*/src/
+!/distro/packages/dinitui/src/
+!/distro/packages/dinxpanel/src/
+!/distro/packages/seafoam-settings/src/
+/distro/packages/dinitui/src/stage/
+/distro/packages/dinxpanel/src/stage/
+/distro/packages/seafoam-settings/src/stage/
 /distro/packages/*/pkg/
 /distro/packages/*/*.pkg.tar.zst
 /distro/packages/*/*.pkg.tar.zst.sig

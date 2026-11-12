@@ -25,10 +25,13 @@ for path in \
   "$aqueous_dir/dinit.patch" "$aqueous_dir/server-decorations.patch" \
   "$aqueous_dir/gles2-renderer.patch" "$aqueous_dir/live-session-lock.patch" \
   "$aqueous_dir/titlebar-text.patch" "$aqueous_dir/two-default-workspaces.patch" \
+  "$aqueous_dir/client-maximize-readiness.patch" \
+  "$aqueous_dir/client_maximize_request.zig" \
   "$aqueous_dir/window_policy_test.zig" \
   "$aqueous_dir/live_lock_policy.zig" \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
   "$pearl_dir/server-decorations.patch" \
+  "$pearl_dir/greeter-state-home.patch" \
   "$graphics_helper" "$graphics_environment" "$greeter_wrapper" \
   "$root/scripts/check_dinx_graphics_profile.sh"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
@@ -89,11 +92,14 @@ source_root="$window_test_tmp/Aqueous-$AQUEOUS_VERSION"
 tar -xzf "$aqueous_archive" -C "$window_test_tmp"
 for patch_file in \
   dinit.patch gles2-renderer.patch server-decorations.patch \
-  titlebar-text.patch two-default-workspaces.patch live-session-lock.patch; do
+  titlebar-text.patch two-default-workspaces.patch live-session-lock.patch \
+  client-maximize-readiness.patch; do
   patch --batch --forward --fuzz=0 -Np1 -d "$source_root" \
     -i "$aqueous_dir/$patch_file" >/dev/null \
     || fail "pinned Aqueous source rejects ${patch_file}"
 done
+install -Dm644 "$aqueous_dir/client_maximize_request.zig" \
+  "$source_root/compositor/aqueous/wm/client_maximize_request.zig"
 pearl_archive="$source_cache/pearl/pearl-$PEARL_VERSION.tar.gz"
 "$root/scripts/cache-verified-download.sh" \
   "$pearl_archive" "$PEARL_SOURCE_URL" "$PEARL_SOURCE_SHA256"
@@ -105,6 +111,12 @@ patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
 patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
   -i "$pearl_dir/server-decorations.patch" >/dev/null \
   || fail 'pinned Pearl source rejects server-decorations.patch'
+patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
+  -i "$pearl_dir/greeter-state-home.patch" >/dev/null \
+  || fail 'pinned Pearl source rejects greeter-state-home.patch'
+grep -Fq 'glib.setenv("XDG_STATE_HOME", "/var/lib/pearl-greeter/.local/state", 1)' \
+  "$pearl_source_root/src/greeter_host_main.zig" \
+  || fail 'Pearl host overwrites the writable private state-home path'
 window_source="$source_root/compositor/aqueous/Window.zig"
 if grep -Fq 'posix.getenv(' "$window_source"; then
   fail 'Aqueous window decoration uses the removed Zig std.posix.getenv API'
@@ -165,6 +177,7 @@ install -Dm644 "$aqueous_dir/live_lock_policy.zig" \
   "$source_root/compositor/aqueous/titlebar_text.zig" \
   "$source_root/compositor/aqueous/wm/input/drag.zig" \
   "$source_root/compositor/aqueous/wm/state/store.zig" \
+  "$source_root/compositor/aqueous/wm/client_maximize_request.zig" \
   "$source_root/compositor/aqueous/wm/window_decoration_policy.zig" \
   || fail 'patched Aqueous Zig sources do not parse or match formatter output'
 (
@@ -252,6 +265,10 @@ grep -Fq 'server-decorations.patch' "$pearl_dir/PKGBUILD" \
   || fail 'Pearl Settings fix patch is not applied'
 grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/server-decorations.patch"' "$pearl_dir/PKGBUILD" \
   || fail 'Pearl Settings fix patch is not applied reproducibly'
+grep -Fq 'greeter-state-home.patch' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl writable state-home patch is not packaged'
+grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/greeter-state-home.patch"' "$pearl_dir/PKGBUILD" \
+  || fail 'Pearl writable state-home patch is not applied reproducibly'
 for required in \
   'validateFormDraft' \
   '.settings-window.pearl-gtk { background: @window_bg_color; color: @window_fg_color; }' \
@@ -260,6 +277,9 @@ for required in \
   grep -Fq -- "$required" "$pearl_dir/server-decorations.patch" \
     || fail "Pearl Settings fix patch is missing: $required"
 done
+grep -Fq 'glib.setenv("XDG_STATE_HOME", "/var/lib/pearl-greeter/.local/state", 1)' \
+  "$pearl_dir/greeter-state-home.patch" \
+  || fail 'Pearl writable state-home patch does not isolate Aqueous state'
 grep -Fq -- '-Dwasm-plugins=false' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not select the compact native build'
 grep -Fq 'build-greeter' "$pearl_dir/PKGBUILD" || fail 'Pearl package does not build Pearl Greeter'
 grep -Fq "'esysusers'" "$pearl_dir/PKGBUILD" \

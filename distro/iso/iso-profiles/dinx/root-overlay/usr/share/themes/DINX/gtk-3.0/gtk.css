@@ -6,11 +6,22 @@
 }
 
 window,
+dialog,
+messagedialog,
 .background {
     background-color: #0b0d12;
     color: #d7dde8;
 }
+headerbar windowtitle,
+.titlebar windowtitle {
+    opacity: 0;
+}
 
+.window-frame,
+window.popup,
+window.normal {
+    border: 1px solid #7f8a9c;
+}
 headerbar,
 .titlebar,
 .navigation-sidebar,

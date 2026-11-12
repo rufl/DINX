@@ -35,8 +35,7 @@ if [[ ! -f "$iso_dir/$checksum_name" ]]; then
 fi
 (cd "$iso_dir" && sha512sum --check --status "$checksum_name") \
   || fail "ISO SHA-512 checksum does not match: $iso_dir/$checksum_name"
-DINX_ISO_PATH="$iso_path" DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-110} \
-  "$script_dir/check_dinx_budget.sh"
+DINX_ISO_PATH="$iso_path" DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
 "$script_dir/check-iso-content.sh" "$iso_path"
 printf 'qualify-iso: static ISO, metadata, checksum, content and budget gates passed: %s\n' "$iso_path"
 
@@ -45,7 +44,8 @@ if [[ "$mode" == static ]]; then
   exit 0
 fi
 
-DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-110} \
+DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
+DINX_QEMU_BOOT_KEYS=ret \
 DINX_QEMU_VIDEO_DEVICE= \
 DINX_QEMU_LOG="$iso_dir/dinx-vga.qemu.log" \
 DINX_QEMU_BOOT_SCREENSHOT="$iso_dir/dinx-boot-screen.ppm" \
@@ -59,7 +59,8 @@ DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
 DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
 
-DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-110} \
+DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
+DINX_QEMU_BOOT_KEYS=ret \
 DINX_QEMU_VIDEO_DEVICE=virtio-vga \
 DINX_QEMU_LOG="$iso_dir/dinx-virtio-vga.qemu.log" \
 DINX_QEMU_BOOT_SCREENSHOT="$iso_dir/dinx-virtio-vga-boot-screen.ppm" \

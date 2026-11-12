@@ -1,7 +1,7 @@
 post_install() {
+  set -e
   /usr/lib/dinx-keyring/configure-repository
-  /usr/bin/pacman-key --populate dinx
-  /usr/bin/pacman-key --updatedb
+  printf '%s\n' 'dinx-keyring: Artix and DINX keyrings are initialized and populated during boot'
 }
 
 post_upgrade() {

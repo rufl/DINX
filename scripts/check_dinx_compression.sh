@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+repo_root=$(cd -- "$script_dir/.." && pwd -P)
 wrapper="$repo_root/scripts/iso-tools/mksquashfs"
 
 fail() {
@@ -11,13 +12,15 @@ fail() {
 
 [[ -x "$wrapper" ]] || fail "compression wrapper is missing or not executable: $wrapper"
 for required in \
-  '-comp xz' \
+  '-comp zstd' \
+  '-Xcompression-level 19' \
   '-b 1M' \
-  '-Xbcj x86' \
-  '-Xdict-size 1M' \
   "'usr/src/linux*'" \
   "'var/cache/pacman/pkg/*'" \
-  "'var/log/*'"; do
+  "'var/log/*'" \
+  'strip_documentation()' \
+  'usr/share/man' \
+  'usr/share/gtk-doc'; do
   grep -Fq -- "$required" "$wrapper" || fail "compression wrapper is missing: $required"
 done
 
@@ -31,6 +34,19 @@ set -euo pipefail
 printf '%s\n' "$@" > "$DINX_COMPRESSION_ARGS"
 EOF
 chmod +x "$fake"
+
+fixture_root="$work_dir/rootfs"
+mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1"
+printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
+printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
+printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
+DINX_MKSQUASHFS_REAL="$fake" \
+DINX_COMPRESSION_ARGS="$args_file" \
+  "$wrapper" "$fixture_root" "$work_dir/fixture.img"
+[[ ! -e "$fixture_root/usr/share/doc" ]] \
+  || fail 'documentation directory remains in the final filesystem'
+[[ ! -e "$fixture_root/usr/share/man" ]] \
+  || fail 'manual pages remain in the final filesystem'
 
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \
@@ -58,12 +74,10 @@ output.img
 -e
 old-exclude
 -comp
-xz
+zstd
+-Xcompression-level
+19
 -b
-1M
--Xbcj
-x86
--Xdict-size
 1M
 -wildcards
 -e
@@ -78,4 +92,4 @@ actual=$(cat "$args_file")
   fail 'wrapper did not enforce the deterministic compression arguments'
 }
 
-printf 'dinx_compression_contract compression=xz block=1M dict=1M level=tool-default bcj=x86 excludes=kernel-source+pacman-cache+logs override_safe=true\n'
+printf 'dinx_compression_contract compression=zstd level=19 block=1M excludes=kernel-source+pacman-cache+logs override_safe=true\n'

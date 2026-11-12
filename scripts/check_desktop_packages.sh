@@ -25,10 +25,10 @@ sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syn
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme qogir-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-for package in breeze-icons zathura zathura-pdf-mupdf libmupdf; do
+for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
   if grep -Fqx "    - $package" "$profile"; then
     fail "$package remains explicitly selected in the DINX profile"
   fi
@@ -126,8 +126,11 @@ for package in onlyoffice zrythm; do
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
   grep -Fq '!strip' "$recipe" || fail "$package AppImage package must disable binary stripping"
   grep -Fq -- '--appimage-extract-and-run "$@"' "$wrapper" || fail "$package launcher does not support systems without FUSE"
+  sh -n "$wrapper" || fail "$package AppImage wrapper has invalid shell syntax"
 done
 office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"
+office_recipe="$root/distro/packages/onlyoffice/PKGBUILD"
+grep -Fq "'coreutils'" "$office_recipe" || fail 'ONLYOFFICE runtime does not declare coreutils for AppImage launcher utilities'
 for mime in \
   application/msword \
   application/vnd.openxmlformats-officedocument.wordprocessingml.document \
@@ -339,4 +342,4 @@ if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
   || grep -Fq 'application/vnd.visio' "$office_launcher"; then
   fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
 fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false breeze_icons=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'

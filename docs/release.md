@@ -18,10 +18,11 @@ pinned Deetty repository or require a separate repository secret when its visibi
 and GitHub token permissions allow access; update the archive and contract together
 when changing the pinned source.
 
-For P3, the same package build also runs `scripts/dintor_p3_qualification.sh`. It
-qualifies the Dintor editor core, real `clangd` diagnostics/navigation, native GTK/X11
-dark and light schemes, and bounded Git status/diff markers before the package is
-eligible for the ISO payload and P0 QEMU/install gate.
+For P3, the same package build runs `scripts/dintor_p3_qualification.sh`. It
+qualifies the Dintor editor core, native GTK/X11 dark and light schemes, bounded
+Git status/diff markers, and the generic stdio LSP client against a real
+`clangd` server. This is a builder-only protocol check; the ISO includes ZLS
+for Zig and does not ship the `clang` package.
 
 ## Current validated snapshot
 

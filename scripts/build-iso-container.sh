@@ -282,6 +282,32 @@ trap finish EXIT
                     return "$status"
                   fi
                 fi
+                if [[ "${DINX_FORCE_REBUILD:-false}" != true ]]; then
+                  local -a precompiled_candidates=()
+                  local all_candidates_found=true
+                  local candidate_archive expected_path
+                  while IFS= read -r expected_path; do
+                    [[ -n "$expected_path" ]] || continue
+                    candidate_archive="/var/cache/pacman/pkg/$(basename -- "$expected_path")"
+                    if [[ -f "$candidate_archive" && ! -L "$candidate_archive" ]]; then
+                      precompiled_candidates+=("$candidate_archive")
+                    else
+                      all_candidates_found=false
+                      break
+                    fi
+                  done < <(cd "$package_dir" && runuser -u dinxbuild -- makepkg --packagelist 2>/dev/null || true)
+
+                  if [[ "$all_candidates_found" == true && ${#precompiled_candidates[@]} -gt 0 ]]; then
+                    if package_cache_as_build_user dinx_package_cache_store \
+                      "$package_artifact_cache" "$package_name" "$cache_key" "${precompiled_candidates[@]}" \
+                      && package_cache_as_build_user dinx_package_cache_restore \
+                        "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
+                      printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=precompiled-hit\n' \
+                        "$package_name" "$((SECONDS - package_started))"
+                      return 0
+                    fi
+                  fi
+                fi
                 if [[ -n ${DINX_CACHE_DIRTY_MARKER:-} ]]; then
                   touch -- "$DINX_CACHE_DIRTY_MARKER"
                 fi
@@ -384,6 +410,11 @@ trap finish EXIT
               build_package dinitui
               pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
+              build_package calamares
+              pacman_install_local "$package_repo"/calamares-*.pkg.tar.zst
+              if pacman -Qq plasma-integration >/dev/null 2>&1; then
+                pacman -Rns --noconfirm plasma-integration
+              fi
               scripts/smoke_calamares_startup.sh
               build_package dinxpanel
               pacman_install_local "$package_repo"/dinxpanel-*.pkg.tar.zst
@@ -416,6 +447,11 @@ trap finish EXIT
               build_package gapless
               build_package dinx-keyring
               build_package opensnitch-dinit
+              build_package dinx-firewalld-dinit
+              firewalld_boot_package=$(find "$package_repo" -maxdepth 1 -type f -name 'dinx-firewalld-dinit-*.pkg.tar.zst' -print -quit)
+              [[ -n "$firewalld_boot_package" ]]
+              firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
+              grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
               build_package floorp
               build_package patchy
               build_package blockbench
@@ -443,8 +479,8 @@ trap finish EXIT
               pacman_conf=$(find /usr/share/artools -type f \
                 -path "*/pacman.conf.d/iso-x86_64.conf" -print -quit)
               test -n "$pacman_conf"
-              printf "\n[dinx]\nSigLevel = Required\nServer = http://127.0.0.1:8765\n" \
-                >> "$pacman_conf"
+              scripts/iso-tools/prioritize-dinx-pacman-repo.sh \
+                "$pacman_conf" http://127.0.0.1:8765
               # Pacman 7's alpm downloader cannot write basestrap's root-owned alternate-root sync DB.
               pacman_options_tmp="$pacman_conf.dinx"
               awk '
@@ -670,7 +706,7 @@ trap finish EXIT
                 printf "compression_dictionary=1M\n"
                 printf "compression_bcj=x86\n"
                 printf "compression_excludes=kernel-source,pacman-cache,logs\n"
-                printf "final_rootfs_removed_packages=linux-headers\n"
+                printf "final_squashfs_prune_candidates=breeze,breeze-cursors,dhcpcd,dhcpcd-dinit,ex-vi-compat,linux-headers,man-db,man-pages,pahole,plasma-integration,plasma-workspace,qogir-icon-theme,qqc2-breeze-style,texinfo,vim,vim-runtime,xdg-desktop-portal-kde\n"
                 printf "compression_wrapper_sha256=%s\n" "$(sha256sum /workspace/scripts/iso-tools/mksquashfs | cut -d " " -f 1)"
                 printf "package_repository_schema=dinx-package-repository/v1\n"
                 printf "package_repository_channel=%s\n" "$package_repository_channel"

@@ -20,7 +20,7 @@ const App = struct {
 
         const window_widget = c.adw_application_window_new(@ptrCast(self.application)) orelse return;
         const window: *c.AdwApplicationWindow = @ptrCast(window_widget);
-        c.gtk_window_set_title(@ptrCast(window), "Seafoam Settings");
+        c.gtk_window_set_title(@ptrCast(window), "Desktop Settings");
         c.gtk_window_set_default_size(@ptrCast(window), 920, 680);
         c.gtk_window_set_resizable(@ptrCast(window), 1);
 
@@ -28,9 +28,7 @@ const App = struct {
         const header = c.adw_header_bar_new() orelse return;
         c.adw_header_bar_set_show_title(@ptrCast(header), 1);
         c.adw_toolbar_view_add_top_bar(@ptrCast(toolbar), @ptrCast(header));
-        const title = c.gtk_label_new("Seafoam Settings") orelse return;
-        c.gtk_widget_add_css_class(title, "title-2");
-        c.adw_header_bar_set_title_widget(@ptrCast(header), title);
+        const title = c.gtk_label_new("Desktop Settings") orelse return;
 
         const scroll = c.gtk_scrolled_window_new() orelse return;
         c.gtk_scrolled_window_set_policy(@ptrCast(scroll), c.GTK_POLICY_NEVER, c.GTK_POLICY_AUTOMATIC);
@@ -41,7 +39,7 @@ const App = struct {
         c.gtk_widget_set_margin_top(content, 20);
         c.gtk_widget_set_margin_bottom(content, 24);
 
-        const heading = c.gtk_label_new("Seafoam desktop settings") orelse return;
+        const heading = c.gtk_label_new("Desktop settings") orelse return;
         c.gtk_label_set_xalign(@ptrCast(heading), 0.0);
         c.gtk_widget_add_css_class(heading, "title-1");
         c.gtk_box_append(@ptrCast(content), heading);
@@ -217,6 +215,7 @@ fn applyTheme() void {
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
         ".seafoam-settings { background: #0b0d12; color: #d7dde8; }\n" ++
+        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; }\n" ++
         "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" ++
         "label.heading { color: #8fb8ff; font-weight: 700; }\n";
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));

@@ -10,7 +10,7 @@ Obrigatório para a ISO base:
 
 - O Deetty é descoberto por `$TERMINAL`, aceita os argumentos documentados de inicialização e respeita um diretório de trabalho quando fornecido.
 - O Dintor possui uma entrada `.desktop` válida, abre arquivos e diretórios por launchers XDG padrão e aceita argumentos de arquivo/linha suportados.
-- O Dintor inicia o LSP documentado para cada tipo de arquivo. Zig usa o ZLS 0.16.0 incluído; C/C++ usa `clangd`.
+- A ISO inclui o ZLS 0.16.0 para a integração LSP de Zig do Dintor. O suporte LSP para C/C++ usa `clangd` do pacote opcional `clang` e não faz parte da imagem padrão.
 - O Floorp é o manipulador padrão de HTML, XHTML, HTTP e HTTPS.
 - O OpenSnitch é instalado com inicialização da interface e daemon gerenciado pelo Dinit tanto no sistema live quanto no instalado. Seus padrões nftables permitem tráfego e não interceptam aplicativos desconhecidos; o Firewalld permanece como serviço separado.
 - O Phyto é o manipulador padrão de diretórios; o File Roller cuida de abrir/criar/extrair arquivos compactados; o GParted cuida do particionamento independente.
@@ -24,9 +24,9 @@ O contrato do tema estático DINX é a fonte de verdade:
 - paleta: `/usr/share/dinx/theme/DINX.json`;
 - escolha de cor do usuário: `DINX_COLOR_SCHEME=light|dark`, com `DINTOR_THEME=prefer-light` aceito pelo Dintor;
 - cores Qt6ct: `~/.config/qt6ct/colors/DINX.conf`;
-- tema GTK: Adwaita com Noto Sans 10 do subset latino/latim estendido DINX; a sessão define o esquema `prefer-dark` do GNOME somente quando o usuário não tem uma escolha explícita de esquema de cores.
+- tema GTK: Adwaita no modo Material e DINX no modo GTK, com Noto Sans 10 do subset latino/latim estendido DINX. Depois que o D-Bus da sessão está pronto, o shell Pearl aplica a variante escura/clara salva ao dconf e às preferências GTK 3/4 e sincroniza o Qt6ct: o modo escuro ativa a paleta DINX, e o modo claro desativa a paleta personalizada. As demais configurações dos toolkits são preservadas.
 - texto de largura fixa: Noto Sans Mono 10 do mesmo subset quando exigido pelo aplicativo;
-- bridges gráficas: estados DINX de superfície, controle, hover, primário e erro, com ícones Adwaita quando disponíveis.
+- bridges gráficas: estados DINX de superfície, controle, hover, primário e erro, com ícones Adwaita quando disponíveis; Papirus é o tema padrão de ícones da área de trabalho.
 
 `DINX_COLOR_SCHEME=light` ou `DINTOR_THEME=prefer-light` seleciona o esquema claro empacotado do editor. Os demais valores usam o esquema escuro DINX. O Dintor não interpreta arquivos privados de shell e continua funcional sem nenhuma variável.
 
@@ -40,16 +40,16 @@ O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --
 
 ## Contrato da sessão Aqueous/Pearl
 
-O Aqueous desenha titlebars e controles DINX para clientes XDG cujo modo xdg-decoration negociado seja servidor. Por padrão, clientes que solicitam ou exigem decorações próprias mantêm suas titlebars; o Aqueous omite a barra, o deslocamento de 36 pixels do conteúdo e as zonas de interação da barra nessas janelas. Clientes XWayland usam os hints Motif de decoração: clientes CSD mantêm suas titlebars, enquanto clientes SSD/sem CSD recebem a decoração DINX. `force_ssd=true` substitui explicitamente CSD em clientes XDG. `GTK_CSD=0` desativa o CSD padrão do GTK, mas não barras customizadas criadas pelo aplicativo. O Floorp recebe `MOZ_GTK_TITLEBAR_DECORATION=system` porque seu caminho Gecko GTK Wayland escolhe decorações de cliente antes de verificar `GTK_CSD`. Em janelas com decoração do servidor, o Aqueous estende a máscara arredondada da superfície pelo titlebar do compositor: o conteúdo começa com cantos superiores quadrados sob a barra e mantém um único contorno externo contínuo. A sessão define `org.gnome.desktop.interface color-scheme='prefer-dark'` somente quando o dconf não tem valor do usuário, preservando escolhas explícitas de tema claro/escuro. Arrastar uma área livre da titlebar do servidor move a janela e usa o encaixe do Aqueous para janelas flutuantes: laterais/base encaixam em metades, cantos em quartos e a borda superior maximiza. Janelas em tela cheia ocultam a barra. Menus e popups mantêm seu comportamento.
+O Aqueous desenha titlebars e controles DINX para clientes XDG cujo modo xdg-decoration negociado seja servidor. Por padrão, clientes que solicitam ou exigem decorações próprias mantêm suas titlebars; o Aqueous omite a barra, o deslocamento de 36 pixels do conteúdo e as zonas de interação da barra nessas janelas. Clientes XWayland usam os hints Motif de decoração: clientes CSD mantêm suas titlebars, enquanto clientes SSD/sem CSD recebem a decoração DINX. `force_ssd=true` substitui explicitamente CSD em clientes XDG. `GTK_CSD=0` desativa o CSD padrão do GTK, mas não barras customizadas criadas pelo aplicativo. O Floorp recebe `MOZ_GTK_TITLEBAR_DECORATION=system` porque seu caminho Gecko GTK Wayland escolhe decorações de cliente antes de verificar `GTK_CSD`. Em janelas com decoração do servidor, o Aqueous estende a máscara arredondada da superfície pelo titlebar do compositor: o conteúdo começa com cantos superiores quadrados sob a barra e mantém um único contorno externo contínuo. Quando o D-Bus da sessão está pronto, o shell Pearl aplica a variante escura/clara salva ao dconf, às preferências GTK 3/4 e ao Qt6ct, mantendo os aplicativos GTK e Qt alinhados ao tema escolhido no Pearl durante o login. Arrastar uma área livre da titlebar do servidor move a janela e usa o encaixe do Aqueous para janelas flutuantes: laterais/base encaixam em metades, cantos em quartos e a borda superior maximiza. Janelas em tela cheia ocultam a barra. Menus e popups mantêm seu comportamento.
 
 O Pearl Settings não cria uma barra de título própria nesta sessão, evitando decoração duplicada; no modo de tema GTK, a janela usa um fundo opaco do tema. A opção de sincronização de bordas do Pearl sincroniza cores, não geometria: a build `aqueous-cpu` de compatibilidade desativa os efeitos Vulkan e mantém cantos quadrados. Cantos arredondados no compositor exigem Aqueous com efeitos Vulkan habilitados.
 
 - Aqueous/Pearl é a única sessão de usuário selecionável e suportada da DINX.
-- A ISO live abre `dinx` diretamente pelo autologin dinit; o rootfs instalado mantém login manual.
+- A ISO live abre `dinx` pelo serviço Dinit reiniciável `dinx-live-session`, com seatd e diretório de runtime privado; o greetd fica exclusivo da instalação e o rootfs instalado mantém login manual.
 - O Pearl Greeter é a interface de login instalada do greetd, não uma segunda sessão de usuário; sua configuração pertencente ao root força `Aqueous + Pearl (DINX)` e não há fallback silencioso.
 - `dinx-aqueous-pearl` inicia o Aqueous diretamente. O filho init espera o Wayland e o D-Bus da sessão; então o supervisor inicia Shikane, PolicyKit, o idle obrigatório e Pearl. O daemon opcional da BC-250 só inicia quando o pacote assinado é instalado separadamente; instale-o somente após detectar o PCI `1002:13fe`. A ISO genérica omite todos os pacotes específicos da BC-250.
 - Falha de helper obrigatório ou do Pearl registra estado explícito e encerra o compositor, em vez de deixar um desktop vazio.
-- A sessão usa elogind/libseat e execução direta sobre dinit; não exige systemd, systemctl, uwsm ou unidades de usuário.
+- A sessão live usa seatd/libseat; sessões instaladas mantêm a seleção de backend em runtime com elogind disponível. Ambos os caminhos executam diretamente sob dinit, sem exigir systemd, systemctl, uwsm ou unidades de usuário.
 
 - `swayidle` bloqueia após 600 segundos e em `before-sleep`; `Super+L`, a ação do launcher e a DINXPanel usam o mesmo caminho `swaylock`. `brightnessctl` fornece passos fixos de 5% para brilho.
 

@@ -43,8 +43,9 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/ports/Makefile.dinx-initramfs" ]] || fail 'missing Makefile.dinx-initramfs'
 [[ -f "$bsd_dir/ports/Makefile.dinx-doctor" ]] || fail 'missing Makefile.dinx-doctor'
 [[ -f "$bsd_dir/ports/Makefile.dinx-hardware-probe" ]] || fail 'missing Makefile.dinx-hardware-probe'
+[[ -f "$bsd_dir/ports/Makefile.dinx-welcome" ]] || fail 'missing Makefile.dinx-welcome'
 [[ -f "$bsd_dir/config/dinit/seatd" ]] || fail 'missing dinit seatd unit'
 [[ -f "$bsd_dir/config/dinit/pipewire" ]] || fail 'missing dinit pipewire unit'
 [[ -f "$bsd_dir/config/dinit/greetd" ]] || fail 'missing dinit greetd unit'
 
-printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed octapkg_primary=passed seafoam_port=passed governor_port=passed bc250_port=passed pixelorama_port=passed blockbench_port=passed bluetooth_port=passed gaming_port=passed graphics_profile_port=passed aqueous_init_port=passed live_autologin_port=passed pearl_greeter_port=passed aqueous_pearl_port=passed package_channel_port=passed plymouth_port=passed initramfs_port=passed doctor_port=passed hardware_probe_port=passed\n'
+printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed octapkg_primary=passed seafoam_port=passed governor_port=passed bc250_port=passed pixelorama_port=passed blockbench_port=passed bluetooth_port=passed gaming_port=passed graphics_profile_port=passed aqueous_init_port=passed live_autologin_port=passed pearl_greeter_port=passed aqueous_pearl_port=passed package_channel_port=passed plymouth_port=passed initramfs_port=passed doctor_port=passed hardware_probe_port=passed welcome_port=passed\n'

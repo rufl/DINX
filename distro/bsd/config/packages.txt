@@ -46,3 +46,4 @@ sysutils/dinx-plymouth-screen
 sysutils/dinx-initramfs
 sysutils/dinx-doctor
 sysutils/dinx-hardware-probe
+sysutils/dinx-welcome

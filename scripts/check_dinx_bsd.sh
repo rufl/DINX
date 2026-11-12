@@ -34,8 +34,9 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/ports/Makefile.dinx-bluetooth-manager" ]] || fail 'missing Makefile.dinx-bluetooth-manager'
 [[ -f "$bsd_dir/ports/Makefile.dinx-gaming" ]] || fail 'missing Makefile.dinx-gaming'
 [[ -f "$bsd_dir/ports/Makefile.dinx-graphics-profile" ]] || fail 'missing Makefile.dinx-graphics-profile'
+[[ -f "$bsd_dir/ports/Makefile.dinx-aqueous-init" ]] || fail 'missing Makefile.dinx-aqueous-init'
 [[ -f "$bsd_dir/config/dinit/seatd" ]] || fail 'missing dinit seatd unit'
 [[ -f "$bsd_dir/config/dinit/pipewire" ]] || fail 'missing dinit pipewire unit'
 [[ -f "$bsd_dir/config/dinit/greetd" ]] || fail 'missing dinit greetd unit'
 
-printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed octapkg_primary=passed seafoam_port=passed governor_port=passed bc250_port=passed pixelorama_port=passed blockbench_port=passed bluetooth_port=passed gaming_port=passed graphics_profile_port=passed\n'
+printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed octapkg_primary=passed seafoam_port=passed governor_port=passed bc250_port=passed pixelorama_port=passed blockbench_port=passed bluetooth_port=passed gaming_port=passed graphics_profile_port=passed aqueous_init_port=passed\n'

@@ -37,3 +37,4 @@ graphics/blockbench
 sysutils/dinx-bluetooth-manager
 games/dinx-gaming
 sysutils/dinx-graphics-profile
+x11-wm/dinx-aqueous-init

@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DINX First-Run Wizard (DINX-BSD)
+PORTNAME=	dinx-first-run-wizard
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils x11
+MASTER_SITES=	https://github.com/rufl/dinx-first-run-wizard/releases/download/v1.0.0/
+DISTNAME=	dinx-first-run-wizard-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX first-run session configuration wizard for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/dinx-first-run-wizard ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

@@ -70,3 +70,4 @@ sysutils/dinx-plymouth-quit
 sysutils/dinx-live-root-overrides
 sysutils/dinx-plymouth-theme
 sysutils/dinx-ray-mark
+sysutils/dinx-first-run-wizard

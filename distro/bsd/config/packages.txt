@@ -35,3 +35,4 @@ sysutils/bc250-control-center
 graphics/pixelorama
 graphics/blockbench
 sysutils/dinx-bluetooth-manager
+games/dinx-gaming

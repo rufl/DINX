@@ -28,4 +28,4 @@ www/floorp
 editors/onlyoffice-desktopEditors
 sysutils/pori
 graphics/phyto
-editors/nocted
+editors/dinted

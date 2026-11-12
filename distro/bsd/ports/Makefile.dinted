@@ -1,12 +1,12 @@
-# FreeBSD Port Makefile for NoctEd Text Editor (DINX-BSD)
-PORTNAME=	nocted
+# FreeBSD Port Makefile for DintEd Editor (DINX-BSD)
+PORTNAME=	dinted
 PORTVERSION=	0.1.0
 CATEGORIES=	editors textproc
-MASTER_SITES=	https://github.com/rufl/nocted/releases/download/v0.1.0/
-DISTNAME=	nocted-0.1.0
+MASTER_SITES=	https://github.com/rufl/dinted/releases/download/v0.1.0/
+DISTNAME=	dinted-0.1.0
 
 MAINTAINER=	trafael@dinx.org
-COMMENT=	NoctEd high-performance code editor for DINX-BSD
+COMMENT=	DintEd high-performance code editor for DINX-BSD
 WWW=		https://github.com/rufl/DINX
 
 LICENSE=	MIT
@@ -22,6 +22,6 @@ do-build:
 
 do-install:
 	@mkdir -p ${STAGEDIR}${PREFIX}/bin
-	@cp ${WRKSRC}/zig-out/bin/nocted ${STAGEDIR}${PREFIX}/bin/
+	@cp ${WRKSRC}/zig-out/bin/dinted ${STAGEDIR}${PREFIX}/bin/
 
 .include <bsd.port.mk>

@@ -61,13 +61,8 @@ const App = struct {
         const heading = c.gtk_label_new("System control center") orelse return;
         c.gtk_label_set_xalign(@ptrCast(heading), 0.0);
         c.gtk_widget_add_css_class(heading, "title-1");
+        c.gtk_widget_set_margin_bottom(heading, 18);
         c.gtk_box_append(@ptrCast(content), heading);
-        const intro = c.gtk_label_new("YaST-inspired access to DINX hardware, services, desktop, updates, firmware and recovery tools. Actions use fixed argv; package operations are explicit and non-destructive.") orelse return;
-        c.gtk_label_set_xalign(@ptrCast(intro), 0.0);
-        c.gtk_label_set_wrap(@ptrCast(intro), 1);
-        c.gtk_widget_add_css_class(intro, "dim-label");
-        c.gtk_widget_set_margin_bottom(intro, 18);
-        c.gtk_box_append(@ptrCast(content), intro);
 
         appendSectionTitle(content, "Hardware");
         const hardware = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
@@ -669,10 +664,14 @@ fn connect(instance: anytype, signal: [*:0]const u8, callback: anytype, app: *Ap
 }
 
 fn applyTheme() void {
+    const manager = c.adw_style_manager_get_default();
+    c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
-        ".dinx-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" ++
-        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" ++
+        ".dinx-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" +
+        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" +
+        "window.background { background-color: #0b0d12; }\n" +
+        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" +
         "label.heading { color: #8fb8ff; font-weight: 700; }\n";
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;

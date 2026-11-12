@@ -46,6 +46,7 @@ rootfs:
     - fwupd
     - gparted
     - pixelorama
+    - godot
     - libva
     - phyto
     - pori

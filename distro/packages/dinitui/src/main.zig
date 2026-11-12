@@ -117,7 +117,7 @@ const App = struct {
 
         const window_widget = c.adw_application_window_new(@ptrCast(self.application)) orelse return;
         const window: *c.AdwApplicationWindow = @ptrCast(window_widget);
-        c.gtk_window_set_title(@ptrCast(window), "DinitUI");
+        c.gtk_window_set_title(@ptrCast(window), "Services");
         c.gtk_window_set_default_size(@ptrCast(window), 1180, 760);
         c.gtk_window_set_resizable(@ptrCast(window), 1);
 
@@ -126,9 +126,7 @@ const App = struct {
         c.adw_header_bar_set_show_title(@ptrCast(header), 1);
         c.adw_toolbar_view_add_top_bar(@ptrCast(toolbar), @ptrCast(header));
 
-        const title = c.gtk_label_new("DinitUI") orelse return;
-        c.gtk_widget_add_css_class(title, "title-2");
-        c.adw_header_bar_set_title_widget(@ptrCast(header), title);
+        const title = c.gtk_label_new("Services") orelse return;
 
         const refresh_button = c.gtk_button_new_with_label("Refresh") orelse return;
         c.gtk_widget_set_tooltip_text(refresh_button, "Refresh services");

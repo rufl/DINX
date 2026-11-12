@@ -31,6 +31,7 @@ depends=(
   'gnupg'
   'zstd'
   'json-glib'
+  'fuse2'
 )
 optdepends=(
   'fish: Fish shell completions'

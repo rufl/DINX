@@ -1,6 +1,0 @@
-# dinit service: pipewire on FreeBSD
-type = process
-command = /usr/local/bin/pipewire
-environment = XDG_RUNTIME_DIR=/var/run/xdg
-restart = true
-depends-on = seatd

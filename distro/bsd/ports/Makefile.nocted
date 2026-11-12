@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for NoctEd Text Editor (DINX-BSD)
+PORTNAME=	nocted
+PORTVERSION=	0.1.0
+CATEGORIES=	editors textproc
+MASTER_SITES=	https://github.com/rufl/nocted/releases/download/v0.1.0/
+DISTNAME=	nocted-0.1.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	NoctEd high-performance code editor for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/nocted ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

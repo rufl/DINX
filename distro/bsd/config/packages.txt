@@ -47,3 +47,4 @@ sysutils/dinx-initramfs
 sysutils/dinx-doctor
 sysutils/dinx-hardware-probe
 sysutils/dinx-welcome
+sysutils/dinx-session-supervisor

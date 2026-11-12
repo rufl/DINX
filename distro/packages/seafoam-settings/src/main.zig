@@ -39,7 +39,7 @@ const App = struct {
         c.gtk_widget_set_margin_top(content, 20);
         c.gtk_widget_set_margin_bottom(content, 24);
 
-        const heading = c.gtk_label_new("Seafoam desktop settings") orelse return;
+        const heading = c.gtk_label_new("Desktop settings") orelse return;
         c.gtk_label_set_xalign(@ptrCast(heading), 0.0);
         c.gtk_widget_add_css_class(heading, "title-1");
         c.gtk_box_append(@ptrCast(content), heading);

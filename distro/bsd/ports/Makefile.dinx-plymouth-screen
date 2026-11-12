@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DINX Plymouth Boot Screen (DINX-BSD)
+PORTNAME=	dinx-plymouth-screen
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils x11
+MASTER_SITES=	https://github.com/rufl/dinx-plymouth-screen/releases/download/v1.0.0/
+DISTNAME=	dinx-plymouth-screen-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX branded Plymouth boot splash screen for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	GPLv2+
+LICENSE_FILE=	${WRKSRC}/COPYING
+
+BUILD_DEPENDS=	plymouth>=0.9.5:sysutils/plymouth
+RUN_DEPENDS=	plymouth>=0.9.5:sysutils/plymouth
+
+USES=		gmake pkgconfig
+
+do-build:
+	@cd ${WRKSRC} && gmake
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/share/plymouth/themes/dinx
+	@cp -R ${WRKSRC}/themes/dinx/* ${STAGEDIR}${PREFIX}/share/plymouth/themes/dinx/
+
+.include <bsd.port.mk>

@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DinitUI (DINX-BSD)
+PORTNAME=	dinitui
+PORTVERSION=	0.2.0
+CATEGORIES=	sysutils
+MASTER_SITES=	https://github.com/rufl/dinitui/releases/download/v0.2.0/
+DISTNAME=	dinitui-0.2.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Graphical Dinit service manager for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/dinitui ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

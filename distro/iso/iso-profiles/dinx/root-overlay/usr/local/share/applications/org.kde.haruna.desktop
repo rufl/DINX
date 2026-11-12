@@ -5,7 +5,7 @@ GenericName=Media Player
 GenericName[pt_BR]=Tocador de Mídia
 Comment=Open source media player built with Qt/QML and libmpv
 Comment[pt_BR]=Reprodutor de mídia de código aberto criado com Qt/QML e libmpv
-Exec=haruna %U
+Exec=env QT_QPA_PLATFORMTHEME=qt6ct haruna %U
 TryExec=haruna
 Icon=haruna
 Type=Application

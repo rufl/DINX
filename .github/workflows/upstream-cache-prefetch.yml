@@ -1,0 +1,62 @@
+name: Refresh upstream pacman cache
+
+on:
+  schedule:
+    - cron: "17 4,16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: dinx-upstream-cache
+  cancel-in-progress: false
+
+jobs:
+  prefetch:
+    name: Prefetch Artix package delta
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Generate upstream package set
+        run: |
+          python3 scripts/list_dinx_upstream_packages.py > "$RUNNER_TEMP/dinx-upstream-packages.txt"
+          test -s "$RUNNER_TEMP/dinx-upstream-packages.txt"
+      - name: Prepare cache directory
+        run: mkdir -p dist/.cache/dinx/pacman/pkg
+      - name: Restore previous upstream package cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/pacman/pkg
+          key: dinx-upstream-pacman-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('distro/iso/iso-profiles/dinx/profile.yaml', 'scripts/iso-builder/packages.txt', 'scripts/list_dinx_upstream_packages.py') }}-${{ github.run_id }}
+          restore-keys: |
+            dinx-upstream-pacman-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('distro/iso/iso-profiles/dinx/profile.yaml', 'scripts/iso-builder/packages.txt', 'scripts/list_dinx_upstream_packages.py') }}-
+            dinx-upstream-pacman-v1-${{ runner.os }}-${{ runner.arch }}-
+      - name: Download only missing or changed Artix packages
+        env:
+          ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/workspace:ro" \
+            --volume "$GITHUB_WORKSPACE/dist/.cache/dinx:/var/cache/dinx" \
+            --volume "$RUNNER_TEMP/dinx-upstream-packages.txt:/tmp/dinx-upstream-packages.txt:ro" \
+            --workdir /workspace \
+            "$ARTIX_IMAGE" \
+            bash /workspace/scripts/sync_dinx_cache.sh \
+              --upstream-only --strict --cache-dir /var/cache/dinx \
+              --package-list /tmp/dinx-upstream-packages.txt
+          sudo chown -R "$(id -u):$(id -g)" dist/.cache/dinx/pacman
+      - name: Save refreshed upstream package cache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/pacman/pkg
+          key: dinx-upstream-pacman-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('distro/iso/iso-profiles/dinx/profile.yaml', 'scripts/iso-builder/packages.txt', 'scripts/list_dinx_upstream_packages.py') }}-${{ github.run_id }}

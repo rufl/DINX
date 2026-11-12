@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Automate distribution maintenance: twice-daily Artix package prefetch, daily upstream pin refresh through reviewed PRs, Grype/Trivy/OSV SBOM audits for sources and the final rootfs, and a nightly P0 ISO retained for 14 days.
+
 # v0.1.0-alpha.14
 
 - **Deetty & TUI Apps Windowed Mode:** Updated Deetty wrapper (`/usr/local/bin/deetty`) to maintain standalone dropdown behavior by default when opened without arguments, while automatically launching in independent windowed mode (`--new-window`) when invoked with commands or TUI utilities (`btop`, `mpv`, etc.).

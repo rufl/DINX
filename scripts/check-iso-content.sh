@@ -1137,7 +1137,7 @@ else
   fail 'OpenSnitch defaults must use nftables, allow traffic and avoid intercepting unknown apps'
 fi
 opensnitch_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/autostart/opensnitch-ui.desktop)
-grep -Fqx 'Exec=opensnitch-ui --background' <<<"$opensnitch_autostart" \
+grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' <<<"$opensnitch_autostart" \
   || fail 'OpenSnitch tray UI is not configured to start in the background'
 grep -Fqx 'TryExec=opensnitch-ui' <<<"$opensnitch_autostart" \
   || fail 'OpenSnitch autostart entry does not guard the UI executable'

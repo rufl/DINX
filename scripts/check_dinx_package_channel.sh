@@ -9,11 +9,12 @@ python3 scripts/check_package_update_manifest.py
 manifest=.github/package-updates.json
 updater=scripts/refresh_package_sources.py
 refresh_workflow=.github/workflows/upstream-package-refresh.yml
+cache_workflow=.github/workflows/upstream-cache-prefetch.yml
 publish_workflow=.github/workflows/publish-dinx-packages.yml
 contracts_workflow=.github/workflows/contracts.yml
 keyring=distro/packages/dinx-keyring
 live_keyring_service=distro/iso/iso-profiles/dinx/live-overlay/etc/dinit.d/dinx-keyring-populate
-for path in "$manifest" "$updater" "$refresh_workflow" "$publish_workflow" \
+for path in "$manifest" "$updater" "$refresh_workflow" "$cache_workflow" "$publish_workflow" \
   "$contracts_workflow" "$keyring/PKGBUILD" "$keyring/dinx-keyring.install" \
   "$keyring/dinx-configure-repository" "$keyring/dinx-mirrorlist" \
   "$keyring/dinx-keyring-bootstrap" "$keyring/dinx-keyring-bootstrap.service" \
@@ -65,7 +66,7 @@ for required in \
     || fail "Docker package-only wiring is missing: $required"
 done
 for required in \
-  'cron: "17 4 * * 1"' \
+  'cron: "17 3 * * *"' \
   'scripts/refresh_package_sources.py' \
   'gh workflow run contracts.yml' \
   'gh run watch "$contract_run"' \
@@ -75,6 +76,14 @@ for required in \
   '      pull-requests: write'; do
   grep -Fq -- "$required" "$refresh_workflow" \
     || fail "scheduled upstream review workflow is missing: $required"
+done
+for required in \
+  'cron: "17 4,16 * * *"' \
+  'scripts/sync_dinx_cache.sh' \
+  '--upstream-only --strict' \
+  'actions/cache/save@'; do
+  grep -Fq -- "$required" "$cache_workflow" \
+    || fail "upstream cache prefetch workflow is missing: $required"
 done
 for required in \
   'DINX_PACKAGE_REPOSITORY_ONLY: "true"' \
@@ -93,4 +102,4 @@ for required in \
     || fail "reusable contract validation is missing: $required"
 done
 
-printf 'dinx_package_channel_contract upstream_refresh=reviewed_weekly_pr package_only_build=true repository=github-release-assets signed=true keyring=profile_and_pacman_config shelly=pacman\n'
+printf 'dinx_package_channel_contract upstream_refresh=reviewed_daily_pr package_only_build=true repository=github-release-assets signed=true keyring=profile_and_pacman_config shelly=pacman\n'

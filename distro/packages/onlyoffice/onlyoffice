@@ -1,4 +1,7 @@
 #!/bin/sh
 set -eu
 export PATH="${PATH:+$PATH:}/usr/bin:/bin"
-exec /opt/onlyoffice/DesktopEditors.AppImage --appimage-extract-and-run "$@"
+export GTK_THEME=DINX
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+export QT_QPA_PLATFORMTHEME=qt6ct
+exec /opt/onlyoffice/DesktopEditors.AppImage --appimage-extract-and-run --theme=dark "$@"

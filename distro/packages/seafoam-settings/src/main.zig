@@ -212,11 +212,14 @@ fn connect(instance: anytype, signal: [*:0]const u8, callback: anytype, app: *Ap
 }
 
 fn applyTheme() void {
+    const manager = c.adw_style_manager_get_default();
+    c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
-        ".seafoam-settings { background: #0b0d12; color: #d7dde8; }\n" ++
-        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; }\n" ++
-        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" ++
+        ".seafoam-settings { background: #0b0d12; color: #d7dde8; }\n" +
+        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" +
+        "window.background { background-color: #0b0d12; }\n" +
+        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" +
         "label.heading { color: #8fb8ff; font-weight: 700; }\n";
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;

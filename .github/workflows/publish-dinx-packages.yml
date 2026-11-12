@@ -101,6 +101,13 @@ jobs:
           key: dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-inputs.outputs.recipe_sha256 }}
           restore-keys: |
             dinx-package-artifacts-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore upstream Artix package cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
+        with:
+          path: dist/.cache/dinx/pacman/pkg
+          key: dinx-upstream-pacman-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('distro/iso/iso-profiles/dinx/profile.yaml', 'scripts/iso-builder/packages.txt', 'scripts/list_dinx_upstream_packages.py') }}
+          restore-keys: |
+            dinx-upstream-pacman-v1-${{ runner.os }}-${{ runner.arch }}-
       - name: Restore makepkg, Cargo and Zig build caches
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4.2.0
         with:

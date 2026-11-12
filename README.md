@@ -110,6 +110,7 @@ Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer 
 - [Qualificação de hardware](docs/pt-BR/alpha7-qualification.md)
 - [Fundação da ISO](distro/iso/README.pt-BR.md)
 - [Modelo de segurança](docs/pt-BR/security-model.md)
+- [Automação de pacotes, segurança e ISO](docs/pt-BR/automation.md)
 - [Licenciamento e REUSE](docs/pt-BR/licensing.md)
 - [Changelog](CHANGELOG.pt-BR.md)
 

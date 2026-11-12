@@ -142,7 +142,7 @@ for required in \
   grep -Fq -- "$required" "$workflow" || fail "workflow is missing build wiring: $required"
 done
 for required in \
-  'cron: "17 4 * * 1"' \
+  'cron: "17 3 * * *"' \
   'scripts/refresh_package_sources.py' \
   'gh pr create' \
   'source_ref'; do

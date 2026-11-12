@@ -2,7 +2,7 @@
 Type=Application
 Name=OpenSnitch UI
 Comment=Monitor application network connections
-Exec=opensnitch-ui --background
+Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background
 TryExec=opensnitch-ui
 Terminal=false
 NoDisplay=true

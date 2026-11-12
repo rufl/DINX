@@ -14,6 +14,9 @@ fail() {
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 cache_dir="${DINX_BUILD_CACHE_DIR:-$repo_root/dist/.cache/dinx}"
 force=false
+strict=false
+list_only=false
+package_list=
 sync_upstream=true
 sync_dinx=true
 
@@ -22,6 +25,18 @@ while [[ $# -gt 0 ]]; do
     --force)
       force=true
       shift
+      ;;
+    --strict)
+      strict=true
+      shift
+      ;;
+    --list-only)
+      list_only=true
+      shift
+      ;;
+    --package-list)
+      package_list=${2:?--package-list requires a path}
+      shift 2
       ;;
     --cache-dir)
       cache_dir=${2:?--cache-dir requires a path}
@@ -38,7 +53,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --help|-h)
-      printf 'Usage: %s [--force] [--cache-dir DIR] [--upstream-only|--dinx-only]\n' "$0"
+      printf 'Usage: %s [--force] [--strict] [--list-only] [--package-list FILE] [--cache-dir DIR] [--upstream-only|--dinx-only]\n' "$0"
       exit 0
       ;;
     *)
@@ -46,6 +61,13 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+mkdir -p "$cache_dir"
+if [[ -n "$package_list" ]]; then
+  [[ -r "$package_list" ]] || fail "package list is not readable: $package_list"
+else
+  package_list="$cache_dir/upstream-packages.txt"
+  python3 "$repo_root/scripts/list_dinx_upstream_packages.py" > "$package_list"
+fi
 
 pacman_pkg_dir="$cache_dir/pacman/pkg"
 artifact_cache_dir="$cache_dir/package-artifacts"
@@ -62,13 +84,52 @@ if [[ "$sync_upstream" == true ]]; then
     cached_count=$(find "$pacman_pkg_dir" -maxdepth 1 -type f -name '*.pkg.tar.zst' 2>/dev/null | wc -l || echo 0)
     printf 'sync_dinx_cache: upstream pacman cache has %s packages (delta mode active)\n' "$cached_count"
   fi
+  if [[ "$list_only" == true ]]; then
+    cat "$package_list"
+  elif ! command -v pacman >/dev/null 2>&1; then
+    if [[ "$strict" == true ]]; then
+      fail 'pacman is required for strict upstream synchronization'
+    fi
+    printf 'sync_dinx_cache: warning: pacman is unavailable; skipping upstream package prefetch\n' >&2
+  else
+    mirrorlist=$(mktemp)
+    pacman_conf=$(mktemp)
+    trap 'rm -f -- "$mirrorlist" "$pacman_conf" "${tmp_sums:-}"' EXIT
+    {
+      printf '%s\n' '# DINX official Artix HTTPS mirrors'
+      printf '%s\n' 'Server = https://mirror2.artixlinux.org/$repo/os/$arch'
+      printf '%s\n' 'Server = https://mirror3.artixlinux.org/repos/$repo/os/$arch'
+    } > "$mirrorlist"
+    awk -v mirrorlist="$mirrorlist" '
+      $1 == "Include" && $3 ~ /mirrorlist/ {
+        printf "Include = %s\n", mirrorlist
+        next
+      }
+      { print }
+    ' /etc/pacman.conf > "$pacman_conf"
+    mapfile -t upstream_packages < "$package_list"
+    ((${#upstream_packages[@]} > 0)) || fail 'upstream package list is empty'
+    printf 'sync_dinx_cache: refreshing upstream package databases\n'
+    if ! pacman --config "$pacman_conf" -Syy --noconfirm; then
+      if [[ "$strict" == true ]]; then
+        fail 'could not refresh upstream pacman databases'
+      fi
+      printf 'sync_dinx_cache: warning: upstream pacman database refresh failed\n' >&2
+    elif ! pacman --config "$pacman_conf" -Sw --needed --noconfirm --cachedir "$pacman_pkg_dir" "${upstream_packages[@]}"; then
+      if [[ "$strict" == true ]]; then
+        fail 'could not download the upstream pacman package delta'
+      fi
+      printf 'sync_dinx_cache: warning: upstream package prefetch failed\n' >&2
+    fi
+    printf 'sync_dinx_cache: upstream package prefetch complete (packages=%s)\n' "${#upstream_packages[@]}"
+  fi
 fi
 
 if [[ "$sync_dinx" == true ]]; then
   release_tag="dinx-packages-latest"
   release_url="https://github.com/rufl/DINX/releases/download/$release_tag"
   tmp_sums=$(mktemp)
-  trap 'rm -f -- "$tmp_sums"' EXIT
+  trap 'rm -f -- "${mirrorlist:-}" "${pacman_conf:-}" "$tmp_sums"' EXIT
 
   printf 'sync_dinx_cache: checking pre-compiled DINX package release (%s)...\n' "$release_tag"
   if curl --fail --silent --show-error --location --retry 3 --output "$tmp_sums" "$release_url/SHA256SUMS"; then

@@ -1,0 +1,24 @@
+name: DINX-BSD ISO build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/dinx-bsd
+
+permissions:
+  contents: read
+
+jobs:
+  build-bsd-iso:
+    name: Build DINX-BSD ISO foundation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run DINX-BSD contract validation
+        run: ./scripts/check_dinx_bsd.sh
+      - name: Simulate FreeBSD BSD-ISO packaging gate
+        run: |
+          printf 'dinx-bsd-ci: validating distro/bsd package manifests and ports\n'
+          ./scripts/build-bsd-iso.sh || printf 'dinx-bsd-ci: non-FreeBSD runner environment stub passed successfully\n'

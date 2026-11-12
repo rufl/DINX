@@ -62,3 +62,4 @@ x11-wm/dinx-lock
 sysutils/dinx-installer
 x11-toolkits/dinx-gtk-dark-mode-seed
 x11-wm/dinx-seed-aqueous-live-config
+x11-wm/dinx-graphics-environment

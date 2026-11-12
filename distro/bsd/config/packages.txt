@@ -55,3 +55,4 @@ net/dinx-network-manager
 audio/dinx-audio-manager
 sysutils/dinx-power-manager
 security/dinx-keyring-populate
+sysutils/dinx-refresh-package-sources

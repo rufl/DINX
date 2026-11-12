@@ -1,0 +1,25 @@
+# DINX-BSD Package Manifest (Upstream FreeBSD ports + DINX first-party ports)
+
+# Upstream FreeBSD Ports (System utilities & tools)
+sysutils/gparted
+archivers/file-roller
+sysutils/seatd
+multimedia/pipewire
+multimedia/wireplumber
+x11-wm/wayland
+x11/wlroots
+sysutils/dinit
+sysutils/pkg
+x11-toolkits/qt6-base
+
+# DINX First-Party / Custom Ports
+x11-wm/aqueous
+x11-wm/pearl
+sysutils/octapkg
+x11/deetty
+sysutils/dinitui
+x11/dinxpanel
+www/floorp
+editors/onlyoffice-desktopEditors
+sysutils/pori
+graphics/phyto

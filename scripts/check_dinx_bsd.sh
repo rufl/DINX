@@ -13,6 +13,7 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -d "$bsd_dir" ]] || fail 'missing distro/bsd directory'
 [[ -f "$repo_root/docs/DINX-BSD-ROADMAP.md" ]] || fail 'missing DINX-BSD roadmap'
 [[ -f "$bsd_dir/config/octapkg.conf" ]] || fail 'missing octapkg.conf'
+[[ -f "$bsd_dir/config/packages.txt" ]] || fail 'missing packages.txt manifest'
 [[ -f "$bsd_dir/ports/Makefile.aqueous" ]] || fail 'missing Makefile.aqueous'
 [[ -f "$bsd_dir/ports/Makefile.pearl" ]] || fail 'missing Makefile.pearl'
 [[ -f "$bsd_dir/ports/Makefile.octapkg" ]] || fail 'missing Makefile.octapkg'
@@ -27,4 +28,4 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/config/dinit/pipewire" ]] || fail 'missing dinit pipewire unit'
 [[ -f "$bsd_dir/config/dinit/greetd" ]] || fail 'missing dinit greetd unit'
 
-printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed additional_ports=passed system_ports=passed app_ports=passed first_party_ports=passed\n'
+printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed additional_ports=passed system_ports=passed app_ports=passed first_party_ports=passed\n'

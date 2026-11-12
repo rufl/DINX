@@ -27,3 +27,5 @@ x11-wm/shikane
 x11-wm/wdisplays
 graphics/swayimg
 security/opensnitch-ui
+audio/zrythm
+devel/godot

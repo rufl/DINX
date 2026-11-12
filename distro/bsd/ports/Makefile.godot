@@ -1,0 +1,28 @@
+# FreeBSD Port Makefile for Godot Engine (DINX-BSD)
+PORTNAME=	godot
+PORTVERSION=	4.3
+CATEGORIES=	devel games
+MASTER_SITES=	https://github.com/godotengine/godot/archive/refs/tags/4.3-stable.tar.gz
+DISTNAME=	godot-4.3-stable
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Godot 2D/3D game engine for DINX-BSD
+WWW=		https://godotengine.org
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE.txt
+
+BUILD_DEPENDS=	scons>=3.0:devel/scons \
+		pkgconf>=0:devel/pkgconf
+RUN_DEPENDS=	vulkan-loader>=0:graphics/vulkan-loader
+
+USES=		compiler:c++17-lang scons pkgconfig
+
+do-build:
+	@cd ${WRKSRC} && scons platform=linuxbsd target=editor optimize=speed -j4
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/bin/godot.linuxbsd.editor.x86_64 ${STAGEDIR}${PREFIX}/bin/godot
+
+.include <bsd.port.mk>

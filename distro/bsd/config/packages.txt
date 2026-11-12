@@ -1,6 +1,6 @@
-# DINX-BSD Package Manifest (Upstream FreeBSD ports + DINX first-party/custom ports)
+# DINX-BSD Package Manifest (Upstream FreeBSD ports + DINX custom/first-party ports)
 
-# Upstream FreeBSD Ports (System utilities & tools)
+# Upstream FreeBSD Ports (Existing in ecosystem)
 sysutils/gparted
 archivers/file-roller
 sysutils/seatd
@@ -11,8 +11,13 @@ x11/wlroots
 sysutils/dinit
 sysutils/pkg
 x11-toolkits/qt6-base
+graphics/swayimg
+x11-wm/wdisplays
+audio/zrythm
+devel/godot
+x11-wm/shikane
 
-# DINX First-Party / Custom Ports
+# DINX Custom / First-Party Ports (Requiring custom packaging)
 x11-wm/aqueous
 x11-wm/pearl
 sysutils/octapkg
@@ -23,9 +28,3 @@ www/floorp
 editors/onlyoffice-desktopEditors
 sysutils/pori
 graphics/phyto
-x11-wm/shikane
-x11-wm/wdisplays
-graphics/swayimg
-security/opensnitch-ui
-audio/zrythm
-devel/godot

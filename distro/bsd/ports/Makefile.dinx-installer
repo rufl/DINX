@@ -1,0 +1,28 @@
+# FreeBSD Port Makefile for DINX Graphical Installer (DINX-BSD)
+PORTNAME=	dinx-installer
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils installer
+MASTER_SITES=	https://github.com/rufl/dinx-installer/releases/download/v1.0.0/
+DISTNAME=	dinx-installer-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX graphical system installer and Calamares bridge for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+RUN_DEPENDS=	calamares>=3.3:sysutils/calamares
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/dinx-installer ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

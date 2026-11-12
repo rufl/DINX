@@ -36,3 +36,4 @@ graphics/pixelorama
 graphics/blockbench
 sysutils/dinx-bluetooth-manager
 games/dinx-gaming
+sysutils/dinx-graphics-profile

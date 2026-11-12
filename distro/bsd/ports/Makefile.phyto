@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for Phyto Image Viewer (DINX-BSD)
+PORTNAME=	phyto
+PORTVERSION=	0.1.0
+CATEGORIES=	graphics
+MASTER_SITES=	https://github.com/rufl/phyto/releases/download/v0.1.0/
+DISTNAME=	phyto-0.1.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Phyto image viewer and organizer for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/phyto ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

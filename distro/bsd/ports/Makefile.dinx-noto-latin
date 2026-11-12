@@ -1,0 +1,23 @@
+# FreeBSD Port Makefile for DINX Noto Latin Fonts (DINX-BSD)
+PORTNAME=	dinx-noto-latin
+PORTVERSION=	1.0.0
+CATEGORIES=	x11-fonts
+MASTER_SITES=	https://github.com/rufl/dinx-noto-latin/releases/download/v1.0.0/
+DISTNAME=	dinx-noto-latin-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX Noto Sans and Mono Latin font bundle for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	OFL11
+LICENSE_FILE=	${WRKSRC}/OFL.txt
+
+RUN_DEPENDS=	fontconfig>=0:x11-fonts/fontconfig
+
+USES=		no-arch
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/share/fonts/noto
+	@cp -R ${WRKSRC}/fonts/* ${STAGEDIR}${PREFIX}/share/fonts/noto/
+
+.include <bsd.port.mk>

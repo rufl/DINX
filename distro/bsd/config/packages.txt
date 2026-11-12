@@ -49,3 +49,4 @@ sysutils/dinx-hardware-probe
 sysutils/dinx-welcome
 sysutils/dinx-session-supervisor
 x11-toolkits/dinx-qt-palette
+x11-fonts/dinx-noto-latin

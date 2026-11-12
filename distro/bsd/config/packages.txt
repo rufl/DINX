@@ -23,7 +23,7 @@ x11-wm/pearl
 sysutils/octapkg
 x11/deetty
 sysutils/dinitui
-x11/dinxpanel
+x11-wm/dinxpanel
 www/floorp
 editors/onlyoffice-desktopEditors
 sysutils/pori
@@ -38,3 +38,4 @@ sysutils/dinx-bluetooth-manager
 games/dinx-gaming
 sysutils/dinx-graphics-profile
 x11-wm/dinx-aqueous-init
+sysutils/dinx-live-autologin

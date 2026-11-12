@@ -280,7 +280,6 @@ required_paths=(
   usr/share/licenses/impasto/license-mit-pinta.txt
   usr/share/licenses/impasto/license-lgpl.txt
   usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md
-  usr/share/doc/impasto/SOURCE
   usr/bin/onlyoffice
   usr/bin/zrythm
   opt/onlyoffice/DesktopEditors.AppImage
@@ -290,8 +289,6 @@ required_paths=(
   usr/share/licenses/onlyoffice/LICENSE
   usr/share/licenses/zrythm/LicenseRef-ZrythmLicense.txt
   usr/share/licenses/zrythm/TRADEMARKS.md
-  usr/share/doc/onlyoffice/SOURCE
-  usr/share/doc/zrythm/SOURCE
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
@@ -306,8 +303,6 @@ required_paths=(
   usr/share/applications/blockbench.desktop
   usr/share/licenses/patchy/LICENSE
   usr/share/licenses/blockbench/LICENSE.MD
-  usr/share/doc/patchy/SOURCE
-  usr/share/doc/blockbench/SOURCE
   usr/bin/pixelorama
   opt/pixelorama/Pixelorama.x86_64
   opt/pixelorama/Pixelorama.pck
@@ -315,7 +310,6 @@ required_paths=(
   usr/share/icons/hicolor/256x256/apps/pixelorama.png
   usr/share/mime/packages/com.orama_interactive.Pixelorama.xml
   usr/share/licenses/pixelorama/LICENSE
-  usr/share/doc/pixelorama/SOURCE
   etc/dinit.d/bluetoothd
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
@@ -1162,9 +1156,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     etc/dinit.d/boot.d/portmaster \
     usr/share/applications/portmaster.desktop \
     usr/share/licenses/portmaster/LICENSE \
-    usr/share/doc/portmaster/SOURCE \
     usr/lib/libayatana-appindicator3.so.1 \
-    usr/bin/firefox \
     usr/share/applications/firefox.desktop \
     etc/firefox/policies/policies.json \
     usr/bin/ufw \

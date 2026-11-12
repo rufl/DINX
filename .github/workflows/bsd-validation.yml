@@ -1,0 +1,22 @@
+name: DINX-BSD Validation
+
+on:
+  push:
+  branches:
+    - feature/dinx-bsd
+  pull_request:
+    branches:
+    - feature/dinx-bsd
+
+permissions:
+  contents: read
+
+jobs:
+  validate-bsd:
+    name: Validate DINX-BSD contracts and scripts
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run DINX-BSD contract validation
+        run: ./scripts/check_dinx_bsd.sh

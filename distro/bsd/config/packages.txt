@@ -29,4 +29,3 @@ editors/onlyoffice-desktopEditors
 sysutils/pori
 graphics/phyto
 editors/dinted
-sysutils/shelly

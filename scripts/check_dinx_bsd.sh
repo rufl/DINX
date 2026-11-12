@@ -26,9 +26,8 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/ports/Makefile.pori" ]] || fail 'missing Makefile.pori'
 [[ -f "$bsd_dir/ports/Makefile.phyto" ]] || fail 'missing Makefile.phyto'
 [[ -f "$bsd_dir/ports/Makefile.dinted" ]] || fail 'missing Makefile.dinted'
-[[ -f "$bsd_dir/ports/Makefile.shelly" ]] || fail 'missing Makefile.shelly'
 [[ -f "$bsd_dir/config/dinit/seatd" ]] || fail 'missing dinit seatd unit'
 [[ -f "$bsd_dir/config/dinit/pipewire" ]] || fail 'missing dinit pipewire unit'
 [[ -f "$bsd_dir/config/dinit/greetd" ]] || fail 'missing dinit greetd unit'
 
-printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed shelly_port=passed\n'
+printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed octapkg_primary=passed\n'

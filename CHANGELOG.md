@@ -1,5 +1,12 @@
 # Changelog
 
+# v0.1.0-alpha.14
+
+- **Deetty & TUI Apps Windowed Mode:** Updated Deetty wrapper (`/usr/local/bin/deetty`) to maintain standalone dropdown behavior by default when opened without arguments, while automatically launching in independent windowed mode (`--new-window`) when invoked with commands or TUI utilities (`btop`, `mpv`, etc.).
+- **Window Titlebar Cleanliness:** Hidden application window titles (`headerbar windowtitle`, `.titlebar windowtitle`) across all GTK3 and GTK4 applications in the DINX theme (`gtk.css`) to eliminate redundant app name headers (such as in Dome).
+- **GTK Window Borders:** Set window frame/border (`.window-frame`, `window.popup`, `window.normal`) to 1px solid medium gray (`#7f8a9c`) across all GTK3 and GTK4 application windows.
+- **Firefox & Gecko Duplicate Close Buttons:** Exported `MOZ_GTK_TITLEBAR_DECORATION=system` globally in the session environment (`dinx-aqueous-pearl`) and disabled `browser.tabs.drawInTitlebar` in Floorp enterprise policies (`policies.json`) to enforce native system titlebars and prevent duplicate window close buttons across Firefox and all Gecko-based browsers.
+
 This file records meaningful DINX changes in direct language. It does not claim that the roadmap is complete; the linked qualification evidence and release metadata are the source of truth.
 
 - Export `MOZ_GTK_TITLEBAR_DECORATION=system` globally in the session environment (`dinx-aqueous-pearl`) to enforce native system titlebars and prevent duplicate close buttons across Firefox and all Gecko-based browsers.

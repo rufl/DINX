@@ -1,3 +1,22 @@
 #!/bin/sh
 set -eu
-exec /usr/bin/deetty "$@"
+case "${1:-}" in
+  -h|--help|--version|--package-smoke|--show|--hide|--toggle|--status|--hidden|--native-grid|--native-grid-windowed|--native-grid-zen|--open-workspace|--open-uri)
+    exec /usr/bin/deetty "$@"
+    ;;
+  --new-window)
+    shift
+    exec /usr/bin/deetty --new-window "$@"
+    ;;
+  -e|--execute)
+    shift
+    exec /usr/bin/deetty --execute "$@"
+    ;;
+  *)
+    if [ $# -eq 0 ]; then
+        exec /usr/bin/deetty
+    else
+        exec /usr/bin/deetty --execute "$@"
+    fi
+    ;;
+esac

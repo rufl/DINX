@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=btop++
+GenericName=System Monitor
+GenericName[pt_BR]=Monitor de sistema
+Comment=Resource monitor that shows usage and stats for processor, memory, disks, network and processes
+Comment[pt_BR]=Monitoramento de atividades com estatisticas e graficos por CPU, disco, rede e processos
+Icon=btop
+Exec=btop %F
+TryExec=btop
+Terminal=false
+Categories=System;Monitor;
+Keywords=system;process;task;
+Keywords[pt_BR]=sistema;processos;tarefas;

@@ -19,8 +19,8 @@ if ! controllers=$(bluetoothctl list 2>&1); then
   notice --error 'Could not query BlueZ. Check that bluetoothd is running in DinitUI.' 'Não foi possível consultar o BlueZ. Verifique se bluetoothd está ativo no DinitUI.'
   exit 1
 fi
-case "$controllers" in
-  *Controller\ *) exec blueman-manager "$@" ;;
-esac
+export GTK_THEME=DINX
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+exec blueman-manager "$@"
 
 notice --info 'No Bluetooth controller is available. In VirtualBox, attach a USB Bluetooth adapter; on hardware, check that the adapter is enabled and bluetoothd is running.' 'Nenhum controlador Bluetooth está disponível. No VirtualBox, conecte um adaptador Bluetooth USB; em hardware, verifique se o adaptador está habilitado e se bluetoothd está ativo.'

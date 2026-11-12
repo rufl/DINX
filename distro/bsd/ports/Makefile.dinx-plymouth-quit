@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DINX Plymouth Quit Helper (DINX-BSD)
+PORTNAME=	dinx-plymouth-quit
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils x11
+MASTER_SITES=	https://github.com/rufl/dinx-plymouth-quit/releases/download/v1.0.0/
+DISTNAME=	dinx-plymouth-quit-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX Plymouth boot screen dismissal service helper for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	GPLv2+
+LICENSE_FILE=	${WRKSRC}/COPYING
+
+BUILD_DEPENDS=	plymouth>=0.9.5:sysutils/plymouth
+RUN_DEPENDS=	plymouth>=0.9.5:sysutils/plymouth
+
+USES=		gmake pkgconfig
+
+do-build:
+	@cd ${WRKSRC} && gmake
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/dinx-plymouth-quit ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

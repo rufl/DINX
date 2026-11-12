@@ -45,7 +45,6 @@ rootfs:
     - flatpak
     - fwupd
     - gparted
-    - godot
     - pixelorama
     - libva
     - phyto
@@ -89,9 +88,8 @@ rootfs:
     - xdg-desktop-portal-wlr
     - xorg-xwayland
     - bluez
-    - bluez-utils
-    - blueman
     - blockbench
+    - bluez-utils
     - btop
     - brightnessctl
     - dialog

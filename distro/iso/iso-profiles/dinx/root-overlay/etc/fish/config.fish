@@ -19,8 +19,8 @@ end
 if not set -q DINTOR_THEME
     set -gx DINTOR_THEME prefer-dark
 end
-if not set -q QT_QPA_PLATFORMTHEME
-    set -gx QT_QPA_PLATFORMTHEME qt6ct
+if not set -q QT_STYLE_OVERRIDE
+    set -gx QT_STYLE_OVERRIDE fusion
 end
 if not set -q XCURSOR_THEME
     set -gx XCURSOR_THEME Adwaita

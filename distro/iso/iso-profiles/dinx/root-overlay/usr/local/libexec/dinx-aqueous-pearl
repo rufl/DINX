@@ -27,7 +27,7 @@ export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"
 export GTK_CSD=0
 # Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
-export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE="${QT_STYLE_OVERRIDE:-fusion}"
 export AQUEOUS_MOD="${AQUEOUS_MOD:-Super}"
 export AQUEOUS_NESTED=0
 if [ -z "${LIBSEAT_BACKEND:-}" ]; then

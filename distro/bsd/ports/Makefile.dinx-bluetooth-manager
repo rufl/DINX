@@ -1,0 +1,28 @@
+# FreeBSD Port Makefile for DINX Bluetooth Manager (DINX-BSD)
+PORTNAME=	dinx-bluetooth-manager
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils comms
+MASTER_SITES=	https://github.com/rufl/dinx-bluetooth-manager/releases/download/v1.0.0/
+DISTNAME=	dinx-bluetooth-manager-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX Bluetooth device manager and pairing utility for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+RUN_DEPENDS=	bluez>=0:net/bluez
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/dinx-bluetooth-manager ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

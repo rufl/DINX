@@ -89,6 +89,7 @@ rootfs:
     - xdg-desktop-portal-wlr
     - xorg-xwayland
     - bluez
+    - blueman
     - blockbench
     - bluez-utils
     - btop

@@ -1,0 +1,26 @@
+# FreeBSD Port Makefile for OctaPkg GUI Package Manager (DINX-BSD)
+PORTNAME=	octapkg
+PORTVERSION=	0.4.0
+CATEGORIES=	sysutils
+MASTER_SITES=	https://github.com/octapkg/octapkg/releases/download/v0.4.0/
+DISTNAME=	octapkg-0.4.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Graphical package manager frontend for OctPkg/pkg
+WWW=		https://github.com/octapkg/octapkg
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	cmake>=3.20:devel/cmake \
+		qt6-base>=6.0:x11-toolkits/qt6-base
+RUN_DEPENDS=	pkg>=0:ports-mgmt/pkg
+
+USES=		compiler:c++17-lang cmake qt:6 pkgconfig
+USE_QT=		base
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/build/octapkg ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for Deetty Terminal Emulator (DINX-BSD)
+PORTNAME=	deetty
+PORTVERSION=	0.1.0
+CATEGORIES=	x11
+MASTER_SITES=	https://github.com/rufl/DEETTY/releases/download/v0.1.0/
+DISTNAME=	deetty-0.1.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Deetty high-performance terminal emulator for DINX-BSD
+WWW=		https://github.com/rufl/DEETTY
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/deetty ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

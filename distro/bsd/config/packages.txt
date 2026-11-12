@@ -41,3 +41,4 @@ x11-wm/dinx-aqueous-init
 sysutils/dinx-live-autologin
 x11/dinx-pearl-greeter-host
 x11-wm/dinx-aqueous-pearl
+sysutils/dinx-package-channel

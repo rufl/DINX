@@ -281,7 +281,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop com.pori.app.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do

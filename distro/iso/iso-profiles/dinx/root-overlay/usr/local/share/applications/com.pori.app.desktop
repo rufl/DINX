@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Disks & Mounts
+Name[pt_BR]=Discos e Montagens
+Comment=Dinit mount and disk manager
+Exec=pori
+TryExec=pori
+Icon=pori
+Type=Application
+Categories=System;
+Terminal=false
+StartupNotify=true

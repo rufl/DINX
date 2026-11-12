@@ -1,0 +1,7 @@
+# dinit service: greetd on FreeBSD
+type = process
+command = /usr/local/bin/greetd --config /usr/local/etc/greetd/config.toml
+restart = true
+depends-on = seatd
+depends-on = pipewire
+waits-for = graphical

@@ -12,8 +12,12 @@ messagedialog,
     background-color: #0b0d12;
     color: #d7dde8;
 }
+headerbar windowtitle label,
+.titlebar windowtitle label {
+    font-size: 11pt;
+    font-weight: 500;
+}
 
-headerbar,
 .titlebar,
 .window-frame,
 leaflet,

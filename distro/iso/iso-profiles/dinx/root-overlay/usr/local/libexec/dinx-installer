@@ -39,13 +39,7 @@ esac
 [ -n "$dbus_address" ] \
     || fail 'DBUS_SESSION_BUS_ADDRESS is missing. The live session D-Bus and polkit authorization agent must be running.'
 
-output=$(pkexec env \
-    XDG_RUNTIME_DIR="$runtime_dir" \
-    WAYLAND_DISPLAY="$wayland_display" \
-    DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
-    XDG_SESSION_TYPE=wayland \
-    QT_QPA_PLATFORM=wayland \
-    calamares 2>&1)
+output=$(calamares 2>&1)
 status=$?
 if [ "$status" -ne 0 ]; then
     if [ -n "$output" ]; then

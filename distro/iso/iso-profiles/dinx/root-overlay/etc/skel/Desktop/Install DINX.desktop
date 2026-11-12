@@ -13,3 +13,5 @@ Terminal=false
 StartupNotify=true
 Categories=System;Qt;
 Keywords=dinx;calamares;installer;install;disco;
+Exec=/usr/local/libexec/dinx-installer
+TryExec=/usr/local/libexec/dinx-installer

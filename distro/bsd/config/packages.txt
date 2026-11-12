@@ -52,3 +52,4 @@ x11-toolkits/dinx-qt-palette
 x11-fonts/dinx-noto-latin
 x11/dinx-tray
 net/dinx-network-manager
+audio/dinx-audio-manager

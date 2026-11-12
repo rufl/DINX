@@ -6,11 +6,21 @@
 }
 
 window,
+dialog,
+messagedialog,
 .background {
     background-color: #0b0d12;
     color: #d7dde8;
 }
 
+headerbar,
+.titlebar,
+.window-frame,
+leaflet,
+flap,
+overlay {
+    background-color: #0b0d12;
+}
 headerbar,
 .titlebar,
 .navigation-sidebar,

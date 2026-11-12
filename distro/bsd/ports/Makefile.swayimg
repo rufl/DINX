@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for Swayimg Image Viewer (DINX-BSD)
+PORTNAME=	swayimg
+PORTVERSION=	3.8
+CATEGORIES=	graphics wayland
+MASTER_SITES=	https://github.com/artizirk/swayimg/releases/download/v3.8/
+DISTNAME=	swayimg-3.8
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Fast image viewer for Wayland compositors (DINX-BSD)
+WWW=		https://github.com/artizirk/swayimg
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	meson>=0.56:devel/meson \
+		ninja>=1.10:devel/ninja \
+		wayland-protocols>=0:graphics/wayland-protocols
+RUN_DEPENDS=	wayland>=0:graphics/wayland
+
+USES=		compiler:c11 gnome meson ninja pkgconfig
+USE_GNOME=	glib20
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/build/swayimg ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

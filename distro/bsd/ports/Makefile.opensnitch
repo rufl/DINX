@@ -1,0 +1,26 @@
+# FreeBSD Port Makefile for OpenSnitch UI (DINX-BSD)
+PORTNAME=	opensnitch-ui
+PORTVERSION=	1.6.0
+CATEGORIES=	security python
+MASTER_SITES=	https://github.com/evilsocket/opensnitch/releases/download/v1.6.0/
+DISTNAME=	opensnitch-1.6.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	OpenSnitch graphical firewall interactive prompt (DINX-BSD)
+WWW=		https://github.com/evilsocket/opensnitch
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/ui/LICENSE
+
+BUILD_DEPENDS=	py311-setuptools>=0:devel/py-setuptools@py311 \
+		py311- PyQt6>=6.0:x11-toolkits/py-PyQt6@py311
+RUN_DEPENDS=	py311- PyQt6>=6.0:x11-toolkits/py-PyQt6@py311 \
+		py311-protobuf>=3.0:devel/py-protobuf@py311
+
+USES=		python:3.11+
+USE_PYTHON=	distutils autoplist
+
+do-install:
+	@cd ${WRKSRC}/ui && ${PYTHON_CMD} setup.py install --prefix=${STAGEDIR}${PREFIX}
+
+.include <bsd.port.mk>

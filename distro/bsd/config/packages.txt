@@ -25,3 +25,5 @@ sysutils/pori
 graphics/phyto
 x11-wm/shikane
 x11-wm/wdisplays
+graphics/swayimg
+security/opensnitch-ui

@@ -68,3 +68,4 @@ sysutils/dinx-mirrorlist
 security/dinx-keyring
 sysutils/dinx-plymouth-quit
 sysutils/dinx-live-root-overrides
+sysutils/dinx-plymouth-theme

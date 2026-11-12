@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DINX Plymouth Theme (DINX-BSD)
+PORTNAME=	dinx-plymouth-theme
+PORTVERSION=	1.0.0
+CATEGORIES=	sysutils x11-fonts
+MASTER_SITES=	https://github.com/rufl/dinx-plymouth-theme/releases/download/v1.0.0/
+DISTNAME=	dinx-plymouth-theme-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX Plymouth boot animation theme and assets for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	GPLv2+
+LICENSE_FILE=	${WRKSRC}/COPYING
+
+BUILD_DEPENDS=	plymouth>=0.9.5:sysutils/plymouth
+RUN_DEPENDS=	plymouth>=0.9.5:sysutils/plymouth
+
+USES=		gmake pkgconfig
+
+do-build:
+	@cd ${WRKSRC} && gmake
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/share/plymouth/themes/dinx-theme
+	@cp -R ${WRKSRC}/theme/* ${STAGEDIR}${PREFIX}/share/plymouth/themes/dinx-theme/
+
+.include <bsd.port.mk>

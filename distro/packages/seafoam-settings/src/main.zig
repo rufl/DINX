@@ -20,7 +20,7 @@ const App = struct {
 
         const window_widget = c.adw_application_window_new(@ptrCast(self.application)) orelse return;
         const window: *c.AdwApplicationWindow = @ptrCast(window_widget);
-        c.gtk_window_set_title(@ptrCast(window), "Seafoam Settings");
+        c.gtk_window_set_title(@ptrCast(window), "Desktop Settings");
         c.gtk_window_set_default_size(@ptrCast(window), 920, 680);
         c.gtk_window_set_resizable(@ptrCast(window), 1);
 
@@ -28,9 +28,7 @@ const App = struct {
         const header = c.adw_header_bar_new() orelse return;
         c.adw_header_bar_set_show_title(@ptrCast(header), 1);
         c.adw_toolbar_view_add_top_bar(@ptrCast(toolbar), @ptrCast(header));
-        const title = c.gtk_label_new("Seafoam Settings") orelse return;
-        c.gtk_widget_add_css_class(title, "title-2");
-        c.adw_header_bar_set_title_widget(@ptrCast(header), title);
+        const title = c.gtk_label_new("Desktop Settings") orelse return;
 
         const scroll = c.gtk_scrolled_window_new() orelse return;
         c.gtk_scrolled_window_set_policy(@ptrCast(scroll), c.GTK_POLICY_NEVER, c.GTK_POLICY_AUTOMATIC);

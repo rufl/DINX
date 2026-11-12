@@ -2,3 +2,4 @@
 set -eu
 export GTK_THEME=DINX
 export GTK_APPLICATION_PREFER_DARK_THEME=1
+exec /opt/impasto/Impasto-x86_64.AppImage --appimage-extract-and-run "$@"

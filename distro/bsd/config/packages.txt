@@ -60,3 +60,4 @@ sysutils/dinx-alpha7-hardware-report
 x11-wm/dinx-idle
 x11-wm/dinx-lock
 sysutils/dinx-installer
+x11-toolkits/dinx-gtk-dark-mode-seed

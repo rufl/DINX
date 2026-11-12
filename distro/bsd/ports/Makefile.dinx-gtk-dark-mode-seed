@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for DINX GTK Dark Mode Seed (DINX-BSD)
+PORTNAME=	dinx-gtk-dark-mode-seed
+PORTVERSION=	1.0.0
+CATEGORIES=	x11-toolkits sysutils
+MASTER_SITES=	https://github.com/rufl/dinx-gtk-dark-mode-seed/releases/download/v1.0.0/
+DISTNAME=	dinx-gtk-dark-mode-seed-1.0.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DINX GTK dark mode preferences seeder and synchronizer for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/dinx-gtk-dark-mode-seed ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

@@ -42,7 +42,11 @@ QDateTimeEdit {
 QComboBox QAbstractItemView,
 QListWidget,
 QTreeWidget,
-QTableWidget {
+QTableWidget,
+QTextEdit,
+QPlainTextEdit,
+QLineEdit,
+QAbstractSpinBox {
     background: #11151d;
     alternate-background-color: #11151d;
     color: #d7dde8;

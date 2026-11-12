@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for Cyan Skillfish Governor (DINX-BSD)
+PORTNAME=	cyan-skillfish
+PORTVERSION=	0.4.14
+CATEGORIES=	sysutils
+MASTER_SITES=	https://github.com/rufl/cyan-skillfish/releases/download/v0.4.14/
+DISTNAME=	cyan-skillfish-0.4.14
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Cyan Skillfish hardware governor and tuning utility for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	zig>=0.13.0:lang/zig
+
+USES=		zig
+USE_ZIG=	yes
+
+do-build:
+	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/zig-out/bin/cyan-skillfish ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

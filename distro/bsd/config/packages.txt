@@ -30,3 +30,4 @@ sysutils/pori
 graphics/phyto
 editors/dinted
 sysutils/seafoam-settings
+sysutils/cyan-skillfish

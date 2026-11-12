@@ -1,0 +1,6 @@
+# dinit service: seatd on FreeBSD
+type = process
+command = /usr/local/bin/seatd -g video
+restart = true
+smooth-recovery = true
+depends-on = devfs

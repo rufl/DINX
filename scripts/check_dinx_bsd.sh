@@ -24,8 +24,10 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/ports/Makefile.onlyoffice" ]] || fail 'missing Makefile.onlyoffice'
 [[ -f "$bsd_dir/ports/Makefile.pori" ]] || fail 'missing Makefile.pori'
 [[ -f "$bsd_dir/ports/Makefile.phyto" ]] || fail 'missing Makefile.phyto'
+[[ -f "$bsd_dir/ports/Makefile.shikane" ]] || fail 'missing Makefile.shikane'
+[[ -f "$bsd_dir/ports/Makefile.wdisplays" ]] || fail 'missing Makefile.wdisplays'
 [[ -f "$bsd_dir/config/dinit/seatd" ]] || fail 'missing dinit seatd unit'
 [[ -f "$bsd_dir/config/dinit/pipewire" ]] || fail 'missing dinit pipewire unit'
 [[ -f "$bsd_dir/config/dinit/greetd" ]] || fail 'missing dinit greetd unit'
 
-printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed additional_ports=passed system_ports=passed app_ports=passed first_party_ports=passed\n'
+printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed additional_ports=passed system_ports=passed app_ports=passed first_party_ports=passed display_ports=passed\n'

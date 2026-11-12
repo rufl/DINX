@@ -1,4 +1,4 @@
-# DINX-BSD Package Manifest (Upstream FreeBSD ports + DINX first-party ports)
+# DINX-BSD Package Manifest (Upstream FreeBSD ports + DINX first-party/custom ports)
 
 # Upstream FreeBSD Ports (System utilities & tools)
 sysutils/gparted
@@ -23,3 +23,5 @@ www/floorp
 editors/onlyoffice-desktopEditors
 sysutils/pori
 graphics/phyto
+x11-wm/shikane
+x11-wm/wdisplays

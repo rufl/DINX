@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for WDisplays (DINX-BSD)
+PORTNAME=	wdisplays
+PORTVERSION=	1.1.0
+CATEGORIES=	x11-wm wayland
+MASTER_SITES=	https://github.com/inarpan/wdisplays/releases/download/v1.1.0/
+DISTNAME=	wdisplays-1.1.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Graphical display configurator for Wayland compositors (DINX-BSD)
+WWW=		https://github.com/inarpan/wdisplays
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	meson>=0.56:devel/meson \
+		ninja>=1.10:devel/ninja \
+		wayland-protocols>=0:graphics/wayland-protocols
+RUN_DEPENDS=	gtk3>=3.24:x11-toolkits/gtk3
+
+USES=		compiler:c11 gnome meson ninja pkgconfig
+USE_GNOME=	gtk30 glib20
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/build/wdisplays ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

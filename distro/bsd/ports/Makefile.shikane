@@ -1,0 +1,29 @@
+# FreeBSD Port Makefile for Shikane Output Manager (DINX-BSD)
+PORTNAME=	shikane
+PORTVERSION=	0.3.0
+CATEGORIES=	x11-wm wayland
+MASTER_SITES=	https://gitlab.com/wgpu-rs/shikane/-/archive/v0.3.0/
+DISTNAME=	shikane-v0.3.0
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Shikane dynamic output configuration daemon for DINX-BSD
+WWW=		https://gitlab.com/wgpu-rs/shikane
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	rust>=1.70:lang/rust \
+		wayland>=0:graphics/wayland
+RUN_DEPENDS=	wayland>=0:graphics/wayland
+
+USES=		compiler:c11 rust
+USE_RUST=	yes
+
+do-build:
+	@cd ${WRKSRC} && cargo build --release --locked
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/target/release/shikane ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

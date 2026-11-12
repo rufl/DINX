@@ -65,3 +65,4 @@ x11-wm/dinx-seed-aqueous-live-config
 x11-wm/dinx-graphics-environment
 sysutils/dinx-configure-repository
 sysutils/dinx-mirrorlist
+security/dinx-keyring

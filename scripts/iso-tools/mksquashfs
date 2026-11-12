@@ -85,23 +85,12 @@ strip_documentation() {
 
   [[ "$root" != / && -d "$root/usr/share" ]] || return 0
 
-  for rel in usr/share/man usr/share/gtk-doc usr/share/help usr/share/info; do
+  for rel in usr/share/man usr/share/gtk-doc usr/share/help usr/share/info usr/share/locale usr/share/omf usr/share/gnome/help usr/share/doc; do
     if [[ -d "$root/$rel" ]]; then
       rm -rf -- "$root/$rel"
-      printf 'dinx-final-squashfs: removed documentation path=%s\n' "$rel"
+      printf 'dinx-final-squashfs: removed documentation/locale path=%s\n' "$rel"
     fi
   done
-
-  doc_dir="$root/usr/share/doc"
-  if [[ -d "$doc_dir" ]]; then
-    find "$doc_dir" -mindepth 1 -type f \
-      ! -name SOURCE \
-      ! -iname 'COPYING*' ! -iname 'LICENSE*' ! -iname 'LICEN[CS]E*' \
-      ! -iname 'copyright*' ! -iname 'COPYRIGHT*' ! -iname 'licencia*' \
-      -delete
-    find "$doc_dir" -mindepth 1 -depth -type d -empty -delete
-    printf 'dinx-final-squashfs: stripped non-license/provenance files under usr/share/doc\n'
-  fi
 }
 
 prune_excluded_packages() {

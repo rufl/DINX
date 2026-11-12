@@ -33,3 +33,4 @@ sysutils/seafoam-settings
 sysutils/cyan-skillfish
 sysutils/bc250-control-center
 graphics/pixelorama
+graphics/blockbench

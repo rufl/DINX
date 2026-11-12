@@ -1,0 +1,28 @@
+# FreeBSD Port Makefile for Blockbench (DINX-BSD)
+PORTNAME=	blockbench
+PORTVERSION=	4.9.4
+CATEGORIES=	graphics games
+MASTER_SITES=	https://github.com/JannisX11/blockbench/archive/refs/tags/v4.9.4.tar.gz
+DISTNAME=	blockbench-4.9.4
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Blockbench 3D modeler and texturing tool for DINX-BSD
+WWW=		https://www.blockbench.net
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	npm>=0:www/npm \
+		electron>=28:devel/electron
+RUN_DEPENDS=	electron>=28:devel/electron
+
+USES=		compiler:c++17-lang nodejs
+
+do-build:
+	@cd ${WRKSRC} && npm install && npm run build
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/build/electron/Blockbench ${STAGEDIR}${PREFIX}/bin/blockbench
+
+.include <bsd.port.mk>

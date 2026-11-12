@@ -44,3 +44,4 @@ x11-wm/dinx-aqueous-pearl
 sysutils/dinx-package-channel
 sysutils/dinx-plymouth-screen
 sysutils/dinx-initramfs
+sysutils/dinx-doctor

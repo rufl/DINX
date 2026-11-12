@@ -17,12 +17,10 @@ headerbar windowtitle,
     opacity: 0;
 }
 
-.titlebar,
 .window-frame,
-leaflet,
-flap,
-overlay {
-    background-color: #0b0d12;
+window.popup,
+window.normal {
+    border: 1px solid #7f8a9c;
 }
 headerbar,
 .titlebar,

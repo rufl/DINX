@@ -1,0 +1,27 @@
+# FreeBSD Port Makefile for Pixelorama (DINX-BSD)
+PORTNAME=	pixelorama
+PORTVERSION=	0.11.2
+CATEGORIES=	graphics games
+MASTER_SITES=	https://github.com/Orama-Interactive/Pixelorama/releases/download/v0.11.2/
+DISTNAME=	pixelorama-0.11.2
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Pixelorama 2D pixel art and sprite editor for DINX-BSD
+WWW=		https://www.orama-interactive.com/pixelorama
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	godot>=4.0:devel/godot
+RUN_DEPENDS=	godot>=4.0:devel/godot
+
+USES=		compiler:c++17-lang
+
+do-build:
+	@cd ${WRKSRC} && godot --headless --export-pack release.pck
+
+do-install:
+	@mkdir -p ${STAGEDIR}${PREFIX}/bin
+	@cp ${WRKSRC}/bin/pixelorama ${STAGEDIR}${PREFIX}/bin/
+
+.include <bsd.port.mk>

@@ -56,3 +56,4 @@ audio/dinx-audio-manager
 sysutils/dinx-power-manager
 security/dinx-keyring-populate
 sysutils/dinx-refresh-package-sources
+sysutils/dinx-alpha7-hardware-report

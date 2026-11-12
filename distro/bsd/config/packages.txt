@@ -31,3 +31,4 @@ graphics/phyto
 editors/dinted
 sysutils/seafoam-settings
 sysutils/cyan-skillfish
+sysutils/bc250-control-center

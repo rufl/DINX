@@ -1,0 +1,25 @@
+# FreeBSD Port Makefile for BC250 Control Center (DINX-BSD)
+PORTNAME=	bc250-control-center
+PORTVERSION=	1.21.1
+CATEGORIES=	sysutils x11
+MASTER_SITES=	https://github.com/rufl/bc250-control-center/releases/download/v1.21.1/
+DISTNAME=	bc250-control-center-1.21.1
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	BC250 hardware control center and power manager for DINX-BSD
+WWW=		https://github.com/rufl/DINX
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	py311-setuptools>=0:devel/py-setuptools@py311 \
+		py311-PyQt6>=6.0:x11-toolkits/py-PyQt6@py311
+RUN_DEPENDS=	py311-PyQt6>=6.0:x11-toolkits/py-PyQt6@py311
+
+USES=		python:3.11+
+USE_PYTHON=	distutils autoplist
+
+do-install:
+	@cd ${WRKSRC} && ${PYTHON_CMD} setup.py install --prefix=${STAGEDIR}${PREFIX}
+
+.include <bsd.port.mk>

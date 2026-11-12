@@ -57,3 +57,4 @@ sysutils/dinx-power-manager
 security/dinx-keyring-populate
 sysutils/dinx-refresh-package-sources
 sysutils/dinx-alpha7-hardware-report
+x11-wm/dinx-idle

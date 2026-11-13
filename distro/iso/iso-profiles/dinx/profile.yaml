@@ -69,6 +69,7 @@ rootfs:
     - krita
     - adw-gtk-theme
     - dinx-pearl-themes
+    - dinx-gtk-themes
     - papirus-icon-theme
     - firefox
     - paintfe

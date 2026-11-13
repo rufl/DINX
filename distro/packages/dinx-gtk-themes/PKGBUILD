@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+pkgname=dinx-gtk-themes
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${DINX_GTK_THEMES_VERSION:?missing DINX_GTK_THEMES_VERSION}"
+: "${SKEUOS_UPSTREAM_COMMIT:?missing Skeuos upstream commit}"
+: "${SKEUOS_UPSTREAM_SOURCE_URL:?missing Skeuos upstream source URL}"
+: "${SKEUOS_UPSTREAM_SOURCE_SHA256:?missing Skeuos upstream source checksum}"
+: "${ORCHIS_FORK_COMMIT:?missing Orchis fork commit}"
+: "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
+: "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
+pkgver="$DINX_GTK_THEMES_VERSION"
+pkgrel=1
+pkgdesc='Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
+arch=('any')
+url='https://github.com/rufl/DINX'
+license=('GPL-3.0-only')
+makedepends=('sassc' 'python')
+source=(
+  "skeuos-gtk-${SKEUOS_UPSTREAM_COMMIT}.tar.gz::${SKEUOS_UPSTREAM_SOURCE_URL}"
+  "Orchis-theme-${ORCHIS_FORK_COMMIT}.tar.gz::${ORCHIS_FORK_SOURCE_URL}"
+)
+sha256sums=(
+  "$SKEUOS_UPSTREAM_SOURCE_SHA256"
+  "$ORCHIS_FORK_SOURCE_SHA256"
+)
+
+build() {
+  local orchis="$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}"
+  local skeuos="$srcdir/skeuos-gtk-${SKEUOS_UPSTREAM_COMMIT}"
+  local out="$srcdir/themes"
+  local corner suffix variant gtk entry td name
+
+  # Orchis: compile GTK3/GTK4 from SASS. Rounded keeps the upstream
+  # $default_corner (12px); square sets it to 0px, exactly like install.sh
+  # --round. Assets are upstream pre-rendered PNG/SVG (no inkscape needed).
+  for corner in 12 0; do
+    suffix=''
+    [[ "$corner" == 0 ]] && suffix='-Square'
+    cp "$orchis/src/_sass/_tweaks.scss" "$orchis/src/_sass/_tweaks-temp.scss"
+    sed -i "s/\$default_corner: 12px;/\$default_corner: ${corner}px;/" \
+      "$orchis/src/_sass/_tweaks-temp.scss"
+    for variant in Light Dark; do
+      name="Orchis${suffix}-${variant}"
+      entry='gtk-Light.scss'
+      [[ "$variant" == Dark ]] && entry='gtk-Dark.scss'
+      for gtk in 3.0 4.0; do
+        td="$out/$name/gtk-$gtk"
+        mkdir -p "$td"
+        sassc -M -t expanded "$orchis/src/gtk/$gtk/$entry" "$td/gtk.css"
+        sassc -M -t expanded "$orchis/src/gtk/$gtk/gtk-Dark.scss" "$td/gtk-dark.css"
+        cp -a "$orchis/src/gtk/assets" "$td/assets"
+        cp -a "$orchis/src/gtk/scalable/." "$td/assets/"
+      done
+      printf '[Desktop Entry]\nType=X-GNOME-Metatheme\nName=%s\nComment=An flat Materia Gtk+ theme based on Elegant Design\nEncoding=UTF-8\n\n[X-GNOME-Metatheme]\nGtkTheme=%s\nMetacityTheme=%s\nIconTheme=Papirus\nCursorTheme=Adwaita\nButtonLayout=close,minimize,maximize:menu\n' \
+        "$name" "$name" "$name" > "$out/$name/index.theme"
+      cp "$orchis/COPYING" "$out/$name/COPYING"
+    done
+  done
+
+  # Skeuos: the upstream prebuilt Blue themes are the canonical rounded
+  # variant. Square reuses the same rendered assets and zeroes every
+  # border-radius <= 20px in the compiled CSS (circular controls keep
+  # their >= 100px radii).
+  for variant in Light Dark; do
+    for suffix in '' '-Square'; do
+      name="Skeuos-Blue-${variant}${suffix}"
+      mkdir -p "$out/$name"
+      cp -a "$skeuos/themes/Skeuos-Blue-$variant/gtk-3.0" "$out/$name/"
+      cp -a "$skeuos/themes/Skeuos-Blue-$variant/gtk-4.0" "$out/$name/"
+      sed "s/Skeuos-Blue-$variant/$name/g" \
+        "$skeuos/themes/Skeuos-Blue-$variant/index.theme" > "$out/$name/index.theme"
+    done
+  done
+  python3 - "$out" <<'EOF'
+import os, re, sys
+out = sys.argv[1]
+radius = re.compile(r'border-radius:\s*([^;}]+)')
+px = re.compile(r'^(\d+(?:\.\d+)?)px$')
+def square(path):
+    with open(path) as f:
+        data = f.read()
+    def repl(m):
+        nums = []
+        for part in m.group(1).split():
+            if part == '0':
+                nums.append(0.0)
+            else:
+                mm = px.match(part)
+                if not mm:
+                    return m.group(0)
+                nums.append(float(mm.group(1)))
+        return 'border-radius: 0' if nums and max(nums) <= 20 else m.group(0)
+    new = radius.sub(repl, data)
+    if new != data:
+        with open(path, 'w') as f:
+            f.write(new)
+for name in os.listdir(out):
+    if not name.endswith('-Square') or not name.startswith('Skeuos-'):
+        continue
+    for gtk in ('gtk-3.0', 'gtk-4.0'):
+        for css in ('gtk.css', 'gtk-dark.css'):
+            p = os.path.join(out, name, gtk, css)
+            if not os.path.islink(p):
+                square(p)
+EOF
+}
+
+check() {
+  local name gtk
+  for name in Orchis-Light Orchis-Dark Orchis-Square-Light Orchis-Square-Dark \
+    Skeuos-Blue-Light Skeuos-Blue-Dark Skeuos-Blue-Light-Square Skeuos-Blue-Dark-Square; do
+    for gtk in gtk-3.0 gtk-4.0; do
+      test -s "$srcdir/themes/$name/$gtk/gtk.css" \
+        || { printf 'missing %s %s\n' "$name" "$gtk" >&2; return 1; }
+    done
+    test -f "$srcdir/themes/$name/index.theme" \
+      || { printf 'missing index.theme: %s\n' "$name" >&2; return 1; }
+  done
+}
+
+package() {
+  local theme_dir="$pkgdir/usr/share/themes"
+  install -d "$theme_dir"
+  cp -a "$srcdir/themes/." "$theme_dir/"
+  install -Dm644 "$srcdir/skeuos-gtk-${SKEUOS_UPSTREAM_COMMIT}/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/SKEUOS-LICENSE"
+  install -Dm644 "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/COPYING" \
+    "$pkgdir/usr/share/licenses/$pkgname/ORCHIS-COPYING"
+}

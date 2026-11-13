@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${DECKCRAFT_VERSION:?missing DECKCRAFT_VERSION}"
 : "${DECKCRAFT_SOURCE_URL:?missing DECKCRAFT_SOURCE_URL}"
 : "${DECKCRAFT_SOURCE_SHA256:?missing DECKCRAFT_SOURCE_SHA256}"
-pkgver="${ DECKCRAFT_VERSION }"
+pkgver="${DECKCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="Presentations and slide shows in pure Rust"
 arch=('x86_64')
@@ -16,14 +16,14 @@ license=('MIT')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
-  "deckcraft-${pkgver}-x86_64.AppImage::${ DECKCRAFT_SOURCE_URL }"
+  "deckcraft-${pkgver}-x86_64.AppImage::${DECKCRAFT_SOURCE_URL}"
   'deckcraft'
   'deckcraft.desktop'
 )
 sha256sums=(
-  "${ DECKCRAFT_SOURCE_SHA256 }"
-  'SKIP'
-  'SKIP'
+  "${DECKCRAFT_SOURCE_SHA256}"
+  '5ed65453f84f06744908b740657b82704072096844faacd4cb512b55448b5fcb'
+  'e937ae29a76e3f397c366903c82aab690702ef3a86a4e36835d2c6e9a91a7f4f'
 )
 
 package() {

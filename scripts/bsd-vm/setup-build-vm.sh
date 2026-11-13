@@ -30,3 +30,15 @@ echo "== sources ready"
 
 sh /root/build/build-native.sh
 echo "== SETUP_BUILD_DONE"
+
+# Runtime setup for the graphical session (mirrors the ISO overlay).
+pkg install -y jq >/dev/null 2>&1
+mkdir -p /usr/local/etc/greetd /etc/pam.d
+printf 'auth\t\trequired\tpam_unix.so\naccount\t\trequired\tpam_permit.so\nsession\t\trequired\tpam_permit.so\npassword\trequired\tpam_permit.so\n' > /etc/pam.d/greetd
+printf '[terminal]\nvt = 1\n\n[initial_session]\ncommand = "/usr/local/bin/dinx-session-select"\nuser = "dinx"\n\n[default_session]\ncommand = "agreety --cmd /usr/local/bin/dinx-session-select"\nuser = "greeter"\n' > /usr/local/etc/greetd/config.toml
+[ -e /run ] || ln -s /var/run /run
+mkdir -p /proc
+mount -t linprocfs linprocfs /proc 2>/dev/null || true
+id dinx >/dev/null 2>&1 || pw useradd dinx -m -s /bin/sh -G video -c 'DINX Desktop'
+mkdir -p /home/dinx; chown dinx:dinx /home/dinx
+echo "== runtime setup done"

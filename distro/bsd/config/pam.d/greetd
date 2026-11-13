@@ -1,5 +1,8 @@
 # FreeBSD PAM service for greetd (DINX-BSD).
+# auth via pam_unix; account/session/password via pam_permit: pam_unix's
+# session module raises SYMBOL_ERR under greetd on FreeBSD 15, and a display
+# manager does not need session accounting here.
 auth		required	pam_unix.so
-account		required	pam_unix.so
-session		required	pam_unix.so
-password	required	pam_unix.so
+account		required	pam_permit.so
+session		required	pam_permit.so
+password	required	pam_permit.so

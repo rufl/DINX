@@ -364,6 +364,11 @@
           "source_url_key": "DECKCRAFT_ICON_URL",
           "checksum_key": "DECKCRAFT_ICON_SHA256",
           "url_template": "https://raw.githubusercontent.com/storytold/deckcraft/{tag}/assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png"
+        },
+        {
+          "source_url_key": "DECKCRAFT_MIME_URL",
+          "checksum_key": "DECKCRAFT_MIME_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/deckcraft/{tag}/packaging/linux/ai.storyteller.deckcraft.mime.xml"
         }
       ]
     },
@@ -426,6 +431,11 @@
           "source_url_key": "TRANSIT_ICON_URL",
           "checksum_key": "TRANSIT_ICON_SHA256",
           "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/assets/app-icon/hicolor/256x256/apps/transit.png"
+        },
+        {
+          "source_url_key": "TRANSIT_MIME_URL",
+          "checksum_key": "TRANSIT_MIME_SHA256",
+          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/packaging/linux/transit.mime.xml"
         }
       ]
     },

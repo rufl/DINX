@@ -26,6 +26,7 @@ source=(
   "LICENSE-MIT::${TRANSIT_LICENSE_MIT_URL}"
   "LICENSE-APACHE::${TRANSIT_LICENSE_APACHE_URL}"
   "transit-256.png::${TRANSIT_ICON_URL}"
+  "transit.mime.xml::${TRANSIT_MIME_URL}"
   'transit'
   'transit.desktop'
 )
@@ -34,6 +35,7 @@ sha256sums=(
   "${TRANSIT_LICENSE_MIT_SHA256}"
   "${TRANSIT_LICENSE_APACHE_SHA256}"
   "${TRANSIT_ICON_SHA256}"
+  "${TRANSIT_MIME_SHA256}"
   '11a0107795d89432af374028a08e998a45933cd15eb18fcb8dd333b067de8294'
   '4cff69e46d8a825e8f3131b2ab9df65ebf914d34f74a818ae8cac2f1bf0b3e0d'
 )
@@ -50,6 +52,8 @@ package() {
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
   install -Dm644 "$srcdir/transit-256.png" \
     "$pkgdir/usr/share/icons/hicolor/256x256/apps/transit.png"
+  install -Dm644 "$srcdir/transit.mime.xml" \
+    "$pkgdir/usr/share/mime/packages/transit.xml"
   install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
 Transit ${pkgver} upstream source and build information:
 https://github.com/transit-audio/transit/tree/v${pkgver}

@@ -26,6 +26,7 @@ source=(
   "LICENSE-MIT::${DECKCRAFT_LICENSE_MIT_URL}"
   "LICENSE-APACHE::${DECKCRAFT_LICENSE_APACHE_URL}"
   "deckcraft-256.png::${DECKCRAFT_ICON_URL}"
+  "ai.storyteller.deckcraft.mime.xml::${DECKCRAFT_MIME_URL}"
   'deckcraft'
   'deckcraft.desktop'
 )
@@ -34,6 +35,7 @@ sha256sums=(
   "${DECKCRAFT_LICENSE_MIT_SHA256}"
   "${DECKCRAFT_LICENSE_APACHE_SHA256}"
   "${DECKCRAFT_ICON_SHA256}"
+  "${DECKCRAFT_MIME_SHA256}"
   '5ed65453f84f06744908b740657b82704072096844faacd4cb512b55448b5fcb'
   'e865584d4c1bec362a8a655102e8e45029f8040209ac000d0ee42b8deaf7319d'
 )
@@ -50,6 +52,8 @@ package() {
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
   install -Dm644 "$srcdir/deckcraft-256.png" \
     "$pkgdir/usr/share/icons/hicolor/256x256/apps/deckcraft.png"
+  install -Dm644 "$srcdir/ai.storyteller.deckcraft.mime.xml" \
+    "$pkgdir/usr/share/mime/packages/ai.storyteller.deckcraft.xml"
   install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
 DeckCraft ${pkgver} upstream source and build information:
 https://github.com/storytold/deckcraft/tree/v${pkgver}

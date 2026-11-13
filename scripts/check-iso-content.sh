@@ -1495,7 +1495,7 @@ usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr
 usr/share/applications/com.github.zbcoding.Impasto.desktop|Impasto|Impasto|impasto %F
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
-usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
+usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|env QT_QPA_PLATFORMTHEME=qt6ct haruna %U
 usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor

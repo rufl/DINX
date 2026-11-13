@@ -457,8 +457,12 @@ trap finish EXIT
               build_package blockbench
               build_package impasto
               build_package pixelorama
-              build_package onlyoffice
-              build_package zrythm
+              build_package wordcraft
+              build_package gridcraft
+              build_package deckcraft
+              build_package pdfcraft
+              build_package transit
+              build_package zenkai
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
               pacman_retry -S --needed --noconfirm \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \

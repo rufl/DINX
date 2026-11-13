@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=gridcraft
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${GRIDCRAFT_VERSION:?missing GRIDCRAFT_VERSION}"
+: "${GRIDCRAFT_SOURCE_URL:?missing GRIDCRAFT_SOURCE_URL}"
+: "${GRIDCRAFT_SOURCE_SHA256:?missing GRIDCRAFT_SOURCE_SHA256}"
+pkgver="${ GRIDCRAFT_VERSION }"
+pkgrel=1
+pkgdesc="Fast, native spreadsheets rebuilt in pure Rust"
+arch=('x86_64')
+url='https://github.com/'
+license=('MIT')
+depends=('glibc' 'gcc-libs')
+options=('!strip')
+source=(
+  "gridcraft-${pkgver}-x86_64.AppImage::${ GRIDCRAFT_SOURCE_URL }"
+  'gridcraft'
+  'gridcraft.desktop'
+)
+sha256sums=(
+  "${ GRIDCRAFT_SOURCE_SHA256 }"
+  'SKIP'
+  'SKIP'
+)
+
+package() {
+  install -Dm755 "$srcdir/gridcraft-${pkgver}-x86_64.AppImage" \
+    "$pkgdir/opt/gridcraft/gridcraft.AppImage"
+  install -Dm755 "$srcdir/gridcraft" "$pkgdir/usr/bin/gridcraft"
+  install -Dm644 "$srcdir/gridcraft.desktop" \
+    "$pkgdir/usr/share/applications/gridcraft.desktop"
+}

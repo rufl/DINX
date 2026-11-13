@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DeckCraft
+Name[pt_BR]=DeckCraft
+Exec=deckcraft %U
+TryExec=deckcraft
+Icon=deckcraft
+Terminal=false
+Categories=Office;Presentation;
+StartupNotify=true

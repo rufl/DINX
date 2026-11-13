@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Zenkai
+Name[pt_BR]=Zenkai
+Exec=zenkai %U
+TryExec=zenkai
+Icon=zenkai
+Terminal=false
+Categories=Utility;
+StartupNotify=true

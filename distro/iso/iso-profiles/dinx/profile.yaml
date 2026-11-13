@@ -70,8 +70,12 @@ rootfs:
     - krita
     - adw-gtk-theme
     - papirus-icon-theme
-    - onlyoffice
-    - zrythm
+    - wordcraft
+    - gridcraft
+    - deckcraft
+    - pdfcraft
+    - transit
+    - zenkai
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin

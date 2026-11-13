@@ -1,7 +1,0 @@
-#!/bin/sh
-set -eu
-if [ "${DINX_LIVE_SESSION:-}" = "1" ] || [ "$(id -u)" -eq 0 ]; then
-    exec /usr/bin/gparted "$@"
-else
-    exec pkexec /usr/bin/gparted "$@"
-fi

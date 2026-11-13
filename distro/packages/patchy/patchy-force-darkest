@@ -1,0 +1,106 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -gt 1 ]; then
+    printf '%s\n' 'patchy-force-darkest: usage: patchy-force-darkest [SETTINGS_FILE]' >&2
+    exit 2
+fi
+
+if [ "$#" -eq 1 ]; then
+    settings=$1
+else
+    config_home=${XDG_CONFIG_HOME:-}
+    if [ -z "$config_home" ]; then
+        [ -n "${HOME:-}" ] || {
+            printf '%s\n' 'patchy-force-darkest: HOME and XDG_CONFIG_HOME are unset' >&2
+            exit 1
+        }
+        config_home=$HOME/.config
+    fi
+    settings=$config_home/RTsoft/Patchy/Patchy.ini
+fi
+
+if [ -L "$settings" ] || { [ -e "$settings" ] && [ ! -f "$settings" ]; }; then
+    printf 'patchy-force-darkest: refusing unsafe settings path: %s\n' "$settings" >&2
+    exit 1
+fi
+
+if [ -f "$settings" ] && awk '
+    /^\[preferences\][[:space:]]*$/ { in_preferences = 1; next }
+    /^\[/ { in_preferences = 0 }
+    in_preferences && /^[[:space:]]*colorScheme[[:space:]]*=[[:space:]]*dark[[:space:]]*$/ {
+        dark = 1
+    }
+    in_preferences && /^[[:space:]]*customThemeId[[:space:]]*=[[:space:]]*bundled:darkest\.patchytheme[[:space:]]*$/ {
+        darkest = 1
+    }
+    END { exit !(dark && darkest) }
+' "$settings"; then
+    exit 0
+fi
+
+settings_dir=${settings%/*}
+[ "$settings_dir" != "$settings" ] || settings_dir=.
+mkdir -p -- "$settings_dir"
+temporary=$(mktemp "$settings_dir/.Patchy.ini.XXXXXX")
+trap 'rm -f -- "$temporary"' EXIT HUP INT TERM
+
+if [ -f "$settings" ]; then
+    awk '
+        function add_theme() {
+            if (!wrote_color) {
+                print "colorScheme=dark"
+                wrote_color = 1
+            }
+            if (!wrote_custom) {
+                print "customThemeId=bundled:darkest.patchytheme"
+                wrote_custom = 1
+            }
+        }
+        /^\[preferences\][[:space:]]*$/ {
+            in_preferences = 1
+            saw_preferences = 1
+            print
+            next
+        }
+        /^\[/ {
+            if (in_preferences) {
+                add_theme()
+            }
+            in_preferences = 0
+        }
+        in_preferences && /^[[:space:]]*colorScheme[[:space:]]*=/ {
+            if (!wrote_color) {
+                print "colorScheme=dark"
+                wrote_color = 1
+            }
+            next
+        }
+        in_preferences && /^[[:space:]]*customThemeId[[:space:]]*=/ {
+            if (!wrote_custom) {
+                print "customThemeId=bundled:darkest.patchytheme"
+                wrote_custom = 1
+            }
+            next
+        }
+        { print }
+        END {
+            if (in_preferences) {
+                add_theme()
+            } else if (!saw_preferences) {
+                print ""
+                print "[preferences]"
+                add_theme()
+            }
+        }
+    ' "$settings" >"$temporary"
+else
+    printf '%s\n' \
+        '[preferences]' \
+        'colorScheme=dark' \
+        'customThemeId=bundled:darkest.patchytheme' >"$temporary"
+fi
+
+chmod 0600 "$temporary"
+mv -f -- "$temporary" "$settings"
+trap - EXIT HUP INT TERM

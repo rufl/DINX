@@ -4,7 +4,7 @@ Name[pt_BR]=Tocador de Música
 GenericName=Music Player
 GenericName[pt_BR]=Tocador de Música
 Comment=Play your music elegantly
-Exec=g4music %U
+Exec=env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
 TryExec=g4music
 Icon=com.github.neithern.g4music
 Terminal=false

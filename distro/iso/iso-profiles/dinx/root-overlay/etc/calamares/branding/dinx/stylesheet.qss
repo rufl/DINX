@@ -6,6 +6,27 @@ QWidget {
     font-size: 10pt;
 }
 
+QDialog,
+QMessageBox,
+QDialogButtonBox,
+QScrollArea,
+QAbstractScrollArea,
+QAbstractScrollArea::viewport {
+    background: #0b0d12;
+    color: #d7dde8;
+}
+
+QTextBrowser,
+QMessageBox QTextEdit,
+QDialog QTextEdit,
+QDialog QPlainTextEdit {
+    background: #11151d;
+    color: #d7dde8;
+    border: 1px solid #222a38;
+    selection-background-color: #263249;
+    selection-color: #d7dde8;
+}
+
 QFrame#sidebarApp,
 QWidget#sidebarApp {
     background: #0b0d12;

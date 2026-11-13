@@ -70,7 +70,7 @@ for required_path in \
 done
 grep -Fqx '[Desktop Entry]' "$autostart" || fail 'OpenSnitch autostart desktop entry is malformed'
 grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' "$autostart" \
-  || fail 'OpenSnitch UI does not start in the dark Qt tray/background environment'
+  || fail 'OpenSnitch UI does not start in the tray/background'
 grep -Fqx 'TryExec=opensnitch-ui' "$autostart" \
   || fail 'OpenSnitch autostart is not guarded by its executable'
 grep -Fq 'squashfs-root/etc/dinit.d/boot.d/opensnitchd -> /etc/dinit.d/opensnitchd' "$iso_check" \

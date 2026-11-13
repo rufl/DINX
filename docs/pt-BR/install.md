@@ -209,7 +209,7 @@ arquivo de mirrors pode ser editado para adicionar mirrors futuramente.
 
 A partir do desktop live:
 
-1. Abra o atalho **Instalar DINX** na área de trabalho ou escolha **Instalar DINX** no launcher de aplicativos; a entrada duplicada upstream do Calamares fica oculta.
+1. Abra o atalho **Instalar DINX** na área de trabalho ou escolha **Instalar DINX** no launcher de aplicativos; a entrada duplicada upstream do Calamares fica oculta. No Pearl Desktop live, o atalho pertencente ao pacote já é executável e aprovado antes do shell iniciar, sem exigir a ação separada “Permitir lançamento” no primeiro uso.
 2. Se nenhum dos atalhos estiver disponível, execute `/usr/local/libexec/dinx-installer` em um terminal da sessão desktop live; o helper preserva Wayland/D-Bus para o polkit, verifica os pré-requisitos e mostra erros de autorização ou inicialização.
 3. Leia **Opções de instalação / Install choices** antes de escolher as partições.
 4. Escolha o layout adequado à sua intenção:

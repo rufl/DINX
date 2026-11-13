@@ -68,8 +68,9 @@ prefix: /usr/local
 EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
   # pkg create -m does not scan rootdir; an explicit plist is required.
-  (cd "$stage/usr/local" && find . -type f | sed 's|^\./|/|') > "$meta/plist"
-  pkg create -m "$meta" -p "$meta/plist" -r "$stage/usr/local" -o "$REPO" >>"$LOG" 2>&1
+  # plist paths are absolute INSTALL paths (pkg add installs them literally).
+  (cd "$stage" && find . -type f | sed 's|^\./|/|') > "$meta/plist"
+  pkg create -m "$meta" -p "$meta/plist" -r "$stage" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
 }
 
@@ -124,6 +125,10 @@ stamp aqueous-end
 # --- FreeBSD compat lib (statx/mallopt) for Pearl -------------------------
 cc -shared -fPIC -O2 -o /usr/local/lib/libdinxcompat.so "$W/dinxcompat.c" >>"$LOG" 2>&1
 log "== dinxcompat exit=$?"
+stage="$W/stage-dinx-compat"
+rm -rf "$stage"; mkdir -p "$stage/usr/local/lib"
+cp /usr/local/lib/libdinxcompat.so "$stage/usr/local/lib/"
+package dinx-compat 1.0 dinx/compat "FreeBSD compat shims (statx/mallopt/errno) for Pearl" "$stage"
 stamp pearl-start
 # --- Pearl ---------------------------------------------------------------
 if [ -d "$W/pearl" ]; then

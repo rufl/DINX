@@ -113,3 +113,7 @@ int sd_pidfd_get_user_unit(int pidfd, char **unit) {
 int *__errno_location(void) {
     return __error();
 }
+
+/* FreeBSD crt1.o normally defines __progname; Zig's startup does not.
+ * libc references it (err/warn/getopt paths). Cosmetic fallback name. */
+char *__progname = "dinx";

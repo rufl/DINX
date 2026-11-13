@@ -273,3 +273,11 @@ patch(
     "const hz = @as(usize, @intCast(std.c.sysconf(3)));",
     "std.c.sysconf(3)));",
 )
+
+# 17. Aqueous: link dinxcompat (crt __progname shim) like Pearl does.
+patch(
+    os.path.join(W, "Aqueous/compositor/build.zig"),
+    'river.root_module.linkSystemLibrary("basu", .{});',
+    'river.root_module.linkSystemLibrary("basu", .{});\n        river.root_module.linkSystemLibrary("dinxcompat", .{});',
+    'linkSystemLibrary("dinxcompat"',
+)

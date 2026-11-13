@@ -27,7 +27,7 @@ until $SSH 'echo SSH_UP' 2>/dev/null | grep -q SSH_UP; do
   sleep 5
 done
 
-$SSH 'pkg add /root/build/repo/dinx-wlroots.pkg /root/build/repo/dinx-greetd.pkg /root/build/repo/dinx-aqueous.pkg /root/build/repo/dinx-pearl.pkg 2>&1 | tail -2;
+$SSH 'pkg add /root/build/repo/dinx-*.pkg 2>&1 | tail -2;
 printf "[initial_session]\ncommand = \"/usr/local/bin/dinx-session-select\"\nuser = \"dinx\"\n\n[default_session]\ncommand = \"agreety --cmd /usr/local/bin/dinx-session-select\"\nuser = \"greeter\"\n" > /usr/local/etc/greetd/config.toml;
 service seatd start >/dev/null 2>&1; service dinx_greetd restart >/dev/null 2>&1 || service dinx_greetd start >/dev/null 2>&1; echo SESSION_STARTED'
 sleep 30

@@ -82,6 +82,9 @@ for required in \
   usr/local/libexec/dinx/session-common \
   usr/local/share/wayland-sessions/dinx-pearl.desktop \
   usr/local/share/wayland-sessions/dinx-noctalia.desktop \
+  usr/local/share/themes/DINX/index.theme \
+  usr/local/share/dinx/theme/DINX.json \
+  usr/local/libexec/dinx-sync-session-theme \
   usr/local/etc/dinit.d/greetd \
   usr/local/etc/dinit.d/pipewire \
   usr/local/etc/dinit.d/seatd \

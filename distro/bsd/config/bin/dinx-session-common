@@ -65,3 +65,13 @@ fi
 if [ ! -e /dev/dri/card0 ]; then
   export WLR_BACKENDS=headless
 fi
+
+# DINX theme sync: Pearl prefs -> GTK/qt6ct (from the themes branch).
+if [ -x /usr/local/libexec/dinx-sync-session-theme ]; then
+  /usr/local/libexec/dinx-sync-session-theme >/dev/null 2>&1 || true
+fi
+if [ -x /usr/local/libexec/dinx-qt6ct-palette-seed ]; then
+  /usr/local/libexec/dinx-qt6ct-palette-seed \
+    "$HOME/.config/qt6ct/colors/DINX.conf" \
+    /etc/skel/.config/qt6ct/colors/DINX.conf >/dev/null 2>&1 || true
+fi

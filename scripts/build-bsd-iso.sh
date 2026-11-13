@@ -105,6 +105,10 @@ if [ -d "$repo_root/dist/bsd/ports/pkg/repo" ]; then
   cp -a "$repo_root/dist/bsd/ports/pkg/repo/." \
     "$overlay_root/usr/local/share/dinx-bsd/distro/bsd/ports/pkg/repo/"
 fi
+# DINX themes (GTK3/4, Pearl palette, qt6ct seed) from the themes branch.
+if [ -d "$repo_root/distro/bsd/config/theme-overlay" ]; then
+  cp -a "$repo_root/distro/bsd/config/theme-overlay/." "$overlay_root/"
+fi
 install -m 0755 "$repo_root/scripts/install-dinx-bsd.sh" \
   "$overlay_root/usr/local/share/dinx-bsd/scripts/install-dinx-bsd.sh"
 install -m 0644 "$repo_root/LICENSE" "$overlay_root/usr/local/share/dinx-bsd/LICENSE"

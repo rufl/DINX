@@ -62,7 +62,7 @@ while [ "$i" -lt 24 ]; do
 done
 if [ "$pkg_ready" = 1 ]; then
   for p in seatd pipewire wireplumber wayland wlroots020 mesa-dri \
-           libxkbcommon xkeyboard-config; do
+           libxkbcommon xkeyboard-config jq; do
     if pkg install -y "$p" >/dev/null 2>&1; then
       log "installed $p"
     else

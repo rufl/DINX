@@ -281,3 +281,13 @@ patch(
     'river.root_module.linkSystemLibrary("basu", .{});\n        river.root_module.linkSystemLibrary("dinxcompat", .{});',
     'linkSystemLibrary("dinxcompat"',
 )
+
+# 18. greetd: FreeBSD vt devices are /dev/ttyvN, not /dev/ttyN.
+p = os.path.join(W, "greetd/greetd/src/server.rs")
+src = open(p, encoding="utf-8").read()
+if "/dev/ttyv" not in src:
+    src = src.replace('"/dev/tty"', '"/dev/ttyv"')
+    src = src.replace('"/dev/tty0"', '"/dev/ttyv0"')
+    src = src.replace('format!("/dev/tty{vt}")', 'format!("/dev/ttyv{vt}")')
+    open(p, "w", encoding="utf-8").write(src)
+    applied.append(p)

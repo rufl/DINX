@@ -240,3 +240,139 @@ em DDJARIN. É a imagem para teste de boot.
 3. Wizard gráfico (Pearl/Qt) substituindo o TUI.
 4. Patches FreeBSD do wine-proton (bug 288475) e do libc6-shim quando o
    pacote oficial ficar atrás do upstream.
+
+## 13. Marco 2 — binários nativos (em andamento)
+
+- VM FreeBSD 15.1 de build (qcow2 do gate, 4 vCPU/4G, SSH via hostfwd 2222 +
+  QMP unix socket para screendump). Disco expandido offline (+16G) e UFS
+  crescido online: `gpart resize -i 1 vtbd0` (slice MBR), remover swap
+  (`gpart delete -i 2 vtbd0s1`), `gpart resize -i 1 vtbd0s1`, `growfs -y /`.
+- Upstream real: `Seafoam-Labs/Aqueous` (build em `compositor/`) e
+  `Seafoam-Labs/pearl` (0.3.9, Zig >= 0.17.0). Zig 0.17.0 oficial
+  freebsd-x86_64 baixado na VM; deps: wlroots020, wayland-protocols,
+  libxkbcommon, pixman, libinput, seatd, gtk4, gtk4-layer-shell, meson,
+  ninja, pkgconf, git-lite, rust, gobject-introspection, mesa-dri.
+- `scripts/bsd-vm/build-native.sh`: build Zig nativo (Aqueous/Pearl) +
+  greetd via cargo; `pkg create` real + `pkg repo` → catálogo local.
+- mangohud não existe no quarterly (só latest) → fora do firstboot,
+  documentado como opcional.
+- Prova gráfica planejada: screendump QMP da sessão greetd→Aqueous→Pearl
+  após os `.pkg` reais entrarem no repo da ISO.
+- Lições de VM: o validator recria o disco com `--disk-size` (default 12G) —
+  usar `--disk-size 32G` para VM de build; disco cheio corrompe o DB do pkg
+  e o UFS (kills durante escrita) → reinstall limpo em vez de fsck em rw;
+  `PermitRootLogin yes` + chave ed25519 via serial para operar por SSH;
+  repo `latest` estoura o limite de catálogo do pkg 2.8.4 → ficar no
+  quarterly e patchear floors de versão (gtk4 4.20.4) no Pearl.
+- Patches FreeBSD em `build-native.sh`: `c.h` do Aqueous usa
+  `dev/evdev/input-event-codes.h` em vez do header Linux; Pearl perde o
+  floor `pam >= 1.7.2` (libpam da base, sem .pc) e gtk4 >= 4.20.4.
+- O firstboot detached segura o lock do pkg no primeiro boot → o setup de
+  build deve esperar `desktop-setup-done` antes de instalar deps.
+- Porting real (marco 2): o Aqueous exige um **wlroots 0.20.2 privado**
+  (45+ patches upstream em `compositor/patches/wlroots/`, script
+  `build-wlroots-render-hook.sh`); o pipeline roda esse script com prefixo
+  de staging e empacota o resultado como `dinx-wlroots`. Faltavam `glslang`
+  (fatal no meson) e headers glibc (`sys/sysmacros.h`, `linux/input*.h`) →
+  shims em `/usr/local/include` apontando para os equivalentes FreeBSD
+  (`sys/types.h`, `dev/evdev/*`).
+- `prctl(PR_SET_PDEATHSIG)` → `procctl(P_PID, 0, PROC_PDEATHSIG_CTL, &sig)`;
+  `PR_SET_CHILD_SUBREAPER` → `procctl(..., PROC_REAP_ACQUIRE, NULL)`
+  (aproximação documentada). Aplicado em Pearl (libc.h wrapper + call sites
+  Zig) e greetd (`session/prctl.rs` via `libc::procctl`).
+- greetd 0.10.3 builda nativo (cargo) e já está empacotado
+  (`dinx-greetd-0.10.3.pkg` + catálogo `pkg repo`).
+- Pearl usa `statx`/`mallopt` (glibc) em vários módulos e lê `/proc/*`:
+  em vez de patchear cada call site, `scripts/bsd-vm/dinxcompat.c` provê
+  `statx` emulado sobre `fstatat` (layout do struct statx do kernel) e
+  `mallopt` no-op; `build.zig` do Pearl linka `dinxcompat` em todo módulo
+  via `createModule`. `/proc` vem de linprocfs montado best-effort pelo
+  wrapper de sessão.
+- O wlroots patcheado instala pkg-config em `libdata/pkgconfig` (não
+  `lib/pkgconfig`) no FreeBSD — `PKG_CONFIG_PATH` do build aponta para lá;
+  o teste de regressão scRGB do script upstream falha em VM headless
+  (biblioteca instala normalmente; caveat documentado).
+- **Aqueous 1.0.5 buildou nativo no FreeBSD 15.1** e está empacotado
+  (`dinx-aqueous-1.0.5.pkg`). Duas correções finais foram necessárias:
+  a lib wlroots patcheada precisava vencer a ordem de `-L` do linker
+  (copiada para `/usr/local/lib`), e o `activity_bootstrap.c` usa
+  `SO_PEERCRED`/`SO_PEERPIDFD`/pidfd (Linux-only) → guarda `#ifdef
+  __FreeBSD__` desabilita os *activity claims* (degradação documentada).
+- Pearl: `siginfo_t` no FreeBSD expõe `pid` direto (sem union Linux);
+  `PTHREAD_ONCE_INIT` (macro com braces) → `std.mem.zeroes` em
+  `repository.zig` e `fetch.zig`.
+
+## 14. Tempos de build e custo de refresh de upstream
+
+Medidos na VM de build (FreeBSD 15.1, 4 vCPU / 4 GB, KVM), por estágio
+(`times.log`, epoch seconds):
+
+| Estágio | Cold (caches zerados) | Warm (caches válidos) |
+|---|---|---|
+| wlroots 0.20.2 patcheado (45+ patches, meson) | 23 s | 0 s (staging reutilizado) |
+| Aqueous (Zig 0.17, translate-c + link) | 55 s | 1–35 s |
+| libdinxcompat (cc) | 2 s | 2 s |
+| Pearl (Zig 0.17, GTK4 bindings) | 493 s | 90–171 s |
+| greetd (cargo) | 29 s | 0–2 s |
+| pkg create + pkg repo | ~1 s | ~1 s |
+| **Total** | **~603 s (~10 min)** | **no-op ~53 s; com mudanças 2–4 min** |
+
+Custo de uma versão nova do upstream = rebuild cold (~10 min) **+ o trabalho
+humano de rebase dos patches**, que é a parte variável:
+- O wlroots é um fork privado pinado em 0.20.2 com 45+ patches; subir a
+  versão do wlroots exige rebase manual desse conjunto (horas, não minutos).
+- Aqueous/Pearl podem introduzir novos Linux-isms a cada release; cada um
+  vira uma rodada de patch (compile ~2–5 min + análise). O histórico desta
+  sessão: 16 patches para levar Pearl de "não compila" a binário nativo.
+- `patch-freebsd.py` falha alto (`PATCH PATTERN MISSING`) quando o upstream
+  move o código patcheado — o refresh nunca passa silenciosamente.
+- Recomendação: pinar versões upstream (como já feito: wlroots 0.20.2,
+  Pearl 0.3.9, Aqueous 1.0.5) e tratar refresh como tarefa planejada com
+  orçamento de rebase, não como `pkg upgrade` automático.
+
+## 15. Temas trazidos da branch `themes`
+
+A branch `themes` (Linux/Artix) carrega a identidade visual DINX. Os assets
+portáveis foram extraídos para `distro/bsd/config/theme-overlay/` com o
+layout alvo e entram no overlay da ISO:
+- `usr/local/share/themes/DINX/` — tema GTK3/GTK4 (css claro/escuro +
+  `index.theme`, IconTheme=Papirus).
+- `usr/local/share/dinx/theme/DINX.json` — paleta Material do Pearl
+  (dark/light, cores de terminal).
+- `usr/local/share/color-schemes/DINXDark.colors` + `etc/skel/.config/qt6ct/`
+  — seed qt6ct para apps Qt6.
+- `usr/local/libexec/dinx-sync-session-theme` — lê as preferências do Pearl
+  (`preferences.json`/`last-good.json`) e sincroniza GTK/settings.ini;
+  `dinx-qt6ct-palette-seed` — semeia a paleta qt6ct sem sobrescrever
+  customizações do usuário (preserva symlinks).
+- O wrapper de sessão executa ambos no início de cada sessão; `jq` entrou
+  nas deps do firstboot.
+Ficaram de fora (Linux-only, documentado): tema GRUB (o FreeBSD usa
+loader(8)) e Plymouth (splash do loader é outro mecanismo).
+Nota de porting adicional: o FreeBSD 15 divide libc/libsys e o `__progname`
+vem do crt1.o, que o startup do Zig não fornece → `dinxcompat` define
+`__progname` (nome cosmético) e o Aqueous passa a linkar `dinxcompat`.
+
+## 16. Porting do greetd (cargo) para FreeBSD
+
+greetd 0.10.3 builda nativo com cargo, mas o runtime exigiu quatro correções
+FreeBSD (todas versionadas em `patch-freebsd.py` / overlay):
+1. **PAM**: falta o serviço `greetd` → `distro/bsd/config/pam.d/greetd`
+   (pam_unix para auth/account/session/password).
+2. **Socket**: greetd binda `/run/greetd.sock`; FreeBSD tem `/var/run` →
+   symlink `/run -> /var/run` no precmd do rc.
+3. **Re-exec**: greetd re-executa via `/proc/self/exe` → linprocfs montado
+   em `/proc` no precmd do rc (e no wrapper de sessão).
+4. **VTs**: upstream abre `/dev/ttyN`; FreeBSD usa `/dev/ttyvN` → patch em
+   `server.rs` (prefixo, tty0 e format de vt).
+Config: `[terminal] vt = 1` obrigatório; `[initial_session]` faz autologin
+do usuário `dinx` no live; `[default_session]` usa agreety no instalado.
+
+## 17. Linkagem: `--as-needed` e o shim crt
+
+O Zig linka com `--as-needed`; `libdinxcompat` não tem símbolos referenciados
+diretamente pelo executável (`__progname` é referenciado pela libc), então o
+linker a descartava e o binário morria com `Undefined symbol "__progname"`.
+Correção: `linkSystemLibrary("dinxcompat", .{ .needed = true })` no Aqueous e
+no Pearl (patch #20). Lição geral: shims de símbolos indiretos precisam de
+`DT_NEEDED` explícito.

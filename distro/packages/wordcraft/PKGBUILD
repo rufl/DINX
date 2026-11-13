@@ -11,8 +11,8 @@ pkgver="${WORDCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="Fast, open-source word processor rebuilt in pure Rust"
 arch=('x86_64')
-url='https://github.com/'
-license=('MIT')
+url='https://github.com/storytold/wordcraft'
+license=('MIT' 'Apache-2.0')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
@@ -23,7 +23,7 @@ source=(
 sha256sums=(
   "${WORDCRAFT_SOURCE_SHA256}"
   '5ee7e9f18f3335c2e76924b55fd4dfb144125216c59d6ff29388bfe757e28fdb'
-  'ca5d03b2bf0a614b48ece8ab0c74adf21b06a0533bca9de4d205bd5be35fee3e'
+  'c7334841f79e465ff91527c23aa74dc543c875ec3b6fc0980e4a619a84de8af0'
 )
 
 package() {

@@ -11,8 +11,8 @@ pkgver="${PDFCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="The open-source PDF workbench"
 arch=('x86_64')
-url='https://github.com/'
-license=('MIT')
+url='https://github.com/storytold/pdfcraft'
+license=('MIT' 'Apache-2.0')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
@@ -23,7 +23,7 @@ source=(
 sha256sums=(
   "${PDFCRAFT_SOURCE_SHA256}"
   '2aa97682ec262a3957d67ad08aba29f0a216f92ac059b2b7097d12966d45cb5e'
-  'b37a7c49ee2c634829cbbe2a802c338cf83ea5d8b2974e6b2050dbca311d7782'
+  'f9378572eaff9eafaf28860081d45fe1dfef4e10dff58d2cccb3ec9ad1f30cf8'
 )
 
 package() {

@@ -133,7 +133,7 @@ P3 release gate:
 **Delivered:**
 
 - standalone `DINX Gaming` launcher and hidden Wayland desktop entry remain available; Gamescope, Steam, Steam device rules and 32-bit Mesa/RADV/Vulkan dependencies are in the optional Artix `gaming` group, not the base ISO;
-- safe Normal/Lite/Gaming service semantics, profile enter/restore with failure propagation around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the YaST-inspired DINXPanel with fixed control-panel shortcuts, Shelly/Topgrade upgrade actions, optional fwupd discovery and a non-removing Artix kernel installer;
+- safe Normal/Lite/Gaming service semantics, profile enter/restore with failure propagation around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the YaST-inspired DINXPanel with fixed control-panel shortcuts, a read-only Shelly upgrade report with optional fwupd discovery, PaintFE and Zenkai launch buttons, and a non-removing Artix kernel installer;
 - fixed launcher argv/return fixture and real headless Gamescope child launch/exit qualification;
 - ISO checks require the hidden launcher and entry while rejecting optional game binaries and package metadata from rootfs/livefs;
 - GameMode and MangoHud are optional group members; `dinx-gaming` supports `DINX_GAMEMODE=auto|on|off` and optional `DINX_MANGOHUD=on|off` without weakening the normal launcher fallback.

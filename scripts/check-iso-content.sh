@@ -274,25 +274,29 @@ required_paths=(
   usr/bin/flatpak
   usr/bin/fwupdmgr
   usr/bin/scanimage
-  usr/bin/impasto
+  usr/bin/paintfe
   usr/local/bin/haruna
   usr/share/color-schemes/DINXDark.colors
-  opt/impasto/Impasto-x86_64.AppImage
-  usr/share/applications/com.github.zbcoding.Impasto.desktop
-  usr/share/licenses/impasto/license-mit.txt
-  usr/share/licenses/impasto/license-mit-pinta.txt
-  usr/share/licenses/impasto/license-lgpl.txt
-  usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md
-  usr/bin/onlyoffice
-  usr/lib/onlyoffice/onlyoffice-force-dark
-  usr/bin/zrythm
-  opt/onlyoffice/DesktopEditors.AppImage
-  opt/zrythm/Zrythm.AppImage
-  usr/share/applications/onlyoffice.desktop
-  usr/share/applications/zrythm.desktop
-  usr/share/licenses/onlyoffice/LICENSE
-  usr/share/licenses/zrythm/LicenseRef-ZrythmLicense.txt
-  usr/share/licenses/zrythm/TRADEMARKS.md
+  opt/paintfe/PaintFE.AppImage
+  usr/share/applications/paintfe.desktop
+  usr/bin/wordcraft
+  opt/wordcraft/wordcraft.AppImage
+  usr/share/applications/wordcraft.desktop
+  usr/bin/gridcraft
+  opt/gridcraft/gridcraft.AppImage
+  usr/share/applications/gridcraft.desktop
+  usr/bin/deckcraft
+  opt/deckcraft/deckcraft.AppImage
+  usr/share/applications/deckcraft.desktop
+  usr/bin/pdfcraft
+  opt/pdfcraft/pdfcraft.AppImage
+  usr/share/applications/pdfcraft.desktop
+  usr/bin/transit
+  opt/transit/transit.AppImage
+  usr/share/applications/transit.desktop
+  usr/bin/zenkai
+  opt/zenkai/zenkai.AppImage
+  usr/share/applications/zenkai.desktop
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
@@ -334,7 +338,6 @@ required_paths=(
   etc/skel/.config/qt6ct/qt6ct.conf
   etc/skel/.config/qt6ct/colors/DINX.conf
   etc/skel/.config/swayimg/init.lua
-  etc/skel/.config/topgrade.toml
   etc/skel/.bashrc
   etc/skel/.config/shikane/config.toml
   "etc/skel/Desktop/Install DINX.desktop"
@@ -416,7 +419,6 @@ required_paths=(
   usr/bin/haruna
   usr/bin/g4music
   usr/bin/galculator
-  usr/bin/topgrade
   usr/bin/paru
   usr/bin/shelly
   usr/bin/shelly-ui
@@ -433,11 +435,8 @@ required_paths=(
   etc/paru.conf
   etc/shellybuild.conf
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
-  usr/bin/floorp
-  usr/lib/floorp/floorp
-  usr/lib/floorp/distribution/policies.json
-  usr/share/applications/floorp.desktop
-  usr/share/icons/hicolor/128x128/apps/floorp.png
+  usr/bin/firefox
+  usr/share/applications/firefox.desktop
   usr/bin/opensnitchd
   usr/bin/opensnitch-ui
   etc/opensnitchd/default-config.json
@@ -589,7 +588,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoffice zrythm haruna; do
+for package in krita inkscape godot pixelorama patchy blockbench paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -1171,7 +1170,7 @@ for action in all config direct policies; do
   grep -Fq "<action id=\"org.fedoraproject.FirewallD1.$action\">" <<<"$firewalld_policy" \
     || fail "Firewalld Polkit action is missing: $action"
 done
-for required_package in floorp opensnitch opensnitch-dinit; do
+for required_package in firefox opensnitch opensnitch-dinit; do
   grep -Eq "/var/lib/pacman/local/${required_package}-[^/]*/" <<<"$manifest" \
     || fail "required package metadata is missing from installed rootfs: $required_package"
 done
@@ -1190,9 +1189,6 @@ grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' <<<"$
 grep -Fqx 'TryExec=opensnitch-ui' <<<"$opensnitch_autostart" \
   || fail 'OpenSnitch autostart entry does not guard the UI executable'
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  if grep -Eq '/var/lib/pacman/local/firefox-[^/]*/' <<<"$image_manifest"; then
-    fail 'Firefox package metadata is present after replacement with Floorp'
-  fi
   for retired_path in \
     usr/bin/portmaster \
     usr/lib/portmaster/portmaster \
@@ -1205,8 +1201,6 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     usr/share/applications/portmaster.desktop \
     usr/share/licenses/portmaster/LICENSE \
     usr/lib/libayatana-appindicator3.so.1 \
-    usr/share/applications/firefox.desktop \
-    etc/firefox/policies/policies.json \
     usr/bin/ufw \
     usr/bin/gufw \
     usr/bin/gufw-pkexec \
@@ -1225,9 +1219,12 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
       fail "retired package remains in a final ISO filesystem: $retired_package"
     fi
   done
+  for retired_package_metadata in floorp onlyoffice impasto zrythm topgrade; do
+    if grep -Eq "/var/lib/pacman/local/${retired_package_metadata}-[^/]*/" <<<"$image_manifest"; then
+      fail "retired desktop package metadata remains in a final ISO filesystem: $retired_package_metadata"
+    fi
+  done
 done
-topgrade_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/topgrade.toml)
-grep -Fq 'arch_package_manager = "pacman"' <<<"$topgrade_config" || fail 'Topgrade is not pinned to Artix pacman'
 
 aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
@@ -1288,18 +1285,18 @@ grep -Fq 'shell: /bin/fish' <<<"$users_config" || fail 'Calamares user shell is 
 grep -Fq '    - render' <<<"$users_config" || fail 'Calamares users are missing DRM render-node access'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
 grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || fail 'Phyto is not the default directory handler'
-grep -Fq 'text/html=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default HTML handler'
-grep -Fq 'application/xhtml+xml=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default XHTML handler'
-grep -Fq 'x-scheme-handler/http=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default HTTP handler'
-grep -Fq 'x-scheme-handler/https=floorp.desktop;' <<<"$mimeapps_config" || fail 'Floorp is not the default HTTPS handler'
-floorp_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/floorp/distribution/policies.json)
-grep -Fq '"DisableAppUpdate": true' <<<"$floorp_policy" || fail 'Floorp updates are not managed by the DINX package source refresh'
-grep -Fq 'application/pdf=onlyoffice.desktop;' <<<"$mimeapps_config" || fail 'ONLYOFFICE is not the default PDF handler'
-onlyoffice_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/onlyoffice)
-onlyoffice_force_dark=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/onlyoffice/onlyoffice-force-dark)
-grep -Fq 'DesktopEditors.conf' <<<"$onlyoffice_launcher" || fail 'ONLYOFFICE launcher does not target its upstream settings file'
-grep -Fq '/usr/lib/onlyoffice/onlyoffice-force-dark' <<<"$onlyoffice_launcher" || fail 'ONLYOFFICE launcher does not invoke its dark-theme helper'
-grep -Fq 'UITheme=theme-dark' <<<"$onlyoffice_force_dark" || fail 'ONLYOFFICE helper does not force its upstream dark theme'
+grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
+grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default XHTML handler'
+grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
+grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
+grep -Fq 'application/pdf=pdfcraft.desktop;' <<<"$mimeapps_config" || fail 'PdfCraft is not the default PDF handler'
+for appimage_launcher in paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai; do
+  launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
+  grep -Fq -- '--appimage-extract-and-run "$@"' <<<"$launcher_script" \
+    || fail "$appimage_launcher launcher does not support systems without FUSE"
+  grep -Fq "/opt/$appimage_launcher/" <<<"$launcher_script" \
+    || fail "$appimage_launcher launcher does not target its package-owned AppImage"
+done
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
@@ -1560,7 +1557,13 @@ usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
-usr/share/applications/com.github.zbcoding.Impasto.desktop|Impasto|Impasto|impasto %F
+usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
+usr/share/applications/wordcraft.desktop|WordCraft|WordCraft|wordcraft %U
+usr/share/applications/gridcraft.desktop|GridCraft|GridCraft|gridcraft %U
+usr/share/applications/deckcraft.desktop|DeckCraft|DeckCraft|deckcraft %U
+usr/share/applications/pdfcraft.desktop|PdfCraft|PdfCraft|pdfcraft %U
+usr/share/applications/transit.desktop|Transit|Transit|transit %U
+usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|env QT_QPA_PLATFORMTHEME=qt6ct haruna %U

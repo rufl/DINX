@@ -7,4 +7,5 @@ TryExec=pdfcraft
 Icon=pdfcraft
 Terminal=false
 Categories=Office;Viewer;Graphics;
+MimeType=application/pdf;
 StartupNotify=true

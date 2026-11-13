@@ -11,8 +11,8 @@ pkgver="${TRANSIT_VERSION}"
 pkgrel=1
 pkgdesc="Digital audio workstation written in Rust"
 arch=('x86_64')
-url='https://github.com/'
-license=('MIT')
+url='https://github.com/transit-audio/transit'
+license=('Apache-2.0')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
@@ -23,7 +23,7 @@ source=(
 sha256sums=(
   "${TRANSIT_SOURCE_SHA256}"
   '11a0107795d89432af374028a08e998a45933cd15eb18fcb8dd333b067de8294'
-  '1db471dbedf76e5db1aa7c8d23bf62dc7619d0cd33bf29135e90c985d9094255'
+  '4cff69e46d8a825e8f3131b2ab9df65ebf914d34f74a818ae8cac2f1bf0b3e0d'
 )
 
 package() {

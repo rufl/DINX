@@ -11,7 +11,7 @@ pkgver="${PAINTFE_VERSION}"
 pkgrel=1
 pkgdesc="Fast, lightweight raster image editor built in Rust"
 arch=('x86_64')
-url='https://github.com/'
+url='https://github.com/kylejckson/PaintFE'
 license=('MIT')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
@@ -23,12 +23,12 @@ source=(
 sha256sums=(
   "${PAINTFE_SOURCE_SHA256}"
   'd42c6e0aad69d7c2300680e715a57977c0b5fe93f95fb6d4900f6ccc9cfba9c5'
-  '6ca6051f47571eab19a2bfd5c7666bb28b7d47fc5383984101109fa4ac2e0571'
+  '6c5cfa7be3c70ad489713a459e528acfa3984037b9ffe0b1edec7b09dffea3ac'
 )
 
 package() {
   install -Dm755 "$srcdir/paintfe-${pkgver}-x86_64.AppImage" \
-    "$pkgdir/opt/paintfe/paintfe.AppImage"
+    "$pkgdir/opt/paintfe/PaintFE.AppImage"
   install -Dm755 "$srcdir/paintfe" "$pkgdir/usr/bin/paintfe"
   install -Dm644 "$srcdir/paintfe.desktop" \
     "$pkgdir/usr/share/applications/paintfe.desktop"

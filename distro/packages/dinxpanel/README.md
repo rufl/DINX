@@ -16,7 +16,7 @@ DINXPanel is the DINX-native, YaST-inspired system control center. It groups fix
 
 `Check upgrades` refreshes Shelly package metadata, lists available standard/AUR/Flatpak/AppImage updates, refreshes optional fwupd metadata and lists available firmware releases. It does not install anything. Missing optional tools are reported in the operation output instead of being silently ignored.
 
-`Topgrade preview` opens `topgrade --dry-run --show-skipped --no-self-update --no-tmux`, so the user can review package, firmware and other configured upgrade steps without a self-update or nested tmux session. `Topgrade` runs the complete workflow. `Shelly upgrade` runs `shelly upgrade all` in a terminal with Shelly's own confirmation and policy boundaries.
+`PaintFE` and `Zenkai` launch the pinned raster image editor and application launcher directly. `Shelly upgrade` runs `shelly upgrade all` in a terminal with Shelly's own confirmation and policy boundaries.
 
 Firmware discovery uses `fwupdmgr refresh` and `fwupdmgr get-updates`; a `fwupdmgr` exit code 2 means “no action” and is treated as a normal no-update result. `fwupd` is optional because firmware support depends on the platform and repository payload.
 
@@ -40,7 +40,8 @@ dinitui --gpu-status
 dinitui --install-gpu-drivers
 shelly sync
 shelly list-updates all
-topgrade --dry-run --show-skipped --no-self-update --no-tmux
+paintfe
+zenkai
 fwupdmgr refresh
 fwupdmgr get-updates
 dinxpanel

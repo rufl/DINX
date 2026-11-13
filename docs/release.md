@@ -40,11 +40,11 @@ blocks and a 1 MiB dictionary. Alpha 10 uses 256 KiB blocks and a 256 KiB
 dictionary, keeping the direct ISO below GitHub's 2 GiB per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
-The current profile also ships official Zrythm v2.0.0-alpha.7 and ONLYOFFICE
-Desktop Editors 10.0.0 AppImages, together about 518 MB before SquashFS
-compression. Zrythm v2 is pre-release software and may crash or lose data.
-ONLYOFFICE's integrated application retains Forms and Diagram Viewer; DINX
-registers only document, spreadsheet, presentation and PDF file types. Images
+The current profile also ships the checksum-pinned upstream AppImages PaintFE,
+WordCraft, GridCraft, DeckCraft, PdfCraft, Transit and Zenkai. Each package
+installs its AppImage under `/opt/<package>/`, a `/usr/bin/<package>` wrapper
+that runs it with `--appimage-extract-and-run` so no FUSE is required, and a
+desktop entry. PdfCraft is the default `application/pdf` handler. Images
 over GitHub's 2 GiB per-asset limit use the split release path; the rolling
 single-file alias advances only for a qualifying single-image release.
 

@@ -300,9 +300,10 @@ For real hardware, use the device matrix and report procedure in [DINX hardware 
 
 DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected
-application sources, and Impasto as the image editor. Impasto is a version-pinned
-upstream AppImage with bundled GTK and preserved license notices; it launches
-without FUSE. Swayimg remains the default image viewer.
+application sources, and PaintFE as the image editor, alongside Krita, Inkscape,
+Pixelorama and Patchy. PaintFE is a checksum-pinned upstream AppImage that
+launches with `--appimage-extract-and-run`, so it needs no FUSE. Swayimg remains
+the default image viewer.
 
 ### Optional gaming stack
 

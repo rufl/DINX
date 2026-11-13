@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=onlyoffice
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${ONLYOFFICE_VERSION:?missing ONLYOFFICE_VERSION}"
+: "${ONLYOFFICE_SOURCE_URL:?missing ONLYOFFICE_SOURCE_URL}"
+: "${ONLYOFFICE_SOURCE_SHA256:?missing ONLYOFFICE_SOURCE_SHA256}"
+: "${ONLYOFFICE_LICENSE_URL:?missing ONLYOFFICE_LICENSE_URL}"
+: "${ONLYOFFICE_LICENSE_SHA256:?missing ONLYOFFICE_LICENSE_SHA256}"
+pkgver="$ONLYOFFICE_VERSION"
+pkgrel=4
+pkgdesc='Desktop editors for documents, spreadsheets, presentations and PDFs'
+arch=('x86_64')
+url='https://www.onlyoffice.com/desktop'
+license=('AGPL-3.0-only')
+depends=('coreutils' 'gawk' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')
+options=('!strip')
+source=(
+  "DesktopEditors-${pkgver}-x86_64.AppImage::${ONLYOFFICE_SOURCE_URL}"
+  "LICENSE::${ONLYOFFICE_LICENSE_URL}"
+  'onlyoffice'
+  'onlyoffice-force-dark'
+  'onlyoffice.desktop'
+)
+sha256sums=(
+  "$ONLYOFFICE_SOURCE_SHA256"
+  "$ONLYOFFICE_LICENSE_SHA256"
+  '8e0d40c5ef5574e146723ac8f2dfbe47214323568b2789df4203106a10bc1f0f'
+  '9a21d2444f3fec9c8520f9bd79ac38cca500de27e15d016d9ca49ad8b5e27cd0'
+  '641758d73f4c6c3d12bcacd3abeba01f66a5dfeed78492c80c5f9ca1a1b6f4b2'
+)
+
+package() {
+  install -Dm755 "$srcdir/DesktopEditors-${pkgver}-x86_64.AppImage" \
+    "$pkgdir/opt/onlyoffice/DesktopEditors.AppImage"
+  install -Dm755 "$srcdir/onlyoffice" "$pkgdir/usr/bin/onlyoffice"
+  install -Dm755 "$srcdir/onlyoffice-force-dark" \
+    "$pkgdir/usr/lib/onlyoffice/onlyoffice-force-dark"
+  install -Dm644 "$srcdir/onlyoffice.desktop" \
+    "$pkgdir/usr/share/applications/onlyoffice.desktop"
+  install -Dm644 "$srcdir/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
+ONLYOFFICE Desktop Editors ${ONLYOFFICE_VERSION} official x86_64 AppImage:
+${ONLYOFFICE_SOURCE_URL}
+
+The DINX package redistributes the unmodified upstream AppImage. The launcher
+registers document, spreadsheet, presentation and PDF file types only; the
+upstream integrated app also contains its Forms and Diagram Viewer features.
+Corresponding application source: https://github.com/ONLYOFFICE/DesktopEditors/tree/v${ONLYOFFICE_VERSION}
+AppImage packaging source: https://github.com/ONLYOFFICE/appimage-desktopeditors/tree/v${ONLYOFFICE_VERSION}
+EOF
+}

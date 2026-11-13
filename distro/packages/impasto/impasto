@@ -1,0 +1,51 @@
+#!/bin/sh
+set -eu
+
+# Impasto applies its saved color-scheme after libadwaita starts, overriding
+# GTK_THEME and ADW_DEBUG_COLOR_SCHEME. Keep this application-local preference
+# dark without changing the desktop's global GTK settings.
+config_root=${XDG_CONFIG_HOME:-"$HOME/.config"}
+settings_dir=$config_root/Impasto
+settings_file=$settings_dir/settings.xml
+tmp=
+
+cleanup() {
+    [ -z "$tmp" ] || rm -f -- "$tmp"
+}
+trap cleanup EXIT HUP INT TERM
+
+umask 077
+mkdir -p -- "$settings_dir"
+
+if [ -L "$settings_file" ]; then
+    printf 'impasto: refusing symlinked settings file: %s\n' "$settings_file" >&2
+elif [ -e "$settings_file" ]; then
+    if [ ! -f "$settings_file" ]; then
+        printf 'impasto: settings path is not a regular file: %s\n' "$settings_file" >&2
+    else
+        tmp=$settings_dir/.settings.xml.tmp.$$
+        if grep -Fq 'name="color-scheme"' "$settings_file"; then
+            sed 's#<setting name="color-scheme"[^>]*>[^<]*</setting>#<setting name="color-scheme" type="System.Int32">2</setting>#' \
+                "$settings_file" > "$tmp"
+        else
+            sed '/<settings>/a\
+  <setting name="color-scheme" type="System.Int32">2</setting>' \
+                "$settings_file" > "$tmp"
+        fi
+        chmod 600 "$tmp"
+        mv -f -- "$tmp" "$settings_file"
+        tmp=
+    fi
+else
+    cat > "$settings_file" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+  <setting name="color-scheme" type="System.Int32">2</setting>
+</settings>
+EOF
+fi
+
+export GTK_THEME=DINX
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+export ADW_DEBUG_COLOR_SCHEME=prefer-dark
+exec /opt/impasto/Impasto-x86_64.AppImage --appimage-extract-and-run "$@"

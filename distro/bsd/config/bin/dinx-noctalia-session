@@ -1,0 +1,20 @@
+#!/bin/sh
+# DINX alternative session: Aqueous compositor + Noctalia shell.
+set -eu
+. "${DINX_PREFIX:-/usr/local}/libexec/dinx/session-common"
+
+start_audio
+
+if ! command -v aqueous >/dev/null 2>&1; then
+  echo 'dinx-noctalia-session: aqueous compositor not installed' >&2
+  exit 1
+fi
+aqueous &
+_session_pids="$_session_pids $!"
+wait_wayland || exit 1
+
+if ! command -v noctalia >/dev/null 2>&1; then
+  echo 'dinx-noctalia-session: noctalia shell not installed' >&2
+  exit 1
+fi
+noctalia

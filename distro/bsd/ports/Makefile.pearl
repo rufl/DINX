@@ -1,9 +1,9 @@
 # FreeBSD Port Makefile for Pearl Desktop Shell (DINX-BSD)
 PORTNAME=	pearl
 PORTVERSION=	0.3.0
+DISTNAME=	${PORTNAME}-${PORTVERSION}
+
 CATEGORIES=	x11-wm wayland
-MASTER_SITES=	https://github.com/rufl/pearl/releases/download/v0.3.0/
-DISTNAME=	pearl-0.3.0
 
 MAINTAINER=	trafael@dinx.org
 COMMENT=	Pearl desktop shell for DINX-BSD
@@ -12,13 +12,17 @@ WWW=		https://github.com/rufl/DINX
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
-BUILD_DEPENDS=	zig>=0.13.0:lang/zig \
-		wayland>=0:graphics/wayland
+BUILD_DEPENDS=	zig>=0.16.0:lang/zig \
+		gtk40>=0:x11-toolkits/gtk40 \
+		wayland-protocols>=0:graphics/wayland-protocols
 RUN_DEPENDS=	seatd>=0:sysutils/seatd \
 		pipewire>=0:multimedia/pipewire
 
-USES=		compiler:c++17-lang zig
-USE_ZIG=	yes
+USES=		pkgconfig wayland
+
+# Local source tarball: place ${DISTFILES} in ${DISTDIR} before building.
+MASTER_SITES=
+DISTFILES=	${DISTNAME}.tar.gz
 
 do-build:
 	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe

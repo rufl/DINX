@@ -1,0 +1,56 @@
+# FreeBSD Port Makefile for Noctalia desktop shell (DINX-BSD alternative)
+PORTNAME=	noctalia
+PORTVERSION=	5.1
+DISTNAME=	${PORTNAME}-${PORTVERSION}
+
+CATEGORIES=	x11-wm wayland
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	A sleek, customizable desktop shell crafted for Wayland
+WWW=		https://github.com/noctalia-dev/noctalia
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+# Noctalia v5 is native C++23 (meson), no Qt/GTK. jemalloc is glibc-only.
+BUILD_DEPENDS=	wayland-protocols>=0:graphics/wayland-protocols \
+		libxkbcommon>=0:x11/libxkbcommon \
+		freetype2>=0:print/freetype2 \
+		fontconfig>=0:x11-fonts/fontconfig \
+		cairo>=0:graphics/cairo \
+		pango>=0:x11-toolkits/pango \
+		harfbuzz>=0:print/harfbuzz \
+		glib20>=0:devel/glib20 \
+		libsecret>=0:security/libsecret \
+		libsodium>=0:security/libsodium \
+		sdbus-cpp>=0:devel/sdbus-cpp \
+		basu>=0:devel/basu \
+		pipewire>=0:multimedia/pipewire \
+		wireplumber>=0.5:multimedia/wireplumber \
+		polkit>=0:sysutils/polkit \
+		curl>=0:ftp/curl \
+		libwebp>=0:graphics/libwebp \
+		libjxl>=0:graphics/libjxl \
+		libsndfile>=0:audio/libsndfile \
+		librsvg2>=0:graphics/librsvg2 \
+		libqalculate>=0:math/libqalculate \
+		libxml2>=0:textproc/libxml2 \
+		md4c>=0:textproc/md4c \
+		tomlplusplus>=0:devel/tomlplusplus \
+		libical>=0:devel/libical \
+		nlohmann-json>=0:devel/nlohmann-json \
+		stb>=0:devel/stb
+RUN_DEPENDS=	pipewire>=0:multimedia/pipewire \
+		git-lite>=0:devel/git-lite \
+		sound-theme-freedesktop>=0:audio/sound-theme-freedesktop
+
+USES=		compiler:c++23-lang meson pkgconfig
+CONFIGURE_ARGS=	-Djemalloc=disabled -Dtests=disabled -Dnative_optimizations=false
+
+# Local source tarball: place ${DISTFILES} in ${DISTDIR} before building.
+# Pin to an upstream release tag; Linux is the first-class target, FreeBSD
+# may need patches (tracked in docs/DINX-BSD-BUILD-GUIDE.md).
+MASTER_SITES=
+DISTFILES=	${DISTNAME}.tar.gz
+
+.include <bsd.port.mk>

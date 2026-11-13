@@ -1,0 +1,18 @@
+#!/bin/sh
+# Select the DINX session: per-user preference, then system default (pearl).
+set -eu
+choice=""
+if [ -r "$HOME/.config/dinx/session" ]; then
+  choice=$(cat "$HOME/.config/dinx/session")
+fi
+if [ -z "$choice" ]; then
+  choice=$(cat /var/db/dinx-bsd/session 2>/dev/null || echo pearl)
+fi
+case "$choice" in
+  pearl) exec "${DINX_PREFIX:-/usr/local}/bin/dinx-pearl-session" ;;
+  noctalia) exec "${DINX_PREFIX:-/usr/local}/bin/dinx-noctalia-session" ;;
+  *)
+    echo "dinx-session-select: unknown session '$choice'" >&2
+    exit 1
+    ;;
+esac

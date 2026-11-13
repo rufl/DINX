@@ -1,0 +1,47 @@
+PARTITIONS=DEFAULT
+DISTRIBUTIONS="kernel.txz base.txz dinx-bsd-overlay.txz"
+export nonInteractive="YES"
+export BSDINSTALL_LOG="/tmp/bsdinstall_log"
+export BSDINSTALL_SKIP_FIRMWARE="YES"
+#!/bin/sh
+# Post-install script: bsdinstall splits this file at the first '^#!' line and
+# runs this part chrooted inside the target. Keep it POSIX sh and base-only:
+# bash, pkg and network are not guaranteed here. Desktop setup runs at first
+# boot via rc.d/dinx_firstboot.
+set -eu
+
+test -r /etc/dinx-release
+
+sysrc hostname="dinx-bsd"
+sysrc ifconfig_DEFAULT="DHCP"
+sysrc dumpdev="NO"
+
+if ! grep -q '^boot_multicons=' /boot/loader.conf; then
+  printf '%s\n' 'boot_multicons="YES"' >> /boot/loader.conf
+fi
+if ! grep -q '^boot_serial=' /boot/loader.conf; then
+  printf '%s\n' 'boot_serial="YES"' >> /boot/loader.conf
+fi
+if ! grep -q '^comconsole_speed=' /boot/loader.conf; then
+  printf '%s\n' 'comconsole_speed="115200"' >> /boot/loader.conf
+fi
+
+sed -i '' 's|^ttyu0[[:space:]].*|ttyu0   "/usr/libexec/getty std.115200"   vt100   onifconsole secure|' /etc/ttys
+
+if [ -f /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker ]; then
+  install -m 0555 /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker /etc/rc.d/dinx_marker
+  sysrc dinx_marker_enable="YES"
+fi
+
+# bsdinstall copies the live system's resolv.conf, which is empty when the
+# installer never configured DNS. Drop it so dhclient creates a real one.
+if [ -f /etc/resolv.conf ] && [ ! -s /etc/resolv.conf ]; then
+  rm -f /etc/resolv.conf
+fi
+
+sysrc dinx_firstboot_enable="YES"
+sysrc dinx_first_run_enable="YES"
+
+mkdir -p /var/db/dinx-bsd
+touch /var/db/dinx-bsd/base-installed
+printf '%s\n' 'DINX-BSD base installation completed.'

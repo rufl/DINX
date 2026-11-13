@@ -1,0 +1,26 @@
+#!/bin/sh
+# PROVIDE: dinx_first_run
+# REQUIRE: NETWORKING DAEMON dinx_live_persist
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="dinx_first_run"
+rcvar="dinx_first_run_enable"
+start_cmd="dinx_first_run_start"
+
+dinx_first_run_start()
+{
+	# Detached on the video console so rc (and the serial getty) never block.
+	/usr/sbin/daemon -o /var/log/dinx-first-run.log /bin/sh -c \
+	  'if [ -f /var/db/dinx-bsd/first-run-done ]; then
+	     service dinx_greetd onestart >/dev/null 2>&1
+	   elif [ -c /dev/ttyv0 ]; then
+	     /usr/local/bin/dinx-first-run </dev/ttyv0 >/dev/ttyv0 2>&1
+	   else
+	     service dinx_greetd onestart >/dev/null 2>&1
+	   fi'
+}
+
+load_rc_config $name
+run_rc_command "$1"

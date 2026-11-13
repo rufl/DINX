@@ -1,9 +1,9 @@
 # FreeBSD Port Makefile for DINX Pearl Greeter Host (DINX-BSD)
 PORTNAME=	dinx-pearl-greeter-host
 PORTVERSION=	1.0.0
+DISTNAME=	${PORTNAME}-${PORTVERSION}
+
 CATEGORIES=	x11 sysutils
-MASTER_SITES=	https://github.com/rufl/dinx-pearl-greeter-host/releases/download/v1.0.0/
-DISTNAME=	dinx-pearl-greeter-host-1.0.0
 
 MAINTAINER=	trafael@dinx.org
 COMMENT=	DINX Pearl greeter host daemon for DINX-BSD
@@ -12,12 +12,15 @@ WWW=		https://github.com/rufl/DINX
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
-BUILD_DEPENDS=	zig>=0.13.0:lang/zig
-RUN_DEPENDS=	pearl>=0.3.0:x11-wm/pearl \
-		greetd>=0:x11/greetd
+# Requires dinx-pearl and dinx-greetd from the local DINX repository;
+# greetd is not a FreeBSD port and cannot be a BUILD_DEPENDS origin.
+BUILD_DEPENDS=	zig>=0.16.0:lang/zig
 
-USES=		zig
-USE_ZIG=	yes
+USES=		pkgconfig
+
+# Local source tarball: place ${DISTFILES} in ${DISTDIR} before building.
+MASTER_SITES=
+DISTFILES=	${DISTNAME}.tar.gz
 
 do-build:
 	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe

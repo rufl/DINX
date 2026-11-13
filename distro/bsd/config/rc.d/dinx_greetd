@@ -1,0 +1,15 @@
+#!/bin/sh
+# PROVIDE: dinx_greetd
+# REQUIRE: LOGIN
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="dinx_greetd"
+rcvar="dinx_greetd_enable"
+pidfile="/var/run/greetd.pid"
+command="/usr/sbin/daemon"
+command_args="-p ${pidfile} /usr/local/sbin/greetd --config /usr/local/etc/greetd/config.toml"
+
+load_rc_config $name
+run_rc_command "$1"

@@ -1,0 +1,3 @@
+[default_session]
+command = "agreety --cmd /usr/local/bin/dinx-session-select"
+user = "greeter"

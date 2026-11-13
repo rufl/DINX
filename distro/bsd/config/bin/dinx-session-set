@@ -1,0 +1,16 @@
+#!/bin/sh
+# Set the per-user DINX session preference.
+set -eu
+if [ $# -ne 1 ]; then
+  echo 'usage: dinx-session-set pearl|noctalia' >&2
+  exit 1
+fi
+case "$1" in
+  pearl|noctalia) ;;
+  *)
+    echo "dinx-session-set: unknown session: $1" >&2
+    exit 1
+    ;;
+esac
+mkdir -p "$HOME/.config/dinx"
+printf '%s\n' "$1" > "$HOME/.config/dinx/session"

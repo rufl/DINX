@@ -1,0 +1,17 @@
+#!/bin/sh
+# HyprBSD-style convenience: initialize the Wine prefix (wineboot/fonts)
+# before running the FreeBSD wine-proton binaries.
+set -eu
+export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-proton}"
+wine=/usr/local/wine-proton/bin/wine
+if [ "$(uname -U)" -ge 1500000 ]; then
+  export PROTON_USE_WOW64=1
+fi
+if [ ! -x "$wine" ]; then
+  echo 'dinx-wine-proton: wine-proton not installed' >&2
+  exit 1
+fi
+if [ ! -d "$WINEPREFIX/drive_c" ]; then
+  "$wine" wineboot -u >/dev/null 2>&1 || true
+fi
+exec "$wine" "$@"

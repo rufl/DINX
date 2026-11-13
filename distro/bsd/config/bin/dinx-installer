@@ -1,0 +1,11 @@
+#!/bin/sh
+# Permanent installation from the live system (NomadBSD-style installer).
+# DESTRUCTIVE: erases the target disk selected by bsdinstall.
+set -eu
+if [ "$(id -u)" != 0 ]; then
+  echo 'dinx-installer: must run as root' >&2
+  exit 1
+fi
+echo 'dinx-installer: this erases the target disk; starting bsdinstall...'
+bsdinstall script /etc/installerconfig
+reboot

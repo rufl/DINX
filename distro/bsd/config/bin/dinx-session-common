@@ -1,0 +1,56 @@
+# Sourced by DINX session wrappers. Provides the FreeBSD equivalent of the
+# turnstile roles we need: per-user XDG_RUNTIME_DIR and session-scoped
+# PipeWire/WirePlumber (children die with the session).
+uid=$(id -u)
+XDG_RUNTIME_DIR="/var/run/user-${uid}"
+if ! mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null; then
+  XDG_RUNTIME_DIR="/tmp/xdg-runtime-${uid}"
+  mkdir -p "$XDG_RUNTIME_DIR"
+fi
+chmod 700 "$XDG_RUNTIME_DIR"
+export XDG_RUNTIME_DIR
+export XDG_SESSION_TYPE=wayland
+
+_session_pids=""
+session_cleanup() {
+  for p in $_session_pids; do
+    kill "$p" 2>/dev/null
+  done
+}
+trap session_cleanup EXIT INT TERM
+
+start_audio() {
+  if command -v pipewire >/dev/null 2>&1; then
+    pipewire &
+    _session_pids="$_session_pids $!"
+  fi
+  if command -v wireplumber >/dev/null 2>&1; then
+    wireplumber &
+    _session_pids="$_session_pids $!"
+  fi
+}
+
+wait_wayland() {
+  i=0
+  while [ "$i" -lt 50 ]; do
+    for s in "$XDG_RUNTIME_DIR"/wayland-*; do
+      if [ -S "$s" ]; then
+        WAYLAND_DISPLAY=$(basename "$s")
+        export WAYLAND_DISPLAY
+        return 0
+      fi
+    done
+    i=$((i + 1))
+    sleep 0.1
+  done
+  echo 'dinx-session: no Wayland socket appeared' >&2
+  return 1
+}
+
+# Locale/keyboard chosen by the first-run wizard.
+for f in /usr/local/etc/dinx/locale.conf /usr/local/etc/dinx/keyboard.conf; do
+  if [ -r "$f" ]; then
+    . "$f"
+  fi
+done
+export LANG LC_ALL XKB_DEFAULT_LAYOUT

@@ -1,0 +1,23 @@
+#!/bin/sh
+# PROVIDE: dinx_marker
+# REQUIRE: DAEMON
+# BEFORE: LOGIN
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="dinx_marker"
+start_cmd="dinx_marker_start"
+
+dinx_marker_start()
+{
+	release=$(awk -F= '$1 == "DINX_BSD_RELEASE" { print $2 }' /etc/dinx-release 2>/dev/null || true)
+	msg="dinx-bsd: first-boot-ready release=${release:-unknown}"
+	printf '%s\n' "$msg"
+	if [ -c /dev/ttyu0 ] && sysctl -n kern.console 2>/dev/null | grep -q 'ttyu0'; then
+		timeout 2 sh -c 'printf "%s\n" "$1" > /dev/ttyu0' _ "$msg" 2>/dev/null || true
+	fi
+}
+
+load_rc_config $name
+run_rc_command "$1"

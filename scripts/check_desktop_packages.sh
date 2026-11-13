@@ -15,6 +15,11 @@ calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/ap
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
 desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
 display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
+gapless_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/g4music"
+gapless_alias="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/gapless"
+pori_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/pori"
+haruna_override="$local_apps/org.kde.haruna.desktop"
+qt6ct_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
@@ -22,6 +27,27 @@ fail() {
 }
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
+for wrapper in "$gapless_wrapper" "$gapless_alias" "$pori_wrapper" \
+  "$root/distro/packages/patchy/patchy" \
+  "$root/distro/packages/impasto/impasto" \
+  "$root/distro/packages/onlyoffice/onlyoffice"; do
+  [[ -x "$wrapper" ]] || fail "dark-mode wrapper is missing or not executable: $wrapper"
+  sh -n "$wrapper" || fail "dark-mode wrapper has invalid shell syntax: $wrapper"
+  grep -Fqx 'export GTK_THEME=DINX' "$wrapper" || fail "DINX GTK theme is missing from $wrapper"
+  grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$wrapper" || fail "GTK dark preference is missing from $wrapper"
+done
+for wrapper in "$gapless_wrapper" "$gapless_alias" "$pori_wrapper" \
+  "$root/distro/packages/patchy/patchy" "$root/distro/packages/impasto/impasto"; do
+  grep -Fqx 'export ADW_DEBUG_COLOR_SCHEME=prefer-dark' "$wrapper" \
+    || fail "libadwaita dark preference is missing from $wrapper"
+done
+grep -Fqx 'exec /usr/bin/g4music "$@"' "$gapless_wrapper" || fail 'Gapless wrapper can recurse instead of launching the packaged binary'
+grep -Fqx 'exec /usr/bin/g4music "$@"' "$gapless_alias" || fail 'Gapless alias can recurse instead of launching the packaged binary'
+grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct haruna %U' "$haruna_override" || fail 'Haruna does not use the DINX Qt theme'
+grep -Fqx 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt6ct_config" || fail 'Qt6ct does not select the DINX dark palette'
+grep -Fqx 'custom_palette=true' "$qt6ct_config" || fail 'Qt6ct DINX dark palette is disabled'
+grep -Fqx 'theme=dark' "$root/distro/packages/onlyoffice/onlyoffice" || fail 'ONLYOFFICE does not seed its dark theme'
+grep -Fq -- '--theme=dark "$@"' "$root/distro/packages/onlyoffice/onlyoffice" || fail 'ONLYOFFICE does not launch in dark mode'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
@@ -125,7 +151,7 @@ for package in onlyoffice zrythm; do
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
   grep -Fq '!strip' "$recipe" || fail "$package AppImage package must disable binary stripping"
-  grep -Fq -- '--appimage-extract-and-run "$@"' "$wrapper" || fail "$package launcher does not support systems without FUSE"
+  grep -Fq -- '--appimage-extract-and-run' "$wrapper" || fail "$package launcher does not support systems without FUSE"
   sh -n "$wrapper" || fail "$package AppImage wrapper has invalid shell syntax"
 done
 office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"
@@ -228,7 +254,7 @@ galculator.desktop|Calculator|Calculadora|galculator
 gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
-org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
+org.kde.haruna.desktop|Media Player|Tocador de Mídia|env QT_QPA_PLATFORMTHEME=qt6ct haruna %U
 blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
@@ -259,6 +285,12 @@ grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay
 grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not seed the installer shortcut from /etc/skel'
 installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
 [[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
+sh -n "$installer_helper" || fail 'DINX installer helper has invalid shell syntax'
+grep -Fq 'output=$(pkexec env \' "$installer_helper" || fail 'DINX installer does not elevate Calamares through pkexec'
+grep -Fq '    calamares 2>&1)' "$installer_helper" || fail 'DINX installer does not execute Calamares as the elevated command'
+for variable in XDG_RUNTIME_DIR WAYLAND_DISPLAY DBUS_SESSION_BUS_ADDRESS XDG_SESSION_TYPE QT_QPA_PLATFORM; do
+  grep -Fq "    $variable=" "$installer_helper" || fail "DINX installer does not preserve $variable across pkexec"
+done
 grep -Fqx '    - zenity' "$profile" || fail 'profile is missing the installer error-dialog dependency'
 grep -Fqx '    - polkit' "$profile" || fail 'profile is missing the polkit pkexec provider'
 grep -Fqx '    - lxqt-policykit' "$profile" || fail 'profile is missing the Wayland polkit authorization agent'
@@ -281,7 +313,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop com.pori.app.desktop btop.desktop nvtop.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do

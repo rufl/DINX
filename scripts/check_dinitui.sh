@@ -50,6 +50,8 @@ grep -Fq 'dinitui|dinxpanel|seafoam-settings)' "$builder" || fail 'makepkg clean
 grep -Fq 'DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh' "$builder" || fail 'builder does not qualify the packaged DinitUI binary'
 grep -Fq 'std.process.run' "$backend" || fail 'DinitUI does not use argv-safe process execution'
 grep -Fq 'service-file discovery failed' "$frontend" || fail 'service-file discovery errors are not surfaced'
+grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" || fail 'DinitUI does not force the DINX dark color scheme'
+grep -Fq 'window.background { background-color: #0b0d12; }' "$frontend" || fail 'DinitUI dark window background is missing'
 grep -Fq 'gtk_button_new_with_label("Refresh")' "$frontend" || fail 'refresh control lacks a visible accessible label'
 grep -Fq 'Filter services' "$frontend" || fail 'service search lacks an input cue'
 grep -Fq -- '--profile-status' "$frontend" || fail 'profile status CLI is missing'

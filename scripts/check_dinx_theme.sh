@@ -400,6 +400,11 @@ fi
 if grep -Eq '#(31415d|151923|2859a8)' "$calamares"; then
   fail 'Calamares contains an out-of-contract color'
 fi
+for source in "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source"; do
+  grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$source" || fail "internal app does not force the DINX dark scheme: $source"
+done
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+  || fail 'Pearl first-run wizard does not default to Pearl Material dark'
 grep -Fq "background: ${dark_token[mSurface]}" "$dinitui_source" || fail 'DinitUI output surface does not use DINX background'
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinitui_source" || fail 'DinitUI output text does not use DINX foreground'
 grep -Fq "color: ${dark_token[mSecondary]}" "$dinitui_source" || fail 'DinitUI started state does not use DINX secondary'

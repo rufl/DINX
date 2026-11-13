@@ -15,7 +15,7 @@ pkgdesc='Desktop editors for documents, spreadsheets, presentations and PDFs'
 arch=('x86_64')
 url='https://www.onlyoffice.com/desktop'
 license=('AGPL-3.0-only')
-depends=('coreutils' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')
+depends=('coreutils' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland' 'fuse2')
 options=('!strip')
 source=(
   "DesktopEditors-${pkgver}-x86_64.AppImage::${ONLYOFFICE_SOURCE_URL}"

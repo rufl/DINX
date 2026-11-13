@@ -16,17 +16,31 @@ terminal_fallback="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/shar
 source_env="$repo_root/distro/packages/deetty/source.env"
 pkgbuild="$repo_root/distro/packages/deetty/PKGBUILD"
 archive="$repo_root/distro/packages/deetty/deetty-0.1.0.tar.gz"
+launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/deetty"
+btop_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/btop"
+nvtop_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/nvtop"
 exec_patch="$repo_root/distro/packages/deetty/deetty-terminal-exec.patch"
 identity_patch="$repo_root/distro/packages/deetty/product-identity.patch"
 qualification_patch="$repo_root/distro/packages/deetty/qualification-compat.patch"
 
 for path in "$profile" "$groups" "$fish_profile" "$shell_profile" "$session_launcher" \
+  "$launcher" "$btop_launcher" "$nvtop_launcher" \
   "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch" "$qualification_patch"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 [[ $(stat -c '%a' "$archive") == 644 ]] \
   || fail 'Deetty source archive must be readable by non-root build steps'
 
+for path in "$launcher" "$btop_launcher" "$nvtop_launcher"; do
+  [[ -x "$path" ]] || fail "terminal launcher is not executable: $path"
+  sh -n "$path" || fail "terminal launcher has invalid shell syntax: $path"
+done
+[[ $(grep -Fc 'exec /usr/bin/deetty --new-window --execute "$@"' "$launcher") -eq 2 ]] \
+  || fail 'Deetty command launcher does not consistently request an independent window'
+grep -Fqx 'exec /usr/local/bin/deetty -e btop "$@"' "$btop_launcher" \
+  || fail 'btop does not launch through the Deetty command wrapper'
+grep -Fqx 'exec /usr/local/bin/deetty -e nvtop "$@"' "$nvtop_launcher" \
+  || fail 'nvtop does not launch through the Deetty command wrapper'
 grep -Fqx '    - deetty' "$profile" || fail 'profile does not install Deetty'
 grep -Fqx '    - ghostty-vt-runtime' "$profile" || fail 'profile does not install the VT-only runtime'
 jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null and index("zls") != null' "$groups" >/dev/null \

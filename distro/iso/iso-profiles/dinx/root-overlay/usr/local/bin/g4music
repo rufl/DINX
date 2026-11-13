@@ -2,4 +2,5 @@
 set -eu
 export GTK_THEME=DINX
 export GTK_APPLICATION_PREFER_DARK_THEME=1
-exec g4music "$@"
+export ADW_DEBUG_COLOR_SCHEME=prefer-dark
+exec /usr/bin/g4music "$@"

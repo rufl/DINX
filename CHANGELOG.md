@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Automate distribution maintenance: twice-daily Artix package prefetch, daily upstream pin refresh through reviewed PRs, Grype/Trivy/OSV SBOM audits for sources and the final rootfs, and a nightly P0 ISO retained for 14 days.
+- Make dark mode deterministic across Gapless, Haruna, OpenSnitch, ONLYOFFICE, Impasto, Pori, Patchy, DinitUI, DINXPanel, Seafoam Settings and the Pearl first-run wizard. Gapless now executes `/usr/bin/g4music` without wrapper recursion; internal libadwaita apps force the DINX dark scheme; the wizard defaults to DINX dark.
+- Update Patchy to 1.33 and Pori to 0.2.0 with verified upstream checksums; remove Pori's obsolete pre-0.2.0 Zig compatibility patch.
+- Open Deetty command and TUI invocations in independent windows, remove Pearl's empty search-heading placeholder, and strengthen the Calamares launcher contract around `pkexec` root elevation plus Wayland/D-Bus environment preservation.
 
 # v0.1.0-alpha.14
 

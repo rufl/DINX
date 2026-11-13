@@ -1585,8 +1585,8 @@ usr/share/applications/pdfcraft.desktop|PdfCraft|PdfCraft|pdfcraft %U
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
-usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|env QT_QPA_PLATFORMTHEME=qt6ct haruna %U
+usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
+usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor

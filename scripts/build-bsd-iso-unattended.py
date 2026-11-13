@@ -202,12 +202,16 @@ def validate_install(args: argparse.Namespace) -> None:
                             log(f"first boot marker and login prompt observed; log={log_path}")
                             # Clean guest shutdown: hard-killing QEMU leaves the
                             # UFS journal dirty and corrupts the disk over runs.
+                            # Repeat the command: the first can be lost in motd noise.
                             process.stdin.write(b"root\n")
                             process.stdin.flush()
-                            process.stdin.write(b"poweroff\n")
-                            process.stdin.flush()
+                            time.sleep(3)
+                            for _ in range(2):
+                                process.stdin.write(b"shutdown -p now\n")
+                                process.stdin.flush()
+                                time.sleep(3)
                             try:
-                                process.wait(timeout=60)
+                                process.wait(timeout=90)
                             except subprocess.TimeoutExpired:
                                 pass
                             return

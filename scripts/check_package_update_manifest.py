@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / ".github/package-updates.json"
 # These pins are intentionally coupled to DINX's private source revision or toolchain.
-MANUAL_SOURCE_PINS = {"deetty", "zls"}
+MANUAL_SOURCE_PINS = {"deetty", "zls", "dinx-gtk-themes", "dinx-pearl-themes"}
 
 
 def fail(message: str) -> None:

@@ -439,6 +439,7 @@ trap finish EXIT
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
+              build_package dinx-pearl-themes
               build_package dinx-plymouth-theme
               build_package dinx-live-autologin
               build_package swayimg

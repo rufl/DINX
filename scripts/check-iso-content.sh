@@ -572,6 +572,10 @@ required_paths=(
   usr/share/fonts/dinx-noto-latin/NotoSans-BoldItalic.ttf
   usr/share/fonts/dinx-noto-latin/NotoSansMono-Regular.ttf
   usr/share/grub/themes/artix/logo.png
+  usr/share/pearl/themes/dinx.skeuos-rounded/theme.json
+  usr/share/pearl/themes/dinx.skeuos-square/theme.json
+  usr/share/pearl/themes/dinx.orchis-rounded/theme.json
+  usr/share/pearl/themes/dinx.orchis-square/theme.json
 )
 
 for path in "${required_paths[@]}"; do
@@ -603,6 +607,8 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
 done
 grep -Eq '/var/lib/pacman/local/dinx-noto-latin-[^/]*/' <<<"$manifest" \
   || fail 'DINX Noto Latin provider package metadata is missing from the installed rootfs'
+grep -Eq '/var/lib/pacman/local/dinx-pearl-themes-[^/]*/' <<<"$manifest" \
+  || fail 'DINX Pearl themes package metadata is missing from the installed rootfs'
 for image_manifest in "$manifest" "$livefs_manifest"; do
   if grep -Eq '/var/lib/pacman/local/noto-fonts-[0-9][^/]*/' <<<"$image_manifest"; then
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'

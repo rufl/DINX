@@ -362,7 +362,7 @@ printf 'aqueous_live_config_seed blur=disabled opacity=disabled lock_keybind=dis
 cat >"$pearl_shell_test/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"
-printf 'off bottom material-light\n'
+printf 'off bottom material light rounded\n'
 SH
 cat >"$pearl_shell_test/bin/pearl" <<'SH'
 #!/bin/sh
@@ -399,7 +399,7 @@ mkdir -p "$pearl_shell_top_test/bin" "$pearl_shell_top_test/home" \
   "$pearl_shell_top_test/config/pearl" "$pearl_shell_top_test/state"
 cat >"$pearl_shell_top_test/wizard" <<'SH'
 #!/bin/sh
-printf 'on top material-dark\n'
+printf 'on top material dark rounded\n'
 SH
 cat >"$pearl_shell_top_test/bin/pearl" <<'SH'
 #!/bin/sh

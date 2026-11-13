@@ -20,6 +20,13 @@ gtk_name=$(jq -r '.theme.gtk_name // ""' "$preferences" 2>/dev/null || printf ''
 gtk_theme=Adwaita
 if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
   gtk_theme=DINX
+elif [ "$theme_mode" = package ]; then
+  case "$gtk_name" in
+    Skeuos-Blue-Light|Skeuos-Blue-Dark|Skeuos-Blue-Light-Square|Skeuos-Blue-Dark-Square|\
+    Orchis-Light|Orchis-Dark|Orchis-Square-Light|Orchis-Square-Dark)
+      gtk_theme=$gtk_name
+      ;;
+  esac
 fi
 
 set_ini_value() {

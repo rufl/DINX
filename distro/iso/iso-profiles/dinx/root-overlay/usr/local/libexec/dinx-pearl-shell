@@ -39,7 +39,7 @@ if [ "$selection" = skip ]; then
     exec pearl "$@"
 fi
 
-IFS=' ' read -r dock bar_edge theme extra <<EOF
+IFS=' ' read -r dock bar_edge theme variant corners extra <<EOF
 $selection
 EOF
 if [ -n "${extra:-}" ]; then
@@ -66,26 +66,41 @@ case "$bar_edge" in
         exec pearl "$@"
         ;;
 esac
+case "$variant" in
+    dark|light) ;;
+    *)
+        printf '%s\n' 'dinx-pearl-shell: invalid appearance selection; starting Pearl with saved preferences' >&2
+        mark_complete
+        exec pearl "$@"
+        ;;
+esac
+case "$corners" in
+    rounded|square) ;;
+    *)
+        printf '%s\n' 'dinx-pearl-shell: invalid corner selection; starting Pearl with saved preferences' >&2
+        mark_complete
+        exec pearl "$@"
+        ;;
+esac
 case "$theme" in
-    dinx-dark)
-        theme_mode=gtk
-        theme_variant=dark
-        gtk_name=DINX
-        ;;
-    dinx-light)
-        theme_mode=gtk
-        theme_variant=light
-        gtk_name=DINX
-        ;;
-    material-dark)
+    material)
         theme_mode=static
-        theme_variant=dark
+        package_id=
         gtk_name=
         ;;
-    material-light)
-        theme_mode=static
-        theme_variant=light
-        gtk_name=
+    skeuos)
+        theme_mode=package
+        package_id="dinx.skeuos-$corners"
+        gtk_name="Skeuos-Blue"
+        [ "$variant" = dark ] && gtk_name="$gtk_name-Dark" || gtk_name="$gtk_name-Light"
+        [ "$corners" = square ] && gtk_name="$gtk_name-Square"
+        ;;
+    orchis)
+        theme_mode=package
+        package_id="dinx.orchis-$corners"
+        gtk_name=Orchis
+        [ "$corners" = square ] && gtk_name="$gtk_name-Square"
+        [ "$variant" = dark ] && gtk_name="$gtk_name-Dark" || gtk_name="$gtk_name-Light"
         ;;
     *)
         printf '%s\n' 'dinx-pearl-shell: invalid theme selection; starting Pearl with saved preferences' >&2
@@ -102,12 +117,15 @@ fi
 mkdir -p "$config_home/pearl"
 preferences_tmp="$preferences.tmp.$$"
 if ! jq --arg theme_mode "$theme_mode" \
-    --arg theme_variant "$theme_variant" \
+    --arg theme_variant "$variant" \
     --arg gtk_name "$gtk_name" \
+    --arg package_id "$package_id" \
     --arg bar_edge "$bar_edge" \
     --arg dock_edge "$dock_edge" \
     --argjson dock_enabled "$dock_enabled" \
-    '.theme = ((.theme // {}) + {mode: $theme_mode, variant: $theme_variant, gtk_name: $gtk_name})
+    '.theme = ((.theme // {}) + {mode: $theme_mode, variant: $theme_variant, gtk_name: $gtk_name,
+                                 package_id: $package_id, palette_id: "", style_id: "",
+                                 catalog_revision: "", snapshot_digest: ""})
      | .bar = ((.bar // {}) + {edge: $bar_edge})
      | .dock = ((.dock // {}) + {enabled: $dock_enabled, edge: $dock_edge})' \
     "$preferences" > "$preferences_tmp"; then

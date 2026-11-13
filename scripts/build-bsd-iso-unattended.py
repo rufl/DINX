@@ -200,6 +200,16 @@ def validate_install(args: argparse.Namespace) -> None:
                             output.clear()
                         elif install_phase == 2:
                             log(f"first boot marker and login prompt observed; log={log_path}")
+                            # Clean guest shutdown: hard-killing QEMU leaves the
+                            # UFS journal dirty and corrupts the disk over runs.
+                            process.stdin.write(b"root\n")
+                            process.stdin.flush()
+                            process.stdin.write(b"poweroff\n")
+                            process.stdin.flush()
+                            try:
+                                process.wait(timeout=60)
+                            except subprocess.TimeoutExpired:
+                                pass
                             return
 
                     if install_phase == 15 and b":~ #" in output:

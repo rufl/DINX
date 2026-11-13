@@ -279,24 +279,42 @@ required_paths=(
   usr/share/color-schemes/DINXDark.colors
   opt/paintfe/PaintFE.AppImage
   usr/share/applications/paintfe.desktop
+  usr/share/icons/hicolor/256x256/apps/paintfe.png
+  usr/share/licenses/paintfe/LICENSE.md
   usr/bin/wordcraft
   opt/wordcraft/wordcraft.AppImage
   usr/share/applications/wordcraft.desktop
+  usr/share/icons/hicolor/256x256/apps/wordcraft.png
+  usr/share/licenses/wordcraft/LICENSE-MIT
+  usr/share/licenses/wordcraft/LICENSE-APACHE
   usr/bin/gridcraft
   opt/gridcraft/gridcraft.AppImage
   usr/share/applications/gridcraft.desktop
+  usr/share/icons/hicolor/256x256/apps/gridcraft.png
+  usr/share/licenses/gridcraft/LICENSE-MIT
+  usr/share/licenses/gridcraft/LICENSE-APACHE
   usr/bin/deckcraft
   opt/deckcraft/deckcraft.AppImage
   usr/share/applications/deckcraft.desktop
+  usr/share/icons/hicolor/256x256/apps/deckcraft.png
+  usr/share/licenses/deckcraft/LICENSE-MIT
+  usr/share/licenses/deckcraft/LICENSE-APACHE
   usr/bin/pdfcraft
   opt/pdfcraft/pdfcraft.AppImage
   usr/share/applications/pdfcraft.desktop
+  usr/share/icons/hicolor/256x256/apps/pdfcraft.png
+  usr/share/licenses/pdfcraft/LICENSE-MIT
+  usr/share/licenses/pdfcraft/LICENSE-APACHE
   usr/bin/transit
   opt/transit/transit.AppImage
   usr/share/applications/transit.desktop
+  usr/share/icons/hicolor/256x256/apps/transit.png
+  usr/share/licenses/transit/LICENSE-MIT
+  usr/share/licenses/transit/LICENSE-APACHE
   usr/bin/zenkai
   opt/zenkai/zenkai.AppImage
   usr/share/applications/zenkai.desktop
+  usr/share/licenses/zenkai/LICENCE.md
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot

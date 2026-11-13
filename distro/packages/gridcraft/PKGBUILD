@@ -7,6 +7,12 @@ source_env="$startdir/source.env"
 : "${GRIDCRAFT_VERSION:?missing GRIDCRAFT_VERSION}"
 : "${GRIDCRAFT_SOURCE_URL:?missing GRIDCRAFT_SOURCE_URL}"
 : "${GRIDCRAFT_SOURCE_SHA256:?missing GRIDCRAFT_SOURCE_SHA256}"
+: "${GRIDCRAFT_LICENSE_MIT_URL:?missing GRIDCRAFT_LICENSE_MIT_URL}"
+: "${GRIDCRAFT_LICENSE_MIT_SHA256:?missing GRIDCRAFT_LICENSE_MIT_SHA256}"
+: "${GRIDCRAFT_LICENSE_APACHE_URL:?missing GRIDCRAFT_LICENSE_APACHE_URL}"
+: "${GRIDCRAFT_LICENSE_APACHE_SHA256:?missing GRIDCRAFT_LICENSE_APACHE_SHA256}"
+: "${GRIDCRAFT_ICON_URL:?missing GRIDCRAFT_ICON_URL}"
+: "${GRIDCRAFT_ICON_SHA256:?missing GRIDCRAFT_ICON_SHA256}"
 pkgver="${GRIDCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="Fast, native spreadsheets rebuilt in pure Rust"
@@ -17,11 +23,17 @@ depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
   "gridcraft-${pkgver}-x86_64.AppImage::${GRIDCRAFT_SOURCE_URL}"
+  "LICENSE-MIT::${GRIDCRAFT_LICENSE_MIT_URL}"
+  "LICENSE-APACHE::${GRIDCRAFT_LICENSE_APACHE_URL}"
+  "gridcraft-256.png::${GRIDCRAFT_ICON_URL}"
   'gridcraft'
   'gridcraft.desktop'
 )
 sha256sums=(
   "${GRIDCRAFT_SOURCE_SHA256}"
+  "${GRIDCRAFT_LICENSE_MIT_SHA256}"
+  "${GRIDCRAFT_LICENSE_APACHE_SHA256}"
+  "${GRIDCRAFT_ICON_SHA256}"
   '7d71a945294a71520d88f738f5635ac3065394000aea04d32ff576a909b2a2d4'
   '614c6497fbd9826019fd49f0c39f54a420a3f847ca4e34d87535c50758b5e433'
 )
@@ -32,4 +44,16 @@ package() {
   install -Dm755 "$srcdir/gridcraft" "$pkgdir/usr/bin/gridcraft"
   install -Dm644 "$srcdir/gridcraft.desktop" \
     "$pkgdir/usr/share/applications/gridcraft.desktop"
+  install -Dm644 "$srcdir/LICENSE-MIT" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 "$srcdir/LICENSE-APACHE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+  install -Dm644 "$srcdir/gridcraft-256.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/gridcraft.png"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
+GridCraft ${pkgver} upstream source and build information:
+https://github.com/storytold/gridcraft/tree/v${pkgver}
+
+The DINX package redistributes the upstream x86_64 AppImage without modification.
+EOF
 }

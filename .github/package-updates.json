@@ -286,7 +286,24 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/storytold/wordcraft/releases/download/v{version}/wordcraft-{version}-linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/wordcraft/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/wordcraft/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "WORDCRAFT_LICENSE_MIT_URL",
+          "checksum_key": "WORDCRAFT_LICENSE_MIT_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/wordcraft/{tag}/LICENSE-MIT"
+        },
+        {
+          "source_url_key": "WORDCRAFT_LICENSE_APACHE_URL",
+          "checksum_key": "WORDCRAFT_LICENSE_APACHE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/wordcraft/{tag}/LICENSE-APACHE"
+        },
+        {
+          "source_url_key": "WORDCRAFT_ICON_URL",
+          "checksum_key": "WORDCRAFT_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/wordcraft/{tag}/assets/app-icon/hicolor/256x256/apps/ai.storyteller.wordcraft.png"
+        }
+      ]
     },
     {
       "name": "gridcraft",
@@ -300,7 +317,24 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/storytold/gridcraft/releases/download/v{version}/gridcraft-{version}-linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/gridcraft/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/gridcraft/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "GRIDCRAFT_LICENSE_MIT_URL",
+          "checksum_key": "GRIDCRAFT_LICENSE_MIT_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/gridcraft/{tag}/LICENSE-MIT"
+        },
+        {
+          "source_url_key": "GRIDCRAFT_LICENSE_APACHE_URL",
+          "checksum_key": "GRIDCRAFT_LICENSE_APACHE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/gridcraft/{tag}/LICENSE-APACHE"
+        },
+        {
+          "source_url_key": "GRIDCRAFT_ICON_URL",
+          "checksum_key": "GRIDCRAFT_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/gridcraft/{tag}/assets/app-icon/hicolor/256x256/apps/ai.storyteller.gridcraft.png"
+        }
+      ]
     },
     {
       "name": "deckcraft",
@@ -314,7 +348,24 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/storytold/deckcraft/releases/download/v{version}/deckcraft-{version}-linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/deckcraft/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/deckcraft/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "DECKCRAFT_LICENSE_MIT_URL",
+          "checksum_key": "DECKCRAFT_LICENSE_MIT_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/deckcraft/{tag}/LICENSE-MIT"
+        },
+        {
+          "source_url_key": "DECKCRAFT_LICENSE_APACHE_URL",
+          "checksum_key": "DECKCRAFT_LICENSE_APACHE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/deckcraft/{tag}/LICENSE-APACHE"
+        },
+        {
+          "source_url_key": "DECKCRAFT_ICON_URL",
+          "checksum_key": "DECKCRAFT_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/deckcraft/{tag}/assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png"
+        }
+      ]
     },
     {
       "name": "pdfcraft",
@@ -328,7 +379,24 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/storytold/pdfcraft/releases/download/v{version}/pdfcraft-{version}-linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/pdfcraft/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/pdfcraft/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "PDFCRAFT_LICENSE_MIT_URL",
+          "checksum_key": "PDFCRAFT_LICENSE_MIT_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/pdfcraft/{tag}/LICENSE-MIT"
+        },
+        {
+          "source_url_key": "PDFCRAFT_LICENSE_APACHE_URL",
+          "checksum_key": "PDFCRAFT_LICENSE_APACHE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/pdfcraft/{tag}/LICENSE-APACHE"
+        },
+        {
+          "source_url_key": "PDFCRAFT_ICON_URL",
+          "checksum_key": "PDFCRAFT_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/storytold/pdfcraft/{tag}/assets/app-icon/hicolor/256x256/apps/ai.storyteller.pdfcraft.png"
+        }
+      ]
     },
     {
       "name": "transit",
@@ -342,7 +410,24 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/transit-audio/transit/releases/download/v{version}/transit-{version}-linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/transit/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/transit/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "TRANSIT_LICENSE_MIT_URL",
+          "checksum_key": "TRANSIT_LICENSE_MIT_SHA256",
+          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/LICENSE-MIT"
+        },
+        {
+          "source_url_key": "TRANSIT_LICENSE_APACHE_URL",
+          "checksum_key": "TRANSIT_LICENSE_APACHE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/LICENSE-APACHE"
+        },
+        {
+          "source_url_key": "TRANSIT_ICON_URL",
+          "checksum_key": "TRANSIT_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/assets/app-icon/hicolor/256x256/apps/transit.png"
+        }
+      ]
     },
     {
       "name": "zenkai",
@@ -356,7 +441,14 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/dayvster/zenkai/releases/download/v{version}/zenkai-v{version}-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/zenkai/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/zenkai/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "ZENKAI_LICENSE_URL",
+          "checksum_key": "ZENKAI_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/dayvster/zenkai/{tag}/LICENCE.md"
+        }
+      ]
     },
     {
       "name": "paintfe",
@@ -370,7 +462,19 @@
       "checksum": "sha256",
       "tag_prefix": "v",
       "url_template": "https://github.com/kylejckson/PaintFE/releases/download/v{version}/PaintFE-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/paintfe/PKGBUILD"
+      "bump_pkgrel_path": "distro/packages/paintfe/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "PAINTFE_LICENSE_URL",
+          "checksum_key": "PAINTFE_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/kylejckson/PaintFE/{tag}/LICENSE.md"
+        },
+        {
+          "source_url_key": "PAINTFE_ICON_URL",
+          "checksum_key": "PAINTFE_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/kylejckson/PaintFE/{tag}/assets/icons/app_icon_256.png"
+        }
+      ]
     }
   ]
 }

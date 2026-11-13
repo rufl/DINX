@@ -99,6 +99,12 @@ install -d \
   "$overlay_root/usr/local/share/dinx-bsd/distro/bsd" \
   "$overlay_root/usr/local/share/dinx-bsd/scripts"
 cp -a "$repo_root/distro/bsd/." "$overlay_root/usr/local/share/dinx-bsd/distro/bsd/"
+# Real native packages built in the FreeBSD build VM (dist/, git-ignored).
+if [ -d "$repo_root/dist/bsd/ports/pkg/repo" ]; then
+  install -d "$overlay_root/usr/local/share/dinx-bsd/distro/bsd/ports/pkg/repo"
+  cp -a "$repo_root/dist/bsd/ports/pkg/repo/." \
+    "$overlay_root/usr/local/share/dinx-bsd/distro/bsd/ports/pkg/repo/"
+fi
 install -m 0755 "$repo_root/scripts/install-dinx-bsd.sh" \
   "$overlay_root/usr/local/share/dinx-bsd/scripts/install-dinx-bsd.sh"
 install -m 0644 "$repo_root/LICENSE" "$overlay_root/usr/local/share/dinx-bsd/LICENSE"

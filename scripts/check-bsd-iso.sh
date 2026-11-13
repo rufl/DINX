@@ -98,6 +98,7 @@ done
 # not a tarball of a staging directory.
 while IFS= read -r member; do
   case "$member" in
+    */data.pkg|*/packagesite.pkg|*/meta.pkg|*/meta.conf) ;;  # repo metadata
     *.pkg)
       bsdtar -xOf "$tmp_dir/dinx-bsd-overlay.txz" "$member" \
         | bsdtar -tf - 2>/dev/null | grep -Fxq '+COMPACT_MANIFEST' \

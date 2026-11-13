@@ -69,15 +69,12 @@ if [ "$pkg_ready" = 1 ]; then
       log "WARNING: failed to install $p"
     fi
   done
-else
-  log 'WARNING: pkg bootstrap/update failed (no network?); desktop stack deferred'
 fi
 
 # Custom DINX packages only when a real local repository catalog exists.
-if [ -f "$share/ports/pkg/repo/packagesite.txz" ]; then
+if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo/packagesite.pkg" ]; then
   sed -i '' 's/enabled: no/enabled: yes/' /usr/local/etc/pkg/repos/dinx.conf
-  pkg install -y -r dinx dinx-greetd dinx-aqueous dinx-pearl \
-    dinx-aqueous-pearl dinx-pearl-greeter-host \
+  pkg install -y -r dinx dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl \
     || log 'WARNING: custom DINX package install failed'
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'
@@ -101,7 +98,7 @@ if [ "$pkg_ready" = 1 ]; then
   esac
   for p in drm-kmod mesa-dri vulkan-loader vulkan-tools wine-proton \
            libc6-shim linux-steam-utils linux-rl9-dbus-libs linux-rl9-devtools \
-           linux-rl9-nss ca_root_nss ruby mangohud; do
+           linux-rl9-nss ca_root_nss ruby; do
     if pkg install -y "$p" >/dev/null 2>&1; then
       log "installed $p"
     else

@@ -54,3 +54,14 @@ for f in /usr/local/etc/dinx/locale.conf /usr/local/etc/dinx/keyboard.conf; do
   fi
 done
 export LANG LC_ALL XKB_DEFAULT_LAYOUT
+
+# Pearl reads /proc (cpuinfo, meminfo, ...); provide linprocfs best-effort.
+if [ ! -f /proc/cpuinfo ] && command -v mount >/dev/null 2>&1; then
+  mkdir -p /proc 2>/dev/null
+  mount -t linprocfs linprocfs /proc 2>/dev/null || true
+fi
+
+# VMs without a GPU: run the compositor headless so sessions still render.
+if [ ! -e /dev/dri/card0 ]; then
+  export WLR_BACKENDS=headless
+fi

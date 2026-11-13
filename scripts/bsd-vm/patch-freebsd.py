@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""FreeBSD port patches for the DINX desktop stack (run inside the build VM).
+
+Upstream Aqueous/Pearl/greetd target Linux. FreeBSD equivalents:
+  - linux/input*.h      -> dev/evdev/input*.h (compat shim headers)
+  - prctl(PR_SET_PDEATHSIG) -> procctl(P_PID, 0, PROC_PDEATHSIG_CTL, &sig)
+  - prctl(PR_SET_CHILD_SUBREAPER) -> procctl(P_PID, 0, PROC_REAP_ACQUIRE, NULL)
+Idempotent: each patch is skipped when already applied; missing patterns fail
+loudly so upstream drift is noticed instead of silently skipped.
+"""
+import os
+import sys
+
+W = sys.argv[1] if len(sys.argv) > 1 else "/root/build"
+applied = []
+
+
+def patch(path, old, new, marker):
+    with open(path, "r", encoding="utf-8") as f:
+        src = f.read()
+    if marker in src:
+        return
+    if old not in src:
+        sys.exit(f"PATCH PATTERN MISSING in {path}: {old[:70]!r}")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(src.replace(old, new))
+    applied.append(path)
+
+
+# 1. Linux compat shim headers for libevdev/translate-c.
+shim = "/usr/local/include/linux"
+os.makedirs(shim, exist_ok=True)
+for name, real in (
+    ("input.h", "dev/evdev/input.h"),
+    ("input-event-codes.h", "dev/evdev/input-event-codes.h"),
+):
+    p = os.path.join(shim, name)
+    if not os.path.exists(p):
+        with open(p, "w") as f:
+            f.write(f"/* FreeBSD compat shim */\n#include <{real}>\n")
+        applied.append(p)
+
+# glibc-only headers used by wlroots upstream sources.
+for rel, real in (
+    ("linux/limits.h", "limits.h"),
+    ("linux/errno.h", "errno.h"),
+):
+    p = os.path.join("/usr/local/include", rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    if not os.path.exists(p):
+        with open(p, "w") as f:
+            f.write(f"/* FreeBSD compat shim */\n#include <{real}>\n")
+        applied.append(p)
+
+# sys/sysmacros.h: -std=c11 hides __BSD_VISIBLE major/minor; provide fallbacks.
+p = "/usr/local/include/sys/sysmacros.h"
+os.makedirs(os.path.dirname(p), exist_ok=True)
+with open(p, "w") as f:
+    f.write("""/* FreeBSD compat shim */
+#include <sys/types.h>
+#ifndef major
+#define major(x) ((int)(((unsigned)(x) >> 8) & 0xfff))
+#define minor(x) ((int)((x) & 0xffff00ff))
+#endif
+""")
+applied.append(p)
+
+# 2. Pearl libc.h: prctl wrapper over procctl on FreeBSD.
+patch(
+    os.path.join(W, "pearl/bindings/c/libc.h"),
+    "#include <sys/prctl.h>",
+    """#ifdef __FreeBSD__
+#include <sys/procctl.h>
+#define PR_SET_PDEATHSIG 1
+static inline int prctl(int option, unsigned long a2, unsigned long a3,
+                        unsigned long a4, unsigned long a5) {
+  (void)a3; (void)a4; (void)a5;
+  if (option == PR_SET_PDEATHSIG) {
+    int sig = (int)a2;
+    return procctl(P_PID, 0, PROC_PDEATHSIG_CTL, &sig);
+  }
+  return 0;
+}
+#else
+#include <sys/prctl.h>
+#endif""",
+    "PROC_PDEATHSIG_CTL",
+)
+
+HELPERS = """
+// FreeBSD port: procctl equivalents of Linux prctl.
+extern "c" fn procctl(idtype: c_int, id: c_int, cmd: c_int, data: ?*anyopaque) c_int;
+fn dinx_pdeathsig(sig: c_int) c_int {
+    var s: c_int = sig;
+    return procctl(0, 0, 11, &s); // P_PID, PROC_PDEATHSIG_CTL
+}
+fn dinx_subreaper() c_int {
+    return procctl(0, 0, 2, null); // P_PID, PROC_REAP_ACQUIRE
+}
+"""
+
+# 3. Pearl Zig call sites that use std.os.linux / zig-wayland linux prctl.
+patch(
+    os.path.join(W, "pearl/src/files/preview/platform/preview_runner.zig"),
+    "if (linux.errno(linux.prctl(@intFromEnum(linux.PR.SET_PDEATHSIG), @intFromEnum(c.SIG.KILL), 0, 0, 0)) != .SUCCESS or c.getppid() != parent) c._exit(125);",
+    "if (dinx_pdeathsig(@intFromEnum(c.SIG.KILL)) != 0 or c.getppid() != parent) c._exit(125);",
+    "dinx_pdeathsig",
+)
+patch(
+    os.path.join(W, "pearl/src/greeter/host.zig"),
+    "if (std.os.linux.prctl(36, 1, 0, 0, 0) != 0) return error.Subreaper;",
+    "if (dinx_subreaper() != 0) return error.Subreaper;",
+    "dinx_subreaper",
+)
+patch(
+    os.path.join(W, "pearl/src/greeter/host.zig"),
+    "_ = std.os.linux.prctl(1, @backingInt(std.c.SIG.KILL), 0, 0, 0);",
+    "_ = dinx_pdeathsig(@backingInt(std.c.SIG.KILL));",
+    "dinx_pdeathsig(@backingInt",
+)
+for rel in (
+    "pearl/src/files/preview/platform/preview_runner.zig",
+    "pearl/src/greeter/host.zig",
+):
+    p = os.path.join(W, rel)
+    with open(p, "r", encoding="utf-8") as f:
+        src = f.read()
+    if "fn dinx_pdeathsig" not in src:
+        with open(p, "a", encoding="utf-8") as f:
+            f.write(HELPERS)
+        applied.append(p + " (helpers)")
+
+# 4. greetd: libc::prctl -> libc::procctl on FreeBSD.
+patch(
+    os.path.join(W, "greetd/greetd/src/session/prctl.rs"),
+    "libc::prctl(PRCTL_SET_PDEATHSIG, sig, 0, 0, 0)",
+    "{ let mut s = sig; libc::procctl(libc::P_PID, 0, libc::PROC_PDEATHSIG_CTL, &mut s as *mut i32 as *mut libc::c_void) }",
+    "PROC_PDEATHSIG_CTL",
+)
+
+print("patched:", *applied, sep="\n  ")
+
+# 5. Pearl: link the FreeBSD compat lib (statx/mallopt) into every module.
+patch(
+    os.path.join(W, "pearl/build.zig"),
+    '    m.addImport("pearl_version", pearl_version);\n    return m;',
+    '    m.addImport("pearl_version", pearl_version);\n    m.linkSystemLibrary("dinxcompat", .{});\n    return m;',
+    'linkSystemLibrary("dinxcompat"',
+)
+
+# 6. Aqueous: sd-bus via basu on FreeBSD (no libsystemd).
+patch(
+    os.path.join(W, "Aqueous/compositor/build.zig"),
+    'linkSystemLibrary("libsystemd", .{});',
+    'linkSystemLibrary("basu", .{});',
+    'linkSystemLibrary("basu"',
+)
+for name in ("sd-bus.h", "sd-daemon.h"):
+    src_h = f"/usr/local/include/basu/{name}"
+    dst_h = f"/usr/local/include/systemd/{name}"
+    if os.path.exists(src_h) and not os.path.exists(dst_h):
+        os.makedirs(os.path.dirname(dst_h), exist_ok=True)
+        with open(dst_h, "w") as f:
+            f.write(f"/* FreeBSD compat shim */\n#include <basu/{name}>\n")
+        applied.append(dst_h)
+
+# 7. Pearl: PTHREAD_ONCE_INIT is a brace macro translate-c cannot emit.
+patch(
+    os.path.join(W, "pearl/src/theme/repository.zig"),
+    "var curl_once: c.pthread_once_t = c.PTHREAD_ONCE_INIT;",
+    "var curl_once: c.pthread_once_t = std.mem.zeroes(c.pthread_once_t);",
+    "std.mem.zeroes(c.pthread_once_t)",
+)
+
+# 8. Aqueous: sd-login.h shim (sd_pidfd_get_user_unit lives in dinxcompat).
+p = "/usr/local/include/systemd/sd-login.h"
+if not os.path.exists(p):
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, "w") as f:
+        f.write("/* FreeBSD compat shim */\n#include <basu/sd-bus.h>\n"
+                "int sd_pidfd_get_user_unit(int pidfd, const char *unit, char **ret);\n")
+    applied.append(p)
+
+# 9. Aqueous: zig 0.17 FilePermissions.fromMode takes u16.
+patch(
+    os.path.join(W, "Aqueous/compositor/aqueous/ConfigTransaction.zig"),
+    ".permissions = .fromMode(mode)",
+    ".permissions = .fromMode(@as(u16, @intCast(mode)))",
+    ".fromMode(@as(u16",
+)
+
+# 10. Pearl: FreeBSD AT struct has no EMPTY_PATH; use the fcntl.h value.
+# Only sys./c. namespaces (std.os.linux.AT.EMPTY_PATH stays valid).
+import pathlib
+import re
+for z in pathlib.Path(os.path.join(W, "pearl/src")).rglob("*.zig"):
+    src = z.read_text(encoding="utf-8")
+    new = re.sub(r"\b(sys|c)\.AT\.EMPTY_PATH", "0x10000 /* AT_EMPTY_PATH */", src)
+    if new != src:
+        z.write_text(new, encoding="utf-8")
+        applied.append(str(z))
+
+# 11. sd_pidfd_get_user_unit: upstream calls it with 2 args.
+patch(
+    "/usr/local/include/systemd/sd-login.h",
+    "int sd_pidfd_get_user_unit(int pidfd, const char *unit, char **ret);",
+    "int sd_pidfd_get_user_unit(int pidfd, char **unit);",
+    "char **unit);",
+)
+
+# 12. Aqueous activity bootstrap: SO_PEERCRED/SO_PEERPIDFD/pidfd are Linux
+# only; disable the feature on FreeBSD instead of faking credentials.
+patch(
+    os.path.join(W, "Aqueous/compositor/aqueous/activity_bootstrap.c"),
+    """    struct ucred cred;
+    socklen_t len = sizeof(cred);
+    if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &cred, &len) < 0 || len != sizeof(cred) || cred.uid != getuid()) { close(fd); return; }
+    int pidfd = -1;
+    len = sizeof(pidfd);
+    if (getsockopt(fd, SOL_SOCKET, SO_PEERPIDFD, &pidfd, &len) < 0 || len != sizeof(pidfd)) { close(fd); return; }
+    fcntl(pidfd, F_SETFD, FD_CLOEXEC);
+    b->peer = fd;
+    b->peer_pidfd = pidfd;
+    b->peer_pid = cred.pid;""",
+    """#ifdef __FreeBSD__
+    /* No SO_PEERCRED/SO_PEERPIDFD/pidfd semantics on FreeBSD: session
+     * activity claims are disabled (documented degradation). */
+    close(fd); return;
+#else
+    struct ucred cred;
+    socklen_t len = sizeof(cred);
+    if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &cred, &len) < 0 || len != sizeof(cred) || cred.uid != getuid()) { close(fd); return; }
+    int pidfd = -1;
+    len = sizeof(pidfd);
+    if (getsockopt(fd, SOL_SOCKET, SO_PEERPIDFD, &pidfd, &len) < 0 || len != sizeof(pidfd)) { close(fd); return; }
+    fcntl(pidfd, F_SETFD, FD_CLOEXEC);
+    b->peer = fd;
+    b->peer_pidfd = pidfd;
+    b->peer_pid = cred.pid;
+#endif""",
+    "activity claims are disabled",
+)
+
+# 13. Pearl: inline comments mid-expression break Zig lexing; plain literal.
+for z in pathlib.Path(os.path.join(W, "pearl/src")).rglob("*.zig"):
+    src = z.read_text(encoding="utf-8")
+    if "0x10000 /* AT_EMPTY_PATH */" in src:
+        z.write_text(src.replace("0x10000 /* AT_EMPTY_PATH */", "0x10000"), encoding="utf-8")
+        applied.append(str(z))
+
+# 14. Pearl: FreeBSD siginfo_t exposes `pid` directly (no Linux union).
+for z in pathlib.Path(os.path.join(W, "pearl/src")).rglob("*.zig"):
+    src = z.read_text(encoding="utf-8")
+    new = src.replace("info.fields.common.first.piduid.pid", "info.pid")
+    new = new.replace("info.si_pid", "info.pid")
+    if new != src:
+        z.write_text(new, encoding="utf-8")
+        applied.append(str(z))
+
+# 15. Pearl: remaining PTHREAD_ONCE_INIT brace macro (fetch.zig).
+patch(
+    os.path.join(W, "pearl/src/agent/fetch.zig"),
+    "var once: c.pthread_once_t = c.PTHREAD_ONCE_INIT;",
+    "var once: c.pthread_once_t = std.mem.zeroes(c.pthread_once_t);",
+    "std.mem.zeroes(c.pthread_once_t)",
+)
+
+# 16. Pearl: AT_CLKTCK auxval is Linux-only; zig's FreeBSD _SC enum only has
+# PAGESIZE, so pass the raw _SC_CLK_TCK value (3, unistd.h).
+patch(
+    os.path.join(W, "pearl/src/cli/server.zig"),
+    "const hz = @as(usize, @intCast(std.c.sysconf(3 /* _SC_CLK_TCK */)));",
+    "const hz = @as(usize, @intCast(std.c.sysconf(3)));",
+    "std.c.sysconf(3)));",
+)

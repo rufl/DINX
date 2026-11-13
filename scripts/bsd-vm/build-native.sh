@@ -1,0 +1,166 @@
+#!/bin/sh
+# Native FreeBSD build of the DINX desktop stack, run INSIDE a FreeBSD VM.
+# Builds Aqueous (Zig/wlroots), Pearl (Zig/GTK4) and greetd (cargo), then
+# packages real .pkg files and a local repository catalog with pkg-create(8).
+# Usage: sh build-native.sh [workdir]   (default /root/build)
+set -u
+W=${1:-/root/build}
+ZIG_DIR=$(ls -d "$W"/zig-x86_64-freebsd-* 2>/dev/null | head -1)
+export PATH="$ZIG_DIR:$PATH"
+LOG="$W/build-native.log"
+REPO="$W/repo"
+mkdir -p "$REPO"
+: > "$LOG"
+
+log() { printf '%s\n' "$*" | tee -a "$LOG"; }
+stamp() { printf '%s %s\n' "$(date +%s)" "$1" >> "$W/times.log"; }
+stamp start
+
+zig version | tee -a "$LOG"
+
+build_zig() {
+  name=$1
+  dir=$2
+  log "== building $name in $dir"
+  (cd "$dir" && zig build -Doptimize=ReleaseSafe) >>"$LOG" 2>&1
+  rc=$?
+  log "== $name zig build exit=$rc"
+  return $rc
+}
+
+# FreeBSD port patches (idempotent). Upstream targets Linux; these adapt the
+# C headers and the pkg-config version floors to the FreeBSD quarterly set.
+apply_freebsd_patches() {
+  aq="$W/Aqueous/compositor/aqueous/c.h"
+  if [ -f "$aq" ] && grep -q '#include <linux/input-event-codes.h>' "$aq" \
+     && ! grep -q '__FreeBSD__' "$aq"; then
+    sed -i '' 's|#include <linux/input-event-codes.h>|#ifdef __FreeBSD__\
+#include <dev/evdev/input-event-codes.h>\
+#else\
+#include <linux/input-event-codes.h>\
+#endif|' "$aq"
+    log "== patched aqueous c.h input-event-codes for FreeBSD"
+  fi
+  pz="$W/pearl/build.zig"
+  if [ -f "$pz" ]; then
+    sed -i '' 's/"gtk4 >= 4.22.5"/"gtk4 >= 4.20.4"/' "$pz"
+    sed -i '' '/"pam >= 1.7.2",/d' "$pz"
+    log "== patched pearl build.zig floors (gtk4 quarterly, base libpam)"
+  fi
+}
+
+package() {
+  name=$1
+  version=$2
+  origin=$3
+  comment=$4
+  stage=$5
+  meta="$W/meta-$name"
+  rm -rf "$meta"
+  mkdir -p "$meta"
+  cat > "$meta/+MANIFEST" <<EOF
+name: $name
+version: "$version"
+origin: $origin
+comment: $comment
+maintainer: trafael@dinx.org
+prefix: /usr/local
+EOF
+  printf '%s\n' "$comment" > "$meta/+DESC"
+  # pkg create -m does not scan rootdir; an explicit plist is required.
+  (cd "$stage/usr/local" && find . -type f | sed 's|^\./|/|') > "$meta/plist"
+  pkg create -m "$meta" -p "$meta/plist" -r "$stage/usr/local" -o "$REPO" >>"$LOG" 2>&1
+  log "== pkg create $name exit=$?"
+}
+
+apply_freebsd_patches
+python3 "$W/patch-freebsd.py" "$W" >>"$LOG" 2>&1 || log "== patch-freebsd.py failed"
+
+# --- patched wlroots (Aqueous private dependency) ------------------------
+WLR_PREFIX="$W/Aqueous/compositor/.deps/wlroots-render-hook"
+stamp wlroots-start
+if [ "${DINX_COLD:-0}" = 1 ]; then
+  rm -rf "$WLR_PREFIX" "$W/Aqueous/compositor/.zig-cache" "$W/pearl/.zig-cache" "$W/greetd/target"
+  log "== COLD rebuild: caches cleared"
+fi
+if [ ! -f "$WLR_PREFIX/lib/libwlroots-0.20.so" ]; then
+  log "== building patched wlroots via upstream script"
+  bash "$W/Aqueous/compositor/scripts/build-wlroots-render-hook.sh" >>"$LOG" 2>&1
+  log "== patched wlroots exit=$?"
+fi
+stamp wlroots-end
+if [ -f "$WLR_PREFIX/lib/libwlroots-0.20.so" ]; then
+  export PKG_CONFIG_PATH="$WLR_PREFIX/libdata/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+  # The linker searches -L in order; make the patched lib win over the
+  # unpatched system wlroots020 package.
+  cp -a "$WLR_PREFIX"/lib/libwlroots-0.20.so* /usr/local/lib/
+  stage="$W/stage-dinx-wlroots"
+  rm -rf "$stage"; mkdir -p "$stage/usr/local"
+  cp -a "$WLR_PREFIX/include" "$WLR_PREFIX/lib" "$WLR_PREFIX/libdata" "$stage/usr/local/"
+  [ -d "$WLR_PREFIX/share" ] && cp -a "$WLR_PREFIX/share" "$stage/usr/local/"
+  package dinx-wlroots 0.20.2.aqueous dinx/wlroots "wlroots 0.20.2 with Aqueous render/presentation patches" "$stage"
+fi
+# --- Aqueous -------------------------------------------------------------
+AQ_DIR="$W/Aqueous/compositor"
+if [ ! -f "$AQ_DIR/build.zig.zon" ]; then
+  AQ_DIR=$(find "$W/Aqueous" -maxdepth 4 -name build.zig.zon 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
+fi
+stamp aqueous-start
+if [ -n "$AQ_DIR" ]; then
+  if build_zig aqueous "$AQ_DIR"; then
+    stage="$W/stage-dinx-aqueous"
+    rm -rf "$stage"; mkdir -p "$stage/usr/local/bin"
+    for b in aqueous aqueousctl; do
+      [ -f "$AQ_DIR/zig-out/bin/$b" ] && cp "$AQ_DIR/zig-out/bin/$b" "$stage/usr/local/bin/"
+    done
+    package dinx-aqueous 1.0.5 dinx/aqueous "Aqueous Wayland compositor (Zig/wlroots)" "$stage"
+  fi
+else
+  log "== Aqueous source tree not found"
+fi
+stamp aqueous-end
+
+
+# --- FreeBSD compat lib (statx/mallopt) for Pearl -------------------------
+cc -shared -fPIC -O2 -o /usr/local/lib/libdinxcompat.so "$W/dinxcompat.c" >>"$LOG" 2>&1
+log "== dinxcompat exit=$?"
+stamp pearl-start
+# --- Pearl ---------------------------------------------------------------
+if [ -d "$W/pearl" ]; then
+  if build_zig pearl "$W/pearl"; then
+    stage="$W/stage-dinx-pearl"
+    rm -rf "$stage"; mkdir -p "$stage/usr/local/bin"
+    for b in "$W/pearl/zig-out/bin/"*; do
+      [ -f "$b" ] && cp "$b" "$stage/usr/local/bin/"
+    done
+    package dinx-pearl 0.3.9 dinx/pearl "Pearl desktop shell (Zig/GTK4)" "$stage"
+  fi
+else
+  log "== pearl source tree not found"
+fi
+stamp pearl-end
+
+stamp greetd-start
+# --- greetd --------------------------------------------------------------
+if [ ! -d "$W/greetd" ]; then
+  git clone --depth 1 https://github.com/kennylevinsen/greetd.git "$W/greetd" >>"$LOG" 2>&1
+fi
+if [ -d "$W/greetd" ]; then
+  log "== building greetd (cargo)"
+  (cd "$W/greetd" && cargo build --release) >>"$LOG" 2>&1
+  log "== greetd cargo exit=$?"
+  if [ -f "$W/greetd/target/release/greetd" ]; then
+    stage="$W/stage-dinx-greetd"
+    rm -rf "$stage"; mkdir -p "$stage/usr/local/sbin" "$stage/usr/local/bin"
+    cp "$W/greetd/target/release/greetd" "$stage/usr/local/sbin/"
+    [ -f "$W/greetd/target/release/agreety" ] && cp "$W/greetd/target/release/agreety" "$stage/usr/local/bin/"
+    package dinx-greetd 0.10.3 dinx/greetd "greetd login daemon (built from source)" "$stage"
+  fi
+fi
+stamp greetd-end
+
+pkg repo "$REPO" >>"$LOG" 2>&1
+log "== pkg repo exit=$?"
+stamp end
+log "== DONE"
+ls -la "$REPO" | tee -a "$LOG"

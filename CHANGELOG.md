@@ -10,6 +10,9 @@
 - Install the live `Desktop/Install DINX.desktop` shortcut with executable mode and preapprove only its exact package-owned SHA-256 digest in Pearl Desktop's launcher state. The approval is live-session-only, preserves existing Pearl state, and rejects modified files, symlinks and corrupt state instead of bypassing Pearl's launcher trust boundary.
 - Allow the disposable `dinx` live user to launch Calamares and GParted and manage Firewalld without an authentication prompt even though the direct Dinit session has no elogind `local` or `active` state. Remove recursive `/usr/local/bin` shadows so GParted uses its upstream Polkit launcher and firewall-config uses Firewalld's D-Bus authorization. Keep passwordless authorization confined to the live overlay; installed systems retain normal authentication.
 - Automate distribution maintenance: twice-daily Artix package prefetch, daily upstream pin refresh through reviewed PRs, Grype/Trivy/OSV SBOM audits for sources and the final rootfs, and a nightly P0 ISO retained for 14 days.
+- Make dark mode deterministic across Gapless, Haruna, OpenSnitch, ONLYOFFICE, Impasto, Pori, Patchy, DinitUI, DINXPanel, Seafoam Settings and the Pearl first-run wizard. Gapless now executes `/usr/bin/g4music` without wrapper recursion; internal libadwaita apps force the DINX dark scheme; the wizard defaults to DINX dark.
+- Update Patchy to 1.33 and Pori to 0.2.0 with verified upstream checksums; remove Pori's obsolete pre-0.2.0 Zig compatibility patch.
+- Open Deetty command and TUI invocations in independent windows, remove Pearl's empty search-heading placeholder, and strengthen the Calamares launcher contract around `pkexec` root elevation plus Wayland/D-Bus environment preservation.
 
 # v0.1.0-alpha.14
 

@@ -78,6 +78,9 @@ grep -Fq 'pkgver="$PORI_VERSION"' "$pori_dir/PKGBUILD" \
   || fail 'Pori package version is not wired to source.env'
 grep -Fq '"$PORI_SOURCE_SHA256"' "$pori_dir/PKGBUILD" \
   || fail 'Pori package checksum is not wired to source.env'
+if grep -Fq 'pori-zig17.patch' "$pori_dir/PKGBUILD"; then
+  fail 'Pori still applies the obsolete pre-0.2.0 Zig compatibility patch'
+fi
 source "$phyto_dir/source.env"
 [[ "$PHYTO_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Phyto version: $PHYTO_VERSION"
 [[ "$PHYTO_SOURCE_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] \

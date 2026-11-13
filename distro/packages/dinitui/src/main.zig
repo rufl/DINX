@@ -127,6 +127,7 @@ const App = struct {
         c.adw_toolbar_view_add_top_bar(@ptrCast(toolbar), @ptrCast(header));
 
         const title = c.gtk_label_new("Services") orelse return;
+        c.adw_header_bar_set_title_widget(@ptrCast(header), title);
 
         const refresh_button = c.gtk_button_new_with_label("Refresh") orelse return;
         c.gtk_widget_set_tooltip_text(refresh_button, "Refresh services");
@@ -780,9 +781,13 @@ fn stateClass(state: dinit.State) [*:0]const u8 {
 }
 
 fn applyTheme() void {
+    const manager = c.adw_style_manager_get_default();
+    c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
         ".dinit-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" ++
+        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" ++
+        "window.background { background-color: #0b0d12; }\n" ++
         ".state-started { color: #9ece6a; }\n" ++
         ".state-starting, .state-stopping { color: #e0af68; }\n" ++
         ".state-failed { color: #f7768e; font-weight: 700; }\n" ++

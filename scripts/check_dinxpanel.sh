@@ -42,6 +42,10 @@ grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not buil
 for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
+grep -Fq 'gtk_label_new("System control center")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
+if grep -Fq 'YaST-inspired' "$frontend"; then
+  fail 'DINXPanel still exposes the retired YaST-inspired subtitle'
+fi
 grep -Fq 'dinx-wdisplays' "$frontend" || fail 'display action does not use the DINX persistence wrapper'
 if grep -Fq 'launch(&.{"wdisplays"})' "$frontend"; then
   fail 'display action bypasses the DINX persistence wrapper'

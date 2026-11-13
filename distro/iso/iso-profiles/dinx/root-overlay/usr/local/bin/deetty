@@ -10,13 +10,13 @@ case "${1:-}" in
     ;;
   -e|--execute)
     shift
-    exec /usr/bin/deetty --execute "$@"
+    exec /usr/bin/deetty --new-window --execute "$@"
     ;;
   *)
     if [ $# -eq 0 ]; then
         exec /usr/bin/deetty
     else
-        exec /usr/bin/deetty --execute "$@"
+        exec /usr/bin/deetty --new-window --execute "$@"
     fi
     ;;
 esac

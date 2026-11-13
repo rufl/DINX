@@ -96,7 +96,11 @@ EOF
   install -Dm644 shelly.fish "$pkgdir/usr/share/fish/vendor_completions.d/shelly.fish"
   install -Dm644 _shelly "$pkgdir/usr/share/zsh/site-functions/_shelly"
 
-  "$srcdir/shelly" utility --docs | go-md2man >"$srcdir/shelly.1"
+  if command -v go-md2man >/dev/null 2>&1; then
+    "$srcdir/shelly" utility --docs | go-md2man >"$srcdir/shelly.1"
+  else
+    printf '.TH "SHELLY" "1" "" "Shelly %s" "Shelly CLI Manual"\n.SH AUTHORS\nSeafoam Labs.\n' "${pkgver}" >"$srcdir/shelly.1"
+  fi
   sed -i "s|^\\.TH .*|.TH \"SHELLY\" \"1\" \"\" \"Shelly ${pkgver}\" \"Shelly CLI Manual\"|" "$srcdir/shelly.1"
   printf '\n.SH AUTHORS\nSeafoam Labs.\n' >>"$srcdir/shelly.1"
   install -Dm644 "$srcdir/shelly.1" "$pkgdir/usr/share/man/man1/shelly.1"

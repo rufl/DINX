@@ -32,6 +32,7 @@ for path in \
   "$pearl_dir/PKGBUILD" "$pearl_dir/source.env" "$pearl_dir/pearl.install" \
   "$pearl_dir/server-decorations.patch" \
   "$pearl_dir/greeter-state-home.patch" \
+  "$pearl_dir/remove-find-your-next-thing.patch" \
   "$graphics_helper" "$graphics_environment" "$greeter_wrapper" \
   "$root/scripts/check_dinx_graphics_profile.sh"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
@@ -114,6 +115,16 @@ patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
 patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
   -i "$pearl_dir/greeter-state-home.patch" >/dev/null \
   || fail 'pinned Pearl source rejects greeter-state-home.patch'
+patch --batch --forward --fuzz=0 -Np1 -d "$pearl_source_root" \
+  -i "$pearl_dir/remove-find-your-next-thing.patch" >/dev/null \
+  || fail 'pinned Pearl source rejects remove-find-your-next-thing.patch'
+pearl_launcher_source="$pearl_source_root/src/desktop/launcher.zig"
+if grep -Fq 'Find your next thing' "$pearl_launcher_source"; then
+  fail 'Pearl launcher still exposes the redundant search heading'
+fi
+if grep -Fq 'widgets.label("", "pearl-card-title")' "$pearl_launcher_source"; then
+  fail 'Pearl launcher retains an empty heading placeholder'
+fi
 grep -Fq 'glib.setenv("XDG_STATE_HOME", "/var/lib/pearl-greeter/.local/state", 1)' \
   "$pearl_source_root/src/greeter_host_main.zig" \
   || fail 'Pearl host overwrites the writable private state-home path'

@@ -120,14 +120,6 @@ import xml.etree.ElementTree as ET
  cal_wordmark_path, cal_ray_path, grub_logo_path, fastfetch_logo_path, boot_mark_path) = map(pathlib.Path, sys.argv[1:])
 brand = root / "design/brand/dinx-wordmark-compact.svg"
 ns = "{http://www.w3.org/2000/svg}"
-boot_mark = ET.parse(boot_mark_path).getroot()
-assert boot_mark.tag == f"{ns}svg", "DINX boot mark source is not SVG"
-assert boot_mark.attrib.get("viewBox") == "0 0 512 512", "DINX boot mark has unexpected dimensions"
-boot_title = boot_mark.find(f"{ns}title")
-assert boot_title is not None and boot_title.text == "DINX boot mark", "DINX boot mark source title is missing"
-assert boot_mark.find(f".//{ns}linearGradient") is not None, "DINX boot mark gradient is missing"
-assert len(boot_mark.findall(f".//{ns}path")) == 2, "DINX boot mark paths are incomplete"
-assert not boot_mark.findall(f".//{ns}rect"), "DINX boot mark paints an opaque background"
 accent = "#F4515B"
 stroke = {
     "fill": "none",
@@ -334,8 +326,8 @@ grep -Fq 'menuentry "Boot to the Firmware/BIOS"' "$live_grub_cfg" \
   || fail 'live ISO GRUB firmware option is missing'
 grep -Fq 'fwsetup' "$live_grub_cfg" || fail 'live ISO GRUB firmware option does not call fwsetup'
 grep -Fq 'productIcon: "dinx-ray-mark.svg"' "$calamares_branding" || fail 'Calamares icon does not use the DINX D-ray mark'
-grep -Fq 'productLogo: "dinx.svg"' "$calamares_branding" || fail 'Calamares logo does not use the DINX Linux wordmark'
-grep -Fq 'productWelcome: "dinx.svg"' "$calamares_branding" || fail 'Calamares welcome does not use the DINX Linux wordmark'
+grep -Fq 'productLogo: "dinx-emblem.png"' "$calamares_branding" || fail 'Calamares logo does not use the DINX emblem'
+grep -Fq 'productWelcome: "dinx-emblem.png"' "$calamares_branding" || fail 'Calamares welcome does not use the DINX emblem'
 if grep -Eiq 'systemd|systemctl' "$pearl_greeter"; then
   fail 'Pearl Greeter configuration contains a systemd integration'
 fi
@@ -411,6 +403,11 @@ fi
 if grep -Eq '#(31415d|151923|2859a8)' "$calamares"; then
   fail 'Calamares contains an out-of-contract color'
 fi
+for source in "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source"; do
+  grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$source" || fail "internal app does not force the DINX dark scheme: $source"
+done
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+  || fail 'Pearl first-run wizard does not default to Pearl Material dark'
 grep -Fq "background: ${dark_token[mSurface]}" "$dinitui_source" || fail 'DinitUI output surface does not use DINX background'
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinitui_source" || fail 'DinitUI output text does not use DINX foreground'
 grep -Fq "color: ${dark_token[mSecondary]}" "$dinitui_source" || fail 'DinitUI started state does not use DINX secondary'

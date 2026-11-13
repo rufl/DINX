@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=PdfCraft
+Name[pt_BR]=PdfCraft
+Exec=pdfcraft %U
+TryExec=pdfcraft
+Icon=pdfcraft
+Terminal=false
+Categories=Office;Viewer;Graphics;
+StartupNotify=true

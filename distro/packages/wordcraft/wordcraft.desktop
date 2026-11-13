@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=WordCraft
+Name[pt_BR]=WordCraft
+Exec=wordcraft %U
+TryExec=wordcraft
+Icon=wordcraft
+Terminal=false
+Categories=Office;WordProcessor;
+StartupNotify=true

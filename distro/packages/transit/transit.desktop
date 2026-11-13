@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Transit
+Name[pt_BR]=Transit
+Exec=transit %U
+TryExec=transit
+Icon=transit
+Terminal=false
+Categories=AudioVideo;Audio;Midi;
+StartupNotify=true

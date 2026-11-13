@@ -336,50 +336,88 @@
       ]
     },
     {
-      "name": "onlyoffice",
+      "name": "wordcraft",
       "provider": "github",
-      "repository": "ONLYOFFICE/appimage-desktopeditors",
-      "source_file": "distro/packages/onlyoffice/source.env",
-      "version_key": "ONLYOFFICE_VERSION",
-      "package_version_key": "ONLYOFFICE_VERSION",
-      "source_url_key": "ONLYOFFICE_SOURCE_URL",
-      "checksum_key": "ONLYOFFICE_SOURCE_SHA256",
+      "repository": "storytold/wordcraft",
+      "source_file": "distro/packages/wordcraft/source.env",
+      "version_key": "WORDCRAFT_VERSION",
+      "package_version_key": "WORDCRAFT_VERSION",
+      "source_url_key": "WORDCRAFT_SOURCE_URL",
+      "checksum_key": "WORDCRAFT_SOURCE_SHA256",
       "checksum": "sha256",
       "tag_prefix": "v",
-      "url_template": "https://github.com/ONLYOFFICE/appimage-desktopeditors/releases/download/v{version}/DesktopEditors-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/onlyoffice/PKGBUILD",
-      "additional_sources": [
-        {
-          "source_url_key": "ONLYOFFICE_LICENSE_URL",
-          "checksum_key": "ONLYOFFICE_LICENSE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/ONLYOFFICE/appimage-desktopeditors/v{version}/LICENSE"
-        }
-      ]
+      "url_template": "https://github.com/storytold/wordcraft/releases/download/v{version}/wordcraft-{version}-linux-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/wordcraft/PKGBUILD"
     },
     {
-      "name": "zrythm",
-      "provider": "zrythm",
-      "repository": "zrythm/zrythm",
-      "source_file": "distro/packages/zrythm/source.env",
-      "version_key": "ZRYTHM_VERSION",
-      "source_url_key": "ZRYTHM_SOURCE_URL",
-      "checksum_key": "ZRYTHM_SOURCE_SHA256",
+      "name": "gridcraft",
+      "provider": "github",
+      "repository": "storytold/gridcraft",
+      "source_file": "distro/packages/gridcraft/source.env",
+      "version_key": "GRIDCRAFT_VERSION",
+      "package_version_key": "GRIDCRAFT_VERSION",
+      "source_url_key": "GRIDCRAFT_SOURCE_URL",
+      "checksum_key": "GRIDCRAFT_SOURCE_SHA256",
       "checksum": "sha256",
       "tag_prefix": "v",
-      "url_template": "https://www.zrythm.org/downloads/Zrythm-{version}-Linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/zrythm/PKGBUILD",
-      "additional_sources": [
-        {
-          "source_url_key": "ZRYTHM_LICENSE_URL",
-          "checksum_key": "ZRYTHM_LICENSE_SHA256",
-          "url_template": "https://gitlab.zrythm.org/zrythm/zrythm/-/raw/{tag}/LICENSES/LicenseRef-ZrythmLicense.txt"
-        },
-        {
-          "source_url_key": "ZRYTHM_TRADEMARKS_URL",
-          "checksum_key": "ZRYTHM_TRADEMARKS_SHA256",
-          "url_template": "https://gitlab.zrythm.org/zrythm/zrythm/-/raw/{tag}/TRADEMARKS.md"
-        }
-      ]
+      "url_template": "https://github.com/storytold/gridcraft/releases/download/v{version}/gridcraft-{version}-linux-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/gridcraft/PKGBUILD"
+    },
+    {
+      "name": "deckcraft",
+      "provider": "github",
+      "repository": "storytold/deckcraft",
+      "source_file": "distro/packages/deckcraft/source.env",
+      "version_key": "DECKCRAFT_VERSION",
+      "package_version_key": "DECKCRAFT_VERSION",
+      "source_url_key": "DECKCRAFT_SOURCE_URL",
+      "checksum_key": "DECKCRAFT_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/storytold/deckcraft/releases/download/v{version}/deckcraft-{version}-linux-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/deckcraft/PKGBUILD"
+    },
+    {
+      "name": "pdfcraft",
+      "provider": "github",
+      "repository": "storytold/pdfcraft",
+      "source_file": "distro/packages/pdfcraft/source.env",
+      "version_key": "PDFCRAFT_VERSION",
+      "package_version_key": "PDFCRAFT_VERSION",
+      "source_url_key": "PDFCRAFT_SOURCE_URL",
+      "checksum_key": "PDFCRAFT_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/storytold/pdfcraft/releases/download/v{version}/pdfcraft-{version}-linux-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/pdfcraft/PKGBUILD"
+    },
+    {
+      "name": "transit",
+      "provider": "github",
+      "repository": "transit-audio/transit",
+      "source_file": "distro/packages/transit/source.env",
+      "version_key": "TRANSIT_VERSION",
+      "package_version_key": "TRANSIT_VERSION",
+      "source_url_key": "TRANSIT_SOURCE_URL",
+      "checksum_key": "TRANSIT_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/transit-audio/transit/releases/download/v{version}/transit-{version}-linux-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/transit/PKGBUILD"
+    },
+    {
+      "name": "zenkai",
+      "provider": "github",
+      "repository": "dayvster/zenkai",
+      "source_file": "distro/packages/zenkai/source.env",
+      "version_key": "ZENKAI_VERSION",
+      "package_version_key": "ZENKAI_VERSION",
+      "source_url_key": "ZENKAI_SOURCE_URL",
+      "checksum_key": "ZENKAI_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/dayvster/zenkai/releases/download/v{version}/zenkai-v{version}-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/zenkai/PKGBUILD"
     }
   ]
 }

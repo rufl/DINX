@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${ZENKAI_VERSION:?missing ZENKAI_VERSION}"
 : "${ZENKAI_SOURCE_URL:?missing ZENKAI_SOURCE_URL}"
 : "${ZENKAI_SOURCE_SHA256:?missing ZENKAI_SOURCE_SHA256}"
-pkgver="${ ZENKAI_VERSION }"
+pkgver="${ZENKAI_VERSION}"
 pkgrel=1
 pkgdesc="Fast app launcher written in Zig"
 arch=('x86_64')
@@ -16,14 +16,14 @@ license=('MIT')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
-  "zenkai-${pkgver}-x86_64.AppImage::${ ZENKAI_SOURCE_URL }"
+  "zenkai-${pkgver}-x86_64.AppImage::${ZENKAI_SOURCE_URL}"
   'zenkai'
   'zenkai.desktop'
 )
 sha256sums=(
-  "${ ZENKAI_SOURCE_SHA256 }"
-  'SKIP'
-  'SKIP'
+  "${ZENKAI_SOURCE_SHA256}"
+  'eae3c4309c67aa838b571bce1689943af9e898b2c8be60871f2adf708e3137e4'
+  'e6855ed0928c6c609b82e78e0352f0cd552e7391f42e35a30a03912e3ea5b5fd'
 )
 
 package() {

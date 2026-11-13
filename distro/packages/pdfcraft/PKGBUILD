@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${PDFCRAFT_VERSION:?missing PDFCRAFT_VERSION}"
 : "${PDFCRAFT_SOURCE_URL:?missing PDFCRAFT_SOURCE_URL}"
 : "${PDFCRAFT_SOURCE_SHA256:?missing PDFCRAFT_SOURCE_SHA256}"
-pkgver="${ PDFCRAFT_VERSION }"
+pkgver="${PDFCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="The open-source PDF workbench"
 arch=('x86_64')
@@ -16,14 +16,14 @@ license=('MIT')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
-  "pdfcraft-${pkgver}-x86_64.AppImage::${ PDFCRAFT_SOURCE_URL }"
+  "pdfcraft-${pkgver}-x86_64.AppImage::${PDFCRAFT_SOURCE_URL}"
   'pdfcraft'
   'pdfcraft.desktop'
 )
 sha256sums=(
-  "${ PDFCRAFT_SOURCE_SHA256 }"
-  'SKIP'
-  'SKIP'
+  "${PDFCRAFT_SOURCE_SHA256}"
+  '2aa97682ec262a3957d67ad08aba29f0a216f92ac059b2b7097d12966d45cb5e'
+  'b37a7c49ee2c634829cbbe2a802c338cf83ea5d8b2974e6b2050dbca311d7782'
 )
 
 package() {

@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${TRANSIT_VERSION:?missing TRANSIT_VERSION}"
 : "${TRANSIT_SOURCE_URL:?missing TRANSIT_SOURCE_URL}"
 : "${TRANSIT_SOURCE_SHA256:?missing TRANSIT_SOURCE_SHA256}"
-pkgver="${ TRANSIT_VERSION }"
+pkgver="${TRANSIT_VERSION}"
 pkgrel=1
 pkgdesc="Digital audio workstation written in Rust"
 arch=('x86_64')
@@ -16,14 +16,14 @@ license=('MIT')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
-  "transit-${pkgver}-x86_64.AppImage::${ TRANSIT_SOURCE_URL }"
+  "transit-${pkgver}-x86_64.AppImage::${TRANSIT_SOURCE_URL}"
   'transit'
   'transit.desktop'
 )
 sha256sums=(
-  "${ TRANSIT_SOURCE_SHA256 }"
-  'SKIP'
-  'SKIP'
+  "${TRANSIT_SOURCE_SHA256}"
+  '11a0107795d89432af374028a08e998a45933cd15eb18fcb8dd333b067de8294'
+  '1db471dbedf76e5db1aa7c8d23bf62dc7619d0cd33bf29135e90c985d9094255'
 )
 
 package() {

@@ -23,7 +23,7 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
-grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'DINXPanel build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
@@ -39,7 +39,7 @@ grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install din
 [[ -x "$bluetooth_helper" ]] || fail "desktop helper is missing or not executable: $bluetooth_helper"
 sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'PaintFE' 'Zenkai' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
 grep -Fq 'gtk_label_new("System control center")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
@@ -61,10 +61,9 @@ grep -Fq '"shelly", "list-updates", "all"' "$frontend" || fail 'Shelly update di
 grep -Fq '"shelly", "upgrade", "all"' "$frontend" || fail 'Shelly upgrade action is missing'
 grep -Fq '"fwupdmgr", "refresh"' "$frontend" || fail 'fwupd metadata refresh is missing'
 grep -Fq '"fwupdmgr", "get-updates"' "$frontend" || fail 'firmware update discovery is missing'
-grep -Fq '"topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux"' "$frontend" || fail 'Topgrade preview is missing'
 for terminal_call in \
-  '"deetty", "-e", "topgrade", "--dry-run"' \
-  '"deetty", "-e", "topgrade"' \
+  '"paintfe"' \
+  '"zenkai"' \
   '"deetty", "-e", "shelly", "upgrade", "all"' \
   '"deetty", "-e", "inxi", "-GSC"'; do
   grep -Fq "$terminal_call" "$frontend" || fail "terminal action does not use Deetty with fixed argv: $terminal_call"
@@ -76,7 +75,6 @@ grep -Fq 'optional_packages.install' "$frontend" || fail 'CUPS download is not w
 grep -Fq 'optional_package_install' "$frontend" || fail 'CUPS installation is not isolated in the asynchronous package task'
 grep -Fq 'pub const cups_user_install_argv' "$optional_packages" || fail 'CUPS non-root package argv is missing'
 grep -Fq 'pub const cups_install_argv' "$optional_packages" || fail 'CUPS pkexec package argv is missing'
-grep -Fq '"topgrade" });' "$frontend" || fail 'Topgrade action is missing'
 for kernel in linux linux-lts linux-zen linux-hardened; do
   grep -Fq ".id = \"$kernel\"" "$kernels" || fail "kernel catalog is missing $kernel"
 done

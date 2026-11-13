@@ -10,23 +10,25 @@ source_env="$startdir/source.env"
 : "${ONLYOFFICE_LICENSE_URL:?missing ONLYOFFICE_LICENSE_URL}"
 : "${ONLYOFFICE_LICENSE_SHA256:?missing ONLYOFFICE_LICENSE_SHA256}"
 pkgver="$ONLYOFFICE_VERSION"
-pkgrel=2
+pkgrel=4
 pkgdesc='Desktop editors for documents, spreadsheets, presentations and PDFs'
 arch=('x86_64')
 url='https://www.onlyoffice.com/desktop'
 license=('AGPL-3.0-only')
-depends=('coreutils' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')
+depends=('coreutils' 'gawk' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')
 options=('!strip')
 source=(
   "DesktopEditors-${pkgver}-x86_64.AppImage::${ONLYOFFICE_SOURCE_URL}"
   "LICENSE::${ONLYOFFICE_LICENSE_URL}"
   'onlyoffice'
+  'onlyoffice-force-dark'
   'onlyoffice.desktop'
 )
 sha256sums=(
   "$ONLYOFFICE_SOURCE_SHA256"
   "$ONLYOFFICE_LICENSE_SHA256"
-  '4cebeca9349b98ebea0348c7c2da0a9cc6960dc62f771bfffb27400b4f536344'
+  '8e0d40c5ef5574e146723ac8f2dfbe47214323568b2789df4203106a10bc1f0f'
+  '9a21d2444f3fec9c8520f9bd79ac38cca500de27e15d016d9ca49ad8b5e27cd0'
   '641758d73f4c6c3d12bcacd3abeba01f66a5dfeed78492c80c5f9ca1a1b6f4b2'
 )
 
@@ -34,6 +36,8 @@ package() {
   install -Dm755 "$srcdir/DesktopEditors-${pkgver}-x86_64.AppImage" \
     "$pkgdir/opt/onlyoffice/DesktopEditors.AppImage"
   install -Dm755 "$srcdir/onlyoffice" "$pkgdir/usr/bin/onlyoffice"
+  install -Dm755 "$srcdir/onlyoffice-force-dark" \
+    "$pkgdir/usr/lib/onlyoffice/onlyoffice-force-dark"
   install -Dm644 "$srcdir/onlyoffice.desktop" \
     "$pkgdir/usr/share/applications/onlyoffice.desktop"
   install -Dm644 "$srcdir/LICENSE" \

@@ -1,0 +1,85 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -gt 1 ]; then
+    printf '%s\n' 'onlyoffice-force-dark: usage: onlyoffice-force-dark [SETTINGS_FILE]' >&2
+    exit 2
+fi
+
+if [ "$#" -eq 1 ]; then
+    settings=$1
+else
+    config_home=${XDG_CONFIG_HOME:-}
+    if [ -z "$config_home" ]; then
+        [ -n "${HOME:-}" ] || {
+            printf '%s\n' 'onlyoffice-force-dark: HOME and XDG_CONFIG_HOME are unset' >&2
+            exit 1
+        }
+        config_home=$HOME/.config
+    fi
+    settings=$config_home/onlyoffice/DesktopEditors.conf
+fi
+
+if [ -L "$settings" ] || { [ -e "$settings" ] && [ ! -f "$settings" ]; }; then
+    printf 'onlyoffice-force-dark: refusing unsafe settings path: %s\n' "$settings" >&2
+    exit 1
+fi
+
+if [ -f "$settings" ] && awk '
+    /^\[General\][[:space:]]*$/ { in_general = 1; next }
+    /^\[/ { in_general = 0 }
+    in_general && /^[[:space:]]*UITheme[[:space:]]*=/ {
+        themes++
+        if ($0 ~ /^[[:space:]]*UITheme[[:space:]]*=[[:space:]]*theme-dark[[:space:]]*$/) dark = 1
+    }
+    END { exit !(dark && themes == 1) }
+' "$settings"; then
+    exit 0
+fi
+
+settings_dir=${settings%/*}
+[ "$settings_dir" != "$settings" ] || settings_dir=.
+mkdir -p -- "$settings_dir"
+temporary=$(mktemp "$settings_dir/.DesktopEditors.conf.XXXXXX")
+trap 'rm -f -- "$temporary"' EXIT HUP INT TERM
+
+if [ -f "$settings" ]; then
+    awk '
+        function add_theme() {
+            if (!wrote_theme) {
+                print "UITheme=theme-dark"
+                wrote_theme = 1
+            }
+        }
+        /^\[General\][[:space:]]*$/ {
+            in_general = 1
+            saw_general = 1
+            print
+            next
+        }
+        /^\[/ {
+            if (in_general) add_theme()
+            in_general = 0
+        }
+        in_general && /^[[:space:]]*UITheme[[:space:]]*=/ {
+            add_theme()
+            next
+        }
+        { print }
+        END {
+            if (in_general) {
+                add_theme()
+            } else if (!saw_general) {
+                print ""
+                print "[General]"
+                add_theme()
+            }
+        }
+    ' "$settings" >"$temporary"
+else
+    printf '%s\n' '[General]' 'UITheme=theme-dark' >"$temporary"
+fi
+
+chmod 0600 "$temporary"
+mv -f -- "$temporary" "$settings"
+trap - EXIT HUP INT TERM

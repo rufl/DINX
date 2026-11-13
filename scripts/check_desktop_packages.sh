@@ -14,7 +14,14 @@ local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/appl
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
 desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
+desktop_approval="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-approve-desktop-launcher"
 display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
+live_policy="$root/distro/iso/iso-profiles/dinx/live-overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
+gparted_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/gparted"
+firewall_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/firewall-config"
+haruna_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
+haruna_scheme="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/color-schemes/DINXDark.colors"
+impasto_wrapper="$root/distro/packages/impasto/impasto"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
@@ -49,6 +56,16 @@ source "$haruna_source"
 [[ "$HARUNA_SOURCE_URL" == "https://download.kde.org/stable/haruna/${HARUNA_VERSION}/haruna-${HARUNA_VERSION}.tar.xz" ]] \
   || fail 'Haruna source URL does not match its stable release pin'
 [[ "$HARUNA_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Haruna source checksum is invalid'
+[[ -x "$haruna_wrapper" ]] || fail 'Haruna dark-theme launcher is missing or not executable'
+sh -n "$haruna_wrapper" || fail 'Haruna dark-theme launcher has invalid shell syntax'
+grep -Fq "ColorScheme 'DINX Dark'" "$haruna_wrapper" || fail 'Haruna launcher does not force its application color scheme'
+grep -Fq 'exec /usr/bin/haruna "$@"' "$haruna_wrapper" || fail 'Haruna launcher does not preserve launch arguments'
+[[ -r "$haruna_scheme" ]] || fail 'DINX KDE color scheme is missing'
+grep -Fqx 'Name=DINX Dark' "$haruna_scheme" || fail 'DINX KDE color scheme has an incorrect name'
+grep -Fqx 'BackgroundNormal=11,13,18' "$haruna_scheme" || fail 'DINX KDE color scheme does not use the dark DINX surface'
+sh -n "$impasto_wrapper" || fail 'Impasto launcher has invalid shell syntax'
+grep -Fq 'name="color-scheme" type="System.Int32">2</setting>' "$impasto_wrapper" \
+  || fail 'Impasto launcher does not force its internal dark color scheme'
 grep -Fq 'pkgver="$HARUNA_VERSION"' "$haruna_recipe" || fail 'Haruna package version is not wired to source.env'
 grep -Fq '${HARUNA_SOURCE_URL}' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
 grep -Fq '"$HARUNA_SOURCE_SHA256"' "$haruna_recipe" || fail 'Haruna checksum is not wired to source.env'
@@ -128,6 +145,74 @@ for package in onlyoffice zrythm; do
   grep -Fq -- '--appimage-extract-and-run "$@"' "$wrapper" || fail "$package launcher does not support systems without FUSE"
   sh -n "$wrapper" || fail "$package AppImage wrapper has invalid shell syntax"
 done
+onlyoffice_launcher="$root/distro/packages/onlyoffice/onlyoffice"
+onlyoffice_force_dark="$root/distro/packages/onlyoffice/onlyoffice-force-dark"
+onlyoffice_recipe="$root/distro/packages/onlyoffice/PKGBUILD"
+[[ -x "$onlyoffice_force_dark" ]] || fail 'ONLYOFFICE dark-theme helper is missing or not executable'
+sh -n "$onlyoffice_force_dark" || fail 'ONLYOFFICE dark-theme helper has invalid shell syntax'
+grep -Fq '/usr/lib/onlyoffice/onlyoffice-force-dark' "$onlyoffice_launcher" || fail 'ONLYOFFICE launcher does not force its internal dark theme'
+grep -Fq 'onlyoffice-force-dark' "$onlyoffice_recipe" || fail 'ONLYOFFICE package does not install its dark-theme helper'
+grep -Fqx "depends=('coreutils' 'gawk' 'glibc' 'nss' 'libxss' 'libxtst' 'xorg-xwayland')" "$onlyoffice_recipe" \
+  || fail 'ONLYOFFICE package omits dark-mode helper runtime dependencies'
+onlyoffice_test=$(mktemp -d)
+onlyoffice_settings="$onlyoffice_test/DesktopEditors.conf"
+printf '%s\n' '[General]' 'UITheme=theme-white' 'maximized=true' '[updates]' 'enabled=false' >"$onlyoffice_settings"
+"$onlyoffice_force_dark" "$onlyoffice_settings"
+grep -Fqx 'UITheme=theme-dark' "$onlyoffice_settings" || fail 'ONLYOFFICE helper did not select the upstream dark theme'
+grep -Fqx 'maximized=true' "$onlyoffice_settings" || fail 'ONLYOFFICE helper removed an unrelated general setting'
+grep -Fqx 'enabled=false' "$onlyoffice_settings" || fail 'ONLYOFFICE helper removed an unrelated settings group'
+[[ $(grep -Fxc 'UITheme=theme-dark' "$onlyoffice_settings") -eq 1 ]] || fail 'ONLYOFFICE helper emitted duplicate theme settings'
+ln -s "$onlyoffice_settings" "$onlyoffice_test/symlink.conf"
+if "$onlyoffice_force_dark" "$onlyoffice_test/symlink.conf" >/dev/null 2>&1; then
+  fail 'ONLYOFFICE helper accepted a settings symlink'
+fi
+rm -rf "$onlyoffice_test"
+patchy_launcher="$root/distro/packages/patchy/patchy"
+patchy_force_darkest="$root/distro/packages/patchy/patchy-force-darkest"
+patchy_recipe="$root/distro/packages/patchy/PKGBUILD"
+patchy_source="$root/distro/packages/patchy/source.env"
+source "$patchy_source"
+[[ "$PATCHY_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Patchy version: $PATCHY_VERSION"
+[[ "$PATCHY_SOURCE_URL" == "https://github.com/SethRobinson/Patchy/releases/download/v${PATCHY_VERSION}/PatchyLinux.AppImage" ]] \
+  || fail 'Patchy source URL does not match its pinned release'
+[[ "$PATCHY_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ && "$PATCHY_LICENSE_SHA256" =~ ^[0-9a-f]{64}$ ]] \
+  || fail 'Patchy source or license checksum is invalid'
+grep -Fq 'pkgver="$PATCHY_VERSION"' "$patchy_recipe" || fail 'Patchy package version is not wired to source.env'
+grep -Fq '"$PATCHY_SOURCE_SHA256"' "$patchy_recipe" || fail 'Patchy package checksum is not wired to source.env'
+[[ -x "$patchy_launcher" && -x "$patchy_force_darkest" ]] || fail 'Patchy launcher or Darkest-theme helper is not executable'
+sh -n "$patchy_launcher" || fail 'Patchy launcher has invalid shell syntax'
+sh -n "$patchy_force_darkest" || fail 'Patchy Darkest-theme helper has invalid shell syntax'
+grep -Fq '/usr/lib/patchy/patchy-force-darkest' "$patchy_launcher" || fail 'Patchy launcher does not force its Darkest theme'
+grep -Fq 'patchy-force-darkest' "$patchy_recipe" || fail 'Patchy package does not install its Darkest-theme helper'
+grep -Fqx "depends=('glibc' 'bash' 'coreutils' 'gawk')" "$patchy_recipe" || fail 'Patchy package omits dark-mode helper runtime dependencies'
+patchy_test=$(mktemp -d)
+trap 'rm -rf "$patchy_test"' EXIT
+patchy_settings="$patchy_test/Patchy.ini"
+"$patchy_force_darkest" "$patchy_settings"
+grep -Fqx '[preferences]' "$patchy_settings" || fail 'Patchy Darkest-theme helper did not create the preferences group'
+grep -Fqx 'colorScheme=dark' "$patchy_settings" || fail 'Patchy Darkest-theme helper did not select a dark base'
+grep -Fqx 'customThemeId=bundled:darkest.patchytheme' "$patchy_settings" || fail 'Patchy Darkest-theme helper did not select Darkest'
+cat >"$patchy_settings" <<'INI'
+[General]
+retained=value
+[preferences]
+colorScheme=light
+customThemeId=bundled:nord.patchytheme
+INI
+"$patchy_force_darkest" "$patchy_settings"
+grep -Fqx 'retained=value' "$patchy_settings" || fail 'Patchy Darkest-theme helper changed unrelated settings'
+grep -Fqx 'colorScheme=dark' "$patchy_settings" || fail 'Patchy Darkest-theme helper did not replace the light base'
+grep -Fqx 'customThemeId=bundled:darkest.patchytheme' "$patchy_settings" || fail 'Patchy Darkest-theme helper did not replace another custom theme'
+patchy_settings_hash=$(sha256sum "$patchy_settings" | cut -d ' ' -f1)
+"$patchy_force_darkest" "$patchy_settings"
+[[ $(sha256sum "$patchy_settings" | cut -d ' ' -f1) == "$patchy_settings_hash" ]] || fail 'Patchy Darkest-theme helper rewrote an already-correct file'
+ln -s "$patchy_settings" "$patchy_test/symlink.ini"
+if "$patchy_force_darkest" "$patchy_test/symlink.ini" >/dev/null 2>&1; then
+  fail 'Patchy Darkest-theme helper accepted a settings symlink'
+fi
+rm -rf "$patchy_test"
+trap - EXIT
+
 office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"
 office_recipe="$root/distro/packages/onlyoffice/PKGBUILD"
 grep -Fq "'coreutils'" "$office_recipe" || fail 'ONLYOFFICE runtime does not declare coreutils for AppImage launcher utilities'
@@ -227,7 +312,7 @@ com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/
 galculator.desktop|Calculator|Calculadora|galculator
 gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
+com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
 org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
@@ -255,8 +340,25 @@ grep -Fqx 'Name=Install DINX' "$desktop_installer" || fail 'desktop shortcut Eng
 grep -Fqx 'Name[pt_BR]=Instalar DINX' "$desktop_installer" || fail 'desktop shortcut Portuguese name is missing'
 grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut does not use the session-aware launcher'
 grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut launcher prerequisite is incorrect'
+[[ -x "$desktop_installer" ]] || fail 'live-user desktop shortcut is not executable in /etc/skel'
+[[ -x "$desktop_approval" ]] || fail 'Pearl desktop launcher approval helper is missing or not executable'
+grep -Fqx '  usr/local/libexec/dinx-approve-desktop-launcher' "$iso_check" || fail 'ISO content contract omits the Pearl desktop approval helper'
+grep -Fqx '  usr/bin/python3' "$iso_check" || fail 'ISO content contract omits the approval helper runtime'
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), sys.argv[1], "exec")' "$desktop_approval" \
+  || fail 'Pearl desktop launcher approval helper has invalid Python syntax'
+[[ ! -e "$gparted_wrapper" ]] || fail 'GParted is shadowed by a recursive local wrapper instead of using its upstream Polkit launcher'
+[[ ! -e "$firewall_wrapper" ]] || fail 'firewall-config is shadowed by a local root wrapper instead of using Firewalld D-Bus authorization'
+[[ -r "$live_policy" ]] || fail 'live passwordless Polkit policy is missing'
+grep -Fq 'subject.user === "dinx"' "$live_policy" || fail 'live Polkit policy is not scoped to the disposable dinx user'
+for policy_action in 'org.gnome.gparted.policy' 'org.fedoraproject.FirewallD1.desktop.policy.choice'; do
+  grep -Fqx "  usr/share/polkit-1/actions/$policy_action" "$iso_check" \
+    || fail "ISO content contract omits privileged application policy: $policy_action"
+done
 grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not resolve the provisioned desktop directory'
-grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not seed the installer shortcut from /etc/skel'
+grep -Fq 'installer_seed="/etc/skel/Desktop/Install DINX.desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not seed the installer shortcut from /etc/skel'
+grep -Fq 'DINX_LIVE_SESSION:-' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'automatic launcher approval is not restricted to the live session'
+grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not preapprove the package-owned launcher for Pearl Desktop'
+grep -Fq '"$installer_desktop" "$installer_seed"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'Pearl approval is not bound to the package-owned installer template'
 installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
 [[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
 grep -Fqx '    - zenity' "$profile" || fail 'profile is missing the installer error-dialog dependency'
@@ -281,9 +383,10 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop com.pori.app.desktop btop.desktop nvtop.desktop; do
+for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop btop.desktop nvtop.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
+grep -Fqx "  usr/share/applications/com.pori.app.desktop" "$iso_check" || fail "ISO payload is missing the Pori desktop entry: com.pori.app.desktop"
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$file_roller_mime_cache" || fail "localized File Roller MIME cache is missing $mime"
 done

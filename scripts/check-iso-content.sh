@@ -124,10 +124,11 @@ if grep -Fq "squashfs-root/$live_policy_path" <<<"$manifest"; then
   fail 'live-only Polkit authorization leaked into the installed rootfs'
 fi
 live_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" "$live_policy_path")
-grep -Fq 'subject.user === "dinx" && subject.local' <<<"$live_policy" \
-  || fail 'live Polkit rule is not scoped to the local dinx user'
-! grep -Fq 'subject.active' <<<"$live_policy" \
-  || fail 'live Polkit rule still requires an elogind-active session'
+grep -Fq 'subject.user === "dinx"' <<<"$live_policy" \
+  || fail 'live Polkit rule is not scoped to the dinx live user'
+if grep -Eq 'subject\.(active|local)' <<<"$live_policy"; then
+  fail 'live Polkit rule still requires elogind session state'
+fi
 grep -Fq 'return polkit.Result.YES;' <<<"$live_policy" \
   || fail 'live Polkit rule does not authorize without credentials'
 if grep -Eq 'auth_(admin|self)' <<<"$live_policy"; then
@@ -274,6 +275,8 @@ required_paths=(
   usr/bin/fwupdmgr
   usr/bin/scanimage
   usr/bin/impasto
+  usr/local/bin/haruna
+  usr/share/color-schemes/DINXDark.colors
   opt/impasto/Impasto-x86_64.AppImage
   usr/share/applications/com.github.zbcoding.Impasto.desktop
   usr/share/licenses/impasto/license-mit.txt
@@ -281,6 +284,7 @@ required_paths=(
   usr/share/licenses/impasto/license-lgpl.txt
   usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md
   usr/bin/onlyoffice
+  usr/lib/onlyoffice/onlyoffice-force-dark
   usr/bin/zrythm
   opt/onlyoffice/DesktopEditors.AppImage
   opt/zrythm/Zrythm.AppImage
@@ -293,6 +297,7 @@ required_paths=(
   usr/bin/inkscape
   usr/bin/godot
   usr/bin/patchy
+  usr/lib/patchy/patchy-force-darkest
   usr/bin/blockbench
   opt/patchy/PatchyLinux.AppImage
   opt/blockbench/Blockbench.AppImage
@@ -375,6 +380,7 @@ required_paths=(
   usr/lib/zls/zig-env.zon
   usr/lib/zls/zig/std/std.zig
   usr/bin/gparted
+  usr/share/polkit-1/actions/org.gnome.gparted.policy
   usr/bin/shikane
   usr/bin/shikanectl
   usr/bin/wdisplays
@@ -455,6 +461,7 @@ required_paths=(
   usr/bin/firewalld
   usr/bin/firewall-config
   usr/share/applications/firewall-config.desktop
+  usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.desktop.policy.choice
   etc/dinit.d/firewalld
   usr/bin/qps
   usr/share/applications/qps.desktop
@@ -479,6 +486,7 @@ required_paths=(
   usr/share/dintor/styles/dintor-dark.xml
   usr/share/dintor/styles/dintor-light.xml
   usr/bin/calamares
+  usr/share/polkit-1/actions/io.calamares.calamares.policy
   usr/bin/dconf
   usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
@@ -494,6 +502,8 @@ required_paths=(
   usr/bin/zenity
   usr/bin/pgrep
   usr/local/libexec/dinx-installer
+  usr/local/libexec/dinx-approve-desktop-launcher
+  usr/bin/python3
   usr/bin/ps
   usr/share/applications/dinx-installer.desktop
   usr/share/applications/calamares.desktop
@@ -520,6 +530,8 @@ required_paths=(
   usr/local/libexec/dinx-bluetooth-manager
   usr/local/share/applications/nm-connection-editor.desktop
   usr/local/share/applications/com.saivert.pwvucontrol.desktop
+  usr/local/share/applications/btop.desktop
+  usr/local/share/applications/nvtop.desktop
   usr/local/share/applications/mimeinfo.cache
   usr/share/applications/gparted.desktop
   usr/share/applications/network.cycles.wdisplays.desktop
@@ -547,6 +559,11 @@ for path in "${required_paths[@]}"; do
     || fail "missing ISO path (exact path required): $path"
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
+  for shadow_wrapper in usr/local/bin/gparted usr/local/bin/firewall-config; do
+    if iso_manifest_contains_path "$shadow_wrapper" <<<"$image_manifest"; then
+      fail "local wrapper shadows an upstream Polkit-aware application: $shadow_wrapper"
+    fi
+  done
   for unused_path in \
     etc/skel/.config/dinx/theme.json \
     usr/share/dinx/branding/dinx-linux-logo.svg \
@@ -575,6 +592,28 @@ for package in krita inkscape godot pixelorama patchy blockbench impasto onlyoff
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
+source "$script_dir/../distro/packages/patchy/source.env"
+patchy_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' "$script_dir/../distro/packages/patchy/PKGBUILD")
+[[ "$patchy_pkgrel" =~ ^[1-9][0-9]*$ ]] || fail 'DINX Patchy pkgrel is invalid'
+patchy_package_version="$PATCHY_VERSION-$patchy_pkgrel"
+patchy_db_dir="var/lib/pacman/local/patchy-$patchy_package_version"
+iso_manifest_contains_path "$patchy_db_dir/desc" <<<"$manifest" \
+  || fail "Pinned Patchy package is missing from the ISO rootfs: $patchy_package_version"
+patchy_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
+  "$tmp_dir/rootfs.img" "$patchy_db_dir/desc" \
+  | awk 'previous == "%VERSION%" { print; exit } { previous = $0 }')
+[[ "$patchy_db_version" == "$patchy_package_version" ]] \
+  || fail "Patchy package version mismatch: $patchy_db_version"
+patchy_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/patchy)
+grep -Fq '/usr/lib/patchy/patchy-force-darkest' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not force its internal Darkest theme'
+grep -Fq 'PatchyLinux.AppImage --appimage-extract-and-run' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not use the no-FUSE AppImage path'
+patchy_force_darkest=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/patchy/patchy-force-darkest)
+grep -Fq 'customThemeId=bundled:darkest.patchytheme' <<<"$patchy_force_darkest" \
+  || fail 'Patchy package does not force its Darkest theme'
+grep -Fq 'refusing unsafe settings path' <<<"$patchy_force_darkest" \
+  || fail 'Patchy Darkest-theme helper does not reject unsafe settings paths'
 grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
   || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
 for package in kparts kio kiconthemes breeze-icons; do
@@ -1123,6 +1162,14 @@ for firewall_package in firewalld firewall-config firewalld-dinit dinx-firewalld
   grep -Eq "/var/lib/pacman/local/${firewall_package}-[^/]*/" <<<"$manifest" \
     || fail "Firewalld package is missing from installed rootfs: $firewall_package"
 done
+gparted_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.gnome.gparted.policy)
+grep -Fq '<action id="org.gnome.gparted">' <<<"$gparted_policy" \
+  || fail 'GParted root-launch Polkit action is missing'
+firewalld_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.desktop.policy.choice)
+for action in all config direct policies; do
+  grep -Fq "<action id=\"org.fedoraproject.FirewallD1.$action\">" <<<"$firewalld_policy" \
+    || fail "Firewalld Polkit action is missing: $action"
+done
 for required_package in floorp opensnitch opensnitch-dinit; do
   grep -Eq "/var/lib/pacman/local/${required_package}-[^/]*/" <<<"$manifest" \
     || fail "required package metadata is missing from installed rootfs: $required_package"
@@ -1247,6 +1294,11 @@ grep -Fq 'x-scheme-handler/https=floorp.desktop;' <<<"$mimeapps_config" || fail 
 floorp_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/floorp/distribution/policies.json)
 grep -Fq '"DisableAppUpdate": true' <<<"$floorp_policy" || fail 'Floorp updates are not managed by the DINX package source refresh'
 grep -Fq 'application/pdf=onlyoffice.desktop;' <<<"$mimeapps_config" || fail 'ONLYOFFICE is not the default PDF handler'
+onlyoffice_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/onlyoffice)
+onlyoffice_force_dark=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/onlyoffice/onlyoffice-force-dark)
+grep -Fq 'DesktopEditors.conf' <<<"$onlyoffice_launcher" || fail 'ONLYOFFICE launcher does not target its upstream settings file'
+grep -Fq '/usr/lib/onlyoffice/onlyoffice-force-dark' <<<"$onlyoffice_launcher" || fail 'ONLYOFFICE launcher does not invoke its dark-theme helper'
+grep -Fq 'UITheme=theme-dark' <<<"$onlyoffice_force_dark" || fail 'ONLYOFFICE helper does not force its upstream dark theme'
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
@@ -1406,6 +1458,11 @@ calamares_mount=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" 
 calamares_bootloader=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/modules/bootloader.conf)
 grub_windows=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/default/grub.d/40-dinx-windows.cfg)
 grep -Fq 'subvolume: ""' <<<"$calamares_mount" || fail 'Calamares Btrfs existing-subvolume guard is missing'
+grep -Fq 'extraMounts:' <<<"$calamares_mount" || fail 'Calamares target pseudo-filesystem mounts are missing'
+grep -Fq 'mountPoint: /proc' <<<"$calamares_mount" || fail 'Calamares target proc mount is missing'
+grep -Fq 'mountPoint: /sys' <<<"$calamares_mount" || fail 'Calamares target sys mount is missing'
+grep -Fq 'mountPoint: /dev' <<<"$calamares_mount" || fail 'Calamares target dev mount is missing'
+grep -Fq 'mountPoint: /run' <<<"$calamares_mount" || fail 'Calamares target run mount is missing'
 grep -Fq 'umask=0077' <<<"$calamares_mount" || fail 'Calamares EFI mount options are missing'
 grep -Fq 'efiBootloaderId: "DINX"' <<<"$calamares_bootloader" || fail 'Calamares DINX EFI bootloader ID is missing'
 grep -Fq 'installEFIFallback: true' <<<"$calamares_bootloader" || fail 'Calamares EFI fallback is not enabled'
@@ -1447,10 +1504,21 @@ installer_seed=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "
 grep -Fq 'Name=Install DINX' <<<"$installer_seed" || fail 'live-user desktop shortcut English name is missing'
 grep -Fq 'Name[pt_BR]=Instalar DINX' <<<"$installer_seed" || fail 'live-user desktop shortcut Portuguese name is missing'
 grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' <<<"$installer_seed" || fail 'live-user desktop shortcut does not use the DINX launcher'
+grep -Fqx 'X-KDE-Trusted=true' <<<"$installer_seed" || fail 'live-user desktop shortcut omits compatible trusted-launcher metadata'
+installer_seed_listing=$(grep -m1 -F 'squashfs-root/etc/skel/Desktop/Install DINX.desktop' <<<"$manifest")
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$installer_seed_listing" || fail 'live-user desktop shortcut is not executable in the ISO skeleton'
+approval_helper_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-approve-desktop-launcher' <<<"$manifest")
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$approval_helper_listing" || fail 'Pearl launcher approval helper is not executable in the ISO'
+approval_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-approve-desktop-launcher)
+grep -Fq 'target_bytes != trusted_bytes' <<<"$approval_helper" || fail 'Pearl launcher approval is not bound to the package-owned template bytes'
+grep -Fq 'hashlib.sha256(target_bytes).hexdigest()' <<<"$approval_helper" || fail 'Pearl launcher approval does not bind the exact shortcut digest'
+grep -Fq 'os.chmod(target, 0o755, follow_symlinks=False)' <<<"$approval_helper" || fail 'Pearl launcher approval does not repair executable mode safely'
 live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
 grep -Fq 'xdg-user-dir DESKTOP' <<<"$live_session_launcher" || fail 'live session does not resolve the user desktop directory'
-grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' <<<"$live_session_launcher" || fail 'live session does not seed its pre-existing user from /etc/skel'
-grep -Fq 'mv -n "$installer_tmp" "$installer_desktop"' <<<"$live_session_launcher" || fail 'live installer shortcut seeding is not atomic and non-overwriting'
+grep -Fq 'installer_seed="/etc/skel/Desktop/Install DINX.desktop"' <<<"$live_session_launcher" || fail 'live session does not seed its pre-existing user from /etc/skel'
+grep -Fq 'mv -n -- "$installer_tmp" "$installer_desktop"' <<<"$live_session_launcher" || fail 'live installer shortcut seeding is not atomic and non-overwriting'
+grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' <<<"$live_session_launcher" || fail 'live session does not preapprove the trusted installer shortcut for Pearl Desktop'
+grep -Fq 'DINX_LIVE_SESSION:-' <<<"$live_session_launcher" || fail 'automatic Pearl launcher approval is not restricted to the live session'
 deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
 grep -Fq 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop launcher is missing'
 grep -Fq 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty desktop URI command is incorrect'

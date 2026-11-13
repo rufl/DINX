@@ -8,6 +8,8 @@ pearl_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.
 pearl_pkg="$root/distro/packages/pearl/PKGBUILD"
 pearl_install="$root/distro/packages/pearl/pearl.install"
 aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
+desktop_approval="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-approve-desktop-launcher"
+desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
 graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
 graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
 greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
@@ -48,7 +50,7 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$theme_sync" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
+  "$aqueous_wrapper" "$desktop_approval" "$desktop_installer" "$theme_sync" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
   "$pearl_shell" "$wizard_source" \
   "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
   "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
@@ -74,6 +76,10 @@ done
 [[ -x "$greeter_wrapper" ]] || fail 'Pearl Greeter wrapper is not executable'
 [[ -x "$aqueous_wrapper" ]] || fail 'Aqueous session wrapper is not executable'
 sh -n "$aqueous_wrapper" || fail 'Aqueous session wrapper has invalid shell syntax'
+[[ -x "$desktop_installer" ]] || fail 'live installer desktop shortcut is not executable'
+[[ -x "$desktop_approval" ]] || fail 'Pearl desktop approval helper is not executable'
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), sys.argv[1], "exec")' "$desktop_approval" \
+  || fail 'Pearl desktop approval helper has invalid Python syntax'
 [[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
 [[ -x "$theme_sync" ]] || fail 'GTK/Qt session theme synchronizer is not executable'
 sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
@@ -229,6 +235,16 @@ if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrappe
 fi
 grep -Fq 'xdg-user-dirs-update' "$aqueous_wrapper" \
   || fail 'Aqueous session does not initialize XDG user directories'
+grep -Fq '[ "${DINX_LIVE_SESSION:-}" = "1" ]' "$aqueous_wrapper" \
+  || fail 'automatic Pearl launcher approval is not restricted to the disposable live session'
+grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' "$aqueous_wrapper" \
+  || fail 'Aqueous live session does not run the Pearl desktop approval helper'
+grep -Fq '"$installer_desktop" "$installer_seed"' "$aqueous_wrapper" \
+  || fail 'Aqueous live session does not bind launcher approval to the package-owned template'
+grep -Fq 'target_bytes != trusted_bytes' "$desktop_approval" \
+  || fail 'Pearl desktop approval helper does not require exact package-owned launcher bytes'
+grep -Fq 'hashlib.sha256(target_bytes).hexdigest()' "$desktop_approval" \
+  || fail 'Pearl desktop approval helper does not bind approval to the launcher digest'
 if grep -Eq 'GTK_THEME=|set -gx GTK_THEME' "$aqueous_wrapper" \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh" \
   "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"; then
@@ -403,6 +419,61 @@ jq -e '.bar.edge == "top" and .dock.edge == "bottom" and .theme.variant == "dark
   "$pearl_shell_top_test/config/pearl/preferences.json" >/dev/null \
   || fail 'Pearl top-bar selection did not preserve the bar edge and opposite dock edge'
 printf 'pearl_bar_edge_smoke top=true bottom=true exclusive_edge=selected\n'
+approval_test="$pearl_shell_test/desktop-approval"
+approval_home="$approval_test/home"
+approval_target="$approval_test/Desktop 42/Install DINX.desktop"
+approval_state="$approval_home/state/pearl/desktop-launchers.json"
+mkdir -p "$(dirname -- "$approval_target")" "$(dirname -- "$approval_state")"
+cp -- "$desktop_installer" "$approval_target"
+chmod 0644 "$approval_target"
+jq -n --arg uri 'file:///custom.desktop' \
+  '{version:1,approvals:[{uri:$uri,digest:([range(0;64)] | map(48) | implode)}],unrelated:{keep:true}}' \
+  >"$approval_state"
+env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
+  "$desktop_approval" "$approval_target" "$desktop_installer"
+approval_uri=$(python3 -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).resolve(strict=True).as_uri())' "$approval_target")
+approval_digest=$(sha256sum "$approval_target" | cut -d ' ' -f1)
+jq -e --arg uri "$approval_uri" --arg digest "$approval_digest" \
+  '.version == 1 and .unrelated.keep == true and ([.approvals[] | select(.uri == "file:///custom.desktop")] | length == 1) and ([.approvals[] | select(.uri == $uri and .digest == $digest)] | length == 1)' \
+  "$approval_state" >/dev/null \
+  || fail 'DINX desktop shortcut approval did not preserve existing state or bind exact URI/content'
+[[ $(stat -c '%a' "$approval_target") == 755 ]] \
+  || fail 'DINX desktop approval helper did not repair the shortcut executable mode'
+[[ $(stat -c '%a' "$approval_state") == 600 ]] \
+  || fail 'Pearl launcher approvals are not written with private permissions'
+approval_state_before=$(sha256sum "$approval_state" | cut -d ' ' -f1)
+env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
+  "$desktop_approval" "$approval_target" "$desktop_installer"
+[[ $(sha256sum "$approval_state" | cut -d ' ' -f1) == "$approval_state_before" ]] \
+  || fail 'DINX desktop approval helper rewrote unchanged Pearl state'
+printf '\n# user edit\n' >>"$approval_target"
+if env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
+  "$desktop_approval" "$approval_target" "$desktop_installer" 2>"$approval_test/modified.log"; then
+  fail 'DINX desktop approval helper approved modified shortcut contents'
+fi
+grep -Fq 'leaving it unapproved' "$approval_test/modified.log" \
+  || fail 'DINX desktop approval helper did not explain why modified content was rejected'
+[[ $(sha256sum "$approval_state" | cut -d ' ' -f1) == "$approval_state_before" ]] \
+  || fail 'DINX desktop approval helper changed Pearl state for a modified shortcut'
+symlink_target="$approval_test/Install DINX symlink.desktop"
+ln -s "$desktop_installer" "$symlink_target"
+if env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
+  "$desktop_approval" "$symlink_target" "$desktop_installer" >/dev/null 2>&1; then
+  fail 'DINX desktop approval helper approved a launcher symlink'
+fi
+[[ $(sha256sum "$approval_state" | cut -d ' ' -f1) == "$approval_state_before" ]] \
+  || fail 'DINX desktop approval helper changed Pearl state for a symlink launcher'
+corrupt_home="$approval_test/corrupt-home"
+mkdir -p "$corrupt_home/state/pearl"
+printf '%s' '{invalid' >"$corrupt_home/state/pearl/desktop-launchers.json"
+cp -- "$desktop_installer" "$approval_target"
+if env HOME="$corrupt_home" XDG_STATE_HOME="$corrupt_home/state" \
+  "$desktop_approval" "$approval_target" "$desktop_installer" >/dev/null 2>&1; then
+  fail 'DINX desktop approval helper accepted corrupt Pearl launcher state'
+fi
+[[ $(cat "$corrupt_home/state/pearl/desktop-launchers.json") == '{invalid' ]] \
+  || fail 'DINX desktop approval helper overwrote corrupt Pearl state'
+printf 'pearl_desktop_launcher executable=true preapproved=true exact_digest=true idempotent=true modified_rejected=true symlink_rejected=true corrupt_state_preserved=true\n'
 qemu_screen="$pearl_shell_test/qemu-client-window.ppm"
 printf 'P6\n2 2\n255\n\377\377\377\377\377\377\377\377\377\377\377\377' >"$qemu_screen"
 cat >"$pearl_shell_test/bin/tesseract" <<'SH'
@@ -454,4 +525,4 @@ grep -Fq 'Exec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock a
 grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock TryExec is missing'
 bash "$root/scripts/smoke_dinx_session.sh"
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true xwayland_csd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true live_lock=false live_blank=true installed_lock=true idle=true before_suspend_blank=true energy=true launcher=true hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true xwayland_csd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true live_lock=false live_blank=true installed_lock=true idle=true before_suspend_blank=true energy=true launcher=true desktop_launcher=executable+preapproved hierarchy=true supervisor=true direct_dinit=true systemd=false\n'

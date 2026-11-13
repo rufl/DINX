@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+# Haruna activates its own KColorScheme after Qt starts, so qt6ct alone cannot
+# keep it dark. Set only Haruna's application-local preference.
+config_root=${XDG_CONFIG_HOME:-"$HOME/.config"}
+settings_dir=$config_root/haruna
+settings_file=$settings_dir/haruna.conf
+
+umask 077
+mkdir -p -- "$settings_dir"
+if [ -L "$settings_file" ]; then
+    printf 'haruna: refusing symlinked settings file: %s\n' "$settings_file" >&2
+else
+    kwriteconfig6 --file "$settings_file" --group General --key ColorScheme 'DINX Dark'
+fi
+
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE=fusion
+exec /usr/bin/haruna "$@"

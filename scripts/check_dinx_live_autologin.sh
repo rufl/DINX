@@ -174,10 +174,11 @@ grep -Fqx 'depends-on       = login.target' "$root_greetd_service" \
   || fail 'live-only autologin dependency leaked into the installed greetd service'
 [[ ! -e "$root_policy" ]] \
   || fail 'live-only Polkit authorization leaked into the installed rootfs overlay'
-grep -Fq 'subject.user === "dinx" && subject.local' "$live_policy" \
-  || fail 'live Polkit rule is not scoped to the local dinx user'
-! grep -Fq 'subject.active' "$live_policy" \
-  || fail 'live Polkit rule still requires an elogind-active session'
+grep -Fq 'subject.user === "dinx"' "$live_policy" \
+  || fail 'live Polkit rule is not scoped to the dinx live user'
+if grep -Eq 'subject\.(active|local)' "$live_policy"; then
+  fail 'live Polkit rule still requires elogind session state'
+fi
 grep -Fq 'return polkit.Result.YES;' "$live_policy" \
   || fail 'live Polkit rule does not authorize without credentials'
 if grep -Eq 'auth_(admin|self)' "$live_policy"; then

@@ -208,7 +208,7 @@ mirrorlist is editable for future mirrors.
 
 From the live desktop:
 
-1. Open the **Install DINX** desktop shortcut or choose **Install DINX** from the application launcher; the duplicate upstream Calamares entry is hidden.
+1. Open the **Install DINX** desktop shortcut or choose **Install DINX** from the application launcher; the duplicate upstream Calamares entry is hidden. On the live Pearl Desktop, the package-owned shortcut is executable and approved before the shell starts, so first launch requires no separate “Allow launching” step.
 2. If neither shortcut is available, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it preserves the Wayland/D-Bus session for polkit, checks prerequisites and displays authorization or startup errors.
 3. Read **Install choices / Opções de instalação** before choosing partitions.
 4. Choose the layout that matches your intent:

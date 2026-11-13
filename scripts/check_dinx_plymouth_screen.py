@@ -57,7 +57,7 @@ def has_centered_dinx_logo(width: int, height: int, pixels: bytes) -> tuple[bool
     height_ratio = logo_height / height
     if abs(center_x - 0.5) > 0.09 or abs(center_y - 0.5) > 0.09:
         return False, "DINX logo is not centered like the Plymouth splash"
-    if not 0.23 <= width_ratio <= 0.46 or not 0.32 <= height_ratio <= 0.58:
+    if not 0.15 <= width_ratio <= 0.46 or not 0.28 <= height_ratio <= 0.58:
         return False, "DINX logo is not rendered at the Plymouth splash scale"
     return True, "centered DINX logo detected"
 

@@ -281,10 +281,21 @@ grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences reta
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
 jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == ""' "$pearl_preferences" >/dev/null \
   || fail 'Fresh Pearl preferences do not default to Pearl Material dark'
-grep -Fq 'const char *theme_name[] = { "dinx-dark", "dinx-light", "material-dark", "material-light" };' "$wizard_source" \
+grep -Fq 'const char *theme_name[] = { "material", "skeuos", "orchis" };' "$wizard_source" \
   || fail 'Pearl first-run theme selection order changed'
-grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+grep -Fq 'printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);' "$wizard_source" \
+  || fail 'Pearl first-run wizard does not emit theme, variant and corner choices'
+if grep -Fq 'dinx-dark' "$wizard_source"; then
+  fail 'Pearl first-run wizard still offers the retired DINX theme choices'
+fi
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not default to Pearl Material dark'
+grep -Fq 'package_id="dinx.skeuos-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not map the Skeuos choice to its Pearl package'
+grep -Fq 'package_id="dinx.orchis-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not map the Orchis choice to its Pearl package'
+grep -Fq 'Skeuos-Blue-Dark-Square' "$theme_sync" \
+  || fail 'Theme sync does not honor the ported GTK themes'
 wizard_sha256=$(sha256sum "$wizard_source" | cut -d ' ' -f 1)
 grep -Fq "'$wizard_sha256'" "$pearl_pkg" || fail 'Pearl first-run wizard source checksum is stale'
 grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'
@@ -406,7 +417,7 @@ fi
 for source in "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source"; do
   grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$source" || fail "internal app does not force the DINX dark scheme: $source"
 done
-grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not default to Pearl Material dark'
 grep -Fq "background: ${dark_token[mSurface]}" "$dinitui_source" || fail 'DinitUI output surface does not use DINX background'
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinitui_source" || fail 'DinitUI output text does not use DINX foreground'

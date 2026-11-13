@@ -18,7 +18,7 @@ license=('MIT')
 depends=('glibc' 'bash' 'coreutils' 'gawk')
 options=('!strip')
 source=(
-  "PatchyLinux.AppImage::${PATCHY_SOURCE_URL}"
+  "PatchyLinux-${pkgver}.AppImage::${PATCHY_SOURCE_URL}"
   "LICENSE::${PATCHY_LICENSE_URL}"
   'patchy'
   'patchy-force-darkest'
@@ -33,7 +33,7 @@ sha256sums=(
 )
 
 package() {
-  install -Dm755 "$srcdir/PatchyLinux.AppImage" \
+  install -Dm755 "$srcdir/PatchyLinux-${pkgver}.AppImage" \
     "$pkgdir/opt/patchy/PatchyLinux.AppImage"
   install -Dm755 "$srcdir/patchy" "$pkgdir/usr/bin/patchy"
   install -Dm755 "$srcdir/patchy-force-darkest" \

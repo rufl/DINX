@@ -299,6 +299,7 @@ required_paths=(
   usr/share/icons/hicolor/256x256/apps/deckcraft.png
   usr/share/licenses/deckcraft/LICENSE-MIT
   usr/share/licenses/deckcraft/LICENSE-APACHE
+  usr/share/mime/packages/ai.storyteller.deckcraft.xml
   usr/bin/pdfcraft
   opt/pdfcraft/pdfcraft.AppImage
   usr/share/applications/pdfcraft.desktop
@@ -311,6 +312,7 @@ required_paths=(
   usr/share/icons/hicolor/256x256/apps/transit.png
   usr/share/licenses/transit/LICENSE-MIT
   usr/share/licenses/transit/LICENSE-APACHE
+  usr/share/mime/packages/transit.xml
   usr/bin/zenkai
   opt/zenkai/zenkai.AppImage
   usr/share/applications/zenkai.desktop

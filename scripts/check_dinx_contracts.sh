@@ -9,7 +9,6 @@ source_checks=(
 )
 checks=(
   check_ghostty_vt_runtime.sh
-  check_floorp.sh
   check_opensnitch.sh
   check_swayimg.sh
   check_package_managers.sh

@@ -7,21 +7,33 @@ source_env="$startdir/source.env"
 : "${TRANSIT_VERSION:?missing TRANSIT_VERSION}"
 : "${TRANSIT_SOURCE_URL:?missing TRANSIT_SOURCE_URL}"
 : "${TRANSIT_SOURCE_SHA256:?missing TRANSIT_SOURCE_SHA256}"
+: "${TRANSIT_LICENSE_MIT_URL:?missing TRANSIT_LICENSE_MIT_URL}"
+: "${TRANSIT_LICENSE_MIT_SHA256:?missing TRANSIT_LICENSE_MIT_SHA256}"
+: "${TRANSIT_LICENSE_APACHE_URL:?missing TRANSIT_LICENSE_APACHE_URL}"
+: "${TRANSIT_LICENSE_APACHE_SHA256:?missing TRANSIT_LICENSE_APACHE_SHA256}"
+: "${TRANSIT_ICON_URL:?missing TRANSIT_ICON_URL}"
+: "${TRANSIT_ICON_SHA256:?missing TRANSIT_ICON_SHA256}"
 pkgver="${TRANSIT_VERSION}"
 pkgrel=1
 pkgdesc="Digital audio workstation written in Rust"
 arch=('x86_64')
 url='https://github.com/transit-audio/transit'
-license=('Apache-2.0')
+license=('MIT' 'Apache-2.0')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
   "transit-${pkgver}-x86_64.AppImage::${TRANSIT_SOURCE_URL}"
+  "LICENSE-MIT::${TRANSIT_LICENSE_MIT_URL}"
+  "LICENSE-APACHE::${TRANSIT_LICENSE_APACHE_URL}"
+  "transit-256.png::${TRANSIT_ICON_URL}"
   'transit'
   'transit.desktop'
 )
 sha256sums=(
   "${TRANSIT_SOURCE_SHA256}"
+  "${TRANSIT_LICENSE_MIT_SHA256}"
+  "${TRANSIT_LICENSE_APACHE_SHA256}"
+  "${TRANSIT_ICON_SHA256}"
   '11a0107795d89432af374028a08e998a45933cd15eb18fcb8dd333b067de8294'
   '4cff69e46d8a825e8f3131b2ab9df65ebf914d34f74a818ae8cac2f1bf0b3e0d'
 )
@@ -32,4 +44,16 @@ package() {
   install -Dm755 "$srcdir/transit" "$pkgdir/usr/bin/transit"
   install -Dm644 "$srcdir/transit.desktop" \
     "$pkgdir/usr/share/applications/transit.desktop"
+  install -Dm644 "$srcdir/LICENSE-MIT" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 "$srcdir/LICENSE-APACHE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+  install -Dm644 "$srcdir/transit-256.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/transit.png"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
+Transit ${pkgver} upstream source and build information:
+https://github.com/transit-audio/transit/tree/v${pkgver}
+
+The DINX package redistributes the upstream x86_64 AppImage without modification.
+EOF
 }

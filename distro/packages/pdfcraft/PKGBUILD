@@ -7,6 +7,12 @@ source_env="$startdir/source.env"
 : "${PDFCRAFT_VERSION:?missing PDFCRAFT_VERSION}"
 : "${PDFCRAFT_SOURCE_URL:?missing PDFCRAFT_SOURCE_URL}"
 : "${PDFCRAFT_SOURCE_SHA256:?missing PDFCRAFT_SOURCE_SHA256}"
+: "${PDFCRAFT_LICENSE_MIT_URL:?missing PDFCRAFT_LICENSE_MIT_URL}"
+: "${PDFCRAFT_LICENSE_MIT_SHA256:?missing PDFCRAFT_LICENSE_MIT_SHA256}"
+: "${PDFCRAFT_LICENSE_APACHE_URL:?missing PDFCRAFT_LICENSE_APACHE_URL}"
+: "${PDFCRAFT_LICENSE_APACHE_SHA256:?missing PDFCRAFT_LICENSE_APACHE_SHA256}"
+: "${PDFCRAFT_ICON_URL:?missing PDFCRAFT_ICON_URL}"
+: "${PDFCRAFT_ICON_SHA256:?missing PDFCRAFT_ICON_SHA256}"
 pkgver="${PDFCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="The open-source PDF workbench"
@@ -17,11 +23,17 @@ depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
   "pdfcraft-${pkgver}-x86_64.AppImage::${PDFCRAFT_SOURCE_URL}"
+  "LICENSE-MIT::${PDFCRAFT_LICENSE_MIT_URL}"
+  "LICENSE-APACHE::${PDFCRAFT_LICENSE_APACHE_URL}"
+  "pdfcraft-256.png::${PDFCRAFT_ICON_URL}"
   'pdfcraft'
   'pdfcraft.desktop'
 )
 sha256sums=(
   "${PDFCRAFT_SOURCE_SHA256}"
+  "${PDFCRAFT_LICENSE_MIT_SHA256}"
+  "${PDFCRAFT_LICENSE_APACHE_SHA256}"
+  "${PDFCRAFT_ICON_SHA256}"
   '2aa97682ec262a3957d67ad08aba29f0a216f92ac059b2b7097d12966d45cb5e'
   'f9378572eaff9eafaf28860081d45fe1dfef4e10dff58d2cccb3ec9ad1f30cf8'
 )
@@ -32,4 +44,16 @@ package() {
   install -Dm755 "$srcdir/pdfcraft" "$pkgdir/usr/bin/pdfcraft"
   install -Dm644 "$srcdir/pdfcraft.desktop" \
     "$pkgdir/usr/share/applications/pdfcraft.desktop"
+  install -Dm644 "$srcdir/LICENSE-MIT" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 "$srcdir/LICENSE-APACHE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+  install -Dm644 "$srcdir/pdfcraft-256.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/pdfcraft.png"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
+PdfCraft ${pkgver} upstream source and build information:
+https://github.com/storytold/pdfcraft/tree/v${pkgver}
+
+The DINX package redistributes the upstream x86_64 AppImage without modification.
+EOF
 }

@@ -7,6 +7,10 @@ source_env="$startdir/source.env"
 : "${PAINTFE_VERSION:?missing PAINTFE_VERSION}"
 : "${PAINTFE_SOURCE_URL:?missing PAINTFE_SOURCE_URL}"
 : "${PAINTFE_SOURCE_SHA256:?missing PAINTFE_SOURCE_SHA256}"
+: "${PAINTFE_LICENSE_URL:?missing PAINTFE_LICENSE_URL}"
+: "${PAINTFE_LICENSE_SHA256:?missing PAINTFE_LICENSE_SHA256}"
+: "${PAINTFE_ICON_URL:?missing PAINTFE_ICON_URL}"
+: "${PAINTFE_ICON_SHA256:?missing PAINTFE_ICON_SHA256}"
 pkgver="${PAINTFE_VERSION}"
 pkgrel=1
 pkgdesc="Fast, lightweight raster image editor built in Rust"
@@ -17,11 +21,15 @@ depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
   "paintfe-${pkgver}-x86_64.AppImage::${PAINTFE_SOURCE_URL}"
+  "LICENSE.md::${PAINTFE_LICENSE_URL}"
+  "paintfe-256.png::${PAINTFE_ICON_URL}"
   'paintfe'
   'paintfe.desktop'
 )
 sha256sums=(
   "${PAINTFE_SOURCE_SHA256}"
+  "${PAINTFE_LICENSE_SHA256}"
+  "${PAINTFE_ICON_SHA256}"
   'd42c6e0aad69d7c2300680e715a57977c0b5fe93f95fb6d4900f6ccc9cfba9c5'
   '6c5cfa7be3c70ad489713a459e528acfa3984037b9ffe0b1edec7b09dffea3ac'
 )
@@ -32,4 +40,14 @@ package() {
   install -Dm755 "$srcdir/paintfe" "$pkgdir/usr/bin/paintfe"
   install -Dm644 "$srcdir/paintfe.desktop" \
     "$pkgdir/usr/share/applications/paintfe.desktop"
+  install -Dm644 "$srcdir/LICENSE.md" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
+  install -Dm644 "$srcdir/paintfe-256.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/paintfe.png"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/doc/$pkgname/SOURCE" <<EOF
+PaintFE ${pkgver} upstream source and build information:
+https://github.com/kylejckson/PaintFE/tree/v${pkgver}
+
+The DINX package redistributes the upstream x86_64 AppImage without modification.
+EOF
 }

@@ -13,6 +13,7 @@ live-session:
   user-services:
     - dbus
     - pipewire
+    - firefox
     - pipewire-pulse
     - wireplumber
 
@@ -66,10 +67,10 @@ rootfs:
     - qt6ct
     - shikane
     - wdisplays
-    - impasto
     - krita
     - adw-gtk-theme
     - papirus-icon-theme
+    - paintfe
     - wordcraft
     - gridcraft
     - deckcraft
@@ -79,7 +80,6 @@ rootfs:
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
-    - floorp
     - pipewire
     - pipewire-pulse
     - zenity
@@ -132,7 +132,6 @@ rootfs:
     - shelly
     - gapless
     - swayimg
-    - topgrade
     - swayidle
     - swaylock
     - wlopm

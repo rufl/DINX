@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=PaintFE
+Name[pt_BR]=PaintFE
+GenericName=Image Editor
+GenericName[pt_BR]=Editor de Imagens
+Comment=Fast, lightweight raster image editor built in Rust
+Comment[pt_BR]=Editor de imagens raster rápido e leve em Rust
+Exec=paintfe %F
+TryExec=paintfe
+Icon=paintfe
+Terminal=false
+Categories=Graphics;2DGraphics;RasterGraphics;
+StartupNotify=true

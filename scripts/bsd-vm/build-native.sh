@@ -74,6 +74,9 @@ EOF
   log "== pkg create $name exit=$?"
 }
 
+if [ ! -d "$W/greetd" ]; then
+  git clone --depth 1 https://github.com/kennylevinsen/greetd.git "$W/greetd" >>"$LOG" 2>&1
+fi
 apply_freebsd_patches
 python3 "$W/patch-freebsd.py" "$W" >>"$LOG" 2>&1 || log "== patch-freebsd.py failed"
 
@@ -147,9 +150,6 @@ stamp pearl-end
 
 stamp greetd-start
 # --- greetd --------------------------------------------------------------
-if [ ! -d "$W/greetd" ]; then
-  git clone --depth 1 https://github.com/kennylevinsen/greetd.git "$W/greetd" >>"$LOG" 2>&1
-fi
 if [ -d "$W/greetd" ]; then
   log "== building greetd (cargo)"
   (cd "$W/greetd" && cargo build --release) >>"$LOG" 2>&1

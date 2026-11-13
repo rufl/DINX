@@ -16,6 +16,8 @@ applied = []
 
 
 def patch(path, old, new, marker):
+    if not os.path.exists(path):
+        return
     with open(path, "r", encoding="utf-8") as f:
         src = f.read()
     if marker in src:

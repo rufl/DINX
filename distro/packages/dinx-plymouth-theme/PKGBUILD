@@ -14,7 +14,7 @@ source=(
   'dinx.script'
   'dinx-plymouth-quit'
   'dinx-plymouth-quit.service'
-  "dinx-logo.png::file://$startdir/../../iso/iso-profiles/dinx/root-overlay/usr/share/grub/themes/artix/logo.png"
+  "dinx-logo.png"
   'vconsole.conf'
 )
 sha256sums=(

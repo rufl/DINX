@@ -291,3 +291,69 @@ if "/dev/ttyv" not in src:
     src = src.replace('format!("/dev/tty{vt}")', 'format!("/dev/ttyv{vt}")')
     open(p, "w", encoding="utf-8").write(src)
     applied.append(p)
+
+# 19. greetd: Linux VT ioctl numbers are hardcoded; on FreeBSD the kernel vt
+# and the compositor DRM backend manage VTs, so stub them out.
+p = os.path.join(W, "greetd/greetd/src/terminal/ioctl.rs")
+src = open(p, encoding="utf-8").read()
+old = """ioctl_write_int_bad!(kd_setmode, KDSETMODE);
+ioctl_write_int_bad!(vt_activate, VT_ACTIVATE);
+ioctl_write_int_bad!(vt_waitactive, VT_WAITACTIVE);
+ioctl_write_ptr_bad!(vt_setmode, VT_SETMODE, vt_mode);
+ioctl_write_ptr_bad!(vt_setactivate, VT_SETACTIVATE, vt_setactivate);
+ioctl_read_bad!(vt_openqry, VT_OPENQRY, i64);
+ioctl_read_bad!(vt_getstate, VT_GETSTATE, vt_state);
+ioctl_write_int_bad!(term_tiocsctty, TIOCSCTTY);"""
+new = """#[cfg(not(target_os = "freebsd"))]
+ioctl_write_int_bad!(kd_setmode, KDSETMODE);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_write_int_bad!(vt_activate, VT_ACTIVATE);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_write_int_bad!(vt_waitactive, VT_WAITACTIVE);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_write_ptr_bad!(vt_setmode, VT_SETMODE, vt_mode);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_write_ptr_bad!(vt_setactivate, VT_SETACTIVATE, vt_setactivate);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_read_bad!(vt_openqry, VT_OPENQRY, i64);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_read_bad!(vt_getstate, VT_GETSTATE, vt_state);
+#[cfg(not(target_os = "freebsd"))]
+ioctl_write_int_bad!(term_tiocsctty, TIOCSCTTY);
+
+#[cfg(target_os = "freebsd")]
+pub unsafe fn kd_setmode(_fd: i32, _mode: i32) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn vt_activate(_fd: i32, _vt: i32) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn vt_waitactive(_fd: i32, _vt: i32) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn vt_setmode(_fd: i32, _m: *mut vt_mode) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn vt_setactivate(_fd: i32, _m: *mut vt_setactivate) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn vt_openqry(_fd: i32, _v: *mut i64) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn vt_getstate(_fd: i32, _s: *mut vt_state) -> nix::Result<()> { Ok(()) }
+#[cfg(target_os = "freebsd")]
+pub unsafe fn term_tiocsctty(_fd: i32, _arg: i32) -> nix::Result<()> { Ok(()) }"""
+if "target_os = \"freebsd\"" not in src:
+    if old not in src:
+        sys.exit("PATCH PATTERN MISSING in greetd ioctl.rs")
+    open(p, "w", encoding="utf-8").write(src.replace(old, new, 1))
+    applied.append(p)
+
+# 20. --as-needed drops libdinxcompat (no directly referenced symbols);
+# force DT_NEEDED so the crt/__progname shim is actually loaded.
+for p, old, new in [
+    (os.path.join(W, "Aqueous/compositor/build.zig"),
+     'river.root_module.linkSystemLibrary("dinxcompat", .{});',
+     'river.root_module.linkSystemLibrary("dinxcompat", .{ .needed = true });'),
+    (os.path.join(W, "pearl/build.zig"),
+     'm.linkSystemLibrary("dinxcompat", .{});',
+     'm.linkSystemLibrary("dinxcompat", .{ .needed = true });'),
+]:
+    s = open(p, encoding="utf-8").read()
+    if old in s:
+        open(p, "w", encoding="utf-8").write(s.replace(old, new))
+        applied.append(p)

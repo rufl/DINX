@@ -156,6 +156,14 @@ rootfs:
       - firewalld-dinit
       - dinx-firewalld-dinit
       - opensnitch-dinit
+    - firefox
+    - paintfe
+    - wordcraft
+    - gridcraft
+    - deckcraft
+    - pdfcraft
+    - transit
+    - zenkai
 livefs:
   packages:
     - artix-grub-live

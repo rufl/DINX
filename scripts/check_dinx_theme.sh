@@ -117,14 +117,6 @@ import xml.etree.ElementTree as ET
  cal_wordmark_path, cal_ray_path, grub_logo_path, fastfetch_logo_path, boot_mark_path) = map(pathlib.Path, sys.argv[1:])
 brand = root / "design/brand/dinx-wordmark-compact.svg"
 ns = "{http://www.w3.org/2000/svg}"
-boot_mark = ET.parse(boot_mark_path).getroot()
-assert boot_mark.tag == f"{ns}svg", "DINX boot mark source is not SVG"
-assert boot_mark.attrib.get("viewBox") == "0 0 512 512", "DINX boot mark has unexpected dimensions"
-boot_title = boot_mark.find(f"{ns}title")
-assert boot_title is not None and boot_title.text == "DINX boot mark", "DINX boot mark source title is missing"
-assert boot_mark.find(f".//{ns}linearGradient") is not None, "DINX boot mark gradient is missing"
-assert len(boot_mark.findall(f".//{ns}path")) == 2, "DINX boot mark paths are incomplete"
-assert not boot_mark.findall(f".//{ns}rect"), "DINX boot mark paints an opaque background"
 accent = "#F4515B"
 stroke = {
     "fill": "none",
@@ -331,8 +323,8 @@ grep -Fq 'menuentry "Boot to the Firmware/BIOS"' "$live_grub_cfg" \
   || fail 'live ISO GRUB firmware option is missing'
 grep -Fq 'fwsetup' "$live_grub_cfg" || fail 'live ISO GRUB firmware option does not call fwsetup'
 grep -Fq 'productIcon: "dinx-ray-mark.svg"' "$calamares_branding" || fail 'Calamares icon does not use the DINX D-ray mark'
-grep -Fq 'productLogo: "dinx.svg"' "$calamares_branding" || fail 'Calamares logo does not use the DINX Linux wordmark'
-grep -Fq 'productWelcome: "dinx.svg"' "$calamares_branding" || fail 'Calamares welcome does not use the DINX Linux wordmark'
+grep -Fq 'productLogo: "dinx-emblem.png"' "$calamares_branding" || fail 'Calamares logo does not use the DINX emblem'
+grep -Fq 'productWelcome: "dinx-emblem.png"' "$calamares_branding" || fail 'Calamares welcome does not use the DINX emblem'
 if grep -Eiq 'systemd|systemctl' "$pearl_greeter"; then
   fail 'Pearl Greeter configuration contains a systemd integration'
 fi

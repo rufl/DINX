@@ -529,6 +529,7 @@ required_paths=(
   etc/skel/.config/pearl/preferences.json
   etc/calamares/branding/dinx/dinx.svg
   etc/calamares/branding/dinx/dinx-ray-mark.svg
+  etc/calamares/branding/dinx/dinx-emblem.png
   usr/lib/calamares/modules/services-artix/main.py
   usr/lib/calamares/modules/services-artix/module.desc
   usr/lib/calamares/modules/postcfg/main.py
@@ -1422,10 +1423,8 @@ grep -Fq 'SidebarText: "#7f8a9c"' <<<"$calamares_branding_desc" || fail 'DINX Ca
 grep -Fq 'SidebarBackgroundCurrent: "#263249"' <<<"$calamares_branding_desc" || fail 'DINX Calamares sidebar selection is missing'
 grep -Fq 'productIcon: "dinx-ray-mark.svg"' <<<"$calamares_branding_desc" \
   || fail 'Calamares product icon does not use the DINX D-ray mark'
-grep -Fq 'productLogo: "dinx.svg"' <<<"$calamares_branding_desc" \
-  || fail 'Calamares product logo does not use the DINX Linux wordmark'
-grep -Fq 'productWelcome: "dinx.svg"' <<<"$calamares_branding_desc" \
-  || fail 'Calamares welcome does not use the DINX Linux wordmark'
+grep -Fq 'productLogo: "dinx-emblem.png"' <<<"$calamares_branding_desc" \
+  || fail 'Calamares product logo does not use the DINX emblem'
 
 installer_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/dinx-installer.desktop)
 grep -Fq 'Name=Install DINX' <<<"$installer_desktop" || fail 'DINX installer English desktop name is missing'

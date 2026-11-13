@@ -11,8 +11,8 @@ pkgver="${GRIDCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="Fast, native spreadsheets rebuilt in pure Rust"
 arch=('x86_64')
-url='https://github.com/'
-license=('MIT')
+url='https://github.com/storytold/gridcraft'
+license=('MIT' 'Apache-2.0')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
@@ -23,7 +23,7 @@ source=(
 sha256sums=(
   "${GRIDCRAFT_SOURCE_SHA256}"
   '7d71a945294a71520d88f738f5635ac3065394000aea04d32ff576a909b2a2d4'
-  '7b0451a3d9994e8c04d54734386902e1ca34dc46b91937030f7263714c7cee18'
+  '614c6497fbd9826019fd49f0c39f54a420a3f847ca4e34d87535c50758b5e433'
 )
 
 package() {

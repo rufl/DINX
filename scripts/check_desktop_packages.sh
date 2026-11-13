@@ -21,7 +21,6 @@ gparted_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/g
 firewall_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/firewall-config"
 haruna_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
 haruna_scheme="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/color-schemes/DINXDark.colors"
-impasto_wrapper="$root/distro/packages/impasto/impasto"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
@@ -63,9 +62,6 @@ grep -Fq 'exec /usr/bin/haruna "$@"' "$haruna_wrapper" || fail 'Haruna launcher 
 [[ -r "$haruna_scheme" ]] || fail 'DINX KDE color scheme is missing'
 grep -Fqx 'Name=DINX Dark' "$haruna_scheme" || fail 'DINX KDE color scheme has an incorrect name'
 grep -Fqx 'BackgroundNormal=11,13,18' "$haruna_scheme" || fail 'DINX KDE color scheme does not use the dark DINX surface'
-sh -n "$impasto_wrapper" || fail 'Impasto launcher has invalid shell syntax'
-grep -Fq 'name="color-scheme" type="System.Int32">2</setting>' "$impasto_wrapper" \
-  || fail 'Impasto launcher does not force its internal dark color scheme'
 grep -Fq 'pkgver="$HARUNA_VERSION"' "$haruna_recipe" || fail 'Haruna package version is not wired to source.env'
 grep -Fq '${HARUNA_SOURCE_URL}' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
 grep -Fq '"$HARUNA_SOURCE_SHA256"' "$haruna_recipe" || fail 'Haruna checksum is not wired to source.env'
@@ -78,6 +74,13 @@ grep -Fqx 'extra-cmake-modules' "$root/scripts/iso-builder/packages.txt" || fail
 for mime in video/mp4 video/mpeg video/webm video/x-matroska; do
   grep -Fqx "$mime=org.kde.haruna.desktop;" "$mimeapps" || fail "Haruna is not the default video handler for $mime"
 done
+for mime in text/html application/xhtml+xml x-scheme-handler/http x-scheme-handler/https; do
+  grep -Fqx "$mime=firefox.desktop;" "$mimeapps" || fail "Firefox is not the default handler for $mime"
+done
+grep -Fqx 'application/pdf=pdfcraft.desktop;' "$mimeapps" || fail 'PdfCraft is not the default PDF handler'
+if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
+  fail 'MIME defaults retain a retired browser or office desktop entry'
+fi
 if grep -Fq 'vlc.desktop' "$mimeapps"; then
   fail 'MIME defaults retain the retired VLC desktop entry'
 fi
@@ -87,7 +90,7 @@ fi
 if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
   fail 'retired KolourPaint desktop override remains in the ISO overlay'
 fi
-for package in patchy blockbench paintfe; do
+for package in patchy blockbench paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai; do
   launcher="$root/distro/packages/$package/$package.desktop"
   [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
@@ -95,10 +98,21 @@ for package in patchy blockbench paintfe; do
     patchy) expected_name=Patchy ;;
     blockbench) expected_name=Blockbench ;;
     paintfe) expected_name=PaintFE ;;
+    wordcraft) expected_name=WordCraft ;;
+    gridcraft) expected_name=GridCraft ;;
+    deckcraft) expected_name=DeckCraft ;;
+    pdfcraft) expected_name=PdfCraft ;;
+    transit) expected_name=Transit ;;
+    zenkai) expected_name=Zenkai ;;
   esac
   grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
   grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
+  case "$package" in
+    paintfe|wordcraft|gridcraft|deckcraft|pdfcraft|transit)
+      grep -Eq '^MimeType=[^;]+;' "$launcher" || fail "$package desktop launcher registers no MIME types"
+      ;;
+  esac
   grep -Fq '!strip' "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
   if grep -Eq "^(Hidden|NoDisplay)=true$" "$launcher"; then
     fail "$package desktop launcher is hidden"

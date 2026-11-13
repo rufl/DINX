@@ -11,8 +11,8 @@ pkgver="${DECKCRAFT_VERSION}"
 pkgrel=1
 pkgdesc="Presentations and slide shows in pure Rust"
 arch=('x86_64')
-url='https://github.com/'
-license=('MIT')
+url='https://github.com/storytold/deckcraft'
+license=('MIT' 'Apache-2.0')
 depends=('glibc' 'gcc-libs')
 options=('!strip')
 source=(
@@ -23,7 +23,7 @@ source=(
 sha256sums=(
   "${DECKCRAFT_SOURCE_SHA256}"
   '5ed65453f84f06744908b740657b82704072096844faacd4cb512b55448b5fcb'
-  'e937ae29a76e3f397c366903c82aab690702ef3a86a4e36835d2c6e9a91a7f4f'
+  'e865584d4c1bec362a8a655102e8e45029f8040209ac000d0ee42b8deaf7319d'
 )
 
 package() {

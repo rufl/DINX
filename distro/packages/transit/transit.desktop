@@ -7,4 +7,5 @@ TryExec=transit
 Icon=transit
 Terminal=false
 Categories=AudioVideo;Audio;Midi;
+MimeType=application/x-transit-session;audio/x-wav;audio/wav;audio/vnd.wave;audio/x-aiff;audio/aiff;audio/flac;audio/x-flac;audio/mpeg;audio/midi;audio/x-midi;
 StartupNotify=true

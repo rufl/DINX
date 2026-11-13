@@ -11,4 +11,5 @@ TryExec=paintfe
 Icon=paintfe
 Terminal=false
 Categories=Graphics;2DGraphics;RasterGraphics;
+MimeType=image/png;image/jpeg;image/webp;image/bmp;image/tiff;image/gif;image/x-paintnet;
 StartupNotify=true

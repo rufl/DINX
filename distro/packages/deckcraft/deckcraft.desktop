@@ -7,4 +7,5 @@ TryExec=deckcraft
 Icon=deckcraft
 Terminal=false
 Categories=Office;Presentation;
+MimeType=application/x-deckcraft;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.openxmlformats-officedocument.presentationml.template;application/vnd.openxmlformats-officedocument.presentationml.slideshow;
 StartupNotify=true

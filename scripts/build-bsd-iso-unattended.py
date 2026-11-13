@@ -123,7 +123,7 @@ def validate_install(args: argparse.Namespace) -> None:
             "-accel",
             accel,
             "-drive",
-            f"file={disk},if=virtio,format=qcow2,cache=writeback",
+            f"file={disk},if=virtio,format=qcow2,cache=unsafe",
             "-drive",
             f"file={iso},media=cdrom,readonly=on",
             "-boot",

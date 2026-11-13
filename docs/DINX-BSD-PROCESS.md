@@ -376,3 +376,17 @@ linker a descartava e o binário morria com `Undefined symbol "__progname"`.
 Correção: `linkSystemLibrary("dinxcompat", .{ .needed = true })` no Aqueous e
 no Pearl (patch #20). Lição geral: shims de símbolos indiretos precisam de
 `DT_NEEDED` explícito.
+
+## 18. Corrupção de UFS: shutdown perdido, não o cache
+
+Sintoma: todo boot de disco instalado parava em `fsck_ufs: Directory N name
+not found / Unknown error 11`, mesmo após install "limpo".
+Causa raiz: o comando `poweroff` enviado pelo gate se perdia no ruído do
+motd; o gate então matava o QEMU a seco (SIGTERM) com o journal SU+J sujo.
+`cache=unsafe` ignora FLUSH, mas com **unmount limpo** o UFS grava o
+superblock clean e o boot seguinte não replays journal — seguro.
+`cache=writeback` respeita flushes porém torna a extração do base.txz
+lenta demais (>21 min vs 142 s com unsafe) — inviável para o gate.
+Correção: manter `cache=unsafe` + shutdown robusto no gate (login root,
+`shutdown -p now` repetido 2x com espera, wait 90 s). Lição: a durabilidade
+vem do unmount limpo do guest, não do modo de cache do QEMU.

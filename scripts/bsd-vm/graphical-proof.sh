@@ -12,7 +12,7 @@ mkdir -p "$OUT"
 rm -f "$QMP"
 
 qemu-system-x86_64 -name dinx-graphical-proof -m 4096 -smp 4 -accel kvm \
-  -drive "file=$DISK,if=virtio,format=qcow2,cache=writeback" \
+  -drive "file=$DISK,if=virtio,format=qcow2,cache=unsafe" \
   -netdev "user,id=net0,hostfwd=tcp::$PORT-:22" -device virtio-net-pci,netdev=net0 \
   -display none -serial null -monitor none \
   -qmp "unix:$QMP,server=on,wait=off" &

@@ -69,7 +69,7 @@ for required_path in \
   grep -Fq "$required_path" "$iso_check" || fail "ISO content gate does not require $required_path"
 done
 grep -Fqx '[Desktop Entry]' "$autostart" || fail 'OpenSnitch autostart desktop entry is malformed'
-grep -Fqx 'Exec=opensnitch-ui --background' "$autostart" \
+grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' "$autostart" \
   || fail 'OpenSnitch UI does not start in the tray/background'
 grep -Fqx 'TryExec=opensnitch-ui' "$autostart" \
   || fail 'OpenSnitch autostart is not guarded by its executable'

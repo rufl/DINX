@@ -68,6 +68,7 @@ rootfs:
     - wdisplays
     - krita
     - adw-gtk-theme
+    - dinx-pearl-themes
     - papirus-icon-theme
     - firefox
     - paintfe

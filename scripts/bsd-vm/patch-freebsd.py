@@ -269,12 +269,15 @@ patch(
 
 # 16. Pearl: AT_CLKTCK auxval is Linux-only; zig's FreeBSD _SC enum only has
 # PAGESIZE, so pass the raw _SC_CLK_TCK value (3, unistd.h).
-patch(
-    os.path.join(W, "pearl/src/cli/server.zig"),
-    "const hz = @as(usize, @intCast(std.c.sysconf(3 /* _SC_CLK_TCK */)));",
-    "const hz = @as(usize, @intCast(std.c.sysconf(3)));",
-    "std.c.sysconf(3)));",
-)
+p = os.path.join(W, "pearl/src/cli/server.zig")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    old = "const hz = @as(usize, @intCast(std.c.sysconf(3 /* _SC_CLK_TCK */)));"
+    if old in src:
+        open(p, "w", encoding="utf-8").write(
+            src.replace(old, "const hz = @as(usize, @intCast(std.c.sysconf(3)));")
+        )
+        applied.append(p)
 
 # 17. Aqueous: link dinxcompat (crt __progname shim) like Pearl does.
 patch(

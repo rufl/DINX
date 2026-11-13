@@ -15,7 +15,7 @@ while [ ! -f /var/db/dinx-bsd/desktop-setup-done ] && [ $i -lt 120 ]; do
 done
 pkg install -y wlroots020 wayland-protocols libxkbcommon pixman libinput \
   seatd gtk4 gtk4-layer-shell meson ninja pkgconf git-lite rust \
-  gobject-introspection mesa-dri pulseaudio python3 bash libsecret libarchive
+  gobject-introspection mesa-dri pulseaudio python3 bash libsecret libarchive glslang
 echo "== deps exit=$?"
 
 mkdir -p /root/build

@@ -576,6 +576,14 @@ required_paths=(
   usr/share/pearl/themes/dinx.skeuos-square/theme.json
   usr/share/pearl/themes/dinx.orchis-rounded/theme.json
   usr/share/pearl/themes/dinx.orchis-square/theme.json
+  usr/share/themes/Orchis-Light/index.theme
+  usr/share/themes/Orchis-Dark/index.theme
+  usr/share/themes/Orchis-Square-Light/index.theme
+  usr/share/themes/Orchis-Square-Dark/index.theme
+  usr/share/themes/Skeuos-Blue-Light/index.theme
+  usr/share/themes/Skeuos-Blue-Dark/index.theme
+  usr/share/themes/Skeuos-Blue-Light-Square/index.theme
+  usr/share/themes/Skeuos-Blue-Dark-Square/index.theme
 )
 
 for path in "${required_paths[@]}"; do
@@ -609,6 +617,8 @@ grep -Eq '/var/lib/pacman/local/dinx-noto-latin-[^/]*/' <<<"$manifest" \
   || fail 'DINX Noto Latin provider package metadata is missing from the installed rootfs'
 grep -Eq '/var/lib/pacman/local/dinx-pearl-themes-[^/]*/' <<<"$manifest" \
   || fail 'DINX Pearl themes package metadata is missing from the installed rootfs'
+grep -Eq '/var/lib/pacman/local/dinx-gtk-themes-[^/]*/' <<<"$manifest" \
+  || fail 'DINX GTK themes package metadata is missing from the installed rootfs'
 for image_manifest in "$manifest" "$livefs_manifest"; do
   if grep -Eq '/var/lib/pacman/local/noto-fonts-[0-9][^/]*/' <<<"$image_manifest"; then
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'

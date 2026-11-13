@@ -51,6 +51,7 @@
             "packages": [
                 "adw-gtk-theme",
                 "dinx-pearl-themes",
+                "dinx-gtk-themes",
                 "papirus-icon-theme",
                 "dconf",
                 "gsettings-desktop-schemas",

@@ -401,11 +401,9 @@ trap finish EXIT
               }
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
-              build_package topgrade
               build_package paru
               build_package shelly
               pacman_install_local \
-                "$package_repo"/topgrade-*.pkg.tar.zst \
                 "$package_repo"/shelly-*.pkg.tar.zst
               build_package dinitui
               pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
@@ -452,10 +450,9 @@ trap finish EXIT
               [[ -n "$firewalld_boot_package" ]]
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
-              build_package floorp
               build_package patchy
               build_package blockbench
-              build_package impasto
+              build_package paintfe
               build_package pixelorama
               build_package wordcraft
               build_package gridcraft

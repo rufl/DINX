@@ -97,32 +97,6 @@
       "url_template": "https://github.com/Seafoam-Labs/Shelly-ALPM/releases/download/{tag}/Shelly-ALPM-linux-x64.tar.gz"
     },
     {
-      "name": "topgrade",
-      "provider": "github",
-      "repository": "topgrade-rs/topgrade",
-      "source_file": "distro/packages/topgrade/source.env",
-      "version_key": "TOPGRADE_VERSION",
-      "package_version_key": "TOPGRADE_VERSION",
-      "source_url_key": "TOPGRADE_SOURCE_URL",
-      "checksum_key": "TOPGRADE_SOURCE_B2",
-      "checksum": "blake2b",
-      "url_template": "https://github.com/topgrade-rs/topgrade/releases/download/{tag}/topgrade-{tag}-x86_64-unknown-linux-musl.tar.gz"
-    },
-    {
-      "name": "floorp",
-      "provider": "github",
-      "repository": "Floorp-Projects/Floorp",
-      "source_file": "distro/packages/floorp/source.env",
-      "version_key": "FLOORP_VERSION",
-      "package_version_key": "FLOORP_VERSION",
-      "source_url_key": "FLOORP_SOURCE_URL",
-      "checksum_key": "FLOORP_SOURCE_SHA256",
-      "checksum": "sha256",
-      "tag_prefix": "v",
-      "url_template": "https://github.com/Floorp-Projects/Floorp/releases/download/{tag}/floorp-linux-x86_64.tar.xz",
-      "bump_pkgrel_path": "distro/packages/floorp/PKGBUILD"
-    },
-    {
       "name": "swayimg",
       "provider": "github",
       "repository": "artemsen/swayimg",
@@ -270,41 +244,6 @@
       ]
     },
     {
-      "name": "impasto",
-      "provider": "github",
-      "repository": "zbcoding/ImpastoPaint",
-      "source_file": "distro/packages/impasto/source.env",
-      "version_key": "IMPASTO_VERSION",
-      "package_version_key": "IMPASTO_VERSION",
-      "source_url_key": "IMPASTO_SOURCE_URL",
-      "checksum_key": "IMPASTO_SOURCE_SHA256",
-      "checksum": "sha256",
-      "tag_prefix": "v",
-      "url_template": "https://github.com/zbcoding/ImpastoPaint/releases/download/{tag}/Impasto-x86_64.AppImage",
-      "additional_sources": [
-        {
-          "source_url_key": "IMPASTO_LICENSE_URL",
-          "checksum_key": "IMPASTO_LICENSE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/license-mit.txt"
-        },
-        {
-          "source_url_key": "IMPASTO_PINTA_LICENSE_URL",
-          "checksum_key": "IMPASTO_PINTA_LICENSE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/license-mit-pinta.txt"
-        },
-        {
-          "source_url_key": "IMPASTO_LGPL_LICENSE_URL",
-          "checksum_key": "IMPASTO_LGPL_LICENSE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/license-lgpl.txt"
-        },
-        {
-          "source_url_key": "IMPASTO_NOTICES_URL",
-          "checksum_key": "IMPASTO_NOTICES_SHA256",
-          "url_template": "https://raw.githubusercontent.com/zbcoding/ImpastoPaint/{tag}/THIRD-PARTY-NOTICES.md"
-        }
-      ]
-    },
-    {
       "name": "pixelorama",
       "provider": "github",
       "repository": "Orama-Interactive/Pixelorama",
@@ -418,6 +357,20 @@
       "tag_prefix": "v",
       "url_template": "https://github.com/dayvster/zenkai/releases/download/v{version}/zenkai-v{version}-x86_64.AppImage",
       "bump_pkgrel_path": "distro/packages/zenkai/PKGBUILD"
+    },
+    {
+      "name": "paintfe",
+      "provider": "github",
+      "repository": "kylejckson/PaintFE",
+      "source_file": "distro/packages/paintfe/source.env",
+      "version_key": "PAINTFE_VERSION",
+      "package_version_key": "PAINTFE_VERSION",
+      "source_url_key": "PAINTFE_SOURCE_URL",
+      "checksum_key": "PAINTFE_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kylejckson/PaintFE/releases/download/v{version}/PaintFE-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/paintfe/PKGBUILD"
     }
   ]
 }

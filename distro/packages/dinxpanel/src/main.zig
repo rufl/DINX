@@ -94,8 +94,8 @@ const App = struct {
         appendSectionTitle(content, "Updates and firmware");
         const updates = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(updates), makeButton("Check upgrades", "Refresh package and firmware metadata, then show available upgrades without installing them", &onUpgradeCheckClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade preview", "Show Topgrade's package, firmware and tool upgrade plan without applying it", &onTopgradePreviewClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade", "Run the complete Topgrade update workflow in a terminal", &onTopgradeClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("PaintFE", "Open PaintFE raster image editor", &onPaintfeClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("Zenkai", "Open Zenkai app launcher", &onZenkaiClicked, self));
         c.gtk_box_append(@ptrCast(updates), makeButton("Shelly upgrade", "Run Shelly's all-backend upgrade workflow in a terminal", &onShellyClicked, self));
         c.gtk_box_append(@ptrCast(content), updates);
 
@@ -621,12 +621,12 @@ fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).runUpgradeCheck();
 }
 
-fn onTopgradePreviewClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux" });
+fn onPaintfeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "paintfe" });
 }
 
-fn onTopgradeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade" });
+fn onZenkaiClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "zenkai" });
 }
 fn onCupsInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).installCups();

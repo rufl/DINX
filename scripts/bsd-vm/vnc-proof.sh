@@ -14,6 +14,11 @@ chmod 700 "$R"; chmod 1777 /tmp/.X11-unix
 chown dinx:dinx "$R"
 rm -f "$R"/wayland-* "$R"/wl-*; rm -rf "$R/aqueous"
 rm -f /root/build/vncproof.out /tmp/aq-init-vnc.out /tmp/vnc-shot.png
+# Pearl reads /proc/self/exe, /proc/stat, /proc/meminfo... on Linux. FreeBSD's
+# linprocfs provides equivalents (incl. /proc/self/exe); the real session
+# mounts this in session-common, the proof must too.
+mkdir -p /proc
+mount -t linprocfs linprocfs /proc 2>/dev/null || true
 
 pkg install -y wayvnc >/dev/null 2>&1
 echo "wayvnc=$(command -v wayvnc || echo MISSING)"

@@ -33,6 +33,14 @@ if [ -f /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker ]; then
   sysrc dinx_marker_enable="YES"
 fi
 
+# Pearl reads /proc/self/exe, /proc/stat, /proc/meminfo, /proc/cpuinfo. The
+# session runs as the unprivileged `dinx` user and cannot mount filesystems,
+# so linprocfs must be mounted from fstab at boot.
+if ! grep -q '^linproc[[:space:]]' /etc/fstab 2>/dev/null; then
+  printf '%s\n' 'linproc	/proc	linprocfs	rw	0	0' >> /etc/fstab
+fi
+mkdir -p /proc
+
 # bsdinstall copies the live system's resolv.conf, which is empty when the
 # installer never configured DNS. Drop it so dhclient creates a real one.
 if [ -f /etc/resolv.conf ] && [ ! -s /etc/resolv.conf ]; then

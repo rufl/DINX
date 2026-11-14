@@ -30,8 +30,20 @@ sed -i '' 's/program_invocation_short_name/getprogname()/g' shared/xalloc.h
 sed -i '' 's|#include <linux/ioctl.h>|#include <sys/ioctl.h>|' libweston/linux-sync-file-uapi.h
 sed -i '' 's|#include <values.h>|#include <limits.h>\
 #include <float.h>|' libweston/input.c
-sed -i '' 's/CLOCK_MONOTONIC_RAW/CLOCK_MONOTONIC/g' libweston/compositor.c
-if [ ! -f build/build.ninja ]; then
+grep -rl 'CLOCK_MONOTONIC_RAW' --include='*.c' --include='*.h' . \
+  | xargs sed -i '' 's/CLOCK_MONOTONIC_RAW/CLOCK_MONOTONIC/g'
+# FreeBSD libc expects the executable/library to provide `environ`.
+grep -q '^char \*\*environ;' shared/process-util.c \
+  || sed -i '' '1i\
+char **environ;
+' shared/process-util.c
+# epoll-shim must be linked into every target (epoll_shim_fcntl).
+export LDFLAGS="-L/usr/local/lib -lepoll-shim"
+# Linux uapi headers used by weston's sync-file support: shim them.
+mkdir -p /usr/local/include/linux
+printf '#include <sys/ioctl.h>\n' > /usr/local/include/linux/ioctl.h
+printf '#include <sys/types.h>\n#include <stdint.h>\ntypedef uint8_t __u8;\ntypedef uint16_t __u16;\ntypedef uint32_t __u32;\ntypedef uint64_t __u64;\ntypedef int8_t __s8;\ntypedef int16_t __s16;\ntypedef int32_t __s32;\ntypedef int64_t __s64;\n' > /usr/local/include/linux/types.h
+rm -rf build
 meson setup build \
     -Dprefix=/usr/local \
     -Dbackend-drm=true \
@@ -57,7 +69,6 @@ meson setup build \
     -Ddoc=false \
     -Dwcap-decode=false >>"$LOG" 2>&1
   log "== meson setup exit=$?"
-fi
 ninja -C build >>"$LOG" 2>&1
 grep -A6 -m2 "FAILED" "$LOG" > "$W/weston-errors.txt" 2>/dev/null || true
 log "== ninja exit=$?"

@@ -25,6 +25,8 @@ log "== clone exit=$?"
 cd weston || exit 1
 # FreeBSD has no ETIME (Linux errno); ETIMEDOUT is the equivalent.
 sed -i '' 's/errno = ETIME;/errno = ETIMEDOUT;/' shared/file-util.c
+# glibc-only program name; FreeBSD provides getprogname() in stdlib.h.
+sed -i '' 's/program_invocation_short_name/getprogname()/g' shared/xalloc.h
 rm -rf build
 meson setup build \
     -Dprefix=/usr/local \

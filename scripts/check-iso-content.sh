@@ -493,7 +493,9 @@ required_paths=(
   usr/bin/pkexec
   usr/bin/zenity
   usr/bin/pgrep
+  usr/bin/timeout
   usr/local/libexec/dinx-installer
+  usr/local/libexec/dinx-gparted
   usr/local/libexec/dinx-approve-desktop-launcher
   usr/bin/python3
   usr/bin/ps
@@ -1193,6 +1195,33 @@ done
 gparted_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.gnome.gparted.policy)
 grep -Fq '<action id="org.gnome.gparted">' <<<"$gparted_policy" \
   || fail 'GParted root-launch Polkit action is missing'
+# GParted is GTK 3 and needs root, so it is elevated through the same pkexec env
+# bridge the installer uses. Upstream's /usr/bin/gparted self-elevates with
+# `pkexec --disable-internal-agent`, which depends on polkit allow_gui preserving
+# DISPLAY/XAUTHORITY; the DINX session unsets DISPLAY and has no X server, so that
+# path leaves the root gpartedbin with no display. Assert the launcher bridges the
+# Wayland socket and session bus instead.
+gparted_launcher_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-gparted' <<<"$manifest")
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$gparted_launcher_listing" \
+  || fail 'GParted launcher is not executable in the ISO'
+gparted_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-gparted)
+grep -Fq 'WAYLAND_DISPLAY="$wayland_display"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not pass the Wayland socket to the elevated session'
+grep -Fq 'XDG_RUNTIME_DIR="$runtime_dir"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not pass the runtime directory to the elevated session'
+grep -Fq 'DBUS_SESSION_BUS_ADDRESS="$dbus_address"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not pass the session bus for polkit authorization'
+grep -Fq 'GDK_BACKEND=wayland' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not force the GTK 3 Wayland backend'
+grep -Fq '/usr/bin/gparted "$@"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not invoke upstream GParted with its arguments'
+grep -Fq '[l]xqt-policykit-agent' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not verify a polkit authorization agent is running'
+gparted_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/gparted.desktop)
+grep -Fqx 'Exec=/usr/local/libexec/dinx-gparted %f' <<<"$gparted_override" \
+  || fail 'Partition Editor override does not use the DINX Wayland launcher'
+grep -Fqx 'TryExec=/usr/local/libexec/dinx-gparted' <<<"$gparted_override" \
+  || fail 'Partition Editor override prerequisite does not resolve the DINX launcher'
 firewalld_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.desktop.policy.choice)
 for action in all config direct policies; do
   grep -Fq "<action id=\"org.fedoraproject.FirewallD1.$action\">" <<<"$firewalld_policy" \
@@ -1582,7 +1611,7 @@ usr/local/share/applications/org.aqueous.Dome.desktop|System Monitor|Monitor do 
 usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
-usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
+usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U

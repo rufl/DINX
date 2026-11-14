@@ -36,9 +36,10 @@ grep -rl 'CLOCK_MONOTONIC_RAW' --include='*.c' --include='*.h' . \
   | xargs sed -i '' 's/CLOCK_MONOTONIC_RAW/CLOCK_MONOTONIC/g'
 sed -i '' 's|#include <pty.h>|#include <libutil.h>|' clients/terminal.c
 # FreeBSD libc expects the executable/library to provide `environ`.
-grep -q '^char \*\*environ;' shared/process-util.c \
+sed -i '' '/^char \*\*environ;$/d' shared/process-util.c
+grep -q 'weak)) char \*\*environ;' shared/process-util.c \
   || sed -i '' '1i\
-char **environ;
+__attribute__((weak)) char **environ;
 ' shared/process-util.c
 # epoll-shim must be linked into every target (epoll_shim_fcntl).
 export LDFLAGS="-L/usr/local/lib -lepoll-shim -lutil"

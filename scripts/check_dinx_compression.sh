@@ -19,8 +19,10 @@ for required in \
   "'var/cache/pacman/pkg/*'" \
   "'var/log/*'" \
   'strip_documentation()' \
+  'strip_build_metadata()' \
   'usr/share/man' \
-  'usr/share/gtk-doc'; do
+  'usr/share/gtk-doc' \
+  'usr/share/gir-1.0'; do
   grep -Fq -- "$required" "$wrapper" || fail "compression wrapper is missing: $required"
 done
 
@@ -36,10 +38,22 @@ EOF
 chmod +x "$fake"
 
 fixture_root="$work_dir/rootfs"
-mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1"
+mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
+  "$fixture_root/usr/include/ghostty/vt" "$fixture_root/usr/include/gtk-4.0" \
+  "$fixture_root/usr/share/gir-1.0" "$fixture_root/usr/lib/cmake/demo" \
+  "$fixture_root/usr/lib/pkgconfig" "$fixture_root/usr/share/vala" \
+  "$fixture_root/usr/share/aclocal"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
 printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
+printf 'vt header required by the Deetty build contract\n' > "$fixture_root/usr/include/ghostty/vt.h"
+printf 'nested vt header\n' > "$fixture_root/usr/include/ghostty/vt/grid.h"
+printf 'build-only header\n' > "$fixture_root/usr/include/gtk-4.0/gtk.h"
+printf 'build-only introspection source\n' > "$fixture_root/usr/share/gir-1.0/Gtk-4.0.gir"
+printf 'build-only cmake config\n' > "$fixture_root/usr/lib/cmake/demo/demo.cmake"
+printf 'build-only pkg-config record\n' > "$fixture_root/usr/lib/pkgconfig/demo.pc"
+printf 'build-only vala binding\n' > "$fixture_root/usr/share/vala/demo.vapi"
+printf 'build-only aclocal macro\n' > "$fixture_root/usr/share/aclocal/demo.m4"
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \
   "$wrapper" "$fixture_root" "$work_dir/fixture.img"
@@ -47,6 +61,15 @@ DINX_COMPRESSION_ARGS="$args_file" \
   || fail 'documentation directory remains in the final filesystem'
 [[ ! -e "$fixture_root/usr/share/man" ]] \
   || fail 'manual pages remain in the final filesystem'
+for build_metadata in usr/share/gir-1.0 usr/lib/cmake usr/lib/pkgconfig usr/share/vala usr/share/aclocal; do
+  [[ ! -e "$fixture_root/$build_metadata" ]] \
+    || fail "build-only metadata remains in the final filesystem: $build_metadata"
+done
+[[ ! -e "$fixture_root/usr/include/gtk-4.0" ]] \
+  || fail 'build-only headers remain in the final filesystem'
+[[ -f "$fixture_root/usr/include/ghostty/vt.h" \
+   && -f "$fixture_root/usr/include/ghostty/vt/grid.h" ]] \
+  || fail 'the ghostty VT headers required by the Deetty build contract were stripped'
 
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \

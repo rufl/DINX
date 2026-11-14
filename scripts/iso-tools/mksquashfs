@@ -93,6 +93,53 @@ strip_documentation() {
   done
 }
 
+# Build-time-only metadata is dead weight in the live/install images: the ISO
+# ships no compiler, make, cmake, pkg-config, g-ir-compiler, valac or autoconf,
+# so nothing in the image can consume headers, CMake package configs, pkg-config
+# records, GObject-Introspection source XML, Vala bindings or aclocal macros.
+# gir-1.0 holds the source XML used to generate typelibs; the runtime reads the
+# already-generated usr/lib/girepository-1.0 typelibs, which are kept.
+# usr/include/ghostty is preserved because check-iso-content.sh requires
+# usr/include/ghostty/vt.h: ghostty-vt-runtime deliberately ships the VT headers
+# alongside its library for Deetty's build contract.
+strip_build_metadata() {
+  local root=$1
+  local rel
+
+  [[ "$root" != / && -d "$root/usr" ]] || return 0
+
+  if [[ -d "$root/usr/include" ]]; then
+    local preserved keep="$root/usr/include/ghostty" kept=false
+    if [[ -d "$keep" ]]; then
+      preserved=$(mktemp -d) || {
+        printf 'dinx-final-squashfs: cannot allocate a directory to preserve usr/include/ghostty\n' >&2
+        return 1
+      }
+      cp -a -- "$keep" "$preserved/" || {
+        rm -rf -- "$preserved"
+        printf 'dinx-final-squashfs: cannot preserve usr/include/ghostty\n' >&2
+        return 1
+      }
+      kept=true
+    fi
+    rm -rf -- "$root/usr/include"
+    if [[ "$kept" == true ]]; then
+      mkdir -p -- "$root/usr/include"
+      mv -- "$preserved/ghostty" "$root/usr/include/"
+      rm -rf -- "$preserved"
+      printf '%s\n' 'dinx-final-squashfs: removed build headers, preserving usr/include/ghostty'
+    else
+      printf '%s\n' 'dinx-final-squashfs: removed build headers'
+    fi
+  fi
+  for rel in usr/share/gir-1.0 usr/lib/cmake usr/lib/pkgconfig usr/share/vala usr/share/aclocal; do
+    if [[ -d "$root/$rel" ]]; then
+      rm -rf -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed build-only metadata path=%s\n' "$rel"
+    fi
+  done
+}
+
 prune_excluded_packages() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
@@ -168,6 +215,7 @@ prune_excluded_packages() {
 if [[ -n "$source_root" ]]; then
   prune_excluded_packages "$source_root"
   strip_documentation "$source_root"
+  strip_build_metadata "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.

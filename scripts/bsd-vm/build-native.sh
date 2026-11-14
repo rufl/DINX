@@ -71,6 +71,13 @@ EOF
   # rootdir both for packing and for shlibs_provided scanning, so the rootdir
   # must be the prefix root (stage/usr/local), not the stage itself.
   (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
+  # pkg create -p skips shlib scanning; declare provided shlibs explicitly so
+  # dependents (dinx-aqueous/dinx-pearl) resolve libdinxcompat/libwlroots.
+  prov=$(sed -n 's|^lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$meta/plist" \
+    | sed 's/.*/"&"/' | paste -sd, -)
+  if [ -n "$prov" ]; then
+    printf 'shlibs_provided: [%s]\n' "$prov" >> "$meta/+MANIFEST"
+  fi
   rm -rf "$meta/root"
   mkdir -p "$meta/root"
   cp -a "$stage/usr/local/." "$meta/root/"

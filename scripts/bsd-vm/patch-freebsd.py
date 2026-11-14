@@ -480,3 +480,52 @@ if os.path.exists(p):
         )
         open(p, "w", encoding="utf-8").write(src)
         applied.append(p)
+
+# 26. Route every raw-Linux syscall in Aqueous through bsd_compat.zig (libc
+# backed). std.os.linux.<syscall> issues the Linux syscall number directly,
+# which is SIGSYS on FreeBSD. Only the syscall call sites are rewritten;
+# linux.errno, types (socklen_t/pid_t/Statx/sockaddr) and constants (AF/SOCK/
+# MSG/SOL/SO) stay std.os.linux because bsd_compat returns the same usize
+# convention linux.errno decodes.
+import shutil
+aq_dir = os.path.join(W, "Aqueous/compositor/aqueous")
+if os.path.isdir(aq_dir):
+    shim_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bsd_compat.zig")
+    if os.path.exists(shim_src):
+        shutil.copyfile(shim_src, os.path.join(aq_dir, "bsd_compat.zig"))
+        applied.append(os.path.join(aq_dir, "bsd_compat.zig"))
+        # syscall call sites to redirect; NOT errno/types/constants.
+        syscalls = [
+            "socket", "bind", "listen", "accept4", "accept", "connect",
+            "close", "unlink", "unlinkat", "chmod", "fchmod", "mkdir",
+            "rmdir", "recvfrom", "sendto", "recv", "send", "getsockopt",
+            "setsockopt", "statx", "open", "read", "readlink", "fsync",
+            "pause", "getrlimit", "fcntl", "getuid", "getgid", "geteuid",
+            "getegid", "kill", "waitpid", "pipe2", "dup", "dup2",
+        ]
+        for root, _dirs, files in os.walk(aq_dir):
+            for fn in files:
+                if not fn.endswith(".zig") or fn == "bsd_compat.zig":
+                    continue
+                fp = os.path.join(root, fn)
+                src = open(fp, encoding="utf-8").read()
+                if "const linux = std.os.linux" not in src:
+                    continue
+                orig = src
+                for sc in syscalls:
+                    src = src.replace("linux.%s(" % sc, "bsdcompat.%s(" % sc)
+                if src == orig:
+                    continue
+                # Insert the bsdcompat import next to the linux import, with a
+                # path relative to this file's depth under aqueous/.
+                rel = os.path.relpath(aq_dir, root)
+                prefix = "" if rel == "." else "../" * (rel.count(os.sep) + 1)
+                imp = 'const bsdcompat = @import("%sbsd_compat.zig");' % prefix
+                if "bsd_compat.zig" not in src:
+                    src = src.replace(
+                        "const linux = std.os.linux;",
+                        "const linux = std.os.linux;\n" + imp,
+                        1,
+                    )
+                open(fp, "w", encoding="utf-8").write(src)
+                applied.append(fp)

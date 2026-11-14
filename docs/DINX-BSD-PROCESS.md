@@ -411,13 +411,16 @@ patch no std do Zig roteando para o statx do libdinxcompat
 Helper exes Zig (aqueousctl) não exportam `environ`, que a libc do FreeBSD
 exige do executável → storage no shim + `LD_PRELOAD` do shim nesses helpers
 (preload no compositor o mata).
-**Blocker aberto:** o Aqueous headless renderiza frames (llvmpipe, HEADLESS-1
-1280x720) mas o socket Wayland criado nunca escuta: `connect()` retorna
-ECONNREFUSED em todos os segundos de vida e `sockstat -l` não mostra
-listener. Nenhum cliente (Pearl, grim) consegue anexar → desktop interativo
-ainda não funciona no FreeBSD; requer porting do caminho socket/event-loop
-do wlroots. Weston (compositor aninhado de referência) não existe no repo
-pkg do FreeBSD 15.1, impedindo a prova aninhada.
+**Causa raiz resolvida (§20 corrigido):** o que parecia "socket Wayland que
+nunca escuta" era, na verdade, o compositor morrendo de **SIGSYS** logo após
+`Starting Xwayland on :0`. Backtrace gdb:
+`IpcServer.privateDirectory() -> linux.getuid() -> os.linux.x86_64.syscall0`
+(exit 140 = 128+SIGSYS). `std.os.linux.getuid()` é syscall Linux cru; no
+FreeBSD o número cai fora da tabela e o kernel devolve SIGSYS. Como a morte
+era instantânea, o socket ainda não estava em listen → `connect()` dava
+ECONNREFUSED e o `sockstat` não mostrava listener (sintoma, não a causa).
+Correção (patch #25): `linux.getuid()` → `std.c.getuid()` (libc portável).
+Xwayland já inicia de fábrica no build `-Dxwayland=true`.
 
 ## 21. Estado verificado (ISO 15.1 com repo nativo)
 

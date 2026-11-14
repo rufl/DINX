@@ -27,7 +27,11 @@ cd weston || exit 1
 sed -i '' 's/errno = ETIME;/errno = ETIMEDOUT;/' shared/file-util.c
 # glibc-only program name; FreeBSD provides getprogname() in stdlib.h.
 sed -i '' 's/program_invocation_short_name/getprogname()/g' shared/xalloc.h
-rm -rf build
+sed -i '' 's|#include <linux/ioctl.h>|#include <sys/ioctl.h>|' libweston/linux-sync-file-uapi.h
+sed -i '' 's|#include <values.h>|#include <limits.h>\
+#include <float.h>|' libweston/input.c
+sed -i '' 's/CLOCK_MONOTONIC_RAW/CLOCK_MONOTONIC/g' libweston/compositor.c
+if [ ! -f build/build.ninja ]; then
 meson setup build \
     -Dprefix=/usr/local \
     -Dbackend-drm=true \
@@ -53,7 +57,9 @@ meson setup build \
     -Ddoc=false \
     -Dwcap-decode=false >>"$LOG" 2>&1
   log "== meson setup exit=$?"
+fi
 ninja -C build >>"$LOG" 2>&1
+grep -A6 -m2 "FAILED" "$LOG" > "$W/weston-errors.txt" 2>/dev/null || true
 log "== ninja exit=$?"
 ninja -C build install >>"$LOG" 2>&1
 log "== install exit=$?"

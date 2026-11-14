@@ -268,8 +268,9 @@ fi
 
 # Keep package caches and logs out of the compressed filesystem.
 exec "$real_mksquashfs" "${filtered[@]}" \
-  -comp zstd \
-  -Xcompression-level 19 \
+  -comp xz \
+  -Xbcj x86 \
   -b 1M \
+  -Xdict-size 1M \
   -wildcards \
   -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

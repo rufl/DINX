@@ -621,8 +621,8 @@ patchy_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
 patchy_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/patchy)
 grep -Fq '/usr/lib/patchy/patchy-force-darkest' <<<"$patchy_launcher" \
   || fail 'Patchy launcher does not force its internal Darkest theme'
-grep -Fq 'PatchyLinux.AppImage --appimage-extract-and-run' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not use the no-FUSE AppImage path'
+grep -Fq 'exec /opt/patchy/AppRun' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not exec its pre-extracted /opt tree'
 patchy_force_darkest=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/patchy/patchy-force-darkest)
 grep -Fq 'customThemeId=bundled:darkest.patchytheme' <<<"$patchy_force_darkest" \
   || fail 'Patchy package does not force its Darkest theme'

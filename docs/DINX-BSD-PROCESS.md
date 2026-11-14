@@ -418,3 +418,17 @@ listener. Nenhum cliente (Pearl, grim) consegue anexar → desktop interativo
 ainda não funciona no FreeBSD; requer porting do caminho socket/event-loop
 do wlroots. Weston (compositor aninhado de referência) não existe no repo
 pkg do FreeBSD 15.1, impedindo a prova aninhada.
+
+## 21. Estado verificado (ISO 15.1 com repo nativo)
+
+Gate unattended na ISO rebuildada: install + firstboot + login em ~127 s,
+shutdown limpo. No disco instalado, o firstboot instalou do repo local
+embarcado os cinco pacotes: dinx-compat, dinx-wlroots, dinx-aqueous,
+dinx-pearl, dinx-greetd (mais seatd/pipewire/wayland/mesa-dri/gtk4 etc.);
+`/usr/local/bin/pearl`, `/usr/local/bin/aqueous` e
+`/usr/local/etc/greetd/config.toml` presentes; `dinx_greetd`/`seatd`
+habilitados pelo script. SHA-256 da ISO: 32a58e9432599d50055c19a7475ab4b19a
+aa847bb625fe94e8fc92615fa342e8.
+Pendência: sessão gráfica interativa (blocker do §20 — socket Wayland do
+Aqueous sem listener no FreeBSD). A prova headless mostra o compositor
+renderizando (llvmpipe, HEADLESS-1 1280x720), mas nenhum cliente anexa.

@@ -34,10 +34,10 @@ The next system milestone is the planned, undated Beta 0.1 qualification. It is 
 
 Alpha 9 and earlier candidate runs are historical; they are not the current release evidence. The release workflow rebuilds the tagged commit and publishes only after matching ISO metadata, signed-repository, checksum and provenance checks pass.
 
-The Alpha 9 artifact used the earlier deterministic compact-ISO path from
-`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 1 MiB
-blocks and a 1 MiB dictionary. Alpha 10 uses 256 KiB blocks and a 256 KiB
-dictionary, keeping the direct ISO below GitHub's 2 GiB per-asset limit.
+The final SquashFS uses the deterministic compact-ISO path from
+`scripts/build-iso.sh`: xz compression with x86 BCJ filtering, 1 MiB blocks
+and a 1 MiB dictionary, keeping the direct ISO below GitHub's 2 GiB
+per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
 The current profile ships PaintFE, Transit and Zenkai plus the repacked binary

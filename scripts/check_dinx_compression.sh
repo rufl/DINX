@@ -12,8 +12,9 @@ fail() {
 
 [[ -x "$wrapper" ]] || fail "compression wrapper is missing or not executable: $wrapper"
 for required in \
-  '-comp zstd' \
-  '-Xcompression-level 19' \
+  '-comp xz' \
+  '-Xbcj x86' \
+  '-Xdict-size 1M' \
   '-b 1M' \
   "'usr/src/linux*'" \
   "'var/cache/pacman/pkg/*'" \
@@ -128,10 +129,12 @@ output.img
 -e
 old-exclude
 -comp
-zstd
--Xcompression-level
-19
+xz
+-Xbcj
+x86
 -b
+1M
+-Xdict-size
 1M
 -wildcards
 -e
@@ -146,4 +149,4 @@ actual=$(cat "$args_file")
   fail 'wrapper did not enforce the deterministic compression arguments'
 }
 
-printf 'dinx_compression_contract compression=zstd level=19 block=1M excludes=kernel-source+pacman-cache+logs override_safe=true\n'
+printf 'dinx_compression_contract compression=xz bcj=x86 block=1M dict=1M excludes=kernel-source+pacman-cache+logs override_safe=true\n'

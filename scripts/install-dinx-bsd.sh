@@ -76,7 +76,7 @@ fi
 # Custom DINX packages only when a real local repository catalog exists.
 if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo/packagesite.pkg" ]; then
   sed -i '' 's/enabled: no/enabled: yes/' /usr/local/etc/pkg/repos/dinx.conf
-  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl dinx-weston \
+  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl \
     || log 'WARNING: custom DINX package install failed'
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'

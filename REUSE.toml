@@ -11,3 +11,9 @@ path = "distro/packages/dinx-noto-latin/OFL.txt"
 precedence = "override"
 SPDX-FileCopyrightText = "2022 The Noto Project Authors"
 SPDX-License-Identifier = "OFL-1.1-no-RFN"
+
+[[annotations]]
+path = "distro/office/eurooffice/assets/LICENSE"
+precedence = "override"
+SPDX-FileCopyrightText = "2007 Free Software Foundation, Inc."
+SPDX-License-Identifier = "AGPL-3.0-only"

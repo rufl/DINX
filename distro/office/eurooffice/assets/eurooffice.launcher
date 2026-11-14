@@ -1,0 +1,10 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+# DINX EuroOffice launcher: exec the real binary from the pre-extracted
+# /opt/eurooffice tree (no AppImage runtime extraction).
+set -eu
+app_dir=/opt/eurooffice
+export LD_LIBRARY_PATH="$app_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+cd "$app_dir"
+exec "$app_dir/DesktopEditors" "$@"

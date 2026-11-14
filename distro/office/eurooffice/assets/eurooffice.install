@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+# pacman scriptlet: refresh desktop/MIME databases after install/upgrade/remove.
+
+post_install() {
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications || true
+  fi
+  if command -v update-mime-database >/dev/null 2>&1; then
+    update-mime-database /usr/share/mime || true
+  fi
+}
+
+post_upgrade() {
+  post_install
+}
+
+post_remove() {
+  post_install
+}

@@ -75,6 +75,7 @@ rootfs:
     - paintfe
     - transit
     - zenkai
+    - eurooffice
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin

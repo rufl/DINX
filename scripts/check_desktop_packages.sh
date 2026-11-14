@@ -77,7 +77,7 @@ done
 for mime in text/html application/xhtml+xml x-scheme-handler/http x-scheme-handler/https; do
   grep -Fqx "$mime=firefox.desktop;" "$mimeapps" || fail "Firefox is not the default handler for $mime"
 done
-grep -Fqx 'application/pdf=firefox.desktop;' "$mimeapps" || fail 'Firefox is not the default PDF handler'
+grep -Fqx 'application/pdf=eurooffice.desktop;' "$mimeapps" || fail 'EuroOffice is not the default PDF handler'
 if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi

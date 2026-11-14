@@ -292,6 +292,9 @@ required_paths=(
   opt/zenkai/AppRun
   usr/share/applications/zenkai.desktop
   usr/share/licenses/zenkai/LICENCE.md
+  usr/bin/eurooffice
+  opt/eurooffice/DesktopEditors
+  usr/share/applications/eurooffice.desktop
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
@@ -591,7 +594,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench paintfe transit zenkai haruna; do
+for package in krita inkscape godot pixelorama patchy blockbench paintfe transit zenkai eurooffice haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -1289,7 +1292,13 @@ grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is 
 grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default XHTML handler'
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
-grep -Fq 'application/pdf=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default PDF handler'
+grep -Fq 'application/pdf=eurooffice.desktop;' <<<"$mimeapps_config" || fail 'EuroOffice is not the default PDF handler'
+for office_mime in \
+  application/vnd.openxmlformats-officedocument.wordprocessingml.document \
+  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet \
+  application/vnd.openxmlformats-officedocument.presentationml.presentation; do
+  grep -Fq "$office_mime=eurooffice.desktop;" <<<"$mimeapps_config" || fail "EuroOffice is not the default handler for $office_mime"
+done
 for appimage_launcher in paintfe transit zenkai patchy blockbench; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
   grep -Fq "exec /opt/$appimage_launcher/AppRun" <<<"$launcher_script" \
@@ -1558,6 +1567,7 @@ usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
+usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U

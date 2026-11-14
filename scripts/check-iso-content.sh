@@ -1630,6 +1630,16 @@ grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missin
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
+# The three native Zig control apps force the DINX dark palette from compiled-in CSS.
+# Assert the shipped binaries carry it, not just their source: a recipe change that
+# leaves pkgrel unchanged makes the builder install a stale precompiled artifact whose
+# binary predates the theme, which is how DinitUI shipped a light UI while
+# check_dinitui.sh still passed on the source.
+for native_dark_app in dinitui dinxpanel seafoam-settings; do
+  native_dark_binary=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$native_dark_app")
+  grep -Fq 'window.background { background-color: #0b0d12; }' <<<"$native_dark_binary" \
+    || fail "$native_dark_app binary does not embed the DINX dark window background; a stale precompiled artifact may have been installed"
+done
 grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Dintor light scheme is missing'
 
 

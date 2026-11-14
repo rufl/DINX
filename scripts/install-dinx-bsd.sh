@@ -15,8 +15,9 @@ done_flag=/var/db/dinx-bsd/desktop-setup-done
 mkdir -p /var/db/dinx-bsd
 
 # Session accounts used by greetd (greeter) and the desktop session (dinx).
-pw useradd dinx -m -s /bin/sh -c 'DINX Desktop' 2>/dev/null \
+pw useradd dinx -m -s /bin/sh -G video -c 'DINX Desktop' 2>/dev/null \
   || log 'user dinx already exists'
+pw groupmod video -m dinx 2>/dev/null || true
 pw useradd greeter -s /bin/sh -c 'DINX Greeter' 2>/dev/null \
   || log 'user greeter already exists'
 
@@ -63,7 +64,7 @@ done
 if [ "$pkg_ready" = 1 ]; then
   for p in seatd pipewire wireplumber wayland mesa-dri \
            libxkbcommon xkeyboard-config jq gtk4 gtk4-layer-shell \
-           libsecret libarchive basu; do
+           libsecret libarchive basu xwayland; do
     if pkg install -y "$p" >/dev/null 2>&1; then
       log "installed $p"
     else
@@ -75,7 +76,7 @@ fi
 # Custom DINX packages only when a real local repository catalog exists.
 if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo/packagesite.pkg" ]; then
   sed -i '' 's/enabled: no/enabled: yes/' /usr/local/etc/pkg/repos/dinx.conf
-  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl \
+  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl dinx-weston \
     || log 'WARNING: custom DINX package install failed'
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'

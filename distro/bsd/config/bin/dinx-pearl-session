@@ -1,20 +1,44 @@
 #!/bin/sh
-# DINX default session: Aqueous compositor + Pearl shell.
+# DINX default session: Weston compositor (Xwayland enabled) + Pearl shell.
+# Weston is the reference compositor and its Wayland socket/Xwayland work on
+# FreeBSD; Aqueous remains installed as an alternative but is not the default.
 set -eu
 . "${DINX_PREFIX:-/usr/local}/libexec/dinx/session-common"
 
 start_audio
 
-if ! command -v aqueous >/dev/null 2>&1; then
-  echo 'dinx-pearl-session: aqueous compositor not installed' >&2
+if ! command -v weston >/dev/null 2>&1; then
+  echo 'dinx-pearl-session: weston compositor not installed' >&2
   exit 1
 fi
-aqueous &
-_session_pids="$_session_pids $!"
-wait_wayland || exit 1
-
 if ! command -v pearl >/dev/null 2>&1; then
   echo 'dinx-pearl-session: pearl shell not installed' >&2
   exit 1
 fi
+
+# Session config: Xwayland on, no idle blanking, desktop shell for background
+# and panel; Pearl attaches as a layer-shell client.
+cfg="$XDG_RUNTIME_DIR/dinx-weston.ini"
+cat > "$cfg" <<'EOF'
+[core]
+xwayland=true
+idle-time=0
+[shell]
+panel-position=none
+background-color=0xff101014
+[libinput]
+enable-tap=true
+EOF
+
+weston_args="--config=$cfg"
+# VMs without a GPU: headless backend so the session still renders.
+if [ ! -e /dev/dri/card0 ]; then
+  weston_args="$weston_args --backend=headless-backend.so --width=1280 --height=720"
+fi
+# shellcheck disable=SC2086
+weston $weston_args &
+_session_pids="$_session_pids $!"
+wait_wayland || exit 1
+
+export XDG_CURRENT_DESKTOP=Weston
 pearl

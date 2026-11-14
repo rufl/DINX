@@ -402,3 +402,14 @@ for p in glob.glob(os.path.join(W, "zig-x86_64-freebsd-*", "lib", "std", "os", "
         lines[i + 1 : i + 5] = [l + "\n" for l in new.splitlines()[1:]]
         open(p, "w", encoding="utf-8").write("".join(lines))
         applied.append(p)
+
+# 22. Pearl session validation: accept Weston as the compositor (the BSD
+# session uses Weston + Xwayland; Aqueous' Wayland socket is broken on FreeBSD).
+p = os.path.join(W, "pearl/src/core/startup.zig")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    old = 'for ([_][]const u8{ "Aqueous", "Aqueous-Git", "Aqueous-Intel-Git" }) |name| {'
+    new = 'for ([_][]const u8{ "Aqueous", "Aqueous-Git", "Aqueous-Intel-Git", "Weston" }) |name| {'
+    if old in src:
+        open(p, "w", encoding="utf-8").write(src.replace(old, new))
+        applied.append(p)

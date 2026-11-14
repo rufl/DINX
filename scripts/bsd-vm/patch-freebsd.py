@@ -397,13 +397,8 @@ for p in glob.glob(os.path.join(W, "zig-x86_64-freebsd-*", "lib", "std", "os", "
         open(p, "w", encoding="utf-8").write(src.replace(old, new))
         applied.append(p)
     elif "dinx-statx-libc" in src:
-        fixed = re.sub(
-            r"    // dinx-statx-libc.*?return @intCast\(@import\(\"\.\./c\.zig\"\)\._errno\(\)\.\*;",
-            lambda m: new,
-            src,
-            count=1,
-            flags=re.S,
-        )
-        if fixed != src:
-            open(p, "w", encoding="utf-8").write(fixed)
-            applied.append(p)
+        lines = src.splitlines(keepends=True)
+        i = next(k for k, l in enumerate(lines) if "dinx-statx-libc" in l)
+        lines[i + 1 : i + 5] = [l + "\n" for l in new.splitlines()[1:]]
+        open(p, "w", encoding="utf-8").write("".join(lines))
+        applied.append(p)

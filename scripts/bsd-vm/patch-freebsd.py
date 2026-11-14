@@ -531,3 +531,21 @@ if os.path.isdir(aq_dir):
                     )
                 open(fp, "w", encoding="utf-8").write(src)
                 applied.append(fp)
+
+# 27. Pearl ships CSS using `backdrop-filter`, which only exists in GTK >= 4.22.
+# FreeBSD ports ship GTK 4.20.4, whose CSS parser rejects the unknown property
+# and Pearl aborts startup with error=InvalidCss. Strip the 4.22-only
+# declarations: the blur is cosmetic, the shell must still start.
+for rel in (
+    "pearl/resources/style.css",
+    "pearl/resources/gtk-background-blur.css",
+    "pearl/src/greeter/screen.zig",
+):
+    p = os.path.join(W, rel)
+    if not os.path.exists(p):
+        continue
+    src = open(p, encoding="utf-8").read()
+    new = re.sub(r"-?backdrop-filter\s*:\s*[^;}\"]*;?", "", src)
+    if new != src:
+        open(p, "w", encoding="utf-8").write(new)
+        applied.append(rel + " (backdrop-filter stripped)")

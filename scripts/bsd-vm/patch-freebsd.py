@@ -279,7 +279,11 @@ if os.path.exists(p):
         ),
         (
             "const hz = std.c.getauxval(std.elf.AT.CLKTCK);",
+            "const hz = std.c.sysconf(3);",
+        ),
+        (
             "const hz = std.c.getauxval(3);",
+            "const hz = std.c.sysconf(3);",
         ),
     ):
         if old in src:

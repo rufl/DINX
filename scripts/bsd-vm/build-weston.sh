@@ -43,10 +43,11 @@ export LDFLAGS="-L/usr/local/lib -lepoll-shim"
 mkdir -p /usr/local/include/linux
 printf '#include <sys/ioctl.h>\n' > /usr/local/include/linux/ioctl.h
 printf '#include <sys/types.h>\n#include <stdint.h>\ntypedef uint8_t __u8;\ntypedef uint16_t __u16;\ntypedef uint32_t __u32;\ntypedef uint64_t __u64;\ntypedef int8_t __s8;\ntypedef int16_t __s16;\ntypedef int32_t __s32;\ntypedef int64_t __s64;\n' > /usr/local/include/linux/types.h
-rm -rf build
-meson setup build \
+RECONF=
+[ -f build/build.ninja ] && RECONF=--reconfigure
+meson setup $RECONF build \
     -Dprefix=/usr/local \
-    -Dbackend-drm=true \
+    -Dbackend-drm=false \
     -Dbackend-headless=true \
     -Dbackend-wayland=true \
     -Dbackend-x11=false \

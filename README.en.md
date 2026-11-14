@@ -114,6 +114,7 @@ Read the [installation guide](docs/install.md) before touching a disk. Windows F
 - [ISO foundation](distro/iso/README.md)
 - [Security model](docs/security-model.md)
 - [Package, security and ISO automation](docs/automation.md)
+- [Internal tools, ports and patches](docs/dinxtools.md)
 - [Licensing and REUSE](docs/licensing.md)
 - [Changelog](CHANGELOG.md)
 

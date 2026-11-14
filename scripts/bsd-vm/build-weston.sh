@@ -13,7 +13,7 @@ log() { printf '%s\n' "$*" | tee -a "$LOG"; }
 
 pkg install -y meson ninja pkgconf git-lite wayland-protocols libxkbcommon \
   pixman libinput libevdev libmtdev libdrm seatd cairo pango lcms2 \
-  xcb-util-cursor libXcursor libxkbcommon xwayland >>"$LOG" 2>&1
+  xcb-util-cursor libXcursor libxkbcommon xwayland xterm >>"$LOG" 2>&1
 log "== deps exit=$?"
 
 cd "$W" || exit 1
@@ -23,6 +23,8 @@ if [ ! -d weston ]; then
 fi
 log "== clone exit=$?"
 cd weston || exit 1
+# FreeBSD has no ETIME (Linux errno); ETIMEDOUT is the equivalent.
+sed -i '' 's/errno = ETIME;/errno = ETIMEDOUT;/' shared/file-util.c
 rm -rf build
 meson setup build \
     -Dprefix=/usr/local \

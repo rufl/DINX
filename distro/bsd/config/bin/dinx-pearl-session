@@ -22,6 +22,7 @@ cfg="$XDG_RUNTIME_DIR/dinx-weston.ini"
 cat > "$cfg" <<'EOF'
 [core]
 xwayland=true
+xwayland-path=/usr/local/bin/Xwayland
 idle-time=0
 [shell]
 panel-position=none

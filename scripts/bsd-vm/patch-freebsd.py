@@ -413,3 +413,16 @@ if os.path.exists(p):
     if old in src:
         open(p, "w", encoding="utf-8").write(src.replace(old, new))
         applied.append(p)
+
+# 23. Pearl under Weston: no Aqueous IPC endpoint exists; skip the Aqueous
+# identity checks when the session desktop is Weston.
+p = os.path.join(W, "pearl/src/core/startup.zig")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    old = "    if (!supported) return error.AqueousSessionRequired;\n"
+    new = old + (
+        '    if (std.ascii.indexOfIgnoreCase(environment.desktop, "weston") != null) return;\n'
+    )
+    if old in src and "indexOfIgnoreCase(environment.desktop" not in src:
+        open(p, "w", encoding="utf-8").write(src.replace(old, new, 1))
+        applied.append(p)

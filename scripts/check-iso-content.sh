@@ -478,6 +478,9 @@ required_paths=(
   usr/share/polkit-1/actions/io.calamares.calamares.policy
   usr/bin/dconf
   usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml
+  etc/dconf/profile/user
+  etc/dconf/db/local
+  etc/dconf/db/local.d/99-dinx-dark
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
@@ -942,6 +945,22 @@ theme_sync=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/l
 grep -Fq 'gtk-application-prefer-dark-theme' <<<"$theme_sync" || fail 'GTK dark/light selection is not synchronized into user settings'
 grep -Fq 'dconf write' <<<"$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
 grep -Fq 'custom_palette' <<<"$theme_sync" || fail 'Qt6ct dark/light palette selection is not synchronized'
+# The per-user theme sync above only runs once the Pearl shell starts, so the
+# freedesktop color-scheme default has to be compiled into the image for the egui
+# applications (WordCraft, GridCraft, DeckCraft, PdfCraft, PaintFE) and the
+# libadwaita/GTK applications to start dark on a fresh or live session. Assert the
+# compiled database shipped in the image, not just the source keyfile: an overlay
+# keyfile under local.d is inert until dconf compiles it.
+dconf_profile=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/profile/user)
+grep -Fqx 'user-db:user' <<<"$dconf_profile" \
+  || fail 'the dconf user profile does not include the user database, so Pearl theme changes would not apply'
+grep -Fqx 'system-db:local' <<<"$dconf_profile" \
+  || fail 'the dconf user profile does not include the system database'
+dconf_database=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/db/local)
+grep -aq 'color-scheme' <<<"$dconf_database" \
+  || fail 'the compiled system dconf database is missing or carries no color-scheme default'
+grep -aq 'prefer-dark' <<<"$dconf_database" \
+  || fail 'the compiled system dconf database does not default to the dark color scheme'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'

@@ -40,13 +40,16 @@ blocks and a 1 MiB dictionary. Alpha 10 uses 256 KiB blocks and a 256 KiB
 dictionary, keeping the direct ISO below GitHub's 2 GiB per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
-The current profile also ships the checksum-pinned upstream AppImages PaintFE,
-WordCraft, GridCraft, DeckCraft, PdfCraft, Transit and Zenkai. Each package
-installs its AppImage under `/opt/<package>/`, a `/usr/bin/<package>` wrapper
-that runs it with `--appimage-extract-and-run` so no FUSE is required, and a
-desktop entry. PdfCraft is the default `application/pdf` handler. Images
-over GitHub's 2 GiB per-asset limit use the split release path; the rolling
-single-file alias advances only for a qualifying single-image release.
+The current profile ships PaintFE, Transit and Zenkai plus the repacked binary
+apps Patchy and Blockbench as pre-extracted `/opt/<package>/` trees (repack
+convention in `distro/iso/README.md`), and EuroOffice as the office/PDF suite.
+Each binary package installs a `/usr/bin/<package>` launcher that execs the
+tree's `AppRun` — no FUSE and no per-launch tmpfs extraction. EuroOffice is the
+default `application/pdf` and OOXML handler, consumed from the office branch's
+lean `eurooffice/v*` releases with a SHA256-verified pacman package and live
+squashfs. Images over GitHub's 2 GiB per-asset limit use the split release
+path; the rolling single-file alias advances only for a qualifying
+single-image release.
 
 ## Published assets
 

@@ -20,6 +20,7 @@ for required in \
   "'var/log/*'" \
   'strip_documentation()' \
   'strip_build_metadata()' \
+  'compile_dconf_database()' \
   'usr/share/man' \
   'usr/share/gtk-doc' \
   'usr/share/gir-1.0'; do
@@ -70,6 +71,36 @@ done
 [[ -f "$fixture_root/usr/include/ghostty/vt.h" \
    && -f "$fixture_root/usr/include/ghostty/vt/grid.h" ]] \
   || fail 'the ghostty VT headers required by the Deetty build contract were stripped'
+
+# The system dconf default must be compiled for freedesktop consumers to see it:
+# the egui Craft apps and libadwaita/GTK apps fall back to light when the portal
+# reports no color-scheme preference, and the overlay keyfiles are inert until
+# dconf compiles them. The functional check needs dconf, which the builder
+# manifest requires; keep it conditional so this contract still runs where dconf
+# is absent.
+theme_overlay="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/dconf"
+grep -Fqx 'system-db:local' "$theme_overlay/profile/user" \
+  || fail 'the dconf user profile does not include the system database'
+grep -Fq "color-scheme='prefer-dark'" "$theme_overlay/db/local.d/99-dinx-dark" \
+  || fail 'the seeded system dconf default does not select the dark color scheme'
+if command -v dconf >/dev/null 2>&1; then
+  dconf_fixture="$work_dir/dconf-root"
+  mkdir -p "$dconf_fixture/etc/dconf/db"
+  cp -a "$theme_overlay/db/local.d" "$dconf_fixture/etc/dconf/db/"
+  mkdir -p "$dconf_fixture/etc/dconf/profile"
+  cp -a "$theme_overlay/profile/user" "$dconf_fixture/etc/dconf/profile/"
+  DINX_MKSQUASHFS_REAL="$fake" \
+  DINX_COMPRESSION_ARGS="$args_file" \
+    "$wrapper" "$dconf_fixture" "$work_dir/dconf.img"
+  [[ -s "$dconf_fixture/etc/dconf/db/local" ]] \
+    || fail 'the system dconf database was not compiled for the final filesystem'
+  [[ "$(stat -c '%a' "$dconf_fixture/etc/dconf/db/local")" == 644 ]] \
+    || fail 'the compiled system dconf database is not world-readable'
+  grep -aq "prefer-dark" "$dconf_fixture/etc/dconf/db/local" \
+    || fail 'the compiled dconf database does not carry the dark color-scheme default'
+else
+  printf '%s\n' 'dinx_compression_contract: dconf unavailable, skipping the compiled-database functional check'
+fi
 
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \

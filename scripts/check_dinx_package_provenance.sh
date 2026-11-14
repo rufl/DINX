@@ -270,10 +270,6 @@ for required in \
   'build_package blockbench' \
   'build_package paintfe' \
   'build_package pixelorama' \
-  'build_package wordcraft' \
-  'build_package gridcraft' \
-  'build_package deckcraft' \
-  'build_package pdfcraft' \
   'build_package transit' \
   'build_package zenkai' \
   '--sign --key' \

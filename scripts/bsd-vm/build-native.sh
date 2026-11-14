@@ -67,21 +67,12 @@ maintainer: trafael@dinx.org
 prefix: /usr/local
 EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
-  # plist paths are prefix-relative; pkg create resolves them against the
-  # rootdir both for packing and for shlibs_provided scanning, so the rootdir
-  # must be the prefix root (stage/usr/local), not the stage itself.
-  (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
-  # pkg create -p skips shlib scanning; declare provided shlibs explicitly so
-  # dependents (dinx-aqueous/dinx-pearl) resolve libdinxcompat/libwlroots.
-  prov=$(sed -n 's|^lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$meta/plist" \
-    | sed 's/.*/"&"/' | paste -sd, -)
-  if [ -n "$prov" ]; then
-    printf 'shlibs_provided: [%s]\n' "$prov" >> "$meta/+MANIFEST"
-  fi
+  # rootdir must be the prefix root: pkg create scans it for the plist AND
+  # for shlibs_provided (an explicit -p plist disables shlib scanning).
   rm -rf "$meta/root"
   mkdir -p "$meta/root"
   cp -a "$stage/usr/local/." "$meta/root/"
-  pkg create -m "$meta" -p "$meta/plist" -r "$meta/root" -o "$REPO" >>"$LOG" 2>&1
+  pkg create -m "$meta" -r "$meta/root" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
 }
 

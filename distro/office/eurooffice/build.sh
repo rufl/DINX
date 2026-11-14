@@ -152,6 +152,14 @@ while IFS= read -r cache_file; do
   rm -f -- "$cache_file"
 done < <(find "$pkgroot/opt/eurooffice" -type f -name '*.cache')
 
+# 4d. Qt development-only payloads (not needed at runtime).
+for devel_dir in cmake pkgconfig designer qmllint qmlls qmltooling objects-RelWithDebInfo; do
+  if [[ -e "$pkgroot/opt/eurooffice/$devel_dir" ]]; then
+    record_removal "$pkgroot/opt/eurooffice/$devel_dir" qt-devel
+    rm -rf -- "$pkgroot/opt/eurooffice/$devel_dir"
+  fi
+done
+
 log "debloat removed $removed_bytes bytes ($(wc -l < "$trim_manifest") entries)"
 
 # --- 5. Strip ELF objects ------------------------------------------------------
@@ -176,9 +184,12 @@ install -Dm755 "$script_dir/assets/eurooffice.launcher" "$pkgroot/usr/bin/euroof
 install -Dm644 "$script_dir/assets/eurooffice.desktop" "$pkgroot/usr/share/applications/eurooffice.desktop"
 install -Dm644 "$script_dir/assets/LICENSE" "$pkgroot/usr/share/licenses/eurooffice/LICENSE"
 # Upstream license notice (Ascensio header + AGPL reference), when present.
-if [[ -f "$upstream_root/LICENSE" ]]; then
-  install -Dm644 "$upstream_root/LICENSE" "$pkgroot/usr/share/licenses/eurooffice/LICENSE.upstream"
-fi
+for upstream_license in LICENSE LICENSE.txt; do
+  if [[ -f "$upstream_root/$upstream_license" ]]; then
+    install -Dm644 "$upstream_root/$upstream_license" "$pkgroot/usr/share/licenses/eurooffice/LICENSE.upstream"
+    break
+  fi
+done
 # Preserve the upstream icon under the DINX desktop-entry name.
 icon_src=$(find "$pkgroot/usr/share/icons" -type f \( -name '*.png' -o -name '*.svg' \) 2>/dev/null | head -1 || true)
 if [[ -n "$icon_src" ]]; then
@@ -207,8 +218,9 @@ depends=(
 {
   printf 'pkgname = eurooffice\n'
   printf 'pkgbase = eurooffice\n'
-  printf 'pkgver = %s\n' "$version"
-  printf 'pkgrel = %s\n' "$pkgrel"
+  # pacman 7 / libalpm 16: combined version, no separate pkgrel key.
+  printf 'pkgver = %s-%s\n' "$version" "$pkgrel"
+  printf 'xdata = pkgtype=pkg\n'
   printf 'pkgdesc = EuroOffice desktop editors (DINX lean repack: documents, spreadsheets, presentations, PDF)\n'
   printf 'url = https://euro-office.github.io/\n'
   printf 'builddate = %s\n' "$(date -u +%s)"
@@ -244,9 +256,11 @@ log "package: $outdir/$pkg_name ($(stat -c '%s' "$outdir/$pkg_name") bytes)"
 
 # --- 8. Live squashfs -----------------------------------------------------------
 squash_name="eurooffice-${version}-x86_64.squashfs"
+rm -f -- "$outdir/$squash_name"
 mksquashfs "$pkgroot" "$outdir/$squash_name" \
   -comp xz -b 1048576 -Xbcj x86 -Xdict-size 1048576 \
-  -no-exports -no-xattrs -all-root -no-progress
+  -no-exports -no-xattrs -all-root -no-progress -noappend \
+  -e .PKGINFO .MTREE .INSTALL
 log "squashfs: $outdir/$squash_name ($(stat -c '%s' "$outdir/$squash_name") bytes)"
 
 # --- 9. Checksums + build metadata ----------------------------------------------
@@ -283,17 +297,21 @@ jq -n \
   > "$outdir/build-metadata.json"
 
 # --- 10. Sanity checks -----------------------------------------------------------
-unsquashfs -l "$outdir/$squash_name" | grep -Fq 'opt/eurooffice/DesktopEditors' \
+squash_listing=$(unsquashfs -l "$outdir/$squash_name")
+grep -Fq 'opt/eurooffice/DesktopEditors' <<<"$squash_listing" \
   || { printf 'build: squashfs missing DesktopEditors\n' >&2; exit 1; }
-unsquashfs -l "$outdir/$squash_name" | grep -Fq 'usr/bin/eurooffice' \
+grep -Fq 'usr/bin/eurooffice' <<<"$squash_listing" \
   || { printf 'build: squashfs missing launcher\n' >&2; exit 1; }
-tar -tf "$outdir/$pkg_name" | grep -Fqx '.PKGINFO' \
+pkg_listing=$(tar -tf "$outdir/$pkg_name")
+grep -Fqx '.PKGINFO' <<<"$pkg_listing" \
   || { printf 'build: package missing .PKGINFO\n' >&2; exit 1; }
-tar -tf "$outdir/$pkg_name" | grep -Fqx '.MTREE' \
+grep -Fqx '.MTREE' <<<"$pkg_listing" \
   || { printf 'build: package missing .MTREE\n' >&2; exit 1; }
 if command -v pacman >/dev/null 2>&1; then
   pacman -Qip "$outdir/$pkg_name" >/dev/null \
     || { printf 'build: pacman rejects package metadata\n' >&2; exit 1; }
+  pacman -Qlp "$outdir/$pkg_name" >/dev/null \
+    || { printf 'build: pacman rejects package file list (.MTREE)\n' >&2; exit 1; }
 fi
 
 log "done: upstream_installed=$upstream_installed_bytes lean_installed=$installed_bytes removed=$removed_bytes"

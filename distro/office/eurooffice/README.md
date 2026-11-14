@@ -24,13 +24,18 @@ manifest, sizes, pipeline digest).
 - Dictionaries: 42 languages, 239 MiB → keep `en_US en_GB pt_BR` (21.5 MiB).
 - CEF locales: 55 `.pak` files, 29 MiB → keep `en-US en-GB pt-BR`.
 - Regenerable sdkjs V8 code caches (`*.cache`) removed.
-- All ELF objects stripped (`strip --strip-unneeded`).
+- Qt development-only payloads removed (cmake, pkgconfig, designer, qmllint,
+  qmlls, qmltooling, objects-RelWithDebInfo).
 - **Kept intact**: converter (x2t), sdkjs editors, web-apps UI, the private
   Qt 6.10.1 / ICU (73+74) / ffmpeg bundles (version-pinned, not shareable with
   system copies), fonts, Visio support.
 
-Result: ~1.37 GiB → ~1.1 GiB installed. Override keeps via
+Result: ~1.37 GiB → ~1.11 GiB installed. Override keeps via
 `EUROFFICE_KEEP_DICTS` / `EUROFFICE_KEEP_LOCALES`.
+
+The pacman package uses the pacman 7 / libalpm 16 `.PKGINFO` format
+(combined `pkgver = <ver>-<rel>`, `xdata = pkgtype=pkg`, no `pkgrel` key).
+The live squashfs excludes `.PKGINFO`/`.MTREE`/`.INSTALL`.
 
 ## Layout
 

@@ -421,9 +421,9 @@ if os.path.exists(p):
     src = open(p, encoding="utf-8").read()
     old = "    if (!supported) return error.AqueousSessionRequired;\n"
     new = old + (
-        '    if (std.ascii.indexOfIgnoreCase(environment.desktop, "weston") != null) return;\n'
+        '    if (std.ascii.eqlIgnoreCase(environment.desktop, "Weston")) return;\n'
     )
-    if old in src and "indexOfIgnoreCase(environment.desktop" not in src:
+    if old in src and 'eqlIgnoreCase(environment.desktop, "Weston")' not in src:
         open(p, "w", encoding="utf-8").write(src.replace(old, new, 1))
         applied.append(p)
 

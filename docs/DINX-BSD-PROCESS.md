@@ -462,3 +462,38 @@ Empacotamento: dinx-weston com shlibs_provided (libweston-14) e sem
 shlibs_required (libpulsecommon é lib privada do pulseaudio); firstboot
 instala dinx-weston + xwayland + pulseaudio. Provas: proof5–8 (redirecionadas,
 screenshooter com perl alarm; serial trunca linhas >~256 chars).
+
+## 23. Aqueous corrigido: a causa real era SIGSYS, não o socket
+
+A conclusão do §20 ("socket não escuta") estava **errada**. Com gdb em cima do
+binário nativo, o compositor morria com **SIGSYS** (exit 140) logo após
+`Starting Xwayland on :0`. Dois backtraces:
+`IpcServer.privateDirectory() -> linux.getuid()` e
+`wm/output/Service.openSocket() -> linux.unlink()`.
+
+Causa raiz: o Aqueous chama ~20 syscalls **diretamente** via `std.os.linux.*`
+(socket/bind/listen/accept4/getsockopt/unlink/chmod/open/statx/...), que
+emitem o **número de syscall Linux cru**. No FreeBSD esses números caem fora
+da tabela e o kernel devolve SIGSYS. Como a morte era instantânea, o socket
+ainda não estava em listen → `connect()` dava ECONNREFUSED (sintoma, não causa).
+
+Correção: `scripts/bsd-vm/dinxlinux.c` — camada C que traduz o ABI Linux para
+FreeBSD (números de errno e de flags, layout de `sockaddr.un`,
+`SO_PEERCRED`→`getpeereid()`, `statx`→`fstatat`, `SOCK_CLOEXEC`/`NONBLOCK` via
+fcntl, `MSG_NOSIGNAL`→`SO_NOSIGPIPE`), devolvendo na convenção `usize` do
+`std.os.linux` para que `linux.errno(rc)` continue valendo. `bsd_compat.zig` é
+o front-end Zig fino (externs + adaptação de tipos); o patch #26 reescreve os
+call sites `linux.<syscall>(` → `bsdcompat.<syscall>(` mantendo `linux.errno`,
+tipos e constantes do std. Compilado em `libdinxcompat.so`.
+
+**Resultado verificado em VM FreeBSD 15.1 (headless, llvmpipe):**
+`WAYLAND_DISPLAY=wayland-1` criado, `AQUEOUS_SOCKET=.../ipc.sock` escutando,
+`XWAYLAND_OK version number: 11.0`, `XTERM_WINDOWS=1` (cliente X11 real
+através do Xwayland), e `GRIM_RC=0` → PNG de 6499 bytes do compositor via
+wlr-screencopy. **Compositor, Xwayland e captura funcionam.**
+
+Pendência: o Pearl aborta com `error=InvalidCss` — o CSS embutido usa
+`backdrop-filter`, propriedade que só existe no GTK ≥ 4.22; os ports do
+FreeBSD estão em GTK 4.20.4. Patch #27 remove as declarações `backdrop-filter`
+antes do build (efeito cosmético; o shell deve subir). O compositor não seta
+`XDG_CURRENT_DESKTOP`, então o init da sessão o exporta como `Aqueous`.

@@ -260,9 +260,12 @@ escuta no FreeBSD (blocker original, journal §20). O wrapper
 | Pacotes reais + repo local (incl. dinx-weston) | **Funciona** [V] |
 | Firstboot instala stack + dinx no instalado | **Funciona** [V] |
 | Weston headless + socket Wayland + desktop-shell | **Funciona** [V] |
-| Xwayland no FreeBSD (launch do filho) | **Não funciona (segfault)** [B] |
-| Pearl sob Weston (binário instalado stale) | **Não funciona** [B] |
-| Screenshot do desktop (screenshooter/xwd) | **Não funciona** [B] |
+| **Aqueous: socket Wayland + IPC (SIGSYS corrigido)** | **Funciona** [V] |
+| **Aqueous + Xwayland (X server 11.0 + xterm anexado)** | **Funciona** [V] |
+| **Captura da tela do compositor (grim/wlr-screencopy)** | **Funciona** [V] |
+| Pearl sob Aqueous (XDG_CURRENT_DESKTOP) | **Corrigido, validando CSS** [V] |
+| Pearl inicia (CSS `backdrop-filter` vs GTK 4.20) | **Em correção (patch 27)** [D] |
+| Xwayland no Weston (segfault no launch do filho) | **Não funciona** [B] |
 | DRM em QEMU (qualquer GPU emulado) | **Não existe no FreeBSD** [B] |
 | greetd greeter em tela | **Não funciona** (consequência) [B] |
 | Temas aplicados em tela | **Não verificável** [B] |

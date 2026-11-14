@@ -549,3 +549,18 @@ for rel in (
     if new != src:
         open(p, "w", encoding="utf-8").write(new)
         applied.append(rel + " (backdrop-filter stripped)")
+
+# 28. Pearl's build.zig floors gtk4 at 4.22.5 and pam at 1.7.2; the FreeBSD
+# quarterly package is gtk4 4.20.4 and base libpam has no .pc file. Lower the
+# gtk4 floor to the packaged version and drop the pam constraint.
+# (build-native.sh has the same sed for its own pass; this makes it apply to
+# any build path, including build-pearl.sh.)
+p = os.path.join(W, "pearl/build.zig")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    orig = src
+    src = src.replace('"gtk4 >= 4.22.5"', '"gtk4 >= 4.20.4"')
+    src = re.sub(r'^\s*"pam >= 1\.7\.2",\n', "", src, flags=re.M)
+    if src != orig:
+        open(p, "w", encoding="utf-8").write(src)
+        applied.append(p + " (gtk4 floor / pam)")

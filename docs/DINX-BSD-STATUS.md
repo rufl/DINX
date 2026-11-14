@@ -192,14 +192,23 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 ## 5. Firstboot / stack de runtime no sistema instalado
 
 ### Funciona
-- **[V]** `scripts/install-dinx-bsd.sh` (via `rc.d/dinx_firstboot`): instala
-  seatd, pipewire, wireplumber, wayland, mesa-dri, libxkbcommon,
-  xkeyboard-config, jq, gtk4, gtk4-layer-shell, libsecret, libarchive, basu;
-  habilita o repo `dinx` local e instala dinx-compat, dinx-wlroots,
-  dinx-greetd, dinx-aqueous, dinx-pearl; instala drm-kmod, vulkan-loader,
-  vulkan-tools; cria `dinx`/`greeter`; escreve PAM do greetd e config.toml;
-  habilita seatd + dinx_greetd. Evidência: `/var/log/dinx-firstboot.log` e
-  `pkg info | grep dinx` no disco do gate (5 pacotes presentes).
+- **[V]** `scripts/install-dinx-bsd.sh` (via `rc.d/dinx_firstboot`) instala as
+  **46 shlibs_required auditadas** dos pacotes nativos (30 provedores:
+  seatd, wayland, libxkbcommon, xkeyboard-config, libxcb + xcb-util-errors/
+  renderutil/wm, libdrm, libdisplay-info, libliftoff, mesa-libs, mesa-dri,
+  vulkan-loader, libinput, libevdev, libudev-devd, pixman, png, cairo,
+  gdk-pixbuf2, glib, gtk4, gtk4-layer-shell, lcms2, libarchive, libxml2,
+  libsecret, polkit, curl, cups, pulseaudio, pipewire, wireplumber) mais
+  xwayland, wayvnc, basu, jq; habilita o repo local e instala dinx-compat,
+  dinx-wlroots, dinx-greetd, dinx-aqueous, dinx-pearl; instala drm-kmod e
+  vulkan-tools; cria `dinx` (grupo `video`)/`greeter`; escreve o PAM do greetd
+  e o config.toml; habilita seatd + dinx_greetd.
+  Auditoria: `scripts/bsd-vm/check-shlibs.py` (MISSING: 0) e
+  `scripts/bsd-vm/check-dep-names.sh` (`bad=0`, todos os 41 nomes existem no
+  catálogo do 15.1). Sem essa lista o `pkg add` falharia com "Missing shlib",
+  porque os manifests declaram `shlibs_required` mas nenhum `deps`.
+- **[V]** `installerconfig` grava `linproc` no `/etc/fstab`: o usuário da
+  sessão não pode montar filesystems, e o Pearl exige `/proc/self/exe`.
 - **[V]** Contas, PAM (`pam_unix` auth + `pam_permit` account/session) e
   config do greetd (`initial_session` → `dinx-session-select`, user dinx).
 - **[I]** Stack gaming/Linuxulator (wine-proton, libc6-shim, linux-steam-utils,
@@ -210,8 +219,11 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 ### Não funciona / notas
 - **[D]** `noctalia` (shell alternativo) não existe no repo → firstboot registra
   NOTE e segue (comportamento esperado, não falha).
-- **[B]** Sessão Pearl de ponta a ponta: bloqueada pelo §4.
-- **[D]** `dinx` sem grupo `video` na criação do firstboot (ver §4).
+- **[B]** Sessão Pearl de ponta a ponta **no disco instalado**: os binários
+  foram validados na VM de build, mas a instalação via firstboot ainda não foi
+  re-executada com estes pacotes (ISO nova precisa de um gate).
+- **[D]** `dinx-weston` continua buildável (`build-weston.sh`) mas não é
+  embarcado nem instalado: o Xwayland dele segfaulta no FreeBSD.
 
 ---
 

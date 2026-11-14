@@ -64,7 +64,7 @@ fi
 
 # 3. Download and verify the new release.
 mkdir -p "$stage_dir"
-gh release download "$latest_tag" --repo "$repo" --dir "$stage_dir" \
+gh release download "$latest_tag" --repo "$repo" --dir "$stage_dir" --clobber \
   --pattern '*.pkg.tar.zst' --pattern '*.squashfs' \
   --pattern SHA256SUMS --pattern build-metadata.json
 (cd "$stage_dir" && sha256sum -c SHA256SUMS)

@@ -390,3 +390,31 @@ lenta demais (>21 min vs 142 s com unsafe) — inviável para o gate.
 Correção: manter `cache=unsafe` + shutdown robusto no gate (login root,
 `shutdown -p now` repetido 2x com espera, wait 90 s). Lição: a durabilidade
 vem do unmount limpo do guest, não do modo de cache do QEMU.
+
+## 19. Empacotamento nativo: formato do pkg e shlibs
+
+`pkg create -m` não varre o rootdir; com `-p` o plist usa paths **absolutos
+de instalação** e o rootdir é o stage (`usr/local/...`). `shlibs_provided`
+nunca é calculado com `-p` (e um campo escrito à mão no +MANIFEST é
+descartado) → pós-injeção: extrair o .pkg, editar +MANIFEST e
++COMPACT_MANIFEST com python, reempacotar com `tar -P -cf ... -s '|^usr|/usr|'`
+(membros absolutos, manifests sem `/`). Sem isso, `pkg add` falha com
+"Missing shlib libdinxcompat.so" ou "//usr/local/... not specified".
+`dinx-wlroots` conflita com `wlroots020` (mesmos arquivos) → o firstboot
+instala só o dinx-wlroots.
+
+## 20. Runtime: statx, environ e o socket Wayland do Aqueous
+
+`std.os.linux.statx` é syscall Linux cru (o shim libc não intercepta) →
+patch no std do Zig roteando para o statx do libdinxcompat
+(`@extern(*const fn ... callconv(.c) c_int, .{ .name = "statx" })`).
+Helper exes Zig (aqueousctl) não exportam `environ`, que a libc do FreeBSD
+exige do executável → storage no shim + `LD_PRELOAD` do shim nesses helpers
+(preload no compositor o mata).
+**Blocker aberto:** o Aqueous headless renderiza frames (llvmpipe, HEADLESS-1
+1280x720) mas o socket Wayland criado nunca escuta: `connect()` retorna
+ECONNREFUSED em todos os segundos de vida e `sockstat -l` não mostra
+listener. Nenhum cliente (Pearl, grim) consegue anexar → desktop interativo
+ainda não funciona no FreeBSD; requer porting do caminho socket/event-loop
+do wlroots. Weston (compositor aninhado de referência) não existe no repo
+pkg do FreeBSD 15.1, impedindo a prova aninhada.

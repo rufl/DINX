@@ -2,17 +2,30 @@
 set -eu
 
 # Haruna activates its own KColorScheme after Qt starts, so qt6ct alone cannot
-# keep it dark. Set only Haruna's application-local preference.
+# keep it dark. Follow the selected Pearl port's generated KDE scheme when a
+# port is active; otherwise keep the DINX dark scheme.
 config_root=${XDG_CONFIG_HOME:-"$HOME/.config"}
 settings_dir=$config_root/haruna
 settings_file=$settings_dir/haruna.conf
+preferences=$config_root/pearl/preferences.json
+
+scheme='DINX Dark'
+if command -v jq >/dev/null 2>&1 && [ -r "$preferences" ]; then
+    package_id=$(jq -r 'select(.theme.mode == "package") | .theme.package_id // ""' "$preferences" 2>/dev/null || printf '')
+    case "$package_id" in
+        dinx.skeuos-rounded) scheme='Skeuos Rounded (DINX)' ;;
+        dinx.skeuos-square) scheme='Skeuos Square (DINX)' ;;
+        dinx.orchis-rounded) scheme='Orchis Rounded (DINX)' ;;
+        dinx.orchis-square) scheme='Orchis Square (DINX)' ;;
+    esac
+fi
 
 umask 077
 mkdir -p -- "$settings_dir"
 if [ -L "$settings_file" ]; then
     printf 'haruna: refusing symlinked settings file: %s\n' "$settings_file" >&2
 else
-    kwriteconfig6 --file "$settings_file" --group General --key ColorScheme 'DINX Dark'
+    kwriteconfig6 --file "$settings_file" --group General --key ColorScheme "$scheme"
 fi
 
 export QT_QPA_PLATFORMTHEME=qt6ct

@@ -67,10 +67,14 @@ maintainer: trafael@dinx.org
 prefix: /usr/local
 EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
-  # pkg create -m does not scan rootdir; an explicit plist is required.
-  # plist paths are absolute INSTALL paths (pkg add installs them literally).
+  # plist paths are prefix-relative; pkg create resolves them against the
+  # rootdir both for packing and for shlibs_provided scanning, so the rootdir
+  # must be the prefix root (stage/usr/local), not the stage itself.
   (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
-  pkg create -m "$meta" -p "$meta/plist" -r "$stage" -o "$REPO" >>"$LOG" 2>&1
+  rm -rf "$meta/root"
+  mkdir -p "$meta/root"
+  cp -a "$stage/usr/local/." "$meta/root/"
+  pkg create -m "$meta" -p "$meta/plist" -r "$meta/root" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
 }
 

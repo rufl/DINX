@@ -21,8 +21,8 @@ manifest, sizes, pipeline digest).
 
 ## Debloat policy (measured on v9.3.8)
 
-- Dictionaries: 42 languages, 239 MiB → keep `en_US en_GB pt_BR` (21.5 MiB).
-- CEF locales: 55 `.pak` files, 29 MiB → keep `en-US en-GB pt-BR`.
+- Dictionaries: 42 languages, 239 MiB → keep `en_US pt_BR`.
+- CEF locales: 55 `.pak` files, 29 MiB → keep `en-US pt-BR`.
 - Regenerable sdkjs V8 code caches (`*.cache`) removed.
 - Qt development-only payloads removed (cmake, pkgconfig, designer, qmllint,
   qmlls, qmltooling, objects-RelWithDebInfo).
@@ -30,11 +30,19 @@ manifest, sizes, pipeline digest).
   (near-incompressible in the ISO) → keep `EN PT` (33 MiB).
 - IE/asm.js fallback engines removed (`*_ie.js`, `monaco-for-ie`): the
   desktop editors run on CEF and use the WASM/modern paths.
+- Unused runtime libraries removed (dinx3): Qt Designer/DesignerComponents/
+  UiTools/QuickTest/Test, ICU tools/test/io (`libicutu`, `libicutest`,
+  `libicuio`), embedded platform plugins (eglfs, linuxfb, minimal,
+  minimalegl, vkkhrdisplay, vnc + EglFS/KMS support libs), and upstream
+  `provenance.json`. ICU i18n **stays** (DesktopEditors links it). Every
+  build verifies dynamic resolution of DesktopEditors, libascdocumentscore
+  and libx2tlib with ldd after debloat.
 - **Kept intact**: converter (x2t), sdkjs editors, web-apps UI, the private
   Qt 6.10.1 / ICU (73+74) / ffmpeg bundles (version-pinned, not shareable with
   system copies), fonts, Visio support.
 
-Result (dinx2): 1,434,607,844 → 945,018,074 bytes installed (−467 MiB).
+Result (dinx3): 1,434,607,844 → 919,869,773 bytes installed (−491 MiB);
+live squashfs 245,669,888 B (234 MiB), pacman package 319,993,020 B.
 Override keeps via `EUROFFICE_KEEP_DICTS` / `EUROFFICE_KEEP_LOCALES` /
 `EUROFFICE_KEEP_TEMPLATES`.
 

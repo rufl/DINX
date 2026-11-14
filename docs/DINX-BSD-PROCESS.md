@@ -492,8 +492,37 @@ tipos e constantes do std. Compilado em `libdinxcompat.so`.
 através do Xwayland), e `GRIM_RC=0` → PNG de 6499 bytes do compositor via
 wlr-screencopy. **Compositor, Xwayland e captura funcionam.**
 
-Pendência: o Pearl aborta com `error=InvalidCss` — o CSS embutido usa
-`backdrop-filter`, propriedade que só existe no GTK ≥ 4.22; os ports do
-FreeBSD estão em GTK 4.20.4. Patch #27 remove as declarações `backdrop-filter`
-antes do build (efeito cosmético; o shell deve subir). O compositor não seta
-`XDG_CURRENT_DESKTOP`, então o init da sessão o exporta como `Aqueous`.
+Pendência (resolvida no §24): o Pearl abortava com `error=InvalidCss` — o CSS
+embutido usa `backdrop-filter`, propriedade que só existe no GTK ≥ 4.22; os
+ports do FreeBSD estão em GTK 4.20.4. Patch #27 remove as declarações
+`backdrop-filter` antes do build (efeito cosmético; o shell sobe). O compositor
+não seta `XDG_CURRENT_DESKTOP`, então o init da sessão o exporta como `Aqueous`.
+
+## 24. Desktop funcional: evidência verificada
+
+Prova em VM FreeBSD 15.1 (headless, llvmpipe), com o compositor lançado pelo
+seu contrato real (`aqueous -c <init>`, que injeta `WAYLAND_DISPLAY`,
+`AQUEOUS_SOCKET` e `DISPLAY` no filho init e mantém o loop vivo):
+
+```
+WAYLAND_DISPLAY=wayland-1
+AQUEOUS_SOCKET=/home/dinx/.run/aqueous/d8e26a3.../ipc.sock
+DISPLAY=:0
+XWAYLAND_OK version number:    11.0
+XTERM_WINDOWS= 1
+PEARL_ALIVE=yes
+info(pearl): event=ready mode=session
+info(pearl): event=desktop app-index-ready entries=5
+GRIM_RC=0   -rw------- 1 dinx wheel 6499 /tmp/dinx-desktop.png
+```
+
+A captura `docs/proof/aqueous-desktop-xwayland.png` (1280×720) mostra a janela
+do xterm aberta **via Xwayland** com o texto `DINX_XWAYLAND_WINDOW_OK`, borda e
+cantos arredondados do pipeline Vulkan do compositor, e cursor. Ou seja:
+compositor, Xwayland, shell Pearl e captura por wlr-screencopy funcionam.
+
+Fixes que destravaram o Pearl: patch #27 remove `backdrop-filter` do CSS
+(propriedade GTK ≥ 4.22; ports têm 4.20.4 — o parser do GTK abortava com
+`error=InvalidCss`) e patch #28 baixa o floor `gtk4 >= 4.22.5` → `>= 4.20.4` e
+remove a exigência de `pam >= 1.7.2` (base não tem .pc). O init exporta
+`XDG_CURRENT_DESKTOP=Aqueous` porque o compositor não o define.

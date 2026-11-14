@@ -1,3 +1,16 @@
+# greetd configuration for DINX-BSD.
+#
+# [terminal] is required: without it greetd fails at startup with
+# "terminal: current vt invalid: 0" because it cannot determine which VT to
+# take over. vt1 matches the vt1 entry in /etc/ttys (getty) so greetd and the
+# console agree on the same terminal.
+[terminal]
+vt = 1
+
+# Greeter shown at boot; agreety is built from source together with greetd.
+# On successful login it runs the session selector, which execs the Aqueous
+# compositor with Pearl as the shell (headless + wayvnc when there is no DRM
+# device, which is the case for virtual GPUs on FreeBSD).
 [default_session]
 command = "agreety --cmd /usr/local/bin/dinx-session-select"
 user = "greeter"

@@ -212,10 +212,38 @@ prune_excluded_packages() {
   remove_vim_compat_aliases "$root"
 }
 
+# Compile the system dconf database from the checked-in keyfiles. dconf reads
+# only the compiled binary at /etc/dconf/db/local at runtime; the keyfile
+# fragments under /etc/dconf/db/local.d are inert until compiled, and the
+# overlay is copied by rsync so no pacman dconf-update hook fires for it.
+# `dconf compile` writes the gvdb binary directly and needs no chroot. Seeding
+# the dark color-scheme system default makes freedesktop consumers (the egui
+# Craft apps, libadwaita/GTK apps) start dark on a fresh or live session.
+compile_dconf_database() {
+  local root=$1
+  local db_dir="$root/etc/dconf/db"
+
+  [[ -d "$db_dir/local.d" ]] || return 0
+  command -v dconf >/dev/null 2>&1 || {
+    printf 'dinx-final-squashfs: etc/dconf/db/local.d present but dconf is unavailable; cannot compile the system database\n' >&2
+    return 1
+  }
+  dconf compile "$db_dir/local" "$db_dir/local.d" || {
+    printf 'dinx-final-squashfs: failed to compile the system dconf database\n' >&2
+    return 1
+  }
+  [[ -s "$db_dir/local" ]] || {
+    printf 'dinx-final-squashfs: dconf compile produced no database\n' >&2
+    return 1
+  }
+  printf '%s\n' 'dinx-final-squashfs: compiled system dconf database at etc/dconf/db/local'
+}
+
 if [[ -n "$source_root" ]]; then
   prune_excluded_packages "$source_root"
   strip_documentation "$source_root"
   strip_build_metadata "$source_root"
+  compile_dconf_database "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.

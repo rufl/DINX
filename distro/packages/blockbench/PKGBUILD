@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${BLOCKBENCH_LICENSE_URL:?missing BLOCKBENCH_LICENSE_URL}"
 : "${BLOCKBENCH_LICENSE_SHA256:?missing BLOCKBENCH_LICENSE_SHA256}"
 pkgver="$BLOCKBENCH_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Low-poly 3D model editor for game assets'
 arch=('x86_64')
 url='https://www.blockbench.net/'
@@ -26,13 +26,13 @@ source=(
 sha256sums=(
   "$BLOCKBENCH_SOURCE_SHA256"
   "$BLOCKBENCH_LICENSE_SHA256"
-  'dfa5e13237334ff151f289a9c0f889faef5d06c3d33424cab49d2ffc7f710442'
+  'bfb5a343153115bc6365b97bd03b84ffb12815e7a095f0081ef2791ad5707c16'
   '92558cc3bdc01d8e64ad6a22d7a1c0d1214f05178951ab5b6c6c00e7bd2bd8da'
 )
 
 package() {
-  install -Dm755 "$srcdir/Blockbench_${pkgver}.AppImage" \
-    "$pkgdir/opt/blockbench/Blockbench.AppImage"
+  bash "$startdir/../../../scripts/lib/repack-appimage.sh" \
+    "$srcdir/Blockbench_${pkgver}.AppImage" "$pkgdir/opt/blockbench" --trim-locales
   install -Dm755 "$srcdir/blockbench" "$pkgdir/usr/bin/blockbench"
   install -Dm644 "$srcdir/blockbench.desktop" \
     "$pkgdir/usr/share/applications/blockbench.desktop"
@@ -42,6 +42,8 @@ package() {
 Blockbench ${pkgver} upstream source and build information:
 https://github.com/JannisX11/Blockbench/tree/v${pkgver}
 
-The DINX package redistributes the upstream x86_64 AppImage without modification.
+The DINX package repacks the upstream x86_64 AppImage as a pre-extracted tree
+(Electron locales trimmed to en/pt; binaries left unstripped) so launches
+never extract into tmpfs.
 EOF
 }

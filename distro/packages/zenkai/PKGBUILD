@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${ZENKAI_LICENSE_URL:?missing ZENKAI_LICENSE_URL}"
 : "${ZENKAI_LICENSE_SHA256:?missing ZENKAI_LICENSE_SHA256}"
 pkgver="${ZENKAI_VERSION}"
-pkgrel=1
+pkgrel=2
 pkgdesc="Fast app launcher written in Zig"
 arch=('x86_64')
 url='https://github.com/dayvster/zenkai'
@@ -26,13 +26,13 @@ source=(
 sha256sums=(
   "${ZENKAI_SOURCE_SHA256}"
   "${ZENKAI_LICENSE_SHA256}"
-  'eae3c4309c67aa838b571bce1689943af9e898b2c8be60871f2adf708e3137e4'
+  '513ba619758fc5684f54ebf270ff0481daa7532e3c6222e3f25a2318bde2542b'
   '7fbfc0549a4c09da1b992cb4cd6546e53b2c139773b02a8d719f8d9bdde6ef6e'
 )
 
 package() {
-  install -Dm755 "$srcdir/zenkai-${pkgver}-x86_64.AppImage" \
-    "$pkgdir/opt/zenkai/zenkai.AppImage"
+  bash "$startdir/../../../scripts/lib/repack-appimage.sh" \
+    "$srcdir/zenkai-${pkgver}-x86_64.AppImage" "$pkgdir/opt/zenkai" --strip --trim-locales
   install -Dm755 "$srcdir/zenkai" "$pkgdir/usr/bin/zenkai"
   install -Dm644 "$srcdir/zenkai.desktop" \
     "$pkgdir/usr/share/applications/zenkai.desktop"
@@ -42,6 +42,7 @@ package() {
 Zenkai ${pkgver} upstream source and build information:
 https://github.com/dayvster/zenkai/tree/v${pkgver}
 
-The DINX package redistributes the upstream x86_64 AppImage without modification.
+The DINX package repacks the upstream x86_64 AppImage as a pre-extracted tree
+(ELF stripped, locales trimmed to en/pt) so launches never extract into tmpfs.
 EOF
 }

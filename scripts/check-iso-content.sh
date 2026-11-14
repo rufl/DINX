@@ -277,19 +277,19 @@ required_paths=(
   usr/bin/paintfe
   usr/local/bin/haruna
   usr/share/color-schemes/DINXDark.colors
-  opt/paintfe/PaintFE.AppImage
+  opt/paintfe/AppRun
   usr/share/applications/paintfe.desktop
   usr/share/icons/hicolor/256x256/apps/paintfe.png
   usr/share/licenses/paintfe/LICENSE.md
   usr/bin/transit
-  opt/transit/transit.AppImage
+  opt/transit/AppRun
   usr/share/applications/transit.desktop
   usr/share/icons/hicolor/256x256/apps/transit.png
   usr/share/licenses/transit/LICENSE-MIT
   usr/share/licenses/transit/LICENSE-APACHE
   usr/share/mime/packages/transit.xml
   usr/bin/zenkai
-  opt/zenkai/zenkai.AppImage
+  opt/zenkai/AppRun
   usr/share/applications/zenkai.desktop
   usr/share/licenses/zenkai/LICENCE.md
   usr/bin/krita
@@ -298,8 +298,8 @@ required_paths=(
   usr/bin/patchy
   usr/lib/patchy/patchy-force-darkest
   usr/bin/blockbench
-  opt/patchy/PatchyLinux.AppImage
-  opt/blockbench/Blockbench.AppImage
+  opt/patchy/AppRun
+  opt/blockbench/AppRun
   usr/share/applications/org.kde.krita.desktop
   usr/share/applications/org.inkscape.Inkscape.desktop
   usr/share/applications/org.godotengine.Godot.desktop
@@ -1290,12 +1290,10 @@ grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
 grep -Fq 'application/pdf=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default PDF handler'
-for appimage_launcher in paintfe transit zenkai; do
+for appimage_launcher in paintfe transit zenkai patchy blockbench; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
-  grep -Fq -- '--appimage-extract-and-run "$@"' <<<"$launcher_script" \
-    || fail "$appimage_launcher launcher does not support systems without FUSE"
-  grep -Fq "/opt/$appimage_launcher/" <<<"$launcher_script" \
-    || fail "$appimage_launcher launcher does not target its package-owned AppImage"
+  grep -Fq "exec /opt/$appimage_launcher/AppRun" <<<"$launcher_script" \
+    || fail "$appimage_launcher launcher does not exec its pre-extracted /opt tree"
 done
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'

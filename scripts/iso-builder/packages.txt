@@ -13,6 +13,7 @@ cjson
 calamares
 calamares-extensions
 dbus
+dconf
 dialog
 dinit
 fzf

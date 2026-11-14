@@ -12,7 +12,7 @@ source_env="$startdir/source.env"
 : "${PAINTFE_ICON_URL:?missing PAINTFE_ICON_URL}"
 : "${PAINTFE_ICON_SHA256:?missing PAINTFE_ICON_SHA256}"
 pkgver="${PAINTFE_VERSION}"
-pkgrel=1
+pkgrel=2
 pkgdesc="Fast, lightweight raster image editor built in Rust"
 arch=('x86_64')
 url='https://github.com/kylejckson/PaintFE'
@@ -30,13 +30,13 @@ sha256sums=(
   "${PAINTFE_SOURCE_SHA256}"
   "${PAINTFE_LICENSE_SHA256}"
   "${PAINTFE_ICON_SHA256}"
-  'd42c6e0aad69d7c2300680e715a57977c0b5fe93f95fb6d4900f6ccc9cfba9c5'
+  '3dedde31d7027753bb5cd9f5acf0b96293023a923f496a0151ca81aca943d82b'
   '6c5cfa7be3c70ad489713a459e528acfa3984037b9ffe0b1edec7b09dffea3ac'
 )
 
 package() {
-  install -Dm755 "$srcdir/paintfe-${pkgver}-x86_64.AppImage" \
-    "$pkgdir/opt/paintfe/PaintFE.AppImage"
+  bash "$startdir/../../../scripts/lib/repack-appimage.sh" \
+    "$srcdir/paintfe-${pkgver}-x86_64.AppImage" "$pkgdir/opt/paintfe" --strip --trim-locales
   install -Dm755 "$srcdir/paintfe" "$pkgdir/usr/bin/paintfe"
   install -Dm644 "$srcdir/paintfe.desktop" \
     "$pkgdir/usr/share/applications/paintfe.desktop"
@@ -48,6 +48,7 @@ package() {
 PaintFE ${pkgver} upstream source and build information:
 https://github.com/kylejckson/PaintFE/tree/v${pkgver}
 
-The DINX package redistributes the upstream x86_64 AppImage without modification.
+The DINX package repacks the upstream x86_64 AppImage as a pre-extracted tree
+(ELF stripped, locales trimmed to en/pt) so launches never extract into tmpfs.
 EOF
 }

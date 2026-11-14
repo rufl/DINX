@@ -118,6 +118,24 @@ int *__errno_location(void) {
  * libc references it (err/warn/getopt paths). Cosmetic fallback name. */
 char *__progname = "dinx";
 
+/* /proc/self/exe has no FreeBSD equivalent exposed to userspace; resolve the
+ * running executable via the kern.proc.pathname sysctl instead. Writes a
+ * NUL-terminated path into buf (size bytes). Returns the path length (without
+ * NUL) on success, -1 on failure. */
+#include <sys/sysctl.h>
+int dinx_self_exe_path(char *buf, size_t size) {
+    if (buf == NULL || size == 0)
+        return -1;
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+    size_t len = size;
+    buf[0] = '\0';
+    if (sysctl(mib, 4, buf, &len, NULL, 0) != 0)
+        return -1;
+    if (len == 0)
+        return -1;
+    return (int)len - 1;
+}
+
 /* FreeBSD libc expects the executable to provide `environ`; Zig helper exes
  * (aqueousctl) do not export it. Provide the storage here; libc's startup
  * fills it through the interposed symbol. */

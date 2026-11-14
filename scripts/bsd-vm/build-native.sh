@@ -21,8 +21,9 @@ zig version | tee -a "$LOG"
 build_zig() {
   name=$1
   dir=$2
-  log "== building $name in $dir"
-  (cd "$dir" && zig build -Doptimize=ReleaseSafe) >>"$LOG" 2>&1
+  shift 2
+  log "== building $name in $dir (flags: $*)"
+  (cd "$dir" && zig build -Doptimize=ReleaseSafe "$@") >>"$LOG" 2>&1
   rc=$?
   log "== $name zig build exit=$rc"
   return $rc
@@ -138,7 +139,7 @@ if [ ! -f "$AQ_DIR/build.zig.zon" ]; then
 fi
 stamp aqueous-start
 if [ -n "$AQ_DIR" ]; then
-  if build_zig aqueous "$AQ_DIR"; then
+  if build_zig aqueous "$AQ_DIR" -Dxwayland=true; then
     stage="$W/stage-dinx-aqueous"
     rm -rf "$stage"; mkdir -p "$stage/usr/local/bin"
     for b in aqueous aqueousctl; do

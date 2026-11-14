@@ -426,3 +426,45 @@ if os.path.exists(p):
     if old in src and "indexOfIgnoreCase(environment.desktop" not in src:
         open(p, "w", encoding="utf-8").write(src.replace(old, new, 1))
         applied.append(p)
+
+# 24. Aqueous xwayland_dpi.zig: Linux-only errno/environ/self-exe.
+#   - c.__errno_location() is glibc; FreeBSD std exposes std.c._errno().
+#   - c.environ is not in the translated C module; use std.posix.environ.
+#   - /proc/self/exe does not exist; use std.fs.selfExePathAlloc.
+p = os.path.join(W, "Aqueous/compositor/aqueous/xwayland_dpi.zig")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    orig = src
+    src = src.replace("c.__errno_location().*", "std.c._errno().*")
+    if "dinx_self_exe_path" not in src:
+        src = src.replace(
+            'pub const c = @import("xwayland_c");',
+            'pub const c = @import("xwayland_c");\n'
+            'extern "c" fn dinx_self_exe_path(buf: [*]u8, size: usize) c_int;',
+            1,
+        )
+    src = src.replace(
+        'if (c.posix_spawn(&self.pid, "/proc/self/exe", &actions, &attr, '
+        '@ptrCast(@constCast(&argv)), c.environ) != 0) return error.Spawn;',
+        "var exe_buf: [4096]u8 = undefined;\n"
+        "        if (dinx_self_exe_path(exe_buf[0..].ptr, exe_buf.len) <= 0) return error.Spawn;\n"
+        "        if (c.posix_spawn(&self.pid, @ptrCast(&exe_buf), &actions, &attr, "
+        "@ptrCast(@constCast(&argv)), @ptrCast(std.posix.environ.ptr)) != 0) return error.Spawn;",
+    )
+    if src != orig:
+        open(p, "w", encoding="utf-8").write(src)
+        applied.append(p)
+
+# 24b. xwayland_dpi.h translate-c chokes on FreeBSD's __SSP_FORTIFY_LEVEL
+# fortified inline functions. Disable before the system headers are pulled in.
+p = os.path.join(W, "Aqueous/compositor/aqueous/xwayland_dpi.h")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    if "__SSP_FORTIFY_LEVEL" not in src:
+        src = src.replace(
+            "#define _GNU_SOURCE 1",
+            "#define _GNU_SOURCE 1\n#undef __SSP_FORTIFY_LEVEL\n#undef _FORTIFY_SOURCE",
+            1,
+        )
+        open(p, "w", encoding="utf-8").write(src)
+        applied.append(p)

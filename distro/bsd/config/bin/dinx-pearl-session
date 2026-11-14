@@ -29,6 +29,9 @@ chmod 1777 /tmp/.X11-unix 2>/dev/null || true
 init="$XDG_RUNTIME_DIR/dinx-init"
 cat > "$init" <<'EOF'
 #!/bin/sh
+# Pearl validates XDG_CURRENT_DESKTOP against the compositor name; Aqueous
+# injects WAYLAND_DISPLAY/AQUEOUS_SOCKET/DISPLAY but not this variable.
+export XDG_CURRENT_DESKTOP=Aqueous
 # No DRM device (VMs): expose the headless session over VNC so it is usable
 # from the hypervisor host. wayvnc attaches as a Wayland client and needs
 # only wlr-screencopy + virtual input, no GPU.

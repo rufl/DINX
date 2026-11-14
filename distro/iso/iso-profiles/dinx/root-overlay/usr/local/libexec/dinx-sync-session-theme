@@ -122,13 +122,49 @@ for gtk_version in 3.0 4.0; do
 done
 
 qt_config="$config_home/qt6ct/qt6ct.conf"
-qt_palette="$config_home/qt6ct/colors/DINX.conf"
-if [ "$theme_variant" = dark ]; then
-  set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
+if [ "$theme_mode" = package ]; then
+  # Pearl's qt6ct profile exports the active port palette here.
+  set_ini_value "$qt_config" Appearance color_scheme_path "$config_home/qt6ct/colors/pearl-material.conf" || true
   set_ini_value "$qt_config" Appearance custom_palette true || true
 else
-  set_ini_value "$qt_config" Appearance custom_palette false || true
+  qt_palette="$config_home/qt6ct/colors/DINX.conf"
+  if [ "$theme_variant" = dark ]; then
+    set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
+    set_ini_value "$qt_config" Appearance custom_palette true || true
+  else
+    set_ini_value "$qt_config" Appearance custom_palette false || true
+  fi
 fi
 
-printf 'dinx-sync-session-theme: variant=%s gtk_theme=%s qt6ct=%s\n' \
-  "$theme_variant" "$gtk_theme" "$theme_variant"
+if [ "$theme_mode" = package ]; then
+  # Deetty reads ~/.config/deetty while Pearl's ghostty adapter writes
+  # ~/.config/ghostty/themes/pearl-material; bridge the generated theme.
+  if mkdir -p -- "$config_home/deetty/themes" 2>/dev/null; then
+    if [ ! -e "$config_home/deetty/themes/pearl-material" ] || [ -L "$config_home/deetty/themes/pearl-material" ]; then
+      ln -sfn ../../ghostty/themes/pearl-material "$config_home/deetty/themes/pearl-material"
+    fi
+    deetty_config="$config_home/deetty/config"
+    if [ -L "$deetty_config" ]; then
+      printf 'dinx-sync-session-theme: preserving user-managed symlink: %s\n' "$deetty_config" >&2
+    elif [ -e "$deetty_config" ] && [ ! -f "$deetty_config" ]; then
+      printf 'dinx-sync-session-theme: not a regular settings file: %s\n' "$deetty_config" >&2
+    else
+      deetty_tmp="$deetty_config.tmp.$$"
+      if [ -f "$deetty_config" ]; then
+        awk 'BEGIN { done = 0 } /^theme[[:space:]]*=/ { print "theme = pearl-material"; done = 1; next } { print } END { if (!done) print "theme = pearl-material" }' \
+          "$deetty_config" > "$deetty_tmp"
+      else
+        printf 'theme = pearl-material\n' > "$deetty_tmp"
+      fi
+      if chmod 600 "$deetty_tmp" && mv -f "$deetty_tmp" "$deetty_config"; then
+        :
+      else
+        rm -f -- "$deetty_tmp"
+        printf 'dinx-sync-session-theme: cannot install settings: %s\n' "$deetty_config" >&2
+      fi
+    fi
+  fi
+fi
+
+printf 'dinx-sync-session-theme: variant=%s mode=%s gtk_theme=%s qt6ct=%s\n' \
+  "$theme_variant" "$theme_mode" "$gtk_theme" "$theme_variant"

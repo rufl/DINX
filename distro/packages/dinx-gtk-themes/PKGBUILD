@@ -9,11 +9,14 @@ source_env="$startdir/source.env"
 : "${SKEUOS_UPSTREAM_COMMIT:?missing Skeuos upstream commit}"
 : "${SKEUOS_UPSTREAM_SOURCE_URL:?missing Skeuos upstream source URL}"
 : "${SKEUOS_UPSTREAM_SOURCE_SHA256:?missing Skeuos upstream source checksum}"
+: "${SKEUOS_FORK_COMMIT:?missing Skeuos fork commit}"
+: "${SKEUOS_FORK_SOURCE_URL:?missing Skeuos fork source URL}"
+: "${SKEUOS_FORK_SOURCE_SHA256:?missing Skeuos fork source checksum}"
 : "${ORCHIS_FORK_COMMIT:?missing Orchis fork commit}"
 : "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
 : "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
 pkgver="$DINX_GTK_THEMES_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -21,10 +24,12 @@ license=('GPL-3.0-only')
 makedepends=('sassc' 'python')
 source=(
   "skeuos-gtk-${SKEUOS_UPSTREAM_COMMIT}.tar.gz::${SKEUOS_UPSTREAM_SOURCE_URL}"
+  "skeuos-gtk-fork-${SKEUOS_FORK_COMMIT}.tar.gz::${SKEUOS_FORK_SOURCE_URL}"
   "Orchis-theme-${ORCHIS_FORK_COMMIT}.tar.gz::${ORCHIS_FORK_SOURCE_URL}"
 )
 sha256sums=(
   "$SKEUOS_UPSTREAM_SOURCE_SHA256"
+  "$SKEUOS_FORK_SOURCE_SHA256"
   "$ORCHIS_FORK_SOURCE_SHA256"
 )
 
@@ -106,6 +111,41 @@ for name in os.listdir(out):
             p = os.path.join(out, name, gtk, css)
             if not os.path.islink(p):
                 square(p)
+EOF
+
+  # Unify accents with the Pearl ports: replace the raw upstream accent hex
+  # with the port palette primary (contrast-adjusted) so shell, application
+  # profiles and GTK themes share identical accent values. Derived shades
+  # remain upstream-derived.
+  python3 - "$out" "$srcdir/skeuos-gtk-${SKEUOS_FORK_COMMIT}" "$orchis" <<'EOF'
+import json, os, re, sys
+out, skeuos_fork, orchis = sys.argv[1:4]
+def primary(root, theme, variant):
+    with open(os.path.join(root, 'themes', theme, variant + '.json')) as f:
+        return json.load(f)['primary'].lower()
+sk = primary(skeuos_fork, 'skeuos-rounded', 'dark')
+or_dark = primary(orchis, 'orchis-rounded', 'dark')
+or_light = primary(orchis, 'orchis-rounded', 'light')
+def unify(path, raw, new):
+    if os.path.islink(path):
+        return
+    with open(path) as f:
+        data = f.read()
+    replaced = re.sub(re.escape(raw), new, data, flags=re.IGNORECASE)
+    if replaced != data:
+        with open(path, 'w') as f:
+            f.write(replaced)
+for name in os.listdir(out):
+    variant = 'dark' if name.endswith('-Dark') else 'light'
+    for gtk in ('gtk-3.0', 'gtk-4.0'):
+        for css in ('gtk.css', 'gtk-dark.css'):
+            p = os.path.join(out, name, gtk, css)
+            file_variant = 'dark' if css == 'gtk-dark.css' else variant
+            if name.startswith('Skeuos-'):
+                unify(p, '#2777ff', sk)
+            elif name.startswith('Orchis-'):
+                raw, new = ('#3281ea', or_dark) if file_variant == 'dark' else ('#1a73e8', or_light)
+                unify(p, raw, new)
 EOF
 }
 

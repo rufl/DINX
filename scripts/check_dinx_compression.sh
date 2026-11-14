@@ -23,6 +23,9 @@ for required in \
   'strip_documentation()' \
   'strip_build_metadata()' \
   'compile_dconf_database()' \
+  'strip_python_bytecode()' \
+  'trim_i18n_locales()' \
+  'trim_icon_variants()' \
   'usr/share/man' \
   'usr/share/gtk-doc' \
   'usr/share/gir-1.0'; do
@@ -45,7 +48,10 @@ mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
   "$fixture_root/usr/include/ghostty/vt" "$fixture_root/usr/include/gtk-4.0" \
   "$fixture_root/usr/share/gir-1.0" "$fixture_root/usr/lib/cmake/demo" \
   "$fixture_root/usr/lib/pkgconfig" "$fixture_root/usr/share/vala" \
-  "$fixture_root/usr/share/aclocal"
+  "$fixture_root/usr/share/aclocal" \
+  "$fixture_root/usr/lib/python3.14/__pycache__" "$fixture_root/usr/lib/python3.14/idlelib" \
+  "$fixture_root/usr/share/i18n/locales" "$fixture_root/usr/share/i18n/charmaps" \
+  "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
 printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
@@ -57,6 +63,12 @@ printf 'build-only cmake config\n' > "$fixture_root/usr/lib/cmake/demo/demo.cmak
 printf 'build-only pkg-config record\n' > "$fixture_root/usr/lib/pkgconfig/demo.pc"
 printf 'build-only vala binding\n' > "$fixture_root/usr/share/vala/demo.vapi"
 printf 'build-only aclocal macro\n' > "$fixture_root/usr/share/aclocal/demo.m4"
+printf 'bytecode\n' > "$fixture_root/usr/lib/python3.14/__pycache__/demo.pyc"
+printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/en_US"
+printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/pt_BR"
+printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/de_DE"
+printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz"
+printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/IBM437.gz"
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \
   "$wrapper" "$fixture_root" "$work_dir/fixture.img"
@@ -73,6 +85,18 @@ done
 [[ -f "$fixture_root/usr/include/ghostty/vt.h" \
    && -f "$fixture_root/usr/include/ghostty/vt/grid.h" ]] \
   || fail 'the ghostty VT headers required by the Deetty build contract were stripped'
+[[ ! -e "$fixture_root/usr/lib/python3.14/__pycache__" \
+   && ! -e "$fixture_root/usr/lib/python3.14/idlelib" ]] \
+  || fail 'Python bytecode/idle payloads remain in the final filesystem'
+[[ -f "$fixture_root/usr/share/i18n/locales/en_US" \
+   && -f "$fixture_root/usr/share/i18n/locales/pt_BR" \
+   && ! -e "$fixture_root/usr/share/i18n/locales/de_DE" \
+   && -f "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz" \
+   && ! -e "$fixture_root/usr/share/i18n/charmaps/IBM437.gz" ]] \
+  || fail 'glibc i18n trim did not keep en/pt locales and UTF-8 charmaps'
+[[ ! -e "$fixture_root/usr/share/icons/Papirus-Dark" \
+   && -d "$fixture_root/usr/share/icons/Papirus" ]] \
+  || fail 'unused icon variants remain or the selected Papirus theme was removed'
 
 # The system dconf default must be compiled for freedesktop consumers to see it:
 # the egui Craft apps and libadwaita/GTK apps fall back to light when the portal

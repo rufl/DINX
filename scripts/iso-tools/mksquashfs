@@ -258,11 +258,51 @@ merge_eurooffice() {
   printf 'dinx-final-squashfs: merged EuroOffice lean tree root=%s\n' "$root"
 }
 
+# Regenerable Python bytecode and unused stdlib payloads are dead weight in
+# the final images; nothing in the runtime reads idle/test/tkinter.
+strip_python_bytecode() {
+  local root=$1 py
+  [[ "$root" != / && -d "$root/usr/lib" ]] || return 0
+  for py in "$root"/usr/lib/python3.*; do
+    [[ -d "$py" ]] || continue
+    find "$py" -name '__pycache__' -type d -prune -exec rm -rf {} +
+    rm -rf -- "$py/idlelib" "$py/test" "$py/tkinter"
+  done
+  printf '%s\n' 'dinx-final-squashfs: removed Python bytecode and idle/test/tkinter payloads'
+}
+
+# glibc i18n data follows the same en/pt locale policy as the apps.
+trim_i18n_locales() {
+  local root=$1
+  [[ "$root" != / && -d "$root/usr/share/i18n/locales" ]] || return 0
+  find "$root/usr/share/i18n/locales" -maxdepth 1 -type f \
+    ! -name 'en_US*' ! -name 'en_GB*' ! -name 'pt_BR*' ! -name 'pt_PT*' -delete
+  if [[ -d "$root/usr/share/i18n/charmaps" ]]; then
+    find "$root/usr/share/i18n/charmaps" -maxdepth 1 -type f \
+      ! -name 'UTF-8*' ! -name 'ISO-8859-1*' -delete
+  fi
+  printf '%s\n' 'dinx-final-squashfs: trimmed glibc i18n locales/charmaps to en/pt + UTF-8/ISO-8859-1'
+}
+
+# Only Papirus (and breeze for Calamares KIconThemes) is selected; the extra
+# icon theme variants are never referenced by the DINX theme contracts.
+trim_icon_variants() {
+  local root=$1 variant
+  [[ "$root" != / && -d "$root/usr/share/icons" ]] || return 0
+  for variant in Papirus-Dark Papirus-Light breeze-dark; do
+    rm -rf -- "$root/usr/share/icons/$variant"
+  done
+  printf '%s\n' 'dinx-final-squashfs: removed unused icon theme variants'
+}
+
 if [[ -n "$source_root" ]]; then
   merge_eurooffice "$source_root"
   prune_excluded_packages "$source_root"
   strip_documentation "$source_root"
   strip_build_metadata "$source_root"
+  strip_python_bytecode "$source_root"
+  trim_i18n_locales "$source_root"
+  trim_icon_variants "$source_root"
   compile_dconf_database "$source_root"
 fi
 

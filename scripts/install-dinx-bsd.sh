@@ -62,7 +62,8 @@ while [ "$i" -lt 24 ]; do
 done
 if [ "$pkg_ready" = 1 ]; then
   for p in seatd pipewire wireplumber wayland wlroots020 mesa-dri \
-           libxkbcommon xkeyboard-config jq; do
+           libxkbcommon xkeyboard-config jq gtk4 gtk4-layer-shell \
+           libsecret libarchive basu; do
     if pkg install -y "$p" >/dev/null 2>&1; then
       log "installed $p"
     else
@@ -74,7 +75,7 @@ fi
 # Custom DINX packages only when a real local repository catalog exists.
 if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo/packagesite.pkg" ]; then
   sed -i '' 's/enabled: no/enabled: yes/' /usr/local/etc/pkg/repos/dinx.conf
-  pkg install -y -r dinx dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl \
+  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl \
     || log 'WARNING: custom DINX package install failed'
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'

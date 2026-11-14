@@ -3,10 +3,11 @@ name: EuroOffice lean package
 # Office-branch pipeline: import upstream Euro-Office deb, debloat, strip,
 # reorganize, publish lean squashfs + pacman package as a GitHub release.
 #
-# NOTE: GitHub schedule triggers only fire on the default branch. This
-# workflow is dispatch-only; the periodic trigger lives on main in
-# consumer/eurooffice-refresh.yml (cherry-pick it there), which dispatches
-# this workflow with --ref office every few days.
+# NOTE: GitHub schedule triggers only fire on the default branch, and
+# workflow_dispatch requires the workflow file to exist on the default
+# branch. The periodic trigger lives on main in consumer/eurooffice-refresh.yml
+# (cherry-pick it there, plus a registration copy of this file). Dispatching
+# with --ref office executes this office-branch definition.
 
 on:
   workflow_dispatch:

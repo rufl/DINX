@@ -8,7 +8,13 @@ These files are authored on the `office` branch but are meant to be
 1. Copy `check_eurooffice_release.sh` → `scripts/check_eurooffice_release.sh`
    (keep the executable bit).
 2. Copy `eurooffice-refresh.yml` → `.github/workflows/eurooffice-refresh.yml`.
-3. Add the builder integration below.
+3. Copy `.github/workflows/eurooffice.yml` from the office branch →
+   `.github/workflows/eurooffice.yml` on main. **Required**: GitHub only
+   registers `workflow_dispatch` workflows that exist on the default branch;
+   dispatching with `--ref office` then executes the office-branch definition.
+   The main copy is a registration anchor — keep it, but pipeline development
+   stays on office.
+4. Add the builder integration below.
 
 The refresh workflow runs every 3 days (`41 5 */3 * *`, adjustable) and on
 manual dispatch. Each run:
@@ -21,8 +27,10 @@ manual dispatch. Each run:
    verifies `SHA256SUMS`, stages them under `dist/office/eurooffice/`, updates
    the pin, commits the pin to main, and dispatches `p0-iso.yml`.
 
-GitHub schedule triggers only fire on the default branch — this is why the
-periodic trigger must live on main while the build pipeline stays on office.
+GitHub schedule triggers only fire on the default branch, and
+`workflow_dispatch` requires the workflow file to exist on the default branch
+as well — this is why both the periodic trigger and a registration copy of
+`eurooffice.yml` live on main while the build pipeline stays on office.
 
 ## Builder integration (build-iso-container.sh)
 

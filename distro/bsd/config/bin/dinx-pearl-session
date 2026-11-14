@@ -1,11 +1,12 @@
 #!/bin/sh
 # DINX default session: Aqueous compositor (Xwayland enabled) + Pearl shell.
 #
-# Aqueous owns the session lifecycle: it spawns an init child (via -c) after it
-# has created the Wayland socket, and injects WAYLAND_DISPLAY, AQUEOUS_SOCKET
-# and DISPLAY (Xwayland) into that child's environment. The compositor arms an
-# idle exit timer that only a connected IPC client renews, so the shell must be
-# started *by* the init child -- not launched in parallel from here.
+# Aqueous owns the session lifecycle. It creates the Wayland socket, the IPC
+# socket and the Xwayland display, injects WAYLAND_DISPLAY / AQUEOUS_SOCKET /
+# DISPLAY into its init child, and arms an idle exit timer that only a
+# connected IPC client renews. So the shell MUST be started by that init child
+# (`aqueous -c <init>`), never launched in parallel from here -- a compositor
+# started in the background with no IPC client tears itself down.
 set -eu
 . "${DINX_PREFIX:-/usr/local}/libexec/dinx/session-common"
 
@@ -20,36 +21,47 @@ if ! command -v pearl >/dev/null 2>&1; then
   exit 1
 fi
 
-# Xwayland needs its socket directory to exist before the compositor starts.
+# Xwayland needs its socket directory before the compositor starts.
 mkdir -p /tmp/.X11-unix 2>/dev/null || true
 chmod 1777 /tmp/.X11-unix 2>/dev/null || true
 
-# Init child: inherits the compositor's Wayland/Xwayland/IPC environment and
-# keeps the session alive by staying connected (Pearl is the IPC client).
+# The IPC directory check requires 0700 (InsecureRuntimeDirectory otherwise).
+# The session user cannot always create it with the right mode, so pre-create.
+mkdir -p "$XDG_RUNTIME_DIR/aqueous" 2>/dev/null || true
+chmod 700 "$XDG_RUNTIME_DIR/aqueous" 2>/dev/null || true
+
+# Init child: inherits the compositor's environment, keeps the session alive by
+# being the IPC client, and starts the shell.
 init="$XDG_RUNTIME_DIR/dinx-init"
 cat > "$init" <<'EOF'
 #!/bin/sh
-# Pearl validates XDG_CURRENT_DESKTOP against the compositor name; Aqueous
-# injects WAYLAND_DISPLAY/AQUEOUS_SOCKET/DISPLAY but not this variable.
+# The compositor does not set XDG_CURRENT_DESKTOP, and Pearl validates it
+# against the compositor name before starting.
 export XDG_CURRENT_DESKTOP=Aqueous
-# No DRM device (VMs): expose the headless session over VNC so it is usable
-# from the hypervisor host. wayvnc attaches as a Wayland client and needs
-# only wlr-screencopy + virtual input, no GPU.
+
+# No DRM device (virtual GPUs have no FreeBSD driver): the compositor runs on
+# the headless backend, so republish the session over VNC to make it reachable
+# from the hypervisor host. wayvnc is an ordinary Wayland client (wlr-screencopy
+# + virtual input) and needs no GPU.
 if [ "${DINX_HEADLESS:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
-  wayvnc 0.0.0.0 "${DINX_VNC_PORT:-5900}" >/dev/null 2>&1 &
+  wayvnc --render-cursor 0.0.0.0 "${DINX_VNC_PORT:-5900}" &
 fi
+
 exec pearl
 EOF
 chmod 755 "$init"
 
 # Without /dev/dri no wlroots backend can scan out; fall back to headless and
-# signal the init child to publish the session via wayvnc.
-aq_args=""
+# tell the init child to publish the session over VNC.
 if [ ! -e /dev/dri/card0 ]; then
   export WLR_BACKENDS=headless
   export DINX_HEADLESS=1
-  echo 'dinx-pearl-session: no /dev/dri, running headless (VNC if wayvnc present)' >&2
+  echo 'dinx-pearl-session: no /dev/dri, running headless' >&2
+  if command -v wayvnc >/dev/null 2>&1; then
+    echo "dinx-pearl-session: desktop available over VNC on port ${DINX_VNC_PORT:-5900}" >&2
+  else
+    echo 'dinx-pearl-session: install wayvnc to reach a headless session remotely' >&2
+  fi
 fi
 
-# shellcheck disable=SC2086
-exec aqueous $aq_args -c "$init"
+exec aqueous -c "$init"

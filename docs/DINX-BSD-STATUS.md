@@ -120,57 +120,69 @@ Legenda:
 
 ---
 
-## 4. Sessão gráfica (compositor + shell) — o blocker central
+## 4. Sessão gráfica (Weston + Xwayland + Pearl) — estado atual
 
-### Funciona (parcial)
-- **[V]** Aqueous sobe com `WLR_BACKENDS=headless`: backend headless criado,
-  Vulkan llvmpipe (LLVM 19.1.7), pipelines de efeitos (rounded, backdrop-blur)
-  inicializados, output `HEADLESS-1` 1280×720 com frames committed
-  (`/tmp/aqueous.log`).
-- **[V]** IPC do Aqueous funciona: `aqueousctl` conecta e responde
-  (usage/windows), **desde que** com `LD_PRELOAD=/usr/local/lib/libdinxcompat.so`
-  (ver abaixo).
-- **[V]** No sistema instalado pela ISO: `/usr/local/bin/pearl`,
-  `/usr/local/bin/aqueous`, `/usr/local/sbin/greetd`,
-  `/usr/local/etc/greetd/config.toml` presentes; `seatd_enable=YES` e
-  `dinx_greetd_enable=YES` setados pelo firstboot.
+Decisão de produto: o compositor da sessão passou a ser **Weston** (build
+nativo, `scripts/bsd-vm/build-weston.sh`), com **Xwayland habilitado**; o
+Aqueous permanece empacotado como alternativa, mas o socket Wayland dele não
+escuta no FreeBSD (blocker original, journal §20). O wrapper
+`dinx-pearl-session` sobe Weston (headless sem `/dev/dri/card0`) + Pearl.
 
-### Não funciona
-- **[B]** **Socket Wayland do Aqueous não escuta no FreeBSD.** O arquivo
-  `wayland-1` é criado em `$XDG_RUNTIME_DIR`, mas `connect()` retorna
-  `ECONNREFUSED` em todos os segundos de vida do compositor (sondagem 1–6 s) e
-  `sockstat -l` não mostra listener unix. Consequência: nenhum cliente anexa —
-  Pearl (`Pearl requires an Aqueous session` quando fora do init; dentro do
-  init não chega a conectar), grim (`failed to create display`), e portanto
-  **não há desktop interativo nem screenshot do desktop**. Causa raiz não
-  fechada; hipótese: caminho socket/event-loop (kqueue) do wlroots patcheado.
-  Evidência: journal §20; sondagens desta rodada.
+### Funciona
+- **[V]** Weston 14.0.2 compila e instala nativamente no FreeBSD 15.1
+  (`meson`/`ninja` exit=0) com Xwayland, shell desktop/kiosk, backend headless
+  e wayland; renderer pixman (`renderer-gl=false`). Patches de porting
+  aplicados pelo script: `ETIME`→`ETIMEDOUT`, `program_invocation_short_name`
+  →`getprogname()`, `pty.h`→`libutil.h` (+`-lutil`), `CLOCK_MONOTONIC_RAW`→
+  `CLOCK_MONOTONIC`, shims `linux/ioctl.h`/`linux/types.h`, `environ` como
+  **weak extern** (definir no objeto sobrescreve o crt1 e segfaulta),
+  `-lepoll-shim` em todos os alvos; opções meson válidas do 14.0.2
+  (sem `colord`/`elogind`/`werror`/`shell-lua`), `backend-drm=false` +
+  `backend-default=headless`, `tools=[]` e `simple-clients=[]`.
+- **[V]** **Socket Wayland do Weston escuta**: `connect()` UNIX em
+  `$XDG_RUNTIME_DIR/wl-x` retorna `CONNECT_OK`; `weston`, `weston-keyboard` e
+  `weston-desktop-shell` ficam vivos (pgrep). Diferente do Aqueous, o caminho
+  socket/event-loop do Weston funciona no FreeBSD.
+- **[V]** Pacote `dinx-weston-14.0.2.pkg` gerado com `shlibs_provided`
+  (libweston-14) e sem `shlibs_required` (libpulsecommon é lib privada do
+  pulseaudio); firstboot instala `dinx-weston` + `xwayland` + `pulseaudio`.
+- **[V]** No sistema instalado pela ISO: pearl/aqueous/greetd/config.toml
+  presentes; `seatd_enable=YES`, `dinx_greetd_enable=YES`.
+- **[V]** Aqueous headless renderiza frames (llvmpipe, HEADLESS-1 1280×720) e
+  o IPC dele responde via `aqueousctl` com `LD_PRELOAD` do shim.
+
+### Não funciona (blockers abertos)
+- **[B]** **Weston segfaulta (signal 11) ao lançar o Xwayland** com
+  `xwayland=true`: o log chega a "launching '/usr/bin/Xwayland'" / "Couldn't
+  unset CLOEXEC on child FDs" e o processo morre; sob gdb o crash não
+  reproduz (race no caminho de FDs do filho Xwayland). Com `xwayland=false` o
+  Weston sobrevive. **Xwayland ainda não funcional no FreeBSD.**
+- **[B]** **`xwayland-path` do weston.ini não é respeitado** no build atual
+  (log continua `/usr/bin/Xwayland`, path Linux; no FreeBSD é
+  `/usr/local/bin/Xwayland`) — investigar parsing da seção `[core]`.
+- **[B]** **Pearl instalado ainda rejeita a sessão**: o binário em
+  `/usr/local/bin/pearl` continua emitindo `AQUEOUS_SOCKET must identify this
+  runtime's aqueous` mesmo com os patches #22 (aceita Weston) e #23 (pula
+  checks de IPC do Aqueous) presentes no fonte — o binário instalado está
+  stale; falta rebuild+reinstall verificado do Pearl após o #23.
+- **[B]** **`weston-screenshooter` aborta** com `Assertion failed: (width > 0)`
+  (output headless sem mode corrente no protocolo de capture); sem screenshot
+  do desktop por esse caminho. `xwd` via Xwayland depende do blocker acima.
 - **[B]** **Sem DRM no QEMU:** `drm-612-kmod` só fornece amdgpu/i915/radeon;
-  nenhum GPU emulado pelo QEMU (virtio-gpu, vmware, bochs) tem driver DRM no
-  FreeBSD 15.1 → `/dev/dri` inexistente → backend DRM impossível em VM.
-  Em hardware real o DRM existe, mas **não foi testado**.
-- **[B]** **Prova aninhada com Weston indisponível:** `pkg install weston` →
-  "No packages available … matching 'weston'" no repo pkg do FreeBSD 15.1.
-- **[B]** **greetd greeter gráfico:** o daemon instala e habilita, mas a
-  sessão/greeter não aparece pelos dois blockers acima (sem DRM na VM; sem
-  socket Wayland utilizável).
+  nenhum GPU emulado pelo QEMU tem driver DRM no FreeBSD 15.1 → backend DRM
+  impossível em VM (headless é o caminho de prova). Hardware real não testado.
+- **[B]** **greetd greeter gráfico:** daemon instala/habilita, mas a sessão
+  não aparece pelos blockers acima.
 
-### Restrições operacionais descobertas (contornáveis, documentadas)
-- **[D]** `aqueousctl` (e helpers Zig) não exportam `environ`, que a libc do
-  FreeBSD exige do executável → `ld-elf.so.1: /lib/libc.so.7: Undefined symbol
-  "environ"`. Contorno: `LD_PRELOAD` do shim **apenas nos helpers**.
-- **[D]** `LD_PRELOAD` do shim **no compositor o mata** (não usar no aqueous).
-- **[D]** Aqueous tem idle-exit (~5 s sem cliente IPC): provas precisam de
-  keepalive (`aqueousctl` em loop) ou captura muito cedo.
-- **[D]** `su -m dinx` preserva `HOME=/root` → Aqueous tenta estado em
-  `/root/.local/state` → `AccessDenied`. Setar `HOME=/home/dinx`.
-- **[D]** `XDG_RUNTIME_DIR` sob `/tmp` → `InsecureRuntimeDirectory` (antes do
-  fix de statx); usar diretório 0700 sob o home do usuário.
-- **[D]** Pearl valida `XDG_CURRENT_DESKTOP` contendo `Aqueous`
-  (`src/core/startup.zig`): só roda dentro da sessão/init do Aqueous (ou
-  `--demo` para galeria standalone).
-- **[D]** `dinx` precisa do grupo `video` para o socket do seatd
-  (`pw groupmod video -m dinx`); o firstboot cria o usuário sem grupo.
+### Restrições operacionais (contornáveis, documentadas)
+- **[D]** Helpers Zig (aqueousctl) não exportam `environ`; usar `LD_PRELOAD`
+  do shim apenas neles. Nunca no compositor.
+- **[D]** `su -m dinx` preserva `HOME=/root`; setar `HOME=/home/dinx`.
+- **[D]** `XDG_RUNTIME_DIR` deve ser 0700 sob o home (não `/tmp`).
+- **[D]** `dinx` no grupo `video` (firstboot já faz `pw groupmod video -m dinx`).
+- **[D]** Provas via serial: linhas >~256 chars truncam; usar scripts via
+  fetch + output redirecionado; screenshooter/perl alarm para não travar.
+- **[D]** Aqueous tem idle-exit (~5 s sem cliente IPC).
 
 ---
 
@@ -244,13 +256,13 @@ Legenda:
 |---|---|
 | Build da ISO + check + checksum | **Funciona** [V] |
 | Install unattended + gate + shutdown limpo | **Funciona** [V] |
-| Build nativo (Aqueous/Pearl/greetd/wlroots/compat) | **Funciona** [V] |
-| Pacotes reais + repo local | **Funciona** [V] |
+| Build nativo (Aqueous/Pearl/greetd/wlroots/compat/Weston) | **Funciona** [V] |
+| Pacotes reais + repo local (incl. dinx-weston) | **Funciona** [V] |
 | Firstboot instala stack + dinx no instalado | **Funciona** [V] |
-| Compositor headless renderiza frames | **Funciona** [V] |
-| IPC do Aqueous (aqueousctl) | **Funciona com LD_PRELOAD** [D] |
-| Clientes Wayland anexam ao Aqueous | **Não funciona** [B] |
-| Desktop Pearl interativo / screenshot | **Não funciona** [B] |
+| Weston headless + socket Wayland + desktop-shell | **Funciona** [V] |
+| Xwayland no FreeBSD (launch do filho) | **Não funciona (segfault)** [B] |
+| Pearl sob Weston (binário instalado stale) | **Não funciona** [B] |
+| Screenshot do desktop (screenshooter/xwd) | **Não funciona** [B] |
 | DRM em QEMU (qualquer GPU emulado) | **Não existe no FreeBSD** [B] |
 | greetd greeter em tela | **Não funciona** (consequência) [B] |
 | Temas aplicados em tela | **Não verificável** [B] |
@@ -259,12 +271,14 @@ Legenda:
 
 ## 9. Próximo passo técnico (para fechar o objetivo)
 
-Instrumentar o caminho do socket Wayland no wlroots patcheado
-(`wl_socket_init` / `wl_display_add_socket_auto` / `wl_event_loop_add_fd`)
-para descobrir por que o fd não chega a listener no FreeBSD (kqueue). Sem
-isso, nenhum cliente — incluindo o Pearl em hardware real — consegue anexar.
-Alternativas de prova enquanto isso: compositor de referência aninhado
-(indisponível no repo 15.1) ou backend DRM em hardware real.
+1. **Xwayland no Weston/FreeBSD**: depurar o segfault no launch do filho
+   (`Couldn't unset CLOEXEC on child FDs`, race; não reproduz sob gdb) e o
+   parsing de `xwayland-path` na seção `[core]` do weston.ini.
+2. **Pearl**: rebuild + reinstall verificado após os patches #22/#23 (o
+   binário instalado ainda é anterior ao #23) e validar a sessão sob Weston.
+3. **Captura**: resolver o `width > 0` do weston-screenshooter (mode corrente
+   do output headless) ou capturar via Xwayland assim que o item 1 fechar.
+4. Só então: prova visual do desktop + gate gráfico da ISO.
 
 ## 10. Como reproduzir
 

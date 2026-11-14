@@ -435,3 +435,27 @@ renderizando (llvmpipe, HEADLESS-1 1280x720), mas nenhum cliente anexa.
 
 Consolidação de tudo que funciona / não funciona (com nível de evidência por
 item): `docs/DINX-BSD-STATUS.md`.
+
+## 22. Weston nativo + Xwayland (decisão de produto)
+
+O compositor da sessão passou a ser Weston 14.0.2 buildado nativamente
+(`scripts/bsd-vm/build-weston.sh`), com Xwayland habilitado; Aqueous fica como
+alternativa empacotada. Porting aplicado: ETIME→ETIMEDOUT;
+program_invocation_short_name→getprogname(); pty.h→libutil.h (+-lutil);
+CLOCK_MONOTONIC_RAW→CLOCK_MONOTONIC; shims linux/ioctl.h e linux/types.h;
+environ como **weak extern** (definição no objeto sobrescreve o crt1 e
+segfaulta em `custom_env_init_from_environ`); -lepoll-shim global; opções
+meson do 14.0.2 (sem colord/elogind/werror/shell-lua; backend-drm=false +
+backend-default=headless; tools=[]; simple-clients=[]; renderer-gl=false).
+Resultado: Weston compila/instala, **socket Wayland escuta** (CONNECT_OK) e
+weston-keyboard/desktop-shell ficam vivos — o caminho socket/event-loop do
+Weston funciona no FreeBSD, ao contrário do Aqueous (§20).
+Blockers abertos: (a) segfault (signal 11) no launch do filho Xwayland
+("Couldn't unset CLOEXEC on child FDs"; race, não reproduz sob gdb);
+(b) `xwayland-path` do weston.ini ignorado (segue /usr/bin/Xwayland);
+(c) Pearl instalado stale (patches #22/#23 no fonte, binário anterior);
+(d) weston-screenshooter aborta `width > 0` (mode do output headless).
+Empacotamento: dinx-weston com shlibs_provided (libweston-14) e sem
+shlibs_required (libpulsecommon é lib privada do pulseaudio); firstboot
+instala dinx-weston + xwayland + pulseaudio. Provas: proof5–8 (redirecionadas,
+screenshooter com perl alarm; serial trunca linhas >~256 chars).

@@ -295,6 +295,19 @@ trim_icon_variants() {
   printf '%s\n' 'dinx-final-squashfs: removed unused icon theme variants'
 }
 
+# Static archives and Python build configuration are build-time-only payloads;
+# the runtime image ships no compiler and nothing reads them at runtime.
+strip_static_libs() {
+  local root=$1 py
+  [[ "$root" != / && -d "$root/usr/lib" ]] || return 0
+  find "$root/usr/lib" -type f -name '*.a' -delete
+  for py in "$root"/usr/lib/python3.*; do
+    [[ -d "$py" ]] || continue
+    rm -rf -- "$py"/config-*
+  done
+  printf '%s\n' 'dinx-final-squashfs: removed static archives and Python build configuration'
+}
+
 if [[ -n "$source_root" ]]; then
   merge_eurooffice "$source_root"
   prune_excluded_packages "$source_root"
@@ -303,6 +316,7 @@ if [[ -n "$source_root" ]]; then
   strip_python_bytecode "$source_root"
   trim_i18n_locales "$source_root"
   trim_icon_variants "$source_root"
+  strip_static_libs "$source_root"
   compile_dconf_database "$source_root"
 fi
 

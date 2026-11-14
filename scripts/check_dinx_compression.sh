@@ -26,6 +26,7 @@ for required in \
   'strip_python_bytecode()' \
   'trim_i18n_locales()' \
   'trim_icon_variants()' \
+  'strip_static_libs()' \
   'usr/share/man' \
   'usr/share/gtk-doc' \
   'usr/share/gir-1.0'; do
@@ -51,7 +52,8 @@ mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
   "$fixture_root/usr/share/aclocal" \
   "$fixture_root/usr/lib/python3.14/__pycache__" "$fixture_root/usr/lib/python3.14/idlelib" \
   "$fixture_root/usr/share/i18n/locales" "$fixture_root/usr/share/i18n/charmaps" \
-  "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus"
+  "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus" \
+  "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
 printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
@@ -69,6 +71,8 @@ printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/pt_BR"
 printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/de_DE"
 printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz"
 printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/IBM437.gz"
+printf 'static\n' > "$fixture_root/usr/lib/libdemo.a"
+printf 'build config\n' > "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu/Makefile"
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \
   "$wrapper" "$fixture_root" "$work_dir/fixture.img"
@@ -97,6 +101,9 @@ done
 [[ ! -e "$fixture_root/usr/share/icons/Papirus-Dark" \
    && -d "$fixture_root/usr/share/icons/Papirus" ]] \
   || fail 'unused icon variants remain or the selected Papirus theme was removed'
+[[ ! -e "$fixture_root/usr/lib/libdemo.a" \
+   && ! -e "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" ]] \
+  || fail 'static archives or Python build configuration remain in the final filesystem'
 
 # The system dconf default must be compiled for freedesktop consumers to see it:
 # the egui Craft apps and libadwaita/GTK apps fall back to light when the portal

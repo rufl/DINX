@@ -69,7 +69,7 @@ EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
   # pkg create -m does not scan rootdir; an explicit plist is required.
   # plist paths are absolute INSTALL paths (pkg add installs them literally).
-  (cd "$stage" && find . -type f | sed 's|^\./|/|') > "$meta/plist"
+  (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
   pkg create -m "$meta" -p "$meta/plist" -r "$stage" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
 }

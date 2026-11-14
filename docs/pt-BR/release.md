@@ -56,13 +56,16 @@ Cada release alpha contém:
   assinaturas, `dinx-package-signing-key.gpg`, `dinx-repository-metadata.txt` e
   os arquivos customizados `*.pkg.tar.zst` com assinaturas destacadas;
 
-O perfil inclui os AppImages oficiais Zrythm v2.0.0-alpha.7 e ONLYOFFICE
-Desktop Editors 10.0.0, juntos com cerca de 518 MB antes da compressão SquashFS.
-O Zrythm v2 é pré-release e pode falhar ou perder dados. O app integrado do
-ONLYOFFICE ainda contém Forms e Diagram Viewer; a DINX registra apenas tipos de
-arquivo de documentos, planilhas, apresentações e PDF. Imagens acima do limite
-de 2 GiB por asset do GitHub usam a entrega dividida; o alias ISO de arquivo
-único só avança quando o release publica uma imagem que cabe nesse limite.
+O perfil atual inclui o EuroOffice (fork lean do ONLYOFFICE, AGPL-3.0) como
+suíte de escritório e PDF, consumido dos releases `eurooffice/v*` da branch
+office com pacote pacman e squashfs live verificados por SHA256; o EuroOffice
+é o handler padrão de `application/pdf` e dos formatos OOXML. PaintFE, Transit,
+Zenkai, Patchy e Blockbench são empacotados como árvores `/opt/<pacote>/`
+pré-extraídas (convenção de repack no `distro/iso/README.pt-BR.md`), com
+launchers que executam `AppRun` sem FUSE nem extração em tmpfs. Imagens acima
+do limite de 2 GiB por asset do GitHub usam a entrega dividida; o alias ISO de
+arquivo único só avança quando o release publica uma imagem que cabe nesse
+limite.
 
 ## Repositório móvel de pacotes assinado
 
@@ -71,7 +74,8 @@ hospedado como assets de GitHub Release sob `dinx-packages-latest`, em
 `https://github.com/rufl/DINX/releases/download/dinx-packages-latest`.
 O atualizador semanal verifica 20 pins de origem de pacotes toda segunda-feira,
 às 04:17 UTC, e abre um pull request para revisão; nunca altera pins diretamente
-na `main`. O Zrythm acompanha o canal v2 alpha oficial; o commit privado do
+na `main`. O EuroOffice acompanha os releases lean `eurooffice/v*` publicados
+pela branch office (consumidor `eurooffice-refresh.yml` na main); o commit privado do
 Deetty e os pins acoplados do ZLS/Zig 0.16 continuam mantidos manualmente. Após
 a integração de alterações de pacotes, um workflow separado compila e assina o
 repositório sem montar uma ISO; alterações somente de pacotes não acionam mais a

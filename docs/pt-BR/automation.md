@@ -1,11 +1,12 @@
 # Automação de pacotes, segurança e ISO
 
-A `main` usa quatro automações independentes, todas com concorrência controlada:
+A `main` usa cinco automações independentes, todas com concorrência controlada:
 
 - **Prefetch upstream:** `.github/workflows/upstream-cache-prefetch.yml` roda às `04:17` e `16:17` UTC. O workflow resolve os pacotes do builder e das imagens DINX, remove os pacotes produzidos pelo próprio repositório, executa `pacman -Syy`/`pacman -Sw --needed` dentro do Artix fixado e salva somente a cache delta verificada.
-- **Renovação de fontes:** `.github/workflows/upstream-package-refresh.yml` consulta os releases upstream diariamente às `03:17` UTC. Alterações são checksumadas, testadas e abertas como PR; o workflow não grava pins diretamente na `main`.
+- **Renovação de fontes:** `.github/workflows/upstream-package-refresh.yml` consulta os releases upstream diariamente às `03:17` UTC. Alterações são checksumadas, testadas e abertas como PR; o workflow não grava pins diretamente na `main`. Os pins usam SHA-256 (64 hex) ou BLAKE2b (128 hex); o atualizador valida o comprimento do digest por algoritmo.
 - **Auditoria de dependências:** `.github/workflows/security-scan.yml` roda em PR, push da `main`, manualmente e diariamente às `01:17` UTC. Gera SBOM SPDX e executa Grype, Trivy e OSV-Scanner. Achados High/Critical bloqueiam o job; o Trivy ignora achados sem correção publicada por política. Os relatórios SARIF ficam no Code Scanning e os artefatos permanecem 30 dias.
 - **ISO noturna:** `.github/workflows/p0-iso.yml` roda às `02:17` UTC, uma vez por dia. O build restaura a cache upstream, compila a ISO e só atesta/envia o artefato do workflow após os gates P0, o SBOM do rootfs final, o boot QEMU e a instalação descartável. O SBOM do rootfs final é gerado para registro, mas não é escaneado como gate de bloqueio (veja [Limites de segurança](#limites-de-seguranca)); o artefato fica disponível por 14 dias.
+- **Renovação do EuroOffice:** `.github/workflows/eurooffice-refresh.yml` roda a cada 3 dias às `05:41` UTC (`41 5 */3 * *`) e por dispatch manual. Ele dispara `eurooffice.yml` na branch `office` (a âncora de registro fica na main porque `workflow_dispatch` exige o arquivo do workflow no branch padrão), compara o release `eurooffice/v*` mais recente com `distro/office/eurooffice.pin`, verifica `SHA256SUMS`, prepara o pacote pacman e o squashfs live, commita o pin e dispara o P0. O builder assina o pacote no repositório DINX temporário e o wrapper do mksquashfs mescla o squashfs com raiz / no rootfs/livefs.
 
 ## Cache
 

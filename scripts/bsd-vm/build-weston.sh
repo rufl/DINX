@@ -66,15 +66,16 @@ meson setup $RECONF build \
     -Dsystemd=false \
     -Dremoting=false \
     -Dpipewire=false \
-    -Dsimple-clients=[] \
+    '-Dsimple-clients=[]' \
     -Ddemo-clients=false \
     -Dtests=false \
     -Ddoc=false \
     -Dwcap-decode=false >>"$LOG" 2>&1
   log "== meson setup exit=$?"
 ninja -C build >>"$LOG" 2>&1
+rc=$?
 grep -A6 -m2 "FAILED" "$LOG" > "$W/weston-errors.txt" 2>/dev/null || true
-log "== ninja exit=$?"
+log "== ninja exit=$rc"
 ninja -C build install >>"$LOG" 2>&1
 log "== install exit=$?"
 

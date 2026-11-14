@@ -272,12 +272,20 @@ patch(
 p = os.path.join(W, "pearl/src/cli/server.zig")
 if os.path.exists(p):
     src = open(p, encoding="utf-8").read()
-    old = "const hz = @as(usize, @intCast(std.c.sysconf(3 /* _SC_CLK_TCK */)));"
-    if old in src:
-        open(p, "w", encoding="utf-8").write(
-            src.replace(old, "const hz = @as(usize, @intCast(std.c.sysconf(3)));")
-        )
-        applied.append(p)
+    for old, new in (
+        (
+            "const hz = @as(usize, @intCast(std.c.sysconf(3 /* _SC_CLK_TCK */)));",
+            "const hz = @as(usize, @intCast(std.c.sysconf(3)));",
+        ),
+        (
+            "const hz = std.c.getauxval(std.elf.AT.CLKTCK);",
+            "const hz = std.c.getauxval(3);",
+        ),
+    ):
+        if old in src:
+            src = src.replace(old, new)
+            applied.append(p)
+    open(p, "w", encoding="utf-8").write(src)
 
 # 17. Aqueous: link dinxcompat (crt __progname shim) like Pearl does.
 patch(
@@ -333,9 +341,9 @@ pub unsafe fn vt_activate(_fd: i32, _vt: i32) -> nix::Result<()> { Ok(()) }
 #[cfg(target_os = "freebsd")]
 pub unsafe fn vt_waitactive(_fd: i32, _vt: i32) -> nix::Result<()> { Ok(()) }
 #[cfg(target_os = "freebsd")]
-pub unsafe fn vt_setmode(_fd: i32, _m: *mut vt_mode) -> nix::Result<()> { Ok(()) }
+pub unsafe fn vt_setmode(_fd: i32, _m: *const vt_mode) -> nix::Result<()> { Ok(()) }
 #[cfg(target_os = "freebsd")]
-pub unsafe fn vt_setactivate(_fd: i32, _m: *mut vt_setactivate) -> nix::Result<()> { Ok(()) }
+pub unsafe fn vt_setactivate(_fd: i32, _m: *const vt_setactivate) -> nix::Result<()> { Ok(()) }
 #[cfg(target_os = "freebsd")]
 pub unsafe fn vt_openqry(_fd: i32, _v: *mut i64) -> nix::Result<()> { Ok(()) }
 #[cfg(target_os = "freebsd")]

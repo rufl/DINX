@@ -66,6 +66,7 @@ meson setup $RECONF build \
     -Dsystemd=false \
     -Dremoting=false \
     -Dpipewire=false \
+    -Dsimple-clients=[] \
     -Ddemo-clients=false \
     -Dtests=false \
     -Ddoc=false \

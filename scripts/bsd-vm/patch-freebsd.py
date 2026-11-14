@@ -457,6 +457,16 @@ if os.path.exists(p):
         open(p, "w", encoding="utf-8").write(src)
         applied.append(p)
 
+# 25. Aqueous IpcServer.zig uses linux.getuid() (raw Linux syscall), which is
+# SIGSYS on FreeBSD. std.c.getuid() routes to libc on every OS.
+p = os.path.join(W, "Aqueous/compositor/aqueous/IpcServer.zig")
+if os.path.exists(p):
+    src = open(p, encoding="utf-8").read()
+    if "linux.getuid()" in src:
+        src = src.replace("linux.getuid()", "std.c.getuid()")
+        open(p, "w", encoding="utf-8").write(src)
+        applied.append(p)
+
 # 24b. xwayland_dpi.h translate-c chokes on FreeBSD's __SSP_FORTIFY_LEVEL
 # fortified inline functions. Disable before the system headers are pulled in.
 p = os.path.join(W, "Aqueous/compositor/aqueous/xwayland_dpi.h")

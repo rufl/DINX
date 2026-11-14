@@ -44,7 +44,6 @@ fn asU32(v: anytype) u32 {
     return switch (@typeInfo(@TypeOf(v))) {
         .int, .comptime_int => @intCast(v),
         .@"enum", .enum_literal => @intFromEnum(v),
-        .enum_int => |e| @intCast(@as(e.backing_integer, v)),
         .bool => @intFromBool(v),
         .@"struct" => @bitCast(v), // packed flag structs (linux.O, linux.STATX)
         .optional => |o| asU32(o orelse 0),
@@ -56,7 +55,6 @@ fn asI32(v: anytype) i32 {
     return switch (@typeInfo(@TypeOf(v))) {
         .int, .comptime_int => @intCast(v),
         .@"enum", .enum_literal => @intFromEnum(v),
-        .enum_int => |e| @intCast(@as(e.backing_integer, v)),
         .bool => @intFromBool(v),
         .@"struct" => @as(i32, @bitCast(asU32(v))),
         .optional => |o| asI32(o orelse 0),

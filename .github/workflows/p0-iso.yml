@@ -430,12 +430,22 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist/security-rootfs
-          mkdir -p dist/security-rootfs
-          rootfs_image=$(find dist/iso -type f -name rootfs.img -print -quit)
-          livefs_image=$(find dist/iso -type f -name livefs.img -print -quit)
-          test -n "$rootfs_image" && test -n "$livefs_image"
-          unsquashfs -no-xattrs -no-progress -d dist/security-rootfs/rootfs "$rootfs_image"
-          unsquashfs -no-xattrs -no-progress -d dist/security-rootfs/livefs "$livefs_image"
+          mkdir -p dist/security-rootfs/images
+          # The squashfs images live inside the ISO; check-iso-content.sh extracts
+          # them into a mktemp directory it removes on exit, so extract them again here.
+          for image in rootfs livefs; do
+            xorriso -osirrox on \
+              -indev "$DINX_ISO" \
+              -extract "/LiveOS/$image.img" "dist/security-rootfs/images/$image.img" \
+              >/dev/null
+            if [[ ! -s "dist/security-rootfs/images/$image.img" ]]; then
+              printf 'p0-iso: %s.img was not extracted from the ISO\n' "$image" >&2
+              exit 1
+            fi
+            unsquashfs -no-xattrs -no-progress \
+              -d "dist/security-rootfs/$image" "dist/security-rootfs/images/$image.img"
+          done
+          rm -rf dist/security-rootfs/images
       - name: Generate final filesystem SBOM
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:

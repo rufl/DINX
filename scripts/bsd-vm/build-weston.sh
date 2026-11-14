@@ -48,6 +48,7 @@ RECONF=
 meson setup $RECONF build \
     -Dprefix=/usr/local \
     -Dbackend-drm=false \
+    -Dbackend-default=headless \
     -Dbackend-headless=true \
     -Dbackend-wayland=true \
     -Dbackend-x11=false \

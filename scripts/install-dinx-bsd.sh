@@ -64,7 +64,7 @@ done
 if [ "$pkg_ready" = 1 ]; then
   for p in seatd pipewire wireplumber wayland mesa-dri \
            libxkbcommon xkeyboard-config jq gtk4 gtk4-layer-shell \
-           libsecret libarchive basu xwayland pulseaudio; do
+           libsecret libarchive basu xwayland pulseaudio wayvnc; do
     if pkg install -y "$p" >/dev/null 2>&1; then
       log "installed $p"
     else

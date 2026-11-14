@@ -29,8 +29,24 @@ chmod 1777 /tmp/.X11-unix 2>/dev/null || true
 init="$XDG_RUNTIME_DIR/dinx-init"
 cat > "$init" <<'EOF'
 #!/bin/sh
+# No DRM device (VMs): expose the headless session over VNC so it is usable
+# from the hypervisor host. wayvnc attaches as a Wayland client and needs
+# only wlr-screencopy + virtual input, no GPU.
+if [ "${DINX_HEADLESS:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
+  wayvnc 0.0.0.0 "${DINX_VNC_PORT:-5900}" >/dev/null 2>&1 &
+fi
 exec pearl
 EOF
 chmod 755 "$init"
 
-exec aqueous -c "$init"
+# Without /dev/dri no wlroots backend can scan out; fall back to headless and
+# signal the init child to publish the session via wayvnc.
+aq_args=""
+if [ ! -e /dev/dri/card0 ]; then
+  export WLR_BACKENDS=headless
+  export DINX_HEADLESS=1
+  echo 'dinx-pearl-session: no /dev/dri, running headless (VNC if wayvnc present)' >&2
+fi
+
+# shellcheck disable=SC2086
+exec aqueous $aq_args -c "$init"

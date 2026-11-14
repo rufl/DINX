@@ -10,7 +10,7 @@ mkdir -p "$RUN"
 chmod 700 "$RUN"
 chown dinx:dinx "$RUN"
 mkdir -p /home/dinx/.config/aqueous
-printf '#!/bin/sh\nexec pearl\n' > /home/dinx/.config/aqueous/init
+printf '#!/bin/sh\nexec pearl >/tmp/pearl.log 2>&1\n' > /home/dinx/.config/aqueous/init
 chmod 755 /home/dinx/.config/aqueous/init
 chown -R dinx:dinx /home/dinx/.config
 su -m dinx -c '
@@ -20,7 +20,7 @@ su -m dinx -c '
   export HOME=/home/dinx
   aqueous >/tmp/aqueous.log 2>&1 &
   sleep 8
-  export WAYLAND_DISPLAY=wayland-0
+  export WAYLAND_DISPLAY=wayland-1
   grim /tmp/proof.png
   echo GRIM=$?
 '

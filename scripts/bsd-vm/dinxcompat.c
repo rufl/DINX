@@ -117,3 +117,8 @@ int *__errno_location(void) {
 /* FreeBSD crt1.o normally defines __progname; Zig's startup does not.
  * libc references it (err/warn/getopt paths). Cosmetic fallback name. */
 char *__progname = "dinx";
+
+/* FreeBSD libc expects the executable to provide `environ`; Zig helper exes
+ * (aqueousctl) do not export it. Provide the storage here; libc's startup
+ * fills it through the interposed symbol. */
+char **environ;

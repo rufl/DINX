@@ -75,9 +75,12 @@ The office-branch workflow `.github/workflows/eurooffice.yml`
 `pkgrel` bumps when the same upstream version is repacked with pipeline
 changes (`force` input).
 
-**GitHub cron only fires on the default branch**, so the periodic trigger
-lives on main: `consumer/eurooffice-refresh.yml` (every 3 days) dispatches
-this workflow with `--ref office`, then consumes any newer published release.
+**GitHub cron only fires on the default branch**, and `workflow_dispatch`
+also requires the workflow file to exist on the default branch. So main
+carries `consumer/eurooffice-refresh.yml` (every 3 days) plus a registration
+copy of `.github/workflows/eurooffice.yml`; the consumer dispatches this
+workflow with `--ref office` (executing the office-branch definition), then
+consumes any newer published release.
 
 ## Consumption (main side)
 

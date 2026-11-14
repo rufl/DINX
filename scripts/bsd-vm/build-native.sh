@@ -128,6 +128,13 @@ if [ -f "$WLR_PREFIX/lib/libwlroots-0.20.so" ]; then
   [ -d "$WLR_PREFIX/share" ] && cp -a "$WLR_PREFIX/share" "$stage/usr/local/"
   package dinx-wlroots 0.20.2.aqueous dinx/wlroots "wlroots 0.20.2 with Aqueous render/presentation patches" "$stage"
 fi
+# --- FreeBSD compat lib (statx/mallopt) for Pearl -------------------------
+cc -shared -fPIC -O2 -o /usr/local/lib/libdinxcompat.so "$W/dinxcompat.c" >>"$LOG" 2>&1
+log "== dinxcompat exit=$?"
+stage="$W/stage-dinx-compat"
+rm -rf "$stage"; mkdir -p "$stage/usr/local/lib"
+cp /usr/local/lib/libdinxcompat.so "$stage/usr/local/lib/"
+package dinx-compat 1.0 dinx/compat "FreeBSD compat shims (statx/mallopt/errno) for Pearl" "$stage"
 # --- Aqueous -------------------------------------------------------------
 AQ_DIR="$W/Aqueous/compositor"
 if [ ! -f "$AQ_DIR/build.zig.zon" ]; then
@@ -149,13 +156,6 @@ fi
 stamp aqueous-end
 
 
-# --- FreeBSD compat lib (statx/mallopt) for Pearl -------------------------
-cc -shared -fPIC -O2 -o /usr/local/lib/libdinxcompat.so "$W/dinxcompat.c" >>"$LOG" 2>&1
-log "== dinxcompat exit=$?"
-stage="$W/stage-dinx-compat"
-rm -rf "$stage"; mkdir -p "$stage/usr/local/lib"
-cp /usr/local/lib/libdinxcompat.so "$stage/usr/local/lib/"
-package dinx-compat 1.0 dinx/compat "FreeBSD compat shims (statx/mallopt/errno) for Pearl" "$stage"
 stamp pearl-start
 # --- Pearl ---------------------------------------------------------------
 if [ -d "$W/pearl" ]; then

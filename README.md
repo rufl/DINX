@@ -26,7 +26,7 @@
 
 | Você quer… | Vá para |
 |---|---|
-| Baixar a ISO direta mais recente | [ISO direta](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Todas as releases](https://github.com/rufl/DINX/releases) |
+| Baixar a ISO direta mais recente (Alpha 0.16) | [ISO direta](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Release Alpha 0.16](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.16) · [Todas as releases](https://github.com/rufl/DINX/releases) |
 | Verificar e instalar a ISO | [Guia de instalação](docs/pt-BR/install.md) |
 | Ver o que o CI realmente provou | [Status do build P0](docs/pt-BR/p0-build.md) |
 | Entender compatibilidade e limites | [Compatibilidade](docs/pt-BR/compatibility.md) · [Roadmap](docs/pt-BR/roadmap.md) |
@@ -74,9 +74,9 @@ O software BC-250 não é instalado na ISO genérica; os pacotes estão no repos
 
 | Item | Estado |
 |---|---|
-| ISO direta (alias rolante) | [`dinx-latest-x86_64.iso`](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso), 1.836.830.720 bytes, com [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) |
-| Releases mais recentes | [Alpha 0.14](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.14) e [Alpha 0.15](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.15) (ISO dividida em partes, acima do limite de 2 GiB) |
-| Próxima ISO | Alpha com **EuroOffice** em qualificação P0; será publicada como ISO direta somente se ficar abaixo de 2 GiB |
+| ISO direta (alias rolante) | [`dinx-latest-x86_64.iso`](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) (Alpha 0.16), 2.133.706.752 bytes, com [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) |
+| Release mais recente | [Alpha 0.16 (`v0.1.0-alpha.16`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.16): primeira ISO com **EuroOffice**, download direto abaixo do limite de 2 GiB |
+| Releases anteriores | [Alpha 0.14](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.14) e [Alpha 0.15](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.15) (ISO dividida em partes, roster antigo) |
 | Base | Artix Linux x86_64 com dinit |
 | Próximo marco | Beta 0.1 do sistema: planejada, ainda não publicada e sem data |
 | Qualificação gaming | P5 separada da beta do sistema; ainda não concluída |

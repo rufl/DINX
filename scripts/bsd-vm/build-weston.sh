@@ -67,6 +67,7 @@ meson setup $RECONF build \
     -Dimage-webp=false \
     -Dsystemd=false \
     -Dremoting=false \
+    '-Dtools=[]' \
     -Dpipewire=false \
     '-Dsimple-clients=[]' \
     -Ddemo-clients=false \

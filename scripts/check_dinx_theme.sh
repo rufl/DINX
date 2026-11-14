@@ -50,6 +50,7 @@ patchy_launcher="$repo_root/distro/packages/patchy/patchy"
 patchy_force_darkest="$repo_root/distro/packages/patchy/patchy-force-darkest"
 wizard_source="$repo_root/distro/packages/pearl/dinx-first-run-wizard.c"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
+haruna_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
 fail() {
   printf 'check_dinx_theme: %s\n' "$*" >&2
   exit 1
@@ -60,7 +61,7 @@ for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg"
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
-  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync" "$patchy_launcher" "$patchy_force_darkest"; do
+  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync" "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
@@ -296,6 +297,20 @@ grep -Fq 'package_id="dinx.orchis-$corners"' "$pearl_shell" \
   || fail 'Pearl shell does not map the Orchis choice to its Pearl package'
 grep -Fq 'Skeuos-Blue-Dark-Square' "$theme_sync" \
   || fail 'Theme sync does not honor the ported GTK themes'
+grep -Fq 'sync_borders: true' "$pearl_shell" \
+  || fail 'Pearl shell does not enable Aqueous window-border color sync'
+grep -Fq '.window_corner_radius = $window_radius' "$pearl_shell" \
+  || fail 'Pearl shell does not propagate the corner choice to Aqueous window radius'
+grep -Fq 'enabled: true' "$pearl_shell" \
+  || fail 'Pearl shell does not enable application color profiles'
+grep -Fq 'profile_prefix="dinx.skeuos-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not bind Skeuos application profiles'
+grep -Fq 'pearl-material.conf' "$theme_sync" \
+  || fail 'Theme sync does not consume the generated Qt palette for ports'
+grep -Fq 'deetty/themes/pearl-material' "$theme_sync" \
+  || fail 'Theme sync does not bridge the generated terminal theme to Deetty'
+grep -Fq 'Skeuos Rounded (DINX)' "$haruna_wrapper" \
+  || fail 'Haruna does not follow the selected port KDE color scheme'
 wizard_sha256=$(sha256sum "$wizard_source" | cut -d ' ' -f 1)
 grep -Fq "'$wizard_sha256'" "$pearl_pkg" || fail 'Pearl first-run wizard source checksum is stale'
 grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'

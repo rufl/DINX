@@ -119,8 +119,12 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_STATE_HOME="$state_home" \
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 1 ]]
       [[ $(ini_value "$settings" gtk-theme-name) == Skeuos-Blue-Dark-Square ]]
     done
+    [[ $(ini_value "$qt_config" color_scheme_path) == "$config_home/qt6ct/colors/pearl-material.conf" ]]
+    [[ $(ini_value "$qt_config" custom_palette) == true ]]
+    [[ $(readlink "$config_home/deetty/themes/pearl-material") == ../../ghostty/themes/pearl-material ]]
+    grep -Fqx "theme = pearl-material" "$config_home/deetty/config"
     [[ $(wc -l <"$calls") == 1 ]]
   ' smoke_dinx_theme_sync "$theme_sync" "$pearl_shell" "$fakebin" \
   "$tmp/wizard" "$config_home" "$preferences" "$tmp/wizard-calls"
 
-printf 'dinx_theme_sync_smoke material_dark=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true light_transition=true gtk_theme_choice=true package_theme=true preserves_unrelated_settings=true\n'
+printf 'dinx_theme_sync_smoke material_dark=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true light_transition=true gtk_theme_choice=true package_theme=true qt_generated_palette=true deetty_bridge=true preserves_unrelated_settings=true\n'

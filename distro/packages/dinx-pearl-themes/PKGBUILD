@@ -13,7 +13,7 @@ source_env="$startdir/source.env"
 : "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
 : "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
 pkgver="$DINX_PEARL_THEMES_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Skeuos and Orchis Pearl community themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'

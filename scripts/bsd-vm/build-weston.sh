@@ -35,14 +35,11 @@ sed -i '' 's|#include <values.h>|#include <limits.h>\
 grep -rl 'CLOCK_MONOTONIC_RAW' --include='*.c' --include='*.h' . \
   | xargs sed -i '' 's/CLOCK_MONOTONIC_RAW/CLOCK_MONOTONIC/g'
 sed -i '' 's|#include <pty.h>|#include <libutil.h>|' clients/terminal.c
-# FreeBSD libc expects the executable/library to provide `environ`.
-sed -i '' '/^char \*\*environ;$/d' shared/process-util.c
-grep -q 'weak)) char \*\*environ;' shared/process-util.c \
-  || sed -i '' '1i\
-__attribute__((weak)) char **environ;
-' shared/process-util.c
+# environ comes from libdinxcompat (shared lib); defining it in objects linked
+# into executables overrides crt1's initialized environ and segfaults.
+sed -i '' '/^char \*\*environ;$/d; /^__attribute__((weak)) char \*\*environ;$/d' shared/process-util.c
 # epoll-shim must be linked into every target (epoll_shim_fcntl).
-export LDFLAGS="-L/usr/local/lib -lepoll-shim -lutil"
+export LDFLAGS="-L/usr/local/lib -lepoll-shim -lutil -ldinxcompat"
 # Linux uapi headers used by weston's sync-file support: shim them.
 mkdir -p /usr/local/include/linux
 printf '#include <sys/ioctl.h>\n' > /usr/local/include/linux/ioctl.h

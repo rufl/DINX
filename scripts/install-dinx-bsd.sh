@@ -62,9 +62,24 @@ while [ "$i" -lt 24 ]; do
   sleep 5
 done
 if [ "$pkg_ready" = 1 ]; then
-  for p in seatd pipewire wireplumber wayland mesa-dri \
-           libxkbcommon xkeyboard-config jq gtk4 gtk4-layer-shell \
-           libsecret libarchive basu xwayland pulseaudio wayvnc; do
+  # Every shared library our native packages link against, resolved by
+  # scripts/bsd-vm/check-shlibs.py against the pkg database (each dinx-*.pkg
+  # declares shlibs_required but no deps, so these must be installed first or
+  # `pkg add` fails with "Missing shlib"). Plus the runtime pieces that are not
+  # shlib deps: XKB data, the Mesa Vulkan software driver, Xwayland, wayvnc for
+  # headless/VNC sessions, audio and jq.
+  for p in \
+    seatd \
+    wayland libxkbcommon xkeyboard-config \
+    libxcb xcb-util-errors xcb-util-renderutil xcb-util-wm \
+    libdrm libdisplay-info libliftoff mesa-libs mesa-dri \
+    vulkan-loader \
+    libinput libevdev libudev-devd \
+    pixman png cairo gdk-pixbuf2 glib gtk4 gtk4-layer-shell \
+    lcms2 libarchive libxml2 libsecret polkit \
+    curl cups \
+    pulseaudio pipewire wireplumber \
+    xwayland wayvnc basu jq; do
     if pkg install -y "$p" >/dev/null 2>&1; then
       log "installed $p"
     else

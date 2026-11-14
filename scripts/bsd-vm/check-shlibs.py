@@ -67,13 +67,17 @@ def main():
     for lib in sorted(all_req):
         if lib in have or lib in BASE_LIBS:
             continue
+        # `pkg shlib -P lib` prints:
+        #   libfoo.so.1 is provided by packages:
+        #           libfoo-1.2.3
         prov = subprocess.run(["pkg", "shlib", "-P", lib],
                               capture_output=True, text=True).stdout
-        for line in prov.split():
-            tok = line.strip().rstrip(":")
-            if tok and tok != lib:
-                have[lib] = tok
-                break
+        for line in prov.splitlines():
+            tok = line.strip()
+            if not tok or "provided by" in tok or tok == lib:
+                continue
+            have[lib] = tok
+            break
 
     base = sorted(l for l in all_req if l in BASE_LIBS)
     missing = sorted(l for l in all_req if l not in have and l not in BASE_LIBS)
@@ -89,8 +93,13 @@ def main():
         print("  MISSING %-32s %s" % (lib, users))
     print()
     print("# pkg install list for firstboot (providers of required shlibs):")
-    providers = sorted({p for lib, p in have.items()
-                        if p not in required and p not in provided_by_repo.values()})
+    def strip_version(pkg):
+        # "gtk4-4.20.4_1" -> "gtk4"; "libxml2-2.11.9" -> "libxml2"
+        return pkg.rsplit("-", 1)[0] if "-" in pkg else pkg
+
+    providers = sorted({strip_version(p) for lib, p in have.items()
+                        if p not in required
+                        and p not in provided_by_repo.values()})
     print(" ".join(providers))
     return 1 if missing else 0
 

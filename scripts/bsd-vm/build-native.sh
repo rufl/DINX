@@ -67,13 +67,12 @@ maintainer: trafael@dinx.org
 prefix: /usr/local
 EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
-  # plist is prefix-relative; pkg create resolves it against the rootdir with
-  # the prefix prepended, so the rootdir is the stage (usr/local/...).
-  (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
+  # plist paths are absolute install paths; pkg add installs them literally.
+  (cd "$stage" && find . -type f | sed 's|^\./|/|') > "$meta/plist"
   pkg create -m "$meta" -p "$meta/plist" -r "$stage" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
   # pkg create drops shlibs_provided; inject it by repacking with bsdtar.
-  prov=$(sed -n 's|^lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$meta/plist" \
+  prov=$(sed -n 's|^/usr/local/lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$meta/plist" \
     | sed 's/.*/"&"/' | paste -sd, -)
   if [ -n "$prov" ]; then
     rm -rf "$meta/inject"

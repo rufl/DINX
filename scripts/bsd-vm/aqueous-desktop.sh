@@ -50,6 +50,7 @@ cat > /tmp/aq-init.sh <<'INIT'
   grim /tmp/dinx-desktop.png 2>/tmp/grim.out
   echo "GRIM=$? $(cat /tmp/grim.out | head -1)"
   ls -la /tmp/dinx-desktop.png 2>&1 | cut -c1-60
+  kill $KA 2>/dev/null
   echo "AQ_INIT_DONE"
 } > /tmp/aq-init.out 2>&1
 sleep 2

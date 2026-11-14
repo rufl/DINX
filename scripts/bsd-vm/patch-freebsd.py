@@ -440,7 +440,9 @@ if os.path.exists(p):
         src = src.replace(
             'pub const c = @import("xwayland_c");',
             'pub const c = @import("xwayland_c");\n'
-            'extern "c" fn dinx_self_exe_path(buf: [*]u8, size: usize) c_int;',
+            'extern "c" fn dinx_self_exe_path(buf: [*]u8, size: usize) c_int;\n'
+            "// libc's environ (provided by crt1); std.posix does not re-export it.\n"
+            "extern var environ: [*:null]const ?[*:0]const u8;",
             1,
         )
     src = src.replace(
@@ -449,7 +451,7 @@ if os.path.exists(p):
         "var exe_buf: [4096]u8 = undefined;\n"
         "        if (dinx_self_exe_path(exe_buf[0..].ptr, exe_buf.len) <= 0) return error.Spawn;\n"
         "        if (c.posix_spawn(&self.pid, @ptrCast(&exe_buf), &actions, &attr, "
-        "@ptrCast(@constCast(&argv)), @ptrCast(std.posix.environ.ptr)) != 0) return error.Spawn;",
+        "@ptrCast(@constCast(&argv)), environ) != 0) return error.Spawn;",
     )
     if src != orig:
         open(p, "w", encoding="utf-8").write(src)

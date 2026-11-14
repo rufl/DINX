@@ -125,8 +125,9 @@ if [ -f "$WLR_PREFIX/lib/libwlroots-0.20.so" ]; then
   [ -d "$WLR_PREFIX/share" ] && cp -a "$WLR_PREFIX/share" "$stage/usr/local/"
   package dinx-wlroots 0.20.2.aqueous dinx/wlroots "wlroots 0.20.2 with Aqueous render/presentation patches" "$stage"
 fi
-# --- FreeBSD compat lib (statx/mallopt) for Pearl -------------------------
-cc -shared -fPIC -O2 -o /usr/local/lib/libdinxcompat.so "$W/dinxcompat.c" >>"$LOG" 2>&1
+# --- FreeBSD compat lib: Zig-visible shims + the Linux->FreeBSD ABI layer ---
+cc -shared -fPIC -O2 -o /usr/local/lib/libdinxcompat.so \
+   "$W/dinxcompat.c" "$W/dinxlinux.c" >>"$LOG" 2>&1
 log "== dinxcompat exit=$?"
 stage="$W/stage-dinx-compat"
 rm -rf "$stage"; mkdir -p "$stage/usr/local/lib"

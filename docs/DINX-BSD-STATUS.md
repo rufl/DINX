@@ -263,25 +263,26 @@ escuta no FreeBSD (blocker original, journal §20). O wrapper
 | **Aqueous: socket Wayland + IPC (SIGSYS corrigido)** | **Funciona** [V] |
 | **Aqueous + Xwayland (X server 11.0 + xterm anexado)** | **Funciona** [V] |
 | **Captura da tela do compositor (grim/wlr-screencopy)** | **Funciona** [V] |
-| Pearl sob Aqueous (XDG_CURRENT_DESKTOP) | **Corrigido, validando CSS** [V] |
-| Pearl inicia (CSS `backdrop-filter` vs GTK 4.20) | **Em correção (patch 27)** [D] |
+| **Pearl shell inicia (`event=ready mode=session`, app-index 5)** | **Funciona** [V] |
+| **Screenshot verificado (xterm Xwayland + bordas Vulkan)** | **Funciona** [V] |
 | Xwayland no Weston (segfault no launch do filho) | **Não funciona** [B] |
-| DRM em QEMU (qualquer GPU emulado) | **Não existe no FreeBSD** [B] |
-| greetd greeter em tela | **Não funciona** (consequência) [B] |
-| Temas aplicados em tela | **Não verificável** [B] |
+| DRM em QEMU/VirtualBox (GPU virtual) | **Não existe no FreeBSD 15.1** [B] |
+| greetd greeter em tela | **Não verificado** (sem VT/DRM em VM) [B] |
+| Temas aplicados em tela | **Não verificável sem scanout** [B] |
 | Gaming/Linuxulator exercitado | **Não testado** [I] |
 | Live/first-run/persist | **Implementado, não re-verificado** [I] |
 
-## 9. Próximo passo técnico (para fechar o objetivo)
-
-1. **Xwayland no Weston/FreeBSD**: depurar o segfault no launch do filho
-   (`Couldn't unset CLOEXEC on child FDs`, race; não reproduz sob gdb) e o
-   parsing de `xwayland-path` na seção `[core]` do weston.ini.
-2. **Pearl**: rebuild + reinstall verificado após os patches #22/#23 (o
-   binário instalado ainda é anterior ao #23) e validar a sessão sob Weston.
-3. **Captura**: resolver o `width > 0` do weston-screenshooter (mode corrente
-   do output headless) ou capturar via Xwayland assim que o item 1 fechar.
-4. Só então: prova visual do desktop + gate gráfico da ISO.
+1. **Rebuildar a ISO** com os pacotes nativos atuais (Aqueous +Xwayland,
+   Pearl com patches 27/28) e rodar o gate unattended.
+2. **VirtualBox (sem DRM)**: dois caminhos, ambos sem driver DRM:
+   a. `WLR_BACKENDS=x11` → Aqueous renderiza numa janela do Xorg com driver
+      `scfb`/`vesa` (X11 não exige KMS) → desktop visível no console da VBox.
+      Requer que o wlroots patcheado tenha o backend x11 habilitado.
+   b. `WLR_BACKENDS=headless` + **wayvnc** (já nos ports, `net/wayvnc` 0.10.1)
+      → sessão exposta por VNC, acessível do host; já preparado no wrapper
+      `dinx-pearl-session` (fallback quando `/dev/dri/card0` não existe).
+3. **greetd/VT**: validar o greeter em ttyv1 com o console vt(4) (não requer
+   DRM) e a transição greeter → sessão.
 
 ## 10. Como reproduzir
 

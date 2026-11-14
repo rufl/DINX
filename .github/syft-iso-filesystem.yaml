@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# SBOM generation scope for the final ISO filesystem.
+#
+# Only the installed-package cataloger runs. The default directory cataloger set
+# additionally fingerprints every executable and every kernel module by file
+# contents, which produced ~7,590 pseudo-packages for a 900-package rootfs and
+# drove name-only CPE matching: GNU tar 1.35 was reported against npm tar
+# advisories, fish 4.9 against a PHP CVE, and ffmpeg 2:9.0 against CVEs fixed
+# in 3.1. Restricting to alpm keeps the bill of materials to the packages pacman
+# actually installed, which is the only inventory DINX controls.
+select-catalogers:
+  - alpm

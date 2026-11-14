@@ -457,14 +457,6 @@ required_paths=(
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
   usr/bin/firefox
   usr/share/applications/firefox.desktop
-  usr/bin/opensnitchd
-  usr/bin/opensnitch-ui
-  etc/opensnitchd/default-config.json
-  usr/share/applications/opensnitch_ui.desktop
-  etc/dinit.d/opensnitchd
-  etc/dinit.d/boot.d/opensnitchd
-  etc/xdg/autostart/opensnitch-ui.desktop
-  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/share/applications/org.kde.haruna.desktop
   usr/share/licenses/haruna/LICENSE
   usr/share/applications/com.github.neithern.g4music.desktop
@@ -1191,8 +1183,6 @@ grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floati
 for firewall_link_manifest in "$manifest" "$livefs_manifest"; do
   grep -Fq 'squashfs-root/etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewall_link_manifest" \
     || fail 'Firewalld Dinit service is not enabled for both installed rootfs and livefs'
-  grep -Fq 'squashfs-root/etc/dinit.d/boot.d/opensnitchd -> /etc/dinit.d/opensnitchd' <<<"$firewall_link_manifest" \
-    || fail 'OpenSnitch Dinit service is not enabled for both installed rootfs and livefs'
 done
 for firewall_package in firewalld firewall-config firewalld-dinit dinx-firewalld-dinit; do
   grep -Eq "/var/lib/pacman/local/${firewall_package}-[^/]*/" <<<"$manifest" \
@@ -1206,24 +1196,10 @@ for action in all config direct policies; do
   grep -Fq "<action id=\"org.fedoraproject.FirewallD1.$action\">" <<<"$firewalld_policy" \
     || fail "Firewalld Polkit action is missing: $action"
 done
-for required_package in firefox opensnitch opensnitch-dinit; do
+for required_package in firefox; do
   grep -Eq "/var/lib/pacman/local/${required_package}-[^/]*/" <<<"$manifest" \
     || fail "required package metadata is missing from installed rootfs: $required_package"
 done
-unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/opensnitchd/default-config.json \
-  > "$tmp_dir/opensnitch-config.json"
-if grep -Fq '"Firewall": "nftables"' "$tmp_dir/opensnitch-config.json" \
-  && grep -Fq '"DefaultAction": "allow"' "$tmp_dir/opensnitch-config.json" \
-  && grep -Fq '"InterceptUnknown": false' "$tmp_dir/opensnitch-config.json"; then
-  :
-else
-  fail 'OpenSnitch defaults must use nftables, allow traffic and avoid intercepting unknown apps'
-fi
-opensnitch_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/autostart/opensnitch-ui.desktop)
-grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' <<<"$opensnitch_autostart" \
-  || fail 'OpenSnitch tray UI is not configured to start in the background'
-grep -Fqx 'TryExec=opensnitch-ui' <<<"$opensnitch_autostart" \
-  || fail 'OpenSnitch autostart entry does not guard the UI executable'
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for retired_path in \
     usr/bin/portmaster \
@@ -1244,13 +1220,21 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     etc/dinit.d/ufw \
     usr/share/applications/gufw.desktop \
     usr/local/share/applications/gufw.desktop \
-    usr/local/libexec/dinx-gufw; do
+    usr/local/libexec/dinx-gufw \
+    usr/bin/opensnitchd \
+    usr/bin/opensnitch-ui \
+    etc/opensnitchd/default-config.json \
+    usr/share/applications/opensnitch_ui.desktop \
+    etc/dinit.d/opensnitchd \
+    etc/dinit.d/boot.d/opensnitchd \
+    etc/xdg/autostart/opensnitch-ui.desktop \
+    usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg; do
     if grep -Fq "$retired_path" <<<"$image_manifest"; then
       fail "retired firewall payload remains in the ISO: $retired_path"
     fi
   done
   # Artix iproute2 requires libxtables; iptables may provide it transitively.
-  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1; do
+  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1 opensnitch opensnitch-dinit; do
     if iso_manifest_contains_package "$retired_package" <<<"$image_manifest"; then
       fail "retired package remains in a final ISO filesystem: $retired_package"
     fi

@@ -8,8 +8,7 @@
 set -u
 W=/root/build
 ZIG_DIR=$(ls -d "$W"/zig-x86_64-freebsd-* 2>/dev/null | head -1)
-export PATH="$ZIG_DIR:$PATH"
-LOG=/tmp/aq-xw.log
+LOG="$W/aq-xw.log"
 : > "$LOG"
 cd "$W" || exit 1
 

@@ -22,6 +22,7 @@
 #   EUROFFICE_WORKDIR      scratch directory (default: mktemp)
 #   EUROFFICE_KEEP_DICTS   dictionaries to keep (default "en_US en_GB pt_BR")
 #   EUROFFICE_KEEP_LOCALES CEF locales to keep (default "en-US en-GB pt-BR")
+#   EUROFFICE_KEEP_TEMPLATES template gallery languages (default "EN PT")
 #   EUROFFICE_NO_STRIP     set to 1 to skip ELF stripping
 set -euo pipefail
 
@@ -31,6 +32,7 @@ pkgrel=${EUROFFICE_PKREL:-1}
 outdir=${EUROFFICE_OUTDIR:-dist/office/eurooffice}
 keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US en_GB pt_BR}
 keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US en-GB pt-BR}
+keep_templates=${EUROFFICE_KEEP_TEMPLATES:-EN PT}
 no_strip=${EUROFFICE_NO_STRIP:-0}
 
 for tool in curl jq ar tar strip mksquashfs unsquashfs sha256sum; do
@@ -160,6 +162,32 @@ for devel_dir in cmake pkgconfig designer qmllint qmlls qmltooling objects-RelWi
   fi
 done
 
+# 4e. Localized template gallery: keep only the configured languages.
+# These are zip-compressed office files, near-incompressible in the ISO.
+if [[ -d "$pkgroot/opt/eurooffice/converter/templates" ]]; then
+  for tpl_dir in "$pkgroot/opt/eurooffice/converter/templates"/*/; do
+    [[ -d "$tpl_dir" ]] || continue
+    lang=$(basename -- "$tpl_dir")
+    keep=0
+    for want in $keep_templates; do [[ "$lang" == "$want" ]] && keep=1; done
+    if (( keep == 0 )); then
+      record_removal "$tpl_dir" template-gallery
+      rm -rf -- "$tpl_dir"
+    fi
+  done
+fi
+
+# 4f. IE/asm.js fallback engines: the desktop editors run on CEF (Chromium)
+# and use the WASM/modern paths; *_ie.js and monaco-for-ie are dead weight.
+while IFS= read -r ie_file; do
+  record_removal "$ie_file" ie-fallback
+  rm -f -- "$ie_file"
+done < <(find "$pkgroot/opt/eurooffice/editors" -type f -name '*_ie.js')
+if [[ -d "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie" ]]; then
+  record_removal "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie" ie-fallback
+  rm -rf -- "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie"
+fi
+
 log "debloat removed $removed_bytes bytes ($(wc -l < "$trim_manifest") entries)"
 
 # --- 5. Strip ELF objects ------------------------------------------------------
@@ -287,6 +315,7 @@ jq -n \
   --argjson strip_failures "$strip_failures" \
   --arg keep_dicts "$keep_dicts" \
   --arg keep_locales "$keep_locales" \
+  --arg keep_templates "$keep_templates" \
   --arg pkg_name "$pkg_name" \
   --arg squash_name "$squash_name" \
   --arg built_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -296,7 +325,8 @@ jq -n \
                deb_asset: $asset_name, deb_sha256: $deb_sha256, deb_bytes: $deb_bytes,
                installed_bytes: $upstream_installed_bytes},
     debloat: {removed_bytes: $removed_bytes, keep_dicts: ($keep_dicts|split(" ")),
-              keep_locales: ($keep_locales|split(" "))},
+              keep_locales: ($keep_locales|split(" ")),
+              keep_templates: ($keep_templates|split(" "))},
     strip: {stripped: $stripped, failures: $strip_failures},
     installed_bytes: $installed_bytes,
     artifacts: {package: $pkg_name, squashfs: $squash_name},

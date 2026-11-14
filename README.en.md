@@ -64,7 +64,7 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 - **Mesa/RADV and VM graphics:** qualification on default VGA and Virtio-VGA in QEMU; direct VirtualBox boot still needs qualification. See the [install guide](docs/install.md);
 - **DINX Gaming** keeps its manual launcher hidden; the gaming stack (Gamescope, Steam, GameMode, MangoHud, 32-bit) is opt-in after installation.
 
-Upstream binary apps (PaintFE, Transit, Zenkai, Patchy, Blockbench) are **repacked as pre-extracted `/opt/<package>/` trees** at build time (`scripts/lib/repack-appimage.sh`): ELF stripped where safe, locales trimmed to en/pt, and launchers exec `AppRun` directly — no FUSE and no per-launch tmpfs extraction. The final SquashFS uses **xz + x86 BCJ, 1 MiB blocks and dictionary** to keep the direct ISO below GitHub's 2 GiB per-asset limit.
+Upstream binary apps (PaintFE, Transit, Zenkai, Patchy, Blockbench) are **repacked as pre-extracted `/opt/<package>/` trees** at build time (`scripts/lib/repack-appimage.sh`): ELF stripped where safe, locales trimmed to en/pt, and launchers exec `AppRun` directly — no FUSE and no per-launch tmpfs extraction. The final SquashFS uses **xz + x86 BCJ, level 9, 1 MiB blocks and an 8 MiB dictionary** to keep the direct ISO below GitHub's 2 GiB per-asset limit.
 
 `dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network.
 

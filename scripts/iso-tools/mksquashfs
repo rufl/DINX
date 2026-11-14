@@ -270,7 +270,8 @@ fi
 exec "$real_mksquashfs" "${filtered[@]}" \
   -comp xz \
   -Xbcj x86 \
+  -Xcompression-level 9 \
   -b 1M \
-  -Xdict-size 1M \
+  -Xdict-size 8M \
   -wildcards \
   -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

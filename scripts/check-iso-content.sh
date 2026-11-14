@@ -19,7 +19,7 @@ iso_path=${1:-}
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 source "$script_dir/lib/iso-content-manifest.sh"
 
-for command in jq mktemp rm xorriso unsquashfs grep cmp python3 zstd; do
+for command in jq mktemp rm xorriso unsquashfs grep cmp python3; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -61,8 +61,8 @@ xorriso -osirrox on \
 
 for squashfs in "$tmp_dir/rootfs.img" "$tmp_dir/livefs.img"; do
   squashfs_stats=$(unsquashfs -no-xattrs -no-progress -s "$squashfs")
-  grep -Eq 'Compression[[:space:]]+zstd([[:space:]]|$)' <<<"$squashfs_stats" \
-    || fail "SquashFS image is not zstd-compressed: $squashfs"
+  grep -Eq 'Compression[[:space:]]+xz([[:space:]]|$)' <<<"$squashfs_stats" \
+    || fail "SquashFS image is not xz-compressed: $squashfs"
   grep -Eq 'Block size[[:space:]]+1048576([[:space:]]|$)' <<<"$squashfs_stats" \
     || fail "SquashFS image does not use 1 MiB blocks: $squashfs"
 done

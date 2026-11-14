@@ -39,7 +39,7 @@ sed -i '' 's|#include <pty.h>|#include <libutil.h>|' clients/terminal.c
 # into executables overrides crt1's initialized environ and segfaults.
 sed -i '' '/^char \*\*environ;$/d; /^__attribute__((weak)) char \*\*environ;$/d' shared/process-util.c
 # epoll-shim must be linked into every target (epoll_shim_fcntl).
-export LDFLAGS="-L/usr/local/lib -lepoll-shim -lutil -ldinxcompat"
+export LDFLAGS="-L/usr/local/lib -lepoll-shim -lutil -Wl,--no-as-needed -ldinxcompat -Wl,--as-needed"
 # Linux uapi headers used by weston's sync-file support: shim them.
 mkdir -p /usr/local/include/linux
 printf '#include <sys/ioctl.h>\n' > /usr/local/include/linux/ioctl.h

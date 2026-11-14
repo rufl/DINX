@@ -30,10 +30,12 @@ su -m dinx -c '
   export WAYLAND_DISPLAY=wl-dinx XDG_CURRENT_DESKTOP=Weston
   pearl >/tmp/pearl.log 2>&1 &
   sleep 4
-  DISPLAY=:0 xterm -geometry 80x24+60+60 >/tmp/xterm.log 2>&1 &
-  sleep 3
-  cd /tmp && weston-screenshooter
-  echo SHOT=$?
+  cd /tmp
+  weston-screenshooter &
+  SP=$!
+  sleep 8
+  kill $SP 2>/dev/null
+  echo SHOT_DONE
   f=$(ls -t /tmp/wayland-screenshot*.png 2>/dev/null | head -1)
   [ -n "$f" ] && cp "$f" /tmp/proof.png
   ls -la /tmp/proof.png 2>&1 | cut -c1-60

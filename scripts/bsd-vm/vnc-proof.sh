@@ -14,6 +14,13 @@ chmod 700 "$R"; chmod 1777 /tmp/.X11-unix
 chown dinx:dinx "$R"
 rm -f "$R"/wayland-* "$R"/wl-*; rm -rf "$R/aqueous"
 rm -f /root/build/vncproof.out /tmp/aq-init-vnc.out /tmp/vnc-shot.png
+# A stale wayvnc holds port 5900 and would serve a dead compositor, producing a
+# blank remote framebuffer. Start from a clean slate.
+pkill -9 -f wayvnc 2>/dev/null
+pkill -9 -f aqueous 2>/dev/null
+pkill -9 pearl 2>/dev/null
+pkill -9 xterm 2>/dev/null
+sleep 2
 # Pearl reads /proc/self/exe, /proc/stat, /proc/meminfo... on Linux. FreeBSD's
 # linprocfs provides equivalents (incl. /proc/self/exe); the real session
 # mounts this in session-common, the proof must too.
@@ -34,7 +41,13 @@ cat > /tmp/aq-init-vnc.sh <<'INIT'
   # Publish the headless session over VNC (no DRM needed).
   wayvnc --render-cursor 0.0.0.0 5900 >/tmp/wayvnc.log 2>&1 &
   echo "WAYVNC_PID=$!"
-  sleep 3
+  # Wait until wayvnc actually accepts connections before the host grabs it.
+  i=0
+  while [ $i -lt 30 ]; do
+    if sockstat -4l 2>/dev/null | grep -q ":5900 "; then echo "WAYVNC_LISTENING=yes"; break; fi
+    i=$((i + 1)); sleep 1
+  done
+  [ $i -ge 30 ] && echo "WAYVNC_LISTENING=no"
 
   # The shell: Pearl.
   pearl >/tmp/pearl.log 2>&1 &

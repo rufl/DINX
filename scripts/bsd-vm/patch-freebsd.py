@@ -389,7 +389,7 @@ for p in glob.glob(os.path.join(W, "zig-x86_64-freebsd-*", "lib", "std", "os", "
         @intFromPtr(statx_buf),
     );"""
     new = """    // dinx-statx-libc: FreeBSD has no statx syscall; use the libc shim.
-    const f = @extern(*const fn (fd_t, [*:0]const u8, u32, u32, *Statx) callconv(.c) c_int, "statx");
+    const f = @extern(*const fn (fd_t, [*:0]const u8, u32, u32, *Statx) callconv(.c) c_int, .{ .name = "statx" });
     const rc = f(dirfd, path, flags, @as(u32, @bitCast(mask)), statx_buf);
     if (rc == 0) return 0;
     return @intCast(@import("../c.zig")._errno().*);"""

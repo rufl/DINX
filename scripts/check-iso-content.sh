@@ -281,31 +281,6 @@ required_paths=(
   usr/share/applications/paintfe.desktop
   usr/share/icons/hicolor/256x256/apps/paintfe.png
   usr/share/licenses/paintfe/LICENSE.md
-  usr/bin/wordcraft
-  opt/wordcraft/wordcraft.AppImage
-  usr/share/applications/wordcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/wordcraft.png
-  usr/share/licenses/wordcraft/LICENSE-MIT
-  usr/share/licenses/wordcraft/LICENSE-APACHE
-  usr/bin/gridcraft
-  opt/gridcraft/gridcraft.AppImage
-  usr/share/applications/gridcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/gridcraft.png
-  usr/share/licenses/gridcraft/LICENSE-MIT
-  usr/share/licenses/gridcraft/LICENSE-APACHE
-  usr/bin/deckcraft
-  opt/deckcraft/deckcraft.AppImage
-  usr/share/applications/deckcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/deckcraft.png
-  usr/share/licenses/deckcraft/LICENSE-MIT
-  usr/share/licenses/deckcraft/LICENSE-APACHE
-  usr/share/mime/packages/ai.storyteller.deckcraft.xml
-  usr/bin/pdfcraft
-  opt/pdfcraft/pdfcraft.AppImage
-  usr/share/applications/pdfcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/pdfcraft.png
-  usr/share/licenses/pdfcraft/LICENSE-MIT
-  usr/share/licenses/pdfcraft/LICENSE-APACHE
   usr/bin/transit
   opt/transit/transit.AppImage
   usr/share/applications/transit.desktop
@@ -616,9 +591,14 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai haruna; do
+for package in krita inkscape godot pixelorama patchy blockbench paintfe transit zenkai haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
+done
+for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto; do
+  if grep -Eq "/var/lib/pacman/local/${retired_app}-[^/]*/" <<<"$manifest"; then
+    fail "retired office/graphics package metadata remains in rootfs: $retired_app"
+  fi
 done
 source "$script_dir/../distro/packages/patchy/source.env"
 patchy_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' "$script_dir/../distro/packages/patchy/PKGBUILD")
@@ -1309,8 +1289,8 @@ grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is 
 grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default XHTML handler'
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
-grep -Fq 'application/pdf=pdfcraft.desktop;' <<<"$mimeapps_config" || fail 'PdfCraft is not the default PDF handler'
-for appimage_launcher in paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai; do
+grep -Fq 'application/pdf=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default PDF handler'
+for appimage_launcher in paintfe transit zenkai; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
   grep -Fq -- '--appimage-extract-and-run "$@"' <<<"$launcher_script" \
     || fail "$appimage_launcher launcher does not support systems without FUSE"
@@ -1578,10 +1558,6 @@ usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Apl
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
-usr/share/applications/wordcraft.desktop|WordCraft|WordCraft|wordcraft %U
-usr/share/applications/gridcraft.desktop|GridCraft|GridCraft|gridcraft %U
-usr/share/applications/deckcraft.desktop|DeckCraft|DeckCraft|deckcraft %U
-usr/share/applications/pdfcraft.desktop|PdfCraft|PdfCraft|pdfcraft %U
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F

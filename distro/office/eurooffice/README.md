@@ -21,43 +21,23 @@ manifest, sizes, pipeline digest).
 
 ## Debloat policy (measured on v9.3.8)
 
-- Dictionaries: 42 languages, 239 MiB → keep `en_US pt_BR`.
-- CEF locales: 55 `.pak` files, 29 MiB → keep `en-US pt-BR`.
+- Dictionaries: 42 languages, 239 MiB → keep `en_US en_GB pt_BR` (21.5 MiB).
+- CEF locales: 55 `.pak` files, 29 MiB → keep `en-US en-GB pt-BR`.
 - Regenerable sdkjs V8 code caches (`*.cache`) removed.
-- Qt development-only payloads removed (cmake, pkgconfig, designer, qmllint,
-  qmlls, qmltooling, objects-RelWithDebInfo).
-- Template gallery: 10 languages, 208 MiB of zip-compressed office files
-  (near-incompressible in the ISO) → keep `EN PT` (33 MiB).
-- IE/asm.js fallback engines removed (`*_ie.js`, `monaco-for-ie`): the
-  desktop editors run on CEF and use the WASM/modern paths.
-- Unused runtime libraries removed (dinx3): Qt Designer/DesignerComponents/
-  UiTools/QuickTest/Test, ICU tools/test/io (`libicutu`, `libicutest`,
-  `libicuio`), embedded platform plugins (eglfs, linuxfb, minimal,
-  minimalegl, vkkhrdisplay, vnc + EglFS/KMS support libs), and upstream
-  `provenance.json`. ICU i18n **stays** (DesktopEditors links it). Every
-  build verifies dynamic resolution of DesktopEditors, libascdocumentscore
-  and libx2tlib with ldd after debloat.
+- All ELF objects stripped (`strip --strip-unneeded`).
 - **Kept intact**: converter (x2t), sdkjs editors, web-apps UI, the private
   Qt 6.10.1 / ICU (73+74) / ffmpeg bundles (version-pinned, not shareable with
   system copies), fonts, Visio support.
 
-Result (dinx3): 1,434,607,844 → 919,869,773 bytes installed (−491 MiB);
-live squashfs 245,669,888 B (234 MiB), pacman package 319,993,020 B.
-Override keeps via `EUROFFICE_KEEP_DICTS` / `EUROFFICE_KEEP_LOCALES` /
-`EUROFFICE_KEEP_TEMPLATES`.
-
-The pacman package uses the pacman 7 / libalpm 16 `.PKGINFO` format
-(combined `pkgver = <ver>-<rel>`, `xdata = pkgtype=pkg`, no `pkgrel` key).
-The live squashfs excludes `.PKGINFO`/`.MTREE`/`.INSTALL`.
+Result: ~1.37 GiB → ~1.1 GiB installed. Override keeps via
+`EUROFFICE_KEEP_DICTS` / `EUROFFICE_KEEP_LOCALES`.
 
 ## Layout
 
 Reorganized from upstream `/opt/euro-office/euro-office` to:
 
 - `/opt/eurooffice/` — application tree (DesktopEditors, libcef.so, editors, …)
-- `/usr/bin/eurooffice` — upstream `desktopeditors` launcher with the DINX
-  app path (keeps `LD_PRELOAD=libcef.so`, `LD_LIBRARY_PATH` incl. converter,
-  and the `--new-document-templates` helper); no AppImage extraction
+- `/usr/bin/eurooffice` — launcher (execs the real binary, no AppImage extraction)
 - `/usr/share/applications/eurooffice.desktop` — DINX desktop identity + MIME
 - `/usr/share/licenses/eurooffice/` — AGPL-3.0 text + upstream notice
 - `/usr/share/doc/eurooffice/SOURCE` — provenance + debloat manifest
@@ -88,12 +68,9 @@ The office-branch workflow `.github/workflows/eurooffice.yml`
 `pkgrel` bumps when the same upstream version is repacked with pipeline
 changes (`force` input).
 
-**GitHub cron only fires on the default branch**, and `workflow_dispatch`
-also requires the workflow file to exist on the default branch. So main
-carries `consumer/eurooffice-refresh.yml` (every 3 days) plus a registration
-copy of `.github/workflows/eurooffice.yml`; the consumer dispatches this
-workflow with `--ref office` (executing the office-branch definition), then
-consumes any newer published release.
+**GitHub cron only fires on the default branch**, so the periodic trigger
+lives on main: `consumer/eurooffice-refresh.yml` (every 3 days) dispatches
+this workflow with `--ref office`, then consumes any newer published release.
 
 ## Consumption (main side)
 

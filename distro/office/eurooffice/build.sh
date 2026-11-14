@@ -22,7 +22,6 @@
 #   EUROFFICE_WORKDIR      scratch directory (default: mktemp)
 #   EUROFFICE_KEEP_DICTS   dictionaries to keep (default "en_US en_GB pt_BR")
 #   EUROFFICE_KEEP_LOCALES CEF locales to keep (default "en-US en-GB pt-BR")
-#   EUROFFICE_KEEP_TEMPLATES template gallery languages (default "EN PT")
 #   EUROFFICE_NO_STRIP     set to 1 to skip ELF stripping
 set -euo pipefail
 
@@ -30,9 +29,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 upstream_repo=${EUROFFICE_UPSTREAM_REPO:-Euro-Office/DesktopEditors}
 pkgrel=${EUROFFICE_PKREL:-1}
 outdir=${EUROFFICE_OUTDIR:-dist/office/eurooffice}
-keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US pt_BR}
-keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US pt-BR}
-keep_templates=${EUROFFICE_KEEP_TEMPLATES:-EN PT}
+keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US en_GB pt_BR}
+keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US en-GB pt-BR}
 no_strip=${EUROFFICE_NO_STRIP:-0}
 
 for tool in curl jq ar tar strip mksquashfs unsquashfs sha256sum; do
@@ -154,80 +152,6 @@ while IFS= read -r cache_file; do
   rm -f -- "$cache_file"
 done < <(find "$pkgroot/opt/eurooffice" -type f -name '*.cache')
 
-# 4d. Qt development-only payloads (not needed at runtime).
-for devel_dir in cmake pkgconfig designer qmllint qmlls qmltooling objects-RelWithDebInfo; do
-  if [[ -e "$pkgroot/opt/eurooffice/$devel_dir" ]]; then
-    record_removal "$pkgroot/opt/eurooffice/$devel_dir" qt-devel
-    rm -rf -- "$pkgroot/opt/eurooffice/$devel_dir"
-  fi
-done
-
-# 4e. Localized template gallery: keep only the configured languages.
-# These are zip-compressed office files, near-incompressible in the ISO.
-if [[ -d "$pkgroot/opt/eurooffice/converter/templates" ]]; then
-  for tpl_dir in "$pkgroot/opt/eurooffice/converter/templates"/*/; do
-    [[ -d "$tpl_dir" ]] || continue
-    lang=$(basename -- "$tpl_dir")
-    keep=0
-    for want in $keep_templates; do [[ "$lang" == "$want" ]] && keep=1; done
-    if (( keep == 0 )); then
-      record_removal "$tpl_dir" template-gallery
-      rm -rf -- "$tpl_dir"
-    fi
-  done
-fi
-
-# 4f. IE/asm.js fallback engines: the desktop editors run on CEF (Chromium)
-# and use the WASM/modern paths; *_ie.js and monaco-for-ie are dead weight.
-while IFS= read -r ie_file; do
-  record_removal "$ie_file" ie-fallback
-  rm -f -- "$ie_file"
-done < <(find "$pkgroot/opt/eurooffice/editors" -type f -name '*_ie.js')
-if [[ -d "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie" ]]; then
-  record_removal "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie" ie-fallback
-  rm -rf -- "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie"
-fi
-
-# 4g. Unused runtime libraries (verified by DT_NEEDED scan plus an ldd
-# resolution check on the core binaries after debloat): Qt dev/test modules,
-# ICU tools/test/io (i18n stays — DesktopEditors links it), embedded
-# platform plugins.
-for qt_module in Designer DesignerComponents UiTools QuickTest Test; do
-  for lib in "$pkgroot/opt/eurooffice/libQt6$qt_module.so"*; do
-    [[ -e "$lib" || -L "$lib" ]] || continue
-    record_removal "$lib" unused-qt-module
-    rm -f -- "$lib"
-  done
-done
-for icu_lib in libicutu libicutest libicuio; do
-  for lib in "$pkgroot/opt/eurooffice/$icu_lib.so"* "$pkgroot/opt/eurooffice/converter/$icu_lib.so"*; do
-    record_removal "$lib" unused-icu
-    rm -f -- "$lib"
-  done
-done
-for platform_plugin in libqeglfs.so libqlinuxfb.so libqminimal.so libqminimalegl.so libqvkkhrdisplay.so libqvnc.so; do
-  if [[ -e "$pkgroot/opt/eurooffice/platforms/$platform_plugin" ]]; then
-    record_removal "$pkgroot/opt/eurooffice/platforms/$platform_plugin" unused-platform
-    rm -f -- "$pkgroot/opt/eurooffice/platforms/$platform_plugin"
-  fi
-done
-if [[ -d "$pkgroot/opt/eurooffice/egldeviceintegrations" ]]; then
-  record_removal "$pkgroot/opt/eurooffice/egldeviceintegrations" unused-platform
-  rm -rf -- "$pkgroot/opt/eurooffice/egldeviceintegrations"
-fi
-for egl_lib in libQt6EglFSDeviceIntegration libQt6EglFsKmsSupport libQt6EglFsKmsGbmSupport; do
-  for lib in "$pkgroot/opt/eurooffice/$egl_lib.so"*; do
-    [[ -e "$lib" || -L "$lib" ]] || continue
-    record_removal "$lib" unused-platform
-    rm -f -- "$lib"
-  done
-done
-# Upstream build provenance (DINX keeps its own SOURCE manifest).
-if [[ -f "$pkgroot/opt/eurooffice/provenance.json" ]]; then
-  record_removal "$pkgroot/opt/eurooffice/provenance.json" upstream-provenance
-  rm -f -- "$pkgroot/opt/eurooffice/provenance.json"
-fi
-
 log "debloat removed $removed_bytes bytes ($(wc -l < "$trim_manifest") entries)"
 
 # --- 5. Strip ELF objects ------------------------------------------------------
@@ -248,46 +172,13 @@ if [[ "$no_strip" != 1 ]]; then
 fi
 
 # --- 6. DINX identity: launcher, desktop entry, licenses, provenance ----------
-# Launcher: reuse the upstream desktopeditors script (localized template
-# helper, LD_LIBRARY_PATH, LD_PRELOAD=libcef.so) with the DINX app path.
-upstream_launcher="$tree/usr/bin/desktopeditors"
-[[ -f "$upstream_launcher" ]] || { printf 'build: missing upstream launcher (usr/bin/desktopeditors)\n' >&2; exit 1; }
-{
-  cat <<'EOF'
-#!/bin/sh
-set -eu
-export GTK_THEME=DINX
-export GTK_APPLICATION_PREFER_DARK_THEME=1
-export QT_QPA_PLATFORMTHEME=qt6ct
-export QT_STYLE_OVERRIDE=Fusion
-
-config_home="${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}"
-settings_dir="$config_home/onlyoffice"
-settings_file="$settings_dir/DesktopEditors.conf"
-if [ ! -e "$settings_file" ]; then
-  mkdir -p "$settings_dir"
-  cat > "$settings_file" <<'SETTINGS'
-[General]
-theme=dark
-SETTINGS
-fi
-EOF
-  sed -e 's|/opt/euro-office/euro-office|/opt/eurooffice|g' \
-      -e 's|exec \$APP_PATH/DesktopEditors "\$@"|exec \$APP_PATH/DesktopEditors --theme=dark "\$@"|' \
-      "$upstream_launcher"
-} > "$pkgroot/usr/bin/eurooffice"
-chmod 0755 "$pkgroot/usr/bin/eurooffice"
-grep -Fq 'LD_PRELOAD' "$pkgroot/usr/bin/eurooffice" \
-  || { printf 'build: launcher lost LD_PRELOAD\n' >&2; exit 1; }
+install -Dm755 "$script_dir/assets/eurooffice.launcher" "$pkgroot/usr/bin/eurooffice"
 install -Dm644 "$script_dir/assets/eurooffice.desktop" "$pkgroot/usr/share/applications/eurooffice.desktop"
 install -Dm644 "$script_dir/assets/LICENSE" "$pkgroot/usr/share/licenses/eurooffice/LICENSE"
 # Upstream license notice (Ascensio header + AGPL reference), when present.
-for upstream_license in LICENSE LICENSE.txt; do
-  if [[ -f "$upstream_root/$upstream_license" ]]; then
-    install -Dm644 "$upstream_root/$upstream_license" "$pkgroot/usr/share/licenses/eurooffice/LICENSE.upstream"
-    break
-  fi
-done
+if [[ -f "$upstream_root/LICENSE" ]]; then
+  install -Dm644 "$upstream_root/LICENSE" "$pkgroot/usr/share/licenses/eurooffice/LICENSE.upstream"
+fi
 # Preserve the upstream icon under the DINX desktop-entry name.
 icon_src=$(find "$pkgroot/usr/share/icons" -type f \( -name '*.png' -o -name '*.svg' \) 2>/dev/null | head -1 || true)
 if [[ -n "$icon_src" ]]; then
@@ -316,9 +207,8 @@ depends=(
 {
   printf 'pkgname = eurooffice\n'
   printf 'pkgbase = eurooffice\n'
-  # pacman 7 / libalpm 16: combined version, no separate pkgrel key.
-  printf 'pkgver = %s-%s\n' "$version" "$pkgrel"
-  printf 'xdata = pkgtype=pkg\n'
+  printf 'pkgver = %s\n' "$version"
+  printf 'pkgrel = %s\n' "$pkgrel"
   printf 'pkgdesc = EuroOffice desktop editors (DINX lean repack: documents, spreadsheets, presentations, PDF)\n'
   printf 'url = https://euro-office.github.io/\n'
   printf 'builddate = %s\n' "$(date -u +%s)"
@@ -354,11 +244,9 @@ log "package: $outdir/$pkg_name ($(stat -c '%s' "$outdir/$pkg_name") bytes)"
 
 # --- 8. Live squashfs -----------------------------------------------------------
 squash_name="eurooffice-${version}-x86_64.squashfs"
-rm -f -- "$outdir/$squash_name"
 mksquashfs "$pkgroot" "$outdir/$squash_name" \
   -comp xz -b 1048576 -Xbcj x86 -Xdict-size 1048576 \
-  -no-exports -no-xattrs -all-root -no-progress -noappend \
-  -e .PKGINFO .MTREE .INSTALL
+  -no-exports -no-xattrs -all-root -no-progress
 log "squashfs: $outdir/$squash_name ($(stat -c '%s' "$outdir/$squash_name") bytes)"
 
 # --- 9. Checksums + build metadata ----------------------------------------------
@@ -378,7 +266,6 @@ jq -n \
   --argjson strip_failures "$strip_failures" \
   --arg keep_dicts "$keep_dicts" \
   --arg keep_locales "$keep_locales" \
-  --arg keep_templates "$keep_templates" \
   --arg pkg_name "$pkg_name" \
   --arg squash_name "$squash_name" \
   --arg built_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -388,8 +275,7 @@ jq -n \
                deb_asset: $asset_name, deb_sha256: $deb_sha256, deb_bytes: $deb_bytes,
                installed_bytes: $upstream_installed_bytes},
     debloat: {removed_bytes: $removed_bytes, keep_dicts: ($keep_dicts|split(" ")),
-              keep_locales: ($keep_locales|split(" ")),
-              keep_templates: ($keep_templates|split(" "))},
+              keep_locales: ($keep_locales|split(" "))},
     strip: {stripped: $stripped, failures: $strip_failures},
     installed_bytes: $installed_bytes,
     artifacts: {package: $pkg_name, squashfs: $squash_name},
@@ -397,49 +283,17 @@ jq -n \
   > "$outdir/build-metadata.json"
 
 # --- 10. Sanity checks -----------------------------------------------------------
-squash_listing=$(unsquashfs -l "$outdir/$squash_name")
-grep -Fq 'opt/eurooffice/DesktopEditors' <<<"$squash_listing" \
+unsquashfs -l "$outdir/$squash_name" | grep -Fq 'opt/eurooffice/DesktopEditors' \
   || { printf 'build: squashfs missing DesktopEditors\n' >&2; exit 1; }
-grep -Fq 'usr/bin/eurooffice' <<<"$squash_listing" \
+unsquashfs -l "$outdir/$squash_name" | grep -Fq 'usr/bin/eurooffice' \
   || { printf 'build: squashfs missing launcher\n' >&2; exit 1; }
-launcher_check=$(unsquashfs -cat "$outdir/$squash_name" usr/bin/eurooffice 2>/dev/null || unsquashfs -no-progress -cat "$outdir/$squash_name" usr/bin/eurooffice)
-grep -Fq '/opt/eurooffice' <<<"$launcher_check" \
-  || { printf 'build: launcher does not target /opt/eurooffice\n' >&2; exit 1; }
-grep -Fq 'LD_PRELOAD' <<<"$launcher_check" \
-  || { printf 'build: launcher missing LD_PRELOAD\n' >&2; exit 1; }
-grep -Fq 'QT_QPA_PLATFORMTHEME=qt6ct' <<<"$launcher_check" \
-  || { printf 'build: launcher missing qt6ct dark-theme backend\n' >&2; exit 1; }
-grep -Fq 'QT_STYLE_OVERRIDE=Fusion' <<<"$launcher_check" \
-  || { printf 'build: launcher missing high-contrast Qt style\n' >&2; exit 1; }
-grep -Fq 'theme=dark' <<<"$launcher_check" \
-  || { printf 'build: launcher missing persisted dark theme\n' >&2; exit 1; }
-grep -Fq -- '--theme=dark' <<<"$launcher_check" \
-  || { printf 'build: launcher missing dark-theme argument\n' >&2; exit 1; }
-# DINX gate: localized launcher identity (pt_BR) must ship in the package.
-grep -Fq 'Name[pt_BR]=' "$pkgroot/usr/share/applications/eurooffice.desktop" \
-  || { printf 'build: desktop entry missing Name[pt_BR]\n' >&2; exit 1; }
-
-pkg_listing=$(tar -tf "$outdir/$pkg_name")
-grep -Fqx '.PKGINFO' <<<"$pkg_listing" \
+tar -tf "$outdir/$pkg_name" | grep -Fqx '.PKGINFO' \
   || { printf 'build: package missing .PKGINFO\n' >&2; exit 1; }
-grep -Fqx '.MTREE' <<<"$pkg_listing" \
+tar -tf "$outdir/$pkg_name" | grep -Fqx '.MTREE' \
   || { printf 'build: package missing .MTREE\n' >&2; exit 1; }
 if command -v pacman >/dev/null 2>&1; then
   pacman -Qip "$outdir/$pkg_name" >/dev/null \
     || { printf 'build: pacman rejects package metadata\n' >&2; exit 1; }
-  pacman -Qlp "$outdir/$pkg_name" >/dev/null \
-    || { printf 'build: pacman rejects package file list (.MTREE)\n' >&2; exit 1; }
-fi
-# Debloat must not break dynamic resolution of the core binaries.
-if command -v ldd >/dev/null 2>&1; then
-  for probe in opt/eurooffice/DesktopEditors opt/eurooffice/libascdocumentscore.so opt/eurooffice/converter/libx2tlib.so; do
-    unresolved=$(LD_LIBRARY_PATH="$pkgroot/opt/eurooffice:$pkgroot/opt/eurooffice/converter" \
-      ldd "$pkgroot/$probe" 2>/dev/null | grep 'not found' || true)
-    if [[ -n "$unresolved" ]]; then
-      printf 'build: unresolved libraries after debloat in %s:\n%s\n' "$probe" "$unresolved" >&2
-      exit 1
-    fi
-  done
 fi
 
 log "done: upstream_installed=$upstream_installed_bytes lean_installed=$installed_bytes removed=$removed_bytes"

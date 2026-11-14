@@ -37,7 +37,7 @@ Alpha 9 e as candidatas anteriores são evidência histórica, não o release at
 
 O SquashFS final usa o caminho determinístico de ISO compacta de
 `scripts/build-iso.sh`: compressão xz com filtro BCJ x86, blocos e dicionário
-de 4 MiB e 4 threads de compressão, mantendo a ISO direta abaixo do limite de 2 GiB por
+de 1 MiB (máximo do squashfs-tools do builder) e 4 threads de compressão, mantendo a ISO direta abaixo do limite de 2 GiB por
 asset do GitHub.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.
 

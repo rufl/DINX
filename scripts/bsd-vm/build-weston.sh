@@ -27,6 +27,8 @@ cd weston || exit 1
 sed -i '' 's/errno = ETIME;/errno = ETIMEDOUT;/' shared/file-util.c
 # glibc-only program name; FreeBSD provides getprogname() in stdlib.h.
 sed -i '' 's/program_invocation_short_name/getprogname()/g' shared/xalloc.h
+grep -rl 'program_invocation_short_name' --include='*.c' --include='*.h' . \
+  | xargs sed -i '' 's/program_invocation_short_name/getprogname()/g'
 sed -i '' 's|#include <linux/ioctl.h>|#include <sys/ioctl.h>|' libweston/linux-sync-file-uapi.h
 sed -i '' 's|#include <values.h>|#include <limits.h>\
 #include <float.h>|' libweston/input.c

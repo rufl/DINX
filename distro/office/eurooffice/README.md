@@ -26,12 +26,17 @@ manifest, sizes, pipeline digest).
 - Regenerable sdkjs V8 code caches (`*.cache`) removed.
 - Qt development-only payloads removed (cmake, pkgconfig, designer, qmllint,
   qmlls, qmltooling, objects-RelWithDebInfo).
+- Template gallery: 10 languages, 208 MiB of zip-compressed office files
+  (near-incompressible in the ISO) → keep `EN PT` (33 MiB).
+- IE/asm.js fallback engines removed (`*_ie.js`, `monaco-for-ie`): the
+  desktop editors run on CEF and use the WASM/modern paths.
 - **Kept intact**: converter (x2t), sdkjs editors, web-apps UI, the private
   Qt 6.10.1 / ICU (73+74) / ffmpeg bundles (version-pinned, not shareable with
   system copies), fonts, Visio support.
 
-Result: ~1.37 GiB → ~1.11 GiB installed. Override keeps via
-`EUROFFICE_KEEP_DICTS` / `EUROFFICE_KEEP_LOCALES`.
+Result (dinx2): 1,434,607,844 → 945,018,074 bytes installed (−467 MiB).
+Override keeps via `EUROFFICE_KEEP_DICTS` / `EUROFFICE_KEEP_LOCALES` /
+`EUROFFICE_KEEP_TEMPLATES`.
 
 The pacman package uses the pacman 7 / libalpm 16 `.PKGINFO` format
 (combined `pkgver = <ver>-<rel>`, `xdata = pkgtype=pkg`, no `pkgrel` key).

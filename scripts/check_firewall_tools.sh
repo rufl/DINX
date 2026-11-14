@@ -65,7 +65,13 @@ for retired_path in \
   'usr/bin/portmaster' \
   'usr/lib/portmaster/portmaster-core' \
   'etc/dinit.d/portmaster' \
-  'usr/share/applications/portmaster.desktop'; do
+  'usr/share/applications/portmaster.desktop' \
+  'usr/bin/opensnitchd' \
+  'usr/bin/opensnitch-ui' \
+  'etc/opensnitchd/default-config.json' \
+  'etc/dinit.d/opensnitchd' \
+  'etc/dinit.d/boot.d/opensnitchd' \
+  'etc/xdg/autostart/opensnitch-ui.desktop'; do
   grep -Fq "$retired_path" "$iso_check" || fail "ISO content checker does not reject $retired_path"
 done
-printf 'firewall_tools_contract firewalld=true firewall_config=true opensnitch_backend=nftables service=dinit boot_enabled=rootfs+livefs explicit_inputs_exclude=portmaster,iptables,libayatana-appindicator,webkit2gtk\n'
+printf 'firewall_tools_contract firewalld=true firewall_config=true service=dinit boot_enabled=rootfs+livefs opensnitch=removed explicit_inputs_exclude=portmaster,iptables,libayatana-appindicator,webkit2gtk\n'

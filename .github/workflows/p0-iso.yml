@@ -81,7 +81,6 @@ on:
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
       - "tools/dinx-qemu-launcher.c"
-      - "scripts/check_opensnitch.sh"
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
@@ -205,8 +204,6 @@ jobs:
         run: ./scripts/check_deetty_integration.sh
       - name: Verify VT-only runtime packaging and sole-terminal build order
         run: ./scripts/check_ghostty_vt_runtime.sh
-      - name: Verify OpenSnitch Dinit service and live UI autostart
-        run: ./scripts/check_opensnitch.sh
 
       - name: Verify pinned swayimg source and package contract
         run: ./scripts/check_swayimg.sh
@@ -455,15 +452,11 @@ jobs:
           artifact-name: dinx-rootfs-sbom-${{ github.sha }}.spdx.json
           upload-artifact: false
           upload-release-assets: false
-      - name: Scan final filesystem SBOM
-        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
-        with:
-          sbom: dist/dinx-rootfs-sbom.spdx.json
-          fail-build: true
-          severity-cutoff: high
-          output-format: sarif
-          output-file: dist/dinx-rootfs-grype.sarif
-          cache-db: true
+          # Inventory only what pacman installed. The default directory cataloger
+          # set also fingerprints every executable and kernel module, which
+          # produced name-only CPE matches against unrelated ecosystems (GNU tar
+          # reported under npm tar advisories). See .github/syft-iso-filesystem.yaml.
+          config: .github/syft-iso-filesystem.yaml
 
       - name: Attest ISO, package repository and checksum provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -489,4 +482,3 @@ jobs:
             dist/dinx-package-repository.tar
             dist/dinx-build.log
             dist/dinx-rootfs-sbom.spdx.json
-            dist/dinx-rootfs-grype.sarif

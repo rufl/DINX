@@ -446,7 +446,6 @@ trap finish EXIT
               build_package swayimg
               build_package gapless
               build_package dinx-keyring
-              build_package opensnitch-dinit
               build_package dinx-firewalld-dinit
               firewalld_boot_package=$(find "$package_repo" -maxdepth 1 -type f -name 'dinx-firewalld-dinit-*.pkg.tar.zst' -print -quit)
               [[ -n "$firewalld_boot_package" ]]

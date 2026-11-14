@@ -18,7 +18,7 @@ Os pontos de entrada são:
 - `scripts/check_dinx_release_preflight.sh` — preflight do canal stable, da chave persistente e dos assets do release GitHub;
 - `scripts/check_dinx_package_provenance.sh` — exige checksums fixados ou contratos locais/staged explícitos para cada PKGBUILD DINX;
 - `scripts/check_dinx_feature_groups.sh` — valida o manifesto de grupos inspirado no Mocaccino contra o perfil Artix;
-- `scripts/check_opensnitch.sh`, `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_desktop_packages.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos de OpenSnitch/Dinit, aplicativo fixado, gerenciamento de pacotes, scanner/firmware/Flatpak/editor de imagens, firewall, hardware e BC250 Control Center;
+- `scripts/check_swayimg.sh`, `scripts/check_package_managers.sh`, `scripts/check_desktop_packages.sh`, `scripts/check_firewall_tools.sh`, `scripts/check_cyan_skillfish.sh` e `scripts/check_bc250_control_center.sh` — contratos de aplicativo fixado, gerenciamento de pacotes, scanner/firmware/Flatpak/editor de imagens, firewall, hardware e BC250 Control Center;
 - `scripts/check_dinitui.sh` — contrato do pacote DinitUI, ações, limite de privilégios, perfis de serviços e integração Gaming direta sobre dinit;
 - `scripts/check_dinxpanel.sh` — contrato do centro de controle DINXPanel, ponte fixa de GPU e instalador seguro de kernels;
 - `scripts/check_gaming.sh` — launcher manual oculto, limite do grupo opcional, Vulkan base e exclusão do payload gaming da ISO;
@@ -116,7 +116,7 @@ O contrato de gerenciamento também prova `paru` e Shelly; o Topgrade não é ma
 
 A receita do Paru mantém o Paru upstream 2.1.0 e fixa os crates Rust `openssl` 0.10.78 e `openssl-sys` 0.9.118, compatíveis com o OpenSSL 4.1 do builder Artix.
 O contrato de hardware confirma que o firmware AMDGPU genérico, Mesa RADV e diagnósticos Vulkan continuam na ISO base. O governor Cyan Skillfish e o BC250 Control Center permanecem pacotes fixados e compiláveis no repositório DINX assinado, mas o grupo `hardware` usa `iso:false` e a verificação de conteúdo rejeita seus binários, serviços e metadata pacman nas duas imagens genéricas. Instale-os somente após confirmar o PCI `1002:13fe`; o comportamento em runtime continua sendo uma qualificação em hardware físico.
-O contrato da ISO verifica Firewalld, firewall-config, Qps e OpenSnitch; os dois serviços Dinit iniciam nos root filesystems live/instalado e a interface OpenSnitch inicia automaticamente na sessão do usuário. O gate valida os padrões nftables/permitir do OpenSnitch e rejeita Portmaster, suas dependências exclusivas, Gufw e UFW.
+O contrato da ISO verifica Firewalld, firewall-config e Qps; o serviço Dinit do Firewalld inicia nos root filesystems live/instalado. A verificação de conteúdo rejeita Portmaster, suas dependências exclusivas, Gufw e UFW nas duas imagens genéricas.
 
 A qualificação QEMU captura duas superfícies em VGA padrão e Virtio-VGA: o OCR precisa ler o título `Dock` da janela GTK4 de configuração inicial Pearl e, depois, o quadro da sessão Aqueous/Pearl precisa conter um marcador Pearl/Aqueous/DINX e rejeitar Pearl Greeter, consoles TTY, prompts de login, campos de senha/entrada e falhas visíveis do Dinit. O primeiro check detecta uma superfície GTK de cliente preta; o segundo confirma o início da sessão. Nenhum deles prova a renderização de todos os aplicativos, boot no VirtualBox, rede, áudio ou saúde prolongada dos serviços.
 

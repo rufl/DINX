@@ -12,7 +12,7 @@ Required for the base ISO:
 - Dintor has desktop ID `org.dinx.Dintor`, is launched by the `dintor` command, opens files and directories through standard XDG launchers and accepts supported file/line arguments.
 - The ISO includes ZLS 0.16.0 for Dintor's Zig LSP integration. C/C++ LSP support uses `clangd` from the optional `clang` package and is not part of the default image.
 - Firefox is the default HTML, XHTML, HTTP and HTTPS handler.
-- OpenSnitch is installed with its UI autostart and Dinit-managed daemon in both live and installed systems. Its nftables defaults allow traffic and do not intercept unknown apps; Firewalld remains a separate service.
+- Firewalld is installed with `firewall-config` and its Dinit-managed service enabled at boot in both live and installed systems; Qps provides process monitoring.
 - Phyto is the default directory handler; File Roller owns archive open/create/extract actions; GParted owns standalone partition editing.
 - Pori discovers block devices through UDisks2 and persists user mounts through dinit services under `/etc/dinit.d`.
 - Keyboard navigation and XDG configuration/data locations remain usable without a private shell integration.

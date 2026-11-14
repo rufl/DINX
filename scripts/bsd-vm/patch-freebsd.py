@@ -495,13 +495,15 @@ if os.path.isdir(aq_dir):
         shutil.copyfile(shim_src, os.path.join(aq_dir, "bsd_compat.zig"))
         applied.append(os.path.join(aq_dir, "bsd_compat.zig"))
         # syscall call sites to redirect; NOT errno/types/constants.
+        # Only the syscalls bsd_compat.zig actually wraps. Redirecting a name
+        # the shim lacks would emit bsdcompat.X (compile error), and leaving a
+        # raw linux.X in place would SIGSYS at runtime -- so keep this list in
+        # lockstep with the wrapper exports.
         syscalls = [
-            "socket", "bind", "listen", "accept4", "accept", "connect",
-            "close", "unlink", "unlinkat", "chmod", "fchmod", "mkdir",
-            "rmdir", "recvfrom", "sendto", "recv", "send", "getsockopt",
-            "setsockopt", "statx", "open", "read", "readlink", "fsync",
-            "pause", "getrlimit", "fcntl", "getuid", "getgid", "geteuid",
-            "getegid", "kill", "waitpid", "pipe2", "dup", "dup2",
+            "socket", "bind", "connect", "listen", "accept4", "close",
+            "unlink", "chmod", "mkdir", "rmdir", "open", "read", "readlink",
+            "fsync", "pause", "recvfrom", "sendto", "fcntl", "getrlimit",
+            "getsockopt", "statx", "getuid", "getgid", "geteuid", "getegid",
         ]
         for root, _dirs, files in os.walk(aq_dir):
             for fn in files:

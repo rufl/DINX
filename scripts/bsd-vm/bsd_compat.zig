@@ -1,297 +1,163 @@
-// bsd_compat.zig — drop-in replacement for `const linux = std.os.linux;`
-// in Aqueous sources, backed by FreeBSD libc.
+// bsd_compat.zig — thin Zig front-end for the Linux->FreeBSD syscall layer.
 //
-// Contract matches std.os.linux: syscall wrappers return usize where a
-// non-error is the raw result (fd / byte count / 0) and an error is the
-// negative Linux errno encoded as usize. errno(r) decodes that back to the
-// std.os.linux.E enum, so existing `switch (linux.errno(rc)) { .AGAIN => ... }`
-// call sites compile and behave unchanged. FreeBSD errno values are mapped to
-// their Linux E equivalents.
+// Drop-in for `const linux = std.os.linux;`. The actual ABI translation
+// (Linux flag/errno numbers, sockaddr_un layout, SO_PEERCRED, statx) lives in
+// dinxlinux.c, compiled into libdinxcompat.so. These wrappers only adapt Zig
+// types and preserve the std.os.linux usize return convention, so call sites
+// keep using `linux.errno(rc)`, `linux.AF.*`, `linux.SOCK.*`, `linux.sockaddr`,
+// `linux.Statx`, etc. unchanged.
 const std = @import("std");
-const c = std.c;
+const lx = std.os.linux;
 
-// This shim provides ONLY the syscall functions (which SIGSYS as raw Linux
-// syscalls on FreeBSD). Types, constants and errno() stay std.os.linux at the
-// call sites; the wrappers return the same usize convention linux.errno decodes.
+// ---- externs into libdinxcompat.so (dinxlinux.c) --------------------------
 
-pub const E = std.os.linux.E;
+extern "c" fn dinx_socket(domain: c_int, sock_type: c_int, protocol: c_int) usize;
+extern "c" fn dinx_bind(fd: c_int, addr: *const anyopaque, addrlen: u32) usize;
+extern "c" fn dinx_connect(fd: c_int, addr: *const anyopaque, addrlen: u32) usize;
+extern "c" fn dinx_listen(fd: c_int, backlog: c_int) usize;
+extern "c" fn dinx_accept4(fd: c_int, addr: ?*anyopaque, addrlen: ?*u32, flags: c_int) usize;
+extern "c" fn dinx_close(fd: c_int) usize;
+extern "c" fn dinx_unlink(path: [*:0]const u8) usize;
+extern "c" fn dinx_chmod(path: [*:0]const u8, mode: u32) usize;
+extern "c" fn dinx_mkdir(path: [*:0]const u8, mode: u32) usize;
+extern "c" fn dinx_rmdir(path: [*:0]const u8) usize;
+extern "c" fn dinx_open(path: [*:0]const u8, flags: u32, mode: u32) usize;
+extern "c" fn dinx_read(fd: c_int, buf: [*]u8, n: usize) usize;
+extern "c" fn dinx_readlink(path: [*:0]const u8, buf: [*]u8, n: usize) usize;
+extern "c" fn dinx_fsync(fd: c_int) usize;
+extern "c" fn dinx_pause() usize;
+extern "c" fn dinx_recvfrom(fd: c_int, buf: [*]u8, len: usize, flags: c_int, addr: ?*anyopaque, addrlen: ?*u32) usize;
+extern "c" fn dinx_sendto(fd: c_int, buf: [*]const u8, len: usize, flags: c_int, addr: ?*const anyopaque, addrlen: u32) usize;
+extern "c" fn dinx_fcntl(fd: c_int, cmd: c_int, arg: i64) usize;
+extern "c" fn dinx_getrlimit(resource: c_int, rlim: *anyopaque) usize;
+extern "c" fn dinx_getsockopt(fd: c_int, level: c_int, optname: c_int, optval: *anyopaque, optlen: *u32) usize;
+extern "c" fn dinx_statx(dirfd: c_int, path: [*:0]const u8, flags: u32, mask: u32, buf: *anyopaque) usize;
 
-// ── Constants (Linux ABI values; source ORs these together) ────────────────
+const c_getuid = @extern(*const fn () callconv(.c) u32, .{ .name = "getuid" });
+const c_getgid = @extern(*const fn () callconv(.c) u32, .{ .name = "getgid" });
+const c_geteuid = @extern(*const fn () callconv(.c) u32, .{ .name = "geteuid" });
+const c_getegid = @extern(*const fn () callconv(.c) u32, .{ .name = "getegid" });
 
-pub const AF = struct {
-    pub const UNIX: u32 = c.AF_UNIX;
-    pub const LOCAL: u32 = c.AF_LOCAL;
-    pub const INET: u32 = c.AF_INET;
-    pub const INET6: u32 = c.AF_INET6;
-};
+// ---- helpers --------------------------------------------------------------
 
-pub const SOCK = struct {
-    pub const STREAM: u32 = c.SOCK_STREAM;
-    pub const DGRAM: u32 = c.SOCK_DGRAM;
-    pub const RAW: u32 = c.SOCK_RAW;
-    pub const SEQPACKET: u32 = c.SOCK_SEQPACKET;
-    // Linux flag bits; socket()/accept4() translate them to fcntl on FreeBSD.
-    pub const NONBLOCK: u32 = 0o4000;
-    pub const CLOEXEC: u32 = 0o2000000;
-};
-
-pub const MSG = struct {
-    // FreeBSD has no MSG_NOSIGNAL; sockets get SO_NOSIGPIPE instead.
-    pub const NOSIGNAL: i32 = 0;
-    pub const DONTWAIT: i32 = c.MSG_DONTWAIT;
-    pub const PEEK: i32 = c.MSG_PEEK;
-};
-
-pub const SOL = struct {
-    pub const SOCKET: i32 = c.SOL_SOCKET;
-};
-
-pub const SO = struct {
-    // Call sites pass linux.SO.PEERCRED (std.os.linux value); match it exactly
-    // so getsockopt() can translate it to FreeBSD getpeereid().
-    pub const PEERCRED: i32 = std.os.linux.SO.PEERCRED;
-    pub const REUSEADDR: i32 = c.SO_REUSEADDR;
-    pub const ERROR: i32 = c.SO_ERROR;
-};
-
-pub const socklen_t = c.socklen_t;
-
-/// Linux-layout sockaddr_un (family u16 + path[108]) so Aqueous call sites
-/// compile unchanged; bind()/connect() translate to the FreeBSD layout.
-pub const sockaddr = struct {
-    pub const un = extern struct {
-        family: u16 = 1, // AF_UNIX
-        path: [108]u8 = [_]u8{0} ** 108,
-    };
-};
-
-const bsd_sockaddr_un = extern struct {
-    sun_len: u8 = 0,
-    sun_family: u8 = 1, // AF_UNIX
-    sun_path: [104]u8 = [_]u8{0} ** 104,
-};
-
-pub const Statx = std.os.linux.Statx;
-pub const STATX = std.os.linux.STATX;
-pub const AT = std.os.linux.AT;
-
-extern "c" fn getpeereid(fd: c_int, euid: *c.uid_t, egid: *c.gid_t) c_int;
-
-// ── errno mapping ──────────────────────────────────────────────────────────
-
-fn currentErrnoE() E {
-    return switch (c._errno().*) {
-        c.EAGAIN, c.EWOULDBLOCK => .AGAIN,
-        c.EINTR => .INTR,
-        c.EPERM => .PERM,
-        c.EACCES => .ACCES,
-        c.ENOENT => .NOENT,
-        c.EEXIST => .EXIST,
-        c.EINVAL => .INVAL,
-        c.EISDIR => .ISDIR,
-        c.ENOTDIR => .NOTDIR,
-        c.ENAMETOOLONG => .NAMETOOLONG,
-        c.EBADF => .BADF,
-        c.ECONNRESET => .CONNRESET,
-        c.EPIPE => .PIPE,
-        c.ENOSYS => .NOSYS,
-        c.EOPNOTSUPP => .OPNOTSUPP,
-        c.ETIMEDOUT => .TIMEDOUT,
-        c.ECONNREFUSED => .CONNREFUSED,
-        c.ENOTSOCK => .NOTSOCK,
-        c.ENOTCONN => .NOTCONN,
-        c.EISCONN => .ISCONN,
-        c.ENOBUFS => .NOBUFS,
-        c.ENOMEM => .NOMEM,
-        c.EMFILE => .MFILE,
-        c.ENFILE => .NFILE,
-        c.EADDRINUSE => .ADDRINUSE,
-        c.EADDRNOTAVAIL => .ADDRNOTAVAIL,
-        c.EAFNOSUPPORT => .AFNOSUPPORT,
-        c.EPROTO => .PROTO,
-        else => .INVAL,
+fn asU32(v: anytype) u32 {
+    return switch (@typeInfo(@TypeOf(v))) {
+        .int => @intCast(v),
+        .@"struct" => @bitCast(v), // packed flag structs (linux.O, linux.STATX)
+        .optional => |o| asU32(o orelse 0),
+        else => @compileError("bsd_compat: unsupported integer/flag type"),
     };
 }
 
-/// Encode a libc result into the std.os.linux usize convention.
-fn rcOrErrno(rc: i64) usize {
-    if (rc >= 0) return @intCast(rc);
-    return @bitCast(-@as(isize, @intFromEnum(currentErrnoE())));
+fn asI32(v: anytype) i32 {
+    return switch (@typeInfo(@TypeOf(v))) {
+        .int => @intCast(v),
+        .@"struct" => @as(i32, @bitCast(asU32(v))),
+        .optional => |o| asI32(o orelse 0),
+        else => @compileError("bsd_compat: unsupported integer type"),
+    };
 }
 
-/// Decode the std.os.linux usize convention back to the E enum.
-pub fn errno(r: usize) E {
-    const s: isize = @bitCast(r);
-    if (s > -4096 and s < 0) return @enumFromInt(@intCast(-s));
-    return .SUCCESS;
+// ---- syscall wrappers -----------------------------------------------------
+
+pub fn socket(domain: anytype, sock_type: anytype, protocol: anytype) usize {
+    return dinx_socket(asI32(domain), asI32(sock_type), asI32(protocol));
 }
 
-// ── Syscall wrappers (libc-backed) ─────────────────────────────────────────
-
-fn setFlags(fd: c_int, sock_type: u32) void {
-    if (sock_type & SOCK.NONBLOCK != 0) _ = c.fcntl(fd, c.F_SETFL, c.O_NONBLOCK);
-    if (sock_type & SOCK.CLOEXEC != 0) _ = c.fcntl(fd, c.F_SETFD, c.FD_CLOEXEC);
-    // MSG_NOSIGNAL is unavailable; suppress SIGPIPE on this socket instead.
-    const one: c_int = 1;
-    _ = c.setsockopt(fd, c.SOL_SOCKET, c.SO_NOSIGPIPE, &one, @sizeOf(c_int));
+pub fn bind(fd: anytype, addr: *const anyopaque, addrlen: anytype) usize {
+    return dinx_bind(asI32(fd), addr, asU32(addrlen));
 }
 
-pub fn socket(domain: u32, sock_type: u32, protocol: u32) usize {
-    const base: i32 = @intCast(sock_type & 0xF);
-    const fd = c.socket(@intCast(domain), base, @intCast(protocol));
-    if (fd < 0) return rcOrErrno(-1);
-    setFlags(fd, sock_type);
-    return @intCast(fd);
+pub fn connect(fd: anytype, addr: *const anyopaque, addrlen: anytype) usize {
+    return dinx_connect(asI32(fd), addr, asU32(addrlen));
 }
 
-fn toBsdUn(linux_un: *const sockaddr.un) bsd_sockaddr_un {
-    var bsd: bsd_sockaddr_un = .{};
-    var n: usize = 0;
-    while (n < linux_un.path.len and linux_un.path[n] != 0) : (n += 1) {}
-    if (n > bsd.sun_path.len) n = bsd.sun_path.len;
-    @memcpy(bsd.sun_path[0..n], linux_un.path[0..n]);
-    bsd.sun_family = c.AF_UNIX;
-    bsd.sun_len = @intCast(2 + n + 1);
-    return bsd;
+pub fn listen(fd: anytype, backlog: anytype) usize {
+    return dinx_listen(asI32(fd), asI32(backlog));
 }
 
-pub fn bind(fd: i32, addr: *const anyopaque, addrlen: socklen_t) usize {
-    const un: *const sockaddr.un = @ptrCast(@alignCast(addr));
-    if (un.family == c.AF_UNIX) {
-        var bsd = toBsdUn(un);
-        const rc = c.bind(@intCast(fd), @ptrCast(&bsd), @sizeOf(bsd_sockaddr_un));
-        return rcOrErrno(if (rc == 0) 0 else -1);
-    }
-    const rc = c.bind(@intCast(fd), @ptrCast(@alignCast(addr)), addrlen);
-    return rcOrErrno(if (rc == 0) 0 else -1);
+pub fn accept4(fd: anytype, addr: ?*anyopaque, addrlen: ?*u32, flags: anytype) usize {
+    return dinx_accept4(asI32(fd), addr, addrlen, asI32(flags));
 }
 
-pub fn connect(fd: i32, addr: *const anyopaque, addrlen: socklen_t) usize {
-    const un: *const sockaddr.un = @ptrCast(@alignCast(addr));
-    if (un.family == c.AF_UNIX) {
-        var bsd = toBsdUn(un);
-        const rc = c.connect(@intCast(fd), @ptrCast(&bsd), @sizeOf(bsd_sockaddr_un));
-        return rcOrErrno(if (rc == 0) 0 else -1);
-    }
-    const rc = c.connect(@intCast(fd), @ptrCast(@alignCast(addr)), addrlen);
-    return rcOrErrno(if (rc == 0) 0 else -1);
-}
-
-pub fn listen(fd: i32, backlog: i32) usize {
-    const rc = c.listen(@intCast(fd), backlog);
-    return rcOrErrno(if (rc == 0) 0 else -1);
-}
-
-pub fn accept4(fd: i32, addr: ?*anyopaque, addrlen: ?*socklen_t, flags: u32) usize {
-    const nfd = c.accept(@intCast(fd), @ptrCast(addr), addrlen);
-    if (nfd < 0) return rcOrErrno(-1);
-    setFlags(nfd, flags);
-    return @intCast(nfd);
-}
-
-pub fn close(fd: i32) usize {
-    const rc = c.close(@intCast(fd));
-    return rcOrErrno(if (rc == 0) 0 else -1);
+pub fn close(fd: anytype) usize {
+    return dinx_close(asI32(fd));
 }
 
 pub fn unlink(path: [*:0]const u8) usize {
-    const rc = c.unlink(path);
-    return rcOrErrno(if (rc == 0) 0 else -1);
+    return dinx_unlink(path);
 }
 
-pub fn chmod(path: [*:0]const u8, mode: u32) usize {
-    const rc = c.chmod(path, @intCast(mode));
-    return rcOrErrno(if (rc == 0) 0 else -1);
+pub fn chmod(path: [*:0]const u8, mode: anytype) usize {
+    return dinx_chmod(path, asU32(mode));
 }
 
-pub fn mkdir(path: [*:0]const u8, mode: u32) usize {
-    const rc = c.mkdir(path, @intCast(mode));
-    return rcOrErrno(if (rc == 0) 0 else -1);
+pub fn mkdir(path: [*:0]const u8, mode: anytype) usize {
+    return dinx_mkdir(path, asU32(mode));
 }
 
 pub fn rmdir(path: [*:0]const u8) usize {
-    const rc = c.rmdir(path);
-    return rcOrErrno(if (rc == 0) 0 else -1);
+    return dinx_rmdir(path);
 }
 
-pub fn recvfrom(fd: i32, buf: [*]u8, len: usize, flags: i32, addr: ?*anyopaque, addrlen: ?*socklen_t) usize {
-    const rc = c.recvfrom(@intCast(fd), buf, len, @intCast(flags), @ptrCast(addr), addrlen);
-    return rcOrErrno(@intCast(rc));
+pub fn read(fd: anytype, buf: [*]u8, n: anytype) usize {
+    return dinx_read(asI32(fd), buf, @intCast(n));
 }
 
-pub fn sendto(fd: i32, buf: [*]const u8, len: usize, flags: i32, addr: ?*const anyopaque, addrlen: socklen_t) usize {
-    _ = flags; // MSG_NOSIGNAL is a no-op; SO_NOSIGPIPE is set on the socket.
-    const rc = c.sendto(@intCast(fd), buf, len, 0, @ptrCast(addr), addrlen);
-    return rcOrErrno(@intCast(rc));
+pub fn readlink(path: [*:0]const u8, buf: [*]u8, n: anytype) usize {
+    return dinx_readlink(path, buf, @intCast(n));
 }
 
-pub fn getuid() u32 {
-    return c.getuid();
-}
-pub fn getgid() u32 {
-    return c.getgid();
-}
-pub fn geteuid() u32 {
-    return c.geteuid();
-}
-pub fn getegid() u32 {
-    return c.getegid();
-}
-
-/// SO_PEERCRED is Linux-only; translate to FreeBSD getpeereid().
-pub fn getsockopt(fd: i32, level: i32, optname: i32, optval: *anyopaque, optlen: *socklen_t) usize {
-    if (optname == SO.PEERCRED) {
-        var euid: c.uid_t = undefined;
-        var egid: c.gid_t = undefined;
-        if (getpeereid(@intCast(fd), &euid, &egid) != 0) return rcOrErrno(-1);
-        const cred: *extern struct { pid: i32, uid: u32, gid: u32 } = @ptrCast(@alignCast(optval));
-        cred.pid = 0;
-        cred.uid = euid;
-        cred.gid = egid;
-        optlen.* = @sizeOf(@TypeOf(cred.*));
-        return 0;
-    }
-    const rc = c.getsockopt(@intCast(fd), level, optname, optval, optlen);
-    return rcOrErrno(if (rc == 0) 0 else -1);
-}
-
-pub fn statx(dirfd: i32, path: [*:0]const u8, flags: u32, mask: STATX, buf: *Statx) usize {
-    const f = @extern(*const fn (i32, [*:0]const u8, u32, u32, *Statx) callconv(.c) c_int, .{ .name = "statx" });
-    const rc = f(dirfd, path, flags, @bitCast(mask), buf);
-    return rcOrErrno(if (rc == 0) 0 else -1);
-}
-
-pub fn open(path: [*:0]const u8, flags: u32, mode: u32) usize {
-    const rc = c.open(path, @intCast(flags), @intCast(mode));
-    return rcOrErrno(@intCast(rc));
-}
-
-pub fn read(fd: i32, buf: [*]u8, count: usize) usize {
-    const rc = c.read(@intCast(fd), buf, count);
-    return rcOrErrno(@intCast(rc));
-}
-
-pub fn readlink(path: [*:0]const u8, buf: [*]u8, bufsiz: usize) usize {
-    const rc = c.readlink(path, buf, bufsiz);
-    return rcOrErrno(@intCast(rc));
-}
-
-pub fn fsync(fd: i32) usize {
-    const rc = c.fsync(@intCast(fd));
-    return rcOrErrno(if (rc == 0) 0 else -1);
+pub fn fsync(fd: anytype) usize {
+    return dinx_fsync(asI32(fd));
 }
 
 pub fn pause() usize {
-    const rc = c.pause();
-    return rcOrErrno(if (rc == 0) 0 else -1);
+    return dinx_pause();
 }
 
-pub fn getrlimit(resource: i32, rlim: *anyopaque) usize {
-    const rc = c.getrlimit(@intCast(resource), @ptrCast(rlim));
-    return rcOrErrno(if (rc == 0) 0 else -1);
+pub fn recvfrom(fd: anytype, buf: [*]u8, len: anytype, flags: anytype, addr: ?*anyopaque, addrlen: ?*u32) usize {
+    return dinx_recvfrom(asI32(fd), buf, @intCast(len), asI32(flags), addr, addrlen);
 }
 
-pub fn fcntl(fd: i32, cmd: i32, arg: i64) usize {
-    const rc = c.fcntl(@intCast(fd), cmd, arg);
-    return rcOrErrno(@intCast(rc));
+pub fn sendto(fd: anytype, buf: [*]const u8, len: anytype, flags: anytype, addr: ?*const anyopaque, addrlen: anytype) usize {
+    return dinx_sendto(asI32(fd), buf, @intCast(len), asI32(flags), addr, asU32(addrlen));
+}
+
+pub fn open(path: [*:0]const u8, flags: lx.O, mode: anytype) usize {
+    return dinx_open(path, asU32(flags), asU32(mode));
+}
+
+pub fn fcntl(fd: anytype, cmd: anytype, arg: anytype) usize {
+    return dinx_fcntl(asI32(fd), asI32(cmd), switch (@typeInfo(@TypeOf(arg))) {
+        .int => @intCast(arg),
+        .pointer => @intFromPtr(arg),
+        .optional => |o| if (o.child == .pointer) @intFromPtr(arg orelse null) else @intCast(arg orelse 0),
+        else => @compileError("bsd_compat: unsupported fcntl arg"),
+    });
+}
+
+pub fn getrlimit(resource: anytype, rlim: *anyopaque) usize {
+    return dinx_getrlimit(asI32(resource), rlim);
+}
+
+pub fn getsockopt(fd: anytype, level: anytype, optname: anytype, optval: *anyopaque, optlen: *u32) usize {
+    return dinx_getsockopt(asI32(fd), asI32(level), asI32(optname), optval, optlen);
+}
+
+pub fn statx(dirfd: anytype, path: [*:0]const u8, flags: anytype, mask: anytype, buf: *anyopaque) usize {
+    return dinx_statx(asI32(dirfd), path, asU32(flags), asU32(mask), buf);
+}
+
+pub fn getuid() u32 {
+    return c_getuid();
+}
+pub fn getgid() u32 {
+    return c_getgid();
+}
+pub fn geteuid() u32 {
+    return c_geteuid();
+}
+pub fn getegid() u32 {
+    return c_getegid();
 }

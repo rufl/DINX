@@ -67,13 +67,35 @@ maintainer: trafael@dinx.org
 prefix: /usr/local
 EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
-  # rootdir must be the prefix root: pkg create scans it for the plist AND
-  # for shlibs_provided (an explicit -p plist disables shlib scanning).
+  # plist is prefix-relative; rootdir is the prefix root so pkg create packs
+  # the right paths. pkg create neither scans shlibs with -p nor keeps a
+  # hand-written shlibs_provided, so inject it into the .pkg afterwards.
+  (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
   rm -rf "$meta/root"
   mkdir -p "$meta/root"
   cp -a "$stage/usr/local/." "$meta/root/"
-  pkg create -m "$meta" -r "$meta/root" -o "$REPO" >>"$LOG" 2>&1
+  pkg create -m "$meta" -p "$meta/plist" -r "$meta/root" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
+  prov=$(sed -n 's|^lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$meta/plist" \
+    | sed 's/.*/"&"/' | paste -sd, -)
+  if [ -n "$prov" ]; then
+    python3 - "$REPO/$name-$version.pkg" "$prov" >>"$LOG" 2>&1 <<'PY'
+import json, sys, tarfile
+path, prov = sys.argv[1], json.loads("[" + sys.argv[2] + "]")
+with tarfile.open(path) as t:
+    members = [(m, t.extractfile(m).read() if m.isfile() else None) for m in t.getmembers()]
+with tarfile.open(path, "w") as t:
+    for m, data in members:
+        if m.name == "+MANIFEST":
+            man = json.loads(data)
+            man["shlibs_provided"] = prov
+            data = json.dumps(man, separators=(",", ":")).encode()
+            m.size = len(data)
+        import io
+        t.addfile(m, io.BytesIO(data) if data is not None else None)
+PY
+    log "== shlibs_provided injected into $name exit=$?"
+  fi
 }
 
 if [ ! -d "$W/greetd" ]; then

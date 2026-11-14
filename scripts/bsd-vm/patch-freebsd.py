@@ -374,3 +374,25 @@ for p, old, new in [
     if old in s:
         open(p, "w", encoding="utf-8").write(s.replace(old, new))
         applied.append(p)
+
+# 21. std.os.linux.statx is a raw Linux syscall; FreeBSD has none. Route it
+# through libc statx (provided by libdinxcompat) so every Zig call site works.
+import glob
+for p in glob.glob(os.path.join(W, "zig-x86_64-freebsd-*", "lib", "std", "os", "linux.zig")):
+    src = open(p, encoding="utf-8").read()
+    old = """    return syscall5(
+        .statx,
+        @as(u32, @bitCast(dirfd)),
+        @intFromPtr(path),
+        flags,
+        @as(u32, @bitCast(mask)),
+        @intFromPtr(statx_buf),
+    );"""
+    new = """    // dinx-statx-libc: FreeBSD has no statx syscall; use the libc shim.
+    const rc = @extern("c" fn (fd_t, [*:0]const u8, u32, u32, *Statx) c_int, "statx")(
+        dirfd, path, flags, @as(u32, @bitCast(mask)), statx_buf);
+    if (rc == 0) return 0;
+    return @intCast(@import("../c.zig")._errno().*);"""
+    if old in src:
+        open(p, "w", encoding="utf-8").write(src.replace(old, new))
+        applied.append(p)

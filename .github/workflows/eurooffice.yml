@@ -1,0 +1,113 @@
+name: EuroOffice lean package
+
+# Office-branch pipeline: import upstream Euro-Office deb, debloat, strip,
+# reorganize, publish lean squashfs + pacman package as a GitHub release.
+#
+# NOTE: GitHub schedule triggers only fire on the default branch, and
+# workflow_dispatch requires the workflow file to exist on the default
+# branch. The periodic trigger lives on main in consumer/eurooffice-refresh.yml
+# (cherry-pick it there, plus a registration copy of this file). Dispatching
+# with --ref office executes this office-branch definition.
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even if the upstream version is already packed (bumps pkgrel)
+        required: false
+        type: boolean
+        default: false
+      version:
+        description: Upstream version override (no leading v)
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-eurooffice
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    name: Detect new upstream EuroOffice release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      needs_build: ${{ steps.detect.outputs.needs_build }}
+      version: ${{ steps.detect.outputs.version }}
+      pkgrel: ${{ steps.detect.outputs.pkgrel }}
+    steps:
+      - name: Checkout DINX office branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare upstream release with packed releases
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EUROFFICE_FORCE: ${{ inputs.force && '1' || '0' }}
+          EUROFFICE_VERSION: ${{ inputs.version }}
+        run: distro/office/eurooffice/detect-release.sh
+
+  build:
+    name: Build and publish lean EuroOffice package
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout DINX office branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install repack tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes squashfs-tools zstd binutils jq curl
+      - name: Import, debloat, strip and repack EuroOffice
+        env:
+          EUROFFICE_VERSION: ${{ needs.detect.outputs.version }}
+          EUROFFICE_PKREL: ${{ needs.detect.outputs.pkgrel }}
+          EUROFFICE_OUTDIR: dist/office/eurooffice
+        run: distro/office/eurooffice/build.sh
+      - name: Verify artifact checksums
+        run: |
+          set -euo pipefail
+          cd dist/office/eurooffice
+          sha256sum -c SHA256SUMS
+      - name: Publish EuroOffice release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.detect.outputs.version }}
+          PKGREL: ${{ needs.detect.outputs.pkgrel }}
+        run: |
+          set -euo pipefail
+          cd dist/office/eurooffice
+          tag="eurooffice/v${VERSION}-dinx${PKGREL}"
+          notes=$(jq -r '"EuroOffice \(.version) DINX lean repack \(.pkgrel).\n\nUpstream: \(.upstream.repo) \(.upstream.tag)\nUpstream deb sha256: `\(.upstream.deb_sha256)`\n\nInstalled size: \(.upstream.installed_bytes) -> \(.installed_bytes) bytes (debloat removed \(.debloat.removed_bytes) bytes; stripped \(.strip.stripped) ELF objects).\n\nAssets:\n- pacman package (install/rootfs): \(.artifacts.package)\n- live squashfs (xz/1MiB/BCJ, tree rooted at /): \(.artifacts.squashfs)\n\nConsumption contract: see distro/office/eurooffice/README.md on the office branch. Verify SHA256SUMS before use."' build-metadata.json)
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            printf 'Release %s already exists; refusing to overwrite\n' "$tag" >&2
+            exit 1
+          fi
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "EuroOffice ${VERSION} (DINX lean ${PKGREL})" \
+            --notes "$notes" \
+            --latest=false \
+            *.pkg.tar.zst *.squashfs SHA256SUMS build-metadata.json
+          printf 'eurooffice_release_published tag=%s commit=%s\n' "$tag" "$GITHUB_SHA"
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: eurooffice-build-${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            dist/office/eurooffice/build-metadata.json
+            dist/office/eurooffice/SHA256SUMS

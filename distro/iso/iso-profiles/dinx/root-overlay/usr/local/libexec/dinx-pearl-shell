@@ -87,20 +87,29 @@ case "$theme" in
         theme_mode=static
         package_id=
         gtk_name=
+        profile_prefix=pearl.material
+        window_radius=15
+        [ "$corners" = square ] && window_radius=0
         ;;
     skeuos)
         theme_mode=package
         package_id="dinx.skeuos-$corners"
+        profile_prefix="dinx.skeuos-$corners"
         gtk_name="Skeuos-Blue"
         [ "$variant" = dark ] && gtk_name="$gtk_name-Dark" || gtk_name="$gtk_name-Light"
         [ "$corners" = square ] && gtk_name="$gtk_name-Square"
+        window_radius=8
+        [ "$corners" = square ] && window_radius=0
         ;;
     orchis)
         theme_mode=package
         package_id="dinx.orchis-$corners"
+        profile_prefix="dinx.orchis-$corners"
         gtk_name=Orchis
         [ "$corners" = square ] && gtk_name="$gtk_name-Square"
         [ "$variant" = dark ] && gtk_name="$gtk_name-Dark" || gtk_name="$gtk_name-Light"
+        window_radius=12
+        [ "$corners" = square ] && window_radius=0
         ;;
     *)
         printf '%s\n' 'dinx-pearl-shell: invalid theme selection; starting Pearl with saved preferences' >&2
@@ -120,12 +129,23 @@ if ! jq --arg theme_mode "$theme_mode" \
     --arg theme_variant "$variant" \
     --arg gtk_name "$gtk_name" \
     --arg package_id "$package_id" \
+    --arg profile_prefix "$profile_prefix" \
+    --argjson window_radius "$window_radius" \
     --arg bar_edge "$bar_edge" \
     --arg dock_edge "$dock_edge" \
     --argjson dock_enabled "$dock_enabled" \
     '.theme = ((.theme // {}) + {mode: $theme_mode, variant: $theme_variant, gtk_name: $gtk_name,
                                  package_id: $package_id, palette_id: "", style_id: "",
-                                 catalog_revision: "", snapshot_digest: ""})
+                                 catalog_revision: "", snapshot_digest: "", sync_borders: true})
+     | .window_corner_radius = $window_radius
+     | .matugen = ((.matugen // {}) + {enabled: true,
+         colors: {source: "follow_pearl", seed: ((.matugen.colors.seed?) // "#6750a4")},
+         applications: {
+           gtk: {mode: "profile", profile_id: ($profile_prefix + ".gtk")},
+           qt5ct: {mode: "profile", profile_id: ($profile_prefix + ".qt5ct")},
+           qt6ct: {mode: "profile", profile_id: ($profile_prefix + ".qt6ct")},
+           kcolorscheme: {mode: "profile", profile_id: ($profile_prefix + ".kcolorscheme")},
+           ghostty: {mode: "profile", profile_id: ($profile_prefix + ".ghostty")}}})
      | .bar = ((.bar // {}) + {edge: $bar_edge})
      | .dock = ((.dock // {}) + {enabled: $dock_enabled, edge: $dock_edge})' \
     "$preferences" > "$preferences_tmp"; then

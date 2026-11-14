@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${PATCHY_LICENSE_URL:?missing PATCHY_LICENSE_URL}"
 : "${PATCHY_LICENSE_SHA256:?missing PATCHY_LICENSE_SHA256}"
 pkgver="$PATCHY_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='PSD-focused image editor with Photoshop-familiar workflows'
 arch=('x86_64')
 url='https://github.com/SethRobinson/Patchy'
@@ -27,14 +27,14 @@ source=(
 sha256sums=(
   "$PATCHY_SOURCE_SHA256"
   "$PATCHY_LICENSE_SHA256"
-  'ca0f49a580fb76b4098a20eee645d781dcdd77535b8a2f68e1f14853111cc247'
+  '15483bd725bd428ac91dd24b7458330c073a92f400c288ae0d602207c0846871'
   '532edd0bb0323fbb9730c4d46cc5bd69d3fe48424931976e23c03d09b87310a7'
   '0388fd7d0c685f16ec56258d087fcfdd4bb4ac2e3df344806d0b80ba80bd6f30'
 )
 
 package() {
-  install -Dm755 "$srcdir/PatchyLinux-${pkgver}.AppImage" \
-    "$pkgdir/opt/patchy/PatchyLinux.AppImage"
+  bash "$startdir/../../../scripts/lib/repack-appimage.sh" \
+    "$srcdir/PatchyLinux-${pkgver}.AppImage" "$pkgdir/opt/patchy" --strip --trim-locales
   install -Dm755 "$srcdir/patchy" "$pkgdir/usr/bin/patchy"
   install -Dm755 "$srcdir/patchy-force-darkest" \
     "$pkgdir/usr/lib/patchy/patchy-force-darkest"
@@ -46,6 +46,7 @@ package() {
 Patchy ${pkgver} upstream source and build information:
 https://github.com/SethRobinson/Patchy/tree/v${pkgver}
 
-The DINX package redistributes the upstream x86_64 AppImage without modification.
+The DINX package repacks the upstream x86_64 AppImage as a pre-extracted tree
+(ELF stripped, locales trimmed to en/pt) so launches never extract into tmpfs.
 EOF
 }

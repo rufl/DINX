@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# System-wide DINX dark color-scheme default.
+#
+# The session's `dinx-sync-session-theme` writes this key into the per-user
+# dconf database from the saved Pearl preferences, but that needs a running
+# session bus and only happens once the Pearl shell starts. Until then
+# gsettings falls back to the schema default `color-scheme='default'`, which
+# freedesktop consumers treat as "no preference":
+#
+#   - the egui applications (WordCraft, GridCraft, DeckCraft, PdfCraft, PaintFE)
+#     default their interface theme to `System`, and their `desktop_theme`
+#     helper explicitly falls back to LIGHT when the portal reports no
+#     preference, so they open in light mode on a fresh session;
+#   - libadwaita and GTK applications resolve their dark variant the same way.
+#
+# Only the color-scheme key is seeded: the GTK/Qt theme, icon theme and the
+# `gtk-application-prefer-dark-theme` preference are already provided by the
+# per-user settings.ini and qt6ct.conf in the skel and asserted by
+# check_dinx_theme.sh, so this stays the single source of truth for the
+# freedesktop color-scheme default. `user-db:user` precedes `system-db:local`
+# in etc/dconf/profile/user, so Pearl's per-user choice still wins once written
+# and the user can switch to light.
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'

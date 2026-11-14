@@ -442,7 +442,7 @@ if os.path.exists(p):
             'pub const c = @import("xwayland_c");\n'
             'extern "c" fn dinx_self_exe_path(buf: [*]u8, size: usize) c_int;\n'
             "// libc's environ (provided by crt1); std.posix does not re-export it.\n"
-            "extern var environ: [*:null]const ?[*:0]const u8;",
+            "extern \"c\" var environ: [*c]const [*c]u8;",
             1,
         )
     src = src.replace(

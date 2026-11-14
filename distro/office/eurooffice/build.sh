@@ -30,8 +30,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 upstream_repo=${EUROFFICE_UPSTREAM_REPO:-Euro-Office/DesktopEditors}
 pkgrel=${EUROFFICE_PKREL:-1}
 outdir=${EUROFFICE_OUTDIR:-dist/office/eurooffice}
-keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US en_GB pt_BR}
-keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US en-GB pt-BR}
+keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US pt_BR}
+keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US pt-BR}
 keep_templates=${EUROFFICE_KEEP_TEMPLATES:-EN PT}
 no_strip=${EUROFFICE_NO_STRIP:-0}
 
@@ -186,6 +186,46 @@ done < <(find "$pkgroot/opt/eurooffice/editors" -type f -name '*_ie.js')
 if [[ -d "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie" ]]; then
   record_removal "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie" ie-fallback
   rm -rf -- "$pkgroot/opt/eurooffice/editors/web-apps/vendor/monaco/monaco-for-ie"
+fi
+
+# 4g. Unused runtime libraries (verified by DT_NEEDED scan plus an ldd
+# resolution check on the core binaries after debloat): Qt dev/test modules,
+# ICU tools/test/io (i18n stays — DesktopEditors links it), embedded
+# platform plugins.
+for qt_module in Designer DesignerComponents UiTools QuickTest Test; do
+  for lib in "$pkgroot/opt/eurooffice/libQt6$qt_module.so"*; do
+    [[ -e "$lib" || -L "$lib" ]] || continue
+    record_removal "$lib" unused-qt-module
+    rm -f -- "$lib"
+  done
+done
+for icu_lib in libicutu libicutest libicuio; do
+  for lib in "$pkgroot/opt/eurooffice/$icu_lib.so"* "$pkgroot/opt/eurooffice/converter/$icu_lib.so"*; do
+    record_removal "$lib" unused-icu
+    rm -f -- "$lib"
+  done
+done
+for platform_plugin in libqeglfs.so libqlinuxfb.so libqminimal.so libqminimalegl.so libqvkkhrdisplay.so libqvnc.so; do
+  if [[ -e "$pkgroot/opt/eurooffice/platforms/$platform_plugin" ]]; then
+    record_removal "$pkgroot/opt/eurooffice/platforms/$platform_plugin" unused-platform
+    rm -f -- "$pkgroot/opt/eurooffice/platforms/$platform_plugin"
+  fi
+done
+if [[ -d "$pkgroot/opt/eurooffice/egldeviceintegrations" ]]; then
+  record_removal "$pkgroot/opt/eurooffice/egldeviceintegrations" unused-platform
+  rm -rf -- "$pkgroot/opt/eurooffice/egldeviceintegrations"
+fi
+for egl_lib in libQt6EglFSDeviceIntegration libQt6EglFsKmsSupport libQt6EglFsKmsGbmSupport; do
+  for lib in "$pkgroot/opt/eurooffice/$egl_lib.so"*; do
+    [[ -e "$lib" || -L "$lib" ]] || continue
+    record_removal "$lib" unused-platform
+    rm -f -- "$lib"
+  done
+done
+# Upstream build provenance (DINX keeps its own SOURCE manifest).
+if [[ -f "$pkgroot/opt/eurooffice/provenance.json" ]]; then
+  record_removal "$pkgroot/opt/eurooffice/provenance.json" upstream-provenance
+  rm -f -- "$pkgroot/opt/eurooffice/provenance.json"
 fi
 
 log "debloat removed $removed_bytes bytes ($(wc -l < "$trim_manifest") entries)"
@@ -354,6 +394,17 @@ if command -v pacman >/dev/null 2>&1; then
     || { printf 'build: pacman rejects package metadata\n' >&2; exit 1; }
   pacman -Qlp "$outdir/$pkg_name" >/dev/null \
     || { printf 'build: pacman rejects package file list (.MTREE)\n' >&2; exit 1; }
+fi
+# Debloat must not break dynamic resolution of the core binaries.
+if command -v ldd >/dev/null 2>&1; then
+  for probe in opt/eurooffice/DesktopEditors opt/eurooffice/libascdocumentscore.so opt/eurooffice/converter/libx2tlib.so; do
+    unresolved=$(LD_LIBRARY_PATH="$pkgroot/opt/eurooffice:$pkgroot/opt/eurooffice/converter" \
+      ldd "$pkgroot/$probe" 2>/dev/null | grep 'not found' || true)
+    if [[ -n "$unresolved" ]]; then
+      printf 'build: unresolved libraries after debloat in %s:\n%s\n' "$probe" "$unresolved" >&2
+      exit 1
+    fi
+  done
 fi
 
 log "done: upstream_installed=$upstream_installed_bytes lean_installed=$installed_bytes removed=$removed_bytes"

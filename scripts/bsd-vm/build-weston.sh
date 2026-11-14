@@ -37,13 +37,17 @@ meson setup build \
     -Dshell-desktop=true \
     -Dshell-kiosk=true \
     -Dshell-ivi=false \
+    -Dshell-fullscreen=false \
+    -Dcolor-management-lcms=true \
+    -Dimage-jpeg=false \
+    -Dimage-webp=false \
+    -Dsystemd=false \
+    -Dremoting=false \
+    -Dpipewire=false \
     -Ddemo-clients=false \
     -Dtests=false \
-    -Dcolord=false \
-    -Dsystemd=false \
-    -Delogind=false \
-    -Dremoting=false \
-    -Dwerror=false >>"$LOG" 2>&1
+    -Ddoc=false \
+    -Dwcap-decode=false >>"$LOG" 2>&1
   log "== meson setup exit=$?"
 ninja -C build >>"$LOG" 2>&1
 log "== ninja exit=$?"

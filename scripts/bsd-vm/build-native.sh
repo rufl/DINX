@@ -67,33 +67,27 @@ maintainer: trafael@dinx.org
 prefix: /usr/local
 EOF
   printf '%s\n' "$comment" > "$meta/+DESC"
-  # plist is prefix-relative; rootdir is the prefix root so pkg create packs
-  # the right paths. pkg create neither scans shlibs with -p nor keeps a
-  # hand-written shlibs_provided, so inject it into the .pkg afterwards.
+  # plist is prefix-relative; pkg create resolves it against the rootdir with
+  # the prefix prepended, so the rootdir is the stage (usr/local/...).
   (cd "$stage" && find . -type f | sed 's|^\./usr/local/||') > "$meta/plist"
-  rm -rf "$meta/root"
-  mkdir -p "$meta/root"
-  cp -a "$stage/usr/local/." "$meta/root/"
-  pkg create -m "$meta" -p "$meta/plist" -r "$meta/root" -o "$REPO" >>"$LOG" 2>&1
+  pkg create -m "$meta" -p "$meta/plist" -r "$stage" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $name exit=$?"
+  # pkg create drops shlibs_provided; inject it by repacking with bsdtar.
   prov=$(sed -n 's|^lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$meta/plist" \
     | sed 's/.*/"&"/' | paste -sd, -)
   if [ -n "$prov" ]; then
-    python3 - "$REPO/$name-$version.pkg" "$prov" >>"$LOG" 2>&1 <<'PY'
-import json, sys, tarfile
-path, prov = sys.argv[1], json.loads("[" + sys.argv[2] + "]")
-with tarfile.open(path) as t:
-    members = [(m, t.extractfile(m).read() if m.isfile() else None) for m in t.getmembers()]
-with tarfile.open(path, "w") as t:
-    for m, data in members:
-        if m.name == "+MANIFEST":
-            man = json.loads(data)
-            man["shlibs_provided"] = prov
-            data = json.dumps(man, separators=(",", ":")).encode()
-            m.size = len(data)
-        import io
-        t.addfile(m, io.BytesIO(data) if data is not None else None)
+    rm -rf "$meta/inject"
+    mkdir -p "$meta/inject"
+    tar -xf "$REPO/$name-$version.pkg" -C "$meta/inject" >>"$LOG" 2>&1
+    python3 - "$meta/inject/+MANIFEST" "[$prov]" >>"$LOG" 2>&1 <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["shlibs_provided"] = json.loads(sys.argv[2])
+json.dump(m, open(p, "w"), separators=(",", ":"))
 PY
+    (cd "$meta/inject" && tar -cf "$REPO/$name-$version.pkg" \
+      +MANIFEST +DESC usr) >>"$LOG" 2>&1
     log "== shlibs_provided injected into $name exit=$?"
   fi
 }

@@ -126,6 +126,7 @@ for n in ("+MANIFEST", "+COMPACT_MANIFEST"):
     if os.path.exists(p):
         m = json.load(open(p))
         m["shlibs_provided"] = prov
+        m.pop("shlibs_required", None)
         json.dump(m, open(p, "w"), separators=(",", ":"))
 PY
   (cd "$meta/inject" && tar -P -cf "$REPO/$name-$version.pkg" -s '|^usr|/usr|' \

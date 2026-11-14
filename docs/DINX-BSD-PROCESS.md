@@ -432,3 +432,6 @@ aa847bb625fe94e8fc92615fa342e8.
 Pendência: sessão gráfica interativa (blocker do §20 — socket Wayland do
 Aqueous sem listener no FreeBSD). A prova headless mostra o compositor
 renderizando (llvmpipe, HEADLESS-1 1280x720), mas nenhum cliente anexa.
+
+Consolidação de tudo que funciona / não funciona (com nível de evidência por
+item): `docs/DINX-BSD-STATUS.md`.

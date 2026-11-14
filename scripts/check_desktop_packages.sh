@@ -17,8 +17,6 @@ desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desk
 desktop_approval="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-approve-desktop-launcher"
 display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
 live_policy="$root/distro/iso/iso-profiles/dinx/live-overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
-gparted_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/gparted"
-firewall_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/firewall-config"
 haruna_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
 haruna_scheme="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/color-schemes/DINXDark.colors"
 

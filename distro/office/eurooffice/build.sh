@@ -384,6 +384,10 @@ grep -Fq '/opt/eurooffice' <<<"$launcher_check" \
   || { printf 'build: launcher does not target /opt/eurooffice\n' >&2; exit 1; }
 grep -Fq 'LD_PRELOAD' <<<"$launcher_check" \
   || { printf 'build: launcher missing LD_PRELOAD\n' >&2; exit 1; }
+# DINX gate: localized launcher identity (pt_BR) must ship in the package.
+grep -Fq 'Name[pt_BR]=' "$pkgroot/usr/share/applications/eurooffice.desktop" \
+  || { printf 'build: desktop entry missing Name[pt_BR]\n' >&2; exit 1; }
+
 pkg_listing=$(tar -tf "$outdir/$pkg_name")
 grep -Fqx '.PKGINFO' <<<"$pkg_listing" \
   || { printf 'build: package missing .PKGINFO\n' >&2; exit 1; }

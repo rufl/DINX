@@ -1,8 +1,11 @@
 [Desktop Entry]
 Type=Application
 Name=EuroOffice
+Name[pt_BR]=EuroOffice
 GenericName=Office Suite
+GenericName[pt_BR]=Suíte de Escritório
 Comment=Edit documents, spreadsheets, presentations and PDFs
+Comment[pt_BR]=Edite documentos, planilhas, apresentações e PDFs
 Exec=eurooffice %U
 TryExec=eurooffice
 Icon=eurooffice

@@ -78,15 +78,18 @@ EOF
     rm -rf "$meta/inject"
     mkdir -p "$meta/inject"
     tar -xf "$REPO/$name-$version.pkg" -C "$meta/inject" >>"$LOG" 2>&1
-    python3 - "$meta/inject/+MANIFEST" "[$prov]" >>"$LOG" 2>&1 <<'PY'
-import json, sys
-p = sys.argv[1]
-m = json.load(open(p))
-m["shlibs_provided"] = json.loads(sys.argv[2])
-json.dump(m, open(p, "w"), separators=(",", ":"))
+    python3 - "$meta/inject" "[$prov]" >>"$LOG" 2>&1 <<'PY'
+import json, os, sys
+d, prov = sys.argv[1], json.loads(sys.argv[2])
+for n in ("+MANIFEST", "+COMPACT_MANIFEST"):
+    p = os.path.join(d, n)
+    if os.path.exists(p):
+        m = json.load(open(p))
+        m["shlibs_provided"] = prov
+        json.dump(m, open(p, "w"), separators=(",", ":"))
 PY
-    (cd "$meta/inject" && tar -cf "$REPO/$name-$version.pkg" -P -s '|^|/|' \
-      +MANIFEST usr) >>"$LOG" 2>&1
+    (cd "$meta/inject" && tar -P -cf "$REPO/$name-$version.pkg" -s '|^usr|/usr|' \
+      +COMPACT_MANIFEST +MANIFEST usr) >>"$LOG" 2>&1
     log "== shlibs_provided injected into $name exit=$?"
   fi
 }

@@ -85,8 +85,8 @@ m = json.load(open(p))
 m["shlibs_provided"] = json.loads(sys.argv[2])
 json.dump(m, open(p, "w"), separators=(",", ":"))
 PY
-    (cd "$meta/inject" && tar -cf "$REPO/$name-$version.pkg" -s '|^|/|' \
-      +MANIFEST +DESC usr) >>"$LOG" 2>&1
+    (cd "$meta/inject" && tar -cfP "$REPO/$name-$version.pkg" -s '|^|/|' \
+      +MANIFEST usr) >>"$LOG" 2>&1
     log "== shlibs_provided injected into $name exit=$?"
   fi
 }

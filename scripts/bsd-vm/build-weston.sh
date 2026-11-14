@@ -92,14 +92,15 @@ meta="$W/meta-$name"
 stage="$W/stage-$name"
 rm -rf "$meta" "$stage"
 mkdir -p "$meta" "$stage/usr/local"
-for p in bin lib/weston lib/libweston-14.so lib/libweston-14.so.14 \
-         lib/libweston-14.so.14.0.2 libdata/pkgconfig include/libweston-14 \
+for p in bin lib/weston libdata/pkgconfig include/libweston-14 \
          share/weston share/wayland-sessions libexec; do
   if [ -e "/usr/local/$p" ]; then
     mkdir -p "$stage/usr/local/$(dirname "$p")"
     cp -a "/usr/local/$p" "$stage/usr/local/$p"
   fi
 done
+mkdir -p "$stage/usr/local/lib"
+cp -a /usr/local/lib/libweston-14* "$stage/usr/local/lib/"
 cat > "$meta/+MANIFEST" <<EOF
 name: $name
 version: "$version"

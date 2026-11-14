@@ -270,8 +270,8 @@ fi
 exec "$real_mksquashfs" "${filtered[@]}" \
   -comp xz \
   -Xbcj x86 \
-  -b 1M \
-  -Xdict-size 8M \
+  -b 4M \
+  -Xdict-size 4M \
   -processors 4 \
   -wildcards \
   -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

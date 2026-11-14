@@ -63,8 +63,8 @@ for squashfs in "$tmp_dir/rootfs.img" "$tmp_dir/livefs.img"; do
   squashfs_stats=$(unsquashfs -no-xattrs -no-progress -s "$squashfs")
   grep -Eq 'Compression[[:space:]]+xz([[:space:]]|$)' <<<"$squashfs_stats" \
     || fail "SquashFS image is not xz-compressed: $squashfs"
-  grep -Eq 'Block size[[:space:]]+4194304([[:space:]]|$)' <<<"$squashfs_stats" \
-    || fail "SquashFS image does not use 4 MiB blocks: $squashfs"
+  grep -Eq 'Block size[[:space:]]+1048576([[:space:]]|$)' <<<"$squashfs_stats" \
+    || fail "SquashFS image does not use 1 MiB blocks: $squashfs"
 done
 
 manifest=$(unsquashfs -no-xattrs -no-progress -lls "$tmp_dir/rootfs.img")

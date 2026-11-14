@@ -14,9 +14,9 @@ fail() {
 for required in \
   '-comp xz' \
   '-Xbcj x86' \
-  '-Xdict-size 4M' \
+  '-Xdict-size 1M' \
   '-processors 4' \
-  '-b 4M' \
+  '-b 1M' \
   "'usr/src/linux*'" \
   "'var/cache/pacman/pkg/*'" \
   "'var/log/*'" \
@@ -134,9 +134,9 @@ xz
 -Xbcj
 x86
 -b
-4M
+1M
 -Xdict-size
-4M
+1M
 -processors
 4
 -wildcards
@@ -152,4 +152,4 @@ actual=$(cat "$args_file")
   fail 'wrapper did not enforce the deterministic compression arguments'
 }
 
-printf 'dinx_compression_contract compression=xz bcj=x86 block=4M dict=4M processors=4 excludes=kernel-source+pacman-cache+logs override_safe=true\n'
+printf 'dinx_compression_contract compression=xz bcj=x86 block=1M dict=1M processors=4 excludes=kernel-source+pacman-cache+logs override_safe=true\n'

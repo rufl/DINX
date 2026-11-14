@@ -180,7 +180,14 @@ if [[ "$no_strip" != 1 ]]; then
 fi
 
 # --- 6. DINX identity: launcher, desktop entry, licenses, provenance ----------
-install -Dm755 "$script_dir/assets/eurooffice.launcher" "$pkgroot/usr/bin/eurooffice"
+# Launcher: reuse the upstream desktopeditors script (localized template
+# helper, LD_LIBRARY_PATH, LD_PRELOAD=libcef.so) with the DINX app path.
+upstream_launcher="$tree/usr/bin/desktopeditors"
+[[ -f "$upstream_launcher" ]] || { printf 'build: missing upstream launcher (usr/bin/desktopeditors)\n' >&2; exit 1; }
+sed 's|/opt/euro-office/euro-office|/opt/eurooffice|g' "$upstream_launcher" > "$pkgroot/usr/bin/eurooffice"
+chmod 0755 "$pkgroot/usr/bin/eurooffice"
+grep -Fq 'LD_PRELOAD' "$pkgroot/usr/bin/eurooffice" \
+  || { printf 'build: launcher lost LD_PRELOAD\n' >&2; exit 1; }
 install -Dm644 "$script_dir/assets/eurooffice.desktop" "$pkgroot/usr/share/applications/eurooffice.desktop"
 install -Dm644 "$script_dir/assets/LICENSE" "$pkgroot/usr/share/licenses/eurooffice/LICENSE"
 # Upstream license notice (Ascensio header + AGPL reference), when present.
@@ -302,6 +309,11 @@ grep -Fq 'opt/eurooffice/DesktopEditors' <<<"$squash_listing" \
   || { printf 'build: squashfs missing DesktopEditors\n' >&2; exit 1; }
 grep -Fq 'usr/bin/eurooffice' <<<"$squash_listing" \
   || { printf 'build: squashfs missing launcher\n' >&2; exit 1; }
+launcher_check=$(unsquashfs -cat "$outdir/$squash_name" usr/bin/eurooffice 2>/dev/null || unsquashfs -no-progress -cat "$outdir/$squash_name" usr/bin/eurooffice)
+grep -Fq '/opt/eurooffice' <<<"$launcher_check" \
+  || { printf 'build: launcher does not target /opt/eurooffice\n' >&2; exit 1; }
+grep -Fq 'LD_PRELOAD' <<<"$launcher_check" \
+  || { printf 'build: launcher missing LD_PRELOAD\n' >&2; exit 1; }
 pkg_listing=$(tar -tf "$outdir/$pkg_name")
 grep -Fqx '.PKGINFO' <<<"$pkg_listing" \
   || { printf 'build: package missing .PKGINFO\n' >&2; exit 1; }

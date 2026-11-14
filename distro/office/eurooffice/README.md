@@ -42,7 +42,9 @@ The live squashfs excludes `.PKGINFO`/`.MTREE`/`.INSTALL`.
 Reorganized from upstream `/opt/euro-office/euro-office` to:
 
 - `/opt/eurooffice/` — application tree (DesktopEditors, libcef.so, editors, …)
-- `/usr/bin/eurooffice` — launcher (execs the real binary, no AppImage extraction)
+- `/usr/bin/eurooffice` — upstream `desktopeditors` launcher with the DINX
+  app path (keeps `LD_PRELOAD=libcef.so`, `LD_LIBRARY_PATH` incl. converter,
+  and the `--new-document-templates` helper); no AppImage extraction
 - `/usr/share/applications/eurooffice.desktop` — DINX desktop identity + MIME
 - `/usr/share/licenses/eurooffice/` — AGPL-3.0 text + upstream notice
 - `/usr/share/doc/eurooffice/SOURCE` — provenance + debloat manifest

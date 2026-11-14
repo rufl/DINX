@@ -1,0 +1,9 @@
+[X-GNOME-Metatheme]
+Name=DINX
+Comment=DINX desktop theme (dark)
+Encoding=UTF-8
+GtkTheme=DINX
+MetacityTheme=DINX
+IconTheme=Adwaita
+CursorTheme=Adwaita
+CursorSize=24

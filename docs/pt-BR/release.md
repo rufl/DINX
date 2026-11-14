@@ -36,8 +36,8 @@ A próxima etapa de sistema é a qualificação planejada e sem data da Beta 0.1
 Alpha 9 e as candidatas anteriores são evidência histórica, não o release atual. O workflow de release recompila o commit marcado e só publica depois que passam as verificações correspondentes de metadados da ISO, repositório assinado, checksum e procedência.
 
 O SquashFS final usa o caminho determinístico de ISO compacta de
-`scripts/build-iso.sh`: compressão xz com filtro BCJ x86, nível 9, blocos de
-1 MiB e dicionário de 8 MiB, mantendo a ISO direta abaixo do limite de 2 GiB por
+`scripts/build-iso.sh`: compressão xz com filtro BCJ x86, blocos de 1 MiB,
+dicionário de 8 MiB e 4 threads de compressão, mantendo a ISO direta abaixo do limite de 2 GiB por
 asset do GitHub.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.
 

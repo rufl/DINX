@@ -14,7 +14,6 @@ fail() {
 for required in \
   '-comp xz' \
   '-Xbcj x86' \
-  '-Xcompression-level 9' \
   '-Xdict-size 8M' \
   '-processors 4' \
   '-b 1M' \
@@ -134,8 +133,6 @@ old-exclude
 xz
 -Xbcj
 x86
--Xcompression-level
-9
 -b
 1M
 -Xdict-size
@@ -155,4 +152,4 @@ actual=$(cat "$args_file")
   fail 'wrapper did not enforce the deterministic compression arguments'
 }
 
-printf 'dinx_compression_contract compression=xz bcj=x86 level=9 block=1M dict=8M processors=4 excludes=kernel-source+pacman-cache+logs override_safe=true\n'
+printf 'dinx_compression_contract compression=xz bcj=x86 block=1M dict=8M processors=4 excludes=kernel-source+pacman-cache+logs override_safe=true\n'

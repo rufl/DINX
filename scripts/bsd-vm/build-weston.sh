@@ -50,6 +50,7 @@ printf '#include <sys/types.h>\n#include <stdint.h>\ntypedef uint8_t __u8;\ntype
 RECONF=
 [ -f build/build.ninja ] && RECONF=--reconfigure
 meson setup $RECONF build \
+    -Drenderer-gl=false \
     -Dprefix=/usr/local \
     -Dbackend-drm=false \
     -Dbackend-default=headless \

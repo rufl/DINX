@@ -20,7 +20,7 @@ fail() {
 }
 
 for path in "$profile" "$groups" "$iso_check" "$workflow" "$builder" \
-  "$dome_dir/PKGBUILD" "$dome_source" "$pearl_source" "$zls_dir/PKGBUILD" "$zls_dir/source.env" \
+  "$dome_dir/PKGBUILD" "$dome_dir/discreet-header.patch" "$dome_source" "$pearl_source" "$zls_dir/PKGBUILD" "$zls_dir/source.env" \
   "$zls_smoke" "$settings_contract"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
@@ -32,8 +32,13 @@ source "$dome_dir/source.env"
 [[ "$DOME_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Dome source checksum is invalid'
 grep -Fq 'pkgver="$DOME_VERSION"' "$dome_dir/PKGBUILD" || fail 'Dome package version is not wired to source.env'
 grep -Fq '"$DOME_SOURCE_SHA256"' "$dome_dir/PKGBUILD" || fail 'Dome source checksum is not wired to source.env'
-grep -Fq 'source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz")' \
-  "$dome_dir/PKGBUILD" || fail 'Dome source archive is not wired to source.env'
+grep -Fq 'discreet-header.patch' "$dome_dir/PKGBUILD" || fail 'Dome package does not apply the discreet header patch'
+grep -Fq 'source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz" "discreet-header.patch")' \
+  "$dome_dir/PKGBUILD" || fail 'Dome source archive and UI patch are not wired'
+grep -Fq 'u.append(brand, u.label("Dome", "title"));' "$dome_dir/discreet-header.patch" \
+  || fail 'Dome discreet header patch does not remove the brand label'
+grep -Fq 'Your system, at a glance.' "$dome_dir/discreet-header.patch" \
+  || fail 'Dome discreet header patch does not remove the overview slogan'
 source "$pearl_source"
 [[ "$PEARL_ZIG_VERSION" == 0.16.0 ]] || fail "unexpected Pearl/Dome/Phyto Zig version: $PEARL_ZIG_VERSION"
 

@@ -14,8 +14,13 @@ url="$DOME_REPOSITORY"
 license=('LicenseRef-Pearl-Unlicensed')
 depends=('gtk4' 'glib2' 'glibc' 'hicolor-icon-theme' 'libpng' 'wayland')
 makedepends=('zig>=0.16')
-source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz")
-sha256sums=("$DOME_SOURCE_SHA256")
+source=("pearl-$DOME_SOURCE_VERSION.tar.gz::${DOME_REPOSITORY}/archive/refs/tags/v${DOME_SOURCE_VERSION}.tar.gz" "discreet-header.patch")
+sha256sums=("$DOME_SOURCE_SHA256" '4863a0a9d398baa08736215e03f3b6e439d8630bcc84de48678880fee7f3b53d')
+
+prepare() {
+  cd "$srcdir/pearl-$DOME_SOURCE_VERSION"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/discreet-header.patch"
+}
 
 build() {
   cd "$srcdir/pearl-$DOME_SOURCE_VERSION/subprojects/dome"

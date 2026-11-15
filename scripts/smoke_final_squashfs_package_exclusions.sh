@@ -171,6 +171,7 @@ assert_vim_compat_aliases_removed() {
 pruned_packages=(
   breeze
   breeze-cursors
+  clang
   plasma-integration
   plasma-workspace
   qogir-icon-theme
@@ -197,6 +198,7 @@ add_fixture_package kparts kio 1
 add_fixture_package calamares-smoke kparts 0
 for package in "${pruned_packages[@]:1}"; do
   case "$package" in
+    clang) add_fixture_package "$package" clang-libs; add_fixture_package clang-libs '' 1 ;;
     dhcpcd-dinit) add_fixture_package "$package" dhcpcd ;;
     ex-vi-compat) add_fixture_package "$package" vim ;;
     man-db) add_fixture_package "$package" dinx-man-db-runtime ;;
@@ -274,6 +276,9 @@ for package in "${pruned_packages[@]}"; do
   [[ ! -e "$root/usr/share/dinx-prune-fixtures/$package/payload" ]] \
     || fail "$package payload remains in final rootfs layer"
 done
+[[ ! -e "$root/var/lib/pacman/local/clang-libs-1.0-1" \
+   && ! -e "$root/usr/share/dinx-prune-fixtures/clang-libs/payload" ]] \
+  || fail 'clang dependency remains in final rootfs layer'
 for runtime in dinx-breeze-runtime dinx-vim-runtime dinx-man-db-runtime dinx-texinfo-runtime; do
   [[ ! -e "$root/var/lib/pacman/local/$runtime-1.0-1" \
      && ! -e "$root/usr/share/dinx-prune-fixtures/$runtime/payload" ]] \
@@ -327,6 +332,9 @@ for package in "${pruned_packages[@]}"; do
   [[ ! -e "$live_root/usr/share/dinx-prune-fixtures/$package/payload" ]] \
     || fail "$package payload remains in final livefs layer"
 done
+[[ ! -e "$live_root/var/lib/pacman/local/clang-libs-1.0-1" \
+   && ! -e "$live_root/usr/share/dinx-prune-fixtures/clang-libs/payload" ]] \
+  || fail 'clang dependency remains in final livefs layer'
 for runtime in dinx-breeze-runtime dinx-vim-runtime dinx-man-db-runtime dinx-texinfo-runtime; do
   [[ ! -e "$live_root/var/lib/pacman/local/$runtime-1.0-1" \
      && ! -e "$live_root/usr/share/dinx-prune-fixtures/$runtime/payload" ]] \

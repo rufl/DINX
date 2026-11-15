@@ -100,6 +100,7 @@ prune_excluded_packages() {
   local -a prune_candidates=(
     breeze
     breeze-cursors
+    clang
     plasma-integration
     plasma-workspace
     qogir-icon-theme

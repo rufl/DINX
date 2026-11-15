@@ -8,6 +8,7 @@ iso_check="$root/scripts/check-iso-content.sh"
 mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
 file_roller_mime_cache="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/mimeinfo.cache"
+dome_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dome"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
 qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
@@ -22,6 +23,9 @@ fail() {
 }
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
+[[ -x "$dome_launcher" ]] || fail 'Dome launcher is missing or not executable'
+sh -n "$dome_launcher" || fail 'Dome launcher has invalid shell syntax'
+grep -Fqx 'exec /usr/bin/dome "$@"' "$dome_launcher" || fail 'Dome launcher recurses through PATH'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 

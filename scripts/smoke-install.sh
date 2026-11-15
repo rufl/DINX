@@ -24,7 +24,7 @@ esac
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso rsync losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
+for command in xorriso rsync losetup partx sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 if [[ "$firmware_mode" == uefi ]]; then
@@ -91,6 +91,13 @@ mounted_sys=false
 mounted_run=false
 qemu_pid=
 monitor_dir=
+refresh_partition_devices() {
+  local device=$1
+  partx --update "$device" >/dev/null 2>&1 \
+    || partx --add "$device" >/dev/null 2>&1 \
+    || true
+  udevadm settle 2>/dev/null || true
+}
 
 cleanup() {
   set +e
@@ -125,6 +132,7 @@ else
   printf 'label: gpt\n, 512M, U\n, , L\n' | sfdisk --wipe always "$disk_image" >/dev/null
 fi
 loop_device=$(losetup --find --show --partscan "$disk_image")
+refresh_partition_devices "$loop_device"
 if [[ "$firmware_mode" == bios ]]; then
   root_device="${loop_device}p1"
 else
@@ -133,7 +141,7 @@ else
 fi
 for _ in {1..20}; do
   [[ -b "$root_device" ]] && break
-  udevadm settle 2>/dev/null || true
+  refresh_partition_devices "$loop_device"
   sleep 1
 done
 [[ -b "$root_device" ]] || fail "partition device did not appear: $root_device"
@@ -529,6 +537,7 @@ grep -Eiq '(^|[^[:alnum:]_])login([^[:alnum:]_]|$)' <<<"$recovery_text" \
   || fail "installed recovery TTY 2 did not show a login prompt: $recovery_screen_path"
 
 loop_device=$(losetup --find --show --partscan "$disk_image")
+refresh_partition_devices "$loop_device"
 if [[ "$firmware_mode" == bios ]]; then
   root_device="${loop_device}p1"
 else
@@ -536,7 +545,7 @@ else
 fi
 for _ in {1..20}; do
   [[ -b "$root_device" ]] && break
-  udevadm settle 2>/dev/null || true
+  refresh_partition_devices "$loop_device"
   sleep 1
 done
 [[ -b "$root_device" ]] || fail "installed partition device did not reappear: $root_device"

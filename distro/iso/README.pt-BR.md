@@ -191,7 +191,7 @@ Para armazenamento, o Pori é o gerenciador DINX de discos/montagens e o Phyto �
 Para configuração de displays, o wrapper DINX `dinx-wdisplays` abre o editor interativo de saídas Wayland; ao fechar, ele substitui atomicamente o perfil `DINX wdisplays` em `~/.config/shikane/config.toml` e recarrega o daemon de usuário Shikane. O Shikane inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes quando as saídas mudam. `Dome`, `Seafoam Settings` e `zls` fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings é o launcher nativo em Zig/GTK4 com argv fixo para os pontos de entrada de display/sessão; ZLS é o language server Zig incluído e usado pelo Dintor com sua árvore `lib/std` correspondente e shim somente de metadados. Aqueous 1.0.5 e Pearl 0.3.0 são os únicos componentes selecionáveis da sessão.
 
 Para navegação web, o perfil instala o pacote `firefox` do Artix e o define como manipulador padrão de HTML/XHTML/HTTP/HTTPS. As atualizações do Firefox vêm das fontes de pacotes do Artix por meio do fluxo revisado de atualização de fontes de pacotes; a DINX não distribui arquivo de políticas do navegador e entrar em uma conta Mozilla continua opcional.
-O perfil também inclui btop/nvtop/inxi, diagnóstico PCI e USB, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy e a suíte WordCraft/GridCraft/DeckCraft/PdfCraft/Transit/Zenkai.
+O perfil também inclui btop/nvtop/inxi, diagnóstico PCI e USB, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, Blender, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy e a suíte WordCraft/GridCraft/DeckCraft/PdfCraft/Transit/Zenkai.
 
 ### Nomes dos launchers
 
@@ -216,6 +216,7 @@ Os nomes seguem o idioma do desktop. O Swayimg permanece oculto no menu de aplic
 | Inkscape | Vector Graphics | Gráficos Vetoriais |
 | Godot | Game Engine | Motor de Jogos |
 | Pixelorama | Pixel Art & Animation | Arte de Pixel e Animação |
+| Blender | 3D Modeling | Modelagem 3D |
 | Patchy | Image Editor | Editor de Imagens |
 | Swayimg | Image Viewer | Visualizador de Imagens |
 | WordCraft | Word Processor | Editor de Texto |

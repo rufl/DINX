@@ -57,6 +57,7 @@
                 "gsettings-desktop-schemas",
                 "blueman",
                 "bluez",
+                "blender",
                 "bluez-utils",
                 "btop",
                 "brightnessctl",

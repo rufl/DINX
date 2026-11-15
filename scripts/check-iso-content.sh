@@ -274,6 +274,8 @@ required_paths=(
   usr/bin/flatpak
   usr/bin/fwupdmgr
   usr/bin/scanimage
+  usr/bin/blender
+  usr/share/applications/blender.desktop
   usr/bin/paintfe
   usr/local/bin/haruna
   usr/share/color-schemes/DINXDark.colors

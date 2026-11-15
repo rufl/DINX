@@ -183,7 +183,7 @@ For storage, Pori is the DINX disk/mount manager and Phyto is the default file m
 For display setup, DINX's `dinx-wdisplays` wrapper opens the interactive Wayland editor; closing it atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the Shikane user daemon. Shikane starts inside Aqueous/Pearl and reapplies matching profiles when outputs change. `Dome`, `Seafoam Settings` and `zls` are part of the base ISO and the signed DINX package repository. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings is the fixed-argv native Zig/GTK4 launcher for the display/session entry points; ZLS is the bundled Zig language server used by Dintor with its matching `lib/std` tree and metadata-only shim, so the full Zig compiler remains optional. Aqueous 1.0.5 and Pearl 0.3.0 are the only selectable session components.
 
 For web browsing, the profile installs Artix's `firefox` package and makes it the default HTML/XHTML/HTTP/HTTPS handler. Firefox updates come from the Artix package sources through the existing reviewed package-source refresh; DINX ships no browser policy file and Mozilla account sign-in remains optional.
-The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, and the WordCraft/GridCraft/DeckCraft/PdfCraft/Transit/Zenkai suite.
+The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, Blender, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, and the WordCraft/GridCraft/DeckCraft/PdfCraft/Transit/Zenkai suite.
 
 ### Application launcher labels
 
@@ -203,6 +203,7 @@ Launcher names follow the desktop locale. Swayimg remains hidden from the app me
 | Galculator | Calculator | Calculadora |
 | GParted | Partition Editor | Particionador |
 | PaintFE | Image Editor | Editor de Imagens |
+| Blender | 3D Modeling | Modelagem 3D |
 | Firefox | Web Browser | Navegador Web |
 | Krita | Digital Painting | Pintura Digital |
 | Inkscape | Vector Graphics | Gráficos Vetoriais |

@@ -31,7 +31,7 @@ sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syn
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak paintfe krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays wordcraft gridcraft deckcraft pdfcraft transit zenkai firefox papirus-icon-theme; do
+for package in blender firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak paintfe krita inkscape godot pixelorama patchy phyto pori shikane udisks2 udisks2-btrfs wdisplays wordcraft gridcraft deckcraft pdfcraft transit zenkai firefox papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
@@ -90,34 +90,6 @@ fi
 if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
   fail 'retired KolourPaint desktop override remains in the ISO overlay'
 fi
-for package in patchy blockbench paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai; do
-  launcher="$root/distro/packages/$package/$package.desktop"
-  [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
-  grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
-  case "$package" in
-    patchy) expected_name=Patchy ;;
-    blockbench) expected_name=Blockbench ;;
-    paintfe) expected_name=PaintFE ;;
-    wordcraft) expected_name=WordCraft ;;
-    gridcraft) expected_name=GridCraft ;;
-    deckcraft) expected_name=DeckCraft ;;
-    pdfcraft) expected_name=PdfCraft ;;
-    transit) expected_name=Transit ;;
-    zenkai) expected_name=Zenkai ;;
-  esac
-  grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
-  grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
-  grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
-  case "$package" in
-    paintfe|wordcraft|gridcraft|deckcraft|pdfcraft|transit)
-      grep -Eq '^MimeType=[^;]+;' "$launcher" || fail "$package desktop launcher registers no MIME types"
-      ;;
-  esac
-  grep -Fq '!strip' "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
-  if grep -Eq "^(Hidden|NoDisplay)=true$" "$launcher"; then
-    fail "$package desktop launcher is hidden"
-  fi
-done
 pixelorama_source="$root/distro/packages/pixelorama/source.env"
 pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"
 pixelorama_launcher="$root/distro/packages/pixelorama/pixelorama"

@@ -74,8 +74,14 @@ deb="$workdir/upstream.deb"
 if [[ -n "${EUROFFICE_DEB:-}" ]]; then
   cp -- "$EUROFFICE_DEB" "$deb"
 else
+  # release-asset CDN can 403 unauthenticated runners under load; GH_TOKEN
+  # (or GITHUB_TOKEN) authenticates the download and raises the rate limit.
+  curl_auth=()
+  if [[ -n "${GH_TOKEN:-}${GITHUB_TOKEN:-}" ]]; then
+    curl_auth=(-H "Authorization: token ${GH_TOKEN:-$GITHUB_TOKEN}")
+  fi
   log "downloading $deb_url"
-  curl -fsSL --retry 3 -o "$deb" "$deb_url"
+  curl -fsSL --retry 5 --retry-delay 2 --connect-timeout 30 "${curl_auth[@]}" -o "$deb" "$deb_url"
 fi
 deb_sha256=$(sha256sum "$deb" | cut -d' ' -f1)
 deb_bytes=$(stat -c '%s' "$deb")

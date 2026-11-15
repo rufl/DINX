@@ -71,6 +71,7 @@ jobs:
           sudo apt-get install --yes squashfs-tools zstd binutils jq curl
       - name: Import, debloat, strip and repack EuroOffice
         env:
+          GH_TOKEN: ${{ github.token }}
           EUROFFICE_VERSION: ${{ needs.detect.outputs.version }}
           EUROFFICE_PKREL: ${{ needs.detect.outputs.pkgrel }}
           EUROFFICE_OUTDIR: dist/office/eurooffice

@@ -22,10 +22,11 @@ manual dispatch. Each run:
 1. Dispatches `eurooffice.yml` on the `office` branch. That pipeline detects
    new upstream Euro-Office releases and publishes lean
    `eurooffice/v<ver>-dinx<N>` GitHub releases (no-op when already packed).
-2. Compares the newest published `eurooffice/v*` release against
-   `distro/office/eurooffice.pin`. When newer: downloads the artifacts,
-   verifies `SHA256SUMS`, stages them under `dist/office/eurooffice/`, updates
-   the pin, commits the pin to main, and dispatches `p0-iso.yml`.
+2. Compares the newest published release with `distro/office/eurooffice.pin`.
+   When newer: downloads the artifacts, verifies `SHA256SUMS`, stages them
+   under `dist/office/eurooffice/`, updates the pin on an automation branch,
+   and opens a pull request for `main`. After merge, the P0 workflow qualifies
+   the new package.
 
 GitHub schedule triggers only fire on the default branch, and
 `workflow_dispatch` requires the workflow file to exist on the default branch

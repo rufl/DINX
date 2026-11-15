@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- Add FreeBSD ports for both Pearl and GTK theme packages to DINX-BSD, including all four families, rounded/square variants, the WCAG-normalized light accents and generated GTK3/GTK4 assets. Extend the Pearl package build check to enforce primary/on-primary and error/error-container contrast for every light and dark manifest; bump package releases.
+
+- Restore the Aqueous 1.0.5 and Pearl 0.3.0 source pins required by the existing DINX dinit/session patches. The newer 1.0.20/0.3.9 archives rejected those patches during the ISO contract, while the restored checksums and all Aqueous/Pearl contracts pass.
+- Update Pearl's DINX display-settings patch for Zig 0.16's `std.process.spawn` API; the previous `std.process.Child.init` call stopped the ISO package build.
+- Align the active firewall contract with the ISO profile: OpenSnitch is no longer shipped, Firewalld remains the sole managed firewall service, and the ISO gate rejects retired OpenSnitch payloads instead of requiring absent files.
 
 - Normalize the Fluent and Jasper light palettes to WCAG AA: `dinx-pearl-themes` darkens the Fluent primary `#2196f3` (3.1:1) to `#1565c0` and the Jasper primary `#009688` (3.7:1) to `#00796b`, and darkens the Jasper `error_color` `#c62828` (4.4:1) to `#b3261e` so accent text and error labels on white containers clear 4.5:1. `dinx-gtk-themes` anchors the Jasper light GTK accent to the same `#00796b`. Bump both packages to a new release.
 

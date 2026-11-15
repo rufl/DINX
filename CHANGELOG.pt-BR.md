@@ -3,6 +3,8 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Adicionar ports FreeBSD dos pacotes de temas Pearl e GTK ao DINX-BSD, incluindo as quatro famílias, variantes arredondadas/quadradas, accents claros normalizados para WCAG e assets GTK3/GTK4 gerados. Estender o `check()` do pacote Pearl para exigir contraste primary/on_primary e error/error_container em todos os manifestos claros e escuros; incrementar os releases dos pacotes.
+
 - Restaurar os pins de fonte Aqueous 1.0.5 e Pearl 0.3.0 exigidos pelos patches DINX existentes de dinit/sessão. Os archives 1.0.20/0.3.9 mais novos rejeitavam esses patches durante o contrato da ISO; os checksums restaurados e todos os contratos Aqueous/Pearl passam.
 - Atualizar o patch de Display Settings da DINX para a API `std.process.spawn` do Zig 0.16; a chamada anterior `std.process.Child.init` interrompia o build do pacote Pearl na ISO.
 - Alinhar o contrato ativo de firewall ao perfil da ISO: OpenSnitch não é mais distribuído, o Firewalld permanece como único serviço de firewall gerenciado e o gate da ISO rejeita payloads OpenSnitch aposentados em vez de exigir arquivos ausentes.

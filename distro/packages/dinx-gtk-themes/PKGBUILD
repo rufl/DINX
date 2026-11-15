@@ -22,7 +22,7 @@ source_env="$startdir/source.env"
 : "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
 : "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_GTK_THEMES_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Fluent, Jasper, Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -255,6 +255,17 @@ check() {
     done
     test -f "$srcdir/themes/$name/index.theme" \
       || { printf 'missing index.theme: %s\n' "$name" >&2; return 1; }
+  done
+  for name in Jasper-Light Jasper-Square-Light; do
+    for gtk in gtk-3.0 gtk-4.0; do
+      local css="$srcdir/themes/$name/$gtk/gtk.css"
+      grep -Eiq '#00796b' "$css" \
+        || { printf 'Jasper light accent missing in %s\n' "$css" >&2; return 1; }
+      if grep -Eiq '#009688' "$css"; then
+        printf 'un-normalized Jasper light accent in %s\n' "$css" >&2
+        return 1
+      fi
+    done
   done
 }
 

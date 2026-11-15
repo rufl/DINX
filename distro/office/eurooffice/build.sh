@@ -50,23 +50,41 @@ mkdir -p "$tree" "$pkgroot"
 log() { printf 'eurooffice-build: %s\n' "$*"; }
 
 # --- 1. Resolve upstream release and deb asset ------------------------------
+# GitHub-hosted runners share outbound IPs; authenticate API calls when a
+# token is available to avoid exhausting the shared unauthenticated limit.
+api_auth=()
+if [[ -n "${GH_TOKEN:-}${GITHUB_TOKEN:-}" ]]; then
+  api_auth=(-H "Authorization: token ${GH_TOKEN:-$GITHUB_TOKEN}")
+fi
+
 version=${EUROFFICE_VERSION:-}
 deb_url=${EUROFFICE_DEB_URL:-}
 asset_name=''
-if [[ -z "$version" || -z "$deb_url" ]]; then
+tag=''
+if [[ -n "$version" ]]; then
+  tag="v$version"
+fi
+if [[ -z "$version" || ( -z "$deb_url" && -z "${EUROFFICE_DEB:-}" ) ]]; then
   if [[ -n "$version" ]]; then
-    release_json=$(curl -fsSL "https://api.github.com/repos/$upstream_repo/releases/tags/v$version")
+    release_json=$(curl -fsSL "${api_auth[@]}" \
+      "https://api.github.com/repos/$upstream_repo/releases/tags/v$version")
   else
-    release_json=$(curl -fsSL "https://api.github.com/repos/$upstream_repo/releases/latest")
+    release_json=$(curl -fsSL "${api_auth[@]}" \
+      "https://api.github.com/repos/$upstream_repo/releases/latest")
   fi
   tag=$(jq -r '.tag_name' <<<"$release_json")
-  [[ "$tag" =~ ^v[0-9]+(\.[0-9]+)+$ ]] || { printf 'build: unexpected upstream tag: %s\n' "$tag" >&2; exit 1; }
+  [[ "$tag" =~ ^v[0-9]+(\.[0-9]+)+$ ]] ||
+    { printf 'build: unexpected upstream tag: %s\n' "$tag" >&2; exit 1; }
   version=${version:-${tag#v}}
-  asset_name=$(jq -r --arg v "$version" '.assets[] | select(.name | test("euro-office-euro-office_" + $v + "-[0-9]+_amd64\\.deb$")) | .name' <<<"$release_json" | head -1)
-  [[ -n "$asset_name" ]] || { printf 'build: no amd64 deb asset for %s\n' "$tag" >&2; exit 1; }
+  asset_name=$(jq -r --arg v "$version" \
+    '.assets[] | select(.name | test("euro-office-euro-office_" + $v + "-[0-9]+_amd64\\.deb$")) | .name' \
+    <<<"$release_json" | head -1)
+  [[ -n "$asset_name" ]] ||
+    { printf 'build: no amd64 deb asset for %s\n' "$tag" >&2; exit 1; }
   deb_url="https://github.com/$upstream_repo/releases/download/$tag/$asset_name"
 fi
-[[ "$version" =~ ^[0-9]+(\.[0-9]+)+$ ]] || { printf 'build: invalid version: %s\n' "$version" >&2; exit 1; }
+[[ "$version" =~ ^[0-9]+(\.[0-9]+)+$ ]] ||
+  { printf 'build: invalid version: %s\n' "$version" >&2; exit 1; }
 log "upstream version=$version"
 
 # --- 2. Import upstream deb --------------------------------------------------

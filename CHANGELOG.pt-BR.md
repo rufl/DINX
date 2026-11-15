@@ -3,6 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Restaurar os pins de fonte Aqueous 1.0.5 e Pearl 0.3.0 exigidos pelos patches DINX existentes de dinit/sessão. Os archives 1.0.20/0.3.9 mais novos rejeitavam esses patches durante o contrato da ISO; os checksums restaurados e todos os contratos Aqueous/Pearl passam.
 - Normalizar as paletas clara do Fluent e do Jasper para WCAG AA: o `dinx-pearl-themes` escurece o primário Fluent `#2196f3` (3,1:1) para `#1565c0` e o primário Jasper `#009688` (3,7:1) para `#00796b`, e escurece o `error_color` Jasper `#c62828` (4,4:1) para `#b3261e`, de modo que texto de acento e rótulos de erro sobre recipientes brancos superem 4,5:1. O `dinx-gtk-themes` ancora o accent GTK claro do Jasper no mesmo `#00796b`. Ambos os pacotes sobem para um novo release.
 
 - Restringir a aparência do Pearl a Orchis, Skeuos, Jasper e Fluent, com Orchis Rounded escuro como padrão. Normalizar os oito manifestos Pearl e perfis KDE para os IDs/nomes da própria família, migrar seleções aposentadas, remover overrides escuros fixos e sincronizar GTK/libadwaita, Qt6ct, Haruna, Deetty, Dintor e bordas do Aqueous a partir da seleção salva. Incrementar os releases afetados e ampliar os contratos de ISO, sessão e tema.

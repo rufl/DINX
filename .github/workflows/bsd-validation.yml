@@ -2,11 +2,11 @@ name: DINX-BSD Validation
 
 on:
   push:
-  branches:
-    - feature/dinx-bsd
+    branches:
+      - feature/dinx-bsd
   pull_request:
     branches:
-    - feature/dinx-bsd
+      - feature/dinx-bsd
 
 permissions:
   contents: read

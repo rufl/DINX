@@ -1,3 +1,18 @@
 #!/bin/sh
 set -eu
+export GTK_THEME=DINX
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+
+config_home="${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}"
+settings_dir="$config_home/paintfe"
+settings_file="$settings_dir/paintfe_settings.cfg"
+if [ ! -e "$settings_file" ]; then
+  mkdir -p "$settings_dir"
+  cat > "$settings_file" <<'EOF'
+# PaintFE Theme
+theme_mode=dark
+theme_preset=midnight
+EOF
+fi
+
 exec /opt/paintfe/AppRun "$@"

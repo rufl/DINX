@@ -20,6 +20,8 @@ x11-wm/shikane
 # DINX Custom / First-Party Ports (Requiring custom packaging)
 x11-wm/aqueous
 x11-wm/pearl
+x11-themes/dinx-pearl-themes
+x11-themes/dinx-gtk-themes
 sysutils/octapkg
 x11/deetty
 sysutils/dinitui

@@ -1,0 +1,40 @@
+# FreeBSD Port Makefile for DINX GTK Community Themes (DINX-BSD)
+PORTNAME=       dinx-gtk-themes
+PORTVERSION=    1.1.0
+PORTREVISION=   1
+CATEGORIES=     x11-themes
+
+MAINTAINER=     trafael@dinx.org
+COMMENT=        DINX GTK3 and GTK4 themes with rounded and square corners
+WWW=            https://github.com/rufl/DINX
+
+LICENSE=        GPLv3
+
+BUILD_DEPENDS=  sassc:devel/sassc
+USES=           python:build
+USE_GITHUB=     yes
+GH_TUPLE=       daniruiz:skeuos-gtk:095e06aa44c637af675850e421057c6f09b9f8d0:skeuos \
+                rufl:skeuos-gtk:43561ba9c384ea401e19fed5ebfec27f8f4350af:skeuos_fork \
+                vinceliuice:Orchis-theme:6475a42a9d14261cf85fc6f428e7f44f0168bef1:orchis \
+                rufl:Fluent-gtk-theme:7befd876d72d7d4d748b6576e5cc404d34e4acd7:fluent \
+                rufl:Jasper-gtk-theme:e52cbfadceb95d5f3da1c3fea80a1b42a37c81e8:jasper
+
+THEME_BUILD_DIR= ${WRKDIR}/dinx-gtk-themes
+THEME_DIR=       ${STAGEDIR}${PREFIX}/share/themes
+
+
+do-build:
+	@${PYTHON_CMD} ${FILESDIR}/dinx-gtk-themes-build.py \
+		${WRKSRC_skeuos} ${WRKSRC_skeuos_fork} ${WRKSRC_orchis} \
+		${WRKSRC_fluent} ${WRKSRC_jasper} ${THEME_BUILD_DIR}
+
+do-install:
+	@${MKDIR} ${THEME_DIR}
+	@${CP} -R ${THEME_BUILD_DIR}/. ${THEME_DIR}/
+	@${MKDIR} ${STAGEDIR}${PREFIX}/share/licenses/${PORTNAME}
+	@${INSTALL_DATA} ${WRKSRC_skeuos}/LICENSE ${STAGEDIR}${PREFIX}/share/licenses/${PORTNAME}/SKEUOS-LICENSE
+	@${INSTALL_DATA} ${WRKSRC_orchis}/COPYING ${STAGEDIR}${PREFIX}/share/licenses/${PORTNAME}/ORCHIS-COPYING
+	@${INSTALL_DATA} ${WRKSRC_fluent}/COPYING ${STAGEDIR}${PREFIX}/share/licenses/${PORTNAME}/FLUENT-COPYING
+	@${INSTALL_DATA} ${WRKSRC_jasper}/LICENSE ${STAGEDIR}${PREFIX}/share/licenses/${PORTNAME}/JASPER-LICENSE
+
+.include <bsd.port.mk>

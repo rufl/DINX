@@ -1,11 +1,27 @@
 {
-  "window_corner_radius": 15,
+  "window_corner_radius": 12,
   "theme": {
-    "mode": "static",
+    "mode": "package",
     "variant": "dark",
     "seed": "#F4515B",
     "source": "seed",
-    "gtk_name": ""
+    "gtk_name": "Orchis-Dark",
+    "package_id": "dinx.orchis-rounded",
+    "sync_borders": true
+  },
+  "matugen": {
+    "enabled": true,
+    "colors": {
+      "source": "follow_pearl",
+      "seed": "#6750a4"
+    },
+    "applications": {
+      "gtk": {"mode": "profile", "profile_id": "dinx.orchis-rounded.gtk"},
+      "qt5ct": {"mode": "profile", "profile_id": "dinx.orchis-rounded.qt5ct"},
+      "qt6ct": {"mode": "profile", "profile_id": "dinx.orchis-rounded.qt6ct"},
+      "kcolorscheme": {"mode": "profile", "profile_id": "dinx.orchis-rounded.kcolorscheme"},
+      "ghostty": {"mode": "profile", "profile_id": "dinx.orchis-rounded.ghostty"}
+    }
   },
   "wallpaper": {
     "mode": "solid",
@@ -21,13 +37,8 @@
       "transition_ms": 420
     }
   },
-  "bar": {
-    "edge": "top"
-  },
-  "dock": {
-    "enabled": true,
-    "edge": "bottom"
-  },
+  "bar": {"edge": "top"},
+  "dock": {"enabled": true, "edge": "bottom"},
   "desktop_icons": {
     "enabled": true,
     "output": "",

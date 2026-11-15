@@ -57,7 +57,7 @@ SH
 cat >"$tmp/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"
-printf 'off bottom material dark rounded\n'
+printf 'off bottom orchis dark rounded\n'
 SH
 chmod +x "$fakebin/pearl" "$tmp/wizard"
 
@@ -82,31 +82,32 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_STATE_HOME="$state_home" \
     }
     dconf write "$color_scheme_key" "'\''prefer-light'\''"
     "$pearl_shell"
-    jq -e '\''.theme.variant == "dark" and .theme.mode == "static"'\'' "$preferences" >/dev/null
+    jq -e '\''.theme.variant == "dark" and .theme.mode == "package" and .theme.package_id == "dinx.orchis-rounded"'\'' "$preferences" >/dev/null
     for gtk_version in 3.0 4.0; do
       settings="$config_home/gtk-$gtk_version/settings.ini"
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 1 ]]
-      [[ $(ini_value "$settings" gtk-theme-name) == Adwaita ]]
+      [[ $(ini_value "$settings" gtk-theme-name) == Orchis-Dark ]]
       [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
       grep -Fqx "preserve-this=yes" "$settings"
     done
     qt_config="$config_home/qt6ct/qt6ct.conf"
-    [[ $(ini_value "$qt_config" color_scheme_path) == "$config_home/qt6ct/colors/DINX.conf" ]]
+    [[ $(ini_value "$qt_config" color_scheme_path) == "$config_home/qt6ct/colors/pearl-material.conf" ]]
     [[ $(ini_value "$qt_config" custom_palette) == true ]]
     [[ $(ini_value "$qt_config" icon_theme) == Papirus ]]
     [[ $(ini_value "$qt_config" style) == Fusion ]]
     [[ $(wc -l <"$calls") == 1 ]]
 
-    jq '\''.theme = {mode:"gtk",variant:"light",gtk_name:"DINX"}'\'' "$preferences" >"$preferences.tmp"
+    jq '\''.theme = {mode:"static",variant:"light",gtk_name:""}'\'' "$preferences" >"$preferences.tmp"
     mv -f "$preferences.tmp" "$preferences"
     "$pearl_shell"
+    jq -e '\''.theme.mode == "package" and .theme.package_id == "dinx.orchis-rounded" and .theme.gtk_name == "Orchis-Light"'\'' "$preferences" >/dev/null
     for gtk_version in 3.0 4.0; do
       settings="$config_home/gtk-$gtk_version/settings.ini"
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 0 ]]
-      [[ $(ini_value "$settings" gtk-theme-name) == DINX ]]
+      [[ $(ini_value "$settings" gtk-theme-name) == Orchis-Light ]]
       [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
     done
-    [[ $(ini_value "$qt_config" custom_palette) == false ]]
+    [[ $(ini_value "$qt_config" custom_palette) == true ]]
     [[ $(ini_value "$qt_config" icon_theme) == Papirus ]]
     [[ $(ini_value "$qt_config" style) == Fusion ]]
     [[ $(wc -l <"$calls") == 1 ]]
@@ -127,4 +128,4 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_STATE_HOME="$state_home" \
   ' smoke_dinx_theme_sync "$theme_sync" "$pearl_shell" "$fakebin" \
   "$tmp/wizard" "$config_home" "$preferences" "$tmp/wizard-calls"
 
-printf 'dinx_theme_sync_smoke material_dark=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true light_transition=true gtk_theme_choice=true package_theme=true qt_generated_palette=true deetty_bridge=true preserves_unrelated_settings=true\n'
+printf 'dinx_theme_sync_smoke orchis_default=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true retired_theme_migration=true package_theme=true qt_generated_palette=true deetty_bridge=true preserves_unrelated_settings=true\n'

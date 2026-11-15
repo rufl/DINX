@@ -3,6 +3,7 @@ set -eu
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 preferences="$config_home/pearl/preferences.json"
+primary_preferences=$preferences
 if [ ! -r "$preferences" ]; then
   preferences="$config_home/pearl/last-good.json"
 fi
@@ -16,20 +17,62 @@ if ! theme_variant=$(jq -er '.theme.variant | select(. == "dark" or . == "light"
   exit 0
 fi
 theme_mode=$(jq -r '.theme.mode // ""' "$preferences" 2>/dev/null || printf '')
-gtk_name=$(jq -r '.theme.gtk_name // ""' "$preferences" 2>/dev/null || printf '')
-gtk_theme=Adwaita
-if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
-  gtk_theme=DINX
-elif [ "$theme_mode" = package ]; then
-  case "$gtk_name" in
-    Skeuos-Blue-Light|Skeuos-Blue-Dark|Skeuos-Blue-Light-Square|Skeuos-Blue-Dark-Square|\
-    Orchis-Light|Orchis-Dark|Orchis-Square-Light|Orchis-Square-Dark|\
-    Fluent-Light|Fluent-Dark|Fluent-Square-Light|Fluent-Square-Dark|\
-    Jasper-Light|Jasper-Dark|Jasper-Square-Light|Jasper-Square-Dark)
-      gtk_theme=$gtk_name
-      ;;
-  esac
-fi
+package_id=$(jq -r '.theme.package_id // ""' "$preferences" 2>/dev/null || printf '')
+case "$package_id:$theme_variant" in
+  dinx.orchis-rounded:dark) gtk_theme=Orchis-Dark ;;
+  dinx.orchis-rounded:light) gtk_theme=Orchis-Light ;;
+  dinx.orchis-square:dark) gtk_theme=Orchis-Square-Dark ;;
+  dinx.orchis-square:light) gtk_theme=Orchis-Square-Light ;;
+  dinx.skeuos-rounded:dark) gtk_theme=Skeuos-Blue-Dark ;;
+  dinx.skeuos-rounded:light) gtk_theme=Skeuos-Blue-Light ;;
+  dinx.skeuos-square:dark) gtk_theme=Skeuos-Blue-Dark-Square ;;
+  dinx.skeuos-square:light) gtk_theme=Skeuos-Blue-Light-Square ;;
+  dinx.jasper-rounded:dark) gtk_theme=Jasper-Dark ;;
+  dinx.jasper-rounded:light) gtk_theme=Jasper-Light ;;
+  dinx.jasper-square:dark) gtk_theme=Jasper-Square-Dark ;;
+  dinx.jasper-square:light) gtk_theme=Jasper-Square-Light ;;
+  dinx.fluent-rounded:dark) gtk_theme=Fluent-Dark ;;
+  dinx.fluent-rounded:light) gtk_theme=Fluent-Light ;;
+  dinx.fluent-square:dark) gtk_theme=Fluent-Square-Dark ;;
+  dinx.fluent-square:light) gtk_theme=Fluent-Square-Light ;;
+  *)
+    package_id=dinx.orchis-rounded
+    theme_mode=package
+    if [ "$theme_variant" = dark ]; then
+      gtk_theme=Orchis-Dark
+    else
+      gtk_theme=Orchis-Light
+    fi
+    if [ "$preferences" = "$primary_preferences" ] && [ -f "$preferences" ] && [ ! -L "$preferences" ]; then
+      preferences_tmp="$preferences.tmp.$$"
+      preferences_mode=$(stat -c '%a' -- "$preferences" 2>/dev/null || printf '600')
+      if jq --arg variant "$theme_variant" --arg gtk "$gtk_theme" --arg package "$package_id" '
+        .window_corner_radius = 12
+        | .theme.mode = "package"
+        | .theme.variant = $variant
+        | .theme.gtk_name = $gtk
+        | .theme.package_id = $package
+        | .theme.sync_borders = true
+        | .matugen.enabled = true
+        | .matugen.colors.source = "follow_pearl"
+        | .matugen.applications = {
+            gtk: {mode: "profile", profile_id: ($package + ".gtk")},
+            qt5ct: {mode: "profile", profile_id: ($package + ".qt5ct")},
+            qt6ct: {mode: "profile", profile_id: ($package + ".qt6ct")},
+            kcolorscheme: {mode: "profile", profile_id: ($package + ".kcolorscheme")},
+            ghostty: {mode: "profile", profile_id: ($package + ".ghostty")}
+          }
+      ' "$preferences" >"$preferences_tmp" &&
+        chmod "$preferences_mode" "$preferences_tmp" &&
+        mv -f -- "$preferences_tmp" "$preferences"; then
+        printf '%s\n' 'dinx-sync-session-theme: migrated retired theme to Orchis Rounded' >&2
+      else
+        rm -f -- "$preferences_tmp"
+        printf '%s\n' 'dinx-sync-session-theme: could not migrate retired theme preference' >&2
+      fi
+    fi
+    ;;
+esac
 
 set_ini_value() {
   ini_file=$1

@@ -47,7 +47,6 @@ session_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/
 pearl_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
 theme_sync="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
 patchy_launcher="$repo_root/distro/packages/patchy/patchy"
-patchy_force_darkest="$repo_root/distro/packages/patchy/patchy-force-darkest"
 wizard_source="$repo_root/distro/packages/pearl/dinx-first-run-wizard.c"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
 haruna_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
@@ -61,7 +60,7 @@ for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg"
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
-  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync" "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper"; do
+  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync" "$patchy_launcher" "$haruna_wrapper"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
@@ -280,17 +279,17 @@ fi
 grep -Fq '"mode": "solid"' "$pearl_preferences" || fail 'Fresh Pearl preferences enable an image wallpaper'
 grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences retain an image wallpaper path'
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
-jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == ""' "$pearl_preferences" >/dev/null \
-  || fail 'Fresh Pearl preferences do not default to Pearl Material dark'
-grep -Fq 'const char *theme_name[] = { "material", "skeuos", "orchis", "fluent", "jasper" };' "$wizard_source" \
-  || fail 'Pearl first-run theme selection order changed'
+jq -e '.window_corner_radius == 12 and .theme.mode == "package" and .theme.variant == "dark" and .theme.gtk_name == "Orchis-Dark" and .theme.package_id == "dinx.orchis-rounded" and .theme.sync_borders == true and .matugen.enabled == true' "$pearl_preferences" >/dev/null \
+  || fail 'Fresh Pearl preferences do not default to Orchis Rounded dark'
+grep -Fq 'const char *theme_name[] = { "orchis", "skeuos", "jasper", "fluent" };' "$wizard_source" \
+  || fail 'Pearl first-run theme selection is not limited to Orchis, Skeuos, Jasper and Fluent'
 grep -Fq 'printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not emit theme, variant and corner choices'
 if grep -Fq 'dinx-dark' "$wizard_source"; then
   fail 'Pearl first-run wizard still offers the retired DINX theme choices'
 fi
 grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);' "$wizard_source" \
-  || fail 'Pearl first-run wizard does not default to Pearl Material dark'
+  || fail 'Pearl first-run wizard does not default to Orchis'
 grep -Fq 'package_id="dinx.skeuos-$corners"' "$pearl_shell" \
   || fail 'Pearl shell does not map the Skeuos choice to its Pearl package'
 grep -Fq 'package_id="dinx.orchis-$corners"' "$pearl_shell" \
@@ -368,7 +367,7 @@ grep -Fq 'pearl-greeter-host' "$pearl_pkg" || fail 'Pearl Greeter host is not pa
 grep -Fq 'rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"' "$pearl_pkg" \
   || fail 'Pearl upstream lifecycle payloads are not removed'
 for gtk_settings in "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4"; do
-  grep -Fq 'gtk-theme-name=Adwaita' "$gtk_settings" || fail "GTK settings omit the Adwaita theme: $gtk_settings"
+  grep -Fq 'gtk-theme-name=Orchis-Dark' "$gtk_settings" || fail "GTK settings omit the Orchis Dark default: $gtk_settings"
   grep -Fq 'gtk-icon-theme-name=Papirus' "$gtk_settings" || fail "GTK settings omit the Papirus icon default: $gtk_settings"
   grep -Fq 'gtk-font-name=Noto Sans 10' "$gtk_settings" || fail "GTK settings omit Noto Sans 10: $gtk_settings"
   grep -Fq 'gtk-application-prefer-dark-theme=1' "$gtk_settings" || fail "GTK settings omit dark preference: $gtk_settings"
@@ -393,10 +392,10 @@ grep -Fq 'dinx-sync-session-theme' "$pearl_shell" || fail 'Pearl shell does not 
 grep -Fq 'gtk-application-prefer-dark-theme' "$theme_sync" || fail 'GTK dark preference is not synchronized'
 grep -Fq 'custom_palette true' "$theme_sync" || fail 'Qt dark palette is not enabled for dark Pearl mode'
 grep -Fq 'custom_palette false' "$theme_sync" || fail 'Qt custom palette is not disabled for light Pearl mode'
-[[ -x "$patchy_force_darkest" ]] || fail 'Patchy Darkest-theme helper is not executable'
-sh -n "$patchy_force_darkest" || fail 'Patchy Darkest-theme helper has invalid shell syntax'
-grep -Fq '/usr/lib/patchy/patchy-force-darkest' "$patchy_launcher" || fail 'Patchy does not force its internal Darkest theme'
-grep -Fq 'customThemeId=bundled:darkest.patchytheme' "$patchy_force_darkest" || fail 'Patchy internal theme is not forced to Darkest'
+grep -Fq 'QT_QPA_PLATFORMTHEME=qt6ct' "$patchy_launcher" || fail 'Patchy does not consume the selected Qt palette'
+if grep -Eq 'darkest|GTK_THEME|prefer.dark' "$patchy_launcher"; then
+  fail 'Patchy still forces a dark application theme'
+fi
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_WIZARD' "$pearl_shell" || fail 'Pearl shell wrapper lacks a testable wizard path'
 grep -Fq "desktop-color: \"${dark_token[mSurface]}\"" "$grub" || fail 'GRUB surface does not use DINX background'
@@ -436,27 +435,18 @@ if grep -Eq '#(31415d|151923|2859a8)' "$calamares"; then
   fail 'Calamares contains an out-of-contract color'
 fi
 for source in "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source"; do
-  grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$source" || fail "internal app does not force the DINX dark scheme: $source"
+  if grep -Eq 'ADW_COLOR_SCHEME_FORCE_DARK|#[0-9A-Fa-f]{6}' "$source"; then
+    fail "internal app still hardcodes its color scheme: $source"
+  fi
 done
-grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);' "$wizard_source" \
-  || fail 'Pearl first-run wizard does not default to Pearl Material dark'
-grep -Fq "background: ${dark_token[mSurface]}" "$dinitui_source" || fail 'DinitUI output surface does not use DINX background'
-grep -Fq "color: ${dark_token[mOnSurface]}" "$dinitui_source" || fail 'DinitUI output text does not use DINX foreground'
-grep -Fq "color: ${dark_token[mSecondary]}" "$dinitui_source" || fail 'DinitUI started state does not use DINX secondary'
-grep -Fq "color: ${dark_token[terminalYellow]}" "$dinitui_source" || fail 'DinitUI transitional state does not use DINX terminal yellow'
-grep -Fq "color: ${dark_token[mError]}" "$dinitui_source" || fail 'DinitUI failed state does not use DINX error'
-grep -Fq "color: ${dark_token[mOnSurfaceVariant]}" "$dinitui_source" || fail 'DinitUI stopped state does not use DINX muted text'
-grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinitui_source" || fail 'DinitUI action does not use DINX primary'
-grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinitui_source" || fail 'DinitUI action text does not use DINX on-primary'
-grep -Fq "background-color: ${dark_token[mHover]}" "$dinitui_source" || fail 'DinitUI selection does not use DINX hover'
-grep -Fq "border-color: ${dark_token[mOutline]}" "$dinitui_source" || fail 'DinitUI controls do not use DINX outline'
-grep -Fq "background: ${dark_token[mSurface]}" "$dinxpanel_source" || fail 'DINXPanel output surface does not use DINX background'
-grep -Fq "color: ${dark_token[mOnSurface]}" "$dinxpanel_source" || fail 'DINXPanel output text does not use DINX foreground'
-grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action does not use DINX primary'
-grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action text does not use DINX on-primary'
-grep -Fq "background: ${dark_token[mSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings surface does not use DINX background'
-grep -Fq "color: ${dark_token[mOnSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings text does not use DINX foreground'
-grep -Fq "background-color: ${dark_token[mPrimary]}" "$seafoam_settings_source" || fail 'Seafoam Settings action does not use DINX primary'
+grep -Fq '@view_bg_color' "$dinitui_source" || fail 'DinitUI output does not consume the active GTK theme'
+grep -Fq '@success_color' "$dinitui_source" || fail 'DinitUI success state does not consume the active GTK theme'
+grep -Fq '@warning_color' "$dinitui_source" || fail 'DinitUI transitional state does not consume the active GTK theme'
+grep -Fq '@error_color' "$dinitui_source" || fail 'DinitUI failure state does not consume the active GTK theme'
+grep -Fq '@dim_label_color' "$dinitui_source" || fail 'DinitUI muted state does not consume the active GTK theme'
+grep -Fq '@view_bg_color' "$dinxpanel_source" || fail 'DINXPanel output does not consume the active GTK theme'
+grep -Fq '@accent_color' "$dinxpanel_source" || fail 'DINXPanel accent does not consume the active GTK theme'
+grep -Fq '@accent_color' "$seafoam_settings_source" || fail 'Seafoam Settings accent does not consume the active GTK theme'
 grep -Fq 'Name=DINX' "$gtk_index" || fail 'GTK theme index name is missing'
 grep -Fq 'IconTheme=Papirus' "$gtk_index" || fail 'DINX GTK theme does not select Papirus icons'
 grep -Fqx '@import url("gtk.css");' "$gtk3_dark" || fail 'GTK3 dark theme bridge is missing'
@@ -464,4 +454,4 @@ grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' "$swayimg" || fail 'Swayimg surface color is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' "$swayimg" || fail 'Swayimg font contract is missing'
 grep -Fq 'swayimg.text.size = 10' "$swayimg" || fail 'Swayimg text size does not match Noto Sans 10'
-printf 'dinx_theme_contract palette=true static=true typography=true states=true gtk=true gtk_system=true qt=true qt_palette=true qt_session_seed=true patchy_darkest=true swayimg=true pearl_greeter=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true desktop_icons_upstream=true boot_mark=true\n'
+printf 'dinx_theme_contract palette=true selected_theme=true typography=true states=true gtk=true gtk_system=true qt=true qt_palette=true qt_session_seed=true patchy_theme=true swayimg=true pearl_greeter=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true desktop_icons_upstream=true boot_mark=true\n'

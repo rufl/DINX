@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restrict Pearl appearance to Orchis, Skeuos, Jasper and Fluent, with Orchis Rounded dark as the default. Normalize all eight Pearl manifests and KDE profiles to their own family IDs/names, migrate retired selections, remove fixed-dark application overrides, and synchronize GTK/libadwaita, Qt6ct, Haruna, Deetty, Dintor and Aqueous borders from the saved selection. Bump affected package releases and extend ISO/session/theme contracts.
+
 - Add Blender from the Artix package repositories to the default ISO desktop roster and require its binary and desktop entry in the ISO content contract.
 - Remove Glances and Blockbench from the default ISO roster; retain both only where required for builder qualification.
 - Fork `daniruiz/skeuos-gtk` and `vinceliuice/Orchis-theme` to `rufl/skeuos-gtk` and `rufl/Orchis-theme` and port both GTK themes to Pearl's schema-1 community theme format. The new `dinx-pearl-themes` package installs Skeuos Rounded, Skeuos Square, Orchis Rounded and Orchis Square under `/usr/share/pearl/themes`, each with dark and light palettes derived from the upstream SASS colors and validated by `pearl-themes` for manifest, token and WCAG 4.5:1 contrast rules. Rounded variants keep the upstream corner radii (Skeuos 8/4 px, Orchis 12 px); square variants use 0 px. The ports are published in the forks' `themes/` directories and pinned by commit SHA-256 in `source.env`; the ISO content gate requires all four `theme.json` paths and the package metadata.

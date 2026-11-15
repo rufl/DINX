@@ -83,14 +83,6 @@ case "$corners" in
         ;;
 esac
 case "$theme" in
-    material)
-        theme_mode=static
-        package_id=
-        gtk_name=
-        profile_prefix=pearl.material
-        window_radius=15
-        [ "$corners" = square ] && window_radius=0
-        ;;
     skeuos)
         theme_mode=package
         package_id="dinx.skeuos-$corners"

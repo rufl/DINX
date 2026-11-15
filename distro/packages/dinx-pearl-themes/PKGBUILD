@@ -19,7 +19,7 @@ source_env="$startdir/source.env"
 : "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
 : "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_PEARL_THEMES_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Fluent, Jasper, Skeuos and Orchis Pearl community themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -85,7 +85,38 @@ import json
 import os
 import sys
 
+
 root = sys.argv[1]
+display_names = {
+    "dinx.skeuos-rounded": "Skeuos Rounded (DINX)",
+    "dinx.skeuos-square": "Skeuos Square (DINX)",
+    "dinx.orchis-rounded": "Orchis Rounded (DINX)",
+    "dinx.orchis-square": "Orchis Square (DINX)",
+    "dinx.fluent-rounded": "Fluent Rounded (DINX)",
+    "dinx.fluent-square": "Fluent Square (DINX)",
+    "dinx.jasper-rounded": "Jasper Rounded (DINX)",
+    "dinx.jasper-square": "Jasper Square (DINX)",
+}
+for theme_id, display_name in display_names.items():
+    theme_root = os.path.join(root, theme_id)
+    manifest_path = os.path.join(theme_root, "theme.json")
+    with open(manifest_path, encoding="utf-8") as stream:
+        manifest = json.load(stream)
+    manifest["defaults"] = [
+        {"application": application, "profile": f"{theme_id}.{application}"}
+        for application in ("gtk", "qt5ct", "qt6ct", "kcolorscheme", "ghostty")
+    ]
+    with open(manifest_path, "w", encoding="utf-8", newline="\n") as stream:
+        json.dump(manifest, stream, ensure_ascii=False, separators=(",", ":"))
+        stream.write("\n")
+    for scheme_name in ("kcolorscheme.colors", "dark-kcolorscheme.colors", "light-kcolorscheme.colors"):
+        scheme_path = os.path.join(theme_root, "profiles", scheme_name)
+        with open(scheme_path, encoding="utf-8") as stream:
+            lines = stream.readlines()
+        with open(scheme_path, "w", encoding="utf-8", newline="\n") as stream:
+            for line in lines:
+                stream.write(f"Name={display_name}\n" if line.startswith("Name=") else line)
+
 for base, dirs, files in os.walk(root):
     dirs.sort()
     for name in sorted(files):
@@ -98,7 +129,7 @@ for base, dirs, files in os.walk(root):
             json.dump(value, stream, ensure_ascii=False, separators=(',', ':'))
             stream.write('\n')
 
-# Reuse byte-identical profiles, licenses and shared assets between the four
+# Reuse byte-identical profiles, licenses and shared assets between the eight
 # ports. Hardlinks preserve all discovered paths and their contents.
 seen = {}
 for base, dirs, files in os.walk(root):

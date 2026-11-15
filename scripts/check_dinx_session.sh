@@ -362,7 +362,7 @@ printf 'aqueous_live_config_seed blur=disabled opacity=disabled lock_keybind=dis
 cat >"$pearl_shell_test/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"
-printf 'off bottom material light rounded\n'
+printf 'off bottom orchis light rounded\n'
 SH
 cat >"$pearl_shell_test/bin/pearl" <<'SH'
 #!/bin/sh
@@ -383,9 +383,9 @@ pearl_shell_test_env=(
 )
 mkdir -p "$pearl_shell_test/home"
 env "${pearl_shell_test_env[@]}" "$pearl_shell"
-jq -e '.theme.mode == "static" and .theme.variant == "light" and .theme.gtk_name == "" and .theme.seed == "#F4515B" and .bar.edge == "bottom" and .bar.retained == true and .dock.enabled == false and .dock.edge == "top" and .dock.retained == true and .unrelated == 42' \
+jq -e '.theme.mode == "package" and .theme.variant == "light" and .theme.gtk_name == "Orchis-Light" and .theme.package_id == "dinx.orchis-rounded" and .theme.seed == "#F4515B" and .bar.edge == "bottom" and .bar.retained == true and .dock.enabled == false and .dock.edge == "top" and .dock.retained == true and .unrelated == 42' \
   "$pearl_shell_test/config/pearl/preferences.json" >/dev/null \
-  || fail 'Pearl wizard selection did not update preferences while preserving existing settings'
+  || fail 'Pearl wizard Orchis selection did not update preferences while preserving existing settings'
 [[ -e "$pearl_shell_test/state/dinx/pearl-first-run-complete" ]] \
   || fail 'Pearl first-run completion marker is missing'
 [[ $(stat -c '%a' "$pearl_shell_test/config/pearl/preferences.json") == 600 ]] \
@@ -393,13 +393,13 @@ jq -e '.theme.mode == "static" and .theme.variant == "light" and .theme.gtk_name
 env "${pearl_shell_test_env[@]}" "$pearl_shell"
 [[ $(wc -l <"$pearl_shell_test/wizard-calls") == 1 ]] \
   || fail 'Pearl first-run wizard runs again after completion'
-printf 'pearl_first_run_smoke dock=off bar=bottom theme=material-light preserves_settings=true once=true\n'
+printf 'pearl_first_run_smoke dock=off bar=bottom theme=orchis-light preserves_settings=true once=true\n'
 pearl_shell_top_test="$pearl_shell_test/top"
 mkdir -p "$pearl_shell_top_test/bin" "$pearl_shell_top_test/home" \
   "$pearl_shell_top_test/config/pearl" "$pearl_shell_top_test/state"
 cat >"$pearl_shell_top_test/wizard" <<'SH'
 #!/bin/sh
-printf 'on top material dark rounded\n'
+printf 'on top orchis dark rounded\n'
 SH
 cat >"$pearl_shell_top_test/bin/pearl" <<'SH'
 #!/bin/sh

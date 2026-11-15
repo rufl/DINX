@@ -167,7 +167,7 @@ emit_result(Wizard *wizard, gboolean skipped)
         const char *dock = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->dock_enabled)) ? "on" : "off";
         const char *edge = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->bar_top)) ? "top" : "bottom";
         guint theme = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->theme));
-        const char *theme_name[] = { "material", "skeuos", "orchis", "fluent", "jasper" };
+        const char *theme_name[] = { "orchis", "skeuos", "jasper", "fluent" };
         const char *variant = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->variant_dark)) ? "dark" : "light";
         const char *corners = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->corners_rounded)) ? "rounded" : "square";
         if (theme >= G_N_ELEMENTS(theme_name))
@@ -282,12 +282,11 @@ on_activate(GtkApplication *application, gpointer user_data)
         text(wizard, "Tema", "Theme"),
         text(wizard, "Escolha o tema, a aparência e o estilo dos cantos. A escolha não altera o tema do greeter.",
                      "Choose the theme, appearance and corner style. This does not change the greeter theme."));
-    theme_names[0] = "Pearl Material";
+    theme_names[0] = "Orchis";
     theme_names[1] = "Skeuos";
-    theme_names[2] = "Orchis";
+    theme_names[2] = "Jasper";
     theme_names[3] = "Fluent";
-    theme_names[4] = "Jasper";
-    theme_names[5] = NULL;
+    theme_names[4] = NULL;
     GtkStringList *theme_model = gtk_string_list_new(theme_names);
     wizard->theme = gtk_drop_down_new(G_LIST_MODEL(theme_model), NULL);
     g_object_unref(theme_model);

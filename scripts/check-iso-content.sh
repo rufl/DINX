@@ -278,7 +278,6 @@ required_paths=(
   usr/share/applications/blender.desktop
   usr/bin/paintfe
   usr/local/bin/haruna
-  usr/share/color-schemes/DINXDark.colors
   opt/paintfe/PaintFE.AppImage
   usr/share/applications/paintfe.desktop
   usr/share/icons/hicolor/256x256/apps/paintfe.png
@@ -323,7 +322,6 @@ required_paths=(
   usr/bin/inkscape
   usr/bin/godot
   usr/bin/patchy
-  usr/lib/patchy/patchy-force-darkest
   opt/patchy/PatchyLinux.AppImage
   usr/share/applications/org.kde.krita.desktop
   usr/share/applications/org.inkscape.Inkscape.desktop
@@ -491,6 +489,7 @@ required_paths=(
   usr/share/licenses/ghostty-vt-runtime/LICENSE
   usr/bin/deetty
   usr/bin/dintor
+  usr/local/bin/dintor
   usr/share/applications/org.dinx.Deetty.desktop
   usr/share/applications/org.dinx.Dintor.desktop
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg
@@ -599,6 +598,37 @@ for path in "${required_paths[@]}"; do
   iso_manifest_contains_path "$path" <<<"$manifest" \
     || fail "missing ISO path (exact path required): $path"
 done
+for theme_id in \
+  dinx.orchis-rounded dinx.orchis-square \
+  dinx.skeuos-rounded dinx.skeuos-square \
+  dinx.jasper-rounded dinx.jasper-square \
+  dinx.fluent-rounded dinx.fluent-square; do
+  pearl_theme=$(unsquashfs -no-xattrs -no-progress -cat \
+    "$tmp_dir/rootfs.img" "usr/share/pearl/themes/$theme_id/theme.json")
+  jq -e --arg id "$theme_id" '
+    [.defaults[] | select(
+      (.application == "gtk" or .application == "qt5ct" or
+       .application == "qt6ct" or .application == "kcolorscheme" or
+       .application == "ghostty") and
+      (.profile | startswith($id + "."))
+    )] | length == 5
+  ' <<<"$pearl_theme" >/dev/null \
+    || fail "Pearl theme has cross-family application profile defaults: $theme_id"
+  case "$theme_id" in
+    dinx.orchis-rounded) scheme_name='Orchis Rounded (DINX)' ;;
+    dinx.orchis-square) scheme_name='Orchis Square (DINX)' ;;
+    dinx.skeuos-rounded) scheme_name='Skeuos Rounded (DINX)' ;;
+    dinx.skeuos-square) scheme_name='Skeuos Square (DINX)' ;;
+    dinx.jasper-rounded) scheme_name='Jasper Rounded (DINX)' ;;
+    dinx.jasper-square) scheme_name='Jasper Square (DINX)' ;;
+    dinx.fluent-rounded) scheme_name='Fluent Rounded (DINX)' ;;
+    dinx.fluent-square) scheme_name='Fluent Square (DINX)' ;;
+  esac
+  pearl_kde_scheme=$(unsquashfs -no-xattrs -no-progress -cat \
+    "$tmp_dir/rootfs.img" "usr/share/pearl/themes/$theme_id/profiles/kcolorscheme.colors")
+  grep -Fqx "Name=$scheme_name" <<<"$pearl_kde_scheme" \
+    || fail "Pearl theme KDE profile has the wrong family name: $theme_id"
+done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for shadow_wrapper in usr/local/bin/gparted usr/local/bin/firewall-config; do
     if iso_manifest_contains_path "$shadow_wrapper" <<<"$image_manifest"; then
@@ -650,15 +680,13 @@ patchy_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
 [[ "$patchy_db_version" == "$patchy_package_version" ]] \
   || fail "Patchy package version mismatch: $patchy_db_version"
 patchy_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/patchy)
-grep -Fq '/usr/lib/patchy/patchy-force-darkest' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not force its internal Darkest theme'
+grep -Fq 'QT_QPA_PLATFORMTHEME=qt6ct' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not consume the selected Qt palette'
 grep -Fq 'PatchyLinux.AppImage --appimage-extract-and-run' <<<"$patchy_launcher" \
   || fail 'Patchy launcher does not use the no-FUSE AppImage path'
-patchy_force_darkest=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/patchy/patchy-force-darkest)
-grep -Fq 'customThemeId=bundled:darkest.patchytheme' <<<"$patchy_force_darkest" \
-  || fail 'Patchy package does not force its Darkest theme'
-grep -Fq 'refusing unsafe settings path' <<<"$patchy_force_darkest" \
-  || fail 'Patchy Darkest-theme helper does not reject unsafe settings paths'
+if grep -Eqi 'darkest|GTK_THEME|prefer.dark' <<<"$patchy_launcher"; then
+  fail 'Patchy launcher still forces a dark application theme'
+fi
 grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
   || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
 for package in kparts kio kiconthemes breeze-icons; do
@@ -831,6 +859,7 @@ done <<<"$terminal_desktops"
 for deetty_path in \
   usr/bin/deetty \
   usr/bin/dintor \
+  usr/local/bin/dintor \
   usr/share/applications/org.dinx.Deetty.desktop \
   usr/share/applications/org.dinx.Dintor.desktop \
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg \
@@ -882,8 +911,8 @@ fi
 grep -Fq '"wallpaper_color": "#0b0d12"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter solid surface color is missing'
 pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
-jq -e '.window_corner_radius == 15 and .theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == "" and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
-  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl Material, dock, bar, radius or solid-wallpaper defaults are incorrect'
+jq -e '.window_corner_radius == 12 and .theme.mode == "package" and .theme.variant == "dark" and .theme.gtk_name == "Orchis-Dark" and .theme.package_id == "dinx.orchis-rounded" and .theme.sync_borders == true and .matugen.enabled == true and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
+  <<<"$pearl_preferences" >/dev/null || fail 'fresh Orchis Rounded, dock, bar, radius or solid-wallpaper defaults are incorrect'
 grep -Fq '"enabled": true' <<<"$pearl_preferences" \
   || fail 'Pearl default desktop icons are no longer enabled'
 grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
@@ -1136,10 +1165,10 @@ gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" et
 theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Orchis Dark'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_settings" || fail 'GTK3 default icon theme is not Papirus'
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Orchis Dark'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_settings" || fail 'GTK4 default icon theme is not Papirus'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
@@ -1188,11 +1217,11 @@ gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" 
 grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dark bridge is missing'
 
 gtk3_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-3.0/settings.ini)
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Orchis Dark'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_system_settings" || fail 'System GTK3 icon default is not Papirus'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk3_system_settings" || fail 'System GTK3 dark preference is missing'
 gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-4.0/settings.ini)
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Orchis Dark'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_system_settings" || fail 'System GTK4 icon default is not Papirus'
 aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
@@ -1610,7 +1639,7 @@ usr/share/applications/pdfcraft.desktop|PdfCraft|PdfCraft|pdfcraft %U
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
+usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager

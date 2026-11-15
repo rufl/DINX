@@ -20,7 +20,7 @@ live_policy="$root/distro/iso/iso-profiles/dinx/live-overlay/etc/polkit-1/rules.
 gparted_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/gparted"
 firewall_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/firewall-config"
 haruna_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
-haruna_scheme="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/color-schemes/DINXDark.colors"
+dintor_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dintor"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
@@ -55,13 +55,16 @@ source "$haruna_source"
 [[ "$HARUNA_SOURCE_URL" == "https://download.kde.org/stable/haruna/${HARUNA_VERSION}/haruna-${HARUNA_VERSION}.tar.xz" ]] \
   || fail 'Haruna source URL does not match its stable release pin'
 [[ "$HARUNA_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Haruna source checksum is invalid'
-[[ -x "$haruna_wrapper" ]] || fail 'Haruna dark-theme launcher is missing or not executable'
-sh -n "$haruna_wrapper" || fail 'Haruna dark-theme launcher has invalid shell syntax'
-grep -Fq "ColorScheme 'DINX Dark'" "$haruna_wrapper" || fail 'Haruna launcher does not force its application color scheme'
+[[ -x "$haruna_wrapper" ]] || fail 'Haruna theme launcher is missing or not executable'
+sh -n "$haruna_wrapper" || fail 'Haruna theme launcher has invalid shell syntax'
+for scheme in Orchis Skeuos Jasper Fluent; do
+  grep -Fq "$scheme Rounded (DINX)" "$haruna_wrapper" || fail "Haruna launcher does not map the $scheme theme"
+done
 grep -Fq 'exec /usr/bin/haruna "$@"' "$haruna_wrapper" || fail 'Haruna launcher does not preserve launch arguments'
-[[ -r "$haruna_scheme" ]] || fail 'DINX KDE color scheme is missing'
-grep -Fqx 'Name=DINX Dark' "$haruna_scheme" || fail 'DINX KDE color scheme has an incorrect name'
-grep -Fqx 'BackgroundNormal=11,13,18' "$haruna_scheme" || fail 'DINX KDE color scheme does not use the dark DINX surface'
+[[ -x "$dintor_wrapper" ]] || fail 'Dintor theme bridge is missing or not executable'
+sh -n "$dintor_wrapper" || fail 'Dintor theme bridge has invalid shell syntax'
+grep -Fq '.theme.variant' "$dintor_wrapper" || fail 'Dintor does not follow the selected Pearl light/dark variant'
+grep -Fq 'exec /usr/bin/dintor "$@"' "$dintor_wrapper" || fail 'Dintor theme bridge does not preserve launch arguments'
 grep -Fq 'pkgver="$HARUNA_VERSION"' "$haruna_recipe" || fail 'Haruna package version is not wired to source.env'
 grep -Fq '${HARUNA_SOURCE_URL}' "$haruna_recipe" || fail 'Haruna source URL is not wired to source.env'
 grep -Fq '"$HARUNA_SOURCE_SHA256"' "$haruna_recipe" || fail 'Haruna checksum is not wired to source.env'

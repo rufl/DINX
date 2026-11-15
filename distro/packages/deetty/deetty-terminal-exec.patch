@@ -1,104 +1,7 @@
---- a/src/main.zig	2026-11-13 21:57:50.000000000 +0000
-+++ b/src/main.zig	2026-11-15 15:42:29.453009521 +0000
-@@ -3714,6 +3714,8 @@
-                 \\  --native-grid-zen          Open in fullscreen mode
-                 \\  --open-workspace PATH      Restore a saved workspace
-                 \\  --open-uri URI             Open a deetty workspace URI
-+                \\  -e, --execute COMMAND [ARGS...]
-+                \\                             Run COMMAND in an independent window
-                 \\
-                 \\Settings, shortcuts, themes and launch profiles are configurable in
-                 \\the native Settings window. See docs/INSTALL.md for desktop setup.
-@@ -3776,6 +3778,26 @@
-                 .restart_shells,
-                 false,
-                 working_directory,
-+                null,
-+            );
-+            return;
-+        }
-+        if (std.mem.eql(u8, cmd, "-e") or std.mem.eql(u8, cmd, "--execute")) {
-+            if (args.len < 3) return error.InvalidExecuteArguments;
-+            var command_buffer: [deetty.launch_profile.max_command_bytes]u8 = undefined;
-+            const command = try deetty.launch_profile.quoteCommandArguments(args[2..], &command_buffer);
-+            try runNativeGridActivated(
-+                allocator,
-+                init.io,
-+                home_dir,
-+                init.environ_map,
-+                1,
-+                .visible,
-+                null,
-+                .restart_shells,
-+                false,
-+                null,
-+                command,
-             );
-             return;
-         }
-@@ -3810,6 +3832,7 @@
-                 .restart_shells,
-                 false,
-                 null,
-+                null,
-             );
-             return;
-         }
-@@ -3831,6 +3854,7 @@
-                 restore_mode,
-                 false,
-                 null,
-+                null,
-             );
-             return;
-         }
-@@ -8960,6 +8984,7 @@
-         .restart_shells,
-         true,
-         null,
-+        null,
-     );
- }
- 
-@@ -9042,6 +9067,7 @@
-     restore_mode: deetty.continuity.RestoreMode,
-     claim_control: bool,
-     initial_working_directory: ?[]const u8,
-+    initial_command: ?[]const u8,
- ) !void {
-     var instance_lock: ?NativeInstanceLock = null;
-     if (claim_control) {
-@@ -9136,7 +9162,7 @@
-     );
-     session_pool.history_limit = app.config.terminal.scrollback_lines;
-     defer session_pool.deinit();
--    var session = if (hot_session_load == .restored)
-+    var session = if (initial_command == null and hot_session_load == .restored)
-         try deetty.terminal_session.TerminalSession.spawnWithHistoryLimitAndScratch(
-             allocator,
-             cwd,
-@@ -9147,9 +9173,14 @@
-             &session_pool.pump_scratch,
-         )
-     else launch: {
--        const initial_profile = app.config.terminal.launch_profile.forInitialLaunch(
-+        var initial_profile = app.config.terminal.launch_profile.forInitialLaunch(
-             initial_working_directory,
-         );
-+        if (initial_command) |command| {
-+            initial_profile.kind = .command;
-+            try initial_profile.shell.set("/bin/sh");
-+            try initial_profile.command.set(command);
-+        }
-         const resolved_cwd = initial_profile.workingDirectory(pane.cwd);
-         if (!std.mem.eql(u8, resolved_cwd, pane.cwd)) try pane.setCwd(resolved_cwd);
-         break :launch try deetty.terminal_session.TerminalSession.spawnProfileWithScratch(
---- a/src/terminal/LaunchProfile.zig	2026-11-13 21:57:50.000000000 +0000
-+++ b/src/terminal/LaunchProfile.zig	2026-11-15 15:47:07.477168022 +0000
-@@ -522,3 +522,60 @@
-     profile.command.len = max_command_bytes;
-     try profile.validateFor(.windows);
- }
+--- a/src/terminal/LaunchProfile.zig
++++ b/src/terminal/LaunchProfile.zig
+@@ -1,2 +1,42 @@
+ const std = @import("std");
 +
 +pub fn quoteCommandArguments(args: anytype, output: *[max_command_bytes]u8) ![]const u8 {
 +    if (args.len == 0) return error.InvalidExecuteArguments;
@@ -139,7 +42,8 @@
 +    output[length.*] = byte;
 +    length.* += 1;
 +}
-+
+ const builtin = @import("builtin");
+@@ -524,0 +565,16 @@
 +test "terminal execute argv are safely quoted and bounded" {
 +    const argv = [_][]const u8{ "/usr/bin/echo", "space here", "a'b", "", "$(touch /tmp/no)" };
 +    var output: [max_command_bytes]u8 = undefined;
@@ -156,3 +60,51 @@
 +    const long_argv = [_][]const u8{ "/bin/echo", long_argument[0..] };
 +    try std.testing.expectError(error.ExecuteArgumentsTooLong, quoteCommandArguments(&long_argv, &output));
 +}
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -3698,0 +3699,19 @@
++        if (std.mem.eql(u8, cmd, "-e") or std.mem.eql(u8, cmd, "--execute")) {
++            if (args.len < 3) return error.InvalidExecuteArguments;
++            var command_buffer: [noctty.launch_profile.max_command_bytes]u8 = undefined;
++            const command = try noctty.launch_profile.quoteCommandArguments(args[2..], &command_buffer);
++            try runNativeGridActivated(
++                allocator,
++                init.io,
++                home_dir,
++                init.environ_map,
++                1,
++                .visible,
++                null,
++                .restart_shells,
++                false,
++                null,
++                command,
++            );
++            return;
++        }
+@@ -3716,0 +3736,2 @@
++                \\  -e, --execute COMMAND [ARGS...]
++                \\                             Run COMMAND in an independent window
+@@ -3778,0 +3800,1 @@
++                null,
+@@ -3812,0 +3835,1 @@
++                null,
+@@ -3833,0 +3857,1 @@
++                null,
+@@ -8923,0 +8948,1 @@
++        null,
+@@ -9005,0 +9031,1 @@
++    initial_command: ?[]const u8,
+@@ -9100,1 +9126,1 @@
+-    var session = if (hot_session_load == .restored)
++    var session = if (initial_command == null and hot_session_load == .restored)
+@@ -9111,3 +9137,8 @@
+-        const initial_profile = app.config.terminal.launch_profile.forInitialLaunch(
++        var initial_profile = app.config.terminal.launch_profile.forInitialLaunch(
+             initial_working_directory,
+         );
++        if (initial_command) |command| {
++            initial_profile.kind = .command;
++            try initial_profile.shell.set("/bin/sh");
++            try initial_profile.command.set(command);
++        }

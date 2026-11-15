@@ -19,7 +19,7 @@ source_env="$startdir/source.env"
 : "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
 : "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_PEARL_THEMES_VERSION"
-pkgrel=4
+pkgrel=5
 pkgdesc='Fluent, Jasper, Skeuos and Orchis Pearl community themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -30,211 +30,47 @@ source=(
   "Orchis-theme-${ORCHIS_FORK_COMMIT}.tar.gz::${ORCHIS_FORK_SOURCE_URL}"
   "Fluent-gtk-theme-${FLUENT_FORK_COMMIT}.tar.gz::${FLUENT_FORK_SOURCE_URL}"
   "Jasper-gtk-theme-${JASPER_FORK_COMMIT}.tar.gz::${JASPER_FORK_SOURCE_URL}"
+  "dinx-pearl-theme-pipeline.py"
 )
 sha256sums=(
   "$SKEUOS_FORK_SOURCE_SHA256"
   "$ORCHIS_FORK_SOURCE_SHA256"
   "$FLUENT_FORK_SOURCE_SHA256"
   "$JASPER_FORK_SOURCE_SHA256"
+  '6e0507502f2a04d902b7e62cc7367be28f206230c31618440a6f2ba4955c3f95'
 )
 
-check() {
+prepare() {
+  local theme_dir="$srcdir/dinx-pearl-themes"
   local theme
-  for theme in skeuos-rounded skeuos-square; do
-    test -f "$srcdir/skeuos-gtk-${SKEUOS_FORK_COMMIT}/themes/$theme/theme.json" \
-      || { printf 'missing Skeuos Pearl theme: %s\n' "$theme" >&2; return 1; }
-  done
-  for theme in orchis-rounded orchis-square; do
-    test -f "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/themes/$theme/theme.json" \
-      || { printf 'missing Orchis Pearl theme: %s\n' "$theme" >&2; return 1; }
-  done
-  for theme in fluent-rounded fluent-square; do
-    test -f "$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}/themes/$theme/theme.json" \
-      || { printf 'missing Fluent Pearl theme: %s\n' "$theme" >&2; return 1; }
-  done
-  for theme in jasper-rounded jasper-square; do
-    test -f "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/themes/$theme/theme.json" \
-      || { printf 'missing Jasper Pearl theme: %s\n' "$theme" >&2; return 1; }
-  done
-  # Validate every light and dark palette before packaging. This keeps the
-  # WCAG guarantee explicit for dark variants too, rather than relying on
-  # an upstream theme validator's implicit defaults.
-  python3 - "$srcdir" "$SKEUOS_FORK_COMMIT" "$ORCHIS_FORK_COMMIT" "$FLUENT_FORK_COMMIT" "$JASPER_FORK_COMMIT" <<'PY'
-import json
-import os
-import sys
-
-root = sys.argv[1]
-commits = dict(zip(("skeuos", "orchis", "fluent", "jasper"), sys.argv[2:]))
-sources = {
-    "skeuos": f"skeuos-gtk-{commits['skeuos']}",
-    "orchis": f"Orchis-theme-{commits['orchis']}",
-    "fluent": f"Fluent-gtk-theme-{commits['fluent']}",
-    "jasper": f"Jasper-gtk-theme-{commits['jasper']}",
-}
-
-def luminance(color):
-    channels = [int(color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
-    channels = [
-        channel / 12.92 if channel <= 0.04045
-        else ((channel + 0.055) / 1.055) ** 2.4
-        for channel in channels
-    ]
-    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
-
-def contrast(first, second):
-    high, low = sorted((luminance(first), luminance(second)), reverse=True)
-    return (high + 0.05) / (low + 0.05)
-
-for brand, source in sources.items():
-    for corners in ("rounded", "square"):
-        theme_root = os.path.join(root, source, "themes", f"{brand}-{corners}")
-        for variant in ("light", "dark"):
-            path = os.path.join(theme_root, variant + ".json")
-            with open(path, encoding="utf-8") as stream:
-                palette = json.load(stream)
-            effective = dict(palette)
-            if variant == "light" and brand == "fluent":
-                effective["primary"] = "#1565c0"
-            elif variant == "light" and brand == "jasper":
-                effective.update(primary="#00796b", error_color="#b3261e")
-            for foreground, background in (
-                ("primary", "on_primary"),
-                ("error_color", "error_container"),
-            ):
-                value = effective.get(foreground)
-                surface = palette.get(background)
-                if not isinstance(value, str) or not isinstance(surface, str):
-                    raise SystemExit(f"{path}: missing {foreground}/{background}")
-                ratio = contrast(value, surface)
-                if ratio < 4.5:
-                    raise SystemExit(
-                        f"{path}: {foreground}/{background} contrast {ratio:.2f}:1 < 4.5:1"
-                    )
-PY
-}
-
-
-package() {
-  # Pearl discovers system themes at $XDG_DATA_DIRS/pearl/themes/*/theme.json.
-  # Each package keeps its LICENSE and ATTRIBUTION.md inside the theme folder.
-  local theme_dir="$pkgdir/usr/share/pearl/themes"
-  local theme
+  rm -rf "$theme_dir"
   install -d "$theme_dir"
   for theme in skeuos-rounded skeuos-square; do
-    cp -a "$srcdir/skeuos-gtk-${SKEUOS_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
+    cp -a "$srcdir/skeuos-gtk-${SKEUOS_FORK_COMMIT}/themes/$theme" \
+      "$theme_dir/dinx.$theme"
   done
   for theme in orchis-rounded orchis-square; do
-    cp -a "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
+    cp -a "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/themes/$theme" \
+      "$theme_dir/dinx.$theme"
   done
   for theme in fluent-rounded fluent-square; do
-    cp -a "$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
+    cp -a "$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}/themes/$theme" \
+      "$theme_dir/dinx.$theme"
   done
   for theme in jasper-rounded jasper-square; do
-    cp -a "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
+    cp -a "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/themes/$theme" \
+      "$theme_dir/dinx.$theme"
   done
-
-  # WCAG AA: light-theme primaries drawn on white canvas must reach 4.5:1.
-  # Fluent (#2196f3 = 3.1:1) and Jasper (#009688 = 3.7:1) fall below it, so
-  # both rounded and square light variants are anchored to a darker shade of
-  # the same hue family. Dark variants already clear the gate and are left
-  # untouched; normalization runs before profile compaction so every port
-  # ships identical palettes.
-  python3 - "$theme_dir" <<'EOF'
-import json, os, sys
-root = sys.argv[1]
-targets = {
-    'fluent':  {'primary': '#1565c0'},
-    'jasper':  {'primary': '#00796b', 'error_color': '#b3261e'},
+  python3 "$srcdir/dinx-pearl-theme-pipeline.py" normalize "$theme_dir"
 }
-for brand, colors in targets.items():
-    for corners in ('rounded', 'square'):
-        for variant in ('light', 'dark'):
-            if variant != 'light':
-                continue
-            path = os.path.join(root, f'dinx.{brand}-{corners}', variant + '.json')
-            with open(path, encoding='utf-8') as stream:
-                data = json.load(stream)
-            data['primary'] = colors['primary']
-            if 'error_color' in colors:
-                data['error_color'] = colors['error_color']
-            with open(path, 'w', encoding='utf-8', newline='\n') as stream:
-                json.dump(data, stream, ensure_ascii=False, separators=(',', ':'))
-                stream.write('\n')
-EOF
 
-  # Pearl reads these manifests and profile descriptors at startup. Compact
-  # JSON preserves their data while reducing I/O and parser work.
-  python3 - "$theme_dir" <<'EOF'
-import hashlib
-import json
-import os
-import sys
-
-
-root = sys.argv[1]
-display_names = {
-    "dinx.skeuos-rounded": "Skeuos Rounded (DINX)",
-    "dinx.skeuos-square": "Skeuos Square (DINX)",
-    "dinx.orchis-rounded": "Orchis Rounded (DINX)",
-    "dinx.orchis-square": "Orchis Square (DINX)",
-    "dinx.fluent-rounded": "Fluent Rounded (DINX)",
-    "dinx.fluent-square": "Fluent Square (DINX)",
-    "dinx.jasper-rounded": "Jasper Rounded (DINX)",
-    "dinx.jasper-square": "Jasper Square (DINX)",
+check() {
+  python3 "$srcdir/dinx-pearl-theme-pipeline.py" validate \
+    "$srcdir/dinx-pearl-themes"
 }
-for theme_id, display_name in display_names.items():
-    theme_root = os.path.join(root, theme_id)
-    manifest_path = os.path.join(theme_root, "theme.json")
-    with open(manifest_path, encoding="utf-8") as stream:
-        manifest = json.load(stream)
-    manifest["defaults"] = [
-        {"application": application, "profile": f"{theme_id}.{application}"}
-        for application in ("gtk", "qt5ct", "qt6ct", "kcolorscheme", "ghostty")
-    ]
-    with open(manifest_path, "w", encoding="utf-8", newline="\n") as stream:
-        json.dump(manifest, stream, ensure_ascii=False, separators=(",", ":"))
-        stream.write("\n")
-    for scheme_name in ("kcolorscheme.colors", "dark-kcolorscheme.colors", "light-kcolorscheme.colors"):
-        scheme_path = os.path.join(theme_root, "profiles", scheme_name)
-        with open(scheme_path, encoding="utf-8") as stream:
-            lines = stream.readlines()
-        with open(scheme_path, "w", encoding="utf-8", newline="\n") as stream:
-            for line in lines:
-                stream.write(f"Name={display_name}\n" if line.startswith("Name=") else line)
 
-for base, dirs, files in os.walk(root):
-    dirs.sort()
-    for name in sorted(files):
-        if not name.endswith('.json'):
-            continue
-        path = os.path.join(base, name)
-        with open(path, encoding='utf-8') as stream:
-            value = json.load(stream)
-        with open(path, 'w', encoding='utf-8', newline='\n') as stream:
-            json.dump(value, stream, ensure_ascii=False, separators=(',', ':'))
-            stream.write('\n')
-
-# Reuse byte-identical profiles, licenses and shared assets between the eight
-# ports. Hardlinks preserve all discovered paths and their contents.
-seen = {}
-for base, dirs, files in os.walk(root):
-    dirs.sort()
-    for name in sorted(files):
-        path = os.path.join(base, name)
-        if os.path.islink(path) or not os.path.isfile(path):
-            continue
-        digest = hashlib.sha256()
-        with open(path, 'rb') as stream:
-            for chunk in iter(lambda: stream.read(1024 * 1024), b''):
-                digest.update(chunk)
-        key = (digest.digest(), os.stat(path).st_size)
-        previous = seen.get(key)
-        if previous is None:
-            seen[key] = path
-            continue
-        if open(previous, 'rb').read() == open(path, 'rb').read():
-            os.unlink(path)
-            os.link(previous, path)
-EOF
+package() {
+  local theme_dir="$pkgdir/usr/share/pearl/themes"
+  install -d "$theme_dir"
+  cp -a "$srcdir/dinx-pearl-themes/." "$theme_dir/"
 }

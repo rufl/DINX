@@ -9,6 +9,8 @@ struct Wizard {
     GtkWidget *dock_enabled;
     GtkWidget *bar_top;
     GtkWidget *theme;
+    GtkWidget *variant_dark;
+    GtkWidget *corners_rounded;
     GtkWidget *back_button;
     GtkWidget *next_button;
     guint page;
@@ -69,13 +71,12 @@ static const char light_css[] =
 static void
 apply_theme(Wizard *wizard)
 {
-    guint selected;
     gboolean light;
 
     if (wizard->style_provider == NULL)
         return;
-    selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->theme));
-    light = selected == 1 || selected == 3;
+    light = wizard->variant_dark != NULL &&
+            !gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->variant_dark));
     gtk_css_provider_load_from_string(wizard->style_provider,
                                      light ? light_css : dark_css);
 }
@@ -86,6 +87,14 @@ on_theme_changed(GObject *object, GParamSpec *property, gpointer user_data)
     Wizard *wizard = user_data;
     (void)object;
     (void)property;
+    apply_theme(wizard);
+}
+
+static void
+on_choice_toggled(GtkCheckButton *button, gpointer user_data)
+{
+    Wizard *wizard = user_data;
+    (void)button;
     apply_theme(wizard);
 }
 
@@ -158,10 +167,12 @@ emit_result(Wizard *wizard, gboolean skipped)
         const char *dock = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->dock_enabled)) ? "on" : "off";
         const char *edge = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->bar_top)) ? "top" : "bottom";
         guint theme = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->theme));
-        const char *theme_name[] = { "dinx-dark", "dinx-light", "material-dark", "material-light" };
+        const char *theme_name[] = { "material", "skeuos", "orchis" };
+        const char *variant = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->variant_dark)) ? "dark" : "light";
+        const char *corners = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->corners_rounded)) ? "rounded" : "square";
         if (theme >= G_N_ELEMENTS(theme_name))
             theme = 0;
-        printf("%s %s %s\n", dock, edge, theme_name[theme]);
+        printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);
     }
     fflush(stdout);
     g_application_quit(G_APPLICATION(wizard->application));
@@ -219,7 +230,9 @@ on_activate(GtkApplication *application, gpointer user_data)
     GtkWidget *root;
     GtkWidget *navigation;
     GtkWidget *bar_choice;
-    const char *theme_names[5];
+    GtkWidget *variant_light;
+    GtkWidget *corners_square;
+    const char *theme_names[4];
     const char * const *languages = g_get_language_names();
 
     wizard->application = application;
@@ -229,7 +242,7 @@ on_activate(GtkApplication *application, gpointer user_data)
     gtk_widget_add_css_class(wizard->window, "dinx-wizard");
     gtk_window_set_title(GTK_WINDOW(wizard->window),
                          text(wizard, "Configuração inicial do Pearl", "Pearl first-run setup"));
-    gtk_window_set_default_size(GTK_WINDOW(wizard->window), 560, 390);
+    gtk_window_set_default_size(GTK_WINDOW(wizard->window), 560, 470);
     gtk_window_set_resizable(GTK_WINDOW(wizard->window), FALSE);
     g_signal_connect(wizard->window, "close-request", G_CALLBACK(on_close_request), wizard);
 
@@ -267,22 +280,43 @@ on_activate(GtkApplication *application, gpointer user_data)
 
     GtkWidget *theme_page = make_page(wizard,
         text(wizard, "Tema", "Theme"),
-        text(wizard, "Escolha o tema visual do Pearl. A escolha não altera o tema do greeter.",
-                     "Choose Pearl's visual theme. This does not change the greeter theme."));
-    theme_names[0] = text(wizard, "DINX escuro", "DINX dark");
-    theme_names[1] = text(wizard, "DINX claro", "DINX light");
-    theme_names[2] = text(wizard, "Pearl Material escuro", "Pearl Material dark");
-    theme_names[3] = text(wizard, "Pearl Material claro", "Pearl Material light");
-    theme_names[4] = NULL;
+        text(wizard, "Escolha o tema, a aparência e o estilo dos cantos. A escolha não altera o tema do greeter.",
+                     "Choose the theme, appearance and corner style. This does not change the greeter theme."));
+    theme_names[0] = "Pearl Material";
+    theme_names[1] = "Skeuos";
+    theme_names[2] = "Orchis";
+    theme_names[3] = NULL;
     GtkStringList *theme_model = gtk_string_list_new(theme_names);
     wizard->theme = gtk_drop_down_new(G_LIST_MODEL(theme_model), NULL);
     g_object_unref(theme_model);
-    gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);
     gtk_widget_add_css_class(wizard->theme, "dinx-wizard-theme-select");
     gtk_widget_set_halign(wizard->theme, GTK_ALIGN_FILL);
     gtk_box_append(GTK_BOX(theme_page), wizard->theme);
     g_signal_connect(wizard->theme, "notify::selected",
                      G_CALLBACK(on_theme_changed), wizard);
+
+    wizard->variant_dark = gtk_check_button_new_with_label(text(wizard, "Escuro", "Dark"));
+    variant_light = gtk_check_button_new_with_label(text(wizard, "Claro", "Light"));
+    gtk_widget_add_css_class(wizard->variant_dark, "dinx-wizard-check");
+    gtk_check_button_set_group(GTK_CHECK_BUTTON(variant_light), GTK_CHECK_BUTTON(wizard->variant_dark));
+    gtk_widget_add_css_class(variant_light, "dinx-wizard-check");
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(wizard->variant_dark), TRUE);
+    gtk_box_append(GTK_BOX(theme_page), wizard->variant_dark);
+    gtk_box_append(GTK_BOX(theme_page), variant_light);
+    g_signal_connect(wizard->variant_dark, "toggled", G_CALLBACK(on_choice_toggled), wizard);
+
+    wizard->corners_rounded = gtk_check_button_new_with_label(
+        text(wizard, "Cantos arredondados", "Rounded corners"));
+    corners_square = gtk_check_button_new_with_label(
+        text(wizard, "Cantos quadrados", "Square corners"));
+    gtk_widget_add_css_class(wizard->corners_rounded, "dinx-wizard-check");
+    gtk_check_button_set_group(GTK_CHECK_BUTTON(corners_square), GTK_CHECK_BUTTON(wizard->corners_rounded));
+    gtk_widget_add_css_class(corners_square, "dinx-wizard-check");
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(wizard->corners_rounded), TRUE);
+    gtk_box_append(GTK_BOX(theme_page), wizard->corners_rounded);
+    gtk_box_append(GTK_BOX(theme_page), corners_square);
+
     apply_theme(wizard);
     gtk_stack_add_named(GTK_STACK(wizard->stack), theme_page, "theme");
 

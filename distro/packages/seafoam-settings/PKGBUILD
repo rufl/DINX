@@ -1,6 +1,6 @@
 pkgname=seafoam-settings
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc='Native DINX settings launcher for Seafoam desktop tools'
 arch=(x86_64)
 url='https://github.com/rufl/DINX'

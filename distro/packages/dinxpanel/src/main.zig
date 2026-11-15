@@ -94,8 +94,8 @@ const App = struct {
         appendSectionTitle(content, "Updates and firmware");
         const updates = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(updates), makeButton("Check upgrades", "Refresh package and firmware metadata, then show available upgrades without installing them", &onUpgradeCheckClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade preview", "Show Topgrade's package, firmware and tool upgrade plan without applying it", &onTopgradePreviewClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade", "Run the complete Topgrade update workflow in a terminal", &onTopgradeClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("PaintFE", "Open PaintFE raster image editor", &onPaintfeClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("Zenkai", "Open Zenkai app launcher", &onZenkaiClicked, self));
         c.gtk_box_append(@ptrCast(updates), makeButton("Shelly upgrade", "Run Shelly's all-backend upgrade workflow in a terminal", &onShellyClicked, self));
         c.gtk_box_append(@ptrCast(content), updates);
 
@@ -621,12 +621,12 @@ fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).runUpgradeCheck();
 }
 
-fn onTopgradePreviewClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux" });
+fn onPaintfeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "paintfe" });
 }
 
-fn onTopgradeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade" });
+fn onZenkaiClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "zenkai" });
 }
 fn onCupsInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).installCups();
@@ -668,10 +668,10 @@ fn applyTheme() void {
     c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
-        ".dinx-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" +
-        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" +
-        "window.background { background-color: #0b0d12; }\n" +
-        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" +
+        ".dinx-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" ++
+        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" ++
+        "window.background { background-color: #0b0d12; }\n" ++
+        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" ++
         "label.heading { color: #8fb8ff; font-weight: 700; }\n";
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;

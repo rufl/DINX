@@ -16,6 +16,7 @@ live_grub_cfg="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/gr
 live_grub_kernels="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/kernels.cfg"
 live_grub_variable="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/variable.cfg"
 calamares="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/stylesheet.qss"
+calamares_notes="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/notesqml.qml"
 calamares_branding="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/branding/dinx/branding.desc"
 qt="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 qt_palette="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/colors/DINX.conf"
@@ -45,19 +46,22 @@ system_gtk4="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.
 session_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
 pearl_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
 theme_sync="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
+patchy_launcher="$repo_root/distro/packages/patchy/patchy"
+patchy_force_darkest="$repo_root/distro/packages/patchy/patchy-force-darkest"
 wizard_source="$repo_root/distro/packages/pearl/dinx-first-run-wizard.c"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
+haruna_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
 fail() {
   printf 'check_dinx_theme: %s\n' "$*" >&2
   exit 1
 }
 
 for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg" \
-  "$grub" "$grub_defaults" "$grub_logo" "$boot_mark_source" "$calamares" "$calamares_branding" "$calamares_wordmark" \
+  "$grub" "$grub_defaults" "$grub_logo" "$boot_mark_source" "$calamares" "$calamares_notes" "$calamares_branding" "$calamares_wordmark" \
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
-  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync"; do
+  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed" "$theme_sync" "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
@@ -278,10 +282,35 @@ grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences reta
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
 jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == ""' "$pearl_preferences" >/dev/null \
   || fail 'Fresh Pearl preferences do not default to Pearl Material dark'
-grep -Fq 'const char *theme_name[] = { "dinx-dark", "dinx-light", "material-dark", "material-light" };' "$wizard_source" \
+grep -Fq 'const char *theme_name[] = { "material", "skeuos", "orchis" };' "$wizard_source" \
   || fail 'Pearl first-run theme selection order changed'
-grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+grep -Fq 'printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);' "$wizard_source" \
+  || fail 'Pearl first-run wizard does not emit theme, variant and corner choices'
+if grep -Fq 'dinx-dark' "$wizard_source"; then
+  fail 'Pearl first-run wizard still offers the retired DINX theme choices'
+fi
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not default to Pearl Material dark'
+grep -Fq 'package_id="dinx.skeuos-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not map the Skeuos choice to its Pearl package'
+grep -Fq 'package_id="dinx.orchis-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not map the Orchis choice to its Pearl package'
+grep -Fq 'Skeuos-Blue-Dark-Square' "$theme_sync" \
+  || fail 'Theme sync does not honor the ported GTK themes'
+grep -Fq 'sync_borders: true' "$pearl_shell" \
+  || fail 'Pearl shell does not enable Aqueous window-border color sync'
+grep -Fq '.window_corner_radius = $window_radius' "$pearl_shell" \
+  || fail 'Pearl shell does not propagate the corner choice to Aqueous window radius'
+grep -Fq 'enabled: true' "$pearl_shell" \
+  || fail 'Pearl shell does not enable application color profiles'
+grep -Fq 'profile_prefix="dinx.skeuos-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not bind Skeuos application profiles'
+grep -Fq 'pearl-material.conf' "$theme_sync" \
+  || fail 'Theme sync does not consume the generated Qt palette for ports'
+grep -Fq 'deetty/themes/pearl-material' "$theme_sync" \
+  || fail 'Theme sync does not bridge the generated terminal theme to Deetty'
+grep -Fq 'Skeuos Rounded (DINX)' "$haruna_wrapper" \
+  || fail 'Haruna does not follow the selected port KDE color scheme'
 wizard_sha256=$(sha256sum "$wizard_source" | cut -d ' ' -f 1)
 grep -Fq "'$wizard_sha256'" "$pearl_pkg" || fail 'Pearl first-run wizard source checksum is stale'
 grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'
@@ -358,6 +387,10 @@ grep -Fq 'dinx-sync-session-theme' "$pearl_shell" || fail 'Pearl shell does not 
 grep -Fq 'gtk-application-prefer-dark-theme' "$theme_sync" || fail 'GTK dark preference is not synchronized'
 grep -Fq 'custom_palette true' "$theme_sync" || fail 'Qt dark palette is not enabled for dark Pearl mode'
 grep -Fq 'custom_palette false' "$theme_sync" || fail 'Qt custom palette is not disabled for light Pearl mode'
+[[ -x "$patchy_force_darkest" ]] || fail 'Patchy Darkest-theme helper is not executable'
+sh -n "$patchy_force_darkest" || fail 'Patchy Darkest-theme helper has invalid shell syntax'
+grep -Fq '/usr/lib/patchy/patchy-force-darkest' "$patchy_launcher" || fail 'Patchy does not force its internal Darkest theme'
+grep -Fq 'customThemeId=bundled:darkest.patchytheme' "$patchy_force_darkest" || fail 'Patchy internal theme is not forced to Darkest'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_WIZARD' "$pearl_shell" || fail 'Pearl shell wrapper lacks a testable wizard path'
 grep -Fq "desktop-color: \"${dark_token[mSurface]}\"" "$grub" || fail 'GRUB surface does not use DINX background'
@@ -380,6 +413,10 @@ done
 grep -Fq "background: ${dark_token[mSurface]}" "$calamares" || fail 'Calamares surface does not use DINX background'
 grep -Fq "background: ${dark_token[mSurfaceVariant]}" "$calamares" || fail 'Calamares control surface does not use DINX panel'
 grep -Fq "background: ${dark_token[mHover]}" "$calamares" || fail 'Calamares hover state does not use DINX hover'
+grep -Fq 'QMessageBox,' "$calamares" || fail 'Calamares error dialogs do not have an explicit dark surface'
+grep -Fq 'QTextBrowser,' "$calamares" || fail 'Calamares diagnostic text does not have an explicit dark surface'
+grep -Fq "        color: \"${dark_token[mSurface]}\"" "$calamares_notes" || fail 'Calamares install guidance does not paint a dark QML surface'
+grep -Fq "            color: \"${dark_token[mOnSurface]}\"" "$calamares_notes" || fail 'Calamares install guidance text does not use DINX foreground'
 grep -Fq "SidebarBackground: \"${dark_token[mSurfaceVariant]}\"" "$calamares_branding" || fail 'Calamares sidebar does not use DINX panel'
 grep -Fq "SidebarText: \"${dark_token[mOnSurfaceVariant]}\"" "$calamares_branding" || fail 'Calamares sidebar text does not use DINX muted text'
 grep -Fq "SidebarTextCurrent: \"${dark_token[mOnSurface]}\"" "$calamares_branding" || fail 'Calamares current sidebar text does not use DINX text'
@@ -395,7 +432,7 @@ fi
 for source in "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source"; do
   grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$source" || fail "internal app does not force the DINX dark scheme: $source"
 done
-grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 2);' "$wizard_source" \
+grep -Fq 'gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->theme), 0);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not default to Pearl Material dark'
 grep -Fq "background: ${dark_token[mSurface]}" "$dinitui_source" || fail 'DinitUI output surface does not use DINX background'
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinitui_source" || fail 'DinitUI output text does not use DINX foreground'
@@ -421,4 +458,4 @@ grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' "$swayimg" || fail 'Swayimg surface color is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' "$swayimg" || fail 'Swayimg font contract is missing'
 grep -Fq 'swayimg.text.size = 10' "$swayimg" || fail 'Swayimg text size does not match Noto Sans 10'
-printf 'dinx_theme_contract palette=true static=true typography=true states=true gtk=true gtk_system=true qt=true qt_palette=true qt_session_seed=true swayimg=true pearl_greeter=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true desktop_icons_upstream=true boot_mark=true\n'
+printf 'dinx_theme_contract palette=true static=true typography=true states=true gtk=true gtk_system=true qt=true qt_palette=true qt_session_seed=true patchy_darkest=true swayimg=true pearl_greeter=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true desktop_icons_upstream=true boot_mark=true\n'

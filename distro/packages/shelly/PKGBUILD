@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${SHELLY_SOURCE_URL:?missing SHELLY_SOURCE_URL}"
 : "${SHELLY_SOURCE_SHA256:?missing SHELLY_SOURCE_SHA256}"
 pkgver="$SHELLY_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Modern Artix-compatible ALPM package manager'
 arch=('x86_64')
 url='https://github.com/Seafoam-Labs/Shelly-ALPM'
@@ -31,7 +31,6 @@ depends=(
   'gnupg'
   'zstd'
   'json-glib'
-  'fuse2'
 )
 optdepends=(
   'fish: Fish shell completions'
@@ -39,7 +38,6 @@ optdepends=(
   'libstarfish: dependency viewer for Arch packages'
   'flatpak: Flatpak package management support'
   'util-linux: isolate fresh-root provisioning for --isolated builds'
-  'fuse2: run AppImages that require FUSE 2'
 )
 _aur_revision='f89d773125357baaa1d2fae715286ce9e00e2cb4'
 source=(

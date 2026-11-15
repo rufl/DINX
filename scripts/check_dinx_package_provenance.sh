@@ -268,8 +268,14 @@ for required in \
   'build_package dinx-plymouth-theme' \
   'build_package patchy' \
   'build_package blockbench' \
-  'build_package impasto' \
+  'build_package paintfe' \
   'build_package pixelorama' \
+  'build_package wordcraft' \
+  'build_package gridcraft' \
+  'build_package deckcraft' \
+  'build_package pdfcraft' \
+  'build_package transit' \
+  'build_package zenkai' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

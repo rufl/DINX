@@ -53,7 +53,7 @@ class PlymouthScreenTests(unittest.TestCase):
         self.assertEqual(reason, "DINX logo is not centered like the Plymouth splash")
 
     def test_rejects_logo_smaller_than_theme_scale(self) -> None:
-        valid, reason = has_centered_dinx_logo(800, 600, _frame(mark_size=120))
+        valid, reason = has_centered_dinx_logo(800, 600, _frame(mark_size=100))
         self.assertFalse(valid)
         self.assertEqual(reason, "DINX logo is not rendered at the Plymouth splash scale")
 

@@ -21,13 +21,18 @@ manifest, sizes, pipeline digest).
 
 ## Debloat policy (measured on v9.3.8)
 
-- Dictionaries: 42 languages, 239 MiB → keep `en_US pt_BR`.
-- CEF locales: 55 `.pak` files, 29 MiB → keep `en-US pt-BR`.
+- Dictionaries: keep `en_US pt_BR fr_FR de_DE nl_NL da_DK pt_PT es_ES it_IT
+  en_GB uk_UA`. Upstream has no Japanese or Chinese Hunspell dictionaries.
+- CEF locales: keep `en-US pt-BR fr de nl da pt-PT es it en-GB uk ja zh-CN
+  zh-TW` (both common Chinese variants).
 - Regenerable sdkjs V8 code caches (`*.cache`) removed.
 - Qt development-only payloads removed (cmake, pkgconfig, designer, qmllint,
   qmlls, qmltooling, objects-RelWithDebInfo).
 - Template gallery: 10 languages, 208 MiB of zip-compressed office files
   (near-incompressible in the ISO) → keep `EN PT` (33 MiB).
+  Keeping the wider UI/dictionary set while limiting galleries to `EN PT`
+  adds 6,713,344 bytes to the live squashfs; projected alpha.16 ISO size is
+  2,140,420,096 bytes, leaving 7,063,552 bytes below the 2 GiB ceiling.
 - IE/asm.js fallback engines removed (`*_ie.js`, `monaco-for-ie`): the
   desktop editors run on CEF and use the WASM/modern paths.
 - Unused runtime libraries removed (dinx3): Qt Designer/DesignerComponents/

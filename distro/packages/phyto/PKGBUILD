@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${PHYTO_REPOSITORY:?missing PHYTO_REPOSITORY}"
 : "${PHYTO_SOURCE_SHA256:?missing PHYTO_SOURCE_SHA256}"
 pkgver="$PHYTO_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Native Zig GTK4 file manager for DINX'
 arch=('x86_64')
 url="$PHYTO_REPOSITORY"

@@ -284,8 +284,10 @@ required_paths=(
   usr/share/icons/hicolor/scalable/apps/org.seafoam.Settings.svg
   usr/share/metainfo/org.aqueous.Dome.metainfo.xml
   usr/share/licenses/seafoam-settings/LICENSE
+  usr/share/doc/seafoam-settings/README.md
   usr/share/licenses/zls/LICENSE
   usr/share/licenses/zls/zig-LICENSE
+  usr/share/doc/zls/README.md
   etc/zls.json
   etc/xdg/zls.json
   etc/xdg/aqueous/wm.toml

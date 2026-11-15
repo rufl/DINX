@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Add FreeBSD ports for both Pearl and GTK theme packages to DINX-BSD, including all four families, rounded/square variants, the WCAG-normalized light accents and generated GTK3/GTK4 assets. Extend the Pearl package build check to enforce primary/on-primary and error/error-container contrast for every light and dark manifest; bump package releases.
+- Consolidate Pearl theme normalization, schema/shape checks, WCAG AA validation, compact JSON and hardlink deduplication into one package pipeline. The same pipeline now backs Linux and FreeBSD; the FreeBSD GTK port also prepares the required Fluent, Jasper and Orchis Sass tweak files and uses the pinned DINX Orchis fork.
 
 - Restore the Aqueous 1.0.5 and Pearl 0.3.0 source pins required by the existing DINX dinit/session patches. The newer 1.0.20/0.3.9 archives rejected those patches during the ISO contract, while the restored checksums and all Aqueous/Pearl contracts pass.
 - Update Pearl's DINX display-settings patch for Zig 0.16's `std.process.spawn` API; the previous `std.process.Child.init` call stopped the ISO package build.

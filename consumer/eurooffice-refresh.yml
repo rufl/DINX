@@ -1,0 +1,59 @@
+name: EuroOffice release refresh
+
+# Main-side periodic consumer of the office branch's lean EuroOffice releases.
+# Cherry-pick this file to .github/workflows/ on main together with
+# consumer/check_eurooffice_release.sh (as scripts/check_eurooffice_release.sh).
+#
+# Every 3 days: kick the office-branch build pipeline (it detects new upstream
+# EuroOffice releases), and when a newer eurooffice/v* release is published,
+# verify + stage it, update the pin, and dispatch a P0 ISO run that bundles it.
+#
+# GitHub schedule triggers only fire on the default branch, which is why this
+# periodic trigger lives on main rather than on the office branch.
+
+on:
+  schedule:
+    - cron: "41 5 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-eurooffice-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Check for new lean EuroOffice release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout DINX main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Check, verify and stage new EuroOffice release
+        id: refresh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check_eurooffice_release.sh
+      - name: Commit pin and dispatch P0 ISO run
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.refresh.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add distro/office/eurooffice.pin
+          git commit --message "chore(office): pin lean EuroOffice ${TAG}"
+          expected=$(git ls-remote --heads origin refs/heads/main | awk 'NR == 1 { print $1 }')
+          git push --force-with-lease="refs/heads/main:$expected" origin HEAD:refs/heads/main
+          gh workflow run p0-iso.yml --repo "$GITHUB_REPOSITORY" --ref main
+          printf 'eurooffice_refresh pinned=%s p0_dispatched=true\n' "$TAG"

@@ -1,0 +1,92 @@
+name: Refresh Deetty and Dintor
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-deetty-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh pinned Deetty/Dintor source
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Refresh the pinned upstream revision
+        id: refresh
+        run: |
+          set -euo pipefail
+          scripts/refresh_deetty_source.sh
+          if git diff --quiet -- distro/packages/deetty/source.env distro/packages/deetty/PKGBUILD; then
+            printf 'changed=false\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --check
+          branch=automation/deetty-source-refresh
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch --create "$branch"
+          git add distro/packages/deetty/source.env distro/packages/deetty/PKGBUILD
+          git commit --message 'chore: refresh Deetty and Dintor source'
+          expected=$(git ls-remote --heads origin "refs/heads/$branch" | awk 'NR == 1 { print $1 }')
+          if [[ -n "$expected" ]]; then
+            git push --force-with-lease="refs/heads/$branch:$expected" origin "HEAD:refs/heads/$branch"
+          else
+            git push origin "HEAD:refs/heads/$branch"
+          fi
+          printf 'changed=true\n' >> "$GITHUB_OUTPUT"
+          printf 'branch=%s\n' "$branch" >> "$GITHUB_OUTPUT"
+          printf 'source_ref=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          printf 'source_refresh=true\n' >> "$GITHUB_OUTPUT"
+      - name: Run package contracts on the refreshed source
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch=${{ steps.refresh.outputs.branch }}
+          commit=${{ steps.refresh.outputs.source_ref }}
+          gh workflow run contracts.yml --repo "$GITHUB_REPOSITORY" --ref "$branch"
+          contract_run=
+          for _ in {1..30}; do
+            contract_run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow contracts.yml --branch "$branch" --event workflow_dispatch --limit 20 --json databaseId,headSha | jq -r --arg sha "$commit" '[.[] | select(.headSha == $sha)] | .[0].databaseId // empty')
+            [[ -n "$contract_run" ]] && break
+            sleep 2
+          done
+          [[ -n "$contract_run" ]] || { printf 'Could not find Deetty contract run\n' >&2; exit 1; }
+          gh run watch "$contract_run" --repo "$GITHUB_REPOSITORY" --exit-status --interval 10
+      - name: Open or update reviewed source PR
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPDATE_BRANCH: ${{ steps.refresh.outputs.branch }}
+          UPDATE_COMMIT: ${{ steps.refresh.outputs.source_ref }}
+        run: |
+          set -euo pipefail
+          body=$(cat <<EOF
+          Automated Deetty/Dintor source refresh from rufl/DEETTY.
+
+          The package contains both the Deetty terminal and Dintor editor. The pinned archive checksum and package release were updated, then the DINX contract workflow passed on commit ${UPDATE_COMMIT}.
+          EOF
+          )
+          existing=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$UPDATE_BRANCH" --json number --jq '.[0].number // empty')
+          if [[ -n "$existing" ]]; then
+            gh pr edit "$existing" --repo "$GITHUB_REPOSITORY" --title 'chore: refresh Deetty and Dintor source' --body "$body"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$UPDATE_BRANCH" --title 'chore: refresh Deetty and Dintor source' --body "$body"
+          fi

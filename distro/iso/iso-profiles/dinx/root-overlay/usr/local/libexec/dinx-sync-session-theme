@@ -3,6 +3,7 @@ set -eu
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 preferences="$config_home/pearl/preferences.json"
+primary_preferences=$preferences
 if [ ! -r "$preferences" ]; then
   preferences="$config_home/pearl/last-good.json"
 fi
@@ -16,11 +17,62 @@ if ! theme_variant=$(jq -er '.theme.variant | select(. == "dark" or . == "light"
   exit 0
 fi
 theme_mode=$(jq -r '.theme.mode // ""' "$preferences" 2>/dev/null || printf '')
-gtk_name=$(jq -r '.theme.gtk_name // ""' "$preferences" 2>/dev/null || printf '')
-gtk_theme=Adwaita
-if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
-  gtk_theme=DINX
-fi
+package_id=$(jq -r '.theme.package_id // ""' "$preferences" 2>/dev/null || printf '')
+case "$package_id:$theme_variant" in
+  dinx.orchis-rounded:dark) gtk_theme=Orchis-Dark ;;
+  dinx.orchis-rounded:light) gtk_theme=Orchis-Light ;;
+  dinx.orchis-square:dark) gtk_theme=Orchis-Square-Dark ;;
+  dinx.orchis-square:light) gtk_theme=Orchis-Square-Light ;;
+  dinx.skeuos-rounded:dark) gtk_theme=Skeuos-Blue-Dark ;;
+  dinx.skeuos-rounded:light) gtk_theme=Skeuos-Blue-Light ;;
+  dinx.skeuos-square:dark) gtk_theme=Skeuos-Blue-Dark-Square ;;
+  dinx.skeuos-square:light) gtk_theme=Skeuos-Blue-Light-Square ;;
+  dinx.jasper-rounded:dark) gtk_theme=Jasper-Dark ;;
+  dinx.jasper-rounded:light) gtk_theme=Jasper-Light ;;
+  dinx.jasper-square:dark) gtk_theme=Jasper-Square-Dark ;;
+  dinx.jasper-square:light) gtk_theme=Jasper-Square-Light ;;
+  dinx.fluent-rounded:dark) gtk_theme=Fluent-Dark ;;
+  dinx.fluent-rounded:light) gtk_theme=Fluent-Light ;;
+  dinx.fluent-square:dark) gtk_theme=Fluent-Square-Dark ;;
+  dinx.fluent-square:light) gtk_theme=Fluent-Square-Light ;;
+  *)
+    package_id=dinx.orchis-rounded
+    theme_mode=package
+    if [ "$theme_variant" = dark ]; then
+      gtk_theme=Orchis-Dark
+    else
+      gtk_theme=Orchis-Light
+    fi
+    if [ "$preferences" = "$primary_preferences" ] && [ -f "$preferences" ] && [ ! -L "$preferences" ]; then
+      preferences_tmp="$preferences.tmp.$$"
+      preferences_mode=$(stat -c '%a' -- "$preferences" 2>/dev/null || printf '600')
+      if jq --arg variant "$theme_variant" --arg gtk "$gtk_theme" --arg package "$package_id" '
+        .window_corner_radius = 12
+        | .theme.mode = "package"
+        | .theme.variant = $variant
+        | .theme.gtk_name = $gtk
+        | .theme.package_id = $package
+        | .theme.sync_borders = true
+        | .matugen.enabled = true
+        | .matugen.colors.source = "follow_pearl"
+        | .matugen.applications = {
+            gtk: {mode: "profile", profile_id: ($package + ".gtk")},
+            qt5ct: {mode: "profile", profile_id: ($package + ".qt5ct")},
+            qt6ct: {mode: "profile", profile_id: ($package + ".qt6ct")},
+            kcolorscheme: {mode: "profile", profile_id: ($package + ".kcolorscheme")},
+            ghostty: {mode: "profile", profile_id: ($package + ".ghostty")}
+          }
+      ' "$preferences" >"$preferences_tmp" &&
+        chmod "$preferences_mode" "$preferences_tmp" &&
+        mv -f -- "$preferences_tmp" "$preferences"; then
+        printf '%s\n' 'dinx-sync-session-theme: migrated retired theme to Orchis Rounded' >&2
+      else
+        rm -f -- "$preferences_tmp"
+        printf '%s\n' 'dinx-sync-session-theme: could not migrate retired theme preference' >&2
+      fi
+    fi
+    ;;
+esac
 
 set_ini_value() {
   ini_file=$1
@@ -115,13 +167,49 @@ for gtk_version in 3.0 4.0; do
 done
 
 qt_config="$config_home/qt6ct/qt6ct.conf"
-qt_palette="$config_home/qt6ct/colors/DINX.conf"
-if [ "$theme_variant" = dark ]; then
-  set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
+if [ "$theme_mode" = package ]; then
+  # Pearl's qt6ct profile exports the active port palette here.
+  set_ini_value "$qt_config" Appearance color_scheme_path "$config_home/qt6ct/colors/pearl-material.conf" || true
   set_ini_value "$qt_config" Appearance custom_palette true || true
 else
-  set_ini_value "$qt_config" Appearance custom_palette false || true
+  qt_palette="$config_home/qt6ct/colors/DINX.conf"
+  if [ "$theme_variant" = dark ]; then
+    set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
+    set_ini_value "$qt_config" Appearance custom_palette true || true
+  else
+    set_ini_value "$qt_config" Appearance custom_palette false || true
+  fi
 fi
 
-printf 'dinx-sync-session-theme: variant=%s gtk_theme=%s qt6ct=%s\n' \
-  "$theme_variant" "$gtk_theme" "$theme_variant"
+if [ "$theme_mode" = package ]; then
+  # Deetty reads ~/.config/deetty while Pearl's ghostty adapter writes
+  # ~/.config/ghostty/themes/pearl-material; bridge the generated theme.
+  if mkdir -p -- "$config_home/deetty/themes" 2>/dev/null; then
+    if [ ! -e "$config_home/deetty/themes/pearl-material" ] || [ -L "$config_home/deetty/themes/pearl-material" ]; then
+      ln -sfn ../../ghostty/themes/pearl-material "$config_home/deetty/themes/pearl-material"
+    fi
+    deetty_config="$config_home/deetty/config"
+    if [ -L "$deetty_config" ]; then
+      printf 'dinx-sync-session-theme: preserving user-managed symlink: %s\n' "$deetty_config" >&2
+    elif [ -e "$deetty_config" ] && [ ! -f "$deetty_config" ]; then
+      printf 'dinx-sync-session-theme: not a regular settings file: %s\n' "$deetty_config" >&2
+    else
+      deetty_tmp="$deetty_config.tmp.$$"
+      if [ -f "$deetty_config" ]; then
+        awk 'BEGIN { done = 0 } /^theme[[:space:]]*=/ { print "theme = pearl-material"; done = 1; next } { print } END { if (!done) print "theme = pearl-material" }' \
+          "$deetty_config" > "$deetty_tmp"
+      else
+        printf 'theme = pearl-material\n' > "$deetty_tmp"
+      fi
+      if chmod 600 "$deetty_tmp" && mv -f "$deetty_tmp" "$deetty_config"; then
+        :
+      else
+        rm -f -- "$deetty_tmp"
+        printf 'dinx-sync-session-theme: cannot install settings: %s\n' "$deetty_config" >&2
+      fi
+    fi
+  fi
+fi
+
+printf 'dinx-sync-session-theme: variant=%s mode=%s gtk_theme=%s qt6ct=%s\n' \
+  "$theme_variant" "$theme_mode" "$gtk_theme" "$theme_variant"

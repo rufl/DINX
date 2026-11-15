@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+# Haruna activates its own KColorScheme after Qt starts. Select the generated
+# KDE scheme that belongs to the active Pearl port.
+config_root=${XDG_CONFIG_HOME:-"$HOME/.config"}
+settings_dir=$config_root/haruna
+settings_file=$settings_dir/haruna.conf
+preferences=$config_root/pearl/preferences.json
+
+scheme='Orchis Rounded (DINX)'
+if command -v jq >/dev/null 2>&1 && [ -r "$preferences" ]; then
+    package_id=$(jq -r 'select(.theme.mode == "package") | .theme.package_id // ""' "$preferences" 2>/dev/null || printf '')
+    case "$package_id" in
+        dinx.orchis-rounded) scheme='Orchis Rounded (DINX)' ;;
+        dinx.orchis-square) scheme='Orchis Square (DINX)' ;;
+        dinx.skeuos-rounded) scheme='Skeuos Rounded (DINX)' ;;
+        dinx.skeuos-square) scheme='Skeuos Square (DINX)' ;;
+        dinx.jasper-rounded) scheme='Jasper Rounded (DINX)' ;;
+        dinx.jasper-square) scheme='Jasper Square (DINX)' ;;
+        dinx.fluent-rounded) scheme='Fluent Rounded (DINX)' ;;
+        dinx.fluent-square) scheme='Fluent Square (DINX)' ;;
+    esac
+fi
+
+umask 077
+mkdir -p -- "$settings_dir"
+if [ -L "$settings_file" ]; then
+    printf 'haruna: refusing symlinked settings file: %s\n' "$settings_file" >&2
+else
+    kwriteconfig6 --file "$settings_file" --group General --key ColorScheme "$scheme"
+fi
+
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE=fusion
+exec /usr/bin/haruna "$@"

@@ -401,11 +401,9 @@ trap finish EXIT
               }
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
-              build_package topgrade
               build_package paru
               build_package shelly
               pacman_install_local \
-                "$package_repo"/topgrade-*.pkg.tar.zst \
                 "$package_repo"/shelly-*.pkg.tar.zst
               build_package dinitui
               pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
@@ -441,6 +439,8 @@ trap finish EXIT
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
+              build_package dinx-pearl-themes
+              build_package dinx-gtk-themes
               build_package dinx-plymouth-theme
               build_package dinx-live-autologin
               build_package swayimg
@@ -452,13 +452,15 @@ trap finish EXIT
               [[ -n "$firewalld_boot_package" ]]
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
-              build_package floorp
               build_package patchy
-              build_package blockbench
-              build_package impasto
+              build_package paintfe
               build_package pixelorama
-              build_package onlyoffice
-              build_package zrythm
+              build_package wordcraft
+              build_package gridcraft
+              build_package deckcraft
+              build_package pdfcraft
+              build_package transit
+              build_package zenkai
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
               pacman_retry -S --needed --noconfirm \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \

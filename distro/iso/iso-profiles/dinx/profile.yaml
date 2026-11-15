@@ -66,16 +66,22 @@ rootfs:
     - qt6ct
     - shikane
     - wdisplays
-    - impasto
     - krita
     - adw-gtk-theme
+    - dinx-pearl-themes
+    - dinx-gtk-themes
     - papirus-icon-theme
-    - onlyoffice
-    - zrythm
+    - firefox
+    - paintfe
+    - wordcraft
+    - gridcraft
+    - deckcraft
+    - pdfcraft
+    - transit
+    - zenkai
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
-    - floorp
     - pipewire
     - pipewire-pulse
     - zenity
@@ -90,14 +96,13 @@ rootfs:
     - xdg-desktop-portal-wlr
     - xorg-xwayland
     - bluez
+    - blender
     - blueman
-    - blockbench
     - bluez-utils
     - btop
     - brightnessctl
     - dialog
     - fzf
-    - glances
     - libnewt
     - openssh
     - patchy
@@ -128,7 +133,6 @@ rootfs:
     - shelly
     - gapless
     - swayimg
-    - topgrade
     - swayidle
     - swaylock
     - wlopm

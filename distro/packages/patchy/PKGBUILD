@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${PATCHY_LICENSE_URL:?missing PATCHY_LICENSE_URL}"
 : "${PATCHY_LICENSE_SHA256:?missing PATCHY_LICENSE_SHA256}"
 pkgver="$PATCHY_VERSION"
-pkgrel=1
+pkgrel=3
 pkgdesc='PSD-focused image editor with Photoshop-familiar workflows'
 arch=('x86_64')
 url='https://github.com/SethRobinson/Patchy'
@@ -18,7 +18,7 @@ license=('MIT')
 depends=('glibc')
 options=('!strip')
 source=(
-  "PatchyLinux.AppImage::${PATCHY_SOURCE_URL}"
+  "PatchyLinux-${pkgver}.AppImage::${PATCHY_SOURCE_URL}"
   "LICENSE::${PATCHY_LICENSE_URL}"
   'patchy'
   'patchy.desktop'
@@ -26,12 +26,12 @@ source=(
 sha256sums=(
   "$PATCHY_SOURCE_SHA256"
   "$PATCHY_LICENSE_SHA256"
-  '63e9fced6aa45b50a8d31ba49d36c1c35e4600ffa68152fa4e791c7ef47c8586'
+  'de4b41a61bcb9385891873de074b41e47d415f1a82756fa2cef32f546c719ae9'
   '0388fd7d0c685f16ec56258d087fcfdd4bb4ac2e3df344806d0b80ba80bd6f30'
 )
 
 package() {
-  install -Dm755 "$srcdir/PatchyLinux.AppImage" \
+  install -Dm755 "$srcdir/PatchyLinux-${pkgver}.AppImage" \
     "$pkgdir/opt/patchy/PatchyLinux.AppImage"
   install -Dm755 "$srcdir/patchy" "$pkgdir/usr/bin/patchy"
   install -Dm644 "$srcdir/patchy.desktop" \

@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+preferences=${XDG_CONFIG_HOME:-"$HOME/.config"}/pearl/preferences.json
+variant=
+if command -v jq >/dev/null 2>&1 && [ -r "$preferences" ]; then
+    variant=$(jq -r '.theme.variant | select(. == "dark" or . == "light")' "$preferences" 2>/dev/null || printf '')
+fi
+case "$variant" in
+    light)
+        export DINX_COLOR_SCHEME=light
+        export DINTOR_THEME=prefer-light
+        ;;
+    dark)
+        export DINX_COLOR_SCHEME=dark
+        export DINTOR_THEME=prefer-dark
+        ;;
+esac
+exec /usr/bin/dintor "$@"

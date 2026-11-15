@@ -49,6 +49,7 @@ qt5-base
 qt6-base
 shaderc
 scdoc
+sassc
 vulkan-headers
 vulkan-icd-loader
 gtk4-layer-shell

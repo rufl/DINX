@@ -87,6 +87,18 @@ if grep -Eq '^[[:space:]]+- basestrap$' "$settings_conf"; then
   fail 'Calamares settings select the unused basestrap module'
 fi
 
+require_text 'extraMounts:' "$mount_conf"
+require_text '      fs: proc' "$mount_conf"
+require_text '      mountPoint: /proc' "$mount_conf"
+require_text '      fs: sysfs' "$mount_conf"
+require_text '      mountPoint: /sys' "$mount_conf"
+require_text '      mountPoint: /dev' "$mount_conf"
+require_text '      options: [ bind ]' "$mount_conf"
+require_text '      fs: tmpfs' "$mount_conf"
+require_text '      mountPoint: /run' "$mount_conf"
+
+require_text '        color: "#0b0d12"' "$notes_qml"
+require_text '            color: "#d7dde8"' "$notes_qml"
 require_text 'mountPoint: /' "$mount_conf"
 require_text 'subvolume: ""' "$mount_conf"
 if grep -Eq '^[[:space:]]+subvolume: /@' "$mount_conf"; then

@@ -781,20 +781,13 @@ fn stateClass(state: dinit.State) [*:0]const u8 {
 }
 
 fn applyTheme() void {
-    const manager = c.adw_style_manager_get_default();
-    c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
-        ".dinit-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" ++
-        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" ++
-        "window.background { background-color: #0b0d12; }\n" ++
-        ".state-started { color: #9ece6a; }\n" ++
-        ".state-starting, .state-stopping { color: #e0af68; }\n" ++
-        ".state-failed { color: #f7768e; font-weight: 700; }\n" ++
-        ".state-stopped { color: #7f8a9c; }\n" ++
-        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" ++
-        "list row:selected { background-color: #263249; }\n" ++
-        "entry, dropdown, textview, scrolledwindow { border-color: #222a38; }\n";
+        ".dinit-output { font-family: monospace; background: @view_bg_color; color: @view_fg_color; }\n" ++
+        ".state-started { color: @success_color; }\n" ++
+        ".state-starting, .state-stopping { color: @warning_color; }\n" ++
+        ".state-failed { color: @error_color; font-weight: 700; }\n" ++
+        ".state-stopped { color: @dim_label_color; }\n";
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;
     c.gtk_style_context_add_provider_for_display(

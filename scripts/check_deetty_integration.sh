@@ -54,7 +54,7 @@ fi
 if [[ -e "$terminal_wrapper" || -e "$terminal_fallback" ]]; then
   fail 'retired terminal fallback wrapper or launcher remains'
 fi
-for package in dialog fzf glances less libnewt nano openssh procps-ng sqlite tmux; do
+for package in dialog fzf less libnewt nano openssh procps-ng sqlite tmux; do
   grep -Fqx "    - $package" "$profile" || fail "profile does not install $package"
 done
 if grep -Eq '^[[:space:]]+- (man-db|man-pages|texinfo)([[:space:]]|$)' "$profile"; then

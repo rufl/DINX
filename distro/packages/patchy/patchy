@@ -1,6 +1,5 @@
 #!/bin/sh
 set -eu
-export GTK_THEME=DINX
-export GTK_APPLICATION_PREFER_DARK_THEME=1
-export ADW_DEBUG_COLOR_SCHEME=prefer-dark
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE=fusion
 exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"

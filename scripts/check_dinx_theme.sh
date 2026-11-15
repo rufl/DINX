@@ -266,8 +266,8 @@ for group, expected_roles in (
         if colors[index] != expected:
             raise SystemExit(f"{group} maps {role} to {colors[index]}, expected {expected}")
 PY
-grep -Fq '"theme": "gtk"' "$pearl_greeter" || fail 'Pearl Greeter does not use the GTK theme bridge'
-grep -Fq '"gtk_theme": "Adwaita"' "$pearl_greeter" || fail 'Pearl Greeter does not use the GTK Adwaita theme'
+grep -Fq '"theme": "material_dark"' "$pearl_greeter" || fail 'Pearl Greeter does not default to dark mode'
+grep -Fq '"high_contrast": false' "$pearl_greeter" || fail 'Pearl Greeter high contrast mode is enabled'
 grep -Fq '"wallpaper_color": "#0b0d12"' "$pearl_greeter" || fail 'Pearl Greeter surface color is missing'
 grep -Fq '"font_size": 16' "$pearl_greeter" || fail 'Pearl Greeter font size is missing'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' "$pearl_greeter" \

@@ -1,7 +1,6 @@
 {
   "version": 1,
-  "theme": "gtk",
-  "gtk_theme": "Adwaita",
+  "theme": "material_dark",
   "wallpaper_color": "#0b0d12",
   "font_size": 16,
   "reduced_motion": true,

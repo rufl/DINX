@@ -148,8 +148,8 @@ grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' "$greeter_wrapper" \
   || fail 'Pearl Greeter cache home is not on its writable runtime directory'
 jq -e '
   .version == 1
-  and .theme == "gtk"
-  and .gtk_theme == "Adwaita"
+  and .theme == "material_dark"
+  and .high_contrast == false
   and .default_session == "wayland:dinx-aqueous-pearl.desktop"
   and .force_session == "wayland:dinx-aqueous-pearl.desktop"
   and .allow == ["wayland:dinx-aqueous-pearl.desktop"]

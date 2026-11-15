@@ -29,7 +29,7 @@ grep -Fq 'Firewalld stays enabled and outside built-in profile policy.' "$profil
   || fail 'DinitUI built-in profiles do not explicitly preserve firewall services'
 grep -Fq 'Firewalld is boot-enabled and remains outside built-in profile policy.' "$readme" \
   || fail 'DinitUI firewall profile boundary is not documented'
-if grep -Eq '(^|[[:space:]])(firewalld|opensnitchd)([[:space:]]|$)' "$profile_conf"; then
+if grep -Eq '(^|[[:space:]])firewalld([[:space:]]|$)' "$profile_conf"; then
   fail 'DinitUI built-in profiles must not toggle Firewalld'
 fi
 

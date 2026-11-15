@@ -117,7 +117,6 @@ rootfs:
     - galculator
     - firewalld
     - firewall-config
-    - opensnitch
     - inxi
     - inkscape
     - jq
@@ -156,7 +155,6 @@ rootfs:
       - artix-live-dinit
       - firewalld-dinit
       - dinx-firewalld-dinit
-      - opensnitch-dinit
 livefs:
   packages:
     - artix-grub-live
@@ -170,7 +168,6 @@ livefs:
       - elogind-dinit
       - firewalld-dinit
       - dinx-firewalld-dinit
-      - opensnitch-dinit
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit

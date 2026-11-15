@@ -443,11 +443,11 @@ test "built-in profiles preserve essential services" {
     const lite = store.get("lite").?;
     try std.testing.expect(lite.isDisabled("bluetoothd"));
     try std.testing.expect(!lite.isDisabled("ufw"));
-    try std.testing.expect(!lite.isDisabled("opensnitchd"));
+    try std.testing.expect(!lite.isDisabled("firewalld"));
     const gaming = store.get("gaming").?;
     try std.testing.expect(!gaming.isDisabled("bluetoothd"));
     try std.testing.expect(!gaming.isDisabled("ufw"));
-    try std.testing.expect(!gaming.isDisabled("opensnitchd"));
+    try std.testing.expect(!gaming.isDisabled("firewalld"));
     try std.testing.expect(!gaming.isDisabled("NetworkManager"));
     try std.testing.expect(!gaming.isDisabled("pipewire"));
 }
@@ -459,7 +459,7 @@ test "profile parser accepts custom names and filters unsafe services" {
         "[profile.streamer]\n" ++
             "description = Streaming and gaming\n" ++
             "enable = NetworkManager,pipewire\n" ++
-            "disable = bluetoothd,../../etc/passwd,opensnitchd\n",
+            "disable = bluetoothd,../../etc/passwd,avahi-daemon\n",
     );
     const profile = store.get("streamer").?;
     try std.testing.expectEqualStrings("Streaming and gaming", profile.description);

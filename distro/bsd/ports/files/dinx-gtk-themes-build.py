@@ -15,6 +15,14 @@ def sass(source, target):
     target.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["sassc", "-M", "-t", "expanded", str(source), str(target)], check=True)
 
+def prepare_tweaks(source, target, old=None, new=None):
+    text = source.read_text(encoding="utf-8")
+    if old is not None:
+        if old not in text:
+            raise ValueError(f"missing expected Sass setting in {source}: {old}")
+        text = text.replace(old, new, 1)
+    target.write_text(text, encoding="utf-8")
+
 
 def copy_assets(source, target):
     for name in ("assets", "scalable"):
@@ -41,6 +49,18 @@ def index(name, brand):
 
 
 def build_brand(root, brand, base, license_name, gtk_prefix, asset_root):
+    if brand == "Fluent":
+        prepare_tweaks(
+            root / "src/_sass/_tweaks.scss",
+            root / "src/_sass/_tweaks-temp.scss",
+            "$window: 'default';",
+            "$window: 'round';",
+        )
+    elif brand == "Jasper":
+        prepare_tweaks(
+            root / "src/sass/_tweaks.scss",
+            root / "src/sass/_tweaks-temp.scss",
+        )
     for suffix in ("", "-Square"):
         for variant in ("Light", "Dark"):
             name = f"{brand}{suffix}-{variant}"
@@ -59,6 +79,13 @@ build_brand(fluent, "Fluent", "src/gtk", "COPYING", "", "src/gtk")
 build_brand(jasper, "Jasper", "src/main", "LICENSE", "gtk-", "src/assets/gtk")
 
 for suffix in ("", "-Square"):
+    corner = 0 if suffix else 12
+    prepare_tweaks(
+        orchis / "src/_sass/_tweaks.scss",
+        orchis / "src/_sass/_tweaks-temp.scss",
+        "$default_corner: 12px;",
+        f"$default_corner: {corner}px;",
+    )
     for variant in ("Light", "Dark"):
         name = f"Orchis{suffix}-{variant}"
         target = out / name

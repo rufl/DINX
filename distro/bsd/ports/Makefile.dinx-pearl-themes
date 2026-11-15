@@ -1,7 +1,7 @@
 # FreeBSD Port Makefile for DINX Pearl Community Themes (DINX-BSD)
 PORTNAME=       dinx-pearl-themes
 PORTVERSION=    1.1.0
-PORTREVISION=   1
+PORTREVISION=   2
 CATEGORIES=     x11-themes
 
 MAINTAINER=     trafael@dinx.org
@@ -12,7 +12,7 @@ LICENSE=        GPLv3
 
 RUN_DEPENDS=    pearl>=0.3.0:x11-wm/pearl
 
-USES=           python:run
+USES=           python:build
 USE_GITHUB=     yes
 GH_TUPLE=       rufl:skeuos-gtk:43561ba9c384ea401e19fed5ebfec27f8f4350af:skeuos \
                 rufl:Orchis-theme:6475a42a9d14261cf85fc6f428e7f44f0168bef1:orchis \
@@ -44,7 +44,6 @@ do-install:
 		${MKDIR} ${THEME_DIR}/dinx.$${theme}; \
 		${CP} -R ${WRKSRC_jasper}/themes/$${theme}/. ${THEME_DIR}/dinx.$${theme}/; \
 	done
-	@${PYTHON_CMD} ${FILESDIR}/dinx-pearl-themes-normalize.py ${THEME_DIR}
 	@${INSTALL_DATA} ${WRKSRC_skeuos}/LICENSE ${THEME_DIR}/dinx.skeuos-rounded/LICENSE
 	@${INSTALL_DATA} ${WRKSRC_skeuos}/LICENSE ${THEME_DIR}/dinx.skeuos-square/LICENSE
 	@${INSTALL_DATA} ${WRKSRC_orchis}/COPYING ${THEME_DIR}/dinx.orchis-rounded/COPYING
@@ -53,5 +52,6 @@ do-install:
 	@${INSTALL_DATA} ${WRKSRC_fluent}/COPYING ${THEME_DIR}/dinx.fluent-square/COPYING
 	@${INSTALL_DATA} ${WRKSRC_jasper}/LICENSE ${THEME_DIR}/dinx.jasper-rounded/LICENSE
 	@${INSTALL_DATA} ${WRKSRC_jasper}/LICENSE ${THEME_DIR}/dinx.jasper-square/LICENSE
+	@${PYTHON_CMD} ${FILESDIR}/dinx-pearl-theme-pipeline.py normalize ${THEME_DIR}
 
 .include <bsd.port.mk>

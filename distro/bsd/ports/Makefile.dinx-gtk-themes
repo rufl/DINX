@@ -1,7 +1,7 @@
 # FreeBSD Port Makefile for DINX GTK Community Themes (DINX-BSD)
 PORTNAME=       dinx-gtk-themes
 PORTVERSION=    1.1.0
-PORTREVISION=   1
+PORTREVISION=   2
 CATEGORIES=     x11-themes
 
 MAINTAINER=     trafael@dinx.org
@@ -15,7 +15,7 @@ USES=           python:build
 USE_GITHUB=     yes
 GH_TUPLE=       daniruiz:skeuos-gtk:095e06aa44c637af675850e421057c6f09b9f8d0:skeuos \
                 rufl:skeuos-gtk:43561ba9c384ea401e19fed5ebfec27f8f4350af:skeuos_fork \
-                vinceliuice:Orchis-theme:6475a42a9d14261cf85fc6f428e7f44f0168bef1:orchis \
+                rufl:Orchis-theme:6475a42a9d14261cf85fc6f428e7f44f0168bef1:orchis \
                 rufl:Fluent-gtk-theme:7befd876d72d7d4d748b6576e5cc404d34e4acd7:fluent \
                 rufl:Jasper-gtk-theme:e52cbfadceb95d5f3da1c3fea80a1b42a37c81e8:jasper
 

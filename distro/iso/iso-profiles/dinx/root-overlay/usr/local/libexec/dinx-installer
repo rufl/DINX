@@ -37,12 +37,38 @@ esac
 [ -S "$socket" ] \
     || fail "The Wayland socket is unavailable at $socket. Wait for the desktop to finish starting, then retry."
 [ -n "$dbus_address" ] \
-    || fail 'DBUS_SESSION_BUS_ADDRESS is missing. The live session D-Bus and polkit authorization agent must be running.'
+preferences=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}/dinx/installer-preferences.json
+if command -v jq >/dev/null 2>&1 && [ -r "$preferences" ]; then
+    locale=$(jq -er '.locale | select(. == "pt_BR.UTF-8" or . == "en_US.UTF-8")' "$preferences") || locale=
+    timezone=$(jq -er '.timezone | select(. == "America/Sao_Paulo" or . == "UTC")' "$preferences") || timezone=
+    keyboard=$(jq -er '.keyboard | select(. == "br" or . == "us")' "$preferences") || keyboard=
+else
+    locale=${LANG:-}
+    timezone=${TZ:-}
+    keyboard=${XKB_DEFAULT_LAYOUT:-}
+fi
+pearl_preferences=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}/pearl/preferences.json
+completion_marker=${XDG_STATE_HOME:-${HOME:-/nonexistent}/.local/state}/dinx/pearl-first-run-complete
+if [ -r "$preferences" ] && [ -r "$pearl_preferences" ]; then
+    pkexec /bin/sh -c '
+        set -eu
+        install -Dm600 -- "$1" /etc/skel/.config/dinx/installer-preferences.json
+        install -Dm600 -- "$2" /etc/skel/.config/pearl/preferences.json
+        install -Dm600 -- "$3" /etc/skel/.local/state/dinx/pearl-first-run-complete
+    ' -- "$preferences" "$pearl_preferences" "$completion_marker" \
+        || fail 'Could not preserve the live-session preferences for the installed user.'
+fi
+
 
 output=$(pkexec env \
     XDG_RUNTIME_DIR="$runtime_dir" \
     WAYLAND_DISPLAY="$wayland_display" \
     DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
+    LANG="$locale" \
+    LANGUAGE="${LANGUAGE:-}" \
+    LC_ALL="$locale" \
+    TZ="$timezone" \
+    XKB_DEFAULT_LAYOUT="$keyboard" \
     XDG_SESSION_TYPE=wayland \
     QT_QPA_PLATFORM=wayland \
     calamares 2>&1)

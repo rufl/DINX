@@ -844,8 +844,8 @@ if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
   fail 'retired Labwc user session remains in the ISO payload'
 fi
 pearl_greeter_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/pearl/greeter.json)
-grep -Fq '"theme": "gtk"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter GTK theme is not enabled'
-grep -Fq '"gtk_theme": "Adwaita"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter Adwaita theme is not enabled'
+grep -Fq '"theme": "material_dark"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter does not default to dark mode'
+grep -Fq '"high_contrast": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter high contrast mode is enabled'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
 if grep -Eq '"(wallpaper|wallpaper_fit|logo)"[[:space:]]*:' <<<"$pearl_greeter_config"; then

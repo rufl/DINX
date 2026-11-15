@@ -6,6 +6,7 @@ state_home=${XDG_STATE_HOME:-${HOME:-/nonexistent}/.local/state}
 preferences="$config_home/pearl/preferences.json"
 state_dir="$state_home/dinx"
 complete_marker="$state_dir/pearl-first-run-complete"
+installer_preferences="$config_home/dinx/installer-preferences.json"
 wizard=${DINX_FIRST_RUN_WIZARD:-/usr/local/libexec/dinx-first-run-wizard}
 theme_sync_helper=${DINX_THEME_SYNC_HELPER:-/usr/local/libexec/dinx-sync-session-theme}
 
@@ -28,6 +29,10 @@ mark_complete() {
 if [ -e "$complete_marker" ]; then
     exec pearl "$@"
 fi
+if [ -r "$installer_preferences" ] && [ -r "$preferences" ]; then
+    mark_complete
+    exec pearl "$@"
+fi
 
 if ! selection=$("$wizard"); then
     printf '%s\n' 'dinx-pearl-shell: first-run wizard failed; starting Pearl with saved preferences' >&2
@@ -39,7 +44,7 @@ if [ "$selection" = skip ]; then
     exec pearl "$@"
 fi
 
-IFS=' ' read -r dock bar_edge theme variant corners extra <<EOF
+IFS=' ' read -r language locale timezone dock bar_edge theme variant corners extra <<EOF
 $selection
 EOF
 if [ -n "${extra:-}" ]; then
@@ -47,6 +52,14 @@ if [ -n "${extra:-}" ]; then
     mark_complete
     exec pearl "$@"
 fi
+case "$language:$locale:$timezone" in
+    pt-BR:pt_BR.UTF-8:America/Sao_Paulo|en-US:en_US.UTF-8:UTC) ;;
+    *)
+        printf '%s\n' 'dinx-pearl-shell: invalid language or location selection; starting Pearl with saved preferences' >&2
+        mark_complete
+        exec pearl "$@"
+        ;;
+esac
 
 case "$dock" in
     on) dock_enabled=true ;;
@@ -82,6 +95,34 @@ case "$corners" in
         exec pearl "$@"
         ;;
 esac
+mkdir -p "$config_home/dinx"
+installer_preferences_tmp="$installer_preferences.tmp.$$"
+if cat >"$installer_preferences_tmp" <<EOF
+{
+  "version": 1,
+  "language": "$language",
+  "locale": "$locale",
+  "timezone": "$timezone",
+  "keyboard": "$( [ "$language" = pt-BR ] && printf br || printf us )"
+}
+EOF
+then
+    chmod 600 "$installer_preferences_tmp"
+    mv -f "$installer_preferences_tmp" "$installer_preferences"
+else
+    rm -f "$installer_preferences_tmp"
+    printf '%s\n' 'dinx-pearl-shell: could not save installer preferences' >&2
+fi
+export LANG="$locale"
+export LANGUAGE="$language"
+if locale -a 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed 's/[.-]//g' | grep -Fqx "$(printf '%s' "$locale" | tr '[:upper:]' '[:lower:]' | sed 's/[.-]//g')" >/dev/null; then
+    export LC_ALL="$locale"
+else
+    unset LC_ALL
+fi
+export TZ="$timezone"
+export XKB_DEFAULT_LAYOUT="$( [ "$language" = pt-BR ] && printf br || printf us )"
+
 case "$theme" in
     material)
         theme_mode=static

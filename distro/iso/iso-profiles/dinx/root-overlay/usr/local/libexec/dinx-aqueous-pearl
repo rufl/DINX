@@ -23,9 +23,18 @@ export CLUTTER_BACKEND=wayland
 export MOZ_ENABLE_WAYLAND=1
 export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORMTHEME=qt6ct
-export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"
-export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"
-export GTK_CSD=0
+config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
+theme_variant=$(jq -r '.theme.variant // empty' "$config_home/pearl/preferences.json" 2>/dev/null || true)
+case "$theme_variant" in
+  dark|light)
+    export DINX_COLOR_SCHEME="$theme_variant"
+    export DINTOR_THEME="prefer-$theme_variant"
+    export GTK_APPLICATION_PREFER_DARK_THEME=$([ "$theme_variant" = dark ] && printf 1 || printf 0)
+    ;;
+  *) export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"; export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}" ;;
+esac
+export DINX_COLOR_SCHEME
+export DINTOR_THEME
 # Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
 

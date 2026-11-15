@@ -6,6 +6,8 @@ struct Wizard {
     GtkCssProvider *style_provider;
     GtkWidget *window;
     GtkWidget *stack;
+    GtkWidget *language;
+    GtkWidget *location;
     GtkWidget *dock_enabled;
     GtkWidget *bar_top;
     GtkWidget *theme;
@@ -166,13 +168,24 @@ emit_result(Wizard *wizard, gboolean skipped)
     } else {
         const char *dock = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->dock_enabled)) ? "on" : "off";
         const char *edge = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->bar_top)) ? "top" : "bottom";
+        guint language = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->language));
+        guint location = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->location));
         guint theme = gtk_drop_down_get_selected(GTK_DROP_DOWN(wizard->theme));
+        const char *language_name[] = { "pt-BR", "en-US" };
+        const char *locale_name[] = { "pt_BR.UTF-8", "en_US.UTF-8" };
+        const char *timezone_name[] = { "America/Sao_Paulo", "UTC" };
         const char *theme_name[] = { "material", "skeuos", "orchis" };
         const char *variant = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->variant_dark)) ? "dark" : "light";
         const char *corners = gtk_check_button_get_active(GTK_CHECK_BUTTON(wizard->corners_rounded)) ? "rounded" : "square";
+        if (language >= G_N_ELEMENTS(language_name))
+            language = 0;
+        if (location >= G_N_ELEMENTS(timezone_name))
+            location = 0;
         if (theme >= G_N_ELEMENTS(theme_name))
             theme = 0;
-        printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);
+        printf("%s %s %s %s %s %s %s %s\n",
+               language_name[language], locale_name[language], timezone_name[location],
+               dock, edge, theme_name[theme], variant, corners);
     }
     fflush(stdout);
     g_application_quit(G_APPLICATION(wizard->application));
@@ -195,10 +208,17 @@ on_back_clicked(GtkButton *button, gpointer user_data)
     if (wizard->page == 0)
         return;
     wizard->page--;
-    gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack),
-                                     wizard->page == 0 ? "dock" : "bar");
+    if (wizard->page == 0)
+        gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "locale");
+    else if (wizard->page == 1)
+        gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "dock");
+    else if (wizard->page == 2)
+        gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "bar");
+    else
+        gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "theme");
     gtk_widget_set_sensitive(wizard->back_button, wizard->page != 0);
     gtk_button_set_label(GTK_BUTTON(wizard->next_button),
+                         wizard->page == 4 ? text(wizard, "Concluir", "Finish") :
                          text(wizard, "Próximo", "Next"));
 }
 
@@ -207,17 +227,18 @@ on_next_clicked(GtkButton *button, gpointer user_data)
 {
     Wizard *wizard = user_data;
     (void)button;
-    if (wizard->page == 0) {
-        wizard->page = 1;
-        gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "bar");
+    if (wizard->page < 4) {
+        wizard->page++;
+        if (wizard->page == 1)
+            gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "dock");
+        else if (wizard->page == 2)
+            gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "bar");
+        else if (wizard->page == 3)
+            gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "theme");
         gtk_widget_set_sensitive(wizard->back_button, TRUE);
-        return;
-    }
-    if (wizard->page == 1) {
-        wizard->page = 2;
-        gtk_stack_set_visible_child_name(GTK_STACK(wizard->stack), "theme");
         gtk_button_set_label(GTK_BUTTON(wizard->next_button),
-                             text(wizard, "Concluir", "Finish"));
+                             wizard->page == 4 ? text(wizard, "Concluir", "Finish") :
+                             text(wizard, "Próximo", "Next"));
         return;
     }
     emit_result(wizard, FALSE);
@@ -252,6 +273,33 @@ on_activate(GtkApplication *application, gpointer user_data)
     wizard->stack = gtk_stack_new();
     gtk_stack_set_transition_type(GTK_STACK(wizard->stack), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
     gtk_widget_set_vexpand(wizard->stack, TRUE);
+    GtkWidget *locale_page = make_page(wizard,
+        "Bem-vindo ao DINX / Welcome to DINX",
+        "Olá! Seja bem-vindo ao DINX. Vamos preparar sua sessão com algumas escolhas simples.\n\nHello! Welcome to DINX. We will prepare your session with a few simple choices.");
+    GtkWidget *locale_language_label = gtk_label_new(
+        "Idioma / Language");
+    GtkWidget *locale_location_label = gtk_label_new(
+        "Localização e fuso horário / Location and time zone");
+    const char *language_names[] = { "Português (Brasil)", "English (United States)", NULL };
+    const char *location_names[] = { "Brasil — São Paulo (America/Sao_Paulo)", "United States — UTC", NULL };
+    GtkStringList *language_model = gtk_string_list_new(language_names);
+    GtkStringList *location_model = gtk_string_list_new(location_names);
+    wizard->language = gtk_drop_down_new(G_LIST_MODEL(language_model), NULL);
+    wizard->location = gtk_drop_down_new(G_LIST_MODEL(location_model), NULL);
+    g_object_unref(language_model);
+    g_object_unref(location_model);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->language), wizard->portuguese ? 0 : 1);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(wizard->location), wizard->portuguese ? 0 : 1);
+    gtk_widget_add_css_class(locale_language_label, "dinx-wizard-label");
+    gtk_widget_add_css_class(locale_location_label, "dinx-wizard-label");
+    gtk_widget_add_css_class(wizard->language, "dinx-wizard-theme-select");
+    gtk_widget_add_css_class(wizard->location, "dinx-wizard-theme-select");
+    gtk_box_append(GTK_BOX(locale_page), locale_language_label);
+    gtk_box_append(GTK_BOX(locale_page), wizard->language);
+    gtk_box_append(GTK_BOX(locale_page), locale_location_label);
+    gtk_box_append(GTK_BOX(locale_page), wizard->location);
+    gtk_stack_add_named(GTK_STACK(wizard->stack), locale_page, "locale");
+
 
     GtkWidget *dock_page = make_page(wizard,
         text(wizard, "Dock", "Dock"),

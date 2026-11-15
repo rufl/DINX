@@ -299,6 +299,20 @@ grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_ini
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
   || fail 'session supervisor does not launch the Pearl first-run wrapper'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
+grep -Fq 'Bem-vindo ao DINX / Welcome to DINX' "$wizard_source" \
+  || fail 'first-run wizard lacks the bilingual greeting'
+grep -Fq 'language_names' "$wizard_source" \
+  || fail 'first-run wizard does not ask for language'
+grep -Fq 'location_names' "$wizard_source" \
+  || fail 'first-run wizard does not ask for location'
+grep -Fq 'installer-preferences.json' "$pearl_shell" \
+  || fail 'Pearl shell does not persist installer preferences'
+grep -Fq 'LANG="$locale"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer" \
+  || fail 'installer does not pass saved locale to Calamares'
+grep -Fq 'XKB_DEFAULT_LAYOUT="$keyboard"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer" \
+  || fail 'installer does not pass saved keyboard to Calamares'
+grep -Fq '/etc/skel/.config/dinx/installer-preferences.json' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer" \
+  || fail 'installer does not preserve live preferences in the installed skeleton'
 if grep -Fq 'dinx-sync-session-theme' "$aqueous_wrapper"; then
   fail 'toolkit theme synchronization runs before session D-Bus readiness'
 fi
@@ -362,7 +376,7 @@ printf 'aqueous_live_config_seed blur=disabled opacity=disabled lock_keybind=dis
 cat >"$pearl_shell_test/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"
-printf 'off bottom material light rounded\n'
+printf 'pt-BR pt_BR.UTF-8 America/Sao_Paulo off bottom material light rounded\n'
 SH
 cat >"$pearl_shell_test/bin/pearl" <<'SH'
 #!/bin/sh
@@ -386,6 +400,9 @@ env "${pearl_shell_test_env[@]}" "$pearl_shell"
 jq -e '.theme.mode == "static" and .theme.variant == "light" and .theme.gtk_name == "" and .theme.seed == "#F4515B" and .bar.edge == "bottom" and .bar.retained == true and .dock.enabled == false and .dock.edge == "top" and .dock.retained == true and .unrelated == 42' \
   "$pearl_shell_test/config/pearl/preferences.json" >/dev/null \
   || fail 'Pearl wizard selection did not update preferences while preserving existing settings'
+jq -e '.language == "pt-BR" and .locale == "pt_BR.UTF-8" and .timezone == "America/Sao_Paulo" and .keyboard == "br"' \
+  "$pearl_shell_test/config/dinx/installer-preferences.json" >/dev/null \
+  || fail 'Pearl wizard did not save installer locale preferences'
 [[ -e "$pearl_shell_test/state/dinx/pearl-first-run-complete" ]] \
   || fail 'Pearl first-run completion marker is missing'
 [[ $(stat -c '%a' "$pearl_shell_test/config/pearl/preferences.json") == 600 ]] \
@@ -399,7 +416,7 @@ mkdir -p "$pearl_shell_top_test/bin" "$pearl_shell_top_test/home" \
   "$pearl_shell_top_test/config/pearl" "$pearl_shell_top_test/state"
 cat >"$pearl_shell_top_test/wizard" <<'SH'
 #!/bin/sh
-printf 'on top material dark rounded\n'
+printf 'pt-BR pt_BR.UTF-8 America/Sao_Paulo on top material dark rounded\n'
 SH
 cat >"$pearl_shell_top_test/bin/pearl" <<'SH'
 #!/bin/sh

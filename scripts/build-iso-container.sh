@@ -453,7 +453,6 @@ trap finish EXIT
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
               build_package patchy
-              build_package blockbench
               build_package paintfe
               build_package pixelorama
               build_package wordcraft

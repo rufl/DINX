@@ -322,16 +322,11 @@ required_paths=(
   usr/bin/godot
   usr/bin/patchy
   usr/lib/patchy/patchy-force-darkest
-  usr/bin/blockbench
   opt/patchy/PatchyLinux.AppImage
-  opt/blockbench/Blockbench.AppImage
   usr/share/applications/org.kde.krita.desktop
   usr/share/applications/org.inkscape.Inkscape.desktop
   usr/share/applications/org.godotengine.Godot.desktop
   usr/share/applications/patchy.desktop
-  usr/share/applications/blockbench.desktop
-  usr/share/licenses/patchy/LICENSE
-  usr/share/licenses/blockbench/LICENSE.MD
   usr/bin/pixelorama
   opt/pixelorama/Pixelorama.x86_64
   opt/pixelorama/Pixelorama.pck
@@ -414,7 +409,6 @@ required_paths=(
   usr/bin/btop
   usr/bin/dialog
   usr/bin/fzf
-  usr/bin/glances
   usr/bin/sftp
   usr/bin/sqlite3
   usr/bin/tmux
@@ -577,6 +571,10 @@ required_paths=(
   usr/share/pearl/themes/dinx.skeuos-square/theme.json
   usr/share/pearl/themes/dinx.orchis-rounded/theme.json
   usr/share/pearl/themes/dinx.orchis-square/theme.json
+  usr/share/pearl/themes/dinx.fluent-rounded/theme.json
+  usr/share/pearl/themes/dinx.fluent-square/theme.json
+  usr/share/pearl/themes/dinx.jasper-rounded/theme.json
+  usr/share/pearl/themes/dinx.jasper-square/theme.json
   usr/share/themes/Orchis-Light/index.theme
   usr/share/themes/Orchis-Dark/index.theme
   usr/share/themes/Orchis-Square-Light/index.theme
@@ -585,6 +583,14 @@ required_paths=(
   usr/share/themes/Skeuos-Blue-Dark/index.theme
   usr/share/themes/Skeuos-Blue-Light-Square/index.theme
   usr/share/themes/Skeuos-Blue-Dark-Square/index.theme
+  usr/share/themes/Fluent-Light/index.theme
+  usr/share/themes/Fluent-Dark/index.theme
+  usr/share/themes/Fluent-Square-Light/index.theme
+  usr/share/themes/Fluent-Square-Dark/index.theme
+  usr/share/themes/Jasper-Light/index.theme
+  usr/share/themes/Jasper-Dark/index.theme
+  usr/share/themes/Jasper-Square-Light/index.theme
+  usr/share/themes/Jasper-Square-Dark/index.theme
 )
 
 for path in "${required_paths[@]}"; do
@@ -625,7 +631,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai haruna; do
+for package in krita inkscape godot pixelorama patchy paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done

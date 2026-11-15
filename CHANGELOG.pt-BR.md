@@ -3,6 +3,8 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Restaurar os pins de fonte Aqueous 1.0.5 e Pearl 0.3.0 exigidos pelos patches DINX existentes de dinit/sessão. Os archives 1.0.20/0.3.9 mais novos rejeitavam esses patches durante o contrato da ISO; os checksums restaurados e todos os contratos Aqueous/Pearl passam.
+
 - Definir o padrão pós-instalação do Pearl Greeter como `material_dark`, mantendo `high_contrast` desativado; a escolha salva de claro/escuro do usuário continua sendo a fonte de verdade pela sincronização de tema da sessão.
 - Estender o first-run wizard do Pearl com saudação polida bilíngue, idioma e localização antes das perguntas da área de trabalho. Persistir locale, teclado e fuso horário para o Calamares da live, propagar o tema claro/escuro escolhido pelo Aqueous e não reabrir o wizard quando as preferências já existirem.
 - Tornar o Dome discreto: remover o ícone/nome da marca no header e a frase “Your system, at a glance.” da visão geral.

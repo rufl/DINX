@@ -33,18 +33,36 @@ sessão na porta 5900. É o mesmo desenho que `dinx-pearl-session` aplica.
 Forwarding de porta (obrigatório para ver o desktop):
 
 ```sh
-VBoxManage modifyvm "DINX-BSD" --nic-forward "hostport=5900,guestport=5900"
+VBoxManage modifyvm "DINX-BSD" --natpf1 \
+  "dinx-vnc,tcp,127.0.0.1,5900,,5900"
 ```
 
 Ou na GUI: Configurações → Rede → NAT → Port Forwarding → adicionar
 `TCP host 127.0.0.1:5900 → guest 5900`.
 
+O launcher reproduz a configuração e abre a janela do console:
+
+```sh
+scripts/bsd-vm/virtualbox-visual-test.sh install \
+  dist/bsd-iso/DINX-BSD-15.1-RELEASE-amd64.iso
+```
+
 ## Instalação
 
 1. Anexe a ISO e dê boot. O sistema sobe como live (autologin no console).
-2. Rode o instalador: `dinx-installer` (ou o atalho "Install DINX" no desktop,
-   quando houver saída de vídeo). O particionamento é scriptado e apaga o disco.
-3. Após o fim, remova a ISO e reinicie.
+2. Se os pacotes gráficos não estiverem na ISO, a sessão live cai em um shell
+   com a mensagem `DINX live`; execute `dinx-installer`. Com pacotes presentes,
+   use o atalho "Install DINX" no desktop.
+3. O particionamento é scriptado e apaga o disco. Após o fim, remova a ISO e
+   reinicie.
+
+Na janela do console, aguarde o reboot do instalador. No host:
+
+```sh
+scripts/bsd-vm/virtualbox-visual-test.sh detach-iso
+scripts/bsd-vm/virtualbox-visual-test.sh start
+scripts/bsd-vm/virtualbox-visual-test.sh vnc
+```
 
 O primeiro boot do sistema instalado dispara `rc.d/dinx_firstboot`, que instala
 em background (log em `/var/log/dinx-firstboot.log`):
@@ -55,10 +73,13 @@ em background (log em `/var/log/dinx-firstboot.log`):
   libudev-devd, pixman, png, cairo, gdk-pixbuf2, glib, gtk4, gtk4-layer-shell,
   lcms2, libarchive, libxml2, libsecret, polkit, curl, cups, pulseaudio,
   pipewire, wireplumber, xwayland, wayvnc, basu, jq
-- pacotes nativos do repo local embarcado na ISO: `dinx-compat`, `dinx-wlroots`,
-  `dinx-aqueous`, `dinx-pearl`, `dinx-greetd`
+- pacotes nativos do repo local embarcado na ISO, quando o catálogo existe:
+  `dinx-compat`, `dinx-wlroots`, `dinx-aqueous`, `dinx-pearl`, `dinx-greetd`
 
-Isso leva alguns minutos (download dos pacotes + primeira indexação). Acompanhe:
+Sem o catálogo local, o sistema continua bootável em console, mas não há
+`aqueous`, `pearl` ou `greetd` para iniciar o desktop. Acompanhe:
+
+A instalação pode levar alguns minutos (download e indexação).
 
 ```sh
 tail -f /var/log/dinx-firstboot.log
@@ -67,7 +88,7 @@ tail -f /var/log/dinx-firstboot.log
 ## Acessando o desktop
 
 Quando o firstboot terminar, ele habilita e inicia `seatd` e `dinx_greetd`.
-O greetd roda a sessão em `vt1`; sem `/dev/dri` o wrapper cai em headless e
+O greetd usa a `ttyv8`; sem `/dev/dri` o wrapper cai em headless e
 sobe o `wayvnc` na porta 5900.
 
 Verifique no guest:

@@ -68,10 +68,11 @@ archive_has() {
 for required in \
   etc/dinx-release \
   etc/rc.d/dinx_firstboot \
-  etc/rc.d/dinx_greetd \
+  etc/pam.d/greetd \
   usr/local/bin/dinx-pearl-session \
   usr/local/bin/dinx-noctalia-session \
   usr/local/bin/dinx-session-select \
+  usr/local/bin/dinx-live-session \
   usr/local/bin/dinx-session-set \
   usr/local/bin/dinx-wine-proton \
   usr/local/bin/dinx-first-run \

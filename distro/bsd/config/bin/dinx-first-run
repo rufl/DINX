@@ -51,6 +51,13 @@ zone=$(dlg --menu "Time zone" 20 60 12 \
   Asia/Tokyo "Tokyo" \
   Asia/Shanghai "Shanghai" \
   Australia/Sydney "Sydney") || exit 1
+theme_variant=$(dlg --menu "Theme" 12 60 2 \
+  dark "DINX Dark" \
+  light "DINX Light") || exit 1
+
+corner_radius=$(dlg --menu "Window corners" 12 60 2 \
+  15 "Rounded" \
+  0 "Square") || exit 1
 
 host=$(dlg --inputbox "Computer name" 10 60 "dinx-bsd") || exit 1
 user=$(dlg --inputbox "Your full name / account name" 10 60 "dinx") || exit 1
@@ -80,6 +87,30 @@ if ! pw user show "$user" >/dev/null 2>&1; then
   pw useradd "$user" -m -d "$homebase/$user" -s /bin/sh -G video -c "DINX User"
 fi
 printf '%s\n%s\n' "$pass" "$pass" | pw usermod "$user" -h 0 >/dev/null 2>&1
+user_config="$homebase/$user/.config"
+mkdir -p "$user_config/pearl" "$user_config/dinx"
+umask 077
+cat > "$user_config/pearl/preferences.json" <<EOF
+{
+  "window_corner_radius": $corner_radius,
+  "theme": {
+    "mode": "gtk",
+    "variant": "$theme_variant",
+    "seed": "#F4515B",
+    "source": "seed",
+    "gtk_name": "DINX"
+  },
+  "wallpaper": {"mode": "solid", "path": "", "color": "#0b0d12", "crops": []},
+  "slideshow": {"enabled": false, "folder": "", "interval_seconds": 900, "transition": "fade"},
+  "bar": {"enabled": true, "edge": "top"},
+  "dock": {"enabled": true, "edge": "bottom", "top_icons": true},
+  "output": {"icon_size": 48, "show_hidden": false, "icons_layout": "automatic"}
+}
+EOF
+printf 'theme_variant=%s\nwindow_corner_radius=%s\n' \
+  "$theme_variant" "$corner_radius" > "$user_config/dinx/theme.conf"
+chown -R "$user" "$user_config"
+umask 022
 printf '%s\n' "$session" > "$statedir/session"
 
 if [ -f /etc/dinx-live ]; then

@@ -31,6 +31,8 @@ build_port() {
     local port="$1" src_dir="$2" pkg_name="$3" prefix="$4"
     shift 4
     local bins=("$@")
+    local build_root="${src_dir}/${BUILD_SUBDIR:-.}"
+    local bin_root="${BIN_ROOT:-${src_dir}}"
 
     log "Building port: ${port} (target=${TARGET})"
     local pkg_stage="${STAGING}/${pkg_name}"
@@ -42,7 +44,7 @@ build_port() {
         return 1
     fi
 
-    if ! (cd "${src_dir}" && "${ZIG}" build -Doptimize=ReleaseSafe \
+    if ! (cd "${build_root}" && "${ZIG}" build -Doptimize=ReleaseSafe \
             -Dtarget="${TARGET}" > "${pkg_stage}.build.log" 2>&1); then
         log "ERROR: zig build failed for ${port}; see ${pkg_stage}.build.log"
         return 1
@@ -50,8 +52,8 @@ build_port() {
 
     local installed=0
     for bin in "${bins[@]}"; do
-        if [[ -f "${src_dir}/zig-out/bin/${bin}" ]]; then
-            cp "${src_dir}/zig-out/bin/${bin}" "${pkg_stage}${prefix}/bin/"
+        if [[ -f "${bin_root}/zig-out/bin/${bin}" ]]; then
+            cp "${bin_root}/zig-out/bin/${bin}" "${pkg_stage}${prefix}/bin/"
             log "  installed: ${bin}"
             installed=1
         fi
@@ -116,6 +118,12 @@ build_port "dinx-pearl-greeter-host" \
     "${SRC_BASE}/pearl/pearl-0.3.0" \
     "dinx-pearl-greeter-host" "/usr/local" \
     "dinx-pearl-greeter-host" || status=1
+BUILD_SUBDIR=subprojects/dome \
+BIN_ROOT="${SRC_BASE}/pearl/pearl-0.3.0/subprojects/dome" \
+build_port "dome" \
+    "${SRC_BASE}/pearl/pearl-0.3.0" \
+    "dome" "/usr/local" \
+    "dome" || status=1
 
 if [[ "$(uname)" == FreeBSD ]] && command -v pkg >/dev/null 2>&1 \
    && compgen -G "${REPO}/*.pkg" >/dev/null; then

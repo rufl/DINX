@@ -27,6 +27,9 @@ if ! grep -q '^comconsole_speed=' /boot/loader.conf; then
 fi
 
 sed -i '' 's|^ttyu0[[:space:]].*|ttyu0   "/usr/libexec/getty std.115200"   vt100   onifconsole secure|' /etc/ttys
+# Reserve the video console for the first-run wizard; greetd owns ttyv8 after
+# the wizard completes. The serial console remains available for recovery.
+sed -i '' 's|^ttyv0[[:space:]].*|ttyv0   "/usr/libexec/getty Pc"   xterm   off secure|' /etc/ttys
 
 if [ -f /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker ]; then
   install -m 0555 /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker /etc/rc.d/dinx_marker

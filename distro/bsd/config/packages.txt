@@ -20,6 +20,7 @@ emulators/linux-rl9
 # DINX Custom / First-Party Ports (Requiring custom packaging)
 x11-wm/aqueous
 x11-wm/pearl
+x11-wm/dome
 # Alternative shell (optional; native C++23/meson, not in FreeBSD ports yet)
 x11-wm/noctalia
 sysutils/octapkg
@@ -87,5 +88,5 @@ emulators/linux-rl9-devtools
 emulators/linux-rl9-nss
 security/ca_root_nss
 lang/ruby
-benchmarks/mangohud
+# benchmarks/mangohud: only in latest, not quarterly; optional overlay HUD.
 # Not in FreeBSD ports: dxvk, gamemode (Vulkan drivers ship in mesa-dri).

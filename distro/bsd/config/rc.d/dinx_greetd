@@ -14,6 +14,18 @@ start_precmd="dinx_greetd_precmd"
 
 dinx_greetd_precmd()
 {
+	if [ ! -f /var/db/dinx-bsd/first-run-done ]; then
+		echo "dinx_greetd: first-run wizard pending; start deferred"
+		return 1
+	fi
+
+	# greetd's FreeBSD worker cannot query VT_GETSTATE on an inactive target.
+	# Activate the dedicated VT before starting it; switch=false avoids that
+	# broken ioctl path in the worker.
+	if [ -c /dev/ttyv0 ]; then
+		vidcontrol -s 8 </dev/ttyv0 >/dev/null 2>&1 || true
+	fi
+
 	# greetd defaults to /run/greetd.sock (Linux path); FreeBSD has /var/run.
 	if [ ! -e /run ]; then
 		ln -s /var/run /run

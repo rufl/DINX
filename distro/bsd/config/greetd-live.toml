@@ -1,5 +1,5 @@
 [initial_session]
-command = "/usr/local/bin/dinx-session-select"
+command = "/usr/local/bin/dinx-live-session"
 user = "dinx"
 
 [default_session]

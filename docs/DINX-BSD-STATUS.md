@@ -163,8 +163,12 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 - **[B]** **Weston + Xwayland:** segfault (signal 11) ao lançar o filho Xwayland
   (`Couldn't unset CLOEXEC on child FDs`); não reproduz sob gdb (race). Por isso
   o Weston não é o compositor da sessão.
-- **[B]** **greetd greeter em tela:** instala e habilita, mas não foi validado
-  em tela (sem DRM na VM; `vt=1` exige o console vt(4) do boot gráfico).
+- **[V]** **greetd inicia após o first-run:** com `first-run-done`, o gate
+  observou `greetd`, `greetd --session-worker` e `agreety` persistentes no
+  disco instalado; o serviço não inicia antes desse marcador.
+- **[B]** **Login greetd → sessão Pearl:** a transição interativa ainda não foi
+  comprovada no QEMU; sem DRM local, a validação visual continua dependente de
+  VNC/teclado virtual ou hardware AMD/Intel.
 - **[B]** **Hardware real (AMD/Intel com DRM):** não testado — é o caminho que
   daria scanout direto sem VNC.
 
@@ -210,7 +214,13 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 - **[V]** `installerconfig` grava `linproc` no `/etc/fstab`: o usuário da
   sessão não pode montar filesystems, e o Pearl exige `/proc/self/exe`.
 - **[V]** Contas, PAM (`pam_unix` auth + `pam_permit` account/session) e
-  config do greetd (`initial_session` → `dinx-session-select`, user dinx).
+  config do greetd (`vt=8`, `switch=false`, `agreety` → `dinx-session-select`);
+  o serviço é bloqueado até `first-run-done`.
+
+- **[V]** O firstboot do gate final concluiu (`DINX_COMPLETE`) após instalar o
+  stack nativo e habilitar seatd/greetd; a lista detalhada permanece no log.
+- **[V]** O wizard executa no disco instalado (`dinx-first-run` + `bsddialog`);
+  `ttyv0` fica reservado ao wizard e `TERM=xterm` é definido explicitamente.
 - **[I]** Stack gaming/Linuxulator (wine-proton, libc6-shim, linux-steam-utils,
   rl9, sysctls LSU, kld_list, conta games): implementado em milestone
   anterior; firstboot instala os pacotes, mas **nenhum jogo/sessão Linux foi
@@ -219,9 +229,9 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 ### Não funciona / notas
 - **[D]** `noctalia` (shell alternativo) não existe no repo → firstboot registra
   NOTE e segue (comportamento esperado, não falha).
-- **[B]** Sessão Pearl de ponta a ponta **no disco instalado**: os binários
-  foram validados na VM de build, mas a instalação via firstboot ainda não foi
-  re-executada com estes pacotes (ISO nova precisa de um gate).
+- **[B]** Login greetd → sessão Pearl no disco instalado ainda não foi
+  comprovado; o serviço e seus workers iniciam, mas a autenticação/transição
+  interativa no VT8 não foi capturada de ponta a ponta.
 - **[D]** `dinx-weston` continua buildável (`build-weston.sh`) mas não é
   embarcado nem instalado: o Xwayland dele segfaulta no FreeBSD.
 

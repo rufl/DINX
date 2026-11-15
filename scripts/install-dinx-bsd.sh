@@ -91,8 +91,13 @@ fi
 # Custom DINX packages only when a real local repository catalog exists.
 if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo/packagesite.pkg" ]; then
   sed -i '' 's/enabled: no/enabled: yes/' /usr/local/etc/pkg/repos/dinx.conf
-  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd dinx-aqueous dinx-pearl \
+  pkg install -y -r dinx dinx-compat dinx-wlroots dinx-greetd \
+    dinx-aqueous dinx-pearl \
     || log 'WARNING: custom DINX package install failed'
+  for optional_pkg in dome deetty dinted; do
+    pkg install -y -r dinx "$optional_pkg" \
+      || log "NOTE: optional package $optional_pkg not available"
+  done
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'
 else
@@ -143,7 +148,12 @@ fi
 sysrc seatd_enable=YES >/dev/null
 sysrc dinx_greetd_enable=YES >/dev/null
 service seatd start >/dev/null 2>&1 || log 'WARNING: seatd start failed'
-service dinx_greetd start >/dev/null 2>&1 || log 'WARNING: greetd start failed'
+if [ -f /var/db/dinx-bsd/first-run-done ]; then
+  service dinx_greetd start >/dev/null 2>&1 \
+    || log 'WARNING: greetd start failed'
+else
+  log 'greetd deferred until first-run wizard completes'
+fi
 
 if [ "$pkg_ready" = 1 ]; then
   touch "$done_flag"

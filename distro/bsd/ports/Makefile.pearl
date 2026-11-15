@@ -24,6 +24,10 @@ USES=		pkgconfig wayland
 MASTER_SITES=
 DISTFILES=	${DISTNAME}.tar.gz
 
+post-patch:
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/greeter-state-home.patch
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/remove-find-your-next-thing.patch
+
 do-build:
 	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
 

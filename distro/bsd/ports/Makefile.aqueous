@@ -21,6 +21,11 @@ USES=		pkgconfig wayland
 MASTER_SITES=
 DISTFILES=	${DISTNAME}.tar.gz
 
+post-patch:
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/client-maximize-readiness.patch
+	@${INSTALL_DATA} ${FILESDIR}/client_maximize_request.zig \
+		${WRKSRC}/compositor/aqueous/wm/client_maximize_request.zig
+
 do-build:
 	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
 

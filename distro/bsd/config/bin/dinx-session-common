@@ -54,6 +54,24 @@ for f in /usr/local/etc/dinx/locale.conf /usr/local/etc/dinx/keyboard.conf; do
   fi
 done
 export LANG LC_ALL XKB_DEFAULT_LAYOUT
+export TERMINAL="${TERMINAL:-deetty}"
+export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland;xcb}"
+export GDK_BACKEND="${GDK_BACKEND:-wayland,x11}"
+export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-wayland,x11}"
+export MOZ_ENABLE_WAYLAND="${MOZ_ENABLE_WAYLAND:-1}"
+if command -v jq >/dev/null 2>&1; then
+  _pearl_preferences="${XDG_CONFIG_HOME:-$HOME/.config}/pearl/preferences.json"
+  if [ -r "$_pearl_preferences" ]; then
+    _theme_variant=$(jq -r '.theme.variant // empty' "$_pearl_preferences" 2>/dev/null || true)
+    case "$_theme_variant" in
+      dark|light)
+        export DINX_COLOR_SCHEME="$_theme_variant"
+        export DINTOR_THEME="prefer-$_theme_variant"
+        export GTK_APPLICATION_PREFER_DARK_THEME=$([ "$_theme_variant" = dark ] && printf 1 || printf 0)
+        ;;
+    esac
+  fi
+fi
 
 # Pearl reads /proc (cpuinfo, meminfo, ...); provide linprocfs best-effort.
 if [ ! -f /proc/cpuinfo ] && command -v mount >/dev/null 2>&1; then

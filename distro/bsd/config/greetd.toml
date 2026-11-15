@@ -1,11 +1,12 @@
 # greetd configuration for DINX-BSD.
 #
 # [terminal] is required: without it greetd fails at startup with
-# "terminal: current vt invalid: 0" because it cannot determine which VT to
-# take over. vt1 matches the vt1 entry in /etc/ttys (getty) so greetd and the
-# console agree on the same terminal.
+# "terminal: current vt invalid: 0" because the FreeBSD worker cannot query
+# VT_GETSTATE on an inactive target. ttyv8 is disabled in /etc/ttys, so it is
+# reserved for greetd; the rc.d script activates it before starting greetd.
 [terminal]
-vt = 1
+vt = 8
+switch = false
 
 # Greeter shown at boot; agreety is built from source together with greetd.
 # On successful login it runs the session selector, which execs the Aqueous

@@ -16,7 +16,7 @@ dinx_first_run_start()
 	  'if [ -f /var/db/dinx-bsd/first-run-done ]; then
 	     service dinx_greetd onestart >/dev/null 2>&1
 	   elif [ -c /dev/ttyv0 ]; then
-	     /usr/local/bin/dinx-first-run </dev/ttyv0 >/dev/ttyv0 2>&1
+	     TERM=xterm /usr/local/bin/dinx-first-run </dev/ttyv0 >/dev/ttyv0 2>&1
 	   else
 	     service dinx_greetd onestart >/dev/null 2>&1
 	   fi'

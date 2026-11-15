@@ -44,7 +44,8 @@ set_ini_value() {
   ini_tmp="$ini_file.tmp.$$"
   ini_mode=600
   if [ -f "$ini_file" ]; then
-    ini_mode=$(stat -c '%a' -- "$ini_file" 2>/dev/null || printf '600')
+    ini_mode=$(stat -f '%Lp' -- "$ini_file" 2>/dev/null || \
+      stat -c '%a' -- "$ini_file" 2>/dev/null || printf '600')
     if ! awk -v section="$ini_section" -v key="$ini_key" -v value="$ini_value" '
       function name_of(line, name) {
         name = line

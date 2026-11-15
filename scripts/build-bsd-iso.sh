@@ -95,6 +95,7 @@ loader_conf="$tmp_dir/loader.conf"
 [[ -r "$installerconfig" ]] || fail "missing installer configuration: $installerconfig"
 install -d \
   "$overlay_root/etc" \
+  "$overlay_root/etc/pam.d" \
   "$overlay_root/usr/local/etc/dinit.d" \
   "$overlay_root/usr/local/share/dinx-bsd/distro/bsd" \
   "$overlay_root/usr/local/share/dinx-bsd/scripts"
@@ -123,6 +124,8 @@ if [[ -f "$repo_root/distro/bsd/config/greetd.toml" ]]; then
   install -m 0644 "$repo_root/distro/bsd/config/greetd.toml" \
     "$overlay_root/usr/local/etc/greetd/config.toml"
 fi
+install -m 0644 "$repo_root/distro/bsd/config/pam.d/greetd" \
+  "$overlay_root/etc/pam.d/greetd"
 install -d "$overlay_root/etc/rc.d" "$overlay_root/usr/local/bin"
 for unit in dinx_firstboot dinx_greetd dinx_first_run dinx_live_persist; do
   install -m 0555 "$repo_root/distro/bsd/config/rc.d/$unit" \
@@ -130,7 +133,7 @@ for unit in dinx_firstboot dinx_greetd dinx_first_run dinx_live_persist; do
 done
 install -d "$overlay_root/usr/local/libexec/dinx" \
   "$overlay_root/usr/local/share/wayland-sessions"
-for s in dinx-pearl-session dinx-noctalia-session dinx-session-select dinx-session-set dinx-wine-proton dinx-first-run dinx-live-persist dinx-installer; do
+for s in dinx-pearl-session dinx-noctalia-session dinx-session-select dinx-live-session dinx-session-set dinx-wine-proton dinx-first-run dinx-live-persist dinx-installer; do
   install -m 0755 "$repo_root/distro/bsd/config/bin/$s" \
     "$overlay_root/usr/local/bin/$s"
 done

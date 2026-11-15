@@ -1,0 +1,40 @@
+# FreeBSD Port Makefile for Pearl Dome (DINX-BSD)
+PORTNAME= dome
+PORTVERSION= 0.1.1
+PORTREVISION= 1
+CATEGORIES= x11-wm wayland
+DISTNAME= pearl-0.3.0
+
+MAINTAINER= trafael@dinx.org
+COMMENT= Pearl desktop overview and launcher for DINX-BSD
+WWW= https://github.com/Seafoam-Labs/pearl
+
+LICENSE= MIT
+LICENSE_FILE= ${WRKSRC}/LICENSE
+
+BUILD_DEPENDS= zig>=0.16.0:lang/zig \
+	gtk40>=4.0:x11-toolkits/gtk40 \
+	glib>=2.0:devel/glib20
+RUN_DEPENDS= wayland>=1.0:graphics/wayland
+
+USES= pkgconfig wayland
+USE_ZIG= yes
+
+# Local Pearl source tarball: place DISTFILES in DISTDIR before building.
+MASTER_SITES=
+DISTFILES= ${DISTNAME}.tar.gz
+
+post-patch:
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/discreet-header.patch
+
+do-build:
+	@cd ${WRKSRC}/subprojects/dome && \
+		ZIG_GLOBAL_CACHE_DIR=${WRKDIR}/zig-global-cache \
+		zig build -Doptimize=ReleaseSafe -Dcpu=baseline
+
+do-install:
+	@${MKDIR} ${STAGEDIR}${PREFIX}/bin
+	@${INSTALL_PROGRAM} ${WRKSRC}/subprojects/dome/zig-out/bin/dome \
+		${STAGEDIR}${PREFIX}/bin/dome
+
+.include <bsd.port.mk>

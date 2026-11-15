@@ -13,7 +13,7 @@ source_env="$startdir/source.env"
 : "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
 : "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
 pkgver="$DINX_PEARL_THEMES_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Skeuos and Orchis Pearl community themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -52,4 +52,48 @@ package() {
   for theme in orchis-rounded orchis-square; do
     cp -a "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
   done
+
+  # Pearl reads these manifests and profile descriptors at startup. Compact
+  # JSON preserves their data while reducing I/O and parser work.
+  python3 - "$theme_dir" <<'EOF'
+import hashlib
+import json
+import os
+import sys
+
+root = sys.argv[1]
+for base, dirs, files in os.walk(root):
+    dirs.sort()
+    for name in sorted(files):
+        if not name.endswith('.json'):
+            continue
+        path = os.path.join(base, name)
+        with open(path, encoding='utf-8') as stream:
+            value = json.load(stream)
+        with open(path, 'w', encoding='utf-8', newline='\n') as stream:
+            json.dump(value, stream, ensure_ascii=False, separators=(',', ':'))
+            stream.write('\n')
+
+# Reuse byte-identical profiles, licenses and shared assets between the four
+# ports. Hardlinks preserve all discovered paths and their contents.
+seen = {}
+for base, dirs, files in os.walk(root):
+    dirs.sort()
+    for name in sorted(files):
+        path = os.path.join(base, name)
+        if os.path.islink(path) or not os.path.isfile(path):
+            continue
+        digest = hashlib.sha256()
+        with open(path, 'rb') as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(chunk)
+        key = (digest.digest(), os.stat(path).st_size)
+        previous = seen.get(key)
+        if previous is None:
+            seen[key] = path
+            continue
+        if open(previous, 'rb').read() == open(path, 'rb').read():
+            os.unlink(path)
+            os.link(previous, path)
+EOF
 }

@@ -321,6 +321,7 @@ required_paths=(
   etc/pearl/greeter.json
   usr/bin/pearl-greeter
   usr/local/libexec/dinx-pearl-shell
+  usr/local/libexec/dinx-tune-aqueous-config
   usr/local/libexec/dinx-qt6ct-palette-seed
   usr/local/libexec/dinx-first-run-wizard
   usr/lib/pearl/pearl-greeter-host

@@ -16,7 +16,7 @@ source_env="$startdir/source.env"
 : "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
 : "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
 pkgver="$DINX_GTK_THEMES_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -170,4 +170,34 @@ package() {
     "$pkgdir/usr/share/licenses/$pkgname/SKEUOS-LICENSE"
   install -Dm644 "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/COPYING" \
     "$pkgdir/usr/share/licenses/$pkgname/ORCHIS-COPYING"
+
+  # Reuse byte-identical assets and metadata across the eight variants.
+  # Hardlinks preserve every theme path and visual result while reducing
+  # installed inode/data usage; pacman/tar retain the relationship.
+  python3 - "$theme_dir" <<'EOF'
+import hashlib
+import os
+import sys
+
+root = sys.argv[1]
+seen = {}
+for base, dirs, files in os.walk(root):
+    dirs.sort()
+    for name in sorted(files):
+        path = os.path.join(base, name)
+        if os.path.islink(path) or not os.path.isfile(path):
+            continue
+        digest = hashlib.sha256()
+        with open(path, 'rb') as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(chunk)
+        key = (digest.digest(), os.stat(path).st_size)
+        previous = seen.get(key)
+        if previous is None:
+            seen[key] = path
+            continue
+        if open(previous, 'rb').read() == open(path, 'rb').read():
+            os.unlink(path)
+            os.link(previous, path)
+EOF
 }

@@ -44,16 +44,31 @@ export DINX_SESSION_COMPOSITOR_PID=$$
 unset DISPLAY
 
 xdg-user-dirs-update
-if [ -n "${HOME:-}" ]; then
+if [ "${DINX_LIVE_SESSION:-}" = "1" ] \
+  && [ -n "${HOME:-}" ] \
+  && [ -r "/etc/skel/Desktop/Install DINX.desktop" ]; then
   desktop_dir=$(xdg-user-dir DESKTOP)
-  installer_seed=/etc/skel/Desktop/Install\ DINX.desktop
-  installer_desktop="$desktop_dir/Install DINX.desktop"
-  if [ -n "$desktop_dir" ] && [ -r "$installer_seed" ] && [ ! -e "$installer_desktop" ]; then
-    installer_tmp="$desktop_dir/.Install DINX.desktop.$$"
-    install -Dm755 "$installer_seed" "$installer_tmp"
-    mv -n "$installer_tmp" "$installer_desktop"
-    rm -f "$installer_tmp"
-  fi
+  case "$desktop_dir" in
+    /*)
+      mkdir -p -- "$desktop_dir"
+      installer_seed="/etc/skel/Desktop/Install DINX.desktop"
+      installer_desktop="$desktop_dir/Install DINX.desktop"
+      if [ ! -e "$installer_desktop" ]; then
+        installer_tmp="$desktop_dir/.Install DINX.desktop.tmp.$$"
+        if install -m755 "$installer_seed" "$installer_tmp"; then
+          mv -n -- "$installer_tmp" "$installer_desktop"
+        fi
+        rm -f -- "$installer_tmp"
+      fi
+      if ! /usr/local/libexec/dinx-approve-desktop-launcher \
+        "$installer_desktop" "$installer_seed"; then
+        printf '%s\n' 'dinx-aqueous-pearl: installer shortcut remains unapproved; its content or Pearl state was unsafe to update' >&2
+      fi
+      ;;
+    *)
+      printf '%s\n' 'dinx-aqueous-pearl: skipping installer shortcut because the Desktop path is not absolute' >&2
+      ;;
+  esac
 fi
 
 compositor=/usr/bin/aqueous

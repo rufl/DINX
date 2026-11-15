@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 pkgname=dinx-plymouth-theme
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc='DINX Plymouth splash theme and Dinit handoff'
 arch=('any')
 url='https://github.com/rufl/DINX'

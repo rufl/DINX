@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+exec /opt/gridcraft/gridcraft.AppImage --appimage-extract-and-run "$@"

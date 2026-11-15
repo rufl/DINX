@@ -5,6 +5,11 @@ Item {
     width: 740
     height: 420
 
+    Rectangle {
+        anchors.fill: parent
+        color: "#0b0d12"
+    }
+
     Flickable {
         id: flick
         anchors.fill: parent

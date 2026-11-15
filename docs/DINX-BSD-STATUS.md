@@ -285,10 +285,9 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 | greetd greeter em tela | **Não verificado** (sem VT/DRM em VM) [B] |
 | Temas aplicados em tela | **Não verificável sem scanout** [B] |
 | Gaming/Linuxulator exercitado | **Não testado** [I] |
-| Live/first-run/persist | **Implementado, não re-verificado** [I] |
+| Live/first-run/persist | **Implementado; gate final re-verificado** [V] |
 
-1. **Rebuildar a ISO** com os pacotes nativos atuais (Aqueous +Xwayland,
-   Pearl com patches 27/28) e rodar o gate unattended.
+1. **[V]** ISO 15.1 atual (`sha256=749a95310a1eab6b10412e28aed5c77179c0a4411efa14702075a5f1294b56a2`): gate unattended final executado em QEMU/KVM com 2 GiB, instalação completa, primeiro boot com `dinx-bsd: first-boot-ready` + `login:` e shutdown limpo.
 2. **VirtualBox (sem DRM)**: dois caminhos, ambos sem driver DRM:
    a. `WLR_BACKENDS=x11` → Aqueous renderiza numa janela do Xorg com driver
       `scfb`/`vesa` (X11 não exige KMS) → desktop visível no console da VBox.

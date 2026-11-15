@@ -12,9 +12,15 @@ source_env="$startdir/source.env"
 : "${ORCHIS_FORK_COMMIT:?missing Orchis fork commit}"
 : "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
 : "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
+: "${FLUENT_FORK_COMMIT:?missing Fluent fork commit}"
+: "${FLUENT_FORK_SOURCE_URL:?missing Fluent fork source URL}"
+: "${FLUENT_FORK_SOURCE_SHA256:?missing Fluent fork source checksum}"
+: "${JASPER_FORK_COMMIT:?missing Jasper fork commit}"
+: "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
+: "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_PEARL_THEMES_VERSION"
-pkgrel=3
-pkgdesc='Skeuos and Orchis Pearl community themes with rounded and square corners'
+pkgrel=1
+pkgdesc='Fluent, Jasper, Skeuos and Orchis Pearl community themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
 license=('GPL-3.0-only')
@@ -22,10 +28,14 @@ depends=('pearl')
 source=(
   "skeuos-gtk-${SKEUOS_FORK_COMMIT}.tar.gz::${SKEUOS_FORK_SOURCE_URL}"
   "Orchis-theme-${ORCHIS_FORK_COMMIT}.tar.gz::${ORCHIS_FORK_SOURCE_URL}"
+  "Fluent-gtk-theme-${FLUENT_FORK_COMMIT}.tar.gz::${FLUENT_FORK_SOURCE_URL}"
+  "Jasper-gtk-theme-${JASPER_FORK_COMMIT}.tar.gz::${JASPER_FORK_SOURCE_URL}"
 )
 sha256sums=(
   "$SKEUOS_FORK_SOURCE_SHA256"
   "$ORCHIS_FORK_SOURCE_SHA256"
+  "$FLUENT_FORK_SOURCE_SHA256"
+  "$JASPER_FORK_SOURCE_SHA256"
 )
 
 check() {
@@ -37,6 +47,14 @@ check() {
   for theme in orchis-rounded orchis-square; do
     test -f "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/themes/$theme/theme.json" \
       || { printf 'missing Orchis Pearl theme: %s\n' "$theme" >&2; return 1; }
+  done
+  for theme in fluent-rounded fluent-square; do
+    test -f "$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}/themes/$theme/theme.json" \
+      || { printf 'missing Fluent Pearl theme: %s\n' "$theme" >&2; return 1; }
+  done
+  for theme in jasper-rounded jasper-square; do
+    test -f "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/themes/$theme/theme.json" \
+      || { printf 'missing Jasper Pearl theme: %s\n' "$theme" >&2; return 1; }
   done
 }
 
@@ -51,6 +69,12 @@ package() {
   done
   for theme in orchis-rounded orchis-square; do
     cp -a "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
+  done
+  for theme in fluent-rounded fluent-square; do
+    cp -a "$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
+  done
+  for theme in jasper-rounded jasper-square; do
+    cp -a "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
   done
 
   # Pearl reads these manifests and profile descriptors at startup. Compact

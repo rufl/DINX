@@ -111,6 +111,26 @@ case "$theme" in
         window_radius=12
         [ "$corners" = square ] && window_radius=0
         ;;
+    fluent)
+        theme_mode=package
+        package_id="dinx.fluent-$corners"
+        profile_prefix="dinx.fluent-$corners"
+        gtk_name=Fluent
+        [ "$corners" = square ] && gtk_name="$gtk_name-Square"
+        [ "$variant" = dark ] && gtk_name="$gtk_name-Dark" || gtk_name="$gtk_name-Light"
+        window_radius=8
+        [ "$corners" = square ] && window_radius=0
+        ;;
+    jasper)
+        theme_mode=package
+        package_id="dinx.jasper-$corners"
+        profile_prefix="dinx.jasper-$corners"
+        gtk_name=Jasper
+        [ "$corners" = square ] && gtk_name="$gtk_name-Square"
+        [ "$variant" = dark ] && gtk_name="$gtk_name-Dark" || gtk_name="$gtk_name-Light"
+        window_radius=18
+        [ "$corners" = square ] && window_radius=0
+        ;;
     *)
         printf '%s\n' 'dinx-pearl-shell: invalid theme selection; starting Pearl with saved preferences' >&2
         mark_complete

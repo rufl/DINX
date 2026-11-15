@@ -282,7 +282,7 @@ grep -Fq '"path": ""' "$pearl_preferences" || fail 'Fresh Pearl preferences reta
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
 jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == ""' "$pearl_preferences" >/dev/null \
   || fail 'Fresh Pearl preferences do not default to Pearl Material dark'
-grep -Fq 'const char *theme_name[] = { "material", "skeuos", "orchis" };' "$wizard_source" \
+grep -Fq 'const char *theme_name[] = { "material", "skeuos", "orchis", "fluent", "jasper" };' "$wizard_source" \
   || fail 'Pearl first-run theme selection order changed'
 grep -Fq 'printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not emit theme, variant and corner choices'
@@ -295,7 +295,11 @@ grep -Fq 'package_id="dinx.skeuos-$corners"' "$pearl_shell" \
   || fail 'Pearl shell does not map the Skeuos choice to its Pearl package'
 grep -Fq 'package_id="dinx.orchis-$corners"' "$pearl_shell" \
   || fail 'Pearl shell does not map the Orchis choice to its Pearl package'
-grep -Fq 'Skeuos-Blue-Dark-Square' "$theme_sync" \
+grep -Fq 'package_id="dinx.fluent-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not map the Fluent choice to its Pearl package'
+grep -Fq 'package_id="dinx.jasper-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not map the Jasper choice to its Pearl package'
+grep -Fq 'Fluent-Square-Dark' "$theme_sync" \
   || fail 'Theme sync does not honor the ported GTK themes'
 grep -Fq 'sync_borders: true' "$pearl_shell" \
   || fail 'Pearl shell does not enable Aqueous window-border color sync'
@@ -303,8 +307,10 @@ grep -Fq '.window_corner_radius = $window_radius' "$pearl_shell" \
   || fail 'Pearl shell does not propagate the corner choice to Aqueous window radius'
 grep -Fq 'enabled: true' "$pearl_shell" \
   || fail 'Pearl shell does not enable application color profiles'
-grep -Fq 'profile_prefix="dinx.skeuos-$corners"' "$pearl_shell" \
-  || fail 'Pearl shell does not bind Skeuos application profiles'
+grep -Fq 'profile_prefix="dinx.fluent-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not bind Fluent application profiles'
+grep -Fq 'profile_prefix="dinx.jasper-$corners"' "$pearl_shell" \
+  || fail 'Pearl shell does not bind Jasper application profiles'
 grep -Fq 'pearl-material.conf' "$theme_sync" \
   || fail 'Theme sync does not consume the generated Qt palette for ports'
 grep -Fq 'deetty/themes/pearl-material' "$theme_sync" \

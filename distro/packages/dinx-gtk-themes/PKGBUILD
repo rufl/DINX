@@ -15,9 +15,15 @@ source_env="$startdir/source.env"
 : "${ORCHIS_FORK_COMMIT:?missing Orchis fork commit}"
 : "${ORCHIS_FORK_SOURCE_URL:?missing Orchis fork source URL}"
 : "${ORCHIS_FORK_SOURCE_SHA256:?missing Orchis fork source checksum}"
+: "${FLUENT_FORK_COMMIT:?missing Fluent fork commit}"
+: "${FLUENT_FORK_SOURCE_URL:?missing Fluent fork source URL}"
+: "${FLUENT_FORK_SOURCE_SHA256:?missing Fluent fork source checksum}"
+: "${JASPER_FORK_COMMIT:?missing Jasper fork commit}"
+: "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
+: "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_GTK_THEMES_VERSION"
-pkgrel=3
-pkgdesc='Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
+pkgrel=1
+pkgdesc='Fluent, Jasper, Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
 license=('GPL-3.0-only')
@@ -26,18 +32,100 @@ source=(
   "skeuos-gtk-${SKEUOS_UPSTREAM_COMMIT}.tar.gz::${SKEUOS_UPSTREAM_SOURCE_URL}"
   "skeuos-gtk-fork-${SKEUOS_FORK_COMMIT}.tar.gz::${SKEUOS_FORK_SOURCE_URL}"
   "Orchis-theme-${ORCHIS_FORK_COMMIT}.tar.gz::${ORCHIS_FORK_SOURCE_URL}"
+  "Fluent-gtk-theme-${FLUENT_FORK_COMMIT}.tar.gz::${FLUENT_FORK_SOURCE_URL}"
+  "Jasper-gtk-theme-${JASPER_FORK_COMMIT}.tar.gz::${JASPER_FORK_SOURCE_URL}"
 )
 sha256sums=(
   "$SKEUOS_UPSTREAM_SOURCE_SHA256"
   "$SKEUOS_FORK_SOURCE_SHA256"
   "$ORCHIS_FORK_SOURCE_SHA256"
+  "$FLUENT_FORK_SOURCE_SHA256"
+  "$JASPER_FORK_SOURCE_SHA256"
 )
 
 build() {
   local orchis="$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}"
   local skeuos="$srcdir/skeuos-gtk-${SKEUOS_UPSTREAM_COMMIT}"
+  local fluent="$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}"
+  local jasper="$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}"
   local out="$srcdir/themes"
   local corner suffix variant gtk entry td name
+  # Fluent and Jasper use their upstream default blue/teal palettes. Both
+  # ports compile GTK3 and GTK4 from pinned SASS, then square variants
+  # remove finite corner radii while preserving circular controls.
+  for source_root in "$fluent" "$jasper"; do
+    if [[ "$source_root" == "$fluent" ]]; then
+      brand=Fluent
+      base="$fluent/src/gtk"
+      license_file="$fluent/COPYING"
+    else
+      brand=Jasper
+      base="$jasper/src/main"
+      license_file="$jasper/LICENSE"
+      cp "$jasper/src/sass/_tweaks.scss" "$jasper/src/sass/_tweaks-temp.scss"
+    fi
+    for corner in 8 0; do
+      suffix=''
+      [[ "$corner" == 0 ]] && suffix='-Square'
+      for variant in Light Dark; do
+        name="${brand}${suffix}-${variant}"
+        entry="gtk-${variant}.scss"
+        for gtk in 3.0 4.0; do
+          scss_dir="$base/$gtk"
+          [[ "$brand" == Jasper ]] && scss_dir="$base/gtk-$gtk"
+          td="$out/$name/gtk-$gtk"
+          mkdir -p "$td"
+          if [[ "$brand" == Fluent ]]; then
+            cp "$fluent/src/_sass/_tweaks.scss" "$fluent/src/_sass/_tweaks-temp.scss"
+            sed -i "s/\$window: 'default';/\$window: 'round';/" "$fluent/src/_sass/_tweaks-temp.scss"
+            sassc -M -t expanded "$scss_dir/$entry" "$td/gtk.css"
+            sassc -M -t expanded "$scss_dir/gtk-Dark.scss" "$td/gtk-dark.css"
+            cp -a "$fluent/src/gtk/assets" "$td/assets"
+            cp -a "$fluent/src/gtk/scalable/." "$td/assets/"
+          else
+            sassc -M -t expanded "$scss_dir/$entry" "$td/gtk.css"
+            sassc -M -t expanded "$scss_dir/gtk-Dark.scss" "$td/gtk-dark.css"
+            cp -a "$jasper/src/assets/gtk/assets" "$td/assets"
+            cp -a "$jasper/src/assets/gtk/scalable/." "$td/assets/"
+          fi
+        done
+        printf '[Desktop Entry]\nType=X-GNOME-Metatheme\nName=%s\nComment=DINX port of the %s GTK theme\nEncoding=UTF-8\n\n[X-GNOME-Metatheme]\nGtkTheme=%s\nMetacityTheme=%s\nIconTheme=Papirus\nCursorTheme=Adwaita\nButtonLayout=close,minimize,maximize:menu\n' \
+          "$name" "$brand" "$name" "$name" > "$out/$name/index.theme"
+        cp "$license_file" "$out/$name/COPYING"
+      done
+    done
+  done
+
+  # Make square variants deterministic across upstream CSS implementations.
+  python3 - "$out" <<'EOF'
+import os, re, sys
+out = sys.argv[1]
+radius = re.compile(r'border-radius:\s*([^;}]+)')
+px = re.compile(r'^(\d+(?:\.\d+)?)px$')
+for name in os.listdir(out):
+    if not name.endswith('-Square'):
+        continue
+    for gtk in ('gtk-3.0', 'gtk-4.0'):
+        for css in ('gtk.css', 'gtk-dark.css'):
+            path = os.path.join(out, name, gtk, css)
+            if not os.path.isfile(path):
+                continue
+            data = open(path).read()
+            def replace(match):
+                values = []
+                for part in match.group(1).split():
+                    if part == '0':
+                        values.append(0)
+                        continue
+                    parsed = px.match(part)
+                    if not parsed:
+                        return match.group(0)
+                    values.append(float(parsed.group(1)))
+                return 'border-radius: 0' if values and max(values) <= 20 else match.group(0)
+            updated = radius.sub(replace, data)
+            if updated != data:
+                open(path, 'w').write(updated)
+EOF
 
   # Orchis: compile GTK3/GTK4 from SASS. Rounded keeps the upstream
   # $default_corner (12px); square sets it to 0px, exactly like install.sh
@@ -152,7 +240,9 @@ EOF
 check() {
   local name gtk
   for name in Orchis-Light Orchis-Dark Orchis-Square-Light Orchis-Square-Dark \
-    Skeuos-Blue-Light Skeuos-Blue-Dark Skeuos-Blue-Light-Square Skeuos-Blue-Dark-Square; do
+    Skeuos-Blue-Light Skeuos-Blue-Dark Skeuos-Blue-Light-Square Skeuos-Blue-Dark-Square \
+    Fluent-Light Fluent-Dark Fluent-Square-Light Fluent-Square-Dark \
+    Jasper-Light Jasper-Dark Jasper-Square-Light Jasper-Square-Dark; do
     for gtk in gtk-3.0 gtk-4.0; do
       test -s "$srcdir/themes/$name/$gtk/gtk.css" \
         || { printf 'missing %s %s\n' "$name" "$gtk" >&2; return 1; }
@@ -170,6 +260,10 @@ package() {
     "$pkgdir/usr/share/licenses/$pkgname/SKEUOS-LICENSE"
   install -Dm644 "$srcdir/Orchis-theme-${ORCHIS_FORK_COMMIT}/COPYING" \
     "$pkgdir/usr/share/licenses/$pkgname/ORCHIS-COPYING"
+  install -Dm644 "$srcdir/Fluent-gtk-theme-${FLUENT_FORK_COMMIT}/COPYING" \
+    "$pkgdir/usr/share/licenses/$pkgname/FLUENT-COPYING"
+  install -Dm644 "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/JASPER-LICENSE"
 
   # Reuse byte-identical assets and metadata across the eight variants.
   # Hardlinks preserve every theme path and visual result while reducing

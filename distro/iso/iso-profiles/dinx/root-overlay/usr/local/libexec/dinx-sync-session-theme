@@ -23,7 +23,9 @@ if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
 elif [ "$theme_mode" = package ]; then
   case "$gtk_name" in
     Skeuos-Blue-Light|Skeuos-Blue-Dark|Skeuos-Blue-Light-Square|Skeuos-Blue-Dark-Square|\
-    Orchis-Light|Orchis-Dark|Orchis-Square-Light|Orchis-Square-Dark)
+    Orchis-Light|Orchis-Dark|Orchis-Square-Light|Orchis-Square-Dark|\
+    Fluent-Light|Fluent-Dark|Fluent-Square-Light|Fluent-Square-Dark|\
+    Jasper-Light|Jasper-Dark|Jasper-Square-Light|Jasper-Square-Dark)
       gtk_theme=$gtk_name
       ;;
   esac

@@ -20,8 +20,8 @@
 #   EUROFFICE_PKREL        DINX pkgrel (default 1)
 #   EUROFFICE_OUTDIR       artifact directory (default dist/office/eurooffice)
 #   EUROFFICE_WORKDIR      scratch directory (default: mktemp)
-#   EUROFFICE_KEEP_DICTS   dictionaries to keep (default "en_US en_GB pt_BR")
-#   EUROFFICE_KEEP_LOCALES CEF locales to keep (default "en-US en-GB pt-BR")
+#   EUROFFICE_KEEP_DICTS   dictionaries to keep (default: DINX en/pt + selected European/Ukrainian languages)
+#   EUROFFICE_KEEP_LOCALES CEF locales to keep (same set + Japanese and Chinese CN/TW)
 #   EUROFFICE_KEEP_TEMPLATES template gallery languages (default "EN PT")
 #   EUROFFICE_NO_STRIP     set to 1 to skip ELF stripping
 set -euo pipefail
@@ -30,8 +30,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 upstream_repo=${EUROFFICE_UPSTREAM_REPO:-Euro-Office/DesktopEditors}
 pkgrel=${EUROFFICE_PKREL:-1}
 outdir=${EUROFFICE_OUTDIR:-dist/office/eurooffice}
-keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US pt_BR}
-keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US pt-BR}
+keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US pt_BR fr_FR de_DE nl_NL da_DK pt_PT es_ES it_IT en_GB uk_UA}
+keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US pt-BR fr de nl da pt-PT es it en-GB uk ja zh-CN zh-TW}
 keep_templates=${EUROFFICE_KEEP_TEMPLATES:-EN PT}
 no_strip=${EUROFFICE_NO_STRIP:-0}
 

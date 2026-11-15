@@ -27,18 +27,18 @@ builder; a ISO inclui o ZLS para Zig e não distribui o pacote `clang`.
 
 ## Snapshot validado atual
 
-A snapshot publicado da Alpha 12 é a [v0.1.0-alpha.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), validada pela [execução marcada 41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) no commit `56a814575e33bfae6215993972784f11b7dae215`. O build passou os contratos de pacotes/perfil, builds de pacotes Artix, checks de conteúdo/tamanho da ISO, boot/captura gráfica no QEMU com VGA padrão, smokes de layout do Calamares, primeiro boot persistente BIOS/UEFI e TTY de recuperação, checks do repositório assinado, vínculo dos metadados, atestação e publicação. A ISO direta tem 1.836.830.720 bytes e SHA-512 `ac1dbd237e484f8d61aab5438185218b13d9e23824ce671440ff67ed275ce7073b90dbcc14bc8d8f7008b2422d66e2756f1b3a88a0d5c21d8c7bbc67c9d60bf9`; snapshot do repositório de pacotes assinado `37dfe99d5e4003e217e786ef82c8ea29562693db2d44b996a9624a68f31c490d`. A Alpha 12 é anterior à correção VMware/Pixman. A main atual adiciona smoke de boot QEMU com VMware-SVGA, ainda não executado; o boot direto no VirtualBox continua sem qualificação.
+A snapshot publicada da Alpha 16 é a [v0.1.0-alpha.16](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.16), validada pela [execução marcada 43622209772](https://github.com/rufl/DINX/actions/runs/43622209772) no commit `81d2606e8711c6e7a3d5efaedff118df0f4fc7a7`. O build passou os contratos de pacotes/perfil, builds de pacotes Artix, checks de conteúdo/tamanho da ISO, boot/captura gráfica no QEMU com VGA padrão, smokes de layout do Calamares, primeiro boot persistente BIOS/UEFI e TTY de recuperação, checks do repositório assinado, vínculo dos metadados, atestação e publicação. A ISO direta tem 2.133.706.752 bytes e SHA-512 `0df5da98684cb41d8ec6408bfb6b0e81bf4711bddf3718d2b3b3fbfdae67d5e65477195c3fb85fbaf9ae93df64ece1492b2b1f8fd2a5ef1fde2032fd09fd4600`; snapshot do repositório de pacotes assinado `829cba983a866d39a422a4a56046b29456598b5ec1574b9205f8cce0555bf133`. A Alpha 16 é a primeira ISO com EuroOffice (fork lean do ONLYOFFICE publicado pela branch `office`) e fica abaixo do limite de 2 GiB por asset graças à compressão xz/BCJ e aos trims de payload no build. O qualificador compartilhado atual testa VGA padrão e Virtio-VGA; o caminho `vmware-svga` do QEMU 11.1.2/KVM trava no udev inicial com `vmwgfx` carregado e não é um passe de VirtualBox. O boot direto no VirtualBox continua não qualificado.
 
-A execução P0 da main [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770), no commit `bf773500965c843e014e3bc3ef8fea685e14b91b`, passou pelo build completo, QEMU, payload gráfico, Calamares e gates de instalação persistente/recuperação BIOS/UEFI, além de metadados, atestação e upload do artefato. Foi uma validação anterior da main após a Alpha 10; a Alpha 12 foi publicada depois pela execução marcada [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617), no commit `56a814575e33bfae6215993972784f11b7dae215`.
+A execução P0 da main [43618288202](https://github.com/rufl/DINX/actions/runs/43618288202), no commit `c4412214ed3f99a5eceba6fda80786d51e62eff5`, passou pelo build completo, QEMU, payload gráfico, Calamares e gates de instalação persistente/recuperação BIOS/UEFI, além de metadados, atestação e upload do artefato, com a ISO contendo EuroOffice abaixo do limite de 2 GiB; a Alpha 16 foi publicada pela execução marcada [43622209772](https://github.com/rufl/DINX/actions/runs/43622209772), no commit `81d2606e8711c6e7a3d5efaedff118df0f4fc7a7`.
 
 A próxima etapa de sistema é a qualificação planejada e sem data da Beta 0.1. Ela é separada do gaming P5; veja no [roadmap](roadmap.md) os gates de hardware, instalador, atualização e recuperação.
 
 Alpha 9 e as candidatas anteriores são evidência histórica, não o release atual. O workflow de release recompila o commit marcado e só publica depois que passam as verificações correspondentes de metadados da ISO, repositório assinado, checksum e procedência.
 
-O artefato Alpha 9 usou o caminho determinístico anterior de ISO compacta de
-`scripts/build-iso.sh`: SquashFS com xz, filtro BCJ x86, blocos de 1 MiB e
-dicionário de 1 MiB. A Alpha 10 usa blocos de 256 KiB e dicionário de 256 KiB,
-mantendo a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
+O SquashFS final usa o caminho determinístico de ISO compacta de
+`scripts/build-iso.sh`: compressão xz com filtro BCJ x86, blocos e dicionário
+de 1 MiB (máximo do squashfs-tools do builder) e 4 threads de compressão, mantendo a ISO direta abaixo do limite de 2 GiB por
+asset do GitHub.
 O manifesto comum versionado mantém o caminho documentado de firmware AMDGPU, deixa firmware genérico e `powertop` fora da imagem final e mantém os headers do kernel apenas para a geração do initramfs da ISO; sua árvore de fontes é excluída do SquashFS final.
 
 ## Artefatos publicados
@@ -56,13 +56,16 @@ Cada release alpha contém:
   assinaturas, `dinx-package-signing-key.gpg`, `dinx-repository-metadata.txt` e
   os arquivos customizados `*.pkg.tar.zst` com assinaturas destacadas;
 
-O perfil inclui os AppImages oficiais Zrythm v2.0.0-alpha.7 e ONLYOFFICE
-Desktop Editors 10.0.0, juntos com cerca de 518 MB antes da compressão SquashFS.
-O Zrythm v2 é pré-release e pode falhar ou perder dados. O app integrado do
-ONLYOFFICE ainda contém Forms e Diagram Viewer; a DINX registra apenas tipos de
-arquivo de documentos, planilhas, apresentações e PDF. Imagens acima do limite
-de 2 GiB por asset do GitHub usam a entrega dividida; o alias ISO de arquivo
-único só avança quando o release publica uma imagem que cabe nesse limite.
+O perfil atual inclui o EuroOffice (fork lean do ONLYOFFICE, AGPL-3.0) como
+suíte de escritório e PDF, consumido dos releases `eurooffice/v*` da branch
+office com pacote pacman e squashfs live verificados por SHA256; o EuroOffice
+é o handler padrão de `application/pdf` e dos formatos OOXML. PaintFE, Transit,
+Zenkai, Patchy e Blockbench são empacotados como árvores `/opt/<pacote>/`
+pré-extraídas (convenção de repack no `distro/iso/README.pt-BR.md`), com
+launchers que executam `AppRun` sem FUSE nem extração em tmpfs. Imagens acima
+do limite de 2 GiB por asset do GitHub usam a entrega dividida; o alias ISO de
+arquivo único só avança quando o release publica uma imagem que cabe nesse
+limite.
 
 ## Repositório móvel de pacotes assinado
 
@@ -71,7 +74,8 @@ hospedado como assets de GitHub Release sob `dinx-packages-latest`, em
 `https://github.com/rufl/DINX/releases/download/dinx-packages-latest`.
 O atualizador semanal verifica 20 pins de origem de pacotes toda segunda-feira,
 às 04:17 UTC, e abre um pull request para revisão; nunca altera pins diretamente
-na `main`. O Zrythm acompanha o canal v2 alpha oficial; o commit privado do
+na `main`. O EuroOffice acompanha os releases lean `eurooffice/v*` publicados
+pela branch office (consumidor `eurooffice-refresh.yml` na main); o commit privado do
 Deetty e os pins acoplados do ZLS/Zig 0.16 continuam mantidos manualmente. Após
 a integração de alterações de pacotes, um workflow separado compila e assina o
 repositório sem montar uma ISO; alterações somente de pacotes não acionam mais a

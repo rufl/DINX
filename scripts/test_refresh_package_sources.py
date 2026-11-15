@@ -358,6 +358,25 @@ class RefreshPackageSourcesTests(unittest.TestCase):
             self.plan()
         self.assertEqual(self.source_path.read_bytes(), original)
 
+    def test_blake2b_pins_accept_128_hex_and_reject_sha256_length(self) -> None:
+        entry = self.manifest["packages"][0]
+        entry["checksum"] = "blake2b"
+        entry["checksum_key"] = "EXAMPLE_SOURCE_B2"
+        self.source_path.write_text(
+            "EXAMPLE_VERSION=1.2.0\n"
+            "EXAMPLE_SOURCE_URL=https://example.invalid/v1.2.0.tar.gz\n"
+            "EXAMPLE_SOURCE_B2=" + "a" * 128 + "\n",
+            encoding="utf-8",
+        )
+        self.checksum = "c" * 128
+        with patch("builtins.print"):
+            changes, changed = self.plan()
+        self.assertEqual(changed, ["example"])
+        self.assertIn("EXAMPLE_SOURCE_B2=" + "c" * 128, changes[self.source_path])
+        self.checksum = "c" * 64
+        with self.assertRaisesRegex(ValueError, "checksum has an invalid format"), patch("builtins.print"):
+            self.plan()
+
     def test_zrythm_official_page_refreshes_prerelease_appimage(self) -> None:
         self.source_path.write_text(
             "\n".join(

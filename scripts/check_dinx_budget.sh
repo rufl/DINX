@@ -8,8 +8,13 @@ max_rootfs_packages=${DINX_MAX_ROOTFS_PACKAGES:-128}
 max_dinit_entries=${DINX_MAX_DINIT_ENTRIES:-25}
 max_native_binary_bytes=${DINX_MAX_NATIVE_BINARY_BYTES:-6291456}
 max_boot_window_seconds=${DINX_MAX_BOOT_WINDOW_SECONDS:-120}
-# Allow a 3 GiB ISO; tagged releases split images above GitHub's 2 GiB asset limit.
-max_iso_bytes=${DINX_MAX_ISO_BYTES:-3221225472}
+# Keep the built ISO below GitHub's 2 GiB release-asset limit so a release stays
+# a single download. release.yml splits any image at or above 2147483648 bytes
+# into part-* volumes, so the ceiling is one byte below that boundary: an
+# oversized ISO fails the build here instead of publishing as split parts.
+# distro/iso/README.md documents this same 2147483647 limit. Raise
+# DINX_MAX_ISO_BYTES only with a deliberate decision to ship split volumes.
+max_iso_bytes=${DINX_MAX_ISO_BYTES:-2147483647}
 boot_window_seconds=${DINX_QEMU_TIMEOUT:-60}
 
 fail() {

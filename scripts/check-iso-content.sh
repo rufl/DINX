@@ -19,7 +19,7 @@ iso_path=${1:-}
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 source "$script_dir/lib/iso-content-manifest.sh"
 
-for command in jq mktemp rm xorriso unsquashfs grep cmp python3 zstd; do
+for command in jq mktemp rm xorriso unsquashfs grep cmp python3; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -61,8 +61,8 @@ xorriso -osirrox on \
 
 for squashfs in "$tmp_dir/rootfs.img" "$tmp_dir/livefs.img"; do
   squashfs_stats=$(unsquashfs -no-xattrs -no-progress -s "$squashfs")
-  grep -Eq 'Compression[[:space:]]+zstd([[:space:]]|$)' <<<"$squashfs_stats" \
-    || fail "SquashFS image is not zstd-compressed: $squashfs"
+  grep -Eq 'Compression[[:space:]]+xz([[:space:]]|$)' <<<"$squashfs_stats" \
+    || fail "SquashFS image is not xz-compressed: $squashfs"
   grep -Eq 'Block size[[:space:]]+1048576([[:space:]]|$)' <<<"$squashfs_stats" \
     || fail "SquashFS image does not use 1 MiB blocks: $squashfs"
 done
@@ -277,54 +277,32 @@ required_paths=(
   usr/bin/paintfe
   usr/local/bin/haruna
   usr/share/color-schemes/DINXDark.colors
-  opt/paintfe/PaintFE.AppImage
+  opt/paintfe/AppRun
   usr/share/applications/paintfe.desktop
   usr/share/icons/hicolor/256x256/apps/paintfe.png
   usr/share/licenses/paintfe/LICENSE.md
-  usr/bin/wordcraft
-  opt/wordcraft/wordcraft.AppImage
-  usr/share/applications/wordcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/wordcraft.png
-  usr/share/licenses/wordcraft/LICENSE-MIT
-  usr/share/licenses/wordcraft/LICENSE-APACHE
-  usr/bin/gridcraft
-  opt/gridcraft/gridcraft.AppImage
-  usr/share/applications/gridcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/gridcraft.png
-  usr/share/licenses/gridcraft/LICENSE-MIT
-  usr/share/licenses/gridcraft/LICENSE-APACHE
-  usr/bin/deckcraft
-  opt/deckcraft/deckcraft.AppImage
-  usr/share/applications/deckcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/deckcraft.png
-  usr/share/licenses/deckcraft/LICENSE-MIT
-  usr/share/licenses/deckcraft/LICENSE-APACHE
-  usr/share/mime/packages/ai.storyteller.deckcraft.xml
-  usr/bin/pdfcraft
-  opt/pdfcraft/pdfcraft.AppImage
-  usr/share/applications/pdfcraft.desktop
-  usr/share/icons/hicolor/256x256/apps/pdfcraft.png
-  usr/share/licenses/pdfcraft/LICENSE-MIT
-  usr/share/licenses/pdfcraft/LICENSE-APACHE
   usr/bin/transit
-  opt/transit/transit.AppImage
+  opt/transit/AppRun
   usr/share/applications/transit.desktop
   usr/share/icons/hicolor/256x256/apps/transit.png
   usr/share/licenses/transit/LICENSE-MIT
   usr/share/licenses/transit/LICENSE-APACHE
   usr/share/mime/packages/transit.xml
   usr/bin/zenkai
-  opt/zenkai/zenkai.AppImage
+  opt/zenkai/AppRun
   usr/share/applications/zenkai.desktop
   usr/share/licenses/zenkai/LICENCE.md
+  usr/bin/eurooffice
+  opt/eurooffice/DesktopEditors
+  usr/share/applications/eurooffice.desktop
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
   usr/bin/patchy
   usr/lib/patchy/patchy-force-darkest
   usr/bin/blockbench
-  opt/patchy/PatchyLinux.AppImage
-  opt/blockbench/Blockbench.AppImage
+  opt/patchy/AppRun
+  opt/blockbench/AppRun
   usr/share/applications/org.kde.krita.desktop
   usr/share/applications/org.inkscape.Inkscape.desktop
   usr/share/applications/org.godotengine.Godot.desktop
@@ -458,14 +436,6 @@ required_paths=(
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
   usr/bin/firefox
   usr/share/applications/firefox.desktop
-  usr/bin/opensnitchd
-  usr/bin/opensnitch-ui
-  etc/opensnitchd/default-config.json
-  usr/share/applications/opensnitch_ui.desktop
-  etc/dinit.d/opensnitchd
-  etc/dinit.d/boot.d/opensnitchd
-  etc/xdg/autostart/opensnitch-ui.desktop
-  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/share/applications/org.kde.haruna.desktop
   usr/share/licenses/haruna/LICENSE
   usr/share/applications/com.github.neithern.g4music.desktop
@@ -509,6 +479,9 @@ required_paths=(
   usr/share/polkit-1/actions/io.calamares.calamares.policy
   usr/bin/dconf
   usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml
+  etc/dconf/profile/user
+  etc/dconf/db/local
+  etc/dconf/db/local.d/99-dinx-dark
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
@@ -521,7 +494,9 @@ required_paths=(
   usr/bin/pkexec
   usr/bin/zenity
   usr/bin/pgrep
+  usr/bin/timeout
   usr/local/libexec/dinx-installer
+  usr/local/libexec/dinx-gparted
   usr/local/libexec/dinx-approve-desktop-launcher
   usr/bin/python3
   usr/bin/ps
@@ -625,9 +600,14 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai haruna; do
+for package in krita inkscape godot pixelorama patchy blockbench paintfe transit zenkai eurooffice haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
+done
+for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto; do
+  if grep -Eq "/var/lib/pacman/local/${retired_app}-[^/]*/" <<<"$manifest"; then
+    fail "retired office/graphics package metadata remains in rootfs: $retired_app"
+  fi
 done
 source "$script_dir/../distro/packages/patchy/source.env"
 patchy_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' "$script_dir/../distro/packages/patchy/PKGBUILD")
@@ -644,8 +624,8 @@ patchy_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
 patchy_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/patchy)
 grep -Fq '/usr/lib/patchy/patchy-force-darkest' <<<"$patchy_launcher" \
   || fail 'Patchy launcher does not force its internal Darkest theme'
-grep -Fq 'PatchyLinux.AppImage --appimage-extract-and-run' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not use the no-FUSE AppImage path'
+grep -Fq 'exec /opt/patchy/AppRun' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not exec its pre-extracted /opt tree'
 patchy_force_darkest=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/patchy/patchy-force-darkest)
 grep -Fq 'customThemeId=bundled:darkest.patchytheme' <<<"$patchy_force_darkest" \
   || fail 'Patchy package does not force its Darkest theme'
@@ -968,6 +948,22 @@ theme_sync=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/l
 grep -Fq 'gtk-application-prefer-dark-theme' <<<"$theme_sync" || fail 'GTK dark/light selection is not synchronized into user settings'
 grep -Fq 'dconf write' <<<"$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
 grep -Fq 'custom_palette' <<<"$theme_sync" || fail 'Qt6ct dark/light palette selection is not synchronized'
+# The per-user theme sync above only runs once the Pearl shell starts, so the
+# freedesktop color-scheme default has to be compiled into the image for the egui
+# applications (WordCraft, GridCraft, DeckCraft, PdfCraft, PaintFE) and the
+# libadwaita/GTK applications to start dark on a fresh or live session. Assert the
+# compiled database shipped in the image, not just the source keyfile: an overlay
+# keyfile under local.d is inert until dconf compiles it.
+dconf_profile=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/profile/user)
+grep -Fqx 'user-db:user' <<<"$dconf_profile" \
+  || fail 'the dconf user profile does not include the user database, so Pearl theme changes would not apply'
+grep -Fqx 'system-db:local' <<<"$dconf_profile" \
+  || fail 'the dconf user profile does not include the system database'
+dconf_database=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/db/local)
+grep -aq 'color-scheme' <<<"$dconf_database" \
+  || fail 'the compiled system dconf database is missing or carries no color-scheme default'
+grep -aq 'prefer-dark' <<<"$dconf_database" \
+  || fail 'the compiled system dconf database does not default to the dark color scheme'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'
@@ -1192,8 +1188,6 @@ grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floati
 for firewall_link_manifest in "$manifest" "$livefs_manifest"; do
   grep -Fq 'squashfs-root/etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewall_link_manifest" \
     || fail 'Firewalld Dinit service is not enabled for both installed rootfs and livefs'
-  grep -Fq 'squashfs-root/etc/dinit.d/boot.d/opensnitchd -> /etc/dinit.d/opensnitchd' <<<"$firewall_link_manifest" \
-    || fail 'OpenSnitch Dinit service is not enabled for both installed rootfs and livefs'
 done
 for firewall_package in firewalld firewall-config firewalld-dinit dinx-firewalld-dinit; do
   grep -Eq "/var/lib/pacman/local/${firewall_package}-[^/]*/" <<<"$manifest" \
@@ -1202,29 +1196,42 @@ done
 gparted_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.gnome.gparted.policy)
 grep -Fq '<action id="org.gnome.gparted">' <<<"$gparted_policy" \
   || fail 'GParted root-launch Polkit action is missing'
+# GParted is GTK 3 and needs root, so it is elevated through the same pkexec env
+# bridge the installer uses. Upstream's /usr/bin/gparted self-elevates with
+# `pkexec --disable-internal-agent`, which depends on polkit allow_gui preserving
+# DISPLAY/XAUTHORITY; the DINX session unsets DISPLAY and has no X server, so that
+# path leaves the root gpartedbin with no display. Assert the launcher bridges the
+# Wayland socket and session bus instead.
+gparted_launcher_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-gparted' <<<"$manifest")
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$gparted_launcher_listing" \
+  || fail 'GParted launcher is not executable in the ISO'
+gparted_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-gparted)
+grep -Fq 'WAYLAND_DISPLAY="$wayland_display"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not pass the Wayland socket to the elevated session'
+grep -Fq 'XDG_RUNTIME_DIR="$runtime_dir"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not pass the runtime directory to the elevated session'
+grep -Fq 'DBUS_SESSION_BUS_ADDRESS="$dbus_address"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not pass the session bus for polkit authorization'
+grep -Fq 'GDK_BACKEND=wayland' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not force the GTK 3 Wayland backend'
+grep -Fq '/usr/bin/gparted "$@"' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not invoke upstream GParted with its arguments'
+grep -Fq '[l]xqt-policykit-agent' <<<"$gparted_launcher" \
+  || fail 'GParted launcher does not verify a polkit authorization agent is running'
+gparted_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/gparted.desktop)
+grep -Fqx 'Exec=/usr/local/libexec/dinx-gparted %f' <<<"$gparted_override" \
+  || fail 'Partition Editor override does not use the DINX Wayland launcher'
+grep -Fqx 'TryExec=/usr/local/libexec/dinx-gparted' <<<"$gparted_override" \
+  || fail 'Partition Editor override prerequisite does not resolve the DINX launcher'
 firewalld_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.desktop.policy.choice)
 for action in all config direct policies; do
   grep -Fq "<action id=\"org.fedoraproject.FirewallD1.$action\">" <<<"$firewalld_policy" \
     || fail "Firewalld Polkit action is missing: $action"
 done
-for required_package in firefox opensnitch opensnitch-dinit; do
+for required_package in firefox; do
   grep -Eq "/var/lib/pacman/local/${required_package}-[^/]*/" <<<"$manifest" \
     || fail "required package metadata is missing from installed rootfs: $required_package"
 done
-unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/opensnitchd/default-config.json \
-  > "$tmp_dir/opensnitch-config.json"
-if grep -Fq '"Firewall": "nftables"' "$tmp_dir/opensnitch-config.json" \
-  && grep -Fq '"DefaultAction": "allow"' "$tmp_dir/opensnitch-config.json" \
-  && grep -Fq '"InterceptUnknown": false' "$tmp_dir/opensnitch-config.json"; then
-  :
-else
-  fail 'OpenSnitch defaults must use nftables, allow traffic and avoid intercepting unknown apps'
-fi
-opensnitch_autostart=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/autostart/opensnitch-ui.desktop)
-grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' <<<"$opensnitch_autostart" \
-  || fail 'OpenSnitch tray UI is not configured to start in the background'
-grep -Fqx 'TryExec=opensnitch-ui' <<<"$opensnitch_autostart" \
-  || fail 'OpenSnitch autostart entry does not guard the UI executable'
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for retired_path in \
     usr/bin/portmaster \
@@ -1245,13 +1252,21 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     etc/dinit.d/ufw \
     usr/share/applications/gufw.desktop \
     usr/local/share/applications/gufw.desktop \
-    usr/local/libexec/dinx-gufw; do
+    usr/local/libexec/dinx-gufw \
+    usr/bin/opensnitchd \
+    usr/bin/opensnitch-ui \
+    etc/opensnitchd/default-config.json \
+    usr/share/applications/opensnitch_ui.desktop \
+    etc/dinit.d/opensnitchd \
+    etc/dinit.d/boot.d/opensnitchd \
+    etc/xdg/autostart/opensnitch-ui.desktop \
+    usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg; do
     if grep -Fq "$retired_path" <<<"$image_manifest"; then
       fail "retired firewall payload remains in the ISO: $retired_path"
     fi
   done
   # Artix iproute2 requires libxtables; iptables may provide it transitively.
-  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1; do
+  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1 opensnitch opensnitch-dinit; do
     if iso_manifest_contains_package "$retired_package" <<<"$image_manifest"; then
       fail "retired package remains in a final ISO filesystem: $retired_package"
     fi
@@ -1326,13 +1341,17 @@ grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is 
 grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default XHTML handler'
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
-grep -Fq 'application/pdf=pdfcraft.desktop;' <<<"$mimeapps_config" || fail 'PdfCraft is not the default PDF handler'
-for appimage_launcher in paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai; do
+grep -Fq 'application/pdf=eurooffice.desktop;' <<<"$mimeapps_config" || fail 'EuroOffice is not the default PDF handler'
+for office_mime in \
+  application/vnd.openxmlformats-officedocument.wordprocessingml.document \
+  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet \
+  application/vnd.openxmlformats-officedocument.presentationml.presentation; do
+  grep -Fq "$office_mime=eurooffice.desktop;" <<<"$mimeapps_config" || fail "EuroOffice is not the default handler for $office_mime"
+done
+for appimage_launcher in paintfe transit zenkai patchy blockbench; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
-  grep -Fq -- '--appimage-extract-and-run "$@"' <<<"$launcher_script" \
-    || fail "$appimage_launcher launcher does not support systems without FUSE"
-  grep -Fq "/opt/$appimage_launcher/" <<<"$launcher_script" \
-    || fail "$appimage_launcher launcher does not target its package-owned AppImage"
+  grep -Fq "exec /opt/$appimage_launcher/AppRun" <<<"$launcher_script" \
+    || fail "$appimage_launcher launcher does not exec its pre-extracted /opt tree"
 done
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
@@ -1593,14 +1612,11 @@ usr/local/share/applications/org.aqueous.Dome.desktop|System Monitor|Monitor do 
 usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
-usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
+usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
-usr/share/applications/wordcraft.desktop|WordCraft|WordCraft|wordcraft %U
-usr/share/applications/gridcraft.desktop|GridCraft|GridCraft|gridcraft %U
-usr/share/applications/deckcraft.desktop|DeckCraft|DeckCraft|deckcraft %U
-usr/share/applications/pdfcraft.desktop|PdfCraft|PdfCraft|pdfcraft %U
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
+usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
@@ -1631,6 +1647,16 @@ grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missin
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
+# The three native Zig control apps force the DINX dark palette from compiled-in CSS.
+# Assert the shipped binaries carry it, not just their source: a recipe change that
+# leaves pkgrel unchanged makes the builder install a stale precompiled artifact whose
+# binary predates the theme, which is how DinitUI shipped a light UI while
+# check_dinitui.sh still passed on the source.
+for native_dark_app in dinitui dinxpanel seafoam-settings; do
+  native_dark_binary=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$native_dark_app")
+  grep -Fq 'window.background { background-color: #0b0d12; }' <<<"$native_dark_binary" \
+    || fail "$native_dark_app binary does not embed the DINX dark window background; a stale precompiled artifact may have been installed"
+done
 grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Dintor light scheme is missing'
 
 

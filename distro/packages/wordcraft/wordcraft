@@ -1,3 +1,0 @@
-#!/bin/sh
-set -eu
-exec /opt/wordcraft/wordcraft.AppImage --appimage-extract-and-run "$@"

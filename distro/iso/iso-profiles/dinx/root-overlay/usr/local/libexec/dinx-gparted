@@ -1,0 +1,64 @@
+#!/bin/sh
+set -u
+
+# GParted is a GTK 3 application that needs root to touch block devices. The
+# upstream /usr/bin/gparted launcher elevates itself with
+# `pkexec --disable-internal-agent`, which relies on polkit's `allow_gui`
+# annotation to preserve DISPLAY and XAUTHORITY. The DINX session is pure
+# Wayland and explicitly unsets DISPLAY (dinx-aqueous-pearl), and its root-display
+# workaround needs `xhost`, which is not installed, so the elevated gpartedbin
+# falls back to X11 with an empty DISPLAY and dies with
+# `cannot open display: :@`. Launch it through the same pkexec env bridge the
+# installer uses instead, and let upstream keep its automount-inhibit handling:
+# under pkexec the launcher is already root, so it takes that code path itself.
+
+show_error() {
+    message=$1
+    # Several of the checks below fail precisely because the session environment
+    # is broken. zenity is a GTK 4 dialog and blocks indefinitely when it has no
+    # display socket to connect to, so only attempt it when one is present, and
+    # bound the wait so a wedged session still yields a message instead of a
+    # launcher that appears to do nothing.
+    if command -v zenity >/dev/null 2>&1 &&
+       { [ -n "${WAYLAND_DISPLAY:-}" ] || [ -n "${DISPLAY:-}" ]; }; then
+        timeout 20 zenity --no-markup --error --title='Partition Editor' \
+            --text="$message" >/dev/null 2>&1 || true
+    fi
+    printf 'Partition Editor: %s\n' "$message" >&2
+}
+
+fail() {
+    show_error "$1"
+    exit 1
+}
+
+command -v pkexec >/dev/null 2>&1 || fail 'pkexec is not installed. The polkit authorization client is missing.'
+command -v gparted >/dev/null 2>&1 || fail 'GParted is not installed on this system.'
+
+runtime_dir=${XDG_RUNTIME_DIR:-}
+wayland_display=${WAYLAND_DISPLAY:-}
+dbus_address=${DBUS_SESSION_BUS_ADDRESS:-}
+[ -n "$runtime_dir" ] && [ -d "$runtime_dir" ] \
+    || fail 'The Wayland session has no valid XDG_RUNTIME_DIR. Log into the desktop session and retry.'
+command -v pgrep >/dev/null 2>&1 || fail 'pgrep is unavailable, so the polkit authorization agent cannot be checked.'
+if ! pgrep -u "$(id -u)" -f '[l]xqt-policykit-agent' >/dev/null 2>&1; then
+    fail 'The lxqt-policykit-agent is not running in this session. Wait for the desktop to finish starting, then retry.'
+fi
+[ -n "$wayland_display" ] \
+    || fail 'WAYLAND_DISPLAY is missing. Launch Partition Editor from the desktop session.'
+case "$wayland_display" in
+    /*) socket=$wayland_display ;;
+    *) socket=$runtime_dir/$wayland_display ;;
+esac
+[ -S "$socket" ] \
+    || fail "The Wayland socket is unavailable at $socket. Wait for the desktop to finish starting, then retry."
+[ -n "$dbus_address" ] \
+    || fail 'DBUS_SESSION_BUS_ADDRESS is missing. The session D-Bus and polkit authorization agent must be running.'
+
+pkexec env \
+    XDG_RUNTIME_DIR="$runtime_dir" \
+    WAYLAND_DISPLAY="$wayland_display" \
+    DBUS_SESSION_BUS_ADDRESS="$dbus_address" \
+    XDG_SESSION_TYPE=wayland \
+    GDK_BACKEND=wayland \
+    /usr/bin/gparted "$@"

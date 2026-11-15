@@ -14,7 +14,7 @@ source_env="$startdir/source.env"
 : "${TRANSIT_ICON_URL:?missing TRANSIT_ICON_URL}"
 : "${TRANSIT_ICON_SHA256:?missing TRANSIT_ICON_SHA256}"
 pkgver="${TRANSIT_VERSION}"
-pkgrel=1
+pkgrel=2
 pkgdesc="Digital audio workstation written in Rust"
 arch=('x86_64')
 url='https://github.com/transit-audio/transit'
@@ -36,13 +36,13 @@ sha256sums=(
   "${TRANSIT_LICENSE_APACHE_SHA256}"
   "${TRANSIT_ICON_SHA256}"
   "${TRANSIT_MIME_SHA256}"
-  '11a0107795d89432af374028a08e998a45933cd15eb18fcb8dd333b067de8294'
+  '7bc8852f006e6e30498b79cbd9a68cc44942ac892b7ef9ceab9b15b8ec7482e2'
   '4cff69e46d8a825e8f3131b2ab9df65ebf914d34f74a818ae8cac2f1bf0b3e0d'
 )
 
 package() {
-  install -Dm755 "$srcdir/transit-${pkgver}-x86_64.AppImage" \
-    "$pkgdir/opt/transit/transit.AppImage"
+  bash "$startdir/../../../scripts/lib/repack-appimage.sh" \
+    "$srcdir/transit-${pkgver}-x86_64.AppImage" "$pkgdir/opt/transit" --strip --trim-locales
   install -Dm755 "$srcdir/transit" "$pkgdir/usr/bin/transit"
   install -Dm644 "$srcdir/transit.desktop" \
     "$pkgdir/usr/share/applications/transit.desktop"
@@ -58,6 +58,7 @@ package() {
 Transit ${pkgver} upstream source and build information:
 https://github.com/transit-audio/transit/tree/v${pkgver}
 
-The DINX package redistributes the upstream x86_64 AppImage without modification.
+The DINX package repacks the upstream x86_64 AppImage as a pre-extracted tree
+(ELF stripped, locales trimmed to en/pt) so launches never extract into tmpfs.
 EOF
 }

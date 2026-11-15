@@ -309,7 +309,7 @@ def plan_updates(
                 checksum = hash_source(url, checksum_algorithm)
                 if advertised_checksum and checksum != advertised_checksum:
                     fail(f"{name}: artifact manifest SHA256 mismatch for {url}")
-            expected_length = 64 if checksum_algorithm in ("sha256", "blake2b") else 0
+            expected_length = 128 if checksum_algorithm == "blake2b" else 64
             if len(checksum) != expected_length or not re.fullmatch(r"[0-9a-f]+", checksum):
                 fail(f"{name}: generated checksum has an invalid format")
             if source_url_key:

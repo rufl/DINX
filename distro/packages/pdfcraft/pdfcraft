@@ -1,3 +1,0 @@
-#!/bin/sh
-set -eu
-exec /opt/pdfcraft/pdfcraft.AppImage --appimage-extract-and-run "$@"

@@ -446,7 +446,6 @@ trap finish EXIT
               build_package swayimg
               build_package gapless
               build_package dinx-keyring
-              build_package opensnitch-dinit
               build_package dinx-firewalld-dinit
               firewalld_boot_package=$(find "$package_repo" -maxdepth 1 -type f -name 'dinx-firewalld-dinit-*.pkg.tar.zst' -print -quit)
               [[ -n "$firewalld_boot_package" ]]
@@ -456,10 +455,6 @@ trap finish EXIT
               build_package blockbench
               build_package paintfe
               build_package pixelorama
-              build_package wordcraft
-              build_package gridcraft
-              build_package deckcraft
-              build_package pdfcraft
               build_package transit
               build_package zenkai
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
@@ -470,6 +465,15 @@ trap finish EXIT
                 qt6-5compat qt6-declarative
               build_package haruna
               if [[ "$package_repository_only" != true ]]; then
+              eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
+              if [[ -n "$eurooffice_stage_dir" ]]; then
+                eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+                eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+                cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
+                export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
+                printf 'dinx-build-timing phase=eurooffice-staged package=%s\n' "$eurooffice_package"
+              fi
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
@@ -701,6 +705,11 @@ trap finish EXIT
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
                 printf "common_profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/common/common.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
+                if [[ -f /workspace/distro/office/eurooffice.pin ]]; then
+                  printf "eurooffice_tag=%s\n" "$(awk -F= '$1 == "tag" { print $2; exit }' /workspace/distro/office/eurooffice.pin)"
+                  printf "eurooffice_package_sha256=%s\n" "$(sha256sum "$package_repo/$eurooffice_package" | cut -d " " -f 1)"
+                  printf "eurooffice_squashfs_sha256=%s\n" "$(sha256sum "$DINX_EUROOFFICE_SQUASHFS" | cut -d " " -f 1)"
+                fi
                 printf "builder_sync_databases_sha256=%s\n" "$builder_sync_databases_sha256"
                 printf "compression_schema=dinx-squashfs/v1\n"
                 printf "compression_algorithm=xz\n"

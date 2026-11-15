@@ -37,6 +37,11 @@ fi
   || fail "ISO SHA-512 checksum does not match: $iso_dir/$checksum_name"
 DINX_ISO_PATH="$iso_path" DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
 "$script_dir/check-iso-content.sh" "$iso_path"
+# Enforce the payload/startup budgets against the built image. The workflow runs
+# this script without DINX_ISO_PATH (no image exists yet), which reports
+# iso=not_measured; passing the path here is what actually binds the built ISO to
+# the size ceiling.
+DINX_ISO_PATH="$iso_path" "$script_dir/check_dinx_budget.sh"
 printf 'qualify-iso: static ISO, metadata, checksum, content and budget gates passed: %s\n' "$iso_path"
 
 if [[ "$mode" == static ]]; then

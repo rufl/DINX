@@ -93,6 +93,53 @@ strip_documentation() {
   done
 }
 
+# Build-time-only metadata is dead weight in the live/install images: the ISO
+# ships no compiler, make, cmake, pkg-config, g-ir-compiler, valac or autoconf,
+# so nothing in the image can consume headers, CMake package configs, pkg-config
+# records, GObject-Introspection source XML, Vala bindings or aclocal macros.
+# gir-1.0 holds the source XML used to generate typelibs; the runtime reads the
+# already-generated usr/lib/girepository-1.0 typelibs, which are kept.
+# usr/include/ghostty is preserved because check-iso-content.sh requires
+# usr/include/ghostty/vt.h: ghostty-vt-runtime deliberately ships the VT headers
+# alongside its library for Deetty's build contract.
+strip_build_metadata() {
+  local root=$1
+  local rel
+
+  [[ "$root" != / && -d "$root/usr" ]] || return 0
+
+  if [[ -d "$root/usr/include" ]]; then
+    local preserved keep="$root/usr/include/ghostty" kept=false
+    if [[ -d "$keep" ]]; then
+      preserved=$(mktemp -d) || {
+        printf 'dinx-final-squashfs: cannot allocate a directory to preserve usr/include/ghostty\n' >&2
+        return 1
+      }
+      cp -a -- "$keep" "$preserved/" || {
+        rm -rf -- "$preserved"
+        printf 'dinx-final-squashfs: cannot preserve usr/include/ghostty\n' >&2
+        return 1
+      }
+      kept=true
+    fi
+    rm -rf -- "$root/usr/include"
+    if [[ "$kept" == true ]]; then
+      mkdir -p -- "$root/usr/include"
+      mv -- "$preserved/ghostty" "$root/usr/include/"
+      rm -rf -- "$preserved"
+      printf '%s\n' 'dinx-final-squashfs: removed build headers, preserving usr/include/ghostty'
+    else
+      printf '%s\n' 'dinx-final-squashfs: removed build headers'
+    fi
+  fi
+  for rel in usr/share/gir-1.0 usr/lib/cmake usr/lib/pkgconfig usr/share/vala usr/share/aclocal; do
+    if [[ -d "$root/$rel" ]]; then
+      rm -rf -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed build-only metadata path=%s\n' "$rel"
+    fi
+  done
+}
+
 prune_excluded_packages() {
   local root=$1
   local local_db="$root/var/lib/pacman/local"
@@ -165,15 +212,120 @@ prune_excluded_packages() {
   remove_vim_compat_aliases "$root"
 }
 
+# Compile the system dconf database from the checked-in keyfiles. dconf reads
+# only the compiled binary at /etc/dconf/db/local at runtime; the keyfile
+# fragments under /etc/dconf/db/local.d are inert until compiled, and the
+# overlay is copied by rsync so no pacman dconf-update hook fires for it.
+# `dconf compile` writes the gvdb binary directly and needs no chroot. Seeding
+# the dark color-scheme system default makes freedesktop consumers (the egui
+# Craft apps, libadwaita/GTK apps) start dark on a fresh or live session.
+compile_dconf_database() {
+  local root=$1
+  local db_dir="$root/etc/dconf/db"
+
+  [[ -d "$db_dir/local.d" ]] || return 0
+  command -v dconf >/dev/null 2>&1 || {
+    printf 'dinx-final-squashfs: etc/dconf/db/local.d present but dconf is unavailable; cannot compile the system database\n' >&2
+    return 1
+  }
+  dconf compile "$db_dir/local" "$db_dir/local.d" || {
+    printf 'dinx-final-squashfs: failed to compile the system dconf database\n' >&2
+    return 1
+  }
+  [[ -s "$db_dir/local" ]] || {
+    printf 'dinx-final-squashfs: dconf compile produced no database\n' >&2
+    return 1
+  }
+  chmod 0644 -- "$db_dir/local" || {
+    printf 'dinx-final-squashfs: cannot set mode on the compiled dconf database\n' >&2
+    return 1
+  }
+  printf '%s\n' 'dinx-final-squashfs: compiled system dconf database at etc/dconf/db/local'
+}
+
+merge_eurooffice() {
+  local root=$1
+  [[ -n "${DINX_EUROOFFICE_SQUASHFS:-}" && -s "${DINX_EUROOFFICE_SQUASHFS}" ]] || return 0
+  [[ "$root" != / && -d "$root" ]] || return 0
+  command -v unsquashfs >/dev/null 2>&1 || {
+    printf 'dinx-final-squashfs: unsquashfs unavailable; cannot merge EuroOffice\n' >&2
+    return 1
+  }
+  unsquashfs -f -d "$root" "$DINX_EUROOFFICE_SQUASHFS" >/dev/null || {
+    printf 'dinx-final-squashfs: failed to merge EuroOffice tree into %s\n' "$root" >&2
+    return 1
+  }
+  printf 'dinx-final-squashfs: merged EuroOffice lean tree root=%s\n' "$root"
+}
+
+# Regenerable Python bytecode and unused stdlib payloads are dead weight in
+# the final images; nothing in the runtime reads idle/test/tkinter.
+strip_python_bytecode() {
+  local root=$1 py
+  [[ "$root" != / && -d "$root/usr/lib" ]] || return 0
+  for py in "$root"/usr/lib/python3.*; do
+    [[ -d "$py" ]] || continue
+    find "$py" -name '__pycache__' -type d -prune -exec rm -rf {} +
+    rm -rf -- "$py/idlelib" "$py/test" "$py/tkinter"
+  done
+  printf '%s\n' 'dinx-final-squashfs: removed Python bytecode and idle/test/tkinter payloads'
+}
+
+# glibc i18n data follows the same en/pt locale policy as the apps.
+trim_i18n_locales() {
+  local root=$1
+  [[ "$root" != / && -d "$root/usr/share/i18n/locales" ]] || return 0
+  find "$root/usr/share/i18n/locales" -maxdepth 1 -type f \
+    ! -name 'en_US*' ! -name 'en_GB*' ! -name 'pt_BR*' ! -name 'pt_PT*' -delete
+  if [[ -d "$root/usr/share/i18n/charmaps" ]]; then
+    find "$root/usr/share/i18n/charmaps" -maxdepth 1 -type f \
+      ! -name 'UTF-8*' ! -name 'ISO-8859-1*' -delete
+  fi
+  printf '%s\n' 'dinx-final-squashfs: trimmed glibc i18n locales/charmaps to en/pt + UTF-8/ISO-8859-1'
+}
+
+# Only Papirus (and breeze for Calamares KIconThemes) is selected; the extra
+# icon theme variants are never referenced by the DINX theme contracts.
+trim_icon_variants() {
+  local root=$1 variant
+  [[ "$root" != / && -d "$root/usr/share/icons" ]] || return 0
+  for variant in Papirus-Dark Papirus-Light breeze-dark; do
+    rm -rf -- "$root/usr/share/icons/$variant"
+  done
+  printf '%s\n' 'dinx-final-squashfs: removed unused icon theme variants'
+}
+
+# Static archives and Python build configuration are build-time-only payloads;
+# the runtime image ships no compiler and nothing reads them at runtime.
+strip_static_libs() {
+  local root=$1 py
+  [[ "$root" != / && -d "$root/usr/lib" ]] || return 0
+  find "$root/usr/lib" -type f -name '*.a' -delete
+  for py in "$root"/usr/lib/python3.*; do
+    [[ -d "$py" ]] || continue
+    rm -rf -- "$py"/config-*
+  done
+  printf '%s\n' 'dinx-final-squashfs: removed static archives and Python build configuration'
+}
+
 if [[ -n "$source_root" ]]; then
+  merge_eurooffice "$source_root"
   prune_excluded_packages "$source_root"
   strip_documentation "$source_root"
+  strip_build_metadata "$source_root"
+  strip_python_bytecode "$source_root"
+  trim_i18n_locales "$source_root"
+  trim_icon_variants "$source_root"
+  strip_static_libs "$source_root"
+  compile_dconf_database "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.
 exec "$real_mksquashfs" "${filtered[@]}" \
-  -comp zstd \
-  -Xcompression-level 19 \
+  -comp xz \
+  -Xbcj x86 \
   -b 1M \
+  -Xdict-size 1M \
+  -processors 4 \
   -wildcards \
   -e 'usr/src/linux*' 'var/cache/pacman/pkg/*' 'var/log/*'

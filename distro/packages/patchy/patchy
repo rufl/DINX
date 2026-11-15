@@ -5,4 +5,4 @@ export GTK_APPLICATION_PREFER_DARK_THEME=1
 if ! /usr/lib/patchy/patchy-force-darkest; then
     printf '%s\n' 'patchy: could not force the Darkest theme; preserving existing settings' >&2
 fi
-exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"
+exec /opt/patchy/AppRun "$@"

@@ -12,15 +12,24 @@ fail() {
 
 [[ -x "$wrapper" ]] || fail "compression wrapper is missing or not executable: $wrapper"
 for required in \
-  '-comp zstd' \
-  '-Xcompression-level 19' \
+  '-comp xz' \
+  '-Xbcj x86' \
+  '-Xdict-size 1M' \
+  '-processors 4' \
   '-b 1M' \
   "'usr/src/linux*'" \
   "'var/cache/pacman/pkg/*'" \
   "'var/log/*'" \
   'strip_documentation()' \
+  'strip_build_metadata()' \
+  'compile_dconf_database()' \
+  'strip_python_bytecode()' \
+  'trim_i18n_locales()' \
+  'trim_icon_variants()' \
+  'strip_static_libs()' \
   'usr/share/man' \
-  'usr/share/gtk-doc'; do
+  'usr/share/gtk-doc' \
+  'usr/share/gir-1.0'; do
   grep -Fq -- "$required" "$wrapper" || fail "compression wrapper is missing: $required"
 done
 
@@ -36,10 +45,34 @@ EOF
 chmod +x "$fake"
 
 fixture_root="$work_dir/rootfs"
-mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1"
+mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
+  "$fixture_root/usr/include/ghostty/vt" "$fixture_root/usr/include/gtk-4.0" \
+  "$fixture_root/usr/share/gir-1.0" "$fixture_root/usr/lib/cmake/demo" \
+  "$fixture_root/usr/lib/pkgconfig" "$fixture_root/usr/share/vala" \
+  "$fixture_root/usr/share/aclocal" \
+  "$fixture_root/usr/lib/python3.14/__pycache__" "$fixture_root/usr/lib/python3.14/idlelib" \
+  "$fixture_root/usr/share/i18n/locales" "$fixture_root/usr/share/i18n/charmaps" \
+  "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus" \
+  "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
 printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
+printf 'vt header required by the Deetty build contract\n' > "$fixture_root/usr/include/ghostty/vt.h"
+printf 'nested vt header\n' > "$fixture_root/usr/include/ghostty/vt/grid.h"
+printf 'build-only header\n' > "$fixture_root/usr/include/gtk-4.0/gtk.h"
+printf 'build-only introspection source\n' > "$fixture_root/usr/share/gir-1.0/Gtk-4.0.gir"
+printf 'build-only cmake config\n' > "$fixture_root/usr/lib/cmake/demo/demo.cmake"
+printf 'build-only pkg-config record\n' > "$fixture_root/usr/lib/pkgconfig/demo.pc"
+printf 'build-only vala binding\n' > "$fixture_root/usr/share/vala/demo.vapi"
+printf 'build-only aclocal macro\n' > "$fixture_root/usr/share/aclocal/demo.m4"
+printf 'bytecode\n' > "$fixture_root/usr/lib/python3.14/__pycache__/demo.pyc"
+printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/en_US"
+printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/pt_BR"
+printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/de_DE"
+printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz"
+printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/IBM437.gz"
+printf 'static\n' > "$fixture_root/usr/lib/libdemo.a"
+printf 'build config\n' > "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu/Makefile"
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \
   "$wrapper" "$fixture_root" "$work_dir/fixture.img"
@@ -47,6 +80,60 @@ DINX_COMPRESSION_ARGS="$args_file" \
   || fail 'documentation directory remains in the final filesystem'
 [[ ! -e "$fixture_root/usr/share/man" ]] \
   || fail 'manual pages remain in the final filesystem'
+for build_metadata in usr/share/gir-1.0 usr/lib/cmake usr/lib/pkgconfig usr/share/vala usr/share/aclocal; do
+  [[ ! -e "$fixture_root/$build_metadata" ]] \
+    || fail "build-only metadata remains in the final filesystem: $build_metadata"
+done
+[[ ! -e "$fixture_root/usr/include/gtk-4.0" ]] \
+  || fail 'build-only headers remain in the final filesystem'
+[[ -f "$fixture_root/usr/include/ghostty/vt.h" \
+   && -f "$fixture_root/usr/include/ghostty/vt/grid.h" ]] \
+  || fail 'the ghostty VT headers required by the Deetty build contract were stripped'
+[[ ! -e "$fixture_root/usr/lib/python3.14/__pycache__" \
+   && ! -e "$fixture_root/usr/lib/python3.14/idlelib" ]] \
+  || fail 'Python bytecode/idle payloads remain in the final filesystem'
+[[ -f "$fixture_root/usr/share/i18n/locales/en_US" \
+   && -f "$fixture_root/usr/share/i18n/locales/pt_BR" \
+   && ! -e "$fixture_root/usr/share/i18n/locales/de_DE" \
+   && -f "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz" \
+   && ! -e "$fixture_root/usr/share/i18n/charmaps/IBM437.gz" ]] \
+  || fail 'glibc i18n trim did not keep en/pt locales and UTF-8 charmaps'
+[[ ! -e "$fixture_root/usr/share/icons/Papirus-Dark" \
+   && -d "$fixture_root/usr/share/icons/Papirus" ]] \
+  || fail 'unused icon variants remain or the selected Papirus theme was removed'
+[[ ! -e "$fixture_root/usr/lib/libdemo.a" \
+   && ! -e "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" ]] \
+  || fail 'static archives or Python build configuration remain in the final filesystem'
+
+# The system dconf default must be compiled for freedesktop consumers to see it:
+# the egui Craft apps and libadwaita/GTK apps fall back to light when the portal
+# reports no color-scheme preference, and the overlay keyfiles are inert until
+# dconf compiles them. The functional check needs dconf, which the builder
+# manifest requires; keep it conditional so this contract still runs where dconf
+# is absent.
+theme_overlay="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/dconf"
+grep -Fqx 'system-db:local' "$theme_overlay/profile/user" \
+  || fail 'the dconf user profile does not include the system database'
+grep -Fq "color-scheme='prefer-dark'" "$theme_overlay/db/local.d/99-dinx-dark" \
+  || fail 'the seeded system dconf default does not select the dark color scheme'
+if command -v dconf >/dev/null 2>&1; then
+  dconf_fixture="$work_dir/dconf-root"
+  mkdir -p "$dconf_fixture/etc/dconf/db"
+  cp -a "$theme_overlay/db/local.d" "$dconf_fixture/etc/dconf/db/"
+  mkdir -p "$dconf_fixture/etc/dconf/profile"
+  cp -a "$theme_overlay/profile/user" "$dconf_fixture/etc/dconf/profile/"
+  DINX_MKSQUASHFS_REAL="$fake" \
+  DINX_COMPRESSION_ARGS="$args_file" \
+    "$wrapper" "$dconf_fixture" "$work_dir/dconf.img"
+  [[ -s "$dconf_fixture/etc/dconf/db/local" ]] \
+    || fail 'the system dconf database was not compiled for the final filesystem'
+  [[ "$(stat -c '%a' "$dconf_fixture/etc/dconf/db/local")" == 644 ]] \
+    || fail 'the compiled system dconf database is not world-readable'
+  grep -aq "prefer-dark" "$dconf_fixture/etc/dconf/db/local" \
+    || fail 'the compiled dconf database does not carry the dark color-scheme default'
+else
+  printf '%s\n' 'dinx_compression_contract: dconf unavailable, skipping the compiled-database functional check'
+fi
 
 DINX_MKSQUASHFS_REAL="$fake" \
 DINX_COMPRESSION_ARGS="$args_file" \
@@ -74,11 +161,15 @@ output.img
 -e
 old-exclude
 -comp
-zstd
--Xcompression-level
-19
+xz
+-Xbcj
+x86
 -b
 1M
+-Xdict-size
+1M
+-processors
+4
 -wildcards
 -e
 usr/src/linux*
@@ -92,4 +183,4 @@ actual=$(cat "$args_file")
   fail 'wrapper did not enforce the deterministic compression arguments'
 }
 
-printf 'dinx_compression_contract compression=zstd level=19 block=1M excludes=kernel-source+pacman-cache+logs override_safe=true\n'
+printf 'dinx_compression_contract compression=xz bcj=x86 block=1M dict=1M processors=4 excludes=kernel-source+pacman-cache+logs override_safe=true\n'

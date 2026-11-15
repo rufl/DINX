@@ -73,12 +73,9 @@ rootfs:
     - papirus-icon-theme
     - firefox
     - paintfe
-    - wordcraft
-    - gridcraft
-    - deckcraft
-    - pdfcraft
     - transit
     - zenkai
+    - eurooffice
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
@@ -118,7 +115,6 @@ rootfs:
     - galculator
     - firewalld
     - firewall-config
-    - opensnitch
     - inxi
     - inkscape
     - jq
@@ -157,7 +153,6 @@ rootfs:
       - artix-live-dinit
       - firewalld-dinit
       - dinx-firewalld-dinit
-      - opensnitch-dinit
 livefs:
   packages:
     - artix-grub-live
@@ -171,7 +166,6 @@ livefs:
       - elogind-dinit
       - firewalld-dinit
       - dinx-firewalld-dinit
-      - opensnitch-dinit
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit

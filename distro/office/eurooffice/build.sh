@@ -252,7 +252,30 @@ fi
 # helper, LD_LIBRARY_PATH, LD_PRELOAD=libcef.so) with the DINX app path.
 upstream_launcher="$tree/usr/bin/desktopeditors"
 [[ -f "$upstream_launcher" ]] || { printf 'build: missing upstream launcher (usr/bin/desktopeditors)\n' >&2; exit 1; }
-sed 's|/opt/euro-office/euro-office|/opt/eurooffice|g' "$upstream_launcher" > "$pkgroot/usr/bin/eurooffice"
+{
+  cat <<'EOF'
+#!/bin/sh
+set -eu
+export GTK_THEME=DINX
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE=Fusion
+
+config_home="${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}"
+settings_dir="$config_home/onlyoffice"
+settings_file="$settings_dir/DesktopEditorsSettings.conf"
+if [ ! -e "$settings_file" ]; then
+  mkdir -p "$settings_dir"
+  cat > "$settings_file" <<'SETTINGS'
+[General]
+theme=dark
+SETTINGS
+fi
+EOF
+  sed -e 's|/opt/euro-office/euro-office|/opt/eurooffice|g' \
+      -e 's|exec \$APP_PATH/DesktopEditors "\$@"|exec \$APP_PATH/DesktopEditors --theme=dark "\$@"|' \
+      "$upstream_launcher"
+} > "$pkgroot/usr/bin/eurooffice"
 chmod 0755 "$pkgroot/usr/bin/eurooffice"
 grep -Fq 'LD_PRELOAD' "$pkgroot/usr/bin/eurooffice" \
   || { printf 'build: launcher lost LD_PRELOAD\n' >&2; exit 1; }
@@ -384,6 +407,14 @@ grep -Fq '/opt/eurooffice' <<<"$launcher_check" \
   || { printf 'build: launcher does not target /opt/eurooffice\n' >&2; exit 1; }
 grep -Fq 'LD_PRELOAD' <<<"$launcher_check" \
   || { printf 'build: launcher missing LD_PRELOAD\n' >&2; exit 1; }
+grep -Fq 'QT_QPA_PLATFORMTHEME=qt6ct' <<<"$launcher_check" \
+  || { printf 'build: launcher missing qt6ct dark-theme backend\n' >&2; exit 1; }
+grep -Fq 'QT_STYLE_OVERRIDE=Fusion' <<<"$launcher_check" \
+  || { printf 'build: launcher missing high-contrast Qt style\n' >&2; exit 1; }
+grep -Fq 'theme=dark' <<<"$launcher_check" \
+  || { printf 'build: launcher missing persisted dark theme\n' >&2; exit 1; }
+grep -Fq -- '--theme=dark' <<<"$launcher_check" \
+  || { printf 'build: launcher missing dark-theme argument\n' >&2; exit 1; }
 # DINX gate: localized launcher identity (pt_BR) must ship in the package.
 grep -Fq 'Name[pt_BR]=' "$pkgroot/usr/share/applications/eurooffice.desktop" \
   || { printf 'build: desktop entry missing Name[pt_BR]\n' >&2; exit 1; }

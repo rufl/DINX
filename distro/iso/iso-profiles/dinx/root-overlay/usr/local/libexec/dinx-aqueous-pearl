@@ -69,6 +69,23 @@ if [ "${DINX_LIVE_SESSION:-}" = "1" ] \
       printf '%s\n' 'dinx-aqueous-pearl: skipping installer shortcut because the Desktop path is not absolute' >&2
       ;;
   esac
+elif [ -n "${HOME:-}" ]; then
+  desktop_dir=$(xdg-user-dir DESKTOP)
+  case "$desktop_dir" in
+    /*) rm -f -- "$desktop_dir/Install DINX.desktop" ;;
+  esac
+  data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+  applications_dir="$data_home/applications"
+  mkdir -p "$applications_dir"
+  installer_hidden="$applications_dir/dinx-installer.desktop"
+  installer_hidden_tmp="$applications_dir/.dinx-installer.desktop.tmp.$$"
+  (umask 022; printf '%s\n' \
+    '[Desktop Entry]' \
+    'Type=Application' \
+    'Name=Install DINX' \
+    'Name[pt_BR]=Instalar DINX' \
+    'Hidden=true' >"$installer_hidden_tmp")
+  mv -f -- "$installer_hidden_tmp" "$installer_hidden"
 fi
 
 compositor=/usr/bin/aqueous
@@ -134,6 +151,12 @@ if [ "${DINX_LIVE_SESSION:-}" = 1 ] && [ -n "${HOME:-}" ] \
     mv -n "$lock_desktop_tmp" "$lock_desktop_override"
     rm -f -- "$lock_desktop_tmp"
   fi
+fi
+if [ -n "${HOME:-}" ] \
+  && [ -f "$config_home/aqueous/wm.toml" ] \
+  && [ ! -L "$config_home/aqueous/wm.toml" ]; then
+  /usr/local/libexec/dinx-tune-aqueous-config "$config_home/aqueous/wm.toml" \
+    || printf '%s\n' 'dinx-aqueous-pearl: could not apply performance policy' >&2
 fi
 if [ -n "${HOME:-}" ] && [ ! -e "$config_home/aqueous/layout.toml" ] && [ -r /etc/xdg/aqueous/layout.toml ]; then
   install -Dm644 /etc/xdg/aqueous/layout.toml "$config_home/aqueous/layout.toml"

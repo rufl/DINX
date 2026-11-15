@@ -53,8 +53,8 @@
      }
 +    fn desktopDisplaySettings(context: *anyopaque) void {
 +        _ = context;
-+        var child = std.process.Child.init(&.{ "dinx-wdisplays" }, std.heap.c_allocator);
-+        child.spawn() catch {};
++        const child = std.process.spawn(std.Options.debug_io, .{ .argv = &.{ "dinx-wdisplays" } }) catch return;
++        _ = child;
 +    }
      fn desktopCrop(context: *anyopaque) void {
          const surface: *Surface = @ptrCast(@alignCast(context));

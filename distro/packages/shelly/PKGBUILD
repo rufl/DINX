@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${SHELLY_SOURCE_URL:?missing SHELLY_SOURCE_URL}"
 : "${SHELLY_SOURCE_SHA256:?missing SHELLY_SOURCE_SHA256}"
 pkgver="$SHELLY_VERSION"
-pkgrel=3
+pkgrel=4
 pkgdesc='Modern Artix-compatible ALPM package manager'
 arch=('x86_64')
 url='https://github.com/Seafoam-Labs/Shelly-ALPM'

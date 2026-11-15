@@ -19,7 +19,7 @@ source_env="$startdir/source.env"
 : "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
 : "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_PEARL_THEMES_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='Fluent, Jasper, Skeuos and Orchis Pearl community themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -76,6 +76,35 @@ package() {
   for theme in jasper-rounded jasper-square; do
     cp -a "$srcdir/Jasper-gtk-theme-${JASPER_FORK_COMMIT}/themes/$theme" "$theme_dir/dinx.$theme"
   done
+
+  # WCAG AA: light-theme primaries drawn on white canvas must reach 4.5:1.
+  # Fluent (#2196f3 = 3.1:1) and Jasper (#009688 = 3.7:1) fall below it, so
+  # both rounded and square light variants are anchored to a darker shade of
+  # the same hue family. Dark variants already clear the gate and are left
+  # untouched; normalization runs before profile compaction so every port
+  # ships identical palettes.
+  python3 - "$theme_dir" <<'EOF'
+import json, os, sys
+root = sys.argv[1]
+targets = {
+    'fluent':  {'primary': '#1565c0'},
+    'jasper':  {'primary': '#00796b', 'error_color': '#b3261e'},
+}
+for brand, colors in targets.items():
+    for corners in ('rounded', 'square'):
+        for variant in ('light', 'dark'):
+            if variant != 'light':
+                continue
+            path = os.path.join(root, f'dinx.{brand}-{corners}', variant + '.json')
+            with open(path, encoding='utf-8') as stream:
+                data = json.load(stream)
+            data['primary'] = colors['primary']
+            if 'error_color' in colors:
+                data['error_color'] = colors['error_color']
+            with open(path, 'w', encoding='utf-8', newline='\n') as stream:
+                json.dump(data, stream, ensure_ascii=False, separators=(',', ':'))
+                stream.write('\n')
+EOF
 
   # Pearl reads these manifests and profile descriptors at startup. Compact
   # JSON preserves their data while reducing I/O and parser work.

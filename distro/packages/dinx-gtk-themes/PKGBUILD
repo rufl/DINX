@@ -22,7 +22,7 @@ source_env="$startdir/source.env"
 : "${JASPER_FORK_SOURCE_URL:?missing Jasper fork source URL}"
 : "${JASPER_FORK_SOURCE_SHA256:?missing Jasper fork source checksum}"
 pkgver="$DINX_GTK_THEMES_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Fluent, Jasper, Skeuos and Orchis GTK3/GTK4 themes with rounded and square corners'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -214,6 +214,10 @@ def primary(root, theme, variant):
 sk = primary(skeuos_fork, 'skeuos-rounded', 'dark')
 or_dark = primary(orchis, 'orchis-rounded', 'dark')
 or_light = primary(orchis, 'orchis-rounded', 'light')
+# Jasper light primaries are normalized to #00796b in the Pearl port for WCAG
+# AA; anchor the GTK accent to the same value so shell, application profiles
+# and GTK themes share identical contrast-correct accent values.
+ja_light = '#00796b'
 def unify(path, raw, new):
     if os.path.islink(path):
         return
@@ -234,6 +238,8 @@ for name in os.listdir(out):
             elif name.startswith('Orchis-'):
                 raw, new = ('#3281ea', or_dark) if file_variant == 'dark' else ('#1a73e8', or_light)
                 unify(p, raw, new)
+            elif name.startswith('Jasper-') and file_variant == 'light':
+                unify(p, '#009688', ja_light)
 EOF
 }
 

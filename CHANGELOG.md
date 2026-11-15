@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Normalize the Fluent and Jasper light palettes to WCAG AA: `dinx-pearl-themes` darkens the Fluent primary `#2196f3` (3.1:1) to `#1565c0` and the Jasper primary `#009688` (3.7:1) to `#00796b`, and darkens the Jasper `error_color` `#c62828` (4.4:1) to `#b3261e` so accent text and error labels on white containers clear 4.5:1. `dinx-gtk-themes` anchors the Jasper light GTK accent to the same `#00796b`. Bump both packages to a new release.
+
 - Restrict Pearl appearance to Orchis, Skeuos, Jasper and Fluent, with Orchis Rounded dark as the default. Normalize all eight Pearl manifests and KDE profiles to their own family IDs/names, migrate retired selections, remove fixed-dark application overrides, and synchronize GTK/libadwaita, Qt6ct, Haruna, Deetty, Dintor and Aqueous borders from the saved selection. Bump affected package releases and extend ISO/session/theme contracts.
 
 - Add Blender from the Artix package repositories to the default ISO desktop roster and require its binary and desktop entry in the ISO content contract.

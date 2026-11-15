@@ -1,4 +1,3 @@
 #!/bin/sh
 set -eu
-export DINX_HIDE_WINDOW_TITLE=1
 exec /usr/bin/dome "$@"

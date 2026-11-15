@@ -31,6 +31,7 @@ jobs:
     permissions:
       contents: write
       actions: write
+      pull-requests: write
     steps:
       - name: Checkout DINX main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -42,7 +43,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: scripts/check_eurooffice_release.sh
-      - name: Commit pin and dispatch P0 ISO run
+      - name: Create pin pull request
         if: steps.refresh.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -53,7 +54,10 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add distro/office/eurooffice.pin
           git commit --message "chore(office): pin lean EuroOffice ${TAG}"
-          expected=$(git ls-remote --heads origin refs/heads/main | awk 'NR == 1 { print $1 }')
-          git push --force-with-lease="refs/heads/main:$expected" origin HEAD:refs/heads/main
-          gh workflow run p0-iso.yml --repo "$GITHUB_REPOSITORY" --ref main
-          printf 'eurooffice_refresh pinned=%s p0_dispatched=true\n' "$TAG"
+          branch="automation/eurooffice-${TAG//\//-}"
+          git switch -c "$branch"
+          git push --set-upstream origin "$branch"
+          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+            --title "chore(office): pin lean EuroOffice ${TAG}" \
+            --body "Updates the verified EuroOffice pin to ${TAG}. Merge this PR to qualify the new package in P0."
+          printf 'eurooffice_refresh pin_pr_created=true tag=%s\n' "$TAG"

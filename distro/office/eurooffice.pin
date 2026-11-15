@@ -1,6 +1,6 @@
-tag=eurooffice/v9.3.8-dinx4
+tag=eurooffice/v9.3.8-dinx5
 version=9.3.8
-pkgrel=4
-package=eurooffice-9.3.8-4-x86_64.pkg.tar.zst
+pkgrel=5
+package=eurooffice-9.3.8-5-x86_64.pkg.tar.zst
 squashfs=eurooffice-9.3.8-x86_64.squashfs
 sha256sums=SHA256SUMS

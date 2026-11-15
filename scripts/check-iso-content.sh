@@ -308,7 +308,7 @@ required_paths=(
   usr/share/licenses/pdfcraft/LICENSE-MIT
   usr/share/licenses/pdfcraft/LICENSE-APACHE
   usr/bin/transit
-  opt/transit/transit.AppImage
+  opt/transit/AppRun
   usr/share/applications/transit.desktop
   usr/share/icons/hicolor/256x256/apps/transit.png
   usr/share/licenses/transit/LICENSE-MIT
@@ -1364,13 +1364,16 @@ grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
 grep -Fq 'application/pdf=pdfcraft.desktop;' <<<"$mimeapps_config" || fail 'PdfCraft is not the default PDF handler'
-for appimage_launcher in paintfe wordcraft gridcraft deckcraft pdfcraft transit zenkai; do
+for appimage_launcher in paintfe wordcraft gridcraft deckcraft pdfcraft zenkai; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
   grep -Fq -- '--appimage-extract-and-run "$@"' <<<"$launcher_script" \
     || fail "$appimage_launcher launcher does not support systems without FUSE"
   grep -Fq "/opt/$appimage_launcher/" <<<"$launcher_script" \
     || fail "$appimage_launcher launcher does not target its package-owned AppImage"
 done
+transit_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/transit)
+grep -Fq '/opt/transit/AppRun "$@"' <<<"$transit_launcher" \
+  || fail 'transit launcher does not target its extracted AppRun tree'
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi

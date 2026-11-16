@@ -17,7 +17,7 @@ Do not use the ISO on a machine containing data that you cannot restore. The liv
 ## Requirements
 
 - x86_64 computer or virtual machine;
-- UEFI firmware is recommended;
+- UEFI firmware is recommended; legacy BIOS/MBR machines boot the same image through its hybrid MBR;
 - a USB drive of at least 4 GB; writing the image erases the whole drive;
 - at least 4 GB RAM recommended for hardware testing. The CI smoke test uses 2 GB, but that is not a supported hardware minimum;
 - a second device or existing system from which to download and verify the image;
@@ -147,7 +147,7 @@ Use a trusted image writer such as Rufus. Select the verified ISO and the correc
 
 1. Insert the USB.
 2. Reboot and open the one-time boot menu (`F12`, `F11`, `Esc` or the vendor-specific key).
-3. Select the UEFI entry for the USB.
+3. Select the UEFI entry for the USB, or the plain/legacy USB entry on BIOS-only machines (for example older notebooks such as the HP dm1 with an AMD E-350); the hybrid MBR boots the same GRUB menu.
 4. If the firmware refuses the image, disable Secure Boot for this test; the current alpha does not provide a signed Secure Boot path.
 5. The published Alpha 12 image starts directly in `Aqueous + Pearl (DINX)`; no live username or password prompt is required.
 
@@ -274,6 +274,10 @@ installer path and remaining gates are tracked in the [architecture decision](ar
 ### The USB does not appear
 
 Verify that the checksum passed, the image was written to the whole device, the firmware is in UEFI mode and the USB is visible in `lsblk`/`diskutil`. Try another port or drive.
+
+### The boot stalls with `No irq handler for vector`
+
+Old legacy-BIOS chipsets (AMD E-350 "Zacate" and similar pre-2012 notebooks, such as the HP dm1) can stop early at `do_IRQ: 1.55 No irq handler for vector`. The GRUB menu itself booted through the hybrid MBR; the kernel needs the legacy interrupt workaround. Reboot and choose `Start DINX Linux (compatibility)`, which adds `noapic irqpoll nomodeset`. The text-mode recovery TTY (`Ctrl+Alt+F2`/`F3`) remains available if the frame buffer still fails.
 
 ### The screen is blank
 

@@ -17,7 +17,7 @@ Não use a ISO em uma máquina com dados que não possam ser restaurados. A sess
 ## Requisitos
 
 - computador ou máquina virtual x86_64;
-- firmware UEFI recomendado;
+- firmware UEFI recomendado; máquinas BIOS/MBR legadas iniciam a mesma imagem pelo MBR híbrido;
 - pendrive de pelo menos 4 GB; a gravação apaga o dispositivo inteiro;
 - 4 GB de RAM recomendados para teste em hardware. O smoke test de CI usa 2 GB, mas isso não é um mínimo de hardware suportado;
 - um segundo dispositivo ou sistema existente para baixar e verificar a imagem;
@@ -145,7 +145,7 @@ Use um gravador confiável como o Rufus. Selecione a ISO verificada e o pendrive
 
 1. Insira o pendrive.
 2. Reinicie e abra o menu de boot (`F12`, `F11`, `Esc` ou a tecla específica do fabricante).
-3. Selecione a entrada UEFI do USB.
+3. Selecione a entrada UEFI do USB, ou a entrada USB simples/legada em máquinas só BIOS (por exemplo notebooks antigos como o HP dm1 com AMD E-350); o MBR híbrido abre o mesmo menu GRUB.
 4. Se o firmware recusar a imagem, desative Secure Boot para este teste; a alpha atual não fornece um caminho Secure Boot assinado.
 5. A imagem Alpha 12 publicada inicia diretamente em `Aqueous + Pearl (DINX)`; a live não solicita usuário nem senha.
 
@@ -276,6 +276,10 @@ produção. O caminho selecionado e os gates restantes estão registrados na [de
 ### O USB não aparece
 
 Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro, que o firmware está em modo UEFI e que o USB aparece em `lsblk`/`diskutil`. Tente outra porta ou outro pendrive.
+
+### A inicialização trava com `No irq handler for vector`
+
+Chipsets BIOS legados antigos (AMD E-350 "Zacate" e notebooks semelhantes anteriores a 2012, como o HP dm1) podem parar no início em `do_IRQ: 1.55 No irq handler for vector`. O menu GRUB em si iniciou pelo MBR híbrido; o kernel precisa da correção de interrupção legado. Reinicie e escolha `Start DINX Linux (compatibility)`, que adiciona `noapic irqpoll nomodeset`. O TTY de recuperação em modo texto (`Ctrl+Alt+F2`/`F3`) continua disponível se o frame buffer ainda falhar.
 
 ### A tela fica vazia
 

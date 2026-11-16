@@ -54,7 +54,9 @@ substitui a qualificação em hardware.
 
 A smoke de boot no QEMU captura a superfície VGA e usa OCR do Tesseract para exigir um marcador da área de trabalho Pearl/Aqueous/DINX, rejeitando Pearl Greeter, prompts de login e falhas visíveis do Dinit. Ela envia `Alt+F4` após a primeira captura para dispensar a configuração inicial do Pearl e verifica o quadro da área de trabalho em seguida. Smokes locais exigem `qemu-system-x86_64`, `socat`, `tesseract-ocr` e `tesseract-ocr-eng`:
 
-O menu de boot mostra `Start DINX Linux` e, em sistemas UEFI, `Boot to the Firmware/BIOS`. DINX é a opção padrão e inicia após uma contagem regressiva visível de seis segundos. No BIOS legado não existe a opção de configuração do firmware UEFI. A qualificação completa do QEMU deixa o menu sem teclas injetadas para verificar a contagem.
+O menu de boot mostra `Start DINX Linux`, `Start DINX Linux (compatibility)` e, em sistemas UEFI, `Boot to the Firmware/BIOS`. DINX é a opção padrão e inicia após uma contagem regressiva visível de seis segundos. No BIOS legado não existe a opção de configuração do firmware UEFI. A qualificação completa do QEMU deixa o menu sem teclas injetadas para verificar a contagem.
+
+A imagem é híbrida: o MBR grub2 mais uma entrada El Torito de BIOS (`/boot/grub/i386-pc/eltorito.img`) e uma partição EFI System anexada fazem o mesmo arquivo iniciar por BIOS/MBR legado (emulação de CD, pendrive gravado com `dd` ou a ISO anexada como disco) e por UEFI. `scripts/check-iso-boot-records.sh` verifica esse layout estaticamente; `scripts/smoke-iso-mbr.sh` prova o caminho de disco iniciando a imagem sob SeaBIOS, sem emulação de CD nem OVMF, e selecionando `Start DINX Linux (compatibility)`. Máquinas com caminho de interrupção legado quebrado (AMD E-350 "Zacate" e chipsets semelhantes anteriores a 2012, como o HP dm1) travam após `do_IRQ: ... No irq handler for vector` na entrada padrão; a entrada de compatibilidade adiciona `noapic irqpoll nomodeset` para elas. As duas são evidências de QEMU, não qualificação de hardware físico.
 
 ```bash
 DINX_QEMU_TIMEOUT=110 \

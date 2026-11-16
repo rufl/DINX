@@ -340,10 +340,14 @@ awk '
 grep -Fq 'set kopts="quiet splash"' "$live_grub_cfg" || fail 'live ISO GRUB does not enable Plymouth and quiet boot'
 grep -Fq 'grub_theme=/boot/grub/themes/artix/theme.txt' "$live_grub_variable" \
   || fail 'live ISO GRUB does not select the DINX boot theme'
-[[ $(grep -Fc 'menuentry ' "$live_grub_kernels") -eq 1 ]] \
-  || fail 'live ISO GRUB does not define exactly one default DINX boot option'
+[[ $(grep -Fc 'menuentry ' "$live_grub_kernels") -eq 2 ]] \
+  || fail 'live ISO GRUB does not define exactly the default and compatibility DINX boot options'
 grep -Fq 'menuentry "Start DINX Linux"' "$live_grub_kernels" \
   || fail 'DINX default boot option is missing'
+grep -Fq 'menuentry "Start DINX Linux (compatibility)"' "$live_grub_kernels" \
+  || fail 'DINX compatibility boot option is missing'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll nomodeset' "$live_grub_kernels" \
+  || fail 'DINX compatibility boot option does not pass the legacy interrupt/framebuffer parameters'
 [[ $(grep -Fc 'menuentry ' "$live_grub_cfg") -eq 1 ]] \
   || fail 'live ISO GRUB has unexpected entries outside its single firmware option'
 grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$live_grub_cfg" \

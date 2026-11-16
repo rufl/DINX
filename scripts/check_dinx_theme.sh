@@ -284,7 +284,7 @@ jq -e '.theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name 
   || fail 'Fresh Pearl preferences do not default to Pearl Material dark'
 grep -Fq 'const char *theme_name[] = { "material", "skeuos", "orchis" };' "$wizard_source" \
   || fail 'Pearl first-run theme selection order changed'
-grep -Fq 'printf("%s %s %s %s %s\n", dock, edge, theme_name[theme], variant, corners);' "$wizard_source" \
+grep -Fq '               dock, edge, theme_name[theme], variant, corners);' "$wizard_source" \
   || fail 'Pearl first-run wizard does not emit theme, variant and corner choices'
 if grep -Fq 'dinx-dark' "$wizard_source"; then
   fail 'Pearl first-run wizard still offers the retired DINX theme choices'

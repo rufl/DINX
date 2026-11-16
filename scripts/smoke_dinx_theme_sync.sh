@@ -57,7 +57,7 @@ SH
 cat >"$tmp/wizard" <<'SH'
 #!/bin/sh
 printf 'called\n' >>"$DINX_WIZARD_CALLS"
-printf 'off bottom material dark rounded\n'
+printf 'pt-BR pt_BR.UTF-8 America/Sao_Paulo off bottom material dark rounded\n'
 SH
 chmod +x "$fakebin/pearl" "$tmp/wizard"
 

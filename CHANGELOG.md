@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Restore the Aqueous 1.0.5 and Pearl 0.3.0 source pins required by the existing DINX dinit/session patches. The newer 1.0.20/0.3.9 archives rejected those patches during the ISO contract, while the restored checksums and all Aqueous/Pearl contracts pass.
 
 - Set Pearl Greeter's post-install default to `material_dark` while keeping `high_contrast` disabled; the saved user's light/dark selection remains authoritative through the session theme synchronization.
 - Extend the Pearl first-run wizard with a polite bilingual greeting, language and location selection before desktop questions. Persist locale, keyboard and timezone choices for the live Calamares launcher, propagate the selected light/dark scheme through Aqueous and skip the wizard when saved preferences already exist.

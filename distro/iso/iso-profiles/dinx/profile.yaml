@@ -31,7 +31,6 @@ rootfs:
     - dinxpanel
     - dinx-keyring
     - dinx-plymouth-theme
-    - dome
     - mission-center
     - river
     - kwm

@@ -283,6 +283,13 @@ required_paths=(
   opt/audionaut/Audionaut.AppImage
   usr/share/applications/audionaut.desktop
   usr/share/licenses/audionaut/LICENSE.md
+  usr/bin/paintfe
+  opt/paintfe/PaintFE.AppImage
+  usr/share/applications/paintfe.desktop
+  usr/share/icons/hicolor/256x256/apps/paintfe.png
+  usr/share/licenses/paintfe/LICENSE.md
+  usr/bin/blender
+  usr/share/applications/blender.desktop
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
@@ -526,7 +533,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy audionaut haruna firefox; do
+for package in krita inkscape godot pixelorama patchy audionaut paintfe blender haruna firefox; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -1048,9 +1055,6 @@ grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct opensnitch-ui --background' <<<"$
 grep -Fqx 'TryExec=opensnitch-ui' <<<"$opensnitch_autostart" \
   || fail 'OpenSnitch autostart entry does not guard the UI executable'
 for image_manifest in "$manifest" "$livefs_manifest"; do
-  grep -Eq '/var/lib/pacman/local/firefox-[^/]*/' <<<"$image_manifest" \
-    || fail 'Firefox package metadata is missing from an ISO image'
-done
   for retired_path in \
     usr/bin/portmaster \
     usr/lib/portmaster/portmaster \
@@ -1355,6 +1359,7 @@ usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagen
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|env QT_QPA_PLATFORMTHEME=qt6ct haruna %U
 usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
+usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol

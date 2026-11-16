@@ -50,7 +50,7 @@ grep -Fq -- '--theme=dark "$@"' "$root/distro/packages/onlyoffice/onlyoffice" ||
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama paintfe blender patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
@@ -61,7 +61,7 @@ for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-s
     fail "$package remains in an ISO feature group"
   fi
 done
-for retired in vlc vlc-cli; do
+for retired in vlc vlc-cli zrythm; do
   if grep -Fqx "    - $retired" "$profile" || grep -Fq "\"$retired\"" "$feature_groups"; then
     fail "$retired remains explicitly selected for the DINX ISO"
   fi
@@ -141,7 +141,7 @@ fi
 grep -Fq 'build_package pixelorama' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Pixelorama'
 
 
-for package in onlyoffice zrythm; do
+for package in onlyoffice; do
   launcher="$root/distro/packages/$package/$package.desktop"
   wrapper="$root/distro/packages/$package/$package"
   recipe="$root/distro/packages/$package/PKGBUILD"
@@ -348,4 +348,4 @@ if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
   || grep -Fq 'application/vnd.visio' "$office_launcher"; then
   fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
 fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+paintfe+blender office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'

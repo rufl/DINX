@@ -270,6 +270,7 @@ for required in \
   'build_package eurooffice' \
   'build_package pixelorama' \
   'build_package audionaut' \
+  'build_package paintfe' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

@@ -47,6 +47,8 @@ rootfs:
     - fuse2
     - gparted
     - pixelorama
+    - paintfe
+    - blender
     - godot
     - libva
     - pcmanfm

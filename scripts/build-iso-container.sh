@@ -423,6 +423,7 @@ trap finish EXIT
               build_package eurooffice
               build_package patchy
               build_package pixelorama
+              build_package paintfe
               build_package audionaut
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
               pacman_retry -S --needed --noconfirm \

@@ -277,28 +277,28 @@
       ]
     },
     {
+      "name": "paintfe",
       "provider": "github",
-      "name": "zrythm",
-      "provider": "zrythm",
-      "repository": "zrythm/zrythm",
-      "source_file": "distro/packages/zrythm/source.env",
-      "version_key": "ZRYTHM_VERSION",
-      "source_url_key": "ZRYTHM_SOURCE_URL",
-      "checksum_key": "ZRYTHM_SOURCE_SHA256",
+      "repository": "kylejckson/PaintFE",
+      "source_file": "distro/packages/paintfe/source.env",
+      "version_key": "PAINTFE_VERSION",
+      "package_version_key": "PAINTFE_VERSION",
+      "source_url_key": "PAINTFE_SOURCE_URL",
+      "checksum_key": "PAINTFE_SOURCE_SHA256",
       "checksum": "sha256",
       "tag_prefix": "v",
-      "url_template": "https://www.zrythm.org/downloads/Zrythm-{version}-Linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/zrythm/PKGBUILD",
+      "url_template": "https://github.com/kylejckson/PaintFE/releases/download/v{version}/PaintFE-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/paintfe/PKGBUILD",
       "additional_sources": [
         {
-          "source_url_key": "ZRYTHM_LICENSE_URL",
-          "checksum_key": "ZRYTHM_LICENSE_SHA256",
-          "url_template": "https://gitlab.zrythm.org/zrythm/zrythm/-/raw/{tag}/LICENSES/LicenseRef-ZrythmLicense.txt"
+          "source_url_key": "PAINTFE_LICENSE_URL",
+          "checksum_key": "PAINTFE_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/kylejckson/PaintFE/{tag}/LICENSE.md"
         },
         {
-          "source_url_key": "ZRYTHM_TRADEMARKS_URL",
-          "checksum_key": "ZRYTHM_TRADEMARKS_SHA256",
-          "url_template": "https://gitlab.zrythm.org/zrythm/zrythm/-/raw/{tag}/TRADEMARKS.md"
+          "source_url_key": "PAINTFE_ICON_URL",
+          "checksum_key": "PAINTFE_ICON_SHA256",
+          "url_template": "https://raw.githubusercontent.com/kylejckson/PaintFE/{tag}/assets/icons/app_icon_256.png"
         }
       ]
     }

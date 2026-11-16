@@ -80,18 +80,6 @@ def latest_tag(
     elif provider == "gitlab":
         project = urllib.parse.quote(repository, safe="")
         endpoint = f"https://gitlab.gnome.org/api/v4/projects/{project}/releases/permalink/latest"
-    elif provider == "zrythm":
-        endpoint = "https://www.zrythm.org/en/download-v2-alpha.html"
-        try:
-            page = get_body(endpoint)
-        except urllib.error.HTTPError as error:
-            fail(f"{entry['name']}: upstream release lookup returned HTTP {error.code}: {endpoint}")
-        match = re.search(r"\bVersion:\s*v?([0-9]+(?:\.[0-9]+)*-(?:alpha|beta|rc)\.[0-9]+)", page)
-        if not match:
-            fail(f"{entry['name']}: official download page has no supported version: {endpoint}")
-        tag = f"v{match.group(1)}"
-        source_version(tag)
-        return tag
     elif provider == "kde":
         project = repository.rsplit("/", 1)[-1]
         endpoint = f"https://download.kde.org/stable/{project}/"

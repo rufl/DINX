@@ -183,7 +183,7 @@ For storage, Pori is the DINX disk/mount manager and Phyto is the default file m
 For display setup, DINX's `dinx-wdisplays` wrapper opens the interactive Wayland editor; closing it atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the Shikane user daemon. Shikane starts inside Aqueous/Pearl and reapplies matching profiles when outputs change. `Dome`, `Seafoam Settings` and `zls` are part of the base ISO and the signed DINX package repository. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings is the fixed-argv native Zig/GTK4 launcher for the display/session entry points; ZLS is the bundled Zig language server used by Dintor with its matching `lib/std` tree and metadata-only shim, so the full Zig compiler remains optional. Aqueous 1.0.5 and Pearl 0.3.0 are the only selectable session components.
 
 For web browsing, the profile installs Artix's `firefox` package and makes it the default HTML/XHTML/HTTP/HTTPS handler. Firefox updates come from the Artix package sources through the existing reviewed package-source refresh; DINX ships no browser policy file and Mozilla account sign-in remains optional.
-The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, Blender, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, and the WordCraft/GridCraft/DeckCraft/PdfCraft/Transit/Zenkai suite.
+The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupd`, Flatpak, Blender, EuroOffice, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, Transit and Zenkai.
 
 ### Application launcher labels
 
@@ -211,10 +211,7 @@ Launcher names follow the desktop locale. Swayimg remains hidden from the app me
 | Pixelorama | Pixel Art & Animation | Arte de Pixel e Animação |
 | Patchy | Image Editor | Editor de Imagens |
 | Swayimg | Image Viewer | Visualizador de Imagens |
-| WordCraft | Word Processor | Editor de Texto |
-| GridCraft | Spreadsheet | Planilha |
-| DeckCraft | Presentations | Apresentações |
-| PdfCraft | PDF Workbench | Estúdio de PDF |
+| EuroOffice | Office Suite | Suíte de Escritório |
 | Transit | Audio Studio | Estúdio de Áudio |
 | Zenkai | App Launcher | Lançador de Aplicativos |
 | Gapless | Music Player | Tocador de Música |
@@ -247,7 +244,7 @@ In the live session, `swayidle` and `wlopm` power off all displays after 600 sec
 
 The Artix builder still consumes one `profile.yaml`; the feature-group manifest is a contract, not a package-composition mechanism. The generic ISO profile contains the foundation and desktop groups while gaming and BC-250-specific packages remain outside the base image. DinitUI's Normal/Lite/Gaming service policies continue to provide runtime service separation.
 
-The P0 content gate requires the root and live-session SquashFS images to contain the expected compositor, shell, greeter, session, Deetty as the sole terminal emulator, Nano recovery editor, Pori dinit storage manager, Phyto file manager, kernel `ntfs3` support, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, the PaintFE, Krita, Inkscape, Godot and Patchy graphics apps, the WordCraft, GridCraft, DeckCraft, PdfCraft, Transit and Zenkai office, PDF, audio and launcher payloads, Firefox, and dinit payloads. It rejects KolourPaint binaries, launchers and package metadata, along with optional gaming binaries and metadata, in both images. `scripts/check_desktop_packages.sh` and `scripts/check_pori_phyto.sh` verify package/profile contracts before the build. `scripts/smoke-install.sh` exercises the offline contract on ephemeral BIOS/UEFI disks, checks the dinit first boot and enables recovery TTYs. The workflow's PPM capture is visual evidence to inspect, not arbitrary hardware qualification.
+The P0 content gate requires the root and live-session SquashFS images to contain the expected compositor, shell, greeter, session, Deetty as the sole terminal emulator, Nano recovery editor, Pori dinit storage manager, Phyto file manager, kernel `ntfs3` support, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, the EuroOffice, PaintFE, Krita, Inkscape, Godot and Patchy application payloads, Transit, Zenkai, Firefox, and dinit payloads. It rejects Blockbench, WordCraft, GridCraft, DeckCraft and PdfCraft binaries, launchers and package metadata, along with optional gaming binaries and metadata, in both images. `scripts/check_desktop_packages.sh` and `scripts/check_pori_phyto.sh` verify package/profile contracts before the build. `scripts/smoke-install.sh` exercises the offline contract on ephemeral BIOS/UEFI disks, checks the dinit first boot and enables recovery TTYs. The workflow's PPM capture is visual evidence to inspect, not arbitrary hardware qualification.
 
 The installed runtime-library check covers dynamically linked applications. The pinned upstream ZLS release is statically linked; the install smoke checks its version and selected configuration inside the target chroot instead.
 

@@ -31,7 +31,7 @@ sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syn
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in blender firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak paintfe krita inkscape godot pixelorama patchy phyto pori shikane udisks2 udisks2-btrfs wdisplays wordcraft gridcraft deckcraft pdfcraft transit zenkai firefox papirus-icon-theme; do
+for package in blender eurooffice firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak paintfe krita inkscape godot pixelorama patchy phyto pori shikane udisks2 udisks2-btrfs wdisplays transit zenkai firefox papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
@@ -42,7 +42,7 @@ for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-s
     fail "$package remains in an ISO feature group"
   fi
 done
-for retired in vlc vlc-cli; do
+for retired in vlc vlc-cli blockbench wordcraft gridcraft deckcraft pdfcraft; do
   if grep -Fqx "    - $retired" "$profile" || grep -Fq "\"$retired\"" "$feature_groups"; then
     fail "$retired remains explicitly selected for the DINX ISO"
   fi
@@ -80,7 +80,10 @@ done
 for mime in text/html application/xhtml+xml x-scheme-handler/http x-scheme-handler/https; do
   grep -Fqx "$mime=firefox.desktop;" "$mimeapps" || fail "Firefox is not the default handler for $mime"
 done
-grep -Fqx 'application/pdf=pdfcraft.desktop;' "$mimeapps" || fail 'PdfCraft is not the default PDF handler'
+grep -Fqx 'application/pdf=eurooffice.desktop;' "$mimeapps" || fail 'EuroOffice is not the default PDF handler'
+for mime in application/vnd.openxmlformats-officedocument.wordprocessingml.document application/vnd.openxmlformats-officedocument.spreadsheetml.sheet application/vnd.openxmlformats-officedocument.presentationml.presentation; do
+  grep -Fqx "$mime=eurooffice.desktop;" "$mimeapps" || fail "EuroOffice is not the default handler for $mime"
+done
 if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi

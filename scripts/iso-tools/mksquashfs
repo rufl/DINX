@@ -92,6 +92,20 @@ strip_documentation() {
     fi
   done
 }
+merge_eurooffice() {
+  local root=$1
+  [[ -n "${DINX_EUROOFFICE_SQUASHFS:-}" && -s "${DINX_EUROOFFICE_SQUASHFS}" ]] || return 0
+  [[ "$root" != / && -d "$root" ]] || return 0
+  command -v unsquashfs >/dev/null 2>&1 || {
+    printf 'dinx-final-squashfs: unsquashfs unavailable; cannot merge EuroOffice\n' >&2
+    return 1
+  }
+  unsquashfs -f -d "$root" "$DINX_EUROOFFICE_SQUASHFS" >/dev/null || {
+    printf 'dinx-final-squashfs: failed to merge EuroOffice tree into %s\n' "$root" >&2
+    return 1
+  }
+  printf 'dinx-final-squashfs: merged EuroOffice lean tree root=%s\n' "$root"
+}
 
 prune_excluded_packages() {
   local root=$1
@@ -166,6 +180,7 @@ prune_excluded_packages() {
 }
 
 if [[ -n "$source_root" ]]; then
+  merge_eurooffice "$source_root"
   prune_excluded_packages "$source_root"
   strip_documentation "$source_root"
 fi

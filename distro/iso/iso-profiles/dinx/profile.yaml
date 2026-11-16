@@ -73,10 +73,7 @@ rootfs:
     - papirus-icon-theme
     - firefox
     - paintfe
-    - wordcraft
-    - gridcraft
-    - deckcraft
-    - pdfcraft
+    - eurooffice
     - transit
     - zenkai
     - dconf

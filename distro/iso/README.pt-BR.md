@@ -189,7 +189,7 @@ Para armazenamento, o Pori é o gerenciador DINX de discos/montagens e o Phyto �
 Para configuração de displays, o wrapper DINX `dinx-wdisplays` abre o editor interativo de saídas Wayland; ao fechar, ele substitui atomicamente o perfil `DINX wdisplays` em `~/.config/shikane/config.toml` e recarrega o daemon de usuário Shikane. O Shikane inicia dentro de Aqueous/Pearl e reaplica perfis correspondentes quando as saídas mudam. `Dome`, `Seafoam Settings` e `zls` fazem parte da ISO base e do repositório DINX assinado. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings é o launcher nativo em Zig/GTK4 com argv fixo para os pontos de entrada de display/sessão; ZLS é o language server Zig incluído e usado pelo Dintor com sua árvore `lib/std` correspondente e shim somente de metadados. Aqueous 1.0.5 e Pearl 0.3.0 são os únicos componentes selecionáveis da sessão.
 
 Para navegação web, o perfil instala o pacote `firefox` do Artix e o define como manipulador padrão de HTML/XHTML/HTTP/HTTPS. As atualizações do Firefox vêm das fontes de pacotes do Artix por meio do fluxo revisado de atualização de fontes de pacotes; a DINX não distribui arquivo de políticas do navegador e entrar em uma conta Mozilla continua opcional.
-O perfil também inclui btop/nvtop/inxi, diagnóstico PCI e USB, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, Blender, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy e a suíte WordCraft/GridCraft/DeckCraft/PdfCraft/Transit/Zenkai.
+O perfil também inclui btop/nvtop/inxi, diagnóstico PCI e USB, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless, Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman, `nm-connection-editor`, SANE, `fwupdmgr`, Flatpak, Blender, EuroOffice, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, Transit e Zenkai.
 
 ### Nomes dos launchers
 
@@ -217,10 +217,7 @@ Os nomes seguem o idioma do desktop. O Swayimg permanece oculto no menu de aplic
 | Blender | 3D Modeling | Modelagem 3D |
 | Patchy | Image Editor | Editor de Imagens |
 | Swayimg | Image Viewer | Visualizador de Imagens |
-| WordCraft | Word Processor | Editor de Texto |
-| GridCraft | Spreadsheet | Planilha |
-| DeckCraft | Presentations | Apresentações |
-| PdfCraft | PDF Workbench | Estúdio de PDF |
+| EuroOffice | Office Suite | Suíte de Escritório |
 | Transit | Audio Studio | Estúdio de Áudio |
 | Zenkai | App Launcher | Lançador de Aplicativos |
 | Gapless | Music Player | Tocador de Música |
@@ -250,7 +247,7 @@ A sessão live usa `swayidle` e `wlopm` para desligar todas as telas após 600 s
 
 O builder Artix ainda consome um único `profile.yaml`; o manifesto de grupos é um contrato, não um mecanismo de composição de pacotes. O perfil da ISO genérica contém os grupos foundation e desktop, enquanto gaming e pacotes específicos da BC-250 ficam fora da imagem base. As políticas de serviço Normal/Lite/Gaming do DinitUI continuam separando serviços em runtime.
 
-O gate de conteúdo do P0 exige que as imagens SquashFS do root e da sessão live contenham o compositor, shell, greeter, sessão e Deetty como único emulador de terminal, além do editor de recuperação Nano, do gerenciador de armazenamento Pori com dinit, do gerenciador de arquivos Phyto, do suporte `ntfs3` de leitura/escrita, do backend de scanner SANE, das ferramentas de firmware fwupd, do runtime Flatpak, dos aplicativos gráficos PaintFE, Krita, Inkscape e Godot e Patchy, dos payloads de escritório, PDF, áudio e lançamento WordCraft, GridCraft, DeckCraft, PdfCraft, Transit e Zenkai, do Firefox e do payload dinit esperado. Ele rejeita binários, launchers e metadata de pacote do KolourPaint, além de binários e metadata dos pacotes gaming opcionais, nas duas imagens. `scripts/check_desktop_packages.sh` e `scripts/check_pori_phyto.sh` verificam contratos de pacote/perfil antes do build. `scripts/smoke-install.sh` executa o contrato offline em discos BIOS/UEFI efêmeros, verifica o primeiro boot dinit e habilita as TTYs de recuperação. A captura PPM do workflow é evidência visual para inspeção, não qualificação de hardware arbitrária.
+O gate de conteúdo do P0 exige que as imagens SquashFS do root e da sessão live contenham o compositor, shell, greeter, sessão e Deetty como único emulador de terminal, além do editor de recuperação Nano, do gerenciador de armazenamento Pori com dinit, do gerenciador de arquivos Phyto, do suporte `ntfs3` de leitura/escrita, do backend de scanner SANE, das ferramentas de firmware fwupd, do runtime Flatpak, dos payloads EuroOffice, PaintFE, Krita, Inkscape, Godot e Patchy, Transit, Zenkai, Firefox e dinit. Ele rejeita binários, launchers e metadata de pacote do Blockbench, WordCraft, GridCraft, DeckCraft e PdfCraft, além de binários e metadata dos pacotes gaming opcionais, nas duas imagens. `scripts/check_desktop_packages.sh` e `scripts/check_pori_phyto.sh` verificam contratos de pacote/perfil antes do build. `scripts/smoke-install.sh` executa o contrato offline em discos BIOS/UEFI efêmeros, verifica o primeiro boot dinit e habilita as TTYs de recuperação. A captura PPM do workflow é evidência visual para inspeção, não qualificação de hardware arbitrária.
 
 O check de bibliotecas de runtime da instalação cobre aplicativos dinamicamente ligados. O release upstream do ZLS, fixado por checksum, é estático; o smoke verifica sua versão e a configuração selecionada dentro do chroot alvo.
 

@@ -19,7 +19,7 @@ iso_path=${1:-}
 script_dir=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 source "$script_dir/lib/iso-content-manifest.sh"
 
-for command in jq mktemp rm xorriso unsquashfs grep cmp python3; do
+for command in jq mktemp rm xorriso unsquashfs grep cmp python3 xz; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 
@@ -274,13 +274,17 @@ required_paths=(
   usr/bin/flatpak
   usr/bin/fwupdmgr
   usr/bin/scanimage
+  usr/bin/blender
+  usr/share/applications/blender.desktop
   usr/bin/paintfe
   usr/local/bin/haruna
-  usr/share/color-schemes/DINXDark.colors
-  opt/paintfe/AppRun
+  opt/paintfe/PaintFE.AppImage
   usr/share/applications/paintfe.desktop
   usr/share/icons/hicolor/256x256/apps/paintfe.png
   usr/share/licenses/paintfe/LICENSE.md
+  usr/bin/eurooffice
+  opt/eurooffice/DesktopEditors
+  usr/share/applications/eurooffice.desktop
   usr/bin/transit
   opt/transit/AppRun
   usr/share/applications/transit.desktop
@@ -289,27 +293,18 @@ required_paths=(
   usr/share/licenses/transit/LICENSE-APACHE
   usr/share/mime/packages/transit.xml
   usr/bin/zenkai
-  opt/zenkai/AppRun
+  opt/zenkai/zenkai.AppImage
   usr/share/applications/zenkai.desktop
   usr/share/licenses/zenkai/LICENCE.md
-  usr/bin/eurooffice
-  opt/eurooffice/DesktopEditors
-  usr/share/applications/eurooffice.desktop
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
   usr/bin/patchy
-  usr/lib/patchy/patchy-force-darkest
-  usr/bin/blockbench
-  opt/patchy/AppRun
-  opt/blockbench/AppRun
+  opt/patchy/PatchyLinux.AppImage
   usr/share/applications/org.kde.krita.desktop
   usr/share/applications/org.inkscape.Inkscape.desktop
   usr/share/applications/org.godotengine.Godot.desktop
   usr/share/applications/patchy.desktop
-  usr/share/applications/blockbench.desktop
-  usr/share/licenses/patchy/LICENSE
-  usr/share/licenses/blockbench/LICENSE.MD
   usr/bin/pixelorama
   opt/pixelorama/Pixelorama.x86_64
   opt/pixelorama/Pixelorama.pck
@@ -392,7 +387,6 @@ required_paths=(
   usr/bin/btop
   usr/bin/dialog
   usr/bin/fzf
-  usr/bin/glances
   usr/bin/sftp
   usr/bin/sqlite3
   usr/bin/tmux
@@ -412,6 +406,9 @@ required_paths=(
   usr/bin/curl
   usr/bin/less
   usr/bin/jq
+  usr/bin/clang
+  usr/bin/clang++
+  usr/bin/clangd
   usr/bin/rsync
   usr/bin/nm-connection-editor
   usr/bin/swayimg
@@ -465,6 +462,7 @@ required_paths=(
   usr/share/licenses/ghostty-vt-runtime/LICENSE
   usr/bin/deetty
   usr/bin/dintor
+  usr/local/bin/dintor
   usr/share/applications/org.dinx.Deetty.desktop
   usr/share/applications/org.dinx.Dintor.desktop
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg
@@ -479,9 +477,6 @@ required_paths=(
   usr/share/polkit-1/actions/io.calamares.calamares.policy
   usr/bin/dconf
   usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml
-  etc/dconf/profile/user
-  etc/dconf/db/local
-  etc/dconf/db/local.d/99-dinx-dark
   usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
@@ -494,9 +489,7 @@ required_paths=(
   usr/bin/pkexec
   usr/bin/zenity
   usr/bin/pgrep
-  usr/bin/timeout
   usr/local/libexec/dinx-installer
-  usr/local/libexec/dinx-gparted
   usr/local/libexec/dinx-approve-desktop-launcher
   usr/bin/python3
   usr/bin/ps
@@ -552,6 +545,10 @@ required_paths=(
   usr/share/pearl/themes/dinx.skeuos-square/theme.json
   usr/share/pearl/themes/dinx.orchis-rounded/theme.json
   usr/share/pearl/themes/dinx.orchis-square/theme.json
+  usr/share/pearl/themes/dinx.fluent-rounded/theme.json
+  usr/share/pearl/themes/dinx.fluent-square/theme.json
+  usr/share/pearl/themes/dinx.jasper-rounded/theme.json
+  usr/share/pearl/themes/dinx.jasper-square/theme.json
   usr/share/themes/Orchis-Light/index.theme
   usr/share/themes/Orchis-Dark/index.theme
   usr/share/themes/Orchis-Square-Light/index.theme
@@ -560,11 +557,50 @@ required_paths=(
   usr/share/themes/Skeuos-Blue-Dark/index.theme
   usr/share/themes/Skeuos-Blue-Light-Square/index.theme
   usr/share/themes/Skeuos-Blue-Dark-Square/index.theme
+  usr/share/themes/Fluent-Light/index.theme
+  usr/share/themes/Fluent-Dark/index.theme
+  usr/share/themes/Fluent-Square-Light/index.theme
+  usr/share/themes/Fluent-Square-Dark/index.theme
+  usr/share/themes/Jasper-Light/index.theme
+  usr/share/themes/Jasper-Dark/index.theme
+  usr/share/themes/Jasper-Square-Light/index.theme
+  usr/share/themes/Jasper-Square-Dark/index.theme
 )
 
 for path in "${required_paths[@]}"; do
   iso_manifest_contains_path "$path" <<<"$manifest" \
     || fail "missing ISO path (exact path required): $path"
+done
+for theme_id in \
+  dinx.orchis-rounded dinx.orchis-square \
+  dinx.skeuos-rounded dinx.skeuos-square \
+  dinx.jasper-rounded dinx.jasper-square \
+  dinx.fluent-rounded dinx.fluent-square; do
+  pearl_theme=$(unsquashfs -no-xattrs -no-progress -cat \
+    "$tmp_dir/rootfs.img" "usr/share/pearl/themes/$theme_id/theme.json")
+  jq -e --arg id "$theme_id" '
+    [.defaults[] | select(
+      (.application == "gtk" or .application == "qt5ct" or
+       .application == "qt6ct" or .application == "kcolorscheme" or
+       .application == "ghostty") and
+      (.profile | startswith($id + "."))
+    )] | length == 5
+  ' <<<"$pearl_theme" >/dev/null \
+    || fail "Pearl theme has cross-family application profile defaults: $theme_id"
+  case "$theme_id" in
+    dinx.orchis-rounded) scheme_name='Orchis Rounded (DINX)' ;;
+    dinx.orchis-square) scheme_name='Orchis Square (DINX)' ;;
+    dinx.skeuos-rounded) scheme_name='Skeuos Rounded (DINX)' ;;
+    dinx.skeuos-square) scheme_name='Skeuos Square (DINX)' ;;
+    dinx.jasper-rounded) scheme_name='Jasper Rounded (DINX)' ;;
+    dinx.jasper-square) scheme_name='Jasper Square (DINX)' ;;
+    dinx.fluent-rounded) scheme_name='Fluent Rounded (DINX)' ;;
+    dinx.fluent-square) scheme_name='Fluent Square (DINX)' ;;
+  esac
+  pearl_kde_scheme=$(unsquashfs -no-xattrs -no-progress -cat \
+    "$tmp_dir/rootfs.img" "usr/share/pearl/themes/$theme_id/profiles/kcolorscheme.colors")
+  grep -Fqx "Name=$scheme_name" <<<"$pearl_kde_scheme" \
+    || fail "Pearl theme KDE profile has the wrong family name: $theme_id"
 done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   for shadow_wrapper in usr/local/bin/gparted usr/local/bin/firewall-config; do
@@ -600,13 +636,13 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench paintfe transit zenkai eurooffice haruna; do
+for package in krita inkscape godot pixelorama patchy paintfe transit zenkai eurooffice haruna; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
-for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto; do
+for retired_app in blockbench wordcraft gridcraft deckcraft pdfcraft; do
   if grep -Eq "/var/lib/pacman/local/${retired_app}-[^/]*/" <<<"$manifest"; then
-    fail "retired office/graphics package metadata remains in rootfs: $retired_app"
+    fail "retired desktop package metadata remains in rootfs: $retired_app"
   fi
 done
 source "$script_dir/../distro/packages/patchy/source.env"
@@ -622,15 +658,13 @@ patchy_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
 [[ "$patchy_db_version" == "$patchy_package_version" ]] \
   || fail "Patchy package version mismatch: $patchy_db_version"
 patchy_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/patchy)
-grep -Fq '/usr/lib/patchy/patchy-force-darkest' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not force its internal Darkest theme'
-grep -Fq 'exec /opt/patchy/AppRun' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not exec its pre-extracted /opt tree'
-patchy_force_darkest=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/patchy/patchy-force-darkest)
-grep -Fq 'customThemeId=bundled:darkest.patchytheme' <<<"$patchy_force_darkest" \
-  || fail 'Patchy package does not force its Darkest theme'
-grep -Fq 'refusing unsafe settings path' <<<"$patchy_force_darkest" \
-  || fail 'Patchy Darkest-theme helper does not reject unsafe settings paths'
+grep -Fq 'QT_QPA_PLATFORMTHEME=qt6ct' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not consume the selected Qt palette'
+grep -Fq 'PatchyLinux.AppImage --appimage-extract-and-run' <<<"$patchy_launcher" \
+  || fail 'Patchy launcher does not use the no-FUSE AppImage path'
+if grep -Eqi 'darkest|GTK_THEME|prefer.dark' <<<"$patchy_launcher"; then
+  fail 'Patchy launcher still forces a dark application theme'
+fi
 grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
   || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
 for package in kparts kio kiconthemes breeze-icons; do
@@ -668,14 +702,11 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired Qogir/Breeze style/cursor, Plasma, Zathura or MuPDF packages remain in the ISO'
   fi
-  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang|ex-vi-compat|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(ex-vi-compat|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
     printf '%s\n' "$forbidden_matches" >&2
-    fail 'build-only clang or Vim qualification packages remain in the ISO'
+    fail 'build-only Vim qualification packages remain in the ISO'
   fi
   for build_only_path in \
-    usr/bin/clang \
-    usr/bin/clang++ \
-    usr/bin/clangd \
     usr/bin/ex \
     usr/bin/vedit \
     usr/bin/vi \
@@ -803,6 +834,7 @@ done <<<"$terminal_desktops"
 for deetty_path in \
   usr/bin/deetty \
   usr/bin/dintor \
+  usr/local/bin/dintor \
   usr/share/applications/org.dinx.Deetty.desktop \
   usr/share/applications/org.dinx.Dintor.desktop \
   usr/share/icons/hicolor/scalable/apps/org.dinx.Deetty.svg \
@@ -844,8 +876,8 @@ if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
   fail 'retired Labwc user session remains in the ISO payload'
 fi
 pearl_greeter_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/pearl/greeter.json)
-grep -Fq '"theme": "material_dark"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter does not default to dark mode'
-grep -Fq '"high_contrast": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter high contrast mode is enabled'
+grep -Fq '"theme": "gtk"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter GTK theme is not enabled'
+grep -Fq '"gtk_theme": "Adwaita"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter Adwaita theme is not enabled'
 grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
 if grep -Eq '"(wallpaper|wallpaper_fit|logo)"[[:space:]]*:' <<<"$pearl_greeter_config"; then
@@ -854,8 +886,8 @@ fi
 grep -Fq '"wallpaper_color": "#0b0d12"' <<<"$pearl_greeter_config" \
   || fail 'Pearl Greeter solid surface color is missing'
 pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
-jq -e '.window_corner_radius == 15 and .theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == "" and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
-  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl Material, dock, bar, radius or solid-wallpaper defaults are incorrect'
+jq -e '.window_corner_radius == 12 and .theme.mode == "package" and .theme.variant == "dark" and .theme.gtk_name == "Orchis-Dark" and .theme.package_id == "dinx.orchis-rounded" and .theme.sync_borders == true and .matugen.enabled == true and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
+  <<<"$pearl_preferences" >/dev/null || fail 'fresh Orchis Rounded, dock, bar, radius or solid-wallpaper defaults are incorrect'
 grep -Fq '"enabled": true' <<<"$pearl_preferences" \
   || fail 'Pearl default desktop icons are no longer enabled'
 grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
@@ -948,22 +980,6 @@ theme_sync=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/l
 grep -Fq 'gtk-application-prefer-dark-theme' <<<"$theme_sync" || fail 'GTK dark/light selection is not synchronized into user settings'
 grep -Fq 'dconf write' <<<"$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
 grep -Fq 'custom_palette' <<<"$theme_sync" || fail 'Qt6ct dark/light palette selection is not synchronized'
-# The per-user theme sync above only runs once the Pearl shell starts, so the
-# freedesktop color-scheme default has to be compiled into the image for the egui
-# applications (WordCraft, GridCraft, DeckCraft, PdfCraft, PaintFE) and the
-# libadwaita/GTK applications to start dark on a fresh or live session. Assert the
-# compiled database shipped in the image, not just the source keyfile: an overlay
-# keyfile under local.d is inert until dconf compiles it.
-dconf_profile=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/profile/user)
-grep -Fqx 'user-db:user' <<<"$dconf_profile" \
-  || fail 'the dconf user profile does not include the user database, so Pearl theme changes would not apply'
-grep -Fqx 'system-db:local' <<<"$dconf_profile" \
-  || fail 'the dconf user profile does not include the system database'
-dconf_database=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/db/local)
-grep -aq 'color-scheme' <<<"$dconf_database" \
-  || fail 'the compiled system dconf database is missing or carries no color-scheme default'
-grep -aq 'prefer-dark' <<<"$dconf_database" \
-  || fail 'the compiled system dconf database does not default to the dark color scheme'
 grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
 grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'
@@ -1124,10 +1140,10 @@ gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" et
 theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Orchis Dark'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_settings" || fail 'GTK3 default icon theme is not Papirus'
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Orchis Dark'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_settings" || fail 'GTK4 default icon theme is not Papirus'
 gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
@@ -1176,11 +1192,11 @@ gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" 
 grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dark bridge is missing'
 
 gtk3_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-3.0/settings.ini)
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Orchis Dark'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_system_settings" || fail 'System GTK3 icon default is not Papirus'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk3_system_settings" || fail 'System GTK3 dark preference is missing'
 gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-4.0/settings.ini)
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Orchis Dark'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_system_settings" || fail 'System GTK4 icon default is not Papirus'
 aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
@@ -1196,33 +1212,6 @@ done
 gparted_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.gnome.gparted.policy)
 grep -Fq '<action id="org.gnome.gparted">' <<<"$gparted_policy" \
   || fail 'GParted root-launch Polkit action is missing'
-# GParted is GTK 3 and needs root, so it is elevated through the same pkexec env
-# bridge the installer uses. Upstream's /usr/bin/gparted self-elevates with
-# `pkexec --disable-internal-agent`, which depends on polkit allow_gui preserving
-# DISPLAY/XAUTHORITY; the DINX session unsets DISPLAY and has no X server, so that
-# path leaves the root gpartedbin with no display. Assert the launcher bridges the
-# Wayland socket and session bus instead.
-gparted_launcher_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-gparted' <<<"$manifest")
-grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$gparted_launcher_listing" \
-  || fail 'GParted launcher is not executable in the ISO'
-gparted_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-gparted)
-grep -Fq 'WAYLAND_DISPLAY="$wayland_display"' <<<"$gparted_launcher" \
-  || fail 'GParted launcher does not pass the Wayland socket to the elevated session'
-grep -Fq 'XDG_RUNTIME_DIR="$runtime_dir"' <<<"$gparted_launcher" \
-  || fail 'GParted launcher does not pass the runtime directory to the elevated session'
-grep -Fq 'DBUS_SESSION_BUS_ADDRESS="$dbus_address"' <<<"$gparted_launcher" \
-  || fail 'GParted launcher does not pass the session bus for polkit authorization'
-grep -Fq 'GDK_BACKEND=wayland' <<<"$gparted_launcher" \
-  || fail 'GParted launcher does not force the GTK 3 Wayland backend'
-grep -Fq '/usr/bin/gparted "$@"' <<<"$gparted_launcher" \
-  || fail 'GParted launcher does not invoke upstream GParted with its arguments'
-grep -Fq '[l]xqt-policykit-agent' <<<"$gparted_launcher" \
-  || fail 'GParted launcher does not verify a polkit authorization agent is running'
-gparted_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/gparted.desktop)
-grep -Fqx 'Exec=/usr/local/libexec/dinx-gparted %f' <<<"$gparted_override" \
-  || fail 'Partition Editor override does not use the DINX Wayland launcher'
-grep -Fqx 'TryExec=/usr/local/libexec/dinx-gparted' <<<"$gparted_override" \
-  || fail 'Partition Editor override prerequisite does not resolve the DINX launcher'
 firewalld_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.desktop.policy.choice)
 for action in all config direct policies; do
   grep -Fq "<action id=\"org.fedoraproject.FirewallD1.$action\">" <<<"$firewalld_policy" \
@@ -1244,6 +1233,14 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     etc/dinit.d/boot.d/portmaster \
     usr/share/applications/portmaster.desktop \
     usr/share/licenses/portmaster/LICENSE \
+    usr/bin/opensnitchd \
+    usr/bin/opensnitch-ui \
+    etc/opensnitchd/default-config.json \
+    usr/share/applications/opensnitch_ui.desktop \
+    etc/dinit.d/opensnitchd \
+    etc/dinit.d/boot.d/opensnitchd \
+    etc/xdg/autostart/opensnitch-ui.desktop \
+    usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg \
     usr/lib/libayatana-appindicator3.so.1 \
     usr/bin/ufw \
     usr/bin/gufw \
@@ -1252,21 +1249,13 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     etc/dinit.d/ufw \
     usr/share/applications/gufw.desktop \
     usr/local/share/applications/gufw.desktop \
-    usr/local/libexec/dinx-gufw \
-    usr/bin/opensnitchd \
-    usr/bin/opensnitch-ui \
-    etc/opensnitchd/default-config.json \
-    usr/share/applications/opensnitch_ui.desktop \
-    etc/dinit.d/opensnitchd \
-    etc/dinit.d/boot.d/opensnitchd \
-    etc/xdg/autostart/opensnitch-ui.desktop \
-    usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg; do
+    usr/local/libexec/dinx-gufw; do
     if grep -Fq "$retired_path" <<<"$image_manifest"; then
       fail "retired firewall payload remains in the ISO: $retired_path"
     fi
   done
   # Artix iproute2 requires libxtables; iptables may provide it transitively.
-  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1 opensnitch opensnitch-dinit; do
+  for retired_package in portmaster libayatana-appindicator webkit2gtk-4.1; do
     if iso_manifest_contains_package "$retired_package" <<<"$image_manifest"; then
       fail "retired package remains in a final ISO filesystem: $retired_package"
     fi
@@ -1346,13 +1335,23 @@ for office_mime in \
   application/vnd.openxmlformats-officedocument.wordprocessingml.document \
   application/vnd.openxmlformats-officedocument.spreadsheetml.sheet \
   application/vnd.openxmlformats-officedocument.presentationml.presentation; do
-  grep -Fq "$office_mime=eurooffice.desktop;" <<<"$mimeapps_config" || fail "EuroOffice is not the default handler for $office_mime"
+  grep -Fq "$office_mime=eurooffice.desktop;" <<<"$mimeapps_config" \
+    || fail "EuroOffice is not the default handler for $office_mime"
 done
-for appimage_launcher in paintfe transit zenkai patchy blockbench; do
+eurooffice_desktop=$(unsquashfs -no-xattrs -no-progress -cat \
+  "$tmp_dir/rootfs.img" usr/share/applications/eurooffice.desktop)
+grep -Fq 'Exec=eurooffice %U' <<<"$eurooffice_desktop" \
+  || fail 'EuroOffice desktop entry has the wrong launch command'
+for appimage_launcher in paintfe zenkai; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
-  grep -Fq "exec /opt/$appimage_launcher/AppRun" <<<"$launcher_script" \
-    || fail "$appimage_launcher launcher does not exec its pre-extracted /opt tree"
+  grep -Fq -- '--appimage-extract-and-run "$@"' <<<"$launcher_script" \
+    || fail "$appimage_launcher launcher does not support systems without FUSE"
+  grep -Fq "/opt/$appimage_launcher/" <<<"$launcher_script" \
+    || fail "$appimage_launcher launcher does not target its package-owned AppImage"
 done
+transit_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/transit)
+grep -Fq '/opt/transit/AppRun "$@"' <<<"$transit_launcher" \
+  || fail 'transit launcher does not target its extracted AppRun tree'
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
@@ -1612,13 +1611,13 @@ usr/local/share/applications/org.aqueous.Dome.desktop|System Monitor|Monitor do 
 usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
-usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
+usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
+usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
 usr/share/applications/transit.desktop|Transit|Transit|transit %U
 usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
-usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
+usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
@@ -1647,16 +1646,6 @@ grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missin
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
-# The three native Zig control apps force the DINX dark palette from compiled-in CSS.
-# Assert the shipped binaries carry it, not just their source: a recipe change that
-# leaves pkgrel unchanged makes the builder install a stale precompiled artifact whose
-# binary predates the theme, which is how DinitUI shipped a light UI while
-# check_dinitui.sh still passed on the source.
-for native_dark_app in dinitui dinxpanel seafoam-settings; do
-  native_dark_binary=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$native_dark_app")
-  grep -Fq 'window.background { background-color: #0b0d12; }' <<<"$native_dark_binary" \
-    || fail "$native_dark_app binary does not embed the DINX dark window background; a stale precompiled artifact may have been installed"
-done
 grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Dintor light scheme is missing'
 
 

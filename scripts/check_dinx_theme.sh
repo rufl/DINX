@@ -346,8 +346,10 @@ grep -Fq 'menuentry "Start DINX Linux"' "$live_grub_kernels" \
   || fail 'DINX default boot option is missing'
 grep -Fq 'menuentry "Start DINX Linux (compatibility)"' "$live_grub_kernels" \
   || fail 'DINX compatibility boot option is missing'
-grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll nomodeset' "$live_grub_kernels" \
-  || fail 'DINX compatibility boot option does not pass the legacy interrupt/framebuffer parameters'
+grep -Fqx '        linux /boot/vmlinuz-$2' "$live_grub_kernels" \
+  || fail 'DINX default boot option does not use the stock kernel parameters'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll' "$live_grub_kernels" \
+  || fail 'DINX compatibility boot option does not pass the legacy interrupt parameters'
 [[ $(grep -Fc 'menuentry ' "$live_grub_cfg") -eq 1 ]] \
   || fail 'live ISO GRUB has unexpected entries outside its single firmware option'
 grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$live_grub_cfg" \

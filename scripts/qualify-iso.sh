@@ -93,7 +93,7 @@ DINX_INSTALL_FIRMWARE=uefi \
 # emulation, no OVMF) and use the compatibility entry for legacy
 # interrupt controllers; this is the BIOS-only notebook path.
 DINX_MBR_OUTPUT_DIR="$iso_dir" \
-DINX_MBR_TIMEOUT=${DINX_MBR_TIMEOUT:-$(( ${DINX_QEMU_TIMEOUT:-120} + 180 ))} \
-DINX_MBR_SESSION_DELAY=${DINX_MBR_SESSION_DELAY:-150} \
+DINX_MBR_TIMEOUT=${DINX_MBR_TIMEOUT:-420} \
+DINX_MBR_SESSION_WAIT=${DINX_MBR_SESSION_WAIT:-180} \
   "$script_dir/smoke-iso-mbr.sh" "$iso_path"
 printf 'qualify-iso: full QEMU VGA, Virtio-VGA, hybrid-MBR, BIOS and UEFI installation gates passed: %s\n' "$iso_path"

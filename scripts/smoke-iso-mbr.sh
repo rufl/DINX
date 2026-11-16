@@ -5,17 +5,17 @@
 # Legacy BIOS/MBR boot smoke: attach the ISO as a read-only disk and boot it
 # through its hybrid MBR with SeaBIOS (no OVMF, no El Torito CD emulation).
 # Proves the grub2 MBR loads the ISO menu from a disk device, then selects
-# "Start DINX Linux (compatibility)" (noapic irqpoll nomodeset) and requires
-# the DINX live desktop marker in the captured session frame. This is the
+# "Start DINX Linux (compatibility)" (noapic irqpoll, the legacy interrupt
+# route workaround) and requires the graphical DINX session through the
+# shared session checker, which rejects getty/login surfaces. This is the
 # HP dm1 / AMD E-350 class boot path; QEMU evidence, not physical hardware.
 set -euo pipefail
 
 iso_path=${1:-}
-timeout_seconds=${DINX_MBR_TIMEOUT:-150}
+timeout_seconds=${DINX_MBR_TIMEOUT:-420}
 memory_mb=${DINX_MBR_MEMORY:-2048}
 output_dir=${DINX_MBR_OUTPUT_DIR:-}
-menu_delay=${DINX_MBR_MENU_DELAY:-8}
-session_delay=${DINX_MBR_SESSION_DELAY:-90}
+ocr_language=${DINX_MBR_OCR_LANG:-eng}
 
 fail() {
   printf 'smoke-iso-mbr: %s\n' "$*" >&2
@@ -25,8 +25,22 @@ fail() {
 [[ -n "$iso_path" && $# -eq 1 ]] || fail 'usage: scripts/smoke-iso-mbr.sh PATH_TO_ISO'
 [[ -f "$iso_path" ]] || fail "ISO does not exist: $iso_path"
 [[ "$iso_path" == /* ]] || iso_path="$PWD/$iso_path"
-for command in qemu-system-x86_64 socat tesseract timeout truncate mktemp; do
+for command in qemu-system-x86_64 socat tesseract timeout truncate mktemp python3; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
+done
+
+# The CI runners boot this path under TCG: the menu needs the BIOS handoff,
+# GRUB module loading and gfxterm before any key can be sent.
+menu_wait=${DINX_MBR_MENU_WAIT:-180}
+session_wait=${DINX_MBR_SESSION_WAIT:-180}
+(( menu_wait + session_wait + 15 < timeout_seconds )) \
+  || fail 'DINX_MBR wait budget must stay below DINX_MBR_TIMEOUT'
+ocr_languages=$(tesseract --list-langs 2>&1) \
+  || fail 'Tesseract could not list installed language data'
+IFS='+' read -r -a requested_ocr_languages <<< "$ocr_language"
+for language in "${requested_ocr_languages[@]}"; do
+  grep -Fqx "$language" <<< "$ocr_languages" \
+    || fail "Tesseract language data '$language' is missing; install tesseract-ocr-eng or set DINX_MBR_OCR_LANG to an installed model"
 done
 
 work_dir=$output_dir
@@ -37,14 +51,8 @@ else
 fi
 disk_image="$work_dir/dinx-mbr-boot.img"
 monitor_path="$work_dir/qemu.monitor"
-menu_frame="$work_dir/mbr-menu.ppm"
-session_frame="$work_dir/mbr-session.ppm"
-
-# The ISO image itself becomes the boot disk: SeaBIOS must reach the GRUB
-# menu through the hybrid MBR code, exactly like a dd-written USB on a
-# BIOS-only notebook.
-truncate -s ${DINX_MBR_DISK_BYTES:-8589934592} "$disk_image"
-cat "$iso_path" > "$disk_image"
+menu_frame="$work_dir/dinx-mbr-menu.ppm"
+session_frame="$work_dir/dinx-mbr-session.ppm"
 
 qemu_pid=
 cleanup() {
@@ -57,8 +65,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# The ISO image itself becomes the boot disk: SeaBIOS must reach the GRUB
+# menu through the hybrid MBR code, exactly like a dd-written USB on a
+# BIOS-only notebook.
+truncate -s ${DINX_MBR_DISK_BYTES:-8589934592} "$disk_image"
+cat "$iso_path" > "$disk_image"
+
 accel=( -accel tcg,thread=multi )
 [[ -r /dev/kvm ]] && accel=( -accel kvm )
+printf 'smoke-iso-mbr: booting %s from its hybrid MBR (%s)\n' "${iso_path##*/}" "${accel[1]}"
+
 timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 \
   "${accel[@]}" -m "$memory_mb" \
@@ -66,7 +82,7 @@ timeout --kill-after=10s "${timeout_seconds}s" \
   -boot order=c \
   -display none -vga std \
   -monitor "unix:$monitor_path,server=on,wait=off" \
-  -serial "file:$work_dir/qemu.log" \
+  -serial "file:$work_dir/dinx-mbr.qemu.log" \
   -net none -no-reboot -no-shutdown &
 qemu_pid=$!
 
@@ -85,37 +101,84 @@ monitor_send() {
     || fail "QEMU monitor rejected: $1"
 }
 
-# Poll for the rendered GRUB menu (gfxterm can lag the BIOS handoff), pause
-# the six-second countdown, and select the second entry: compatibility.
+# Boot-menu frames are low-resolution gfxterm captures: auto page
+# segmentation returns empty text, so nearest-neighbour enlarge and force a
+# fixed-layout mode like the CI graphical smoke does.
+ocr_frame() {
+  local frame="$1"
+  local enlarged="$frame.upscaled.ppm"
+  local text=
+  if python3 - "$frame" <<'PY' > "$enlarged" 2>/dev/null
+import sys
+with open(sys.argv[1], 'rb') as handle:
+    data = handle.read()
+parts = data.split(b'\n', 3)
+if len(parts) != 4 or parts[0] != b'P6':
+    sys.exit(1)
+width, height = (int(value) for value in parts[1].split())
+scale = 3
+body = parts[3]
+out = [parts[0], f"{width * scale} {height}".encode(), parts[2]]
+rows = []
+for y in range(height):
+    row = body[y * width * 3:(y + 1) * width * 3]
+    enlarged = bytearray()
+    for x in range(width):
+        enlarged += row[x * 3:x * 3 + 3] * scale
+    rows += [bytes(enlarged)] * scale
+sys.stdout.buffer.write(b'\n'.join(out) + b'\n' + b''.join(rows))
+PY
+  then
+    text=$(tesseract "$enlarged" - -l "$ocr_language" --psm 11 2>/dev/null || true)
+  fi
+  rm -f -- "$enlarged"
+  if [[ -z "${text//[[:space:]]/}" ]]; then
+    text=$(tesseract "$frame" - -l "$ocr_language" --psm 6 2>/dev/null || true)
+  fi
+  printf '%s' "$text"
+}
+
 menu_ready=false
-menu_deadline=$((SECONDS + 40))
+menu_text=
+menu_deadline=$((SECONDS + menu_wait))
 while (( SECONDS < menu_deadline )); do
-  sleep 2
+  sleep 3
   monitor_send "screendump $menu_frame"
   [[ -s "$menu_frame" ]] || continue
-  menu_text=$(tesseract "$menu_frame" - --psm 6 2>/dev/null || true)
-  grep -qi 'Start DINX' <<<"$menu_text" && { menu_ready=true; break; }
+  menu_text=$(ocr_frame "$menu_frame")
+  if grep -qi 'DINX' <<<"$menu_text"; then
+    menu_ready=true
+    break
+  fi
 done
 [[ "$menu_ready" == true ]] \
-  || fail 'hybrid MBR boot did not display the DINX GRUB menu'
+  || fail "hybrid MBR boot did not display the DINX GRUB menu (ocr: ${menu_text:0:120})"
 printf 'smoke-iso-mbr: hybrid MBR reached the DINX GRUB menu\n'
+
+# Any keypress pauses the countdown; select the second menu entry
+# (compatibility kernel parameters) before the default boots.
 monitor_send 'sendkey down'
 sleep 1
 monitor_send 'sendkey ret'
 
-# Wait for the live session surface, polling the captured frame via OCR.
+# The compatibility session must reach the graphical shell: the Pearl
+# first-run `Dock` window or the Aqueous/Pearl surface. A getty frame
+# (`dinxlive login:`, `tty1`) proves the session failed to start and must
+# not pass, so require a positive marker and reject the text login.
 ready=false
-deadline=$((SECONDS + session_delay))
-while (( SECONDS < deadline )); do
+session_text=
+session_deadline=$((SECONDS + session_wait))
+while (( SECONDS < session_deadline )); do
   sleep 10
   monitor_send "screendump $session_frame"
   [[ -s "$session_frame" ]] || continue
-  session_text=$(tesseract "$session_frame" - 2>/dev/null || true)
-  if grep -qiE 'Dock|dinx' <<<"$session_text"; then
+  session_text=$(ocr_frame "$session_frame")
+  if grep -Eiq '(^|[^[:alnum:]_])(Dock|Pearl|Aqueous)([^[:alnum:]_]|$)' <<<"$session_text" \
+    && ! grep -Eiq 'login[[:space:]]*:|tty[[:space:]]*[0-9]|password' <<<"$session_text"; then
     ready=true
     break
   fi
 done
 [[ "$ready" == true ]] \
-  || fail 'compatibility boot did not reach the DINX desktop within the window'
+  || fail "compatibility boot did not reach the DINX graphical session (ocr: ${session_text:0:160})"
 printf 'smoke-iso-mbr: compatibility entry booted to the DINX desktop marker\n'

@@ -347,6 +347,9 @@ required_paths=(
   usr/local/libexec/pori-mount-service
   usr/bin/file-roller
   usr/bin/missioncenter
+  usr/share/applications/io.missioncenter.MissionCenter.desktop
+  usr/share/metainfo/io.missioncenter.MissionCenter.metainfo.xml
+  usr/share/licenses/mission-center/COPYING
   usr/bin/gparted
   usr/bin/shikane
   usr/bin/shikanectl

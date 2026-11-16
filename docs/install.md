@@ -277,7 +277,7 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The boot stalls with `No irq handler for vector`
 
-Old legacy-BIOS chipsets (AMD E-350 "Zacate" and similar pre-2012 notebooks, such as the HP dm1) can stop early at `do_IRQ: 1.55 No irq handler for vector`. The GRUB menu itself booted through the hybrid MBR; the kernel needs the legacy interrupt workaround. Reboot and choose `Start DINX Linux (compatibility)`, which adds `noapic irqpoll nomodeset`. The text-mode recovery TTY (`Ctrl+Alt+F2`/`F3`) remains available if the frame buffer still fails.
+Old legacy-BIOS chipsets (AMD E-350 "Zacate" and similar pre-2012 notebooks, such as the HP dm1) can stop early at `do_IRQ: 1.55 No irq handler for vector`. The GRUB menu itself booted through the hybrid MBR; the kernel needs the legacy interrupt workaround. Reboot and choose `Start DINX Linux (compatibility)`, which adds `noapic irqpoll` (add `nomodeset` via `e` only for a GPU-driver hang). The text-mode recovery TTY (`Ctrl+Alt+F2`/`F3`) remains available if the frame buffer still fails.
 
 ### The screen is blank
 

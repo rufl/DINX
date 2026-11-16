@@ -279,7 +279,7 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A inicialização trava com `No irq handler for vector`
 
-Chipsets BIOS legados antigos (AMD E-350 "Zacate" e notebooks semelhantes anteriores a 2012, como o HP dm1) podem parar no início em `do_IRQ: 1.55 No irq handler for vector`. O menu GRUB em si iniciou pelo MBR híbrido; o kernel precisa da correção de interrupção legado. Reinicie e escolha `Start DINX Linux (compatibility)`, que adiciona `noapic irqpoll nomodeset`. O TTY de recuperação em modo texto (`Ctrl+Alt+F2`/`F3`) continua disponível se o frame buffer ainda falhar.
+Chipsets BIOS legados antigos (AMD E-350 "Zacate" e notebooks semelhantes anteriores a 2012, como o HP dm1) podem parar no início em `do_IRQ: 1.55 No irq handler for vector`. O menu GRUB em si iniciou pelo MBR híbrido; o kernel precisa da correção de interrupção legado. Reinicie e escolha `Start DINX Linux (compatibility)`, que adiciona `noapic irqpoll` (adicione `nomodeset` pelo `e` apenas para travamento do driver da GPU). O TTY de recuperação em modo texto (`Ctrl+Alt+F2`/`F3`) continua disponível se o frame buffer ainda falhar.
 
 ### A tela fica vazia
 

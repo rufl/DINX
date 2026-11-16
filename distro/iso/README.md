@@ -86,30 +86,15 @@ scripts/build-iso.sh -q
 The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. The chroot cache defaults to `/var/lib/artools/buildiso`; override it with `DINX_ISO_CHROOTS` when the builder uses another persistent volume.
 ## ISO size target
 
-The build wrapper prepends `scripts/iso-tools/mksquashfs` to the builder `PATH`.
-It forces zstd-compressed SquashFS images at compression level 19 with 1 MiB
-blocks; the current high-density preset no longer uses the older x86 BCJ/XZ
-combination. Artix keeps `linux-headers` until it
-generates the initramfs, then the wrapper transactionally removes `linux-headers`
-and its build-only dependency `pahole` from each staged package root before compression.
-The ISO content check rejects either package from final package databases. Kernel sources, pacman package caches
-and build logs are also excluded. The root overlay recreates `/var/log/dinit`
-through tmpfiles before Dinit services start, and the ISO-content check requires
-that rule. The livefs-only `dinx-live-autologin` package supplies no-op `root-ro`
-and `early-root-rw.target` units for its writable overlay; these overrides are not
-included in the Calamares-installed rootfs. The live rootfs includes `squashfs-tools`
-because Calamares `unpackfs` requires `unsquashfs`; the install contract removes it
-from the installed root. The builder keeps its own copy. CI installs the wrapper at
-`/usr/bin/mksquashfs` after preserving the real binary, because Artix `buildiso`
-may invoke that absolute path. Build-only package pruning uses an isolated
-minimal pacman config so absolute includes from staged `/etc/pacman.conf` do not
-resolve on the builder host. Assembly fails if Artix does not produce a
-nonempty `/LiveOS/rootfs.img`; post-build inspection checks both SquashFS
-superblocks for zstd compression and 1 MiB blocks.
-The P0 budget currently allows ISOs below 3 GiB. GitHub release publication
-still rejects a single asset at or above 2 GiB, so larger images require
-splitting or further compaction; the latest qualified P0 ISO is 2,922,678,272
-bytes.
+The build wrapper prepends `scripts/iso-tools/mksquashfs` to the builder
+`PATH`. It forces xz-compressed SquashFS images with x86 BCJ, 1 MiB blocks and
+a 1 MiB dictionary. Artix keeps `linux-headers` until it generates the
+initramfs, then the wrapper transactionally removes build-only package roots
+and metadata from each staged root before compression. Kernel sources, pacman
+package caches and build logs are also excluded. Assembly fails if Artix does
+not produce a nonempty `/LiveOS/rootfs.img`; post-build inspection checks both
+SquashFS superblocks for xz compression and 1 MiB blocks. The P0 budget keeps
+the ISO below GitHub's 2 GiB single-asset limit.
 
 ## Graphical profile
 

@@ -88,30 +88,14 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 ## Meta de tamanho da ISO
 
 O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
-do builder. Ele força imagens SquashFS com zstd no nível 19 e blocos de 1 MiB;
-o preset atual de alta densidade não usa mais a combinação antiga de BCJ x86/XZ.
-O Artix mantém `linux-headers` até
-gerar o initramfs; depois o wrapper remove transacionalmente `linux-headers` e
-sua dependência de build `pahole` de cada rootfs preparado antes da compactação.
-O check de conteúdo rejeita ambos os pacotes nos bancos finais. Fontes do kernel, caches de pacotes
-pacman e logs de build também ficam fora da imagem. O root overlay recria
-`/var/log/dinit` por tmpfiles antes de os serviços Dinit iniciarem, e o check da
-ISO exige essa regra. O pacote `dinx-live-autologin`, exclusivo do livefs, fornece
-unidades no-op `root-ro` e `early-root-rw.target` para seu overlay gravável; essas
-substituições não entram no rootfs instalado pelo Calamares. O rootfs live inclui
-`squashfs-tools` porque o módulo `unpackfs` do Calamares precisa de `unsquashfs`;
-o contrato da instalação remove o pacote da raiz instalada. O builder mantém sua
-própria cópia. O CI instala o wrapper em
-`/usr/bin/mksquashfs` após preservar o binário real, pois o `buildiso` do Artix
-pode invocar esse caminho absoluto. A poda de pacotes usa uma configuração
-`pacman` mínima e isolada, pois includes absolutos do `/etc/pacman.conf`
-preparado resolveriam no host do builder. A montagem falha se o Artix não gerar
-um `/LiveOS/rootfs.img` não vazio; a inspeção pós-build verifica zstd e blocos de
-1 MiB nos dois superblocos SquashFS.
-O orçamento P0 permite atualmente ISOs abaixo de 3 GiB. A publicação de releases
-no GitHub ainda rejeita um asset único de 2 GiB ou mais, então imagens maiores
-exigem divisão ou compactação adicional; a ISO P0 qualificada mais recente tem
-2.922.678.272 bytes.
+do builder. Ele força imagens SquashFS com xz, BCJ x86, blocos de 1 MiB e
+dicionário de 1 MiB. O Artix mantém `linux-headers` até gerar o initramfs;
+depois o wrapper remove transacionalmente as raízes e os metadados de pacotes
+exclusivos do build de cada rootfs preparado antes da compactação. Fontes do
+kernel, caches de pacotes pacman e logs de build também ficam fora da imagem.
+A montagem falha se o Artix não gerar um `/LiveOS/rootfs.img` não vazio; a
+inspeção pós-build verifica xz e blocos de 1 MiB nos dois superblocos SquashFS.
+O orçamento P0 mantém a ISO abaixo do limite de asset único de 2 GiB do GitHub.
 
 ## Perfil gráfico
 

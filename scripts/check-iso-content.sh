@@ -279,11 +279,6 @@ required_paths=(
   usr/bin/flatpak
   usr/bin/fwupdmgr
   usr/bin/scanimage
-  usr/bin/euro-office-lite
-  usr/bin/eurooffice
-  usr/lib/Euro-Office-Lite/binaries/libkernel.so
-  usr/share/applications/eurooffice.desktop
-  usr/share/licenses/eurooffice/LICENSE
   usr/bin/audionaut
   opt/audionaut/Audionaut.AppImage
   usr/share/applications/audionaut.desktop
@@ -531,7 +526,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy audionaut haruna firefox eurooffice; do
+for package in krita inkscape godot pixelorama patchy audionaut haruna firefox; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -1118,7 +1113,7 @@ grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 
 grep -Fq 'x-scheme-handler/https=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTPS handler'
 firefox_policy=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/firefox/distribution/policies.json)
 grep -Fq '"DisableAppUpdate": true' <<<"$firefox_policy" || fail 'Firefox updates are not managed by the DINX policy'
-grep -Fq 'application/pdf=eurooffice.desktop;' <<<"$mimeapps_config" || fail 'EuroOffice is not the default PDF handler'
+grep -Fq 'application/pdf=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default PDF handler'
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
@@ -1353,7 +1348,6 @@ while IFS='|' read -r path english portuguese command; do
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"
 done <<'EOF'
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
-usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
 usr/share/applications/firefox.desktop|Firefox|Firefox|firefox %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
@@ -1386,6 +1380,19 @@ for retired_zls_path in \
   usr/lib/zls/zig/std/std.zig; do
   if grep -Fq "/$retired_zls_path" <<<"$manifest"; then
     fail "optional ZLS payload is present in the generic ISO: $retired_zls_path"
+  fi
+done
+if grep -E '/var/lib/pacman/local/eurooffice-[^/]*/' <<<"$manifest"; then
+  fail 'optional EuroOffice package metadata is present in the generic ISO'
+fi
+for retired_eurooffice_path in \
+  usr/bin/euro-office-lite \
+  usr/bin/eurooffice \
+  usr/lib/Euro-Office-Lite/binaries/libkernel.so \
+  usr/share/applications/eurooffice.desktop \
+  usr/share/licenses/eurooffice/LICENSE; do
+  if grep -Fq "/$retired_eurooffice_path" <<<"$manifest"; then
+    fail "optional EuroOffice payload is present in the generic ISO: $retired_eurooffice_path"
   fi
 done
 grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missing'

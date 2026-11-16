@@ -24,9 +24,13 @@ done
 source "$source_env"
 [[ "$EUROOFFICE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha$ ]] || fail 'invalid EuroOffice version'
 [[ "$EUROOFFICE_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'invalid EuroOffice checksum'
-grep -Fqx '    - eurooffice' "$profile" || fail 'profile is missing EuroOffice'
-jq -e '.groups.desktop.packages | index("eurooffice") != null' "$groups" >/dev/null \
-  || fail 'desktop group is missing EuroOffice'
+if grep -Fqx '    - eurooffice' "$profile"; then
+  fail 'optional EuroOffice remains selected in the base rootfs profile'
+fi
+jq -e '.groups.desktop.packages | index("eurooffice") == null' "$groups" >/dev/null \
+  || fail 'desktop feature group must not include optional EuroOffice'
+jq -e '.groups.optional.packages | index("eurooffice") != null' "$groups" >/dev/null \
+  || fail 'optional feature group does not include EuroOffice'
 if grep -Eiq '(^|[[:space:]])onlyoffice([[:space:]]|$)|onlyoffice\.desktop' "$profile" "$groups" "$mimeapps"; then
   fail 'ONLYOFFICE remains selected or registered'
 fi
@@ -53,14 +57,18 @@ for mime in \
   application/pdf; do
   grep -Fq "$mime;" "$desktop" || fail "EuroOffice is missing MIME type $mime"
 done
-for required in \
+for retired_eurooffice_path in \
   '  usr/bin/euro-office-lite' \
   '  usr/bin/eurooffice' \
   '  usr/lib/Euro-Office-Lite/binaries/libkernel.so' \
   '  usr/share/applications/eurooffice.desktop' \
   '  usr/share/licenses/eurooffice/LICENSE'; do
-  grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
+  if grep -Fqx "$retired_eurooffice_path" "$iso_check"; then
+    fail "ISO contract still requires optional EuroOffice payload: ${retired_eurooffice_path#  }"
+  fi
 done
+grep -Fq 'optional EuroOffice package metadata is present in the generic ISO' "$iso_check" \
+  || fail 'ISO gate does not exclude optional EuroOffice from the base image'
 grep -Fq 'build_package eurooffice' "$builder" || fail 'ISO builder does not build EuroOffice'
 grep -Fq 'scripts/check_eurooffice.sh' "$workflow" || fail 'workflow does not run the EuroOffice contract'
-printf 'eurooffice_contract version=%s lean=true onlyoffice=false pdf=true\n' "$EUROOFFICE_VERSION"
+printf 'eurooffice_contract version=%s lean=true onlyoffice=false base=false optional=true\n' "$EUROOFFICE_VERSION"

@@ -19,9 +19,11 @@ These files are authored on the `office` branch but are meant to be
 The refresh workflow runs every 3 days (`41 5 */3 * *`, adjustable) and on
 manual dispatch. Each run:
 
-1. Dispatches `eurooffice.yml` on the `office` branch. That pipeline detects
-   new upstream Euro-Office releases and publishes lean
-   `eurooffice/v<ver>-dinx<N>` GitHub releases (no-op when already packed).
+1. Dispatches `eurooffice.yml` on the `office` branch and waits for the run it
+   started (up to 55 minutes). That pipeline detects new upstream Euro-Office
+   releases and publishes lean `eurooffice/v<ver>-dinx<N>` GitHub releases
+   (no-op when already packed). Waiting in the same cycle means a fresh lean
+   build is consumed immediately instead of on the next 3-day run.
 2. Compares the newest published release with `distro/office/eurooffice.pin`.
    When newer: downloads the artifacts, verifies `SHA256SUMS`, stages them
    under `dist/office/eurooffice/`, updates the pin on an automation branch,

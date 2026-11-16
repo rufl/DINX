@@ -80,6 +80,15 @@ DINX_QEMU_POST_SCREENSHOT_DELAY=10 \
 DINX_QEMU_POST_KEYS=alt-f4 \
   "$script_dir/smoke-iso.sh" "$iso_path"
 
+DINX_INSTALL_OUTPUT_DIR="$iso_dir" \
+DINX_INSTALL_TIMEOUT=${DINX_INSTALL_TIMEOUT:-180} \
+DINX_INSTALL_FIRMWARE=bios \
+  "$script_dir/smoke-install.sh" "$iso_path"
+DINX_INSTALL_OUTPUT_DIR="$iso_dir" \
+DINX_INSTALL_TIMEOUT=${DINX_INSTALL_TIMEOUT:-180} \
+DINX_INSTALL_FIRMWARE=uefi \
+  "$script_dir/smoke-install.sh" "$iso_path"
+
 # Hybrid MBR path: boot the ISO as a raw disk through SeaBIOS (no CD
 # emulation, no OVMF) and use the compatibility entry for legacy
 # interrupt controllers; this is the BIOS-only notebook path.

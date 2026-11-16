@@ -7,7 +7,7 @@ source_env="$startdir/source.env"
 : "${DOME_REPOSITORY:?missing DOME_REPOSITORY}"
 : "${DOME_SOURCE_SHA256:?missing DOME_SOURCE_SHA256}"
 pkgver="$DOME_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Native Zig GTK4 system monitor for DINX'
 arch=('x86_64')
 url="$DOME_REPOSITORY"

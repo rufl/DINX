@@ -87,8 +87,9 @@ The default output directory is `dist/iso`; override it with `DINX_ISO_OUTPUT`. 
 ## ISO size target
 
 The build wrapper prepends `scripts/iso-tools/mksquashfs` to the builder `PATH`.
-It forces xz-compressed SquashFS images with x86 BCJ, 1 MiB blocks and a 1 MiB
-dictionary; both are the maximum supported SquashFS sizes. `mksquashfs` exposes no XZ level control, so its tool default remains. Artix keeps `linux-headers` until it
+It forces zstd-compressed SquashFS images at compression level 19 with 1 MiB
+blocks; the current high-density preset no longer uses the older x86 BCJ/XZ
+combination. Artix keeps `linux-headers` until it
 generates the initramfs, then the wrapper transactionally removes `linux-headers`
 and its build-only dependency `pahole` from each staged package root before compression.
 The ISO content check rejects either package from final package databases. Kernel sources, pacman package caches
@@ -104,9 +105,11 @@ may invoke that absolute path. Build-only package pruning uses an isolated
 minimal pacman config so absolute includes from staged `/etc/pacman.conf` do not
 resolve on the builder host. Assembly fails if Artix does not produce a
 nonempty `/LiveOS/rootfs.img`; post-build inspection checks both SquashFS
-superblocks for xz compression and 1 MiB blocks.
-The P0 budget rejects ISOs at or above GitHub's 2 GiB asset limit; Alpha 12 is
-1,836,830,720 bytes (310,652,928 bytes below the limit).
+superblocks for zstd compression and 1 MiB blocks.
+The P0 budget currently allows ISOs below 3 GiB. GitHub release publication
+still rejects a single asset at or above 2 GiB, so larger images require
+splitting or further compaction; the latest qualified P0 ISO is 2,922,678,272
+bytes.
 
 ## Graphical profile
 

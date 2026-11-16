@@ -88,9 +88,9 @@ O diretório de saída padrão é `dist/iso`; ele pode ser alterado com `DINX_IS
 ## Meta de tamanho da ISO
 
 O wrapper do build coloca `scripts/iso-tools/mksquashfs` no início do `PATH`
-do builder. Ele força imagens SquashFS com xz, BCJ x86, blocos e dicionário de
-1 MiB, os maiores valores suportados. O `mksquashfs` não expõe controle de nível
-do xz, então mantém o padrão da ferramenta. O Artix mantém `linux-headers` até
+do builder. Ele força imagens SquashFS com zstd no nível 19 e blocos de 1 MiB;
+o preset atual de alta densidade não usa mais a combinação antiga de BCJ x86/XZ.
+O Artix mantém `linux-headers` até
 gerar o initramfs; depois o wrapper remove transacionalmente `linux-headers` e
 sua dependência de build `pahole` de cada rootfs preparado antes da compactação.
 O check de conteúdo rejeita ambos os pacotes nos bancos finais. Fontes do kernel, caches de pacotes
@@ -106,10 +106,12 @@ própria cópia. O CI instala o wrapper em
 pode invocar esse caminho absoluto. A poda de pacotes usa uma configuração
 `pacman` mínima e isolada, pois includes absolutos do `/etc/pacman.conf`
 preparado resolveriam no host do builder. A montagem falha se o Artix não gerar
-um `/LiveOS/rootfs.img` não vazio; a inspeção pós-build verifica xz e blocos de
+um `/LiveOS/rootfs.img` não vazio; a inspeção pós-build verifica zstd e blocos de
 1 MiB nos dois superblocos SquashFS.
-O orçamento P0 rejeita ISOs no limite ou acima de 2 GiB por asset do GitHub; a
-Alpha 12 tem 1.836.830.720 bytes (310.652.928 bytes abaixo do limite).
+O orçamento P0 permite atualmente ISOs abaixo de 3 GiB. A publicação de releases
+no GitHub ainda rejeita um asset único de 2 GiB ou mais, então imagens maiores
+exigem divisão ou compactação adicional; a ISO P0 qualificada mais recente tem
+2.922.678.272 bytes.
 
 ## Perfil gráfico
 

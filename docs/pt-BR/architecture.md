@@ -16,13 +16,13 @@
 
 ```text
 Aplicativos DINX
-  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS
+  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Mission Center · ZLS
 
 Contratos compartilhados
   Tema DINX estático · XDG · .desktop · $TERMINAL · D-Bus padrão
 
 Sessão do desktop
-  Wayland · Aqueous · Pearl · host Pearl Greeter
+  Wayland · River · KWM · Morghulis · PCManFM
 
 Fundação
   Artix Linux · dinit · kernel · Mesa/Vulkan · PipeWire · D-Bus · portais · polkit
@@ -39,7 +39,7 @@ O alvo é Artix Linux com dinit em x86_64. A imagem base fornece:
 - login gráfico com TTY de recuperação;
 - rede, PipeWire, D-Bus, portais, polkit e gráficos acelerados;
 - Pori para discos/montagens sobre UDisks2, com serviços persistentes dinit em `/etc/dinit.d`;
-- Phyto como gerenciador de arquivos e handler padrão de diretórios;
+- PCManFM como gerenciador de arquivos nativo, handler padrão de diretórios e desktop;
 - File Roller para abrir/criar/extrair arquivos compactados e GParted para particionamento independente;
 - `wdisplays` e `shikane` para configuração Wayland e reaplicação de layouts;
 - manifestos que identificam cada entrada específica da DINX;
@@ -53,7 +53,7 @@ Pacotes upstream são preferidos. Pacotes e patches específicos da DINX permane
 
 Deetty é responsável pela janela, preferências, atalhos, abas/painéis e sessões de terminal. Seu núcleo Zig possui parsing VT, células Unicode, cursor/modos, scrollback limitado, seleção, paste e ciclo de vida PTY. O pacote `ghostty-vt-runtime` fornece somente o adaptador VT público do Ghostty; o aplicativo de terminal Ghostty não faz parte do payload da DINX.
 
-Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. O ISO inclui o ZLS para projetos Zig; C/C++ pode usar `clangd` quando o pacote opcional `clang` estiver instalado. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `DINTOR_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
+Dintor é um editor leve, não um IDE completo. Seus limites são estado/UI Zig, motor de edição, parser de sintaxe, cliente LSP, status/diff Git limitado e abertura XDG. O ZLS é um pacote opcional para projetos Zig; C/C++ pode usar `clangd` quando o pacote opcional `clang` estiver instalado. O editor escolhe o esquema por `DINX_COLOR_SCHEME` ou `DINTOR_THEME` e usa o esquema escuro DINX por default. Ele continua funcional sem serviço de shell ou IPC privado.
 
 ### DinitUI
 
@@ -67,23 +67,21 @@ A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Blueto
 
 CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuário habilita o serviço pelo DinitUI quando necessário.
 
-### Dome, Seafoam Settings e ZLS
+### Mission Center, Seafoam Settings e ZLS
 
-`Dome` é um monitor nativo Zig/GTK4 incluído na ISO e no repositório DINX assinado. Suas telas de recursos/processos são dinit-safe; o pacote não instala integração com systemd, systemctl ou uwsm.
+`Mission Center` é o monitor base GTK4 de recursos e processos, incluído na ISO e no repositório DINX assinado. Sua receita não introduz dependência de systemd.
 
-`Seafoam Settings` é um launcher base nativo em Zig/GTK4 para as superfícies de display/sessão DINX: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Usa vetores de argumentos fixos, abre diretamente no Dintor os arquivos documentados de configuração do Aqueous/Pearl e do Shikane e executa o exportador de perfil de display no Deetty. Deetty é o único emulador de terminal da ISO; Nano continua como editor de recuperação.
+`Seafoam Settings` é um launcher base nativo em Zig/GTK4 para as superfícies DINX de display/sessão: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct e Mission Center. Usa vetores de argumentos fixos e abre diretamente no Dintor os caminhos de configuração River/KWM/Morghulis e Shikane. Deetty é o único emulador de terminal da ISO; Nano continua como editor de recuperação.
 
 `zls` é o pacote oficial Zig Language Server 0.16.0 com fonte fixada. Carrega a árvore `lib/std` correspondente e o shim de metadados `/usr/lib/zls/zig-env`; completion e navegação do Dintor funcionam sem compilador Zig completo. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; a árvore 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP. Um pacote Artix `zig` opcional habilita comandos de compilação pelo mesmo shim.
 
-### Aqueous, Pearl e o limite dinit
+### River, KWM, Morghulis e o limite dinit
 
-Aqueous 1.0.5 e Pearl 0.3.0 são a única sessão de usuário selecionável. Na imagem live, o serviço Dinit reiniciável `dinx-live-session` inicia a sessão diretamente, sem display manager: `runuser` entra na conta descartável `dinx`, `dbus-run-session` fornece o barramento, `/run/dinx-session` fornece runtime independente do elogind e o seatd controla o seat; um lock nesse diretório rejeita compositores duplicados. Saídas novas do Aqueous começam com dois workspaces; isso define o estado inicial, não um limite máximo nem uma alteração da configuração pessoal existente. Os usuários live/instalados e o Pearl Greeter recebem acesso ao grupo `render`. Com um render node DRM acessível, o helper seleciona GLES2 com efeitos reduzidos no QEMU `virtio_gpu`/virgl. VirtualBox VMSVGA (`vmwgfx`), `vboxvideo` legado e sistemas sem render node DRM acessível selecionam o Aqueous completo com `WLR_RENDERER=vulkan` e `GSK_RENDERER` sem override, seguindo a política wlroots Vulkan-only do Devario; `vulkan-swrast` continua empacotado para Vulkan por software. QXL e outros adaptadores 2D usam a build CPU de compatibilidade quando há render node. Os patches DINX de cantos arredondados no caminho de buffers de cena Pixman foram removidos. É necessária uma ISO nova; o boot direto no VirtualBox e a renderização de superfícies de clientes ainda precisam de teste no hypervisor.
+River/KWM/Morghulis é a única sessão de usuário base. Na imagem live, o serviço Dinit reiniciável `dinx-live-session` inicia a sessão diretamente: `runuser` entra na conta descartável `dinx`, `dbus-run-session` fornece o barramento, `/run/dinx-session` fornece runtime e o seatd controla o seat. `dinx-river-session` prepara diretórios XDG e política gráfica; `dinx-river-init` inicia KWM, Morghulis, PCManFM, Shikane, PolicyKit e idle. O daemon BC-250 opcional inicia somente quando seu pacote assinado separado está instalado.
 
-Antes de iniciar o compositor, `dinx-aqueous-pearl` executa `xdg-user-dirs-update` como o usuário da sessão. Contas novas da live e do sistema instalado recebem os diretórios XDG padrão, incluindo `~/Desktop`, antes do Pearl iniciar.
+Morghulis salva a escolha clara/escura em `~/.config/morghulis/preferences.json`; o sincronizador reaplica GTK/Qt no login. PCManFM é o desktop e o handler padrão `inode/directory`.
 
-Aqueous chama `dinx-aqueous-init`, que espera Wayland e D-Bus da sessão e inicia sob supervisão Shikane, PolicyKit, o idle obrigatório e Pearl. Se os pacotes BC-250 forem instalados separadamente do repositório assinado em uma máquina com PCI `1002:13fe`, o supervisor inicia o daemon opcional do Control Center. A ISO genérica não inclui esses pacotes. `dinx-session-supervisor` registra `starting`, `ready`, `failed` e `exited`; encerra o compositor quando um componente obrigatório falha e encerra o processo pai monitorado quando o supervisor para.
-
-A sessão usa execução direta sobre dinit e não exige systemd, systemctl, uwsm ou unidades de usuário. O greetd fica fora do caminho live. No login instalado/manual, o greetd inicia o host dedicado do Pearl Greeter pela conta `pearl-greeter`, e `/etc/pearl/greeter.json` força a mesma entrada Aqueous/Pearl com X11 e UWSM desativados. O Pearl Greeter não é uma segunda sessão de usuário nem fallback silencioso.
+A sessão usa execução direta sobre dinit e não exige systemd, systemctl, uwsm ou unidades de usuário. O login instalado/manual usa `agreety` pelo greetd e pela conta dedicada `greeter`.
 
 `dinx-doctor` é uma superfície somente leitura para sessão, dinit, armazenamento, display e pacotes. Não inicia serviços, monta dispositivos, altera Shikane, executa transações ou acessa a rede.
 
@@ -98,7 +96,7 @@ Os contratos compartilhados são versionados independentemente dos detalhes inte
 - adaptadores D-Bus padrão para notificações;
 - convenções de logs e diagnósticos.
 
-O contrato do Tema DINX v1 é uma paleta estática em `/usr/share/dinx/theme/DINX.json` com papéis semânticos de superfície/texto/primário/erro, variantes clara/escura, paleta ANSI completa, Noto Sans 10 para bridges gráficas, geometria quadrada, Papirus como tema padrão de ícones da área de trabalho e bridge de ícones Adwaita para os controles DINX. Depois que o D-Bus da sessão está pronto, o shell Pearl aplica a variante salva às preferências de esquema de cores/dark do dconf e GTK 3/4 e ao Qt6ct; o modo GTK seleciona o tema GTK DINX, o modo escuro ativa a paleta Qt DINX e o modo claro desativa a paleta Qt personalizada. O sincronizador preserva as demais configurações dos toolkits. O Pearl Greeter usa `/etc/pearl/greeter.json` com a bridge GTK DINX; Pearl, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. `dinx-noto-latin` fornece estilos Noto Sans e Noto Sans Mono em um subset latino/latim estendido; campos de largura fixa, logs monoespaçados do DinitUI/DINXPanel e `u_vga16 16` do GRUB são limites intencionais da plataforma. A qualificação do contrato é feita por `scripts/check_dinx_theme.sh`.
+O contrato do Tema DINX v1 é uma paleta estática em `/usr/share/dinx/theme/DINX.json` com papéis semânticos de superfície/texto/primário/erro, variantes clara/escura, paleta ANSI completa, Noto Sans 10 para bridges gráficas, geometria quadrada, Papirus como tema padrão de ícones e bridge de ícones Adwaita para controles DINX. Morghulis salva a variante de aparência em `~/.config/morghulis/preferences.json`; o sincronizador aplica-a a dconf, GTK 3/4 e Qt6ct preservando configurações não relacionadas. Morghulis, PCManFM, Calamares, Swayimg e GRUB usam bridges estáticas com os mesmos tokens. `dinx-noto-latin` fornece Noto Sans e Noto Sans Mono de um subset latino/latim estendido; `scripts/check_morghulis_theme.sh` valida o contrato do tema.
 
 ## Sessão gaming
 
@@ -116,4 +114,4 @@ O Phyto é o único gerenciador de arquivos base. File Roller e GParted cobrem a
 
 `feature-groups.json` inventaria rootfs, init dinit, boot e livefs. `scripts/check_dinx_feature_groups.sh` compara inventários com as fontes YAML, rejeita ownership duplicado e impede pacotes opcionais no perfil base. `contracts.yml` executa checks não privilegiados; o workflow P0 permanece o gate privilegiado de build, QEMU, instalação, recuperação, atestação e release.
 
-`scripts/check_dinx_budget.sh` mantém os tetos de pacotes rootfs, entradas dinit, binários e ISO. `scripts/check_dinx_session.sh`, `check_dinx_theme.sh`, `check_dinx_display_persistence.sh`, `check_pori_phyto.sh` e `check-iso-content.sh` verificam a integração observável antes da montagem final.
+`scripts/check_dinx_budget.sh` mantém os tetos de pacotes rootfs, entradas dinit, binários e ISO. `scripts/check_river_session.sh`, `scripts/check_morghulis_theme.sh`, `scripts/check_mission_center.sh`, `scripts/check_dinx_display_persistence.sh` e `scripts/check-iso-content.sh` verificam a integração observável antes da montagem final.

@@ -23,7 +23,7 @@ Na P3, o mesmo build do pacote executa `scripts/dintor_p3_qualification.sh`. Ele
 qualifica o core do editor Dintor, os esquemas GTK/X11 nativos claro e escuro,
 marcadores limitados de status/diff do Git e o cliente LSP genérico por stdio
 contra um servidor `clangd` real. Esse é um check de protocolo somente do
-builder; a ISO inclui o ZLS para Zig e não distribui o pacote `clang`.
+builder; o ZLS é publicado como pacote DINX opcional para Zig e a ISO não distribui o pacote `clang`.
 
 ## Snapshot validado atual
 

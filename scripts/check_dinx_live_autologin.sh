@@ -56,12 +56,12 @@ livefs_packages=$(awk '
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
 
-grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' "$root_greetd" \
-  || fail 'installed greetd fallback does not launch the graphics-safe Pearl Greeter wrapper'
+grep -Fq 'command = "agreety --cmd /usr/local/libexec/dinx-river-session"' "$root_greetd" \
+  || fail 'installed greetd fallback does not launch the River session'
 grep -Fqx 'vt = 7' "$root_greetd" \
   || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
-grep -Fq 'user = "pearl-greeter"' "$root_greetd" \
-  || fail 'installed greetd fallback user is not the dedicated Pearl Greeter account'
+grep -Fq 'user = "greeter"' "$root_greetd" \
+  || fail 'installed greetd fallback user is not the standard greeter account'
 ! grep -Fq '[initial_session]' "$root_greetd" \
   || fail 'installed greetd config must not enable autologin'
 grep -Fq 'displayAutologin: false' "$users_conf" \
@@ -124,8 +124,8 @@ grep -Fq 'runuser -u dinx' "$session_launcher" \
   || fail 'live session does not start as the dinx user'
 grep -Fq 'DINX_LIVE_SESSION=1' "$session_launcher" \
   || fail 'live session launcher does not mark the session as live'
-grep -Fq 'dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' "$session_launcher" \
-  || fail 'live session launcher does not start the Aqueous/Pearl wrapper'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$session_launcher" \
+  || fail 'live session launcher does not start the River/KWM/Morghulis wrapper'
 grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$session_launcher" \
   || fail 'live session launcher does not select the private runtime dir'
 grep -Fq 'boot.d/dinx-live-session' "$pkgbuild" \
@@ -167,7 +167,7 @@ grep -Fqx 'command          = /usr/bin/greetd' "$root_greetd_service" \
 grep -Fqx 'smooth-recovery  = true' "$root_greetd_service" \
   || fail 'installed greetd override does not preserve smooth recovery'
 grep -Fqx 'restart-delay    = 7' "$root_greetd_service" \
-  || fail 'installed greetd override does not wait for Pearl Greeter teardown'
+  || fail 'installed greetd override does not wait for greeter teardown'
 grep -Fqx 'depends-on       = login.target' "$root_greetd_service" \
   || fail 'installed greetd override dropped its login target dependency'
 ! grep -Fq 'dinx-live-autologin' "$root_greetd_service" \
@@ -186,8 +186,8 @@ fi
 
 grep -Fq 'build_package dinx-live-autologin' "$builder" \
   || fail 'ISO builder does not build the live autologin package'
-grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
-  || fail 'CI dropped the existing DINX session contract'
+grep -Fq 'run: ./scripts/check_river_session.sh' "$workflow" \
+  || fail 'CI dropped the River/KWM/Morghulis session contract'
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 

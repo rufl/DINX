@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+pkgname=turnstile
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${TURNSTILE_VERSION:?missing TURNSTILE_VERSION}"
+: "${TURNSTILE_REPOSITORY:?missing TURNSTILE_REPOSITORY}"
+: "${TURNSTILE_SOURCE_URL:?missing TURNSTILE_SOURCE_URL}"
+: "${TURNSTILE_SOURCE_SHA256:?missing TURNSTILE_SOURCE_SHA256}"
+pkgver="$TURNSTILE_VERSION"
+pkgrel=1
+pkgdesc='Session/login tracker and per-user Dinit service manager'
+arch=('x86_64')
+url="$TURNSTILE_REPOSITORY"
+license=('BSD-2-Clause')
+depends=('dinit' 'pam')
+makedepends=('gcc' 'meson' 'ninja' 'pkgconf' 'scdoc')
+source=("turnstile-$pkgver.tar.gz::$TURNSTILE_SOURCE_URL")
+sha256sums=("$TURNSTILE_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/turnstile-$pkgver"
+  meson setup build \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --buildtype=plain \
+    -Ddinit=enabled \
+    -Drunit=disabled \
+    -Ddefault_backend=dinit \
+    -Dmanage_rundir=false \
+    -Dman=false \
+    -Dlibrary=disabled
+  meson compile -C build
+}
+
+package() {
+  cd "$srcdir/turnstile-$pkgver"
+  DESTDIR="$pkgdir" meson install -C build
+  install -Dm644 COPYING.md "$pkgdir/usr/share/licenses/$pkgname/COPYING.md"
+  install -d "$pkgdir/etc/dinit.d/boot.d"
+  ln -s ../turnstiled "$pkgdir/etc/dinit.d/boot.d/turnstiled"
+}

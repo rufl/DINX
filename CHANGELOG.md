@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Add Mission Center 1.2.0 as the GTK4 resource/process monitor, remove Qps and Dome from the ISO payload, and keep Pori/PCManFM as the storage/file-management stack. EuroOffice remains disabled.
+- Disable the Transit audio workstation and enable the pinned Audionaut multitrack audio editor in the DINX package profile and ISO pipeline.
 
 - Automate distribution maintenance: twice-daily Artix package prefetch, daily upstream pin refresh through reviewed PRs, Grype/Trivy/OSV SBOM audits for sources and the final rootfs, and a nightly P0 ISO retained for 14 days.
 - Make dark mode deterministic across Gapless, Haruna, OpenSnitch, ONLYOFFICE, Impasto, Pori, Patchy, DinitUI, DINXPanel, Seafoam Settings and the Pearl first-run wizard. Gapless now executes `/usr/bin/g4music` without wrapper recursion; internal libadwaita apps force the DINX dark scheme; the wizard defaults to DINX dark.

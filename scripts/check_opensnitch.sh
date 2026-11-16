@@ -75,7 +75,7 @@ grep -Fqx 'TryExec=opensnitch-ui' "$autostart" \
   || fail 'OpenSnitch autostart is not guarded by its executable'
 grep -Fq 'squashfs-root/etc/dinit.d/boot.d/opensnitchd -> /etc/dinit.d/opensnitchd' "$iso_check" \
   || fail 'ISO content gate does not verify the OpenSnitch Dinit boot link in both images'
-grep -Fq 'for required_package in floorp opensnitch opensnitch-dinit' "$iso_check" \
+grep -Fq 'for required_package in firefox opensnitch opensnitch-dinit' "$iso_check" \
   || fail 'ISO content gate does not require the browser and OpenSnitch package metadata'
 
 printf 'opensnitch_contract package=true ui_autostart=true backend=nftables default_action=allow dinit=true boot_enabled=rootfs+livefs firewall=firewalld+nftables\n'

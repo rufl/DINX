@@ -24,7 +24,7 @@ If private reporting is unavailable, contact the repository owner through the Gi
 
 ## Alpha-specific boundaries
 
-- The live image automatically opens the disposable `dinx` account in `Aqueous + Pearl (DINX)`; installed/manual login uses Pearl Greeter through greetd and the dedicated `pearl-greeter` account. The Greeter is not an authentication boundary for the live image: physical boot access already grants control of that machine. The public `dinx` password remains only as a diagnostic fallback if the live session is started manually. Never reuse it elsewhere.
+- The live image automatically opens the disposable `dinx` account in the River/KWM/Morghulis session through greetd/agreety; installed/manual login uses the same greetd path. The login surface is not an authentication boundary for the live image: physical boot access already grants control of that machine. The public `dinx` password remains only as a diagnostic fallback if the live session is started manually. Never reuse it elsewhere.
 - Verify the ISO checksum before writing removable media or booting it.
 - Do not place production credentials, personal data or private keys in the live session.
 - A successful boot is not evidence of production security, persistence safety or update safety.

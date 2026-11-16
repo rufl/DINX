@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=EuroOffice
+Name[pt_BR]=EuroOffice
+GenericName=Office Suite
+GenericName[pt_BR]=Suíte de Escritório
+Comment=Lean offline document, spreadsheet, presentation and PDF editor
+Comment[pt_BR]=Editor leve offline de documentos, planilhas, apresentações e PDF
+Exec=eurooffice %U
+TryExec=eurooffice
+Icon=euro-office-lite
+Terminal=false
+Categories=Office;WordProcessor;Spreadsheet;Presentation;
+MimeType=text/plain;application/msword;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.oasis.opendocument.text;application/rtf;application/vnd.ms-excel;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.oasis.opendocument.spreadsheet;text/csv;application/vnd.ms-powerpoint;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.oasis.opendocument.presentation;application/pdf;

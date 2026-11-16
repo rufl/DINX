@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-local_packages=(dinitui dinxpanel dinx-firewalld-dinit ghostty-vt-runtime seafoam-settings wizp)
+local_packages=(dinitui dinxpanel dinx-firewalld-dinit ghostty-vt-runtime wizp)
 contains_local_package() {
   local candidate=$1
   local package
@@ -37,7 +37,6 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
     case "$package" in
       dinitui) contract=scripts/check_dinitui.sh ;;
       dinxpanel) contract=scripts/check_dinxpanel.sh ;;
-      seafoam-settings) contract=scripts/check_seafoam_settings.sh ;;
       wizp) contract=scripts/check_wizp_package.sh ;;
       ghostty-vt-runtime) contract=scripts/check_ghostty_vt_runtime.sh ;;
       dinx-firewalld-dinit) contract=scripts/check_firewall_tools.sh ;;
@@ -264,12 +263,13 @@ for required in \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
   'pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good' \
+  'build_package turnstile' \
   'build_package dinx-noto-latin' \
   'build_package dinx-plymouth-theme' \
   'build_package patchy' \
-  'build_package blockbench' \
-  'build_package impasto' \
+  'build_package eurooffice' \
   'build_package pixelorama' \
+  'build_package audionaut' \
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

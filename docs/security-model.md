@@ -4,7 +4,7 @@
 
 DINX is a public alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
-The live image automatically opens the disposable `dinx` account in `Aqueous + Pearl (DINX)`. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. Installed/manual login uses Pearl Greeter through greetd and the dedicated `pearl-greeter` account; the configured host forces Aqueous/Pearl without X11, UWSM or systemd. The public `dinx` password remains only as a diagnostic fallback if Pearl Greeter appears after a manual live start; the installed system keeps its separate Calamares-created login policy.
+The live image automatically opens the disposable `dinx` account in the River/KWM/Morghulis session. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. Installed/manual login uses `agreety` through greetd and the dedicated `greeter` account; the configured session uses River/KWM/Morghulis without X11, UWSM or systemd. The public `dinx` password remains only as a diagnostic fallback if a manual live start needs it; the installed system keeps its separate Calamares-created login policy.
 
 ## Threat assumptions
 

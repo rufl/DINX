@@ -39,24 +39,24 @@
 DINX is an Artix distribution for a small, legible and controllable desktop session:
 
 - **Artix Linux + dinit** as the base, without replacing the init system with systemd;
-- **Aqueous + Pearl** as the only user session, started directly over dinit; **Pearl Greeter** is the greetd login UI and is hosted by Aqueous without systemd or UWSM;
+- **River + KWM + Morghulis** as the base Wayland session, started directly over dinit; `greetd` uses `agreety` for login;
 - **DinitUI** and **DINXPanel** for service, hardware, driver and kernel profiles;
 - **Calamares** for experimental installation, **GParted** for separate partition editing and **Pori** for persistent disks and mounts through dinit;
-- **Phyto** as the default file manager and **File Roller** for opening, creating and extracting archives;
+- **PCManFM** as the default file manager and desktop, with **File Roller** for opening, creating and extracting archives;
 - **wdisplays + Shikane** for configuring Wayland displays and reapplying the layout across sessions;
 - the kernel **ntfs3** module for NTFS read/write support in the live ISO and installed system;
 - **Mesa/RADV and VM graphics:** the builder includes `vmwgfx`/`vboxvideo` in the initramfs, and ISO inspection verifies both. Qualification tests the live session on default VGA and Virtio-VGA in QEMU. On this host, QEMU 11.1.2/KVM with `vmware-svga` stalls in early udev when `vmwgfx` loads, so that proxy was removed; direct VirtualBox boot still needs qualification. Accessible `virtio_gpu` retains GLES2. See the [graphics guide](docs/install.md).
 - **DINX Gaming** keeps its manual launcher hidden. The base ISO excludes Gamescope, Steam, GameMode, MangoHud, Steam device rules and 32-bit gaming libraries; users can opt into the gaming stack after installation. The base retains 64-bit RADV/Vulkan; see the [install guide](docs/install.md).
 
-`dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket.
+`dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket. The `scripts/check_dinx_doctor.sh` and `scripts/smoke_dinx_doctor.sh` contracts enforce this boundary.
 
 BC-250 software is not installed in the generic ISO. Its packages are available in the signed DINX repository; install them only after confirming PCI ID `1002:13fe`.
 
 ## Seafoam and the sole session in the base ISO
 
-**Dome**, **Seafoam Settings** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Dome provides resource/process monitoring without installing or requiring systemd; Seafoam Settings groups display and session entry points; ZLS provides Zig LSP support in Dintor with the matching Zig standard library and a compact metadata shim, without requiring a full Zig compiler in the ISO. Pearl 0.3.0, including the upstream source used by Dome, and Phyto's bundled Pearl 0.2.8 source use their pinned Zig 0.16.0 toolchain; Pori, Aqueous and other DINX-native Zig packages outside that upstream Pearl tree use verified Zig 0.17.0.
+**Mission Center 1.2.0**, **Seafoam Settings**, **Audionaut** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Mission Center provides GTK4 resource/process monitoring without a systemd dependency; Seafoam Settings groups display, session and Mission Center entry points; Audionaut provides audio.
 
-**Aqueous 1.0.5** and **Pearl 0.3.0** ship in the base ISO. `Aqueous + Pearl (DINX)` is the only selectable user session and the live initial session: DINX starts Aqueous directly, runs the supervised Shikane/PolicyKit/idle helpers and execs Pearl without `systemd`, `systemctl`, `uwsm` or user units. Installed/manual login uses **Pearl Greeter**, launched directly by greetd through its dedicated `pearl-greeter` account; the Greeter forces the same Aqueous/Pearl entry and does not expose X11 or UWSM. If the live Aqueous/Pearl session exits, greetd falls back to Pearl Greeter rather than silently switching sessions.
+**River**, **KWM**, **Morghulis** and **PCManFM** ship in the base ISO. `River + KWM + Morghulis (DINX)` is the live and installed graphical session; Morghulis first use saves the light/dark variant in `~/.config/morghulis/preferences.json`, synchronizes GTK/Qt and starts the PCManFM desktop. Login uses `agreety` through greetd, without systemd, systemctl or UWSM.
 
 ## Current state
 
@@ -71,9 +71,9 @@ BC-250 software is not installed in the generic ISO. Its packages are available 
 
 ## Next milestone: System Beta 0.1
 
-Beta 0.1 is planned, with no release date set. The goal is to qualify the Aqueous/Pearl session on dinit and the installation, update and recovery paths on a declared physical hardware matrix. Release requires physical network, audio, GPU/display and suspend testing, plus installation and recovery on disposable disks, signed updates and documented limits.
+Beta 0.1 is planned, with no release date set. The goal is to qualify the River/KWM/Morghulis session on dinit and the installation, update and recovery paths on a declared physical hardware matrix. Release requires physical network, audio, GPU/display and suspend testing, plus installation and recovery on disposable disks, signed updates and documented limits.
 
-The [GitHub release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) is **under 2 GiB** (`2,147,483,648` bytes); DINX has no smaller 1.8-billion-byte target. Alpha 12 is published as a direct ISO of 1,836,830,720 bytes, below that limit. Future ISOs must stay below it to publish as a direct asset. P5 gaming remains separate: Beta 0.1 will not claim support without real DRM, Steam, controller and audio tests. The session remains Aqueous/Pearl with dinit, without systemd or UWSM. [Full criteria in the roadmap](docs/roadmap.md).
+The [GitHub release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) is **under 2 GiB** (`2,147,483,648` bytes); DINX has no smaller 1.8-billion-byte target. Alpha 12 is published as a direct ISO of 1,836,830,720 bytes, below that limit. Future ISOs must stay below it to publish as a direct asset. P5 gaming remains separate: Beta 0.1 will not claim support without real DRM, Steam, controller and audio tests. The session uses River/KWM/Morghulis with dinit, without systemd or UWSM.
 
 
 Alpha 12 is published as a direct GitHub release asset below the 2 GiB per-asset limit. Verify its matching `.iso.sha512` file before writing it to a USB drive.
@@ -89,7 +89,7 @@ Alpha 12 is published as a direct GitHub release asset below the 2 GiB per-asset
    ```
 
 3. Write the verified ISO to the whole USB device — not a partition — and boot in UEFI mode.
-4. The published Alpha 12 image opens directly in `Aqueous + Pearl (DINX)`; it does not request a username or password. Installed login and Calamares autologin remain disabled.
+4. The published Alpha 12 image opens directly in `River + KWM + Morghulis (DINX)`; it does not request a username or password. Installed login and Calamares autologin remain disabled.
 
 Read the [installation guide](docs/install.md) before touching a disk. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 

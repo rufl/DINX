@@ -2,25 +2,20 @@
 set -eu
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
-preferences="$config_home/pearl/preferences.json"
-if [ ! -r "$preferences" ]; then
-  preferences="$config_home/pearl/last-good.json"
-fi
+preferences="$config_home/morghulis/preferences.json"
 if ! command -v jq >/dev/null 2>&1 || [ ! -r "$preferences" ]; then
-  printf '%s\n' 'dinx-sync-session-theme: saved Pearl theme is unavailable; leaving toolkit settings unchanged' >&2
+  printf '%s\n' 'dinx-sync-session-theme: saved Morghulis theme is unavailable; leaving toolkit settings unchanged' >&2
   exit 0
 fi
 
-if ! theme_variant=$(jq -er '.theme.variant | select(. == "dark" or . == "light")' "$preferences" 2>/dev/null); then
-  printf '%s\n' 'dinx-sync-session-theme: saved Pearl theme variant is invalid; leaving toolkit settings unchanged' >&2
-  exit 0
+theme_variant=${DINX_THEME_VARIANT:-}
+if [ -z "$theme_variant" ]; then
+  theme_variant=$(jq -er '.theme.variant | select(. == "dark" or . == "light")' "$preferences" 2>/dev/null) || {
+    printf '%s\n' 'dinx-sync-session-theme: saved Morghulis theme variant is invalid; leaving toolkit settings unchanged' >&2
+    exit 0
+  }
 fi
-theme_mode=$(jq -r '.theme.mode // ""' "$preferences" 2>/dev/null || printf '')
-gtk_name=$(jq -r '.theme.gtk_name // ""' "$preferences" 2>/dev/null || printf '')
 gtk_theme=Adwaita
-if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
-  gtk_theme=DINX
-fi
 
 set_ini_value() {
   ini_file=$1

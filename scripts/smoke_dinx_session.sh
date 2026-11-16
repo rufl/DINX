@@ -4,7 +4,6 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 idle="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-idle"
 lock="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-lock"
-live_config="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-config"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -62,23 +61,5 @@ live_lock=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$lock" 2>&1)
   exit 1
 }
 
-cat > "$tmp/wm.toml" <<'EOF'
-[blur]
-enabled = true
-[opacity]
-enabled = true
-[keybinds]
-lock_screen = "Super+Ctrl+L"
-focus_left = "Super+H"
-EOF
-"$live_config" "$tmp/wm.toml"
-grep -Fqx 'enabled = false' "$tmp/wm.toml" || { printf 'smoke_dinx_session: live effects were not disabled\n' >&2; exit 1; }
-grep -Fqx 'lock_screen = []' "$tmp/wm.toml" || { printf 'smoke_dinx_session: live lock binding was not removed\n' >&2; exit 1; }
-grep -Fqx 'focus_left = "Super+H"' "$tmp/wm.toml" || { printf 'smoke_dinx_session: unrelated live keybind changed\n' >&2; exit 1; }
-"$live_config" "$tmp/wm.toml"
-[[ $(grep -Fc 'lock_screen = []' "$tmp/wm.toml") -eq 1 ]] || {
-  printf 'smoke_dinx_session: live config seeding is not idempotent\n' >&2
-  exit 1
-}
 
-printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true seed_idempotent=true\n'
+printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true\n'

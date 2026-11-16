@@ -3,6 +3,8 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Adicionar o Mission Center 1.2.0 como monitor GTK4 de recursos/processos, remover Qps e Dome do payload da ISO e manter Pori/PCManFM como stack de armazenamento/gerenciamento de arquivos. EuroOffice continua desabilitado.
+- Desabilitar a estação de áudio Transit e habilitar o editor de áudio multifaixa Audionaut, fixado por checksum, no perfil de pacotes e no pipeline da ISO.
 - Automatizar a manutenção da distribuição: prefetch incremental de pacotes Artix duas vezes ao dia, renovação diária de pins upstream por PR, SBOM/auditoria Grype-Trivy-OSV em fontes e rootfs final e ISO P0 noturna com retenção de 14 dias.
 - Tornar o modo escuro determinístico no Gapless, Haruna, OpenSnitch, ONLYOFFICE, Impasto, Pori, Patchy, DinitUI, DINXPanel, Seafoam Settings e assistente inicial do Pearl. O Gapless agora executa `/usr/bin/g4music` sem recursão do wrapper; apps internos libadwaita forçam o esquema escuro DINX; o assistente inicia em DINX escuro.
 - Atualizar Patchy para 1.33 e Pori para 0.2.0 com checksums upstream verificados; remover o patch de compatibilidade Zig anterior ao Pori 0.2.0, agora obsoleto.

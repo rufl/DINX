@@ -21,8 +21,8 @@ when changing the pinned source.
 For P3, the same package build runs `scripts/dintor_p3_qualification.sh`. It
 qualifies the Dintor editor core, native GTK/X11 dark and light schemes, bounded
 Git status/diff markers, and the generic stdio LSP client against a real
-`clangd` server. This is a builder-only protocol check; the ISO includes ZLS
-for Zig and does not ship the `clang` package.
+`clangd` server. This is a builder-only protocol check; ZLS is published as
+an optional DINX package for Zig and the ISO does not ship the `clang` package.
 
 ## Current validated snapshot
 

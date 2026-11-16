@@ -25,16 +25,16 @@ rootfs:
     - calamares-extensions
     - squashfs-tools
     - dinit
+    - turnstile
     - dinit-rc
     - dinitui
     - dinxpanel
     - dinx-keyring
     - dinx-plymouth-theme
-    - dome
-    - aqueous
-    - pearl
-    - seafoam-settings
-    - zls
+    - mission-center
+    - river
+    - kwm
+    - morghulis
     - e2fsprogs
     - efibootmgr
     - elogind
@@ -49,7 +49,7 @@ rootfs:
     - pixelorama
     - godot
     - libva
-    - phyto
+    - pcmanfm
     - pori
     - greetd
     - linux-firmware-amdgpu
@@ -66,16 +66,14 @@ rootfs:
     - qt6ct
     - shikane
     - wdisplays
-    - impasto
     - krita
     - adw-gtk-theme
     - papirus-icon-theme
-    - onlyoffice
-    - zrythm
+    - eurooffice
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
-    - floorp
+    - firefox
     - pipewire
     - pipewire-pulse
     - zenity
@@ -91,7 +89,6 @@ rootfs:
     - xorg-xwayland
     - bluez
     - blueman
-    - blockbench
     - bluez-utils
     - btop
     - brightnessctl
@@ -122,11 +119,11 @@ rootfs:
     - paru
     - pciutils
     - pwvucontrol
-    - qps
     - rsync
     - sane
     - shelly
     - gapless
+    - audionaut
     - swayimg
     - topgrade
     - swayidle

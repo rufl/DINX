@@ -56,7 +56,7 @@ on:
       - "scripts/check_build_metadata.sh"
       - "scripts/smoke_build_metadata.sh"
       - "scripts/check-iso-host.sh"
-      - "scripts/check_dinx_theme.sh"
+      - "scripts/check_morghulis_theme.sh"
       - "scripts/check_deetty_integration.sh"
       - "scripts/check_ghostty_vt_runtime.sh"
       - "scripts/dintor_p3_qualification.sh"
@@ -81,19 +81,18 @@ on:
       - "scripts/package-windows-qemu.sh"
       - "scripts/deploy-ztash.sh"
       - "tools/dinx-qemu-launcher.c"
-      - "scripts/check_floorp.sh"
+      - "scripts/check_firefox.sh"
+      - "scripts/check_eurooffice.sh"
       - "scripts/check_opensnitch.sh"
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
-      - "scripts/check_pori_phyto.sh"
-      - "scripts/check_seafoam_apps.sh"
-      - "scripts/check_seafoam_settings.sh"
-      - "scripts/check_aqueous_pearl.sh"
+      - "scripts/check_river_session.sh"
+      - "scripts/check_mission_center.sh"
+      - "scripts/check_turnstile.sh"
       - "scripts/smoke_zls.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
-      - "scripts/smoke_dinx_session_supervisor.sh"
       - "scripts/smoke_pori_mount_service.sh"
       - "scripts/smoke_pori_zig.sh"
       - "scripts/check_firewall_tools.sh"
@@ -102,12 +101,7 @@ on:
       - "scripts/check_dinitui.sh"
       - "scripts/check_dinxpanel.sh"
       - "scripts/check_dinx_live_autologin.sh"
-      - "scripts/check_dinx_session.sh"
-      - "scripts/smoke_dinx_theme_sync.sh"
-      - "scripts/check_dinx_doctor.sh"
-      - "scripts/smoke_dinx_doctor.sh"
       - "scripts/check_dinx_budget.sh"
-      - "scripts/measure_dinx_session.sh"
       - "scripts/smoke_dinx_session.sh"
       - "scripts/check_alpha7_hardware_report.sh"
       - "scripts/check_dinx_hardware_evidence.sh"
@@ -206,8 +200,10 @@ jobs:
         run: ./scripts/check_deetty_integration.sh
       - name: Verify VT-only runtime packaging and sole-terminal build order
         run: ./scripts/check_ghostty_vt_runtime.sh
-      - name: Verify Floorp defaults and managed browser policy
-        run: ./scripts/check_floorp.sh
+      - name: Verify Firefox defaults and managed browser policy
+        run: ./scripts/check_firefox.sh
+      - name: Verify EuroOffice lean office payload
+        run: ./scripts/check_eurooffice.sh
       - name: Verify OpenSnitch Dinit service and live UI autostart
         run: ./scripts/check_opensnitch.sh
 
@@ -217,12 +213,14 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
-      - name: Verify Pori, Phyto, dinit storage and NTFS contracts
-        run: ./scripts/check_pori_phyto.sh
-      - name: Verify Seafoam app selection and Dome package contract
-        run: ./scripts/check_seafoam_apps.sh
-      - name: Verify Seafoam Settings package and argv contract
-        run: ./scripts/check_seafoam_settings.sh
+      - name: Verify River, KWM, Morghulis and PCManFM session contract
+        run: ./scripts/check_river_session.sh
+      - name: Verify Transit removal and Audionaut package contract
+        run: ./scripts/check_audionaut.sh
+      - name: Verify Turnstile user-session service contract
+        run: ./scripts/check_turnstile.sh
+      - name: Verify Mission Center source and package contract
+        run: ./scripts/check_mission_center.sh
 
       - name: Install pinned Zig for native session contracts
         env:
@@ -240,14 +238,10 @@ jobs:
           scripts/cache-verified-extract.sh \
             "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
           echo "$zig_root" >> "$GITHUB_PATH"
-      - name: Verify Aqueous/Pearl direct dinit session contract
-        run: ./scripts/check_aqueous_pearl.sh
       - name: Verify wdisplays to Shikane persistence contract
         run: ./scripts/check_dinx_display_persistence.sh
       - name: Smoke-test wdisplays to Shikane persistence
         run: ./scripts/smoke_dinx_display_persistence.sh
-      - name: Smoke-test the sole Aqueous/Pearl session boundary
-        run: ./scripts/smoke_dinx_session_supervisor.sh
       - name: Smoke-test supervised Pori NTFS mount service
         run: ./scripts/smoke_pori_mount_service.sh
       - name: Verify WIZP package staging and desktop contract
@@ -270,14 +264,8 @@ jobs:
         run: ./scripts/check_dinitui.sh
       - name: Verify DINXPanel control-center and kernel contract
         run: ./scripts/check_dinxpanel.sh
-      - name: Verify DINX lock, idle, brightness and launcher hierarchy contract
-        run: ./scripts/check_dinx_session.sh
       - name: Verify live-session autologin boundary
         run: ./scripts/check_dinx_live_autologin.sh
-      - name: Verify read-only DINX doctor contract
-        run: ./scripts/check_dinx_doctor.sh
-      - name: Smoke-test read-only DINX doctor
-        run: ./scripts/smoke_dinx_doctor.sh
       - name: Verify installer lifecycle boundary
         run: ./scripts/check_install_lifecycle.sh
       - name: Verify Calamares partitioning contract
@@ -301,8 +289,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes dbus-daemon dconf-cli dconf-service btrfs-progs dosfstools libarchive-tools ntfs-3g grub-efi-amd64-bin ovmf qemu-system-x86 qemu-utils squashfs-tools xorriso zstd socat grub-pc-bin tesseract-ocr tesseract-ocr-eng
-      - name: Smoke-test GTK and Qt theme synchronization
-        run: ./scripts/smoke_dinx_theme_sync.sh
       - name: Verify full ISO qualification prerequisites
         run: scripts/check-iso-qualification-host.sh full --build-path "$GITHUB_WORKSPACE/dist" --build-path "$RUNNER_TEMP" --build-path "$(docker info --format '{{.DockerRootDir}}')"
       - name: Smoke-test Calamares partition transaction

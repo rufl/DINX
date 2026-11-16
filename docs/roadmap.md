@@ -14,7 +14,7 @@ Tags `v0.1.0-alpha.12` and `alpha-latest` point to the same source commit, and t
 
 ## Product objective
 
-DINX aims to be a beginner-friendly, live-first Artix Linux desktop: boot straight into a usable Aqueous/Pearl session without a live login prompt; provide a familiar floating-window desktop with titlebars, window controls and edge/corner snapping; include a focused set of everyday apps; and make installation approachable through Calamares guided/manual choices with swap optional. The design stays single-session and dinit-only: no systemd or UWSM. The distribution is delivered as one directly downloadable x86_64 ISO below GitHub's 2 GiB per-file limit.
+DINX aims to be a beginner-friendly, live-first Artix Linux desktop: boot straight into a usable River/KWM/Morghulis session without a live login prompt; provide a focused set of everyday apps including PCManFM and Mission Center; and make installation approachable through Calamares guided/manual choices with swap optional. The design stays single-session and dinit-only: no systemd or UWSM. The distribution is delivered as one directly downloadable x86_64 ISO below GitHub's 2 GiB per-file limit.
 
 Alpha 12 is an experimental milestone, not a blanket hardware-support claim. CI verified the graphical session in QEMU and the release workflow's install/recovery paths; physical-machine coverage and direct VirtualBox VMSVGA boot remain unqualified. Cross-toolkit window behavior is also a Beta gate, not a universal guarantee.
 
@@ -27,11 +27,11 @@ Alpha 12 is an experimental milestone, not a blanket hardware-support claim. CI 
 Implementation delivered:
 
 - the P0 ISO/VM foundation gate, signed package transaction path and recovery-TTY contract;
-- the direct Aqueous/Pearl session, Pearl Greeter through greetd, and dinit-only runtime with no systemd/UWSM;
+- the direct River/KWM/Morghulis session, `agreety` through greetd, and dinit-only runtime with no systemd/UWSM;
 - the Fish defaults, base package boundary and clean-build/VM smoke paths;
-- The live session starts Aqueous/Pearl without asking for live credentials; installed systems use Pearl Greeter and do not enable autologin. Aqueous/Pearl is the only session, launched and supervised directly by dinit, with no systemd or UWSM payload.
+- The live session starts River/KWM/Morghulis without asking for live credentials; installed systems use `agreety` and do not enable autologin. The session is launched and supervised directly by dinit, with no systemd or UWSM payload.
 - New user profiles start with two workspaces and floating/stacking windows. The compositor provides DINX titlebars, minimize/maximize/close controls, titlebar dragging and edge/corner snapping; compatibility with every GTK, Qt and XWayland app remains to be qualified.
-- Fish is the default shell and Deetty the only terminal emulator. The base roster includes Dintor, Phyto, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Dome, Seafoam Settings and ZLS, alongside the DINX control/diagnostic tools.
+- Fish is the default shell and Deetty the only terminal emulator. The base roster includes Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Mission Center and Seafoam Settings; ZLS is an optional package.
 - GTK 3/4 defaults to the DINX dark theme; system branding is applied without replacing application or desktop icons. The live and installed systems use kernel `ntfs3` for NTFS read/write, and display changes can persist to Shikane profiles.
 - Calamares offers guided and manual partitioning, keeps destructive choices unselected and makes swap optional. CI covers installer transactions, but physical-disk installation and data-preservation claims still require hardware qualification.
 
@@ -70,7 +70,7 @@ P2 exit evidence:
 - the exact pinned upstream archive that supplies Deetty and Dintor is SHA-256 verified and built into the Artix `deetty` package;
 - the native Zig core qualifies PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, protocol/Unicode compatibility, allocator-accounted lifecycle and fairness under 30 panes with an 8 MiB paste;
 - the ReleaseSafe matrix qualifies actual tmux, a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP, real Vim/btop, and the installed `info` command or its deterministic styled fallback for minimal/non-TTY surfaces;
-- the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, Aqueous/Pearl discovery and package-runtime contracts are verified;
+- the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, River/KWM/Morghulis discovery and package-runtime contracts are verified;
 - the final P0 workflow proves package creation, ISO generation, QEMU boot, graphical payload, persistent installation, recovery TTY, attestation and artifact upload.
 
 The pinned upstream source retains legacy internal module and resource names. They appear only where the patches and qualification fixtures must address those exact upstream inputs; installed package names and paths are Deetty/Dintor.
@@ -105,7 +105,7 @@ P3 release gate:
 - `PKGBUILD`, the ISO profile, `check_deetty_integration.sh` and `check-iso-content.sh` carry the same Dintor/LSP/Git/theme contract;
 - the P0 workflow remains the required package, ISO, QEMU, persistent-install, recovery and attestation gate.
 
-**Exit criterion:** met. A developer can work on Zig projects with the ISO's ZLS; C/C++ LSP is optional and requires `clangd`.
+**Exit criterion:** met. A developer can work on Zig projects with the optional DINX ZLS package; C/C++ LSP is optional and requires `clangd`.
 
 ## P4 — DinitUI
 
@@ -158,8 +158,8 @@ P3 release gate:
 
 - build metadata now binds the recorded ISO byte count and SHA-512 to the exact artifact checked by CI and the tagged release preflight;
 - metadata records the largest installed packages so size regressions have an actionable diagnostic;
-- the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, Phyto, File Roller, GParted, recovery TTY and hardware behavior.
-- shipped Aqueous 1.0.5/Pearl 0.3.0 as the sole user session through direct DINX wrappers: live autologin and the greeter launch Aqueous, the init child starts the DINX user-session helpers and Pearl, the Aqueous activity bootstrap uses direct dinit process identity, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
+- the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, PCManFM, File Roller, GParted, recovery TTY and hardware behavior.
+- shipped River/KWM/Morghulis as the sole user session through direct DINX wrappers: live autologin and installed greetd launch the River session, the init wrapper starts the DINX user-session helpers and Morghulis, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
 
 **Remaining release gates:**
 
@@ -179,8 +179,8 @@ P3 release gate:
 - Publish a physical compatibility matrix with exact hardware and tested firmware, GPU/display, network, audio, Bluetooth and suspend/resume results. Limit support claims to tested machines; qualify BC-250 only on detected, separately tested hardware.
 - Test guided and manual installation on disposable physical disks, including the supported UEFI/BIOS paths, first boot, recovery TTY and interrupted-install recovery. Keep swap optional; never require users to create it manually. Document Windows/BitLocker/hibernation boundaries and make no data-preservation claim beyond tested layouts.
 - Qualify the signed package-repository bootstrap, signature verification, installed-system updates and package recovery. Decide whether installed-ISO upgrades and filesystem rollback are supported; otherwise state that they remain unsupported and document the recovery/reinstall path.
-- Validate the base services and session on the declared machines: network, D-Bus, portals, polkit, PipeWire, GPU acceleration, display persistence, lock/idle and suspend/resume. Keep Aqueous/Pearl as the only session, supervised directly by dinit; install no systemd or UWSM.
-- Verify GTK 3/4, Qt 6 and XWayland apps in the Aqueous session: titlebar visibility, minimize/maximize/close, dragging, snapping and custom-titlebar overlap. Record app-specific exceptions instead of claiming uniform behavior without evidence.
+- Validate the base services and session on the declared machines: network, D-Bus, portals, polkit, PipeWire, GPU acceleration, display persistence, lock/idle and suspend/resume. Keep River/KWM/Morghulis as the only session, supervised directly by dinit; install no systemd or UWSM.
+- Verify GTK 3/4, Qt 6 and XWayland apps in the River/KWM/Morghulis session: toolkit titlebar visibility, dragging, and client-surface behavior. Record app-specific exceptions instead of claiming uniform behavior without evidence.
 - Pass the existing P0 build, QEMU, Calamares, BIOS/UEFI, recovery, metadata and provenance gates. Keep the direct ISO below GitHub's [2 GiB release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2,147,483,648` bytes); Alpha 12 measures 1,836,830,720 bytes. QEMU graphics passed; direct VirtualBox VMSVGA boot is not yet qualified.
 - Publish matching English and Brazilian Portuguese installation, compatibility, known-issues and recovery guidance with test evidence and explicit unsupported cases.
 

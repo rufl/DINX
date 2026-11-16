@@ -9,15 +9,17 @@ source_checks=(
 )
 checks=(
   check_ghostty_vt_runtime.sh
-  check_floorp.sh
+  check_firefox.sh
+  check_eurooffice.sh
   check_opensnitch.sh
   check_swayimg.sh
   check_package_managers.sh
   check_desktop_packages.sh
-  check_pori_phyto.sh
-  check_seafoam_apps.sh
-  check_seafoam_settings.sh
-  check_aqueous_pearl.sh
+  check_audionaut.sh
+  check_river_session.sh
+  check_morghulis_theme.sh
+  check_mission_center.sh
+  check_turnstile.sh
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh
@@ -28,7 +30,6 @@ checks=(
   check_firewall_tools.sh
   check_dinitui.sh
   check_dinxpanel.sh
-  check_dinx_session.sh
   check_dinx_graphics_profile.sh
   check_dinx_live_autologin.sh
   check_dinx_doctor.sh
@@ -77,7 +78,6 @@ fi
 for smoke in \
   smoke_dinx_pacman_repo_priority.sh \
   smoke_dinx_display_persistence.sh \
-  smoke_dinx_session_supervisor.sh \
   smoke_dinx_qt_palette.sh \
   smoke_pori_mount_service.sh \
   smoke_pori_zig.sh \

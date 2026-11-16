@@ -69,8 +69,6 @@ fakeroot -- sh -c '
     chown -R 34:34 "$tree/var/lib/nfs/statd"
     chown 87:0 "$tree/var/lib/ntp"
     chown 32:32 "$tree/var/lib/rpcbind"
-    chown -R 978:978 "$tree/var/lib/pearl-greeter" "$tree/var/cache/pearl-greeter"
-    chmod 755 "$tree/var/empty/pearl-greeter"
   else
     chown -R 1000:1000 "$tree/home/dinx"
     chown 1000:1000 "$tree/var/spool/mail/dinx"

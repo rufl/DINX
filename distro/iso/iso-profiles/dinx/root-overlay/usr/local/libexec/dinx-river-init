@@ -1,0 +1,50 @@
+#!/bin/sh
+set -eu
+
+state_home=${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}
+mkdir -p "$state_home/dinx"
+log_path="$state_home/dinx/river-session.log"
+exec >>"$log_path" 2>&1
+
+pids=''
+cleanup() {
+  for pid in $pids; do kill -TERM "$pid" 2>/dev/null || true; done
+}
+trap cleanup EXIT
+trap 'exit 143' HUP INT TERM
+
+start() {
+  "$@" &
+  pids="$pids $!"
+}
+
+start_background() {
+  "$@" &
+}
+
+start_optional() {
+  command -v "$1" >/dev/null 2>&1 || return 0
+  start "$@"
+}
+
+command -v kwm >/dev/null 2>&1 || exit 127
+command -v morghulis >/dev/null 2>&1 || exit 127
+command -v pcmanfm >/dev/null 2>&1 || exit 127
+command -v shikane >/dev/null 2>&1 || exit 127
+command -v lxqt-policykit-agent >/dev/null 2>&1 || exit 127
+
+start_background /usr/local/libexec/dinx-morghulis-first-run
+start kwm
+start morghulis
+start pcmanfm --desktop
+start shikane
+start lxqt-policykit-agent
+start /usr/local/libexec/dinx-idle
+start_optional bc250-control-centerd
+
+while :; do
+  for pid in $pids; do
+    kill -0 "$pid" 2>/dev/null || exit 1
+  done
+  sleep 1
+done

@@ -14,7 +14,7 @@ As tags `v0.1.0-alpha.12` e `alpha-latest` apontam para o mesmo commit-fonte, e 
 
 ## Objetivo do produto
 
-A DINX busca ser um desktop Artix Linux amigável para iniciantes e pensado para iniciar pela sessão live: entrar direto em Aqueous/Pearl sem pedir login na live; oferecer janelas flutuantes familiares, com barra de título, controles e encaixe nas bordas/cantos; incluir um conjunto focado de aplicativos cotidianos; e simplificar a instalação pelo Calamares, com opções de instalação guiada ou manual e swap opcional. O desenho permanece de sessão única e somente dinit: sem systemd ou UWSM. A distribuição é entregue em uma ISO x86_64 para download direto, abaixo do limite de 2 GiB por arquivo do GitHub.
+A DINX busca ser um desktop Artix Linux amigável para iniciantes e pensado para iniciar pela sessão live: entrar direto em River/KWM/Morghulis sem pedir login na live; oferecer um conjunto focado de aplicativos cotidianos, incluindo PCManFM e Mission Center; e simplificar a instalação pelo Calamares, com opções guiada ou manual e swap opcional. O desenho permanece de sessão única e somente dinit: sem systemd ou UWSM. A distribuição é entregue em uma ISO x86_64 para download direto, abaixo do limite de 2 GiB por arquivo do GitHub.
 
 A Alpha 12 é um marco experimental, não uma afirmação geral de suporte a hardware. O CI verificou a sessão gráfica no QEMU e os caminhos de instalação/recuperação do workflow; a cobertura em máquinas físicas e o boot direto no VirtualBox VMSVGA continuam sem qualificação. O comportamento entre todos os toolkits também é um gate da Beta, não uma garantia universal.
 
@@ -27,11 +27,11 @@ A Alpha 12 é um marco experimental, não uma afirmação geral de suporte a har
 Implementação entregue:
 
 - o gate da fundação ISO/VM P0, o caminho de transações de pacotes assinados e o contrato de TTY de recuperação;
-- a sessão Aqueous/Pearl direta, o Pearl Greeter pelo greetd e o runtime somente dinit, sem systemd/UWSM;
+- a sessão River/KWM/Morghulis direta, `agreety` pelo greetd e o runtime somente dinit, sem systemd/UWSM;
 - os defaults Fish, o limite do payload base e os smokes de build limpo/VM;
-- A sessão live inicia Aqueous/Pearl sem pedir credenciais; sistemas instalados usam Pearl Greeter e não habilitam autologin. Aqueous/Pearl é a única sessão, iniciada e supervisionada diretamente pelo dinit, sem payload de systemd ou UWSM.
+- A sessão live inicia River/KWM/Morghulis sem pedir credenciais; sistemas instalados usam `agreety` e não habilitam autologin. A sessão é iniciada e supervisionada diretamente pelo dinit, sem payload de systemd ou UWSM.
 - Novos perfis começam com dois workspaces e janelas flutuantes/stacking. O compositor fornece barras DINX, controles de minimizar/maximizar/fechar, arraste pela barra e encaixe nas bordas/cantos; a compatibilidade com todos os aplicativos GTK, Qt e XWayland ainda precisa ser qualificada.
-- Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, Phyto, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Dome, Seafoam Settings e ZLS, além das ferramentas DINX de controle/diagnóstico.
+- Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Mission Center, Seafoam Settings e ZLS, além das ferramentas DINX de controle/diagnóstico.
 - GTK 3/4 usa o tema escuro DINX por padrão; a identidade visual do sistema não substitui ícones de aplicativos nem da área de trabalho. Os sistemas live e instalado usam o `ntfs3` do kernel para leitura e escrita em NTFS, e as alterações de configuração dos monitores podem ser salvas em perfis do Shikane.
 - O Calamares oferece particionamento guiado e manual, mantém opções destrutivas desmarcadas e deixa swap opcional. O CI cobre transações do instalador, mas a instalação em discos físicos e alegações de preservação de dados ainda exigem qualificação em hardware.
 
@@ -156,8 +156,8 @@ Gate de release P3:
 
 - o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
 - o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
-- os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, Phyto, File Roller, GParted, TTY de recuperação e comportamento de hardware.
-- entregue Aqueous 1.0.5/Pearl 0.3.0 como a única sessão do usuário por wrappers DINX diretos: o autologin live e o greeter iniciam Aqueous, o filho de init inicia os helpers de sessão da DINX e o Pearl, o bootstrap de atividade do Aqueous usa identidade direta de processo dinit e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
+- os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, PCManFM, File Roller, GParted, TTY de recuperação e comportamento de hardware.
+- entregue River/KWM/Morghulis como a única sessão do usuário por wrappers DINX diretos: o autologin live e o greetd instalado iniciam a sessão River, o init wrapper inicia os helpers da DINX e o Morghulis, e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
 
 **Gates de release restantes:**
 
@@ -177,8 +177,8 @@ Gate de release P3:
 - Publicar uma matriz de compatibilidade física com hardware exato e resultados testados de firmware, GPU/display, rede, áudio, Bluetooth e suspensão/retomada. Limitar as afirmações de suporte às máquinas testadas; qualificar BC-250 somente em hardware detectado e testado separadamente.
 - Testar instalação guiada e manual em discos físicos descartáveis, incluindo os caminhos UEFI/BIOS suportados, primeiro boot, TTY de recuperação e recuperação após instalação interrompida. Manter swap opcional; nunca exigir criação manual pelo usuário. Documentar limites de Windows/BitLocker/hibernação e não prometer preservação de dados além dos layouts testados.
 - Qualificar bootstrap do repositório assinado, verificação de assinaturas, atualizações do sistema instalado e recuperação de pacotes. Decidir se upgrades de ISO instalada e rollback do filesystem serão suportados; caso contrário, declarar que continuam indisponíveis e documentar o caminho de recuperação/reinstalação.
-- Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. Aqueous/Pearl continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
-- Verificar aplicativos GTK 3/4, Qt 6 e XWayland na sessão Aqueous: barra de título, minimizar/maximizar/fechar, arrastar, encaixar e sobreposição de barras próprias. Registrar exceções por aplicativo em vez de alegar comportamento uniforme sem evidência.
+- Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. River/KWM/Morghulis continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
+- Verificar aplicativos GTK 3/4, Qt 6 e XWayland na sessão River/KWM/Morghulis: titlebar, arraste e comportamento das superfícies. Registrar exceções por aplicativo em vez de alegar comportamento uniforme sem evidência.
 - Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta abaixo do [limite de 2 GiB por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2.147.483.648` bytes); a Alpha 12 mede 1.836.830.720 bytes. Os gráficos no QEMU passaram; o boot direto no VirtualBox VMSVGA ainda não foi qualificado.
 - Publicar guias correspondentes em inglês e português brasileiro para instalação, compatibilidade, problemas conhecidos e recuperação, com evidências de teste e casos explicitamente não suportados.
 

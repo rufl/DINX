@@ -89,41 +89,34 @@ if [[ "$mode" == greeter ]]; then
     exit 1
   fi
   greeter_text=$(printf '%s' "$recognized" | tr -cd '[:alnum:]')
-  if ! grep -Eiq 'aqueous.*pearl.*dinx|pearl.*dinx' <<<"$greeter_text" \
-    || ! grep -Eiq 'signin' <<<"$greeter_text" \
+  if ! grep -Eiq 'signin|login|user' <<<"$greeter_text" \
     || ! grep -Eiq 'pas[[:alpha:]]{0,4}rd' <<<"$greeter_text"; then
-    printf 'dinx-qemu-session: Pearl Greeter identity, sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
+    printf 'dinx-qemu-session: sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  printf 'dinx-qemu-session: greeter_ready=true marker=Aqueous+Pearl+SignIn+Password screenshot=%s\n' "$screenshot"
+  printf 'dinx-qemu-session: greeter_ready=true marker=agreety+SignIn+Password screenshot=%s\n' "$screenshot"
   exit 0
 fi
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then
-  fail 'Pearl reports a missing XDG Desktop directory'
+  fail 'DINX reports a missing XDG Desktop directory'
 fi
-if grep -Eiq 'pearl[[:space:]]+greeter|login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|select[[:space:]]*user|fail|dinit:.*execution failed|initializing[[:space:]]+aqueous[[:space:]]+version' <<<"$recognized"; then
+if grep -Eiq 'login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|select[[:space:]]*user|fail|dinit:.*execution failed' <<<"$recognized"; then
   printf 'dinx-qemu-session: rejected non-session screen:\n%s\n' "$recognized" >&2
   exit 1
 fi
 if [[ "$mode" == first-run ]]; then
-  if ! grep -Eiq '(^|[^[:alnum:]_])Dock([^[:alnum:]_]|$)' <<<"$recognized"; then
-    printf 'dinx-qemu-session: Pearl first-run client window has no readable Dock title:\n%s\n' "$recognized" >&2
+  if ! grep -Eiq '(^|[^[:alnum:]_])(Morghulis|DINX|Desktop|PCManFM)([^[:alnum:]_]|$)' <<<"$recognized"; then
+    printf 'dinx-qemu-session: Morghulis first-run screen has no readable desktop marker:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  printf 'dinx-qemu-session: first_run_client_visible=true marker=Dock screenshot=%s\n' "$screenshot"
+  printf 'dinx-qemu-session: first_run_client_visible=true marker=Morghulis+Desktop screenshot=%s\n' "$screenshot"
   exit 0
 fi
 marker=identity
-if ! grep -Eiq '(^|[^[:alnum:]_])(pearl|aqueous|dinx)([^[:alnum:]_]|$)' <<<"$recognized"; then
-  if grep -Eiq '(^|[^[:alnum:]_])Desktop([^[:alnum:]_]|$)' <<<"$recognized" \
-    && grep -Eiq 'English[[:space:]]+\(US\)' <<<"$recognized" \
-    && grep -Eiq '[0-2]?[[:digit:]][:-][0-5][[:digit:]]' <<<"$recognized"; then
-    marker=pearl-panel
-  elif grep -Eiq 'dinx' <<<"$recognized"; then
-    marker=dinx-desktop
-  else
-    printf 'dinx-qemu-session: no Pearl/Aqueous desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
-    exit 1
-  fi
+if grep -Eiq '(^|[^[:alnum:]_])(Morghulis|DINX|River|PCManFM|Desktop)([^[:alnum:]_]|$)' <<<"$recognized"; then
+  marker=morghulis-desktop
+else
+  printf 'dinx-qemu-session: no Morghulis/DINX desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
+  exit 1
 fi
 printf 'dinx-qemu-session: graphical_ready=true marker=%s screenshot=%s\n' "$marker" "$screenshot"

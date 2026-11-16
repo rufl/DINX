@@ -16,13 +16,13 @@
 
 ```text
 DINX applications
-  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (base ISO)
+  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Mission Center · ZLS (optional package)
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · standard D-Bus adapters
 
 Desktop session
-  Wayland · Aqueous · Pearl · Pearl Greeter host
+  Wayland · River · KWM · Morghulis · PCManFM
 
 Operating-system foundation
   Artix Linux · dinit · kernel · Mesa/Vulkan · PipeWire · D-Bus · portals · polkit
@@ -39,7 +39,7 @@ The first target is Artix Linux with dinit on x86_64. The base image must provid
 - graphical login with a recovery TTY;
 - networking, PipeWire, D-Bus, portals, polkit and accelerated graphics;
 - Pori manages disks and mounts through UDisks2, with persistent dinit services under `/etc/dinit.d`;
-- Phyto provides native file management and is the default directory handler; DINX includes File Roller for archive actions and GParted for standalone partition editing, while `wdisplays` and `shikane` cover Wayland display setup; Thunar, GVFS, Tumbler and KDE Partition Manager remain omitted;
+- PCManFM provides native file management and is the default directory handler and desktop; DINX includes File Roller for archive actions and GParted for standalone partition editing, while `wdisplays` and `shikane` cover Wayland display setup; Thunar, GVFS, Tumbler and KDE Partition Manager remain omitted;
 - package manifests that identify every DINX-specific input;
 - a known-good snapshot that can be reproduced from a clean build environment.
 
@@ -62,7 +62,7 @@ Dintor is a lightweight code editor, not a full IDE. Its boundaries are:
 - a proven syntax parser such as Tree-sitter;
 - an LSP process/client layer;
 - Git status, bounded unified diff output and per-file change markers are exposed through the editor's Tools action; Git is an optional project capability and never blocks opening or editing a file outside a repository.
-- Dintor's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. The ISO includes ZLS for Zig; C/C++ support can use `clangd` when the optional `clang` package is installed.
+- Dintor's LSP layer launches the server selected for the file type with bounded JSON-RPC framing. ZLS is available as an optional DINX package for Zig; C/C++ support can use `clangd` when the optional `clang` package is installed.
 - The editor selects its documented light/dark scheme from `DINTOR_THEME` and falls back to the DINX dark scheme.
 
 The editor remains useful without a shell session service or private IPC. Presentation and launcher integration are optional and use standard XDG/Wayland boundaries.
@@ -82,31 +82,31 @@ DINXPanel downloads the fixed `cups-dinit` package from the configured Artix
 repository, which pulls CUPS and provides the `cupsd` dinit service. The user
 enables or starts that service through DinitUI when printing is required.
 
-The standalone Gamescope session is independent of the Aqueous/Pearl session supervisor and does not install a shell plugin or systemd integration.
+The standalone Gamescope session is independent of the River/KWM/Morghulis session and does not install a shell plugin or systemd integration.
 
-### Dome
+### Mission Center
 
-`Dome` is a base native Zig/GTK4 system monitor delivered in the signed DINX package repository and included in the ISO. Its resource and process views are dinit-safe; the package installs no systemd, systemctl or uwsm integration.
+`Mission Center` is the base GTK4 resource and process monitor delivered in the signed DINX package repository and included in the ISO. Its package does not introduce a systemd dependency.
 
 ### Seafoam Settings and ZLS
 
-`Seafoam Settings` is a base native Zig/GTK4 launcher for DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Dome. It uses fixed argument vectors, opens the documented Aqueous/Pearl and Shikane config files directly in Dintor, and runs the display-profile exporter in Deetty. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
+`Seafoam Settings` is a base native Zig/GTK4 launcher for DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Mission Center. It uses fixed argument vectors and opens the documented River/KWM/Morghulis and Shikane configuration paths directly in Dintor. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
 
-`zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Dintor completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0; the 0.16.0 tree here is only the ZLS/LSP compatibility runtime. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
-### Aqueous, Pearl and the dinit session boundary
+`zls` is the optional source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim; when installed, Dintor completion and navigation work without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
+### River, KWM, Morghulis and the dinit session boundary
 
-The live image starts Aqueous/Pearl from the restartable `dinx-live-session` Dinit service instead of a display manager. `runuser` enters the disposable `dinx` account, `dbus-run-session` supplies the session bus, `/run/dinx-session` supplies an elogind-independent runtime directory and seatd owns the live seat; a runtime-directory lock rejects duplicate compositor instances. Aqueous invokes `dinx-aqueous-init`; that child waits for the Wayland socket and session D-Bus, then starts supervised Shikane, PolicyKit, the required idle helper and Pearl. If BC-250 packages are separately installed from the signed repository on a machine with PCI `1002:13fe`, the supervisor starts the optional Control Center daemon. The generic ISO does not include those packages. `dinx-session-supervisor` records `starting`, `ready`, `failed` and `exited` state and terminates the compositor when a required helper or Pearl exits; if the supervisor itself is stopped, its cleanup path terminates the tracked compositor parent too. DINX removes upstream `uwsm` and systemd user-unit payloads. Installed/manual login uses Pearl Greeter: greetd launches its dedicated host through the `pearl-greeter` account, and `/etc/pearl/greeter.json` forces the same Aqueous/Pearl entry with X11 and UWSM disabled. Pearl Greeter is not a user-session fallback and never performs a silent session switch.
+The live image starts River/KWM/Morghulis from the restartable `dinx-live-session` Dinit service instead of a display manager. `runuser` enters the disposable `dinx` account, `dbus-run-session` supplies the session bus, `/run/dinx-session` supplies the runtime directory and seatd owns the live seat. `dinx-river-session` prepares XDG directories and graphics policy; `dinx-river-init` starts KWM, Morghulis, PCManFM, Shikane, PolicyKit and idle helpers. If BC-250 packages are separately installed from the signed repository on PCI `1002:13fe`, the optional Control Center daemon starts; the generic ISO omits those packages.
 
-Before the compositor starts, `dinx-aqueous-pearl` runs `xdg-user-dirs-update` as the session user. Fresh live and installed accounts get the standard XDG directories, including `~/Desktop`, before Pearl starts.
+Morghulis first use asks for the light/dark variant and saves it in `~/.config/morghulis/preferences.json`; the session synchronizer reapplies it to GTK/Qt at login. PCManFM owns the desktop and is the default `inode/directory` handler.
 
-Fresh Aqueous outputs start with two workspaces. This changes the startup default, not the maximum workspace count and not an existing user's saved configuration. Live and newly installed session accounts plus Pearl Greeter receive `render` group access. With an accessible DRM render node, the graphics helper selects reduced-effects GLES2 for QEMU `virtio_gpu`/virgl. VirtualBox VMSVGA (`vmwgfx`), legacy `vboxvideo`, and systems without an accessible render node select the full Aqueous binary with `WLR_RENDERER=vulkan` and `GSK_RENDERER` unset, matching Devario's Vulkan-only wlroots renderer policy; `vulkan-swrast` remains packaged for software Vulkan. QXL and other 2D adapters use the CPU compatibility build when a render node is present. The custom Pixman scene-buffer rounded-corner patches are removed. A fresh ISO is required; direct VirtualBox boot and client-surface rendering still require hypervisor testing.
+Graphics policy keeps QEMU `virtio_gpu` on the reduced-effects GLES2 path and uses the safe fallback when no accessible render node exists. Direct VirtualBox validation remains separate qualification.
 
 `dinx-doctor` is the read-only evidence surface for the current session, dinit, storage, display and package paths. It does not start services, mount devices, modify Shikane, run package transactions or contact a network. `DINX_DOCTOR_QUERY_DINIT=1` opts into a read-only user-dinit list query.
 
 
 ### Session safety and payload budgets
 
-The Aqueous/Pearl session starts the fixed `dinx-idle` wrapper. In the live session, `swayidle` runs `wlopm` to power off displays after 600 seconds and before suspend, then powers them on after activity or resume. Aqueous rejects session-lock requests in live mode; the default lock binding and DINXPanel/desktop lock actions are disabled. Installed sessions retain the `swaylock` timeout and suspend lock path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
+The River/KWM/Morghulis session starts the fixed `dinx-idle` wrapper. In the live session, `swayidle` runs `wlopm` to power off displays after 600 seconds and before suspend, then powers them on after activity or resume. The live session does not expose a lock action; installed sessions retain the `swaylock` timeout and suspend lock path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
 
 The profile has one combined Artix package payload because `buildiso` consumes one YAML profile. DinitUI separates Normal/Lite/Gaming service policy at runtime, while `scripts/check_dinx_budget.sh` prevents package/startup/binary growth. `scripts/measure_dinx_session.sh` is a runtime observation tool; it reports RSS/CPU only when a real session exists and does not substitute for hardware qualification.
 
@@ -128,7 +128,7 @@ Shared contracts are versioned independently from application internals:
 
 A contract must have a documented version and a compatibility test before applications rely on it.
 
-The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry, Papirus as the default desktop icon theme and Adwaita icon bridging for DINX controls. After session D-Bus is ready, the Pearl shell applies the saved appearance variant to GTK 3/4's dconf color scheme and dark preference, and to Qt6ct; GTK mode selects the DINX GTK theme, dark mode enables the DINX Qt palette, and light mode disables Qt's custom palette. The synchronizer preserves unrelated toolkit settings. Pearl Greeter uses `/etc/pearl/greeter.json` with the GTK DINX bridge; Pearl, Calamares, Swayimg and GRUB use static bridges with the same tokens. `dinx-noto-latin` supplies Noto Sans styles and Noto Sans Mono from a generated Latin/Latin Extended subset; fixed-width fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
+The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry, Papirus as the default desktop icon theme and Adwaita icon bridging for DINX controls. Morghulis stores the saved appearance variant in `~/.config/morghulis/preferences.json`; the session synchronizer applies it to dconf, GTK 3/4 and Qt6ct while preserving unrelated toolkit settings. Morghulis, PCManFM, Calamares, Swayimg and GRUB use static bridges with the same tokens. `dinx-noto-latin` supplies Noto Sans styles and Noto Sans Mono from a generated Latin/Latin Extended subset; `scripts/check_morghulis_theme.sh` is the theme contract qualification.
 
 ## Gaming session
 
@@ -136,14 +136,14 @@ Gaming is a hidden manual launcher, not a selectable user session. The base ISO 
 
 ## Storage and filesystem boundary
 
-Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. Phyto is the only base file manager and the default `inode/directory` handler. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside Aqueous/Pearl and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
+Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. PCManFM is the default file manager and `inode/directory` handler. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside River/KWM/Morghulis and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
 
 The kernel `ntfs3` module supplies NTFS read/write support in both the live ISO and the installed system. Pori maps UDisks2's `ntfs` filesystem type to `ntfs3`. The legacy `ntfs-3g` package is not in the ISO or base install; it remains an optional post-install package for compatibility and repair tooling. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 
 ## Installation path selected
 
 
-The base image includes Phyto as its default file manager, File Roller for archive actions, Pori as its dinit storage manager, GParted for standalone partition editing, `dinx-wdisplays` for interactive display configuration with persistent Shikane export, and the Shikane user daemon. The profile deliberately omits Thunar, GVFS, Tumbler and KDE Partition Manager rather than shipping competing file-manager, volume-monitor and partitioning stacks.
+The base image includes PCManFM as its default file manager and desktop, File Roller for archive actions, Pori as its dinit storage manager, GParted for standalone partition editing, `dinx-wdisplays` for interactive display configuration with persistent Shikane export, and the Shikane user daemon. The profile deliberately omits Thunar, GVFS, Tumbler and KDE Partition Manager rather than shipping competing file-manager, volume-monitor and partitioning stacks.
 
 The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. The profile preserves existing Windows ESP/NTFS layouts, enables a separate DINX EFI boot directory and keeps `os-prober` for Windows discovery. CI qualifies disposable BIOS/UEFI, Btrfs-existing-subvolume and Windows side-by-side/manual transaction smokes; the overall path remains experimental until destructive-device safeguards, physical hardware installation, installed-ISO upgrades and filesystem recovery are qualified.
 

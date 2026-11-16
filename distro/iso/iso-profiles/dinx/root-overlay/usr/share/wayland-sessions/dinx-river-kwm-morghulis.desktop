@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=River + KWM + Morghulis (DINX)
+Comment=River compositor with KWM and the Morghulis desktop shell
+Exec=dbus-run-session /usr/local/libexec/dinx-river-session
+TryExec=/usr/local/libexec/dinx-river-session
+Type=Application
+DesktopNames=River;KWM;Morghulis

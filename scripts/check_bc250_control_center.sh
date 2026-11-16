@@ -12,9 +12,8 @@ cd "$repo_root"
 for path in \
   distro/packages/bc250-control-center/PKGBUILD \
   distro/packages/bc250-control-center/source.env \
-  distro/packages/pearl/PKGBUILD \
   distro/iso/iso-profiles/dinx/profile.yaml \
-  distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor; do
+  distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-init; do
   [[ -f "$path" ]] || fail "missing contract file: $path"
 done
 
@@ -52,7 +51,6 @@ jq -e '
   (.groups.hardware.packages | index("cyan-skillfish-governor-smu-dinit") != null)
 ' distro/iso/iso-profiles/dinx/feature-groups.json >/dev/null \
   || fail 'BC-250 packages must remain in the optional signed repository group'
-grep -Fq '    - pearl' distro/iso/iso-profiles/dinx/profile.yaml || fail 'Pearl shell is missing from the DINX rootfs'
 if grep -Fq '    - python-pyqt6' distro/iso/iso-profiles/dinx/profile.yaml; then
   fail 'BC250-only PyQt6 runtime must not be explicitly installed in the base profile'
 fi
@@ -63,8 +61,8 @@ for package in bc250-control-center cyan-skillfish-governor-smu cyan-skillfish-g
   grep -Fq "build_package $package" scripts/build-iso-container.sh \
     || fail "ISO builder does not build the optional signed package: $package"
 done
-grep -Fq 'start_optional bc250 bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor \
-  || fail 'session daemon is not supervised when installed on detected hardware'
+grep -Fq 'start_optional bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-init \
+  || fail 'River session does not supervise the optional BC-250 daemon'
 
 printf 'bc250_control_center_contract version=%s python=>=3.12 pyqt6=true iso=false signed_repository=true hardware_gate=pci-1002:13fe systemd=false source_sha256=%s\n' \
   "$BC250_CONTROL_CENTER_VERSION" "$BC250_CONTROL_CENTER_SOURCE_SHA256"

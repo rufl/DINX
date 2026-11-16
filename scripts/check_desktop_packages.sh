@@ -9,7 +9,6 @@ mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
 file_roller_mime_cache="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/mimeinfo.cache"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
-qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
@@ -51,7 +50,7 @@ grep -Fq -- '--theme=dark "$@"' "$root/distro/packages/onlyoffice/onlyoffice" ||
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice zrythm papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
@@ -96,13 +95,12 @@ fi
 if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
   fail 'retired KolourPaint desktop override remains in the ISO overlay'
 fi
-for package in patchy blockbench impasto; do
+for package in patchy impasto; do
   launcher="$root/distro/packages/$package/$package.desktop"
   [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
   case "$package" in
     patchy) expected_name=Patchy ;;
-    blockbench) expected_name=Blockbench ;;
     impasto) expected_name=Impasto ;;
   esac
   grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
@@ -180,14 +178,11 @@ grep -Fq 'Forms and Diagram Viewer' "$root/distro/packages/onlyoffice/PKGBUILD" 
 
 grep -Fqx 'Exec=patchy %F' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy launcher does not preserve file arguments'
 grep -Fqx 'Comment[pt_BR]=Editor de imagens com foco em PSD' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy Portuguese description is missing'
-grep -Fqx 'Exec=blockbench %U' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench launcher does not preserve URI arguments'
-grep -Fqx 'Comment[pt_BR]=Editor de modelos 3D low-poly' "$root/distro/packages/blockbench/blockbench.desktop" || fail 'Blockbench Portuguese description is missing'
 grep -Fqx 'Exec=impasto %F' "$root/distro/packages/impasto/impasto.desktop" || fail 'Impasto launcher does not preserve image file arguments'
 grep -Fqx 'Comment[pt_BR]=Pinte, crie e edite imagens' "$root/distro/packages/impasto/impasto.desktop" || fail 'Impasto Portuguese description is missing'
 grep -Fqx 'exec /opt/impasto/Impasto-x86_64.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/impasto/impasto" || fail 'Impasto launcher does not use the no-FUSE AppImage runtime'
 grep -Fqx "depends=('glibc')" "$root/distro/packages/impasto/PKGBUILD" || fail 'Impasto package does not declare its glibc runtime'
 grep -Fqx 'exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/patchy/patchy" || fail 'Patchy launcher does not use the no-FUSE AppImage runtime'
-grep -Fqx 'exec /opt/blockbench/Blockbench.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/blockbench/blockbench" || fail 'Blockbench launcher does not use the no-FUSE AppImage runtime'
 
 for removed in gvfs gvfs-gphoto2 gvfs-mtp gvfs-smb partitionmanager thunar thunar-archive-plugin thunar-volman tumbler; do
   if grep -Fqx "    - $removed" "$profile"; then
@@ -210,19 +205,6 @@ grep -Fq '${GAPLESS_SOURCE_URL}' "$gapless_recipe" \
   || fail 'Gapless package URL is not wired to source.env'
 grep -Fq '"$GAPLESS_SOURCE_B2"' "$gapless_recipe" \
   || fail 'Gapless package checksum is not wired to source.env'
-matugen_recipe="$root/distro/packages/matugen/PKGBUILD"
-matugen_source="$root/distro/packages/matugen/source.env"
-source "$matugen_source"
-[[ "$MATUGEN_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Matugen version: $MATUGEN_VERSION"
-[[ "$MATUGEN_SOURCE_URL" == "$MATUGEN_REPOSITORY/archive/refs/tags/v${MATUGEN_VERSION}.tar.gz" ]] \
-  || fail 'Matugen source URL does not match its version pin'
-[[ "$MATUGEN_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Matugen source checksum is invalid'
-grep -Fq 'pkgver="$MATUGEN_VERSION"' "$matugen_recipe" \
-  || fail 'Matugen package version is not wired to source.env'
-grep -Fq '${MATUGEN_SOURCE_URL}' "$matugen_recipe" \
-  || fail 'Matugen source URL is not wired to source.env'
-grep -Fq '"$MATUGEN_SOURCE_SHA256"' "$matugen_recipe" \
-  || fail 'Matugen source checksum is not wired to source.env'
 grep -Fqx '  gst-plugins-base' "$gapless_recipe" || fail 'Gapless package does not require GStreamer base codecs'
 grep -Fqx '  gst-plugins-good' "$gapless_recipe" || fail 'Gapless package does not require GStreamer good codecs'
 if grep -Fqx 'DBusActivatable=true' "$local_apps/com.github.neithern.g4music.desktop"; then
@@ -235,11 +217,6 @@ grep -Fqx 'Exec=file-roller %U' "$file_roller_override" || fail 'File Roller ove
 grep -Fqx 'Icon=org.gnome.FileRoller' "$file_roller_override" || fail 'File Roller override icon is missing'
 grep -Fq 'bluetoothctl list' "$bluetooth_helper" || fail 'Bluetooth launcher does not detect available controllers'
 grep -Fq 'exec blueman-manager' "$bluetooth_helper" || fail 'Bluetooth launcher does not open Blueman when a controller exists'
-grep -Fqx 'Name=Process Manager' "$qps_override" || fail 'Qps English desktop name is missing'
-grep -Fqx 'Name[pt_BR]=Processos' "$qps_override" || fail 'Qps Portuguese desktop name is missing'
-grep -Fqx 'TryExec=qps' "$qps_override" || fail 'Qps override does not resolve the installed binary'
-grep -Fqx 'Exec=qps' "$qps_override" || fail 'Qps override command is missing'
-grep -Fqx 'Icon=qps' "$qps_override" || fail 'Qps override icon is missing'
 while IFS='|' read -r desktop_id english portuguese command; do
   desktop="$local_apps/$desktop_id"
   [[ -f "$desktop" ]] || fail "missing localized desktop override: $desktop_id"
@@ -247,8 +224,7 @@ while IFS='|' read -r desktop_id english portuguese command; do
   grep -Fqx "Name[pt_BR]=$portuguese" "$desktop" || fail "$desktop_id Portuguese desktop name is incorrect"
   grep -Fqx "Exec=$command" "$desktop" || fail "$desktop_id launch command is incorrect"
 done <<'EOF'
-org.aqueous.Dome.desktop|System Monitor|Monitor do Sistema|dome
-org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
+pcmanfm.desktop|File Manager|Gerenciador de Arquivos|pcmanfm %U
 com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 galculator.desktop|Calculator|Calculadora|galculator
 gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
@@ -281,8 +257,8 @@ grep -Fqx 'Name=Install DINX' "$desktop_installer" || fail 'desktop shortcut Eng
 grep -Fqx 'Name[pt_BR]=Instalar DINX' "$desktop_installer" || fail 'desktop shortcut Portuguese name is missing'
 grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut does not use the session-aware launcher'
 grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut launcher prerequisite is incorrect'
-grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not resolve the provisioned desktop directory'
-grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl" || fail 'live session does not seed the installer shortcut from /etc/skel'
+grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session" || fail 'live session does not resolve the provisioned desktop directory'
+grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session" || fail 'live session does not seed the installer shortcut from /etc/skel'
 installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
 [[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
 sh -n "$installer_helper" || fail 'DINX installer helper has invalid shell syntax'
@@ -313,7 +289,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in org.aqueous.Dome.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
+for override in pcmanfm.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
@@ -332,14 +308,13 @@ grep -Fqx '  usr/share/licenses/impasto/license-mit.txt' "$iso_check" || fail 'I
 grep -Fqx '  usr/share/licenses/impasto/license-mit-pinta.txt' "$iso_check" || fail 'ISO payload is missing the Pinta-derived license'
 grep -Fqx '  usr/share/licenses/impasto/license-lgpl.txt' "$iso_check" || fail 'ISO payload is missing the bundled GTK license text'
 grep -Fqx '  usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md' "$iso_check" || fail 'ISO payload is missing Impasto third-party notices'
-grep -Fqx '  usr/bin/phyto' "$iso_check" || fail 'ISO payload is missing Phyto'
-grep -Fqx '  usr/bin/pori' "$iso_check" || fail 'ISO payload is missing Pori'
+grep -Fqx '  usr/bin/pcmanfm' "$iso_check" || fail 'ISO payload is missing PCManFM'
 grep -Fqx '  usr/bin/g4music' "$iso_check" || fail 'ISO payload is missing Gapless'
 grep -Fqx '  usr/bin/galculator' "$iso_check" || fail 'ISO payload is missing Galculator'
 grep -Fqx '  usr/share/flatpak/remotes.d/flathub.flatpakrepo' "$iso_check" || fail 'ISO payload is missing the Flatpak source descriptor'
 grep -Fqx '  usr/share/applications/com.github.zbcoding.Impasto.desktop' "$iso_check" || fail 'ISO payload is missing the Impasto desktop entry'
 grep -Fqx '  usr/share/applications/com.pori.app.desktop' "$iso_check" || fail 'ISO payload is missing the Pori desktop entry'
-grep -Fqx '  usr/share/applications/org.aqueous.Phyto.desktop' "$iso_check" || fail 'ISO payload is missing the Phyto desktop entry'
+grep -Fqx '  usr/local/share/applications/pcmanfm.desktop' "$iso_check" || fail 'ISO payload is missing the PCManFM desktop override'
 grep -Fqx '  usr/share/applications/com.github.neithern.g4music.desktop' "$iso_check" || fail 'ISO payload is missing the Gapless desktop entry'
 grep -Fqx '  usr/share/applications/galculator.desktop' "$iso_check" || fail 'ISO payload is missing the Galculator desktop entry'
 grep -Fqx '  usr/bin/file-roller' "$iso_check" || fail 'ISO payload is missing File Roller'
@@ -353,7 +328,6 @@ grep -Fqx '  usr/local/share/applications/mimeinfo.cache' "$iso_check" || fail '
 grep -Fqx '  usr/share/applications/gparted.desktop' "$iso_check" || fail 'ISO payload is missing the GParted desktop entry'
 grep -Fqx '  usr/share/applications/network.cycles.wdisplays.desktop' "$iso_check" || fail 'ISO payload is missing the wdisplays desktop entry'
 grep -Fqx '  usr/share/applications/firewall-config.desktop' "$iso_check" || fail 'ISO payload is missing the firewall-config desktop entry'
-grep -Fqx '  usr/local/share/applications/qps.desktop' "$iso_check" || fail 'ISO payload is missing the localized Qps desktop override'
 if grep -Fq 'strawberry' "$mimeapps"; then
   fail 'Strawberry remains in the audio handler defaults'
 fi
@@ -365,7 +339,7 @@ grep -Fqx 'application/pdf=onlyoffice.desktop;' "$mimeapps" || fail 'ONLYOFFICE 
 if grep -Fq 'application/epub+zip=' "$mimeapps"; then
   fail 'EPUB handler still points to the removed Zathura application'
 fi
-grep -Fqx 'inode/directory=org.aqueous.Phyto.desktop;' "$mimeapps" || fail 'Phyto is no longer the default directory handler'
+grep -Fqx 'inode/directory=pcmanfm.desktop;' "$mimeapps" || fail 'PCManFM is no longer the default directory handler'
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
@@ -374,4 +348,4 @@ if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
   || grep -Fq 'application/vnd.visio' "$office_launcher"; then
   fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
 fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+patchy+blockbench office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true phyto=true pori=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane ntfs_backend=udisks2 image_viewer=swayimg directory_handler=phyto\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=true pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'

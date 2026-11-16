@@ -127,7 +127,7 @@ wait_for_first_run_client() {
     fi
     sleep 2
   done
-  fail "Pearl first-run Dock did not appear before the QEMU timeout: ${checker_output}"
+  fail "Morghulis first-run screen did not appear before the QEMU timeout: ${checker_output}"
 }
 
 
@@ -329,5 +329,5 @@ fi
 "$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot"
 
 
-printf 'smoke-iso: Pearl/Aqueous session reached a graphical-ready screen within %ss\n' "$timeout_seconds"
+printf 'smoke-iso: River/KWM/Morghulis session reached a graphical-ready screen within %ss\n' "$timeout_seconds"
 printf 'smoke-iso: serial log: %s\n' "$log_path"

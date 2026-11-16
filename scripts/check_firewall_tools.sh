@@ -44,7 +44,7 @@ firewalld_boot_overlay=distro/iso/iso-profiles/dinx/root-overlay/etc/dinit.d/boo
 if grep -Fq 'iptables' "$profile" "$common" "$groups"; then
   fail 'iptables is an explicit ISO input; iproute2 may require it transitively for libxtables'
 fi
-if grep -Eq 'portmaster|libayatana-appindicator|webkit2gtk-4\.1' "$profile" "$groups" "$common" "$builder" "$panel_pkg" "$panel_src"; then
+if grep -Eq 'portmaster|libayatana-appindicator' "$profile" "$groups" "$common" "$builder" "$panel_pkg" "$panel_src"; then
   fail 'Portmaster or an exclusive runtime dependency remains in the active ISO inputs'
 fi
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build DINXPanel'

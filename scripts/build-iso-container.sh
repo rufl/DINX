@@ -114,27 +114,11 @@ trap finish EXIT
                   "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
               export PATH="$zig_root:$PATH"
               printf "zig_version=%s\n" "$(zig version)"
-              source /workspace/distro/packages/pearl/source.env
-              : "${PEARL_ZIG_VERSION:?PEARL_ZIG_VERSION is missing}"
-              : "${PEARL_ZIG_SOURCE_URL:?PEARL_ZIG_SOURCE_URL is missing}"
-              : "${PEARL_ZIG_SOURCE_SHA256:?PEARL_ZIG_SOURCE_SHA256 is missing}"
-              pearl_zig_archive="zig-x86_64-linux-${PEARL_ZIG_VERSION}.tar.xz"
-              pearl_zig_archive_path="$toolchain_cache/$pearl_zig_archive"
-              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
-                scripts/cache-verified-download.sh \
-                  "$pearl_zig_archive_path" \
-                  "$PEARL_ZIG_SOURCE_URL" \
-                  "$PEARL_ZIG_SOURCE_SHA256"
-              pearl_zig_root="$toolchain_extraction_cache/zig-${PEARL_ZIG_VERSION}-${PEARL_ZIG_SOURCE_SHA256}"
-              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
-                scripts/cache-verified-extract.sh \
-                  "$pearl_zig_archive_path" "$PEARL_ZIG_SOURCE_SHA256" \
-                  "$PEARL_ZIG_VERSION" zig "$pearl_zig_root"
               printf 'dinx-build-timing phase=toolchain-setup elapsed_seconds=%s exit_status=0\n' \
                 "$((SECONDS - toolchain_started))"
 
               # Run before makepkg --clean removes source trees used by the static theme contract.
-              scripts/check_dinx_theme.sh
+              scripts/check_morghulis_theme.sh
               package_repo=${DINX_PACKAGE_OUTPUT:-/workspace/dist/packages}
               rm -rf "$package_repo"
               mkdir -p "$package_repo"
@@ -239,12 +223,8 @@ trap finish EXIT
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 local -a package_archives=()
                 case "$package_name" in
-                  dinitui|dinxpanel|seafoam-settings)
+                  dinitui|dinxpanel)
                     # These packages build directly from checked-in source trees.
-                    ;;
-                  dome)
-                    # A failed Zig build can leave partial dependency state in $srcdir.
-                    makepkg_options+=(--clean --cleanbuild)
                     ;;
                   *)
                     makepkg_options+=(--clean)
@@ -257,9 +237,7 @@ trap finish EXIT
                 if [[ "$package_name" == cyan-skillfish-governor-smu ]]; then
                   extra_env+=(CARGO_BUILD_JOBS=1)
                 fi
-                if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then
-                  extra_env+=("ZIG=$pearl_zig_root/zig")
-                elif [[ "$package_name" == pori || "$package_name" == aqueous ]]; then
+                if [[ "$package_name" == pori ]]; then
                   extra_env+=("ZIG=$zig_root/zig")
                 fi
 
@@ -399,6 +377,7 @@ trap finish EXIT
                 printf 'build-iso-container: could not clear builder btop file capabilities: %s\n' "$btop_path" >&2
                 exit 1
               }
+              build_package turnstile
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
               build_package topgrade
@@ -421,23 +400,12 @@ trap finish EXIT
               build_package shikane
               pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
-              build_package matugen
-              pacman_install_local "$package_repo"/matugen-*.pkg.tar.zst
-              build_package aqueous
-              build_package pearl
-              pacman_install_local \
-                "$package_repo"/aqueous-*.pkg.tar.zst \
-                "$package_repo"/pearl-*.pkg.tar.zst
               build_package pori
-              build_package phyto
-              build_package dome
+              build_package mission-center
               build_package zls
-              build_package seafoam-settings
               pacman_install_local \
-                "$package_repo"/dome-*.pkg.tar.zst \
-                "$package_repo"/seafoam-settings-*.pkg.tar.zst \
+                "$package_repo"/mission-center-*.pkg.tar.zst \
                 "$package_repo"/zls-*.pkg.tar.zst
-              SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
@@ -452,13 +420,10 @@ trap finish EXIT
               [[ -n "$firewalld_boot_package" ]]
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
-              build_package floorp
+              build_package eurooffice
               build_package patchy
-              build_package blockbench
-              build_package impasto
               build_package pixelorama
-              build_package onlyoffice
-              build_package zrythm
+              build_package audionaut
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
               pacman_retry -S --needed --noconfirm \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \

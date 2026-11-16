@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: Apache-2.0
+pkgname=eurooffice
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${EUROOFFICE_VERSION:?missing EUROOFFICE_VERSION}"
+: "${EUROOFFICE_REPOSITORY:?missing EUROOFFICE_REPOSITORY}"
+: "${EUROOFFICE_SOURCE_URL:?missing EUROOFFICE_SOURCE_URL}"
+: "${EUROOFFICE_SOURCE_SHA256:?missing EUROOFFICE_SOURCE_SHA256}"
+: "${EUROOFFICE_LICENSE_URL:?missing EUROOFFICE_LICENSE_URL}"
+: "${EUROOFFICE_LICENSE_SHA256:?missing EUROOFFICE_LICENSE_SHA256}"
+pkgver="$EUROOFFICE_VERSION"
+pkgrel=1
+pkgdesc='Lean offline Euro-Office document, spreadsheet, presentation and PDF editor'
+arch=('x86_64')
+url="$EUROOFFICE_REPOSITORY"
+license=('AGPL-3.0-or-later')
+depends=('glibc' 'gtk3' 'webkit2gtk-4.1')
+source=(
+  "Euro-Office-Lite_${pkgver}_amd64.deb::$EUROOFFICE_SOURCE_URL"
+  "LICENSE::$EUROOFFICE_LICENSE_URL"
+  'eurooffice'
+  'eurooffice.desktop'
+)
+sha256sums=(
+  "$EUROOFFICE_SOURCE_SHA256"
+  "$EUROOFFICE_LICENSE_SHA256"
+  '72ffa44384fef8c142429b4f4063db42e036f2cc82c2815c8c64f3b4247d29b6'
+  '36d8bf7e4a6551a41386994c7eef501ef86017899647628831905885922ceba8'
+)
+
+package() {
+  install -d "$pkgdir"
+  ar p "$srcdir/Euro-Office-Lite_${pkgver}_amd64.deb" data.tar.gz \
+    | tar -xzf - -C "$pkgdir"
+  rm -f "$pkgdir/usr/share/applications/Euro-Office-Lite.desktop"
+  install -Dm755 "$srcdir/eurooffice" "$pkgdir/usr/bin/eurooffice"
+  install -Dm644 "$srcdir/eurooffice.desktop" \
+    "$pkgdir/usr/share/applications/eurooffice.desktop"
+  install -Dm644 "$srcdir/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

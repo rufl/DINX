@@ -241,25 +241,10 @@ printf 'smoke-install: root UUID=%s\n' "$root_uuid"
 printf 'smoke-install: checking installed runtime payload before boot\n'
 mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
-chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls \
+chroot "$target_dir" /usr/bin/pacman -Q dinit turnstile dinitui dinxpanel mission-center \
   >/dev/null 2>&1 || fail 'installed core packages are missing'
-[[ -f "$target_dir/etc/zls.json" || -f "$target_dir/etc/xdg/zls.json" ]] \
-  || fail 'installed ZLS configuration is missing'
-[[ -x "$target_dir/usr/lib/zls/zig-env" ]] || fail 'installed ZLS shim is missing'
-[[ -f "$target_dir/usr/lib/zls/zig/std/std.zig" ]] || fail 'installed ZLS standard library is missing'
-zls_version=$(chroot "$target_dir" /usr/bin/zls --version) \
-  || fail 'installed ZLS version check failed'
-[[ "$zls_version" == 0.16.0 ]] || fail 'installed ZLS version is incorrect'
-shim_version=$(chroot "$target_dir" /usr/lib/zls/zig-env version) \
-  || fail 'installed ZLS shim version check failed'
-[[ "$shim_version" == 0.16.0 ]] || fail 'installed ZLS shim version is incorrect'
-zls_environment=$(chroot "$target_dir" /usr/bin/zls env) \
-  || fail 'installed ZLS environment check failed'
-grep -Eq '/etc/(zls|xdg/zls)\.json' <<<"$zls_environment" \
-  || fail 'installed ZLS configuration is not selected'
 printf 'smoke-install: checking installed runtime libraries\n'
-# ZLS is statically linked; version and configuration are checked above.
-for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings; do
+for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/missioncenter; do
   [[ -x "$target_dir$binary" ]] || fail "installed binary is missing: ${binary##*/}"
   ldd_output=$(chroot "$target_dir" /usr/bin/ldd "$binary" 2>&1) \
     || fail "installed library check failed: ${binary##*/}"
@@ -471,7 +456,7 @@ if [[ "$monitor_ready" == true ]]; then
   done
   if [[ "$greeter_ready" != true ]]; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
-    fail "installed Pearl Greeter did not start before the QEMU timeout: ${greeter_output}"
+    fail "installed agreety did not start before the QEMU timeout: ${greeter_output}"
   fi
   [[ -s "$screen_path" ]] || fail "installed greeter screenshot was not created: $screen_path"
   printf 'sendkey ctrl-alt-f2\n' \

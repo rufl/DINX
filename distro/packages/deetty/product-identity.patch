@@ -215,7 +215,7 @@
 -TryExec=noctty
 -Exec=noctty --open-uri %u
 -Icon=com.noctty.NOCTTY
-+Comment=Native terminal workspace for DINX Aqueous and Pearl
++Comment=Native terminal workspace for DINX
 +TryExec=deetty
 +Exec=deetty --open-uri %u
 +Icon=org.dinx.Deetty
@@ -335,7 +335,7 @@
 -  <summary>Native terminal workspace for Plasma and Noctalia Wayland</summary>
 +  <id>org.dinx.Deetty</id>
 +  <name>Deetty</name>
-+  <summary>Native terminal workspace for DINX Aqueous and Pearl</summary>
++  <summary>Native terminal workspace for DINX</summary>
    <metadata_license>CC0-1.0</metadata_license>
    <project_license>MIT</project_license>
    <description>

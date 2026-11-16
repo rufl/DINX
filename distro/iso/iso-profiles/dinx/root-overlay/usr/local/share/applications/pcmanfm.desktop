@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=File Manager
+Name[pt_BR]=Gerenciador de Arquivos
+Comment=Browse files and manage the desktop
+Comment[pt_BR]=Navegue pelos arquivos e gerencie a área de trabalho
+Exec=pcmanfm %U
+TryExec=pcmanfm
+Icon=system-file-manager
+Terminal=false
+Categories=GTK;FileManager;Utility;
+MimeType=inode/directory;

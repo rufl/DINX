@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Audionaut
+Name[pt_BR]=Audionaut
+Comment=Multitrack audio editor and recorder
+Comment[pt_BR]=Editor e gravador de áudio multifaixa
+Exec=audionaut %F
+TryExec=audionaut
+Icon=multimedia-player
+Terminal=false
+Categories=AudioVideo;Audio;AudioVideoEditing;
+StartupNotify=true

@@ -31,10 +31,43 @@ emit() {
   if [[ -n "${GITHUB_OUTPUT:-}" ]]; then printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; fi
 }
 
-# 1. Keep the office pipeline moving (detects new upstream releases there).
+# 1. Kick the office pipeline (detects new upstream releases there) and wait
+#    for the run it started. Without the wait a freshly packed release would
+#    only be consumed by the next refresh cycle (up to 3 days later).
 if [[ "${EUROFFICE_SKIP_DISPATCH:-0}" != 1 ]]; then
+  before=$(gh run list --workflow eurooffice.yml --repo "$repo" --branch office \
+    --limit 1 --json databaseId --jq '.[0].databaseId // "0"')
   if ! gh workflow run eurooffice.yml --repo "$repo" --ref office; then
     printf 'eurooffice-consumer: WARNING could not dispatch office pipeline\n' >&2
+  else
+    new_run=''
+    for _ in $(seq 1 12); do
+      sleep 5
+      candidate=$(gh run list --workflow eurooffice.yml --repo "$repo" --branch office \
+        --limit 1 --json databaseId --jq '.[0].databaseId // "0"')
+      if [[ "$candidate" != "$before" ]]; then new_run=$candidate; break; fi
+    done
+    if [[ -z "$new_run" ]]; then
+      printf 'eurooffice-consumer: WARNING office pipeline run not observed; continuing\n' >&2
+    else
+      printf 'eurooffice-consumer: waiting for office run %s\n' "$new_run"
+      deadline=$(( $(date +%s) + 3300 ))
+      while :; do
+        status=$(gh run view "$new_run" --repo "$repo" \
+          --json status,conclusion --jq '[.status,.conclusion]|@tsv')
+        case "$status" in
+          completed*success*) printf 'eurooffice-consumer: office run %s succeeded\n' "$new_run"; break ;;
+          completed*)
+            printf 'eurooffice-consumer: WARNING office run %s ended (%s)\n' "$new_run" "${status#completed }" >&2
+            break ;;
+        esac
+        if (( $(date +%s) >= deadline )); then
+          printf 'eurooffice-consumer: WARNING office run %s still queued/running after 55m; continuing\n' "$new_run" >&2
+          break
+        fi
+        sleep 30
+      done
+    fi
   fi
 fi
 

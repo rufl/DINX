@@ -65,12 +65,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install repack tooling
+      - name: Install repack tooling and runtime probes
         run: |
           sudo apt-get update
-          sudo apt-get install --yes squashfs-tools zstd binutils jq curl
+          sudo apt-get install --yes \
+            squashfs-tools zstd binutils jq curl \
+            libnotify4 libpulse0 libxkbcommon-x11-0 libegl1 libopengl0
       - name: Import, debloat, strip and repack EuroOffice
         env:
+          GH_TOKEN: ${{ github.token }}
           EUROFFICE_VERSION: ${{ needs.detect.outputs.version }}
           EUROFFICE_PKREL: ${{ needs.detect.outputs.pkgrel }}
           EUROFFICE_OUTDIR: dist/office/eurooffice

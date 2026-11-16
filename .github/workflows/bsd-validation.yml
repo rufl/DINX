@@ -3,10 +3,10 @@ name: DINX-BSD Validation
 on:
   push:
     branches:
-      - feature/dinx-bsd
+      - feat/bsd
   pull_request:
     branches:
-      - feature/dinx-bsd
+      - feat/bsd
 
 permissions:
   contents: read

@@ -243,6 +243,36 @@ compile_dconf_database() {
   printf '%s\n' 'dinx-final-squashfs: compiled system dconf database at etc/dconf/db/local'
 }
 
+# The same rsync-overlay reasoning applies to GSettings: pacman's
+# glib-compile-schemas hook never fires for the assembled tree, so the schema
+# directory ships without its gvdb cache. GLib.Settings() aborts the process
+# when the compiled database is absent, which would take down the Morghulis
+# shell at startup. `glib-compile-schemas` writes gschemas.compiled into the
+# given directory and needs no chroot.
+compile_glib_schemas() {
+  local root=$1
+  local schemas_dir="$root/usr/share/glib-2.0/schemas"
+
+  [[ -d "$schemas_dir" ]] || return 0
+  command -v glib-compile-schemas >/dev/null 2>&1 || {
+    printf 'dinx-final-squashfs: schema directory present but glib-compile-schemas is unavailable\n' >&2
+    return 1
+  }
+  glib-compile-schemas "$schemas_dir" || {
+    printf 'dinx-final-squashfs: failed to compile the GSettings schemas\n' >&2
+    return 1
+  }
+  [[ -s "$schemas_dir/gschemas.compiled" ]] || {
+    printf 'dinx-final-squashfs: glib-compile-schemas produced no database\n' >&2
+    return 1
+  }
+  chmod 0644 -- "$schemas_dir/gschemas.compiled" || {
+    printf 'dinx-final-squashfs: cannot set mode on the compiled GSettings database\n' >&2
+    return 1
+  }
+  printf '%s\n' 'dinx-final-squashfs: compiled GSettings database at usr/share/glib-2.0/schemas/gschemas.compiled'
+}
+
 merge_eurooffice() {
   local root=$1
   [[ -n "${DINX_EUROOFFICE_SQUASHFS:-}" && -s "${DINX_EUROOFFICE_SQUASHFS}" ]] || return 0
@@ -318,6 +348,10 @@ if [[ -n "$source_root" ]]; then
   trim_icon_variants "$source_root"
   strip_static_libs "$source_root"
   compile_dconf_database "$source_root"
+  # After merge_eurooffice and every strip pass, so the compiled database also
+  # covers schemas the EuroOffice payload contributes and no pruned schema is
+  # left dangling in it.
+  compile_glib_schemas "$source_root"
 fi
 
 # Keep package caches and logs out of the compressed filesystem.

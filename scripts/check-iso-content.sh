@@ -430,6 +430,8 @@ required_paths=(
   usr/share/licenses/gapless/COPYING
   usr/share/dbus-1/services/com.github.neithern.g4music.service
   usr/share/glib-2.0/schemas/com.github.neithern.g4music.gschema.xml
+  usr/share/glib-2.0/schemas/com.arkye.morghulis.gschema.xml
+  usr/share/glib-2.0/schemas/gschemas.compiled
   usr/share/applications/swayimg.desktop
   usr/share/applications/com.shellyorg.shelly.desktop
   usr/share/applications/com.shellyorg.shelly-notifications.desktop

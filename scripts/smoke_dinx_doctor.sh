@@ -45,7 +45,7 @@ report=$(
 for required in \
   'schema=dinx-doctor/v1' \
   'mode=read-only' \
-  'session.default=river+kwm' \
+  'session.default=river+kwm+morghulis' \
   'storage.ntfs3_write=kernel-driver' \
   'package.river=installed' \
   'package.kwm=installed' \

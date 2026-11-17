@@ -56,8 +56,8 @@ print_value session.type "${XDG_SESSION_TYPE:-unknown}"
 print_value session.desktop "${XDG_CURRENT_DESKTOP:-unknown}"
 print_value session.session_desktop "${XDG_SESSION_DESKTOP:-unknown}"
 print_value session.wayland_display "${WAYLAND_DISPLAY:-unknown}"
-print_value session.default river+kwm
-print_value session.selectable river+kwm-only
+print_value session.default river+kwm+morghulis
+print_value session.selectable river+kwm+morghulis-only
 print_value session.greeter_host agreety
 command_state session.command.greeter agreety
 command_state session.command.dinitctl dinitctl
@@ -66,6 +66,7 @@ command_state session.command.dinxpanel dinxpanel
 command_state session.command.river river
 command_state session.command.kwm kwm
 command_state session.command.kwim kwim
+command_state session.command.morghulis morghulis
 
 if [ "${DINX_DOCTOR_QUERY_DINIT:-0}" = 1 ]; then
   if command -v dinitctl >/dev/null 2>&1 && dinitctl --user list >/dev/null 2>&1; then

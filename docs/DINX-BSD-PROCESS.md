@@ -939,3 +939,69 @@ filtro. `MORGHULIS_USE_ASTAL_RIVER=1` reverte quando o astal acompanhar o
   (`Makefile.river-shifttags`). O Makefile upstream não serve no FreeBSD (GNU
   pattern rules que o bmake rejeita, `-lrt` inexistente, `-lpixman-1` com zero
   usos no fonte).
+
+## 29. river 0.4.8 segfaulta em screencopy — e por que isso trava a prova visual
+
+Com river 0.4.8 + kwm + morghulis, o stack **sobe e fica estável** enquanto
+ninguém captura a tela. Medido (`no-wayvnc` run, sem cliente de captura):
+
+```
+t=20s: river S 00:20 | kwm S 00:20 | morghulis S 00:17   (no core)
+t=45s: river I 00:45 | kwm I 00:45 | morghulis S 00:42   (no core)
+t=65s: river S 01:05 | kwm I 01:05 | morghulis S 01:02   (no core)
+morghulis: "Application.vala:180: Successfully initialized primary monitor"
+kwm:       "info(kwm): start running"
+"Lost connection to Wayland compositor": 0
+```
+
+No instante em que um cliente de screencopy conecta (wayvnc para servir VNC,
+ou `grim`), o river 0.4.8 cai com SIGSEGV (`signal 11`, core dump). Backtrace
+do core (`lldb`):
+
+```
+#0 river`Server.handleNewCaptureSession at Server.zig:626:53
+     (ext_image_copy_capture_v1.ExtImageCopyCaptureSessionV1)
+#2 libwayland-server.so.0`wl_signal_emit_mutable
+```
+
+`Server.zig:618-630` do river 0.4.8:
+
+```zig
+if (wlr_capture_session.source.toOutput()) |wlr_output| { ... }
+else {
+    var it = server.wm.windows.iterator();
+    while (it.next()) |window| {
+        if (wlr_capture_session.source == window.capture_source) { ...; break; }
+    } else unreachable;   // <-- 626: o cursor não é output nem toplevel
+}
+```
+
+A fonte da captura do **cursor** (`wayvnc --render-cursor`) não é nem um
+`wlr_output` nem um toplevel conhecido do `server.wm`, então cai no
+`else unreachable`. O upstream corrigiu exatamente isso no **river 0.5.x**:
+`handleNewCaptureSession` agora devolve `error.NotOutputOrToplevel` com o
+comentário *"Presumably a cursor session"* e o loop `else { return
+error.NotOutputOrToplevel; }`. Confirmado lendo `Server.zig` do tag v0.5.2.
+
+Consequência para o lane:
+- O crash é do **river 0.4.8** (pacote do catálogo FreeBSD), não do port. Vale
+  também no Linux; é bug de upstream já corrigido.
+- Ele **não** impede a sessão: sem captura, river+kwm+morghulis ficam de pé
+  indefinidamente. Impede a **prova visual** — num backend headless a única
+  janela para o framebuffer é screencopy (wayvnc/grim), que é justamente o que
+  derruba o river 0.4.8. Daí os grabs de framebuffer saírem uniformes
+  (rgb 96,96,96 = fundo do river) ou abortarem a conexão: o compositor morre no
+  meio da captura.
+- `GSK_RENDERER=cairo` foi necessário porque, sem GPU, o GTK4 tenta o renderer
+  GL e loga `MESA: error: ZINK: failed to choose pdev`; com Cairo o morghulis
+  inicializa o monitor sem erro de renderer (mesma classe do fix do Pearl no
+  §24).
+- Morghulis carrega o CSS do tema (`main.css`, 5680 bytes, `:root
+  --master-border-radius`) e o GSettings (`com.arkye.morghulis`) — sem o schema
+  instalado ele aborta com "Settings schema is not installed", então o port tem
+  que instalar o `.gschema.xml` + `glib-compile-schemas`.
+
+Próximo passo em andamento: compilar **river 0.5.2** do fonte no guest (zig
+0.16 do catálogo, wlroots020 0.20.2 vs o 0.20.3 pedido — linka
+`wlroots-0.20` do sistema, compatível), para (a) eliminar o crash de captura e
+(b) finalmente obter um framebuffer do morghulis desenhado via wayvnc.

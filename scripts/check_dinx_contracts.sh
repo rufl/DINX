@@ -15,7 +15,6 @@ checks=(
   check_pori_phyto.sh
   check_seafoam_apps.sh
   check_seafoam_settings.sh
-  check_aqueous_pearl.sh
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh

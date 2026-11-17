@@ -2,9 +2,10 @@
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-idle="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-idle"
-lock="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-lock"
-live_config="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-config"
+overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
+idle="$overlay/usr/local/libexec/dinx-idle"
+lock="$overlay/usr/local/libexec/dinx-lock"
+river_session="$overlay/usr/local/libexec/dinx-river-session"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -36,6 +37,7 @@ chmod +x "$tmp/swayidle" "$tmp/swaylock" "$tmp/wlopm"
 export DINX_WLOPM_LOG="$tmp/wlopm.log"
 : > "$DINX_WLOPM_LOG"
 
+# Installed sessions keep the swaylock timeout and the suspend lock path.
 installed_idle=$(PATH="$tmp:$PATH" "$idle")
 installed_lock=$(PATH="$tmp:$PATH" "$lock")
 [[ "$installed_idle" == 'swayidle_argv=[-w][timeout][600][/usr/local/libexec/dinx-lock][before-sleep][/usr/local/libexec/dinx-lock]' ]] || {
@@ -47,6 +49,7 @@ installed_lock=$(PATH="$tmp:$PATH" "$lock")
   exit 1
 }
 
+# The live session may only blank displays: no lock command, no lock action.
 live_idle=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$idle")
 [[ "$live_idle" == 'swayidle_argv=[-w][timeout][600][wlopm --off "*"][resume][wlopm --on "*"][before-sleep][wlopm --off "*"][after-resume][wlopm --on "*"]' ]] || {
   printf 'smoke_dinx_session: unexpected live idle argv: %s\n' "$live_idle" >&2
@@ -62,23 +65,44 @@ live_lock=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$lock" 2>&1)
   exit 1
 }
 
-cat > "$tmp/wm.toml" <<'EOF'
-[blur]
-enabled = true
-[opacity]
-enabled = true
-[keybinds]
-lock_screen = "Super+Ctrl+L"
-focus_left = "Super+H"
-EOF
-"$live_config" "$tmp/wm.toml"
-grep -Fqx 'enabled = false' "$tmp/wm.toml" || { printf 'smoke_dinx_session: live effects were not disabled\n' >&2; exit 1; }
-grep -Fqx 'lock_screen = []' "$tmp/wm.toml" || { printf 'smoke_dinx_session: live lock binding was not removed\n' >&2; exit 1; }
-grep -Fqx 'focus_left = "Super+H"' "$tmp/wm.toml" || { printf 'smoke_dinx_session: unrelated live keybind changed\n' >&2; exit 1; }
-"$live_config" "$tmp/wm.toml"
-[[ $(grep -Fc 'lock_screen = []' "$tmp/wm.toml") -eq 1 ]] || {
-  printf 'smoke_dinx_session: live config seeding is not idempotent\n' >&2
+# The River wrapper's live-session lock-override block, executed verbatim in a
+# throwaway HOME: it must hide the lock action and never clobber a user file.
+live_block="$tmp/live-lock-override.sh"
+awk '
+  /^  data_home=\$\{XDG_DATA_HOME/ { capture = 1 }
+  capture { print }
+  capture && /^  fi$/ { exit }
+' "$river_session" >"$live_block"
+[[ -s "$live_block" ]] || {
+  printf 'smoke_dinx_session: the live lock-override block is missing from the River session wrapper\n' >&2
+  exit 1
+}
+grep -Fq 'Hidden=true' "$live_block" || {
+  printf 'smoke_dinx_session: the live lock-override block does not hide the lock action\n' >&2
+  exit 1
+}
+live_home="$tmp/live-home"
+mkdir -p "$live_home"
+run_live_block() {
+  XDG_DATA_HOME="$live_home/.local/share" sh -eu -c '. "$1"' sh "$live_block"
+}
+run_live_block
+live_override="$live_home/.local/share/applications/dinx-lock.desktop"
+grep -Fq 'Hidden=true' "$live_override" || {
+  printf 'smoke_dinx_session: live session did not hide the screen-lock action\n' >&2
+  exit 1
+}
+printf '[Desktop Entry]\nType=Application\nName=My own lock\nHidden=false\n' >"$live_override"
+run_live_block
+grep -Fq 'Name=My own lock' "$live_override" || {
+  printf 'smoke_dinx_session: live lock override replaced a user-owned file\n' >&2
+  exit 1
+}
+rm -f "$live_override"
+run_live_block
+[[ $(grep -Fc 'Hidden=true' "$live_override") -eq 1 ]] || {
+  printf 'smoke_dinx_session: live lock override seeding is not idempotent\n' >&2
   exit 1
 }
 
-printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true seed_idempotent=true\n'
+printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true live_lock_override=hidden+preserves_user_file idempotent=true\n'

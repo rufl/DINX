@@ -312,7 +312,7 @@ esse caminho de publicação; ele publica alterações de pacotes
 independentemente da ISO após a integração de mudanças revisadas nos pins das
 origens.
 
-O responsável pelo release deve registrar manualmente uma qualificação real de sessão Wayland: `Super+L`, lock após 600 segundos de idle, lock antes da suspensão, desbloqueio após resume e brilho físico para cima/baixo. Uma VM pode qualificar a ordem da sessão; hardware físico é necessário para afirmar suporte a brilho e suspensão.
+O responsável pelo release deve registrar manualmente uma qualificação real de sessão Wayland: `dinx-lock`, lock após 600 segundos de idle, lock antes da suspensão, desbloqueio após resume e brilho físico para cima/baixo. Uma VM pode qualificar a ordem da sessão; hardware físico é necessário para afirmar suporte a brilho e suspensão.
 
 Atualize IDs de execução, commits, tamanhos/digests de artefato e links de release nos documentos de status em inglês e português somente depois que o workflow correspondente passar. O release planejado Beta 0.1 do sistema não afirma suporte gaming; P5 continua separado até passarem os testes de DRM real, Steam/jogo, controle/áudio, retorno ao greeter e suspend/GPU em hardware físico.
 O caminho de release com tag agora possui atualização assinada e downgrade de pacote
@@ -328,7 +328,7 @@ evidências de hardware e sessão sem alterar o estado do sistema.
 
 ## Limites do release
 
-- A imagem live faz autologin na conta descartável `dinx` e mantém a senha pública `dinx` apenas como fallback diagnóstico se o Pearl Greeter aparecer após uma inicialização manual da live. Ela nunca é uma fronteira de autenticação e não deve ser reutilizada.
+- A imagem live faz autologin na conta descartável `dinx` e mantém a senha pública `dinx` apenas como fallback diagnóstico se a tela de login do agreety aparecer após uma inicialização manual da live. Ela nunca é uma fronteira de autenticação e não deve ser reutilizada.
 - A imagem ainda é um instalador de disco experimental, sem atualização da ISO instalada,
   rollback do filesystem ou caminho Secure Boot assinado. O CI qualifica o contrato
   offline do rootfs em discos BIOS e UEFI descartáveis e captura um quadro da TTY de

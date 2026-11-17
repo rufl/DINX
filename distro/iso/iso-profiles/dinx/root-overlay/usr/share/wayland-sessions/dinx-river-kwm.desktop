@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=River + KWM (DINX)
+Comment=River compositor with the KWM tiling window manager
+Exec=dbus-run-session /usr/local/libexec/dinx-river-session
+TryExec=/usr/local/libexec/dinx-river-session
+Type=Application
+DesktopNames=river;kwm

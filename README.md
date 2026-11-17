@@ -41,7 +41,7 @@
 | [`main`](https://github.com/rufl/DINX/tree/main) | Distribuição Linux: ISO, pacotes, desktop, qualificação e releases |
 | [`feat/bsd`](https://github.com/rufl/DINX/tree/feat/bsd) | Variante FreeBSD da DINX (sem CEF/EuroOffice; escritório via apps nativos/browser) |
 | [`office`](https://github.com/rufl/DINX/tree/office) | Pipeline do EuroOffice: repack lean do upstream, publicação de releases `eurooffice/v*` |
-| [`themes`](https://github.com/rufl/DINX/tree/themes) | Ports de temas (Skeuos/Orchis) para o formato de temas do Pearl e GTK |
+| [`themes`](https://github.com/rufl/DINX/tree/themes) | Ports de temas (Skeuos/Orchis) para o formato de temas GTK da DINX |
 | [`tools`](https://github.com/rufl/DINX/tree/tools) | Tooling auxiliar de build, qualificação e lançamento |
 
 A `main` consome os releases lean do EuroOffice publicados pela branch `office` (pin + verificação SHA256 + merge no rootfs/livefs); as branches não são mergeadas entre si sem revisão.
@@ -51,7 +51,7 @@ A `main` consome os releases lean do EuroOffice publicados pela branch `office` 
 DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e controlável:
 
 - **Artix Linux + dinit** como base, sem trocar o init por systemd;
-- **Aqueous + Pearl** como a única sessão do usuário, iniciada diretamente sobre dinit; o **Pearl Greeter** é a interface de login do greetd;
+- **River + KWM** como a única sessão do usuário, iniciada diretamente sobre dinit; o **agreety** pelo greetd é a interface de login, e o kwim gerencia os dispositivos de entrada;
 - **DinitUI** e **DINXPanel** (Central de Controle) para perfis de serviços, hardware, drivers e kernels;
 - **Calamares** para a instalação experimental, **GParted** para particionamento separado e **Pori** para discos e montagens persistentes via dinit;
 - **Phyto** como gerenciador de arquivos padrão e **File Roller** para arquivos compactados;
@@ -93,7 +93,7 @@ O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositor
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
-4. A imagem live abre diretamente em `Aqueous + Pearl (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
+4. A imagem live abre diretamente em `River + KWM (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 

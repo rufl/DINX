@@ -80,7 +80,7 @@ class PlymouthScreenTests(unittest.TestCase):
         self.assertTrue(has_grub_menu("Start DINX Linux"))
         self.assertTrue(has_grub_menu("Boot to the Firmware/BIOS"))
         self.assertTrue(has_grub_menu("Advanced options"))
-        self.assertFalse(has_grub_menu("Pearl Greeter"))
+        self.assertFalse(has_grub_menu("agreety"))
 
     def test_cli_reports_invalid_ppm_without_crashing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

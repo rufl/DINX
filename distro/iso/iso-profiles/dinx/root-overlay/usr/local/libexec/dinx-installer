@@ -23,13 +23,13 @@ runtime_dir=${XDG_RUNTIME_DIR:-}
 wayland_display=${WAYLAND_DISPLAY:-}
 dbus_address=${DBUS_SESSION_BUS_ADDRESS:-}
 [ -n "$runtime_dir" ] && [ -d "$runtime_dir" ] \
-    || fail 'The Aqueous Wayland session has no valid XDG_RUNTIME_DIR. Log into the live desktop and retry.'
+    || fail 'The River Wayland session has no valid XDG_RUNTIME_DIR. Log into the live desktop and retry.'
 command -v pgrep >/dev/null 2>&1 || fail 'pgrep is unavailable, so the live polkit authorization agent cannot be checked.'
 if ! pgrep -u "$(id -u)" -f '[l]xqt-policykit-agent' >/dev/null 2>&1; then
     fail 'The lxqt-policykit-agent is not running in this session. Wait for the desktop to finish starting, then retry.'
 fi
 [ -n "$wayland_display" ] \
-    || fail 'WAYLAND_DISPLAY is missing. Launch Install DINX from the Aqueous desktop session.'
+    || fail 'WAYLAND_DISPLAY is missing. Launch Install DINX from the River desktop session.'
 case "$wayland_display" in
     /*) socket=$wayland_display ;;
     *) socket=$runtime_dir/$wayland_display ;;
@@ -47,15 +47,11 @@ else
     timezone=${TZ:-}
     keyboard=${XKB_DEFAULT_LAYOUT:-}
 fi
-pearl_preferences=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}/pearl/preferences.json
-completion_marker=${XDG_STATE_HOME:-${HOME:-/nonexistent}/.local/state}/dinx/pearl-first-run-complete
-if [ -r "$preferences" ] && [ -r "$pearl_preferences" ]; then
+if [ -r "$preferences" ]; then
     pkexec /bin/sh -c '
         set -eu
         install -Dm600 -- "$1" /etc/skel/.config/dinx/installer-preferences.json
-        install -Dm600 -- "$2" /etc/skel/.config/pearl/preferences.json
-        install -Dm600 -- "$3" /etc/skel/.local/state/dinx/pearl-first-run-complete
-    ' -- "$preferences" "$pearl_preferences" "$completion_marker" \
+    ' -- "$preferences" \
         || fail 'Could not preserve the live-session preferences for the installed user.'
 fi
 

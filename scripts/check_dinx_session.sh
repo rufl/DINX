@@ -2,46 +2,44 @@
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
-greetd_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml"
-pearl_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/pearl/greeter.json"
-pearl_pkg="$root/distro/packages/pearl/PKGBUILD"
-pearl_install="$root/distro/packages/pearl/pearl.install"
-aqueous_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
-desktop_approval="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-approve-desktop-launcher"
-desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
-graphics_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-profile"
-graphics_environment="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-graphics-environment.sh"
-greeter_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-greeter-host"
-aqueous_layout="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/layout.toml"
-theme_sync="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
-live_config_seed="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-seed-aqueous-live-config"
-aqueous_patch="$root/distro/packages/aqueous/dinit.patch"
-aqueous_decoration_patch="$root/distro/packages/aqueous/server-decorations.patch"
-gtk3_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
-gtk3_skel="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/gtk-3.0/settings.ini"
-gtk4_system="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.0/settings.ini"
-gtk4_skel="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/gtk-4.0/settings.ini"
-aqueous_init="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-init"
-supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
-pearl_shell="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
-wizard_source="$root/distro/packages/pearl/dinx-first-run-wizard.c"
-aqueous_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-aqueous-pearl.desktop"
-gaming_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-gaming.desktop"
-session_dir="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions"
-lock="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-lock"
-idle="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-idle"
-desktop="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-lock.desktop"
+greetd_config="$overlay/etc/greetd/config.toml"
+tmpfiles="$overlay/etc/tmpfiles.d/dinx-dinit.conf"
+river_session="$overlay/usr/local/libexec/dinx-river-session"
+river_init="$overlay/usr/local/libexec/dinx-river-init"
+supervisor="$overlay/usr/local/libexec/dinx-session-supervisor"
+desktop_approval="$overlay/usr/local/libexec/dinx-approve-desktop-launcher"
+palette_seed="$overlay/usr/local/libexec/dinx-qt6ct-palette-seed"
+desktop_installer="$overlay/etc/skel/Desktop/Install DINX.desktop"
+graphics_helper="$overlay/usr/local/libexec/dinx-graphics-profile"
+graphics_environment="$overlay/usr/local/libexec/dinx-graphics-environment.sh"
+theme_sync="$overlay/usr/local/libexec/dinx-sync-session-theme"
+installer="$overlay/usr/local/libexec/dinx-installer"
+session_dir="$overlay/usr/share/wayland-sessions"
+river_entry="$session_dir/dinx-river-kwm.desktop"
+gaming_session="$session_dir/dinx-gaming.desktop"
+lock="$overlay/usr/local/libexec/dinx-lock"
+idle="$overlay/usr/local/libexec/dinx-idle"
+desktop="$overlay/usr/share/applications/dinx-lock.desktop"
+live_package="$root/distro/packages/dinx-live-autologin"
+kwm_pkgbuild="$root/distro/packages/kwm/PKGBUILD"
+kwim_pkgbuild="$root/distro/packages/kwim/PKGBUILD"
 architecture="$root/docs/architecture.md"
 compatibility="$root/docs/compatibility.md"
 pt_architecture="$root/docs/pt-BR/architecture.md"
 pt_compatibility="$root/docs/pt-BR/compatibility.md"
-shell_profile="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh"
-fish_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"
-useradd_defaults="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/default/useradd"
-users_conf="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/calamares/modules/users.conf"
+shell_profile="$overlay/etc/profile.d/dinx.sh"
+fish_config="$overlay/etc/fish/config.fish"
+useradd_defaults="$overlay/etc/default/useradd"
+users_conf="$overlay/etc/calamares/modules/users.conf"
+gtk3_system="$overlay/etc/xdg/gtk-3.0/settings.ini"
+gtk3_skel="$overlay/etc/skel/.config/gtk-3.0/settings.ini"
+gtk4_system="$overlay/etc/xdg/gtk-4.0/settings.ini"
+gtk4_skel="$overlay/etc/skel/.config/gtk-4.0/settings.ini"
 qemu_session_checker="$root/scripts/check_dinx_qemu_session.sh"
 iso_smoke="$root/scripts/smoke-iso.sh"
+install_smoke="$root/scripts/smoke-install.sh"
 
 fail() {
   printf 'check_dinx_session: %s\n' "$*" >&2
@@ -49,397 +47,305 @@ fail() {
 }
 
 for path in \
-  "$profile" "$greetd_config" "$pearl_config" "$pearl_pkg" "$pearl_install" \
-  "$aqueous_wrapper" "$desktop_approval" "$desktop_installer" "$theme_sync" "$live_config_seed" "$greeter_wrapper" "$aqueous_init" "$supervisor" "$aqueous_session" \
-  "$pearl_shell" "$wizard_source" \
-  "$gaming_session" "$lock" "$idle" "$desktop" "$shell_profile" "$fish_config" \
-  "$aqueous_layout" "$aqueous_patch" "$graphics_helper" "$graphics_environment" \
-  "$useradd_defaults" "$users_conf" "$gtk3_system" "$gtk3_skel" \
-  "$gtk4_system" "$gtk4_skel" "$qemu_session_checker" "$iso_smoke"; do
+  "$profile" "$greetd_config" "$tmpfiles" \
+  "$river_session" "$river_init" "$supervisor" \
+  "$desktop_approval" "$palette_seed" "$desktop_installer" "$theme_sync" "$installer" \
+  "$river_entry" "$gaming_session" "$lock" "$idle" "$desktop" \
+  "$shell_profile" "$fish_config" "$useradd_defaults" "$users_conf" \
+  "$graphics_helper" "$graphics_environment" \
+  "$kwm_pkgbuild" "$root/distro/packages/kwm/source.env" \
+  "$kwim_pkgbuild" "$root/distro/packages/kwim/source.env" \
+  "$live_package/dinx-live-session" \
+  "$gtk3_system" "$gtk3_skel" "$gtk4_system" "$gtk4_skel" \
+  "$qemu_session_checker" "$iso_smoke" "$install_smoke"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
-for retired in \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/regreet.toml" \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/aqueous/greeter-wm.toml" \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-regreet" \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-greeter" \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-greeter-init"; do
-  [[ ! -e "$retired" ]] || fail "retired greeter path remains: ${retired#$root/}"
-done
+
+# The installed session set is closed: only the River/KWM entry and the hidden
+# gaming launcher may be selectable by the greeter.
 for session_path in "$session_dir"/*.desktop; do
   [[ -e "$session_path" ]] || continue
   case "${session_path##*/}" in
-    dinx-aqueous-pearl.desktop|dinx-gaming.desktop) ;;
+    dinx-river-kwm.desktop|dinx-gaming.desktop) ;;
     *) fail "unsupported user session entry remains: ${session_path#$root/}" ;;
   esac
 done
-[[ -x "$greeter_wrapper" ]] || fail 'Pearl Greeter wrapper is not executable'
-[[ -x "$aqueous_wrapper" ]] || fail 'Aqueous session wrapper is not executable'
-sh -n "$aqueous_wrapper" || fail 'Aqueous session wrapper has invalid shell syntax'
+
+# The shipped session/libexec surface is closed: retired compositors, greeters
+# and config tuners must not come back, and nothing else may masquerade as a
+# DINX session component.
+for retired in \
+  "$overlay/etc/greetd/regreet.toml" \
+  "$overlay/usr/local/libexec/dinx-regreet" \
+  "$root/distro/packages/matugen"; do
+  [[ ! -e "$retired" ]] || fail "retired session path remains: ${retired#$root/}"
+done
+# The retired compositor/shell recipes and their roster entries are matched by
+# name prefix so no retired product name reappears in this gate.
+while IFS= read -r retired_dir; do
+  fail "retired session package recipe remains: ${retired_dir#$root/}"
+done < <(find "$root/distro/packages" -maxdepth 1 -type d \( -name 'aq*' -o -name '*pea*' \))
+if grep -Eq '^    - [a-z0-9._-]*(aq|pea)[a-z0-9._-]*$' "$profile"; then
+  fail 'a retired compositor or shell package remains in the profile'
+fi
+while IFS= read -r helper_path; do
+  case "${helper_path##*/}" in
+    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
+    *) fail "unexpected session component: ${helper_path#$root/}" ;;
+  esac
+done < <(find "$overlay/usr/local/libexec" -maxdepth 1 -type f)
+
+# Every session/launcher command must resolve inside the overlay: a dangling
+# Exec is how a removed compositor kept appearing in the greeter catalogue.
+while IFS= read -r desktop_file; do
+  while IFS= read -r key; do
+    command_path=${key#*=}
+    command_path=${command_path#dbus-run-session }
+    case "$command_path" in
+      /usr/*|/etc/*) [[ -e "$overlay$command_path" ]] \
+        || fail "dangling session command in ${desktop_file#$root/}: $command_path" ;;
+    esac
+  done < <(grep -E '^(Exec|TryExec)=/' "$desktop_file" || true)
+done < <(find "$session_dir" "$overlay/usr/share/applications" -name '*.desktop' -type f)
+
+[[ -x "$river_session" ]] || fail 'River session wrapper is not executable'
+sh -n "$river_session" || fail 'River session wrapper has invalid shell syntax'
+[[ -x "$river_init" ]] || fail 'River session init is not executable'
+sh -n "$river_init" || fail 'River session init has invalid shell syntax'
+[[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
+sh -n "$supervisor" || fail 'session supervisor has invalid shell syntax'
 [[ -x "$desktop_installer" ]] || fail 'live installer desktop shortcut is not executable'
-[[ -x "$desktop_approval" ]] || fail 'Pearl desktop approval helper is not executable'
+[[ -x "$desktop_approval" ]] || fail 'desktop approval helper is not executable'
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), sys.argv[1], "exec")' "$desktop_approval" \
-  || fail 'Pearl desktop approval helper has invalid Python syntax'
-[[ -x "$aqueous_init" ]] || fail 'Aqueous session init is not executable'
+  || fail 'desktop approval helper has invalid Python syntax'
+[[ -x "$palette_seed" ]] || fail 'Qt6ct palette seed helper is not executable'
+sh -n "$palette_seed" || fail 'Qt6ct palette seed helper has invalid shell syntax'
 [[ -x "$theme_sync" ]] || fail 'GTK/Qt session theme synchronizer is not executable'
 sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
+sh -n "$idle" || fail 'idle wrapper has invalid shell syntax'
+sh -n "$lock" || fail 'lock wrapper has invalid shell syntax'
 [[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
-[[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
-sh -n "$greeter_wrapper" || fail 'Pearl Greeter wrapper has invalid shell syntax'
 
-for package in greetd brightnessctl swayidle swaylock wlopm fish aqueous pearl vulkan-swrast dconf gsettings-desktop-schemas; do
+# Roster: the River stack and the greetd/agreety greeter are shipped; the
+# retired compositors, session launchers and palette generator are not.
+for package in \
+  river kwm kwim greetd greetd-agreety seatd elogind dinit shikane \
+  brightnessctl swayidle swaylock wlopm fish vulkan-swrast dconf \
+  gsettings-desktop-schemas xorg-xwayland qt6ct qt6-wayland lxqt-policykit; do
   grep -Fq "    - $package" "$profile" || fail "profile is missing $package"
 done
-for package in labwc noctalia aqueous-core aqueous-session uwsm greetd-regreet; do
+for package in labwc noctalia uwsm greetd-regreet matugen; do
   if grep -Fqx "    - $package" "$profile"; then
     fail "retired session or greeter package remains in the profile: $package"
   fi
 done
+grep -Fq 'install -Dm644 "$srcdir/out/share/doc/kwm/config.zon" "$pkgdir/etc/xdg/kwm/config.zon"' "$kwm_pkgbuild" \
+  || fail 'kwm does not ship the system-wide config seed used by the session wrapper'
+if grep -Fq 'pkgdir/usr/share/wayland-sessions' "$kwm_pkgbuild"; then
+  fail 'kwm installs a competing upstream session entry'
+fi
+grep -Fq "provides=('river-input-manager')" "$kwim_pkgbuild" \
+  || fail 'kwim does not provide the river input manager'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$live_package/dinx-live-session" \
+  || fail 'the live session does not launch the River session wrapper under a session bus'
+
+# Shell defaults name the River desktop for recovery TTYs and Fish users.
 grep -Fq 'export SHELL=/bin/fish' "$shell_profile" || fail 'POSIX shell default is not Fish'
-grep -Fq 'XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Aqueous}"' "$shell_profile" \
-  || fail 'POSIX desktop default is not Aqueous'
+grep -Fq 'XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-river}"' "$shell_profile" \
+  || fail 'POSIX desktop default is not river'
 grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$shell_profile" \
   || fail 'DINX color scheme default is missing'
+grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$shell_profile" \
+  || fail 'Dintor dark-theme preference default is missing'
 grep -Fq 'set -gx SHELL /bin/fish' "$fish_config" || fail 'Fish system shell default is missing'
-grep -Fq 'set -gx XDG_CURRENT_DESKTOP Aqueous' "$fish_config" \
-  || fail 'Fish desktop default is not Aqueous'
+grep -Fq 'set -gx XDG_CURRENT_DESKTOP river' "$fish_config" \
+  || fail 'Fish desktop default is not river'
 grep -Fq 'set -gx DINX_COLOR_SCHEME dark' "$fish_config" \
   || fail 'Fish DINX color scheme default is missing'
 grep -Fq 'SHELL=/bin/fish' "$useradd_defaults" || fail 'new-user shell default is not Fish'
 grep -Fq 'shell: /bin/fish' "$users_conf" || fail 'Calamares user shell is not Fish'
+grep -Fq '    - render' "$users_conf" || fail 'Calamares users are missing render-node access'
 
-for doc in "$architecture" "$compatibility" "$pt_architecture" "$pt_compatibility"; do
-  grep -Fq 'Aqueous' "$doc" || fail "Aqueous session boundary is undocumented: ${doc#$root/}"
-  grep -Fq 'Pearl Greeter' "$doc" || fail "Pearl Greeter boundary is undocumented: ${doc#$root/}"
-  grep -Fq 'dinit' "$doc" || fail "dinit boundary is undocumented: ${doc#$root/}"
-done
-
+# Installed greetd hands the seat to agreety, which launches the River wrapper.
 grep -Fq '[general]' "$greetd_config" || fail 'greetd general section is missing'
 grep -Fq 'source_profile = false' "$greetd_config" \
   || fail 'greetd must not source the greeter account profile'
-grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' "$greetd_config" \
-  || fail 'greetd does not launch the graphics-safe Pearl Greeter wrapper'
-grep -Fq 'user = "pearl-greeter"' "$greetd_config" \
-  || fail 'greetd does not use the dedicated Pearl Greeter account'
+grep -Fq 'command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"' "$greetd_config" \
+  || fail 'greetd does not launch the River session through agreety'
+grep -Fq 'user = "greeter"' "$greetd_config" \
+  || fail 'greetd does not use the greetd-provided greeter account'
 if grep -Fq '[initial_session]' "$greetd_config"; then
   fail 'installed greetd config must not enable live autologin'
 fi
 if grep -Eiq 'systemd|systemctl' "$greetd_config"; then
   fail 'greetd config contains a systemd integration'
 fi
+grep -Fq 'd /var/cache/agreety 0700 greeter greeter -' "$tmpfiles" \
+  || fail 'agreety private cache directory is not provisioned by tmpfiles'
 
-grep -Fq 'grep -qx seat' "$greeter_wrapper" \
-  || fail 'Pearl Greeter does not verify seatd group membership before selecting the seatd backend'
-grep -Fq 'export LIBSEAT_BACKEND=seatd' "$greeter_wrapper" \
-  || fail 'Pearl Greeter does not select the seatd libseat backend'
-grep -Fq 'export LIBSEAT_BACKEND=logind' "$greeter_wrapper" \
-  || fail 'Pearl Greeter does not fall back to elogind for libseat'
-grep -Fq 'export HOME=/var/empty/pearl-greeter' "$greeter_wrapper" \
-  || fail 'Pearl Greeter does not use its root-owned trusted home'
-grep -Fq 'export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config' "$greeter_wrapper" \
-  || fail 'Pearl Greeter config home is not on its writable private directory'
-grep -Fq 'export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share' "$greeter_wrapper" \
-  || fail 'Pearl Greeter data home is not on its writable private directory'
-grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state' "$greeter_wrapper" \
-  || fail 'Pearl Greeter state home is not its dedicated writable state directory'
-grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' "$greeter_wrapper" \
-  || fail 'Pearl Greeter cache home is not on its writable runtime directory'
-jq -e '
-  .version == 1
-  and .theme == "material_dark"
-  and .high_contrast == false
-  and .default_session == "wayland:dinx-aqueous-pearl.desktop"
-  and .force_session == "wayland:dinx-aqueous-pearl.desktop"
-  and .allow == ["wayland:dinx-aqueous-pearl.desktop"]
-  and (.roots | length == 1)
-  and .roots[0].path == "/usr/share/wayland-sessions"
-  and .roots[0].type == "wayland"
-  and .accounts == true
-  and .password_first == true
-  and .power == true
-  and .remember_session == false
-  and .fingerprint_hint == false
-  and .allow_uwsm == false
-  and .x11 == false
-' "$pearl_config" >/dev/null || fail 'Pearl Greeter config does not force the DINX Aqueous/Pearl session'
-if grep -Eiq 'systemd|systemctl' "$pearl_config"; then
-  fail 'Pearl Greeter config contains a systemd integration'
-fi
-
-grep -Fq 'build-greeter' "$pearl_pkg" || fail 'Pearl package does not build Pearl Greeter'
-grep -Fq 'install=pearl.install' "$pearl_pkg" || fail 'Pearl package has no greeter account install hook'
-for binary in pearl-greeter pearl-greeter-host pearl-greeter-session pearl-greeter-init; do
-  grep -Fq "$binary" "$pearl_pkg" || fail "Pearl package does not install or validate $binary"
-done
-grep -Fq 'rm -rf "$pkgdir/usr/lib/systemd" "$pkgdir/usr/share/uwsm"' "$pearl_pkg" \
-  || fail 'Pearl package does not remove upstream systemd/UWSM lifecycle payloads'
-if grep -Eq "['\"](systemd|systemctl|uwsm)['\"]" "$pearl_pkg" \
-  || grep -Eiq '(^|[[:space:]])(systemctl|uwsm)([[:space:]]|$)' "$pearl_pkg"; then
-  fail 'Pearl recipe contains a systemd, systemctl or UWSM dependency/command'
-fi
-grep -Fq 'useradd --system --gid pearl-greeter' "$pearl_install" \
-  || fail 'Pearl Greeter account is not provisioned by the package hook'
-grep -Fq 'usermod --append --groups video,render pearl-greeter' "$pearl_install" \
-  || fail 'Pearl Greeter account is missing video/render access'
-grep -Fq 'install -d -o root -g root -m 0755 /var/empty/pearl-greeter' "$pearl_install" \
-  || fail 'Pearl Greeter trusted home is not provisioned as root-owned and read-only'
-for greeter_path in \
-  /var/lib/pearl-greeter \
-  /var/lib/pearl-greeter/.config \
-  /var/lib/pearl-greeter/.local \
-  /var/lib/pearl-greeter/.local/share \
-  /var/lib/pearl-greeter/.local/state \
-  /var/cache/pearl-greeter; do
-  grep -Fq "$greeter_path" "$pearl_install" \
-    || fail "Pearl Greeter writable path is not provisioned by its package hook: $greeter_path"
-done
-grep -Fq '    - render' "$users_conf" || fail 'Calamares users are missing render-node access'
-grep -Fq 'two-default-workspaces.patch' "$root/distro/packages/aqueous/PKGBUILD" \
-  || fail 'Aqueous package does not apply the two-workspace default'
-if grep -Eiq 'systemd|systemctl|uwsm' "$pearl_install"; then
-  fail 'Pearl Greeter install hook contains a systemd integration'
-fi
-
-grep -Fq 'compositor=/usr/bin/aqueous' "$aqueous_wrapper" \
-  || fail 'Aqueous hardware compositor selection is missing'
-grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
-  || fail 'Aqueous compatibility compositor selection is missing'
-grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueous_wrapper" \
-  || fail 'Aqueous wrapper does not select the graphics profile'
-grep -Fq 'virtual-gl)' "$aqueous_wrapper" \
-  || fail 'Aqueous VM GLES branch is missing'
-grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' "$aqueous_wrapper" \
-  || fail 'Aqueous wrapper does not load the shared renderer policy'
-grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper" \
-  || fail 'Aqueous wrapper does not apply the selected renderer policy'
+# The session wrapper owns desktop identity, seat backend probing, the graphics
+# profile, single-instance locking and the live-session shortcuts.
+grep -Fq 'export XDG_CURRENT_DESKTOP=river:kwm' "$river_session" \
+  || fail 'River session desktop identity is not river:kwm'
+grep -Fq 'export XDG_SESSION_DESKTOP=river' "$river_session" \
+  || fail 'River session name is not exported'
+grep -Fq 'export XDG_SESSION_TYPE=wayland' "$river_session" \
+  || fail 'River session does not declare the Wayland session type'
+grep -Fq 'export DINX_DISPLAY_AUTHORITY=shikane' "$river_session" \
+  || fail 'River session does not name its display authority'
+grep -Fq 'export DINX_SESSION_COMPOSITOR_PID=$$' "$river_session" \
+  || fail 'River session does not publish its compositor pid to the supervisor'
+grep -Fq 'grep -qx seat' "$river_session" \
+  || fail 'River session does not verify seatd group membership before selecting the seatd backend'
+grep -Fq '[ -S /run/seatd.sock ]' "$river_session" \
+  || fail 'River session does not require a live seatd socket before selecting seatd'
+grep -Fq 'export LIBSEAT_BACKEND=seatd' "$river_session" \
+  || fail 'River session does not select the seatd libseat backend'
+grep -Fq 'export LIBSEAT_BACKEND=logind' "$river_session" \
+  || fail 'River session does not fall back to elogind for libseat'
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$river_session" \
+  || fail 'River session wrapper does not select the graphics profile'
+grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' "$river_session" \
+  || fail 'River session wrapper does not load the shared renderer policy'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$river_session" \
+  || fail 'River session wrapper does not apply the selected renderer policy'
 grep -Fq 'export WLR_RENDERER=gles2' "$graphics_environment" \
-  || fail 'Aqueous VM renderer policy does not use GLES2'
+  || fail 'VM renderer policy does not use GLES2'
 grep -Fq 'export WLR_RENDERER=vulkan' "$graphics_environment" \
-  || fail 'Aqueous VirtualBox renderer policy does not use Vulkan'
+  || fail 'VirtualBox renderer policy does not use Vulkan'
+grep -Fq 'export WLR_RENDERER=pixman' "$graphics_environment" \
+  || fail 'CPU renderer policy does not use pixman'
 grep -Fq 'unset GSK_RENDERER' "$graphics_environment" \
   || fail 'GTK4 VM renderer selection is not left automatic'
 [[ $(grep -Fc 'unset GSK_RENDERER' "$graphics_environment") -eq 3 ]] \
   || fail 'GTK4 renderer selection is not automatic for CPU, virtual GL and Vulkan profiles'
-grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' "$aqueous_wrapper" \
-  || fail 'Aqueous wrapper does not launch the selected compositor'
-grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$aqueous_wrapper" \
-  || fail 'Aqueous live session does not use its private runtime directory'
-grep -Fq 'lock_path=$XDG_RUNTIME_DIR/dinx-aqueous-pearl.lock' "$aqueous_wrapper" \
-  || fail 'Aqueous compositor lock is not scoped to the session runtime directory'
-grep -Fq 'flock -n 9' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not reject a duplicate compositor instance'
-if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$aqueous_wrapper"; then
-  fail 'Aqueous session still forces the failing Lavapipe compositor path'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$river_session" \
+  || fail 'live River session does not use its private runtime directory'
+grep -Fq 'lock_path=$XDG_RUNTIME_DIR/dinx-river-session.lock' "$river_session" \
+  || fail 'River session lock is not scoped to the session runtime directory'
+grep -Fq 'flock -n 9' "$river_session" \
+  || fail 'River session does not reject a duplicate compositor instance'
+grep -Fq 'exec river -c /usr/local/libexec/dinx-river-init' "$river_session" \
+  || fail 'River session wrapper does not launch river with the DINX configuration'
+grep -Fq 'xdg-user-dirs-update' "$river_session" \
+  || fail 'River session does not initialize XDG user directories'
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$river_session" \
+  || fail 'River session does not force the Qt6ct platform theme'
+grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$river_session" \
+  || fail 'River session does not force Gecko browsers to use the system/compositor titlebar'
+grep -Fq 'riverctl default-layout kwm' "$river_init" \
+  || fail 'River init does not register kwm as the default layout'
+grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' "$river_init" \
+  || fail 'River init does not launch the supervisor in river mode'
+if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$river_session"; then
+  fail 'River session still forces the failing software Vulkan path'
 fi
-grep -Fq 'xdg-user-dirs-update' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not initialize XDG user directories'
-grep -Fq '[ "${DINX_LIVE_SESSION:-}" = "1" ]' "$aqueous_wrapper" \
-  || fail 'automatic Pearl launcher approval is not restricted to the disposable live session'
-grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' "$aqueous_wrapper" \
-  || fail 'Aqueous live session does not run the Pearl desktop approval helper'
-grep -Fq '"$installer_desktop" "$installer_seed"' "$aqueous_wrapper" \
-  || fail 'Aqueous live session does not bind launcher approval to the package-owned template'
-grep -Fq 'target_bytes != trusted_bytes' "$desktop_approval" \
-  || fail 'Pearl desktop approval helper does not require exact package-owned launcher bytes'
-grep -Fq 'hashlib.sha256(target_bytes).hexdigest()' "$desktop_approval" \
-  || fail 'Pearl desktop approval helper does not bind approval to the launcher digest'
-if grep -Eq 'GTK_THEME=|set -gx GTK_THEME' "$aqueous_wrapper" \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh" \
-  "$root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"; then
+if grep -Eq 'GTK_THEME=|set -gx GTK_THEME' "$river_session" "$shell_profile" "$fish_config"; then
   fail 'DINX session forces a GTK theme and overrides application preferences'
 fi
-grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not force the Qt6ct platform theme'
-grep -Fq 'default = "stacking"' "$aqueous_layout" \
-  || fail 'Aqueous live and installed sessions do not default to floating windows'
-for slot in primary secondary tertiary quaternary; do
-  grep -Fq "$slot = \"stacking\"" "$aqueous_layout" \
-    || fail "Aqueous $slot layout slot does not resolve to floating stacking"
-done
-for binding in set_layout_primary set_layout_secondary set_layout_tertiary set_layout_quaternary; do
-  grep -Eq "^\+${binding}[[:space:]]*=[[:space:]]*\[\]$" "$aqueous_patch" \
-    || fail "Aqueous $binding shortcut remains bound to a non-floating layout"
-done
-for setting in 'snap_gap = 0' 'snap_threshold = 24' 'resistance = 12' 'top_edge_maximize = true'; do
-  grep -Fq "$setting" "$aqueous_layout" || fail "Aqueous floating snap config is missing $setting"
-done
-grep -Fq 'force_ssd = false' "$aqueous_layout" \
-  || fail 'Aqueous must honor client-side GTK decorations by default'
-grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not force Gecko browsers to use the system/compositor titlebar'
-grep -Fq 'client_requires_csd' "$aqueous_decoration_patch" \
-  || fail 'Aqueous decoration policy does not distinguish client-side decorations'
-grep -Fq '.xwayland => decoration_policy.useServerSideDecorations(' "$aqueous_decoration_patch" \
-  || fail 'Aqueous XWayland decoration policy ignores client CSD hints'
-grep -Fq 'window.wm_scheduled.decoration_hint == .prefers_csd or' "$aqueous_decoration_patch" \
-  || fail 'Aqueous XWayland decoration policy misses preferred CSD'
-grep -Fq 'window.wm_scheduled.decoration_hint == .only_supports_csd' "$aqueous_decoration_patch" \
-  || fail 'Aqueous XWayland decoration policy misses required CSD'
-grep -Fq 'if (!window.usesServerTitlebar()) return null;' "$aqueous_decoration_patch" \
-  || fail 'Aqueous titlebar hit testing is active without server-side decorations'
+if grep -Eiq 'systemd|systemctl|uwsm|labwc|noctalia|regreet' "$river_session" "$river_init" "$supervisor"; then
+  fail 'River session path contains a retired session or systemd integration'
+fi
+if grep -Eq '^[^#]*dinx-sync-session-theme' "$river_session"; then
+  fail 'toolkit theme synchronization runs before session D-Bus readiness'
+fi
+
+# Live-session shortcuts: the installer launcher is seeded and approved only in
+# the disposable session, and the lock action is hidden there.
+grep -Fq '[ "${DINX_LIVE_SESSION:-}" = "1" ]' "$river_session" \
+  || fail 'automatic launcher approval is not restricted to the disposable live session'
+grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' "$river_session" \
+  || fail 'live River session does not run the desktop approval helper'
+grep -Fq '"$installer_desktop" "$installer_seed"' "$river_session" \
+  || fail 'live River session does not bind launcher approval to the package-owned template'
+grep -Fq 'Hidden=true' "$river_session" \
+  || fail 'live River session does not hide the screen-lock action'
+grep -Fq 'install -Dm644 /etc/xdg/kwm/config.zon "$config_home/kwm/config.zon"' "$river_session" \
+  || fail 'River session does not seed the system kwm configuration for a new user'
+kwm_seed_block=$(awk '
+  /^if / && /kwm\/config\.zon/ { capture = 1 }
+  capture { print }
+  capture && /^fi$/ { exit }
+' "$river_session")
+grep -Fq '[ ! -e "$config_home/kwm/config.zon" ]' <<<"$kwm_seed_block" \
+  || fail 'River session may overwrite an existing user kwm configuration'
+grep -Fq '[ -r /etc/xdg/kwm/config.zon ]' <<<"$kwm_seed_block" \
+  || fail 'River session seeds kwm config without a readable system default'
+grep -Fq '/usr/local/libexec/dinx-qt6ct-palette-seed' "$river_session" \
+  || fail 'River session does not seed the DINX Qt6ct palette'
+grep -Fq 'target_bytes != trusted_bytes' "$desktop_approval" \
+  || fail 'desktop approval helper does not require exact package-owned launcher bytes'
+grep -Fq 'hashlib.sha256(target_bytes).hexdigest()' "$desktop_approval" \
+  || fail 'desktop approval helper does not bind approval to the launcher digest'
+
+# The supervisor only understands the river mode and owns the DINX helpers.
+grep -Fq '[ "$mode" = river ]' "$supervisor" \
+  || fail 'session supervisor does not restrict itself to the river mode'
+grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
+grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
+grep -Fq 'start_required shikane shikane' "$supervisor" \
+  || fail 'session supervisor does not start the required display daemon'
+grep -Fq 'start_required policykit lxqt-policykit-agent' "$supervisor" \
+  || fail 'session supervisor does not start the required PolicyKit agent'
+grep -Fq 'start_required idle "$libexec_dir/dinx-idle"' "$supervisor" \
+  || fail 'session supervisor does not start the required idle helper'
+grep -Fq 'start_optional bc250 bc250-control-centerd' "$supervisor" \
+  || fail 'session supervisor does not start the optional BC-250 daemon'
+grep -Fq 'set_status ready' "$supervisor" || fail 'session supervisor has no ready status boundary'
+grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
+grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
+if grep -Eq 'start_(required|optional) (shell|kwm) ' "$supervisor"; then
+  fail 'session supervisor starts a shell or a second layout generator'
+fi
+
+# Session catalogue identity.
+grep -Fq 'Name=River + KWM (DINX)' "$river_entry" || fail 'River session display name is incorrect'
+grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' "$river_entry" \
+  || fail 'River session command is incorrect'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-river-session' "$river_entry" \
+  || fail 'River session TryExec is missing'
+grep -Fq 'DesktopNames=river;kwm' "$river_entry" || fail 'River session desktop names are missing'
+if grep -Eiq 'systemd|systemctl|uwsm' "$river_entry"; then
+  fail 'River session entry contains a systemd or UWSM integration'
+fi
+grep -Fq 'Hidden=true' "$gaming_session" || fail 'gaming session is not hidden'
+grep -Fq 'NoDisplay=true' "$gaming_session" || fail 'gaming session remains visible'
+
 for gtk_settings in "$gtk3_system" "$gtk3_skel" "$gtk4_system" "$gtk4_skel"; do
   grep -Fq 'gtk-decoration-layout=:minimize,maximize,close' "$gtk_settings" \
     || fail "GTK fallback window controls are incomplete in ${gtk_settings#$root/}"
 done
-grep -Fq 'aqueous/layout.toml' "$aqueous_wrapper" \
-  || fail 'Aqueous session does not seed the DINX floating layout'
-aqueous_wm_seed_block=$(awk '
-  /^if / && /aqueous\/wm\.toml/ { capture = 1 }
-  capture { print }
-  capture && /^fi$/ { exit }
-' "$aqueous_wrapper")
-grep -Fq '[ ! -e "$config_home/aqueous/wm.toml" ]' <<<"$aqueous_wm_seed_block" \
-  || fail 'Aqueous session may overwrite an existing live-user window-manager config'
-grep -Fq 'install -Dm644 /etc/xdg/aqueous/wm.toml "$config_home/aqueous/wm.toml"' <<<"$aqueous_wm_seed_block" \
-  || fail 'Aqueous session does not seed the system window-manager config for a new user'
-grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' "$aqueous_init" \
-  || fail 'Aqueous init does not launch the supervisor'
-grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' "$supervisor" \
-  || fail 'session supervisor does not launch the Pearl first-run wrapper'
-sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
-grep -Fq 'Bem-vindo ao DINX / Welcome to DINX' "$wizard_source" \
-  || fail 'first-run wizard lacks the bilingual greeting'
-grep -Fq 'language_names' "$wizard_source" \
-  || fail 'first-run wizard does not ask for language'
-grep -Fq 'location_names' "$wizard_source" \
-  || fail 'first-run wizard does not ask for location'
-grep -Fq 'installer-preferences.json' "$pearl_shell" \
-  || fail 'Pearl shell does not persist installer preferences'
-grep -Fq 'LANG="$locale"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer" \
-  || fail 'installer does not pass saved locale to Calamares'
-grep -Fq 'XKB_DEFAULT_LAYOUT="$keyboard"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer" \
-  || fail 'installer does not pass saved keyboard to Calamares'
-grep -Fq '/etc/skel/.config/dinx/installer-preferences.json' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer" \
-  || fail 'installer does not preserve live preferences in the installed skeleton'
-if grep -Fq 'dinx-sync-session-theme' "$aqueous_wrapper"; then
-  fail 'toolkit theme synchronization runs before session D-Bus readiness'
+
+if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
+  fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
 fi
-grep -Fq 'theme_sync_helper=${DINX_THEME_SYNC_HELPER:-/usr/local/libexec/dinx-sync-session-theme}' "$pearl_shell" \
-  || fail 'Pearl shell does not invoke the toolkit theme synchronizer'
-[[ -x "$live_config_seed" ]] || fail 'live Aqueous config seed helper is not executable'
-sh -n "$live_config_seed" || fail 'live Aqueous config seed helper has invalid shell syntax'
-pearl_shell_test=$(mktemp -d)
-trap 'rm -rf "$pearl_shell_test"' EXIT
-mkdir -p "$pearl_shell_test/bin" "$pearl_shell_test/config/pearl"
-mkdir -p "$pearl_shell_test/config/aqueous"
-cat >"$pearl_shell_test/config/aqueous/wm.toml" <<'TOML'
-[blur]
-enabled = true # preserve blur note
-radius = 9
-[unrelated]
-enabled = true
-[opacity]
-enabled = true # preserve opacity note
-  value = 0.8
-[keybinds]
-lock_screen = "Super+Ctrl+L"
-focus_left = "Super+H"
-TOML
-chmod 0640 "$pearl_shell_test/config/aqueous/wm.toml"
-"$live_config_seed" "$pearl_shell_test/config/aqueous/wm.toml"
-[[ $(stat -c '%a' "$pearl_shell_test/config/aqueous/wm.toml") == 640 ]] \
-  || fail 'live Aqueous effects seed did not preserve config permissions'
-grep -Fqx 'enabled = false # preserve blur note' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed did not disable backdrop blur or preserve its comment'
-grep -Fqx 'enabled = false # preserve opacity note' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed did not disable window opacity or preserve its comment'
-grep -Fqx 'radius = 9' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed changed the blur radius'
-grep -Eq '^[[:space:]]*value = 0\.8$' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed changed the opacity value'
-grep -Fqx 'enabled = true' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed changed an unrelated enabled setting'
-grep -Fqx 'lock_screen = []' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed did not disable the lock-screen keybind'
-grep -Fqx 'focus_left = "Super+H"' "$pearl_shell_test/config/aqueous/wm.toml" \
-  || fail 'live Aqueous config seed changed an unrelated keybind'
-live_config_seed_hash=$(sha256sum "$pearl_shell_test/config/aqueous/wm.toml")
-"$live_config_seed" "$pearl_shell_test/config/aqueous/wm.toml"
-[[ $(sha256sum "$pearl_shell_test/config/aqueous/wm.toml") == "$live_config_seed_hash" ]] \
-  || fail 'live Aqueous config seed is not idempotent'
-printf '[unrelated]\nvalue = 1\n' >"$pearl_shell_test/aqueous-wm-missing-sections.toml"
-"$live_config_seed" "$pearl_shell_test/aqueous-wm-missing-sections.toml"
-awk '
-  /^\[blur\]$/ { section = "blur"; next }
-  /^\[opacity\]$/ { section = "opacity"; next }
-  /^\[keybinds\]$/ { section = "keybinds"; next }
-  /^\[/ { section = "" }
-  section == "blur" && $0 == "enabled = false" { blur = 1 }
-  section == "opacity" && $0 == "enabled = false" { opacity = 1 }
-  section == "keybinds" && $0 == "lock_screen = []" { lock = 1 }
-  END { exit !(blur && opacity && lock) }
-' "$pearl_shell_test/aqueous-wm-missing-sections.toml" \
-  || fail 'live Aqueous config seed did not add missing disabled settings'
-printf 'aqueous_live_config_seed blur=disabled opacity=disabled lock_keybind=disabled preserves_settings=true idempotent=true\n'
-cat >"$pearl_shell_test/wizard" <<'SH'
-#!/bin/sh
-printf 'called\n' >>"$DINX_WIZARD_CALLS"
-printf 'pt-BR pt_BR.UTF-8 America/Sao_Paulo off bottom material light rounded\n'
-SH
-cat >"$pearl_shell_test/bin/pearl" <<'SH'
-#!/bin/sh
-exit 0
-SH
-chmod +x "$pearl_shell_test/wizard" "$pearl_shell_test/bin/pearl"
-cat >"$pearl_shell_test/config/pearl/preferences.json" <<'JSON'
-{"theme":{"seed":"#F4515B"},"wallpaper":{"mode":"solid","path":"","color":"#0b0d12"},"bar":{"retained":true},"dock":{"retained":true},"unrelated":42}
-JSON
-pearl_shell_test_env=(
-  "PATH=$pearl_shell_test/bin:$PATH"
-  "HOME=$pearl_shell_test/home"
-  "XDG_CONFIG_HOME=$pearl_shell_test/config"
-  "XDG_STATE_HOME=$pearl_shell_test/state"
-  "DINX_FIRST_RUN_WIZARD=$pearl_shell_test/wizard"
-  "DINX_WIZARD_CALLS=$pearl_shell_test/wizard-calls"
-  "DINX_THEME_SYNC_HELPER=/bin/true"
-)
-mkdir -p "$pearl_shell_test/home"
-env "${pearl_shell_test_env[@]}" "$pearl_shell"
-jq -e '.theme.mode == "static" and .theme.variant == "light" and .theme.gtk_name == "" and .theme.seed == "#F4515B" and .bar.edge == "bottom" and .bar.retained == true and .dock.enabled == false and .dock.edge == "top" and .dock.retained == true and .unrelated == 42' \
-  "$pearl_shell_test/config/pearl/preferences.json" >/dev/null \
-  || fail 'Pearl wizard selection did not update preferences while preserving existing settings'
-jq -e '.language == "pt-BR" and .locale == "pt_BR.UTF-8" and .timezone == "America/Sao_Paulo" and .keyboard == "br"' \
-  "$pearl_shell_test/config/dinx/installer-preferences.json" >/dev/null \
-  || fail 'Pearl wizard did not save installer locale preferences'
-[[ -e "$pearl_shell_test/state/dinx/pearl-first-run-complete" ]] \
-  || fail 'Pearl first-run completion marker is missing'
-[[ $(stat -c '%a' "$pearl_shell_test/config/pearl/preferences.json") == 600 ]] \
-  || fail 'Pearl first-run preferences are not private'
-env "${pearl_shell_test_env[@]}" "$pearl_shell"
-[[ $(wc -l <"$pearl_shell_test/wizard-calls") == 1 ]] \
-  || fail 'Pearl first-run wizard runs again after completion'
-printf 'pearl_first_run_smoke dock=off bar=bottom theme=material-light preserves_settings=true once=true\n'
-pearl_shell_top_test="$pearl_shell_test/top"
-mkdir -p "$pearl_shell_top_test/bin" "$pearl_shell_top_test/home" \
-  "$pearl_shell_top_test/config/pearl" "$pearl_shell_top_test/state"
-cat >"$pearl_shell_top_test/wizard" <<'SH'
-#!/bin/sh
-printf 'pt-BR pt_BR.UTF-8 America/Sao_Paulo on top material dark rounded\n'
-SH
-cat >"$pearl_shell_top_test/bin/pearl" <<'SH'
-#!/bin/sh
-exit 0
-SH
-chmod +x "$pearl_shell_top_test/wizard" "$pearl_shell_top_test/bin/pearl"
-printf '{}\n' >"$pearl_shell_top_test/config/pearl/preferences.json"
-env \
-  "PATH=$pearl_shell_top_test/bin:$PATH" \
-  "HOME=$pearl_shell_top_test/home" \
-  "XDG_CONFIG_HOME=$pearl_shell_top_test/config" \
-  "XDG_STATE_HOME=$pearl_shell_top_test/state" \
-  "DINX_FIRST_RUN_WIZARD=$pearl_shell_top_test/wizard" \
-  "DINX_THEME_SYNC_HELPER=/bin/true" \
-  "$pearl_shell"
-jq -e '.bar.edge == "top" and .dock.edge == "bottom" and .theme.variant == "dark"' \
-  "$pearl_shell_top_test/config/pearl/preferences.json" >/dev/null \
-  || fail 'Pearl top-bar selection did not preserve the bar edge and opposite dock edge'
-printf 'pearl_bar_edge_smoke top=true bottom=true exclusive_edge=selected\n'
-approval_test="$pearl_shell_test/desktop-approval"
-approval_home="$approval_test/home"
-approval_target="$approval_test/Desktop 42/Install DINX.desktop"
-approval_state="$approval_home/state/pearl/desktop-launchers.json"
+grep -Fq 'Exec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock action is missing'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock TryExec is missing'
+
+# The installer still consumes the live session's saved preferences.
+grep -Fq 'LANG="$locale"' "$installer" || fail 'installer does not pass saved locale to Calamares'
+grep -Fq 'XKB_DEFAULT_LAYOUT="$keyboard"' "$installer" \
+  || fail 'installer does not pass saved keyboard to Calamares'
+grep -Fq '/etc/skel/.config/dinx/installer-preferences.json' "$installer" \
+  || fail 'installer does not preserve live preferences in the installed skeleton'
+
+# QEMU screen gates stay wired into the live and installed smokes.
+grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" session' "$iso_smoke" \
+  || fail 'QEMU live smoke does not check the running desktop screen'
+grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter' "$install_smoke" \
+  || fail 'installed QEMU smoke does not check the agreety greeter screen'
+
+bash -n "$qemu_session_checker" || fail 'QEMU session checker has invalid shell syntax'
+
+# Desktop launcher approval helper: digest binding, idempotence, private state,
+# and rejection of modified or symlinked shortcuts.
+fixture=$(mktemp -d)
+trap 'rm -rf "$fixture"' EXIT
+approval_home="$fixture/home"
+approval_target="$fixture/Desktop 42/Install DINX.desktop"
+approval_state="$approval_home/state/dinx/desktop-launchers.json"
 mkdir -p "$(dirname -- "$approval_target")" "$(dirname -- "$approval_state")"
 cp -- "$desktop_installer" "$approval_target"
 chmod 0644 "$approval_target"
@@ -453,93 +359,94 @@ approval_digest=$(sha256sum "$approval_target" | cut -d ' ' -f1)
 jq -e --arg uri "$approval_uri" --arg digest "$approval_digest" \
   '.version == 1 and .unrelated.keep == true and ([.approvals[] | select(.uri == "file:///custom.desktop")] | length == 1) and ([.approvals[] | select(.uri == $uri and .digest == $digest)] | length == 1)' \
   "$approval_state" >/dev/null \
-  || fail 'DINX desktop shortcut approval did not preserve existing state or bind exact URI/content'
+  || fail 'desktop shortcut approval did not preserve existing state or bind exact URI/content'
 [[ $(stat -c '%a' "$approval_target") == 755 ]] \
-  || fail 'DINX desktop approval helper did not repair the shortcut executable mode'
+  || fail 'desktop approval helper did not repair the shortcut executable mode'
 [[ $(stat -c '%a' "$approval_state") == 600 ]] \
-  || fail 'Pearl launcher approvals are not written with private permissions'
+  || fail 'desktop launcher approvals are not written with private permissions'
 approval_state_before=$(sha256sum "$approval_state" | cut -d ' ' -f1)
 env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
   "$desktop_approval" "$approval_target" "$desktop_installer"
 [[ $(sha256sum "$approval_state" | cut -d ' ' -f1) == "$approval_state_before" ]] \
-  || fail 'DINX desktop approval helper rewrote unchanged Pearl state'
+  || fail 'desktop approval helper rewrote unchanged state'
 printf '\n# user edit\n' >>"$approval_target"
 if env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
-  "$desktop_approval" "$approval_target" "$desktop_installer" 2>"$approval_test/modified.log"; then
-  fail 'DINX desktop approval helper approved modified shortcut contents'
+  "$desktop_approval" "$approval_target" "$desktop_installer" >"$fixture/modified.log" 2>&1; then
+  fail 'desktop approval helper accepted a modified shortcut'
 fi
-grep -Fq 'leaving it unapproved' "$approval_test/modified.log" \
-  || fail 'DINX desktop approval helper did not explain why modified content was rejected'
+grep -Fq 'leaving it unapproved' "$fixture/modified.log" \
+  || fail 'desktop approval helper did not explain why modified content was rejected'
 [[ $(sha256sum "$approval_state" | cut -d ' ' -f1) == "$approval_state_before" ]] \
-  || fail 'DINX desktop approval helper changed Pearl state for a modified shortcut'
-symlink_target="$approval_test/Install DINX symlink.desktop"
+  || fail 'desktop approval helper changed state for a modified shortcut'
+symlink_target="$fixture/Install DINX symlink.desktop"
 ln -s "$desktop_installer" "$symlink_target"
 if env HOME="$approval_home" XDG_STATE_HOME="$approval_home/state" \
   "$desktop_approval" "$symlink_target" "$desktop_installer" >/dev/null 2>&1; then
-  fail 'DINX desktop approval helper approved a launcher symlink'
+  fail 'desktop approval helper followed a symlinked shortcut'
 fi
 [[ $(sha256sum "$approval_state" | cut -d ' ' -f1) == "$approval_state_before" ]] \
-  || fail 'DINX desktop approval helper changed Pearl state for a symlink launcher'
-corrupt_home="$approval_test/corrupt-home"
-mkdir -p "$corrupt_home/state/pearl"
-printf '%s' '{invalid' >"$corrupt_home/state/pearl/desktop-launchers.json"
+  || fail 'desktop approval helper changed state for a symlink launcher'
+corrupt_home="$fixture/corrupt-home"
+mkdir -p "$corrupt_home/state/dinx"
+printf '%s' '{invalid' >"$corrupt_home/state/dinx/desktop-launchers.json"
 cp -- "$desktop_installer" "$approval_target"
 if env HOME="$corrupt_home" XDG_STATE_HOME="$corrupt_home/state" \
   "$desktop_approval" "$approval_target" "$desktop_installer" >/dev/null 2>&1; then
-  fail 'DINX desktop approval helper accepted corrupt Pearl launcher state'
+  fail 'desktop approval helper accepted corrupt state'
 fi
-[[ $(cat "$corrupt_home/state/pearl/desktop-launchers.json") == '{invalid' ]] \
-  || fail 'DINX desktop approval helper overwrote corrupt Pearl state'
-printf 'pearl_desktop_launcher executable=true preapproved=true exact_digest=true idempotent=true modified_rejected=true symlink_rejected=true corrupt_state_preserved=true\n'
-qemu_screen="$pearl_shell_test/qemu-client-window.ppm"
-printf 'P6\n2 2\n255\n\377\377\377\377\377\377\377\377\377\377\377\377' >"$qemu_screen"
-cat >"$pearl_shell_test/bin/tesseract" <<'SH'
+[[ $(cat "$corrupt_home/state/dinx/desktop-launchers.json") == '{invalid' ]] \
+  || fail 'desktop approval helper overwrote corrupt state'
+printf 'desktop_launcher executable=true preapproved=true exact_digest=true idempotent=true modified_rejected=true symlink_rejected=true corrupt_state_preserved=true private_mode=600\n'
+
+# QEMU screen self-tests against a stubbed OCR engine.
+mkdir -p "$fixture/bin"
+cat >"$fixture/bin/tesseract" <<'SH'
 #!/bin/sh
 printf '%s\n' "${DINX_TEST_OCR:-}"
 SH
-chmod +x "$pearl_shell_test/bin/tesseract"
-env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='Dock Show the dock Next' \
-  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
-env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX Aqueous desktop' \
+chmod +x "$fixture/bin/tesseract"
+qemu_screen="$fixture/screen.ppm"
+printf 'P6\n2 2\n255\n\377\377\377\377\377\377\377\377\377\377\377\377' >"$qemu_screen"
+ocr_env=("PATH=$fixture/bin:$PATH")
+env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null
-if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop' \
-  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null 2>&1; then
-  fail 'QEMU first-run client-window check accepts a screenshot without readable client text'
-fi
-env "${pearl_shell_test_env[@]}" DINX_TEST_OCR=$'Aqueous + Pearl (DINX) - Wayland\nPas\n\nrd\nSign in' \
+env "${ocr_env[@]}" DINX_TEST_OCR='DINX desktop' \
+  "$qemu_session_checker" "$qemu_screen" session >/dev/null
+env "${ocr_env[@]}" DINX_TEST_OCR=$'agreety\nRiver + KWM (DINX)\nPassword\nSign in' \
   "$qemu_session_checker" "$qemu_screen" greeter >/dev/null
-if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR=$'Aqueous + Pearl (DINX) - Wayland\nPas\n\nrd\nSign in\nAccessDenied' \
-  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
-  fail 'QEMU greeter check accepts an access-denied startup failure'
+env "${ocr_env[@]}" DINX_TEST_OCR='Install DINX' \
+  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
+if env "${ocr_env[@]}" DINX_TEST_OCR=$'agreety\nPassword\nSign in' \
+  "$qemu_session_checker" "$qemu_screen" session >/dev/null; then
+  fail 'the session screen check accepted a greeter login screen'
 fi
-if env "${pearl_shell_test_env[@]}" DINX_TEST_OCR='DINX desktop Pas rd Sign in' \
-  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
-  fail 'QEMU greeter check accepts controls without Pearl Greeter identity'
+if env "${ocr_env[@]}" DINX_TEST_OCR=$'River + KWM (DINX) - Wayland\nPassword\nSign in\nAccessDenied' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null; then
+  fail 'the greeter screen check accepted a startup failure'
 fi
-grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run' "$iso_smoke" \
-  || fail 'QEMU live smoke does not check readable first-run client-window content'
-printf 'qemu_client_window_smoke readable_first_run=true session_marker=true greeter_ocr_fragment=true greeter_startup_error_rejected=true rejects_missing_title=true\n'
-grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
-grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
-grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
-grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
-if grep -Eiq 'labwc|noctalia|systemd|uwsm' "$aqueous_wrapper" "$aqueous_init" "$supervisor"; then
-  fail 'Aqueous supervisor path contains a retired session or systemd integration'
+if env "${ocr_env[@]}" DINX_TEST_OCR='Wayfire - Wayland' \
+  "$qemu_session_checker" "$qemu_screen" session >/dev/null; then
+  fail 'the session screen check accepted a foreign compositor title'
 fi
-grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' "$aqueous_session" \
-  || fail 'Aqueous/Pearl session command is incorrect'
-grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' "$aqueous_session" \
-  || fail 'Aqueous/Pearl session TryExec is missing'
-grep -Fq 'DesktopNames=Aqueous;Pearl' "$aqueous_session" \
-  || fail 'Aqueous/Pearl desktop identity is missing'
-grep -Fq 'Hidden=true' "$gaming_session" || fail 'gaming session is not hidden'
-grep -Fq 'NoDisplay=true' "$gaming_session" || fail 'gaming session remains visible'
+if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
+  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null; then
+  fail 'the first-run screen check passed without the installer shortcut'
+fi
+if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
+  "$qemu_session_checker" "$fixture/missing.ppm" session >/dev/null 2>&1; then
+  fail 'the session screen check accepted a missing screenshot'
+fi
+printf 'qemu_screen_smoke river_title=true dinx_marker=true greeter_ocr=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
 
-if grep -Eq '/bin/sh -c|systemctl|loginctl suspend' "$lock" "$idle"; then
-  fail 'session wrappers contain forbidden shell indirection or systemd suspend calls'
-fi
-grep -Fq 'Exec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock action is missing'
-grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock TryExec is missing'
 bash "$root/scripts/smoke_dinx_session.sh"
+bash "$root/scripts/smoke_dinx_session_supervisor.sh"
 
-printf 'dinx_session_contract session=aqueous_pearl_only=true greeter=pearl_greeter=true x11=false uwsm=false floating_default=stacking=true layout_slots=stacking=true layout_shortcuts=disabled native_edge_snap=halves+quarters=true top_edge_maximize=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true client_csd_without_duplicate_ssd=true xwayland_csd=true compositor_titlebar_controls=minimize+maximize+close=true theme_env=gtk+qt=true qemu_client_window=true qemu_virgl_gles=true virtualbox_vmsvga_vulkan=true no_render_node_vulkan=true render_group=true live_lock=false live_blank=true installed_lock=true idle=true before_suspend_blank=true energy=true launcher=true desktop_launcher=executable+preapproved hierarchy=true supervisor=true direct_dinit=true systemd=false\n'
+# The River/agreety session boundary must be documented in every language.
+for doc in "$architecture" "$compatibility" "$pt_architecture" "$pt_compatibility"; do
+  grep -Eiq '(^|[^[:alnum:]])river([^[:alnum:]]|$)|(^|[^[:alnum:]])kwm([^[:alnum:]]|$)' "$doc" \
+    || fail "River session boundary is undocumented: ${doc#$root/}"
+  grep -Fiq 'agreety' "$doc" || fail "agreety greeter boundary is undocumented: ${doc#$root/}"
+  grep -Fq 'dinit' "$doc" || fail "dinit boundary is undocumented: ${doc#$root/}"
+done
+
+printf 'dinx_session_contract session=river_kwm_only=true greeter=agreety=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+greetd-agreety=true profiled_defaults=river=true tmpfiles=agreety_cache=true supervisor=river required_helpers=shikane+policykit+idle optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'

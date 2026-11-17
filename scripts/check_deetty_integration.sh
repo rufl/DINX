@@ -10,7 +10,7 @@ profile="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json"
 fish_profile="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/fish/config.fish"
 shell_profile="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/profile.d/dinx.sh"
-session_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
+session_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session"
 terminal_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-terminal"
 terminal_fallback="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-terminal-fallback.desktop"
 source_env="$repo_root/distro/packages/deetty/source.env"
@@ -106,7 +106,7 @@ grep -Fq "'$qualification_patch_sha'" "$pkgbuild" \
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
-grep -Fqx 'TERMINAL=deetty EDITOR=dintor VISUAL=dintor XDG_CURRENT_DESKTOP=Aqueous' <<<"$shell_output" || fail 'shell defaults are not deterministic'
+grep -Fqx 'TERMINAL=deetty EDITOR=dintor VISUAL=dintor XDG_CURRENT_DESKTOP=river' <<<"$shell_output" || fail 'shell defaults are not deterministic'
 
 
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/dinx-deetty-integration.XXXXXX")

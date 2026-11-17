@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+export XDG_CURRENT_DESKTOP=river:kwm
+export XDG_SESSION_DESKTOP=river
+export XDG_SESSION_TYPE=wayland
+
+# river runs this script as its configuration once its Wayland socket exists.
+# kwm implements river-window-management-v1 and must be registered as the
+# default layout before any view is mapped, otherwise river has no tiler and
+# windows never get placed.
+riverctl default-layout kwm
+
+# The supervisor owns kwm and the DINX helpers so that a failed component
+# terminates the session instead of leaving a blank desktop.
+exec /usr/local/libexec/dinx-session-supervisor river

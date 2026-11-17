@@ -29,7 +29,7 @@ marcar um resultado como `pass`.
 
 1. Verifique o SHA-512 da ISO e o metadata do build; depois inicialize a sessão
    DINX normal.
-2. Após uma instalação pelo Calamares, confirme que o primeiro boot chega ao Pearl Greeter e depois à sessão Aqueous/Pearl; `dinitctl status greetd NetworkManager` deve mostrar os serviços esperados.
+2. Após uma instalação pelo Calamares, confirme que o primeiro boot chega à tela de login do agreety e depois à sessão River/KWM; `dinitctl status greetd NetworkManager` deve mostrar os serviços esperados.
 3. Abra **Ajustes de Tela**, organize as saídas, feche-a e
    confirme que o perfil `DINX wdisplays` existe em
    `~/.config/shikane/config.toml`; saia e entre novamente para confirmar a
@@ -55,10 +55,10 @@ relatório para cada alvo.
 
 ### Desktop
 
-- inicializar a sessão live e verificar que ela abre diretamente em Aqueous + Pearl; se o fallback do Pearl Greeter aparecer, confirmar que ele expõe somente a entrada forçada `Aqueous + Pearl (DINX)` e registrar o caminho;
-- verificar Wayland, Aqueous, Pearl, áudio, rede e aceleração GPU;
+- inicializar a sessão live e verificar que ela abre diretamente em River + KWM; se a tela de login do agreety aparecer no lugar, confirmar que ela oferece somente a entrada `River + KWM (DINX)` e registrar o caminho;
+- verificar Wayland, River, KWM, áudio, rede e aceleração GPU;
 - se o suporte a NVIDIA for alegado, instalar `nvidia-open-dkms` com headers correspondentes, reiniciar e verificar render node, Vulkan e saída do Gamescope;
-- bloquear com `Super+L`;
+- bloquear pelo `dinx-lock`;
 - verificar bloqueio após 600 segundos de idle;
 - suspender, retomar, desbloquear e confirmar que a sessão continua utilizável;
 - testar brilho físico;

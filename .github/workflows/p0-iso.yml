@@ -87,7 +87,6 @@ on:
       - "scripts/check_pori_phyto.sh"
       - "scripts/check_seafoam_apps.sh"
       - "scripts/check_seafoam_settings.sh"
-      - "scripts/check_aqueous_pearl.sh"
       - "scripts/smoke_zls.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
@@ -234,13 +233,11 @@ jobs:
           scripts/cache-verified-extract.sh \
             "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
           echo "$zig_root" >> "$GITHUB_PATH"
-      - name: Verify Aqueous/Pearl direct dinit session contract
-        run: ./scripts/check_aqueous_pearl.sh
       - name: Verify wdisplays to Shikane persistence contract
         run: ./scripts/check_dinx_display_persistence.sh
       - name: Smoke-test wdisplays to Shikane persistence
         run: ./scripts/smoke_dinx_display_persistence.sh
-      - name: Smoke-test the sole Aqueous/Pearl session boundary
+      - name: Smoke-test the sole River/KWM session boundary
         run: ./scripts/smoke_dinx_session_supervisor.sh
       - name: Smoke-test supervised Pori NTFS mount service
         run: ./scripts/smoke_pori_mount_service.sh

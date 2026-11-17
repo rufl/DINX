@@ -114,22 +114,23 @@ trap finish EXIT
                   "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
               export PATH="$zig_root:$PATH"
               printf "zig_version=%s\n" "$(zig version)"
-              source /workspace/distro/packages/pearl/source.env
-              : "${PEARL_ZIG_VERSION:?PEARL_ZIG_VERSION is missing}"
-              : "${PEARL_ZIG_SOURCE_URL:?PEARL_ZIG_SOURCE_URL is missing}"
-              : "${PEARL_ZIG_SOURCE_SHA256:?PEARL_ZIG_SOURCE_SHA256 is missing}"
-              pearl_zig_archive="zig-x86_64-linux-${PEARL_ZIG_VERSION}.tar.xz"
-              pearl_zig_archive_path="$toolchain_cache/$pearl_zig_archive"
+              # Zig 0.16 is required by phyto, dome, kwm and kwim. The pin
+              # lives here rather than in a package's source.env because it is
+              # a builder toolchain, not a package source.
+              zig016_version=0.16.0
+              zig016_archive="zig-x86_64-linux-${zig016_version}.tar.xz"
+              zig016_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00
+              zig016_archive_path="$toolchain_cache/$zig016_archive"
               DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
                 scripts/cache-verified-download.sh \
-                  "$pearl_zig_archive_path" \
-                  "$PEARL_ZIG_SOURCE_URL" \
-                  "$PEARL_ZIG_SOURCE_SHA256"
-              pearl_zig_root="$toolchain_extraction_cache/zig-${PEARL_ZIG_VERSION}-${PEARL_ZIG_SOURCE_SHA256}"
+                  "$zig016_archive_path" \
+                  "https://ziglang.org/download/${zig016_version}/${zig016_archive}" \
+                  "$zig016_sha256"
+              zig016_root="$toolchain_extraction_cache/zig-${zig016_version}-${zig016_sha256}"
               DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
                 scripts/cache-verified-extract.sh \
-                  "$pearl_zig_archive_path" "$PEARL_ZIG_SOURCE_SHA256" \
-                  "$PEARL_ZIG_VERSION" zig "$pearl_zig_root"
+                  "$zig016_archive_path" "$zig016_sha256" \
+                  "$zig016_version" zig "$zig016_root"
               printf 'dinx-build-timing phase=toolchain-setup elapsed_seconds=%s exit_status=0\n' \
                 "$((SECONDS - toolchain_started))"
 
@@ -257,9 +258,10 @@ trap finish EXIT
                 if [[ "$package_name" == cyan-skillfish-governor-smu ]]; then
                   extra_env+=(CARGO_BUILD_JOBS=1)
                 fi
-                if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then
-                  extra_env+=("ZIG=$pearl_zig_root/zig")
-                elif [[ "$package_name" == pori || "$package_name" == aqueous ]]; then
+                if [[ "$package_name" == phyto || "$package_name" == dome \
+                  || "$package_name" == kwm || "$package_name" == kwim ]]; then
+                  extra_env+=("ZIG=$zig016_root/zig")
+                elif [[ "$package_name" == pori ]]; then
                   extra_env+=("ZIG=$zig_root/zig")
                 fi
 
@@ -419,13 +421,11 @@ trap finish EXIT
               build_package shikane
               pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
-              build_package matugen
-              pacman_install_local "$package_repo"/matugen-*.pkg.tar.zst
-              build_package aqueous
-              build_package pearl
+              build_package kwm
+              build_package kwim
               pacman_install_local \
-                "$package_repo"/aqueous-*.pkg.tar.zst \
-                "$package_repo"/pearl-*.pkg.tar.zst
+                "$package_repo"/kwm-*.pkg.tar.zst \
+                "$package_repo"/kwim-*.pkg.tar.zst
               build_package pori
               build_package phyto
               build_package dome
@@ -439,7 +439,6 @@ trap finish EXIT
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
-              build_package dinx-pearl-themes
               build_package dinx-gtk-themes
               build_package dinx-plymouth-theme
               build_package dinx-live-autologin

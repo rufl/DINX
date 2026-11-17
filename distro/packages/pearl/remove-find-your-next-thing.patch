@@ -1,5 +1,0 @@
---- a/src/desktop/launcher.zig
-+++ b/src/desktop/launcher.zig
-@@ -110,2 +110 @@
--        host.append(widgets.label(tr("Find your next thing", "Was möchtest du als Nächstes tun?"), "pearl-card-title").as(gtk.Widget));
-         const search = gtk.SearchEntry.new();

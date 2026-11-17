@@ -113,7 +113,7 @@ for name in os.listdir(out):
                 square(p)
 EOF
 
-  # Unify accents with the Pearl ports: replace the raw upstream accent hex
+  # Unify accents across the theme ports: replace the raw upstream accent hex
   # with the port palette primary (contrast-adjusted) so shell, application
   # profiles and GTK themes share identical accent values. Derived shades
   # remain upstream-derived.

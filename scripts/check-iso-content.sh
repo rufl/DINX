@@ -148,8 +148,8 @@ grep -Fq 'install -d -o dinx -g dinx -m 0700 /run/dinx-session' <<<"$live_autolo
 live_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-session)
 grep -Fq 'runuser -u dinx' <<<"$live_session" \
   || fail 'livefs session does not start as the dinx user'
-grep -Fq 'dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$live_session" \
-  || fail 'livefs session does not start the Aqueous/Pearl wrapper'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$live_session" \
+  || fail 'livefs session does not start the River/KWM wrapper'
 live_greetd_unit=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
 grep -Fq 'command = /bin/true' <<<"$live_greetd_unit" \
   || fail 'livefs does not shadow greetd with a no-op unit'
@@ -190,7 +190,7 @@ grep -Eq '^command[[:space:]]*=[[:space:]]*/usr/bin/greetd$' <<<"$root_greetd_se
 grep -Eq '^smooth-recovery[[:space:]]*=[[:space:]]*true$' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not preserve smooth recovery'
 grep -Eq '^restart-delay[[:space:]]*=[[:space:]]*7$' <<<"$root_greetd_service" \
-  || fail 'installed greetd service does not wait for Pearl Greeter teardown'
+  || fail 'installed greetd service does not delay restarts after the agreety session ends'
 grep -Eq '^depends-on[[:space:]]*=[[:space:]]*login\.target$' <<<"$root_greetd_service" \
   || fail 'installed greetd service does not use the login target'
 if grep -Fq 'dinx-live-autologin' <<<"$root_greetd_service"; then
@@ -252,8 +252,8 @@ required_paths=(
   usr/share/plymouth/themes/dinx/logo.png
   usr/bin/unsquashfs
   etc/greetd/config.toml
+  usr/bin/agreety
   usr/local/libexec/dinx-graphics-environment.sh
-  usr/local/libexec/dinx-pearl-greeter-host
   etc/tmpfiles.d/dinx-dinit.conf
   usr/bin/reboot
   usr/bin/poweroff
@@ -318,16 +318,11 @@ required_paths=(
   usr/share/mime/packages/com.orama_interactive.Pixelorama.xml
   usr/share/licenses/pixelorama/LICENSE
   etc/dinit.d/bluetoothd
-  etc/pearl/greeter.json
-  usr/bin/pearl-greeter
-  usr/local/libexec/dinx-pearl-shell
-  usr/local/libexec/dinx-tune-aqueous-config
+  usr/bin/river
+  usr/bin/kwm
+  usr/bin/kwim
+  etc/xdg/kwm/config.zon
   usr/local/libexec/dinx-qt6ct-palette-seed
-  usr/local/libexec/dinx-first-run-wizard
-  usr/lib/pearl/pearl-greeter-host
-  usr/lib/pearl/pearl-greeter-session
-  usr/lib/pearl/pearl-greeter-init
-  usr/share/pearl-greeter/release-gate.json
   etc/profile.d/dinx.sh
   etc/default/useradd
   etc/fish/config.fish
@@ -349,16 +344,10 @@ required_paths=(
   usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
   usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
   usr/bin/xdg-user-dirs-update
-  usr/bin/aqueous
-  usr/bin/aqueous-cpu
-  usr/bin/aqueousctl
-  usr/bin/aqueous-config
-  usr/bin/pearl
   usr/local/libexec/dinx-graphics-profile
   usr/lib/dri/virtio_gpu_dri.so
   usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
-  usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy
   usr/bin/phyto
   usr/bin/pori
   usr/local/libexec/pori-mount-service
@@ -376,8 +365,6 @@ required_paths=(
   usr/share/licenses/zls/zig-LICENSE
   etc/zls.json
   etc/xdg/zls.json
-  etc/xdg/aqueous/wm.toml
-  usr/local/libexec/dinx-seed-aqueous-live-config
   usr/lib/zls/zig-env
   usr/lib/zls/zig-env.zon
   usr/lib/zls/zig/std/std.zig
@@ -482,12 +469,12 @@ required_paths=(
   etc/dconf/profile/user
   etc/dconf/db/local
   etc/dconf/db/local.d/99-dinx-dark
-  usr/share/wayland-sessions/dinx-aqueous-pearl.desktop
+  usr/share/wayland-sessions/dinx-river-kwm.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
-  usr/local/libexec/dinx-aqueous-pearl
+  usr/local/libexec/dinx-river-session
   usr/local/libexec/dinx-sync-session-theme
-  usr/local/libexec/dinx-aqueous-init
+  usr/local/libexec/dinx-river-init
   usr/local/libexec/dinx-session-supervisor
   usr/bin/dbus-send
   usr/bin/lxqt-policykit-agent
@@ -531,9 +518,7 @@ required_paths=(
   usr/share/applications/gparted.desktop
   usr/share/applications/network.cycles.wdisplays.desktop
   usr/share/grub/themes/artix/theme.txt
-  etc/pearl/greeter.json
   etc/issue
-  etc/skel/.config/pearl/preferences.json
   etc/calamares/branding/dinx/dinx.svg
   etc/calamares/branding/dinx/dinx-ray-mark.svg
   etc/calamares/branding/dinx/dinx-emblem.png
@@ -548,10 +533,6 @@ required_paths=(
   usr/share/fonts/dinx-noto-latin/NotoSans-BoldItalic.ttf
   usr/share/fonts/dinx-noto-latin/NotoSansMono-Regular.ttf
   usr/share/grub/themes/artix/logo.png
-  usr/share/pearl/themes/dinx.skeuos-rounded/theme.json
-  usr/share/pearl/themes/dinx.skeuos-square/theme.json
-  usr/share/pearl/themes/dinx.orchis-rounded/theme.json
-  usr/share/pearl/themes/dinx.orchis-square/theme.json
   usr/share/themes/Orchis-Light/index.theme
   usr/share/themes/Orchis-Dark/index.theme
   usr/share/themes/Orchis-Square-Light/index.theme
@@ -591,10 +572,20 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
 done
 grep -Eq '/var/lib/pacman/local/dinx-noto-latin-[^/]*/' <<<"$manifest" \
   || fail 'DINX Noto Latin provider package metadata is missing from the installed rootfs'
-grep -Eq '/var/lib/pacman/local/dinx-pearl-themes-[^/]*/' <<<"$manifest" \
-  || fail 'DINX Pearl themes package metadata is missing from the installed rootfs'
 grep -Eq '/var/lib/pacman/local/dinx-gtk-themes-[^/]*/' <<<"$manifest" \
   || fail 'DINX GTK themes package metadata is missing from the installed rootfs'
+iso_profile_roster="$script_dir/../distro/iso/iso-profiles/dinx/profile.yaml"
+[[ -r "$iso_profile_roster" ]] || fail 'DINX ISO profile roster is not readable'
+for roster_package in river kwm kwim greetd-agreety greetd; do
+  grep -Eq "^[[:space:]]+- ${roster_package}([[:space:]]|$)" "$iso_profile_roster" \
+    || fail "the River/KWM session roster entry is missing from the ISO profile: $roster_package"
+done
+for retired_roster_package in aqueous pearl dinx-pearl-themes matugen; do
+  if grep -Eq "^[[:space:]]+- ${retired_roster_package}([[:space:]]|$)" "$iso_profile_roster"; then
+    printf '%s\n' "retired roster entry: $retired_roster_package" >&2
+    fail "retired Aqueous/Pearl package remains in the ISO profile roster: $retired_roster_package"
+  fi
+done
 for image_manifest in "$manifest" "$livefs_manifest"; do
   if grep -Eq '/var/lib/pacman/local/noto-fonts-[0-9][^/]*/' <<<"$image_manifest"; then
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
@@ -828,50 +819,16 @@ fi
 dinit_tmpfiles=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/tmpfiles.d/dinx-dinit.conf)
 grep -Fqx 'd /var/log/dinit 0755 root root -' <<<"$dinit_tmpfiles" \
   || fail 'ISO does not recreate the Dinit service log directory at boot'
-for greeter_directory in \
-  /var/lib/pearl-greeter \
-  /var/lib/pearl-greeter/.config \
-  /var/lib/pearl-greeter/.local \
-  /var/lib/pearl-greeter/.local/share \
-  /var/lib/pearl-greeter/.local/state \
-  /var/cache/pearl-greeter; do
-  grep -Fqx "d $greeter_directory 0700 pearl-greeter pearl-greeter -" <<<"$dinit_tmpfiles" \
-    || fail "ISO does not create writable Pearl Greeter directory at boot: $greeter_directory"
-done
+grep -Fqx 'd /var/cache/agreety 0700 greeter greeter -' <<<"$dinit_tmpfiles" \
+  || fail 'ISO does not create the writable agreety cache directory at boot'
+if grep -Fq 'pearl-greeter' <<<"$dinit_tmpfiles"; then
+  fail 'tmpfiles still provisions a retired Pearl Greeter directory'
+fi
 
 
 if grep -Fq '/usr/share/wayland-sessions/labwc.desktop' <<<"$manifest"; then
   fail 'retired Labwc user session remains in the ISO payload'
 fi
-pearl_greeter_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/pearl/greeter.json)
-grep -Fq '"theme": "material_dark"' <<<"$pearl_greeter_config" || fail 'Pearl Greeter does not default to dark mode'
-grep -Fq '"high_contrast": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter high contrast mode is enabled'
-grep -Fq '"force_session": "wayland:dinx-aqueous-pearl.desktop"' <<<"$pearl_greeter_config" \
-  || fail 'Pearl Greeter does not force the DINX Aqueous/Pearl session'
-if grep -Eq '"(wallpaper|wallpaper_fit|logo)"[[:space:]]*:' <<<"$pearl_greeter_config"; then
-  fail 'Pearl Greeter still configures a wallpaper image or logo'
-fi
-grep -Fq '"wallpaper_color": "#0b0d12"' <<<"$pearl_greeter_config" \
-  || fail 'Pearl Greeter solid surface color is missing'
-pearl_preferences=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/pearl/preferences.json)
-jq -e '.window_corner_radius == 15 and .theme.mode == "static" and .theme.variant == "dark" and .theme.gtk_name == "" and .wallpaper.mode == "solid" and .wallpaper.path == "" and .bar.edge == "top" and .dock.enabled == true and .dock.edge == "bottom"' \
-  <<<"$pearl_preferences" >/dev/null || fail 'fresh Pearl Material, dock, bar, radius or solid-wallpaper defaults are incorrect'
-grep -Fq '"enabled": true' <<<"$pearl_preferences" \
-  || fail 'Pearl default desktop icons are no longer enabled'
-grep -Fq '"allow": ["wayland:dinx-aqueous-pearl.desktop"]' <<<"$pearl_greeter_config" \
-  || fail 'Pearl Greeter allows an unexpected user session'
-grep -Fq '"allow_uwsm": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter UWSM integration is enabled'
-grep -Fq '"x11": false' <<<"$pearl_greeter_config" || fail 'Pearl Greeter X11 integration is enabled'
-if grep -Eiq 'systemd|systemctl' <<<"$pearl_greeter_config"; then
-  fail 'Pearl Greeter config contains a systemd integration'
-fi
-pearl_release_gate=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/pearl-greeter/release-gate.json)
-grep -Fq '"schema": 1' <<<"$pearl_release_gate" || fail 'Pearl Greeter release gate schema is missing'
-grep -Fq '"activated_services": []' <<<"$pearl_release_gate" || fail 'Pearl Greeter release gate activates a service'
-pearl_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/passwd)
-grep -Eq '^pearl-greeter:' <<<"$pearl_passwd" || fail 'Pearl Greeter account is missing from the rootfs'
-pearl_group=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/group)
-grep -Eq '^pearl-greeter:' <<<"$pearl_group" || fail 'Pearl Greeter group is missing from the rootfs'
 if grep -E '/var/lib/pacman/local/greetd-regreet-[^/]*/' <<<"$manifest"; then
   fail 'retired ReGreet package metadata is present'
 fi
@@ -892,17 +849,37 @@ gaming_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" u
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session command is incorrect'
 grep -Fq 'Hidden=true' <<<"$gaming_session" || fail 'DINX gaming session is not hidden'
 grep -Fq 'NoDisplay=true' <<<"$gaming_session" || fail 'DINX gaming session remains selectable'
-aqueous_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-aqueous-pearl.desktop)
-grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" || fail 'DINX Aqueous/Pearl session command is incorrect'
-grep -Fq 'TryExec=/usr/local/libexec/dinx-aqueous-pearl' <<<"$aqueous_session" || fail 'DINX Aqueous/Pearl session TryExec is missing'
-aqueous_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
-aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
+river_kwm_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-river-kwm.desktop)
+grep -Fq 'Name=River + KWM (DINX)' <<<"$river_kwm_session" || fail 'DINX River/KWM session name is incorrect'
+grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$river_kwm_session" || fail 'DINX River/KWM session command is incorrect'
+grep -Fq 'TryExec=/usr/local/libexec/dinx-river-session' <<<"$river_kwm_session" || fail 'DINX River/KWM session TryExec is missing'
+grep -Fq 'DesktopNames=river;kwm' <<<"$river_kwm_session" || fail 'DINX River/KWM session does not advertise the river;kwm desktop names'
+river_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-session)
+river_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-init)
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$aqueous_launcher" \
-  || fail 'DINX Aqueous does not load the shared graphics environment policy'
-grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$aqueous_launcher" \
-  || fail 'DINX Aqueous does not apply the selected renderer policy'
-aqueous_graphics_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-profile)
+grep -Fq 'export XDG_CURRENT_DESKTOP=river:kwm' <<<"$river_session" \
+  || fail 'DINX River session does not advertise the river;kwm desktop identity'
+grep -Fq 'export XDG_SESSION_DESKTOP=river' <<<"$river_session" \
+  || fail 'DINX River session does not advertise the river session desktop'
+river_session_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-river-session' <<<"$manifest")
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$river_session_listing" \
+  || fail 'DINX River session wrapper is not executable in the ISO'
+river_init_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-river-init' <<<"$manifest")
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$river_init_listing" \
+  || fail 'DINX River session init is not executable in the ISO'
+grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$river_session" \
+  || fail 'DINX River session does not detect the graphics profile'
+grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$river_session" \
+  || fail 'DINX River session does not load the shared graphics environment policy'
+grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$river_session" \
+  || fail 'DINX River session does not apply the selected renderer policy'
+grep -Fq 'grep -qx seat' <<<"$river_session" \
+  || fail 'DINX River session does not verify seatd group membership before selecting the seatd backend'
+grep -Fq 'export LIBSEAT_BACKEND=seatd' <<<"$river_session" \
+  || fail 'DINX River session does not select the seatd libseat backend'
+grep -Fq 'export LIBSEAT_BACKEND=logind' <<<"$river_session" \
+  || fail 'DINX River session does not fall back to elogind for libseat'
+graphics_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-profile)
 graphics_environment=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-environment.sh)
 grep -Fq 'export WLR_RENDERER=gles2' <<<"$graphics_environment" || fail 'DINX QEMU renderer policy is not set to GLES2'
 grep -Fq 'export WLR_RENDERER=vulkan' <<<"$graphics_environment" || fail 'DINX VirtualBox/default renderer policy is not set to Vulkan'
@@ -910,53 +887,30 @@ grep -Fq 'export WLR_RENDERER=pixman' <<<"$graphics_environment" || fail 'DINX C
 grep -Fq 'unset GSK_RENDERER' <<<"$graphics_environment" || fail 'DINX virtual graphics profiles do not leave GTK4 renderer selection automatic'
 [[ $(grep -Fc 'unset GSK_RENDERER' <<<"$graphics_environment") -eq 3 ]] \
   || fail 'DINX GTK4 renderer selection is not automatic for CPU, virtual-GL and Vulkan profiles'
-greeter_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-pearl-greeter-host)
-grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not detect the graphics profile'
-grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not load the shared renderer policy'
-grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$greeter_wrapper" || fail 'Pearl Greeter does not apply the selected renderer'
-grep -Fq 'exec /usr/lib/pearl/pearl-greeter-host "$@"' <<<"$greeter_wrapper" || fail 'Pearl Greeter wrapper does not execute its packaged host'
-grep -Fq 'grep -qx seat' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter does not verify seatd group membership before selecting the seatd backend'
-grep -Fq 'export LIBSEAT_BACKEND=seatd' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter does not select the seatd libseat backend'
-grep -Fq 'export LIBSEAT_BACKEND=logind' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter does not fall back to elogind for libseat'
-grep -Fq 'export HOME=/var/empty/pearl-greeter' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter does not use its root-owned trusted home'
-grep -Fq 'export XDG_CONFIG_HOME=/var/lib/pearl-greeter/.config' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter config home is not on its writable private directory'
-grep -Fq 'export XDG_DATA_HOME=/var/lib/pearl-greeter/.local/share' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter data home is not on its writable private directory'
-grep -Fq 'export XDG_STATE_HOME=/var/lib/pearl-greeter/.local/state' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter state home is not its dedicated writable state directory'
-grep -Fq 'export XDG_CACHE_HOME=/var/cache/pearl-greeter' <<<"$greeter_wrapper" \
-  || fail 'Pearl Greeter cache home is not on its writable runtime directory'
-grep -Fq 'compositor=/usr/bin/aqueous-cpu' <<<"$aqueous_launcher" || fail 'DINX Aqueous compatibility compositor is missing'
-grep -Fq 'hardware|vulkan)' <<<"$aqueous_launcher" || fail 'DINX full Aqueous compositor is not selected for the Vulkan profile'
-grep -Fq 'virtio_gpu)' <<<"$aqueous_graphics_helper" || fail 'QEMU virtio-gpu render-node driver is not detected'
-grep -Fq 'vmwgfx|vboxvideo)' <<<"$aqueous_graphics_helper" || fail 'VirtualBox Vulkan renderer policy is not selected'
-grep -Fq 'qxl|bochs|simpledrm|cirrus)' <<<"$aqueous_graphics_helper" || fail '2D virtual display fallback drivers are not detected'
+grep -Fq 'virtio_gpu)' <<<"$graphics_helper" || fail 'QEMU virtio-gpu render-node driver is not detected'
+grep -Fq 'vmwgfx|vboxvideo)' <<<"$graphics_helper" || fail 'VirtualBox Vulkan renderer policy is not selected'
+grep -Fq 'qxl|bochs|simpledrm|cirrus)' <<<"$graphics_helper" || fail '2D virtual display fallback drivers are not detected'
 for graphics_module in virtio-gpu vmwgfx; do
   grep -Eq "/usr/lib/modules/[^[:space:]]*/kernel/drivers/gpu/drm/.*/${graphics_module}\\.ko(\\.(zst|xz|gz))?([[:space:]]|$)" <<<"$manifest" \
     || fail "ISO kernel DRM module is missing for VM compatibility: $graphics_module"
 done
-grep -Fqx 'xdg-user-dirs-update' <<<"$aqueous_launcher" || fail 'DINX Aqueous session does not initialize XDG user directories'
-pearl_shell=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-pearl-shell)
-grep -Fq '/usr/local/libexec/dinx-sync-session-theme' <<<"$pearl_shell" \
-  || fail 'Pearl session does not synchronize saved GTK/Qt theme preferences'
+grep -Fqx 'xdg-user-dirs-update' <<<"$river_session" || fail 'DINX River session does not initialize XDG user directories'
 theme_sync=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-sync-session-theme)
 grep -Fq 'gtk-application-prefer-dark-theme' <<<"$theme_sync" || fail 'GTK dark/light selection is not synchronized into user settings'
 grep -Fq 'dconf write' <<<"$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
 grep -Fq 'custom_palette' <<<"$theme_sync" || fail 'Qt6ct dark/light palette selection is not synchronized'
-# The per-user theme sync above only runs once the Pearl shell starts, so the
-# freedesktop color-scheme default has to be compiled into the image for the egui
-# applications (WordCraft, GridCraft, DeckCraft, PdfCraft, PaintFE) and the
-# libadwaita/GTK applications to start dark on a fresh or live session. Assert the
-# compiled database shipped in the image, not just the source keyfile: an overlay
-# keyfile under local.d is inert until dconf compiles it.
+if grep -Fq 'pearl/preferences.json' <<<"$theme_sync"; then
+  fail 'the theme synchronizer still reads the retired Pearl preferences file'
+fi
+# DINX ships one fixed dark appearance, so the freedesktop color-scheme default
+# has to be compiled into the image for the egui applications (WordCraft,
+# GridCraft, DeckCraft, PdfCraft, PaintFE) and the libadwaita/GTK applications to
+# start dark on a fresh or live session. Assert the compiled database shipped in
+# the image, not just the source keyfile: an overlay keyfile under local.d is
+# inert until dconf compiles it.
 dconf_profile=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/profile/user)
 grep -Fqx 'user-db:user' <<<"$dconf_profile" \
-  || fail 'the dconf user profile does not include the user database, so Pearl theme changes would not apply'
+  || fail 'the dconf user profile does not include the user database, so saved theme changes would not apply'
 grep -Fqx 'system-db:local' <<<"$dconf_profile" \
   || fail 'the dconf user profile does not include the system database'
 dconf_database=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/db/local)
@@ -964,13 +918,19 @@ grep -aq 'color-scheme' <<<"$dconf_database" \
   || fail 'the compiled system dconf database is missing or carries no color-scheme default'
 grep -aq 'prefer-dark' <<<"$dconf_database" \
   || fail 'the compiled system dconf database does not default to the dark color scheme'
-grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_launcher" || fail 'DINX Aqueous wrapper does not execute the selected compositor'
-grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'DINX Aqueous init does not launch the supervisor'
-grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'DINX Aqueous supervisor does not launch the Pearl first-run wrapper'
+grep -Fq 'exec river -c /usr/local/libexec/dinx-river-init' <<<"$river_session" || fail 'DINX River session does not execute the DINX river configuration'
+grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' <<<"$river_init" || fail 'DINX River init does not launch the supervisor'
+grep -Fq '[ "$mode" = river ]' <<<"$session_supervisor" \
+  || fail 'DINX session supervisor does not accept the river session mode'
+grep -Fq 'lock_path=$XDG_RUNTIME_DIR/dinx-river-session.lock' <<<"$river_session" \
+  || fail 'DINX River session single-instance lock is not on its runtime directory'
+if grep -Fq 'dinx-pearl-shell' <<<"$session_supervisor"; then
+  fail 'DINX session supervisor still starts the retired Pearl shell'
+fi
 grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' <<<"$session_supervisor" || fail 'DINX session supervisor does not gate D-Bus readiness'
-if grep -Eq 'systemd|systemctl|uwsm|loginctl' <<<"$aqueous_session$aqueous_launcher$aqueous_init$session_supervisor"; then
-  fail 'DINX Aqueous/Pearl session contains a forbidden systemd or uwsm integration'
+if grep -Eq 'systemd|systemctl|uwsm|loginctl' <<<"$river_kwm_session$river_session$river_init$session_supervisor"; then
+  fail 'DINX River/KWM session contains a forbidden systemd or uwsm integration'
 fi
 
 
@@ -978,16 +938,19 @@ session_entries=$(grep -oE '/usr/share/(wayland-sessions|xsessions)/[^[:space:]]
 while IFS= read -r session_path; do
   [[ -n "$session_path" ]] || continue
   case "$session_path" in
-    /usr/share/wayland-sessions/dinx-aqueous-pearl.desktop) continue ;;
+    /usr/share/wayland-sessions/dinx-river-kwm.desktop) continue ;;
     /usr/share/wayland-sessions/dinx-gaming.desktop) ;;
     *) fail "unsupported user session remains: $session_path" ;;
   esac
   session_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "${session_path#/}")
   grep -Fq 'Hidden=true' <<<"$session_config" \
-    || fail "non-Aqueous session remains visible: $session_path"
+    || fail "non-River session remains visible: $session_path"
   grep -Fq 'NoDisplay=true' <<<"$session_config" \
-    || fail "non-Aqueous session remains discoverable: $session_path"
+    || fail "non-River session remains discoverable: $session_path"
 done <<<"$session_entries"
+if grep -Eq '^(Hidden|NoDisplay)=true$' <<<"$river_kwm_session"; then
+  fail 'the DINX River/KWM session is hidden from the greeter session list'
+fi
 
 
 grub_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/grub/themes/artix/theme.txt)
@@ -1102,10 +1065,20 @@ grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general 
 grep -Fq 'source_profile = false' <<<"$root_greetd_config" || fail 'installed greetd sources the greeter profile'
 grep -Fq 'vt = 7' <<<"$root_greetd_config" \
   || fail 'installed greetd does not use the dedicated VT, separate from tty1 getty'
-grep -Fq 'command = "/usr/local/libexec/dinx-pearl-greeter-host"' <<<"$root_greetd_config" \
-  || fail 'installed greetd does not launch the graphics-safe Pearl Greeter wrapper'
-grep -Fq 'user = "pearl-greeter"' <<<"$root_greetd_config" \
-  || fail 'installed greetd does not use the Pearl Greeter account'
+grep -Fq 'command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not launch the River/KWM session through agreety'
+grep -Fq 'user = "greeter"' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not use the greetd-provided greeter account'
+grep -Fq '[default_session]' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not select the River/KWM session as its default session'
+root_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/passwd)
+root_group=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/group)
+if grep -Eq '^pearl-greeter:' <<<"$root_passwd$root_group"; then
+  fail 'the retired Pearl Greeter account or group remains in the installed rootfs'
+fi
+if grep -Fq 'pearl-greeter' <<<"$root_greetd_config"; then
+  fail 'installed greetd config still references the retired Pearl Greeter account'
+fi
 if grep -Fq '[initial_session]' <<<"$root_greetd_config"; then
   fail 'installed greetd unexpectedly enables live autologin'
 fi
@@ -1183,8 +1156,6 @@ gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.
 grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Adwaita'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_system_settings" || fail 'System GTK4 icon default is not Papirus'
-aqueous_layout_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/layout.toml)
-grep -Fq 'default = "stacking"' <<<"$aqueous_layout_config" || fail 'DINX floating layout default is missing'
 for firewall_link_manifest in "$manifest" "$livefs_manifest"; do
   grep -Fq 'squashfs-root/etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewall_link_manifest" \
     || fail 'Firewalld Dinit service is not enabled for both installed rootfs and livefs'
@@ -1278,42 +1249,31 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
   done
 done
 
-aqueous_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
-grep -Fq 'exec "$compositor" -c /usr/local/libexec/dinx-aqueous-init' <<<"$aqueous_wrapper" || fail 'Aqueous session command is incorrect'
-grep -Fq 'flock -n 9' <<<"$aqueous_wrapper" \
-  || fail 'Aqueous session does not reject a duplicate compositor instance'
-grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' <<<"$aqueous_wrapper" \
-  || fail 'Aqueous live session does not use its private runtime directory'
-if grep -Eq 'GTK_THEME=' <<<"$aqueous_wrapper"; then
-  fail 'Live GUI session overrides the selected GTK theme'
+grep -Fq 'flock -n 9' <<<"$river_session" \
+  || fail 'River session does not reject a duplicate compositor instance'
+grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' <<<"$river_session" \
+  || fail 'River live session does not use its private runtime directory'
+if grep -Eq 'GTK_THEME=' <<<"$river_session"; then
+  fail 'River session overrides the fixed DINX GTK theme'
 fi
-grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$aqueous_wrapper" || fail 'Live GUI session does not force Qt6ct'
-grep -Fq 'pearl/preferences.json' <<<"$aqueous_wrapper" \
-  || fail 'Aqueous session does not seed Pearl preferences for missing files'
-grep -Fq '[ ! -e "$config_home/pearl/preferences.json" ]' <<<"$aqueous_wrapper" \
-  || fail 'Aqueous session may overwrite saved Pearl preferences'
-grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' <<<"$aqueous_wrapper" \
-  || fail 'Aqueous session may overwrite Pearl recovery state'
-grep -Fq 'qt6ct/qt6ct.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed Qt6ct for existing users'
-grep -Fq 'qt6ct/colors/DINX.conf' <<<"$aqueous_wrapper" || fail 'Live and installed sessions do not seed the DINX Qt palette'
-grep -Fq 'aqueous/layout.toml' <<<"$aqueous_wrapper" || fail 'Live session does not seed the floating layout'
-grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ] &&' <<<"$aqueous_wrapper" \
-  || fail 'live-only Aqueous safety config is not restricted to the live session'
-grep -Fq 'dinx-seed-aqueous-live-config "$config_home/aqueous/wm.toml"' <<<"$aqueous_wrapper" \
-  || fail 'Live session does not disable lock actions and visual effects in Aqueous config'
-aqueous_wm_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/aqueous/wm.toml)
-grep -Fqx 'spawn_terminal = "deetty"' <<<"$aqueous_wm_config" || fail 'Aqueous terminal action does not launch Deetty'
-grep -Fq '"Alt+Shift+F"        = "set_layout:stacking"' <<<"$aqueous_wm_config" || fail 'Aqueous stacking layout keyboard binding is missing'
-aqueous_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-init)
-grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor aqueous' <<<"$aqueous_init" || fail 'Aqueous init supervisor command is missing'
-session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq 'start_required shell "$libexec_dir/dinx-pearl-shell"' <<<"$session_supervisor" || fail 'Pearl is not required by the session supervisor'
-grep -Fq 'wait_for_wayland' <<<"$session_supervisor" || fail 'Aqueous session does not gate Wayland readiness'
-grep -Fq 'wait_for_dbus' <<<"$session_supervisor" || fail 'Aqueous session does not gate D-Bus readiness'
-if grep -Eiq 'labwc|noctalia|systemd|uwsm' <<<"$aqueous_wrapper
-$aqueous_init
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$river_session" || fail 'Live GUI session does not force Qt6ct'
+grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' <<<"$river_session" || fail 'River session does not default to Deetty'
+grep -Fq 'qt6ct/qt6ct.conf' <<<"$river_session" || fail 'Live and installed sessions do not seed Qt6ct for existing users'
+grep -Fq 'qt6ct/colors/DINX.conf' <<<"$river_session" || fail 'Live and installed sessions do not seed the DINX Qt palette'
+grep -Fq 'if [ "${DINX_LIVE_SESSION:-}" = 1 ] &&' <<<"$river_session" \
+  || fail 'live-only River safety config is not restricted to the live session'
+grep -Fq 'install -Dm644 /etc/xdg/kwm/config.zon "$config_home/kwm/config.zon"' <<<"$river_session" \
+  || fail 'River session does not seed the system KWM configuration for the user'
+grep -Fq '[ ! -e "$config_home/kwm/config.zon" ]' <<<"$river_session" \
+  || fail 'River session may overwrite a saved KWM configuration'
+grep -Fq 'riverctl default-layout kwm' <<<"$river_init" || fail 'River init does not register KWM as the default layout'
+grep -Fq 'start_required shikane shikane' <<<"$session_supervisor" || fail 'River session supervisor does not require the display authority'
+grep -Fq 'start_required policykit lxqt-policykit-agent' <<<"$session_supervisor" || fail 'River session supervisor does not require the Polkit authentication agent'
+grep -Fq 'start_required idle "$libexec_dir/dinx-idle"' <<<"$session_supervisor" || fail 'River session supervisor does not require the DINX idle manager'
+if grep -Eiq 'labwc|noctalia|systemd|uwsm' <<<"$river_session
+$river_init
 $session_supervisor"; then
-  fail 'Aqueous/Pearl session contains a retired session or init integration'
+  fail 'River/KWM session contains a retired session or init integration'
 fi
 idle_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-idle)
 grep -Fq 'wlopm --off "*"' <<<"$idle_wrapper" || fail 'DINX live idle manager does not blank displays'
@@ -1322,7 +1282,6 @@ lock_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr
 grep -Fq 'Exec=/usr/local/libexec/dinx-lock' <<<"$lock_desktop" || fail 'DINX lock launcher is missing'
 shell_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/profile.d/dinx.sh)
 grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' <<<"$shell_config" || fail 'DINX shell does not default to Deetty'
-grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' <<<"$aqueous_wrapper" || fail 'Aqueous session does not default to Deetty'
 grep -Fq 'EDITOR=' <<<"$shell_config" || fail 'DINX shell editor default is missing'
 grep -Fq 'QT_QPA_PLATFORMTHEME=' <<<"$shell_config" || fail 'Qt6ct session integration is missing'
 grep -Fq 'DINX_COLOR_SCHEME=' <<<"$shell_config" || fail 'DINX color scheme session integration is missing'
@@ -1455,6 +1414,48 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(labwc|noctalia)-[^/]*/' <
   printf '%s\n' "$forbidden_matches" >&2
   fail 'retired Labwc/Noctalia package metadata is present'
 fi
+if forbidden_matches=$(grep -E '/var/lib/pacman/local/(aqueous|aqueous-cpu|pearl|dinx-pearl-themes|matugen)-[0-9][^/]*/' <<<"$manifest"); then
+  printf '%s\n' "$forbidden_matches" >&2
+  fail 'retired Aqueous/Pearl compositor package metadata is present'
+fi
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  for retired_compositor_path in \
+    usr/bin/aqueous \
+    usr/bin/aqueous-cpu \
+    usr/bin/aqueousctl \
+    usr/bin/aqueous-config \
+    usr/bin/pearl \
+    usr/bin/pearl-greeter \
+    usr/lib/pearl \
+    usr/share/pearl-greeter \
+    usr/share/pearl/themes \
+    etc/pearl \
+    etc/xdg/aqueous \
+    etc/skel/.config/pearl \
+    usr/local/libexec/dinx-pearl-shell \
+    usr/local/libexec/dinx-pearl-greeter-host \
+    usr/local/libexec/dinx-aqueous-pearl \
+    usr/local/libexec/dinx-aqueous-init \
+    usr/local/libexec/dinx-seed-aqueous-live-config \
+    usr/local/libexec/dinx-tune-aqueous-config \
+    usr/share/polkit-1/actions/org.aqueous.Pearl.Greeter.Appearance.policy \
+    usr/share/wayland-sessions/dinx-aqueous-pearl.desktop \
+    usr/lib/aqueous \
+    usr/share/aqueous \
+    usr/share/aqueous-protocols \
+    usr/share/pkgconfig/aqueous-protocols.pc \
+    usr/share/doc/aqueous \
+    usr/share/licenses/aqueous \
+    usr/share/licenses/pearl \
+    usr/share/licenses/matugen \
+    usr/bin/matugen \
+    usr/local/libexec/dinx-first-run-wizard; do
+    if forbidden_matches=$(grep -F "/$retired_compositor_path" <<<"$image_manifest" | grep -v '^d'); then
+      printf '%s\n' "$forbidden_matches" >&2
+      fail "retired Aqueous/Pearl payload remains in the ISO: $retired_compositor_path"
+    fi
+  done
+done
 if forbidden_matches=$(grep -E '/var/lib/pacman/local/greetd-regreet-[^/]*/' <<<"$manifest"); then
   printf '%s\n' "$forbidden_matches" >&2
   fail 'retired ReGreet package metadata is present'
@@ -1469,7 +1470,7 @@ if forbidden_matches=$(grep -E '/var/lib/pacman/local/(xorg-server-[0-9]|xorg-xi
 fi
 if forbidden_matches=$(grep -E '/var/lib/pacman/local/uwsm-[^/]*/' <<<"$manifest"); then
   printf '%s\n' "$forbidden_matches" >&2
-  fail 'uwsm package metadata is present; the DINX Aqueous/Pearl path is direct'
+  fail 'uwsm package metadata is present; the DINX River/KWM session path is direct'
 fi
 for forbidden_path in \
   etc/systemd \
@@ -1560,17 +1561,17 @@ grep -Fqx 'X-KDE-Trusted=true' <<<"$installer_seed" || fail 'live-user desktop s
 installer_seed_listing=$(grep -m1 -F 'squashfs-root/etc/skel/Desktop/Install DINX.desktop' <<<"$manifest")
 grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$installer_seed_listing" || fail 'live-user desktop shortcut is not executable in the ISO skeleton'
 approval_helper_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-approve-desktop-launcher' <<<"$manifest")
-grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$approval_helper_listing" || fail 'Pearl launcher approval helper is not executable in the ISO'
+grep -Eq '^-rwxr-xr-x[[:space:]]' <<<"$approval_helper_listing" || fail 'desktop launcher approval helper is not executable in the ISO'
 approval_helper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-approve-desktop-launcher)
-grep -Fq 'target_bytes != trusted_bytes' <<<"$approval_helper" || fail 'Pearl launcher approval is not bound to the package-owned template bytes'
-grep -Fq 'hashlib.sha256(target_bytes).hexdigest()' <<<"$approval_helper" || fail 'Pearl launcher approval does not bind the exact shortcut digest'
-grep -Fq 'os.chmod(target, 0o755, follow_symlinks=False)' <<<"$approval_helper" || fail 'Pearl launcher approval does not repair executable mode safely'
-live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-aqueous-pearl)
+grep -Fq 'target_bytes != trusted_bytes' <<<"$approval_helper" || fail 'desktop launcher approval is not bound to the package-owned template bytes'
+grep -Fq 'hashlib.sha256(target_bytes).hexdigest()' <<<"$approval_helper" || fail 'desktop launcher approval does not bind the exact shortcut digest'
+grep -Fq 'os.chmod(target, 0o755, follow_symlinks=False)' <<<"$approval_helper" || fail 'desktop launcher approval does not repair executable mode safely'
+live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-session)
 grep -Fq 'xdg-user-dir DESKTOP' <<<"$live_session_launcher" || fail 'live session does not resolve the user desktop directory'
 grep -Fq 'installer_seed="/etc/skel/Desktop/Install DINX.desktop"' <<<"$live_session_launcher" || fail 'live session does not seed its pre-existing user from /etc/skel'
 grep -Fq 'mv -n -- "$installer_tmp" "$installer_desktop"' <<<"$live_session_launcher" || fail 'live installer shortcut seeding is not atomic and non-overwriting'
-grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' <<<"$live_session_launcher" || fail 'live session does not preapprove the trusted installer shortcut for Pearl Desktop'
-grep -Fq 'DINX_LIVE_SESSION:-' <<<"$live_session_launcher" || fail 'automatic Pearl launcher approval is not restricted to the live session'
+grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' <<<"$live_session_launcher" || fail 'live session does not preapprove the trusted installer shortcut for the desktop'
+grep -Fq 'DINX_LIVE_SESSION:-' <<<"$live_session_launcher" || fail 'automatic desktop launcher approval is not restricted to the live session'
 deetty_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/org.dinx.Deetty.desktop)
 grep -Fq 'TryExec=deetty' <<<"$deetty_desktop" || fail 'Deetty desktop launcher is missing'
 grep -Fq 'Exec=deetty --open-uri %u' <<<"$deetty_desktop" || fail 'Deetty desktop URI command is incorrect'
@@ -1707,8 +1708,8 @@ grep -Fq 'DINX_LIVE_SESSION=1' <<<"$live_session_launcher" \
   || fail 'live session launcher does not mark the session as live'
 grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' <<<"$live_session_launcher" \
   || fail 'live session launcher does not use the private runtime directory'
-grep -Fq 'dbus-run-session /usr/local/libexec/dinx-aqueous-pearl' <<<"$live_session_launcher" \
-  || fail 'live session launcher does not start Aqueous/Pearl under a session bus'
+grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$live_session_launcher" \
+  || fail 'live session launcher does not start the River/KWM session under a session bus'
 live_autologin_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-autologin)
 grep -Fq 'before = login.target' <<<"$live_autologin_service" \
   || fail 'live boot preparation does not precede the login target'
@@ -1718,4 +1719,4 @@ grep -Fq 'before = greetd' <<<"$live_autologin_service" \
 live_passwd=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/passwd)
 grep -Eq '^dinx:' <<<"$live_passwd" || fail 'live session user dinx is missing'
 
-printf 'ISO content check passed: DINX wordmark/boot-mark branding is present in the live and installed GRUB themes and Calamares; Pearl uses a solid greeter/desktop surface without a logo wallpaper; upstream desktop icon choices remain unchanged; Aqueous/Pearl sole live session starts directly under dinit, Pearl Greeter remains installed-only, no systemd/UWSM or legacy X11, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'
+printf 'ISO content check passed: DINX wordmark/boot-mark branding is present in the live and installed GRUB themes and Calamares; DINX ships one fixed dark appearance with no logo wallpaper; upstream desktop icon choices remain unchanged; River/KWM is the sole live session and starts directly under dinit, agreety via greetd remains installed-only, no systemd/UWSM or legacy X11, no retired compositor payload, optional gaming and BC-250 payloads excluded, and base storage/display/desktop/installer payload checks passed.\n'

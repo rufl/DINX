@@ -2,18 +2,6 @@
   "schema": "dinx-upstream-package-updates/v1",
   "packages": [
     {
-      "name": "aqueous",
-      "provider": "github",
-      "repository": "Seafoam-Labs/Aqueous",
-      "source_file": "distro/packages/aqueous/source.env",
-      "version_key": "AQUEOUS_VERSION",
-      "package_version_key": "AQUEOUS_VERSION",
-      "source_url_key": "AQUEOUS_SOURCE_URL",
-      "checksum_key": "AQUEOUS_SOURCE_SHA256",
-      "checksum": "sha256",
-      "url_template": "https://github.com/Seafoam-Labs/Aqueous/archive/refs/tags/{tag}.tar.gz"
-    },
-    {
       "name": "calamares",
       "provider": "codeberg",
       "repository": "Calamares/calamares",
@@ -26,18 +14,6 @@
       "tag_prefix": "v",
       "url_template": "https://codeberg.org/Calamares/calamares/releases/download/{tag}/calamares-{version}.tar.gz",
       "bump_pkgrel_path": "distro/packages/calamares/PKGBUILD"
-    },
-    {
-      "name": "pearl",
-      "provider": "github",
-      "repository": "Seafoam-Labs/pearl",
-      "source_file": "distro/packages/pearl/source.env",
-      "version_key": "PEARL_VERSION",
-      "package_version_key": "PEARL_VERSION",
-      "source_url_key": "PEARL_SOURCE_URL",
-      "checksum_key": "PEARL_SOURCE_SHA256",
-      "checksum": "sha256",
-      "url_template": "https://github.com/Seafoam-Labs/pearl/archive/refs/tags/{tag}.tar.gz"
     },
     {
       "name": "dome",
@@ -71,18 +47,6 @@
       "checksum_key": "PORI_SOURCE_SHA256",
       "checksum": "sha256",
       "url_template": "https://github.com/Seafoam-Labs/Pori/archive/refs/tags/{tag}.tar.gz"
-    },
-    {
-      "name": "matugen",
-      "provider": "github",
-      "repository": "InioX/matugen",
-      "source_file": "distro/packages/matugen/source.env",
-      "version_key": "MATUGEN_VERSION",
-      "package_version_key": "MATUGEN_VERSION",
-      "source_url_key": "MATUGEN_SOURCE_URL",
-      "checksum_key": "MATUGEN_SOURCE_SHA256",
-      "checksum": "sha256",
-      "url_template": "https://github.com/InioX/matugen/archive/refs/tags/{tag}.tar.gz"
     },
     {
       "name": "shelly",
@@ -356,6 +320,34 @@
           "url_template": "https://raw.githubusercontent.com/kylejckson/PaintFE/{tag}/assets/icons/app_icon_256.png"
         }
       ]
+    },
+    {
+      "name": "kwm",
+      "provider": "github",
+      "repository": "kewuaa/kwm",
+      "source_file": "distro/packages/kwm/source.env",
+      "version_key": "KWM_VERSION",
+      "package_version_key": "KWM_VERSION",
+      "source_url_key": "KWM_SOURCE_URL",
+      "checksum_key": "KWM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kewuaa/kwm/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/kwm/PKGBUILD"
+    },
+    {
+      "name": "kwim",
+      "provider": "github",
+      "repository": "kewuaa/kwim",
+      "source_file": "distro/packages/kwim/source.env",
+      "version_key": "KWIM_VERSION",
+      "package_version_key": "KWIM_VERSION",
+      "source_url_key": "KWIM_SOURCE_URL",
+      "checksum_key": "KWIM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kewuaa/kwim/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/kwim/PKGBUILD"
     }
   ]
 }

@@ -7,23 +7,24 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 fakebin="$tmp/bin"
 libexec="$tmp/libexec"
-state="$tmp/state"
+state="$tmp/pids"
 mkdir -p "$fakebin" "$libexec" "$state"
 
+# Required helpers: shikane and the PolicyKit agent are resolved through PATH,
+# the idle wrapper through DINX_SESSION_LIBEXEC.
 make_helper() {
   name=$1
-  cat >"$fakebin/$name" <<EOF
+  dir=$2
+  cat >"$dir/$name" <<EOF
 #!/bin/sh
 printf '%s\n' "\$\$" >"$state/$name.pid"
 while :; do /usr/bin/sleep 1; done
 EOF
-  chmod +x "$fakebin/$name"
+  chmod +x "$dir/$name"
 }
-for helper in shikane lxqt-policykit-agent dinx-pearl-shell; do
-  make_helper "$helper"
-done
-cp "$fakebin/shikane" "$libexec/dinx-idle"
-cp "$fakebin/dinx-pearl-shell" "$libexec/dinx-pearl-shell"
+make_helper shikane "$fakebin"
+make_helper lxqt-policykit-agent "$fakebin"
+make_helper dinx-idle "$libexec"
 
 export DINX_SESSION_SKIP_WAYLAND_CHECK=1
 export DINX_SESSION_SKIP_DBUS_CHECK=1
@@ -33,7 +34,7 @@ export XDG_STATE_HOME="$tmp/state-home"
 
 wait_for_status() {
   expected=$1
-  for _ in $(seq 1 100); do
+  for _ in $(seq 1 300); do
     if [ -f "$XDG_STATE_HOME/dinx/session.status" ] &&
       grep -Fqx "status=$expected" "$XDG_STATE_HOME/dinx/session.status"; then
       return 0
@@ -43,31 +44,74 @@ wait_for_status() {
   return 1
 }
 
-DINX_SESSION_COMPOSITOR_PID= "${supervisor}" aqueous >/dev/null 2>&1 &
+helper_stopped() {
+  helper=$1
+  pid=$(cat "$state/$helper.pid")
+  for _ in $(seq 1 300); do
+    kill -0 "$pid" 2>/dev/null || return 0
+    /usr/bin/sleep 0.01
+  done
+  printf 'dinx_session_supervisor_smoke: helper still alive: %s\n' "$helper" >&2
+  kill -KILL "$pid" 2>/dev/null || true
+  return 1
+}
+
+if "$supervisor" retired-mode >/dev/null 2>&1; then
+  printf 'dinx_session_supervisor_smoke: the supervisor accepted an unsupported session mode\n' >&2
+  exit 1
+fi
+if "$supervisor" >/dev/null 2>&1; then
+  printf 'dinx_session_supervisor_smoke: the supervisor started without a session mode\n' >&2
+  exit 1
+fi
+
+"$supervisor" river >/dev/null 2>&1 &
 supervisor_pid=$!
 wait_for_status ready
-kill -TERM "$(cat "$state/dinx-pearl-shell.pid")"
+grep -Fqx 'mode=river' "$XDG_STATE_HOME/dinx/session.status" || {
+  printf 'dinx_session_supervisor_smoke: the supervisor did not record its river mode\n' >&2
+  exit 1
+}
+for helper in shikane lxqt-policykit-agent dinx-idle; do
+  [ -s "$state/$helper.pid" ] || {
+    printf 'dinx_session_supervisor_smoke: required helper never started: %s\n' "$helper" >&2
+    exit 1
+  }
+done
+kill -TERM "$(cat "$state/dinx-idle.pid")"
 wait_for_status failed
 wait "$supervisor_pid" || true
+grep -Fq 'reason=helper-idle-exited' "$XDG_STATE_HOME/dinx/session.log" || {
+  printf 'dinx_session_supervisor_smoke: helper failure reason was not logged\n' >&2
+  exit 1
+}
+for helper in shikane lxqt-policykit-agent; do
+  helper_stopped "$helper" || exit 1
+done
 
-rm -rf "$XDG_STATE_HOME"
-DINX_SESSION_COMPOSITOR_PID= "${supervisor}" aqueous >/dev/null 2>&1 &
+rm -rf "$XDG_STATE_HOME" "$state"
+mkdir -p "$state"
+"$supervisor" river >/dev/null 2>&1 &
 supervisor_pid=$!
 wait_for_status ready
 kill -TERM "$supervisor_pid"
 wait "$supervisor_pid" || true
+for helper in shikane lxqt-policykit-agent dinx-idle; do
+  helper_stopped "$helper" || exit 1
+done
 
-rm -rf "$XDG_STATE_HOME"
+rm -rf "$XDG_STATE_HOME" "$state"
+mkdir -p "$state"
 /usr/bin/sleep 30 &
 compositor_pid=$!
-DINX_SESSION_COMPOSITOR_PID="$compositor_pid" "${supervisor}" aqueous >/dev/null 2>&1 &
+DINX_SESSION_COMPOSITOR_PID="$compositor_pid" "$supervisor" river >/dev/null 2>&1 &
 supervisor_pid=$!
 wait_for_status ready
 kill -TERM "$supervisor_pid"
 wait "$supervisor_pid" || true
 
 parent_alive=false
-for _ in $(seq 1 100); do
+for _ in $(seq 1 300); do
   if ! kill -0 "$compositor_pid" 2>/dev/null; then
     break
   fi
@@ -84,5 +128,22 @@ if [ "$parent_alive" = true ]; then
   exit 1
 fi
 wait "$compositor_pid" || true
+for helper in shikane lxqt-policykit-agent dinx-idle; do
+  helper_stopped "$helper" || exit 1
+done
 
-printf 'dinx_session_supervisor_smoke aqueous_ready=true helper_failure=true signal_cleanup=true\n'
+rm -rf "$XDG_STATE_HOME" "$state"
+mkdir -p "$state"
+/usr/bin/sleep 30 &
+compositor_pid=$!
+DINX_SESSION_COMPOSITOR_PID="$compositor_pid" "$supervisor" river >/dev/null 2>&1 &
+supervisor_pid=$!
+wait_for_status ready
+kill -TERM "$compositor_pid"
+wait_for_status exited
+wait "$supervisor_pid" || true
+for helper in shikane lxqt-policykit-agent dinx-idle; do
+  helper_stopped "$helper" || exit 1
+done
+
+printf 'dinx_session_supervisor_smoke river_ready=true required_helpers=shikane+policykit+idle retired_mode_rejected=true helper_failure=true signal_cleanup=true compositor_parent_terminated=true compositor_exit_status=exited\n'

@@ -303,7 +303,7 @@ repository. Configure the production signing secrets before enabling that
 publication path; it publishes package changes independently of the ISO after
 reviewed source-pin changes are merged.
 
-The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
+The release operator must manually record one real Wayland session qualification: `dinx-lock`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
 
 Update run IDs, commits, artifact sizes/digests and release links in the English and Portuguese status documents only after the relevant workflow is green. The planned Beta 0.1 system release does not claim gaming support; P5 remains separate until real DRM output, Steam/game, controller/audio, greeter-return and physical suspend/GPU tests pass.
 The tagged release path now has a documented signed package update and package
@@ -318,7 +318,7 @@ hardware/session evidence without changing system state.
 
 ## Release limits
 
-- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if Pearl Greeter appears after a manual live start. It is never an authentication boundary and must not be reused.
+- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if the agreety login screen appears after a manual live start. It is never an authentication boundary and must not be reused.
 - The image is still an experimental disk installer without an installed-ISO upgrade,
   filesystem rollback or signed Secure Boot path. CI qualifies the offline rootfs
   contract on disposable BIOS and UEFI disks and captures a recovery-TTY frame; it

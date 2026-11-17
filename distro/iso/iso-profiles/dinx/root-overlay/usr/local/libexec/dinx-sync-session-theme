@@ -1,33 +1,23 @@
 #!/bin/sh
 set -eu
 
-config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
-preferences="$config_home/pearl/preferences.json"
-if [ ! -r "$preferences" ]; then
-  preferences="$config_home/pearl/last-good.json"
-fi
-if ! command -v jq >/dev/null 2>&1 || [ ! -r "$preferences" ]; then
-  printf '%s\n' 'dinx-sync-session-theme: saved Pearl theme is unavailable; leaving toolkit settings unchanged' >&2
+# DINX ships a single fixed dark appearance. The session exports the dark
+# scheme, so there is no saved per-user theme selection to read: this helper
+# only keeps the individual toolkits aligned with it.
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+  config_home=$XDG_CONFIG_HOME
+elif [ -n "${HOME:-}" ]; then
+  config_home="$HOME/.config"
+else
+  printf '%s\n' 'dinx-sync-session-theme: no config directory is available; leaving toolkit settings unchanged' >&2
   exit 0
 fi
 
-if ! theme_variant=$(jq -er '.theme.variant | select(. == "dark" or . == "light")' "$preferences" 2>/dev/null); then
-  printf '%s\n' 'dinx-sync-session-theme: saved Pearl theme variant is invalid; leaving toolkit settings unchanged' >&2
-  exit 0
-fi
-theme_mode=$(jq -r '.theme.mode // ""' "$preferences" 2>/dev/null || printf '')
-gtk_name=$(jq -r '.theme.gtk_name // ""' "$preferences" 2>/dev/null || printf '')
-gtk_theme=Adwaita
-if [ "$theme_mode" = gtk ] && [ "$gtk_name" = DINX ]; then
-  gtk_theme=DINX
-elif [ "$theme_mode" = package ]; then
-  case "$gtk_name" in
-    Skeuos-Blue-Light|Skeuos-Blue-Dark|Skeuos-Blue-Light-Square|Skeuos-Blue-Dark-Square|\
-    Orchis-Light|Orchis-Dark|Orchis-Square-Light|Orchis-Square-Dark)
-      gtk_theme=$gtk_name
-      ;;
-  esac
-fi
+gtk_theme=DINX
+gtk_prefer_dark=1
+color_scheme_key=/org/gnome/desktop/interface/color-scheme
+dconf_value="'prefer-dark'"
+qt_palette="$config_home/qt6ct/colors/DINX.conf"
 
 set_ini_value() {
   ini_file=$1
@@ -102,8 +92,6 @@ set_ini_value() {
   fi
 }
 
-color_scheme_key=/org/gnome/desktop/interface/color-scheme
-dconf_value="'prefer-$theme_variant'"
 if command -v dconf >/dev/null 2>&1; then
   dconf write "$color_scheme_key" "$dconf_value" >/dev/null 2>&1 || \
     printf 'dinx-sync-session-theme: could not set dconf color-scheme=%s\n' "$dconf_value" >&2
@@ -111,60 +99,16 @@ else
   printf '%s\n' 'dinx-sync-session-theme: dconf is unavailable; GTK color preference was not synchronized' >&2
 fi
 
-gtk_prefer_dark=1
-if [ "$theme_variant" = light ]; then
-  gtk_prefer_dark=0
-fi
 for gtk_version in 3.0 4.0; do
   gtk_settings="$config_home/gtk-$gtk_version/settings.ini"
   set_ini_value "$gtk_settings" Settings gtk-theme-name "$gtk_theme" || true
   set_ini_value "$gtk_settings" Settings gtk-application-prefer-dark-theme "$gtk_prefer_dark" || true
 done
 
+# Qt only follows the DINX palette when the custom scheme is enabled.
 qt_config="$config_home/qt6ct/qt6ct.conf"
-if [ "$theme_mode" = package ]; then
-  # Pearl's qt6ct profile exports the active port palette here.
-  set_ini_value "$qt_config" Appearance color_scheme_path "$config_home/qt6ct/colors/pearl-material.conf" || true
-  set_ini_value "$qt_config" Appearance custom_palette true || true
-else
-  qt_palette="$config_home/qt6ct/colors/DINX.conf"
-  if [ "$theme_variant" = dark ]; then
-    set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
-    set_ini_value "$qt_config" Appearance custom_palette true || true
-  else
-    set_ini_value "$qt_config" Appearance custom_palette false || true
-  fi
-fi
+set_ini_value "$qt_config" Appearance color_scheme_path "$qt_palette" || true
+set_ini_value "$qt_config" Appearance custom_palette true || true
 
-if [ "$theme_mode" = package ]; then
-  # Deetty reads ~/.config/deetty while Pearl's ghostty adapter writes
-  # ~/.config/ghostty/themes/pearl-material; bridge the generated theme.
-  if mkdir -p -- "$config_home/deetty/themes" 2>/dev/null; then
-    if [ ! -e "$config_home/deetty/themes/pearl-material" ] || [ -L "$config_home/deetty/themes/pearl-material" ]; then
-      ln -sfn ../../ghostty/themes/pearl-material "$config_home/deetty/themes/pearl-material"
-    fi
-    deetty_config="$config_home/deetty/config"
-    if [ -L "$deetty_config" ]; then
-      printf 'dinx-sync-session-theme: preserving user-managed symlink: %s\n' "$deetty_config" >&2
-    elif [ -e "$deetty_config" ] && [ ! -f "$deetty_config" ]; then
-      printf 'dinx-sync-session-theme: not a regular settings file: %s\n' "$deetty_config" >&2
-    else
-      deetty_tmp="$deetty_config.tmp.$$"
-      if [ -f "$deetty_config" ]; then
-        awk 'BEGIN { done = 0 } /^theme[[:space:]]*=/ { print "theme = pearl-material"; done = 1; next } { print } END { if (!done) print "theme = pearl-material" }' \
-          "$deetty_config" > "$deetty_tmp"
-      else
-        printf 'theme = pearl-material\n' > "$deetty_tmp"
-      fi
-      if chmod 600 "$deetty_tmp" && mv -f "$deetty_tmp" "$deetty_config"; then
-        :
-      else
-        rm -f -- "$deetty_tmp"
-        printf 'dinx-sync-session-theme: cannot install settings: %s\n' "$deetty_config" >&2
-      fi
-    fi
-  fi
-fi
-
-printf 'dinx-sync-session-theme: variant=%s mode=%s gtk_theme=%s qt6ct=%s\n' \
-  "$theme_variant" "$theme_mode" "$gtk_theme" "$theme_variant"
+printf 'dinx-sync-session-theme: gtk_theme=%s prefer_dark=%s dconf=%s qt6ct_palette=%s\n' \
+  "$gtk_theme" "$gtk_prefer_dark" "$dconf_value" "$qt_palette"

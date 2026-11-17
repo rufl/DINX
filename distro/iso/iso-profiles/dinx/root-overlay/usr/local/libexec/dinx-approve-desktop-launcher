@@ -45,7 +45,7 @@ def unique_object(pairs):
     result = {}
     for key, value in pairs:
         if key in result:
-            raise ValueError(f"duplicate JSON key in Pearl approval state: {key}")
+            raise ValueError(f"duplicate JSON key in DINX approval state: {key}")
         result[key] = value
     return result
 
@@ -57,16 +57,16 @@ def load_approvals(path):
         return {"version": 1, "approvals": []}
     document = json.loads(raw, object_pairs_hook=unique_object)
     if not isinstance(document, dict) or type(document.get("version")) is not int or document["version"] != 1:
-        raise ValueError("unsupported Pearl approval state")
+        raise ValueError("unsupported DINX approval state")
     approvals = document.get("approvals")
     if not isinstance(approvals, list) or len(approvals) > MAX_APPROVALS:
-        raise ValueError("invalid Pearl approval list")
+        raise ValueError("invalid DINX approval list")
     for item in approvals:
         if not isinstance(item, dict) or not isinstance(item.get("uri"), str):
-            raise ValueError("invalid Pearl launcher approval")
+            raise ValueError("invalid DINX launcher approval")
         digest = item.get("digest")
         if not isinstance(digest, str) or len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest):
-            raise ValueError("invalid Pearl launcher digest")
+            raise ValueError("invalid DINX launcher digest")
     return document
 
 
@@ -112,7 +112,7 @@ def main():
             if not home:
                 return fail("HOME is unset")
             state_home = os.path.join(home, ".local", "state")
-        state_dir = pathlib.Path(state_home) / "pearl"
+        state_dir = pathlib.Path(state_home) / "dinx"
         state_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         state_path = state_dir / "desktop-launchers.json"
         lock_path = state_dir / ".desktop-launchers.lock"
@@ -126,7 +126,7 @@ def main():
                 return 0
             approvals = [item for item in document["approvals"] if item["uri"] != uri]
             if len(approvals) >= MAX_APPROVALS:
-                return fail("Pearl launcher approval limit reached")
+                return fail("DINX launcher approval limit reached")
             approvals.append({"uri": uri, "digest": digest})
             document["approvals"] = approvals
             payload = json.dumps(document, ensure_ascii=False, separators=(",", ":")).encode("utf-8") + b"\n"

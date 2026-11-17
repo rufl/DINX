@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=kwm
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${KWM_VERSION:?missing KWM_VERSION}"
+: "${KWM_REPOSITORY:?missing KWM_REPOSITORY}"
+: "${KWM_SOURCE_URL:?missing KWM_SOURCE_URL}"
+: "${KWM_SOURCE_SHA256:?missing KWM_SOURCE_SHA256}"
+: "${KWM_ZIG_VERSION:?missing KWM_ZIG_VERSION}"
+pkgver="$KWM_VERSION"
+pkgrel=1
+pkgdesc='Dynamic tiling window manager for the River Wayland compositor'
+arch=('x86_64')
+url="$KWM_REPOSITORY"
+license=('GPL-3.0-only')
+# fcft and pixman are required because the status bar is enabled by default;
+# the bar is the DINX status surface until Morghulis replaces it.
+depends=('glibc' 'fcft' 'pixman' 'wayland' 'libxkbcommon')
+makedepends=('wayland-protocols' 'wayland-utils' 'zig>=0.16')
+optdepends=('kwim: river input-management helper, invoked automatically by kwm')
+source=("kwm-$pkgver.tar.gz::$KWM_SOURCE_URL")
+sha256sums=("$KWM_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/kwm-$pkgver"
+  local zig_bin="${ZIG:-zig}"
+  local zig_version="$("$zig_bin" version)"
+  [[ "$zig_version" == "$KWM_ZIG_VERSION" ]] || {
+    printf 'kwm %s requires Zig %s, found %s\n' "$pkgver" "$KWM_ZIG_VERSION" "$zig_version" >&2
+    return 1
+  }
+  export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
+  export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
+  "$zig_bin" build install \
+    --prefix "$srcdir/out" \
+    -Dcpu=baseline \
+    -Doptimize=ReleaseSafe
+}
+
+check() {
+  test -x "$srcdir/out/bin/kwm"
+  # The pinned upstream contract: version string must match the source.env pin.
+  [[ "$("$srcdir/out/bin/kwm" -version)" == "$KWM_VERSION" ]] \
+    || { printf 'kwm binary reports an unexpected version\n' >&2; return 1; }
+}
+
+package() {
+  cd "$srcdir/kwm-$pkgver"
+  install -Dm755 "$srcdir/out/bin/kwm" "$pkgdir/usr/bin/kwm"
+  install -Dm644 "$srcdir/out/share/man/man1/kwm.1" "$pkgdir/usr/share/man/man1/kwm.1"
+  install -Dm644 "$srcdir/out/share/doc/kwm/config.zon" "$pkgdir/usr/share/doc/kwm/config.zon"
+  # kwm reads user config from $XDG_CONFIG_HOME/kwm/config.zon only; ship the
+  # upstream default system-wide so dinx-river-session can seed it per user.
+  install -Dm644 "$srcdir/out/share/doc/kwm/config.zon" "$pkgdir/etc/xdg/kwm/config.zon"
+  install -Dm644 "$srcdir/out/share/icons/hicolor/scalable/apps/kwm.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/kwm.svg"
+  install -Dm644 "$srcdir/out/share/icons/hicolor/256x256/apps/kwm.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/kwm.png"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # Upstream ships share/wayland-sessions/kwm.desktop (Exec=river -c kwm). DINX
+  # owns a single session entry for the river stack, so the competing upstream
+  # session is deliberately not installed; it would appear as a second login
+  # session and bypass the DINX session supervisor.
+}

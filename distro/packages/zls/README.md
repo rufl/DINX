@@ -8,7 +8,9 @@ ZLS is bundled in the base DINX ISO. `/etc/zls.json` is the default global
 configuration path and `/etc/xdg/zls.json` is provided as an XDG-compatible
 hard link. Both point it at a compact metadata-only Zig shim plus the bundled
 standard library, so Zig completion and navigation work without installing a
-Pori, Aqueous and other DINX-native Zig packages outside the upstream
-Pearl/Dome/Phyto sources use Zig 0.17.0; this 0.16.0 payload is only the ZLS/LSP
-compatibility runtime. If the optional Artix `zig` package is installed later,
+full Zig compiler. Pori and other DINX-native Zig packages outside the upstream
+Dome/Phyto sources use Zig 0.17.0; kwm and kwim require the same 0.16.0 toolchain
+as this payload, because their build.zig still reads the Build.build_root field
+Zig 0.17 removed. This 0.16.0 payload is only the ZLS/LSP compatibility runtime.
+If the optional Artix `zig` package is installed later,
 the shim delegates to that compiler for build and formatting commands.

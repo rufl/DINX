@@ -2,8 +2,8 @@
 set -eu
 
 mode=${1:-}
-[ "$mode" = aqueous ] || {
-    printf 'dinx-session-supervisor: usage: %s aqueous\n' "$0" >&2
+[ "$mode" = river ] || {
+    printf 'dinx-session-supervisor: usage: %s river\n' "$0" >&2
     exit 64
 }
 
@@ -131,7 +131,8 @@ start_required shikane shikane
 start_required policykit lxqt-policykit-agent
 start_required idle "$libexec_dir/dinx-idle"
 start_optional bc250 bc250-control-centerd
-start_required shell "$libexec_dir/dinx-pearl-shell"
+# kwm is deliberately not started here: river spawns it as its default layout
+# (see dinx-river-init), so starting it again would contend for the layout slot.
 
 set_status ready
 log 'status=ready'

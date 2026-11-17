@@ -31,8 +31,10 @@ rootfs:
     - dinx-keyring
     - dinx-plymouth-theme
     - dome
-    - aqueous
-    - pearl
+    - river
+    - kwm
+    - kwim
+    - greetd-agreety
     - seafoam-settings
     - zls
     - e2fsprogs
@@ -68,7 +70,6 @@ rootfs:
     - wdisplays
     - krita
     - adw-gtk-theme
-    - dinx-pearl-themes
     - dinx-gtk-themes
     - papirus-icon-theme
     - firefox

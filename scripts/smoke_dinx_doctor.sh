@@ -16,7 +16,7 @@ cat > "$tmp/bin/pacman" <<'EOF'
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
 if [ "$1" = -Q ]; then
   case "$2" in
-    dinit|phyto|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|dome|seafoam-settings|zls|aqueous|pearl) exit 0 ;;
+    dinit|phyto|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|dome|seafoam-settings|zls|river|kwm|kwim) exit 0 ;;
   esac
 fi
 exit 1
@@ -28,7 +28,7 @@ printf '%s\n' "$*" >> "$DINX_DOCTOR_DINIT_LOG"
 [ "$1" = --user ] && [ "$2" = list ]
 EOF
 
-for command in dinitui dinxpanel aqueous pearl phyto pori wdisplays shikane shikanectl udisksctl; do
+for command in dinitui dinxpanel agreety river kwm kwim phyto pori wdisplays shikane shikanectl udisksctl; do
   : > "$tmp/bin/$command"
 done
 chmod +x "$tmp/bin/pacman" "$tmp/bin/dinitctl" "$tmp/bin"/*
@@ -45,10 +45,10 @@ report=$(
 for required in \
   'schema=dinx-doctor/v1' \
   'mode=read-only' \
-  'session.default=aqueous+pearl' \
+  'session.default=river+kwm' \
   'storage.ntfs3_write=kernel-driver' \
-  'package.aqueous=installed' \
-  'package.pearl=installed' \
+  'package.river=installed' \
+  'package.kwm=installed' \
   'package.transactions=not-run' \
   'network.access=not-run'; do
   grep -Fqx "$required" <<<"$report" || {

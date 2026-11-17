@@ -41,7 +41,7 @@
 | [`main`](https://github.com/rufl/DINX/tree/main) | Linux distribution: ISO, packages, desktop, qualification and releases |
 | [`feat/bsd`](https://github.com/rufl/DINX/tree/feat/bsd) | DINX FreeBSD variant (no CEF/EuroOffice; office via native apps/browser) |
 | [`office`](https://github.com/rufl/DINX/tree/office) | EuroOffice pipeline: lean upstream repack, `eurooffice/v*` release publication |
-| [`themes`](https://github.com/rufl/DINX/tree/themes) | Theme ports (Skeuos/Orchis) to Pearl's community theme format and GTK |
+| [`themes`](https://github.com/rufl/DINX/tree/themes) | Theme ports (Skeuos/Orchis) to the DINX GTK theme format |
 | [`tools`](https://github.com/rufl/DINX/tree/tools) | Auxiliary build, qualification and launcher tooling |
 
 `main` consumes the lean EuroOffice releases published by the `office` branch (pin + SHA256 verification + rootfs/livefs merge); branches are not merged into each other without review.
@@ -51,7 +51,7 @@
 DINX is an Artix distribution for a small, legible and controllable desktop session:
 
 - **Artix Linux + dinit** as the base, without replacing the init system with systemd;
-- **Aqueous + Pearl** as the only user session, started directly over dinit; **Pearl Greeter** is the greetd login UI;
+- **River + KWM** as the only user session, started directly over dinit; **agreety** under greetd is the login UI, and kwim manages the input devices;
 - **DinitUI** and **DINXPanel** (system control center) for service, hardware, driver and kernel profiles;
 - **Calamares** for experimental installation, **GParted** for separate partition editing and **Pori** for persistent disks and mounts through dinit;
 - **Phyto** as the default file manager and **File Roller** for archives;
@@ -93,7 +93,7 @@ The [GitHub release-asset limit](https://docs.github.com/en/repositories/releasi
    ```
 
 3. Write the verified ISO to the whole USB device — not a partition — and boot in UEFI mode.
-4. The live image opens directly in `Aqueous + Pearl (DINX)`; it does not request a username or password. Installed login and Calamares autologin remain disabled.
+4. The live image opens directly in `River + KWM (DINX)`; it does not request a username or password. Installed login and Calamares autologin remain disabled.
 
 Read the [installation guide](docs/install.md) before touching a disk. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 

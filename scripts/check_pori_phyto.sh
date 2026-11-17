@@ -12,7 +12,6 @@ builder="$repo_root/scripts/build-iso-container.sh"
 calamares_check="$repo_root/scripts/check_calamares_partitioning.sh"
 pori_dir="$repo_root/distro/packages/pori"
 phyto_dir="$repo_root/distro/packages/phyto"
-pearl_dir="$repo_root/distro/packages/pearl"
 
 fail() {
   printf 'pori_phyto_contract: %s\n' "$*" >&2
@@ -30,7 +29,7 @@ for path in \
   "$pori_dir/watch-dinit.zig" "$pori_dir/pori-dinit.patch" \
   "$pori_dir/pori-mount-service" \
   "$repo_root/scripts/smoke_pori_zig.sh" \
-  "$phyto_dir/PKGBUILD" "$phyto_dir/source.env" "$pearl_dir/source.env"; do
+  "$phyto_dir/PKGBUILD" "$phyto_dir/source.env"; do
   require_file "$path"
 done
 
@@ -114,16 +113,18 @@ grep -Fq 'zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4
   || fail 'ISO builder does not verify the Zig 0.17 archive'
 grep -Fq 'extra_env+=("ZIG=$zig_root/zig")' "$builder" \
   || fail 'ISO builder does not pass Zig 0.17 to Pori'
-grep -Fq 'PEARL_ZIG_VERSION=0.16.0' "$pearl_dir/source.env" \
-  || fail 'Pearl/Dome/Phyto toolchain is not pinned to Zig 0.16'
-grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$builder" \
-  || fail 'ISO builder does not select Pearl Zig toolchain for Phyto and Dome'
-grep -Fq 'extra_env+=("ZIG=$pearl_zig_root/zig")' "$builder" \
-  || fail 'ISO builder does not pass Pearl Zig toolchain to Phyto and Dome'
+grep -Fq 'zig016_version=0.16.0' "$builder" \
+  || fail 'ISO builder does not pin the Zig 0.16 toolchain used by Phyto, Dome, KWM and KWIM'
+grep -Fq 'zig016_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00' "$builder" \
+  || fail 'ISO builder does not verify the Zig 0.16 archive'
+grep -Fq '"$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
+  || fail 'ISO builder does not select the Zig 0.16 toolchain for Phyto, Dome, KWM and KWIM'
+grep -Fq 'extra_env+=("ZIG=$zig016_root/zig")' "$builder" \
+  || fail 'ISO builder does not pass the Zig 0.16 toolchain to its native packages'
 grep -Fq 'scripts/smoke_pori_zig.sh' "$workflow" || fail 'workflow does not run the Pori Zig source smoke'
 grep -Fq 'scripts/check_pori_phyto.sh' "$workflow" || fail 'workflow does not run the Pori/Phyto contract'
 grep -Fq 'ntfs3\.ko' "$iso_check" || fail 'ISO contract does not require the kernel ntfs3 module'
 grep -Fq '/usr/bin/ntfs-3g' "$iso_check" || fail 'ISO contract does not reject the optional ntfs-3g package'
 grep -Fq 'ntfs-3g' "$calamares_check" || fail 'Calamares contract does not document optional NTFS write support'
 
-printf 'pori_phyto_contract pori=true phyto=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false ntfs3_live_rw=true ntfs3_legacy_optional=true pori_zig=0.17.0 dome_zig=0.16.0 phyto_zig=0.16.0\n'
+printf 'pori_phyto_contract pori=true phyto=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false ntfs3_live_rw=true ntfs3_legacy_optional=true pori_zig=0.17.0 phyto_zig=0.16.0\n'

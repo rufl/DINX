@@ -26,6 +26,7 @@
                 "firewalld",
                 "fwupd",
                 "greetd",
+                "greetd-agreety",
                 "libva",
                 "linux-firmware-amdgpu",
                 "linux-firmware-intel",
@@ -46,11 +47,10 @@
             ]
         },
         "desktop": {
-            "description": "Aqueous/Pearl Wayland session, first-party applications, desktop tools, removable media, and user utilities.",
+            "description": "River/KWM Wayland session, first-party applications, desktop tools, removable media, and user utilities.",
             "iso": true,
             "packages": [
                 "adw-gtk-theme",
-                "dinx-pearl-themes",
                 "dinx-gtk-themes",
                 "papirus-icon-theme",
                 "dconf",
@@ -71,8 +71,9 @@
                 "firewall-config",
                 "diffutils",
                 "dome",
-                "aqueous",
-                "pearl",
+                "river",
+                "kwm",
+                "kwim",
                 "seafoam-settings",
                 "zls",
                 "phyto",

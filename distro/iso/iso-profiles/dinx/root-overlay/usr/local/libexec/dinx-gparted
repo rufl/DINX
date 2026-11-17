@@ -5,7 +5,7 @@ set -u
 # upstream /usr/bin/gparted launcher elevates itself with
 # `pkexec --disable-internal-agent`, which relies on polkit's `allow_gui`
 # annotation to preserve DISPLAY and XAUTHORITY. The DINX session is pure
-# Wayland and explicitly unsets DISPLAY (dinx-aqueous-pearl), and its root-display
+# Wayland and explicitly unsets DISPLAY (dinx-river-session), and its root-display
 # workaround needs `xhost`, which is not installed, so the elevated gpartedbin
 # falls back to X11 with an empty DISPLAY and dies with
 # `cannot open display: :@`. Launch it through the same pkexec env bridge the

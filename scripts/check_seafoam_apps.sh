@@ -8,7 +8,6 @@ iso_check="$root/scripts/check-iso-content.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
 builder="$root/scripts/build-iso-container.sh"
 dome_dir="$root/distro/packages/dome"
-pearl_source="$root/distro/packages/pearl/source.env"
 
 dome_source="$dome_dir/source.env"
 zls_dir="$root/distro/packages/zls"
@@ -20,7 +19,7 @@ fail() {
 }
 
 for path in "$profile" "$groups" "$iso_check" "$workflow" "$builder" \
-  "$dome_dir/PKGBUILD" "$dome_dir/discreet-header.patch" "$dome_source" "$pearl_source" "$zls_dir/PKGBUILD" "$zls_dir/source.env" \
+  "$dome_dir/PKGBUILD" "$dome_dir/discreet-header.patch" "$dome_source" "$zls_dir/PKGBUILD" "$zls_dir/source.env" \
   "$zls_smoke" "$settings_contract"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
@@ -39,8 +38,8 @@ grep -Fq 'u.append(brand, u.label("Dome", "title"));' "$dome_dir/discreet-header
   || fail 'Dome discreet header patch does not remove the brand label'
 grep -Fq 'Your system, at a glance.' "$dome_dir/discreet-header.patch" \
   || fail 'Dome discreet header patch does not remove the overview slogan'
-source "$pearl_source"
-[[ "$PEARL_ZIG_VERSION" == 0.16.0 ]] || fail "unexpected Pearl/Dome/Phyto Zig version: $PEARL_ZIG_VERSION"
+grep -Fq 'zig016_version=0.16.0' "$builder" \
+  || fail 'ISO builder does not pin the Zig 0.16 toolchain required by Dome'
 
 source "$zls_dir/source.env"
 [[ "$ZLS_VERSION" == 0.16.0 ]] || fail "unexpected ZLS version: $ZLS_VERSION"
@@ -113,10 +112,10 @@ grep -Fq 'build_package zls' "$builder" || fail 'ISO builder does not build ZLS 
 grep -Fq 'build_package seafoam-settings' "$builder" || fail 'ISO builder does not build Seafoam Settings for the base package repository'
 grep -Fq 'zig_version=0.17.0' "$builder" || fail 'ISO builder does not pin Zig 0.17 for native DINX packages'
 grep -Fq 'extra_env+=("ZIG=$zig_root/zig")' "$builder" || fail 'ISO builder does not pass the pinned Zig toolchain to native packages'
-grep -Fq 'if [[ "$package_name" == pearl || "$package_name" == phyto || "$package_name" == dome ]]; then' "$builder" \
-  || fail 'ISO builder does not select the Pearl Zig toolchain for Dome'
-grep -Fq 'extra_env+=("ZIG=$pearl_zig_root/zig")' "$builder" \
-  || fail 'ISO builder does not pass Pearl Zig toolchain to Dome'
+grep -Fq '"$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
+  || fail 'ISO builder does not select the Zig 0.16 toolchain for Dome'
+grep -Fq 'extra_env+=("ZIG=$zig016_root/zig")' "$builder" \
+  || fail 'ISO builder does not pass the Zig 0.16 toolchain to Dome'
 grep -Fq 'ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh' "$builder" || fail 'Artix builder does not smoke-test ZLS'
 grep -Fq 'scripts/check_seafoam_apps.sh' "$workflow" || fail 'workflow does not run the Seafoam app contract'
 grep -Fq 'scripts/check_seafoam_settings.sh' "$workflow" || fail 'workflow does not run the Seafoam Settings contract'

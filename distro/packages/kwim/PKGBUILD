@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=kwim
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${KWIM_VERSION:?missing KWIM_VERSION}"
+: "${KWIM_REPOSITORY:?missing KWIM_REPOSITORY}"
+: "${KWIM_SOURCE_URL:?missing KWIM_SOURCE_URL}"
+: "${KWIM_SOURCE_SHA256:?missing KWIM_SOURCE_SHA256}"
+pkgver="$KWIM_VERSION"
+pkgrel=1
+pkgdesc='River input-management helper configuring input devices independently of the window manager'
+arch=('x86_64')
+url="$KWIM_REPOSITORY"
+license=('GPL-3.0-only')
+depends=('glibc' 'wayland' 'libxkbcommon')
+makedepends=('wayland-protocols' 'zig>=0.16')
+provides=('river-input-manager')
+source=("kwim-$pkgver.tar.gz::$KWIM_SOURCE_URL")
+sha256sums=("$KWIM_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/kwim-$pkgver"
+  export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
+  export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
+  "${ZIG:-zig}" build install \
+    --prefix "$srcdir/out" \
+    -Dcpu=baseline \
+    -Doptimize=ReleaseSafe
+}
+
+check() {
+  test -x "$srcdir/out/bin/kwim"
+  [[ "$("$srcdir/out/bin/kwim" --version)" == "$KWIM_VERSION" ]] \
+    || { printf 'kwim binary reports an unexpected version\n' >&2; return 1; }
+}
+
+package() {
+  cd "$srcdir/kwim-$pkgver"
+  install -Dm755 "$srcdir/out/bin/kwim" "$pkgdir/usr/bin/kwim"
+  install -Dm644 "$srcdir/out/share/man/man1/kwim.1" "$pkgdir/usr/share/man/man1/kwim.1"
+  install -Dm644 "$srcdir/out/share/man/man5/kwim.5" "$pkgdir/usr/share/man/man5/kwim.5"
+  install -Dm644 "$srcdir/out/share/doc/kwim/config.zon" "$pkgdir/usr/share/doc/kwim/config.zon"
+  install -Dm644 "$srcdir/out/share/bash-completion/completions/kwim" \
+    "$pkgdir/usr/share/bash-completion/completions/kwim"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

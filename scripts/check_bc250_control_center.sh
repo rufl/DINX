@@ -12,7 +12,6 @@ cd "$repo_root"
 for path in \
   distro/packages/bc250-control-center/PKGBUILD \
   distro/packages/bc250-control-center/source.env \
-  distro/packages/pearl/PKGBUILD \
   distro/iso/iso-profiles/dinx/profile.yaml \
   distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor; do
   [[ -f "$path" ]] || fail "missing contract file: $path"
@@ -52,7 +51,6 @@ jq -e '
   (.groups.hardware.packages | index("cyan-skillfish-governor-smu-dinit") != null)
 ' distro/iso/iso-profiles/dinx/feature-groups.json >/dev/null \
   || fail 'BC-250 packages must remain in the optional signed repository group'
-grep -Fq '    - pearl' distro/iso/iso-profiles/dinx/profile.yaml || fail 'Pearl shell is missing from the DINX rootfs'
 if grep -Fq '    - python-pyqt6' distro/iso/iso-profiles/dinx/profile.yaml; then
   fail 'BC250-only PyQt6 runtime must not be explicitly installed in the base profile'
 fi

@@ -8,7 +8,10 @@ dinx_apply_graphics_environment() {
       export WLR_RENDERER=pixman
       unset GSK_RENDERER
       ;;
-    virtual-gl)
+    # Pre-GCN AMD (Terascale) and virtual GL both have working OpenGL but no
+    # Vulkan-capable hardware path, so both use the GLES2 wlroots renderer.
+    # Requesting Vulkan here would silently drop to llvmpipe on the CPU.
+    virtual-gl|legacy-gl)
       export WLR_RENDERER=gles2
       unset GSK_RENDERER
       ;;

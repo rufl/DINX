@@ -849,3 +849,93 @@ Nenhum módulo Astal usa inotify/epoll/signalfd/`/proc`/`/sys`: são clientes
 GLib/D-Bus, então o `devel/glib20` do FreeBSD já resolve a portabilidade
 (`file_monitor_backend=libinotify-kqueue` + `libepoll-shim`). O bloqueio é de
 **daemons e bindings de build**, não de código.
+
+## 28. morghulis no FreeBSD — e o conflito de protocolo que decide o stack
+
+O objetivo do lane era "morghulis funcionar no river, com kwm e kwim". O build
+funciona; o que **não** é possível é ter o painel de tags do morghulis e o kwm
+ao mesmo tempo, por decisão do upstream do river, não por limitação do FreeBSD.
+
+**O que compilou e rodou** (VM FreeBSD 15.1, `dbus-run-session river -c init`,
+backend headless, gschema instalado):
+
+```
+pids:      pipewire=38204  kwm=38208  morghulis=38210
+t=25s:     38210  S  00:22  morghulis      38208  I  00:24  kwm
+t=40s:     38210  S  00:37  morghulis      38208  I  00:39  kwm
+kwm log:   info(kwm): start running
+river log: running init executable ... / running server
+morghulis: ELF 1.9 MB "for FreeBSD 15.1", ldd 150 deps, 0 não resolvidas
+```
+
+Os três vivos juntos e estáveis por 40 s (stat `S`/`I`, não `Z`). O `--help`
+só para em "Failed to open display", esperado sem scanout. Os `CRITICAL` que
+sobram são daemons ausentes, não falhas do port: `bluetooth.vala:122` (não há
+provedor `org.bluez`), `power-profiles.vala:58` (não há
+`power-profiles-daemon`), `battery`/`.face.icon` (VM sem bateria nem avatar).
+
+**O conflito de protocolo.** AstalRiver liga em `zriver_status_manager_v1`
+(`lib/river/src/river.vala:234`, com `critical()` em :237 quando ausente) —
+ou seja, `river-status-unstable-v1` + `river-control-unstable-v1`. O kwm
+implementa `river-window-management-v1`. Medido por tag no diretório
+`protocol/` do river:
+
+| river | river-status-unstable-v1 | river-window-management-v1 |
+|---|---|---|
+| v0.3.0 … v0.3.12 | presente | ausente |
+| v0.4.0 … v0.5.2 | **ausente** | presente |
+| `main` | ausente | presente |
+
+O river removeu o status em `a309d18e` (2024-07-21, "river: remove
+river-status-unstable-v1") e o `window-management-v1` só entrou em 2026-09.
+Nenhuma release carrega os dois. E o `river_output_v1` do protocolo novo
+**não** expõe estado de tags (requests/events: destroy, removed, wl_output,
+position, dimensions, set_presentation_mode, capture_sessions — nenhuma tag),
+então não há como reimplementar o `RiverTags` sobre ele. Consequência: com
+river ≥ 0.4 (necessário para o kwm) o morghulis só roda **sem** o módulo
+river, o que derruba a barra de tags. Isso vale igualmente no Linux — não é
+custo do port.
+
+A escolha do `build-astal-morphulis.sh` é kwm + river 0.4.8 + morghulis sem
+AstalRiver, porque o kwm é o window manager (sem ele não há como mover/fechar
+janelas) e o morghulis trata `astal-river-0.1` como `required: false`
+(`src/meson.build:26`), o que já exclui `RiverTags.vala` e o
+`--define=river`. Implementado escondendo o `.pc` num diretório pkgconfig
+filtrado (`$W/morghulis-pkgconfig`, symlinks de tudo menos `astal-river-*`)
+durante configure+build, em vez de mover o arquivo — o resto do sistema
+continua com o astal-river instalado. Verificado: `configure_rc=0`,
+`ninja_rc=0`, `--define=river` ausente, astal-river continua visível fora do
+filtro. `MORGHULIS_USE_ASTAL_RIVER=1` reverte quando o astal acompanhar o
+`window-management-v1`.
+
+**Outros fatos que custaram rodada e valem registro:**
+- O pin é trunk `a3eb6d7`, **não** o tag `v0.14.0`. O tag (2025-11) chama
+  `river.get_focused_output()`/`get_output()`, que o AstalRiver atual (2026-08)
+  substituiu pela propriedade `focused_output` + `find_output_by_name()`; e o
+  tag também não declara `astal_wl_dep`/`wayland-client`, o que faz o valac
+  falhar com "The symbol `Wl' could not be found" (o valac **não** segue
+  `Requires` do pkg-config transitivamente). O trunk já traz os dois.
+- SCSS exige **dart-sass**: `main.scss` usa módulos (`@use "adw"; adw.$var`),
+  que o `sassc`/libsass 3.6 do catálogo não interpreta
+  (`Invalid CSS after "...border-radius: adw"`), e o `rubygem-dartsass` aborta
+  com "does not support the amd64-freebsd platform". dart-sass é JS puro:
+  `npm install sass` local + wrapper `sass` → `node sass.js` (provado: 1.108.2
+  gera o CSS de 5675 bytes).
+- O morghulis **exige** o GSettings instalado
+  (`com.arkye.morghulis`); sem ele aborta com "Settings schema ... is not
+  installed". O port tem que instalar o `.gschema.xml` e rodar
+  `glib-compile-schemas`.
+- Sem D-Bus de sessão o shell morre: `tray.vala:142`/`proxy.vala:67` com
+  "Cannot autolaunch D-Bus without X11 $DISPLAY". Daí o `dbus-run-session` no
+  `dinx-river-session`.
+- `glycin` (dep dura do morghulis, ausente no FreeBSD) **compila**: rust 1.98.1
+  do catálogo, `configure_rc=0`, `build_rc=0`, `install_rc=0`, gerando
+  `glycin-2.pc` e `glycin-gtk4-2.pc`. O README dele já desliga os loaders fora
+  do Linux (`host_machine.system() == 'linux'`), então a portabilidade é por
+  desenho. A primeira falha foi meu `timeout 240` no ninja ("interrupted by
+  user"), não o código.
+- `river-shifttags` (que o `RiverTags` chama 7×) não vem no river nem no kwm:
+  é `gnuunixchad/river-shifttags`, C puro, portado aqui
+  (`Makefile.river-shifttags`). O Makefile upstream não serve no FreeBSD (GNU
+  pattern rules que o bmake rejeita, `-lrt` inexistente, `-lpixman-1` com zero
+  usos no fonte).

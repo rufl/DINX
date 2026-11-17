@@ -177,10 +177,45 @@ SEOF
     chmod 755 /usr/local/bin/sass
     log "== sass wrapper -> dart-sass ($(sass --version 2>&1 | head -1))"
   fi
+  # AstalRiver is INCOMPATIBLE with the river this session ships, so hide it
+  # from morghulis's configure. Evidence: river removed river-status-unstable-v1
+  # in a309d18e (2024-07-21) -- that is what AstalRiver binds (river.vala:234
+  # find_globals("zriver_status_manager_v1"), which then fails with "the
+  # compositor does not support zriver_status_manager_v1"); river replaced it
+  # with river-window-management-v1, which is what kwm implements. No river
+  # release carries both (v0.3.0..v0.3.12: status only; v0.4.0..v0.5.2:
+  # window-management only, verified per-tag against the protocol dir). kwm is
+  # the window manager, so river >= 0.4 wins and morghulis builds without the
+  # river module -- it is required:false upstream, which drops RiverTags and the
+  # --define=river tag bar. Set MORGHULIS_USE_ASTAL_RIVER=1 once astal-river
+  # tracks river-window-management-v1.
+  #
+  # Implemented as a filtered pkgconfig dir rather than by moving the .pc aside,
+  # so the rest of the system keeps astal-river installed.
+  MORGHULIS_PC="$PREFIX/lib/pkgconfig:$PREFIX/libdata/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig"
+  if [ "${MORGHULIS_USE_ASTAL_RIVER:-0}" != 1 ]; then
+    MPC="$W/morghulis-pkgconfig"
+    rm -rf "$MPC"; mkdir -p "$MPC"
+    for pcdir in "$PREFIX/lib/pkgconfig" "$PREFIX/libdata/pkgconfig" \
+                 /usr/local/lib/pkgconfig /usr/local/libdata/pkgconfig; do
+      [ -d "$pcdir" ] || continue
+      for pc in "$pcdir"/*.pc; do
+        [ -f "$pc" ] || continue
+        case $(basename "$pc") in
+          astal-river-*) continue ;;
+        esac
+        ln -sf "$pc" "$MPC/$(basename "$pc")"
+      done
+    done
+    MORGHULIS_PC="$MPC"
+    log "== astal-river hidden from morghulis configure (river/kwm protocol conflict)"
+  fi
   rm -rf "$M/build"
-  (cd "$M" && meson setup build --prefix="$PREFIX" > /tmp/morph-ms.log 2>&1)
+  (cd "$M" && PKG_CONFIG_PATH="$MORGHULIS_PC" \
+     meson setup build --prefix="$PREFIX" > /tmp/morph-ms.log 2>&1)
   log "== morghulis configure_rc=$?"
-  (cd "$M" && ninja -C build > /tmp/morph-nj.log 2>&1)
+  (cd "$M" && PKG_CONFIG_PATH="$MORGHULIS_PC" \
+     ninja -C build > /tmp/morph-nj.log 2>&1)
   log "== morghulis build_rc=$?"
   if [ -x "$M/build/src/morghulis" ]; then
     (cd "$M" && DESTDIR="$W/stage-dinx-morghulis" ninja -C build install) >>"$LOG" 2>&1

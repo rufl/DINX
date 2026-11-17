@@ -60,10 +60,16 @@ cat >> "$init" <<'EOF'
 export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-river}"
 
 # No DRM device (virtual GPUs have no FreeBSD driver): river then runs on the
-# headless backend, so republish it over VNC to keep the session reachable from
-# the hypervisor host. wayvnc is an ordinary Wayland client (wlr-screencopy
-# plus virtual input) and needs no GPU.
-if [ "${DINX_HEADLESS:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
+# headless backend. Republishing it over VNC needs wayvnc, which is an ordinary
+# wlr-screencopy client -- but river 0.4.8 (the FreeBSD catalogue version)
+# SIGSEGVs in handleNewCaptureSession when a capture source is neither an
+# output nor a toplevel it knows (Server.zig:626, reached as soon as a
+# screencopy client connects; upstream fixed it in 0.5.x by returning
+# error.NotOutputOrToplevel). Since wayvnc's whole purpose is to serve
+# screencopy, publishing VNC on 0.4.8 means the compositor dies on first
+# client -- strictly worse than not serving at all. So VNC republish is opt-in:
+# set DINX_RIVER_VNC=1 once river >= 0.5 is installed.
+if [ "${DINX_RIVER_VNC:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
   wayvnc --render-cursor 0.0.0.0 "${DINX_VNC_PORT:-5900}" &
 fi
 
@@ -105,8 +111,10 @@ fi
 if [ "${WLR_BACKENDS:-}" = headless ]; then
   export DINX_HEADLESS=1
   echo 'dinx-river-session: no /dev/dri, running headless' >&2
-  if command -v wayvnc >/dev/null 2>&1; then
-    echo "dinx-river-session: desktop available over VNC on port ${DINX_VNC_PORT:-5900}" >&2
+  if [ "${DINX_RIVER_VNC:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
+    echo "dinx-river-session: desktop published over VNC on port ${DINX_VNC_PORT:-5900}" >&2
+  elif command -v wayvnc >/dev/null 2>&1; then
+    echo 'dinx-river-session: VNC republish disabled; river 0.4.8 crashes on screencopy clients. Set DINX_RIVER_VNC=1 with river >= 0.5 to reach this session remotely.' >&2
   else
     echo 'dinx-river-session: install wayvnc to reach a headless session remotely' >&2
   fi

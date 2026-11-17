@@ -1,0 +1,44 @@
+#!/bin/sh
+# valadoc stand-in for the FreeBSD build of the Astal 0.1 stack.
+#
+# Why this exists: astal generates every module's GIR by running its own
+# gir.py, which shells out to `valadoc --gir` (lib/gir.py uses valadoc, not
+# g-ir-scanner, because valadoc embeds doc comments). FreeBSD lang/vala is
+# configured --disable-valadoc and ships no bin/valadoc, so the GIR step of
+# every module fails with "program does not contain a static `main' method"
+# or a plain FileNotFoundError before anything installs.
+#
+# gir.py honours the VALADOC environment variable (os.getenv("VALADOC",
+# "valadoc")), so the ports set it to this script. The GIR that valadoc
+# writes is the one valac writes in library mode; valadoc's only addition is
+# documentation text, which matters for gi-docgen HTML, not for the
+# typelibs, vapis or GTK consumers that make up the runtime. Hence
+# `valac -C --library NAME --gir OUT` produces the file gir.py post-processes.
+#
+# -C stops after C generation: --library mode otherwise also links the shared
+# object, which is redundant here (ninja builds it) and failed on missing
+# link flags (undefined round / crt1 _start) in verification.
+#
+# argv shape from gir.py:
+#   valadoc -o docs --package-name NAME --gir OUT.gir --force --pkg=P --pkg=Q SRC...
+# valac takes `--pkg P` (space), has no -o/--package-name/--force.
+
+name=""
+gir=""
+pkgs=""
+sources=""
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-o) shift ;;
+	--package-name) shift; name="$1" ;;
+	--gir) shift; gir="$1" ;;
+	--force) ;;
+	--pkg=*) pkgs="$pkgs --pkg ${1#--pkg=}" ;;
+	*) sources="$sources $1" ;;
+	esac
+	shift
+done
+[ -n "$gir" ] || exit 0
+[ -n "$name" ] || { echo "astal-valadoc-shim: no --package-name" >&2; exit 2; }
+# shellcheck disable=SC2086
+exec valac -C --library "$name" --gir "$gir" $pkgs $sources

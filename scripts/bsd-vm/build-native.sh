@@ -217,6 +217,68 @@ else
 fi
 stamp kwm-end
 
+stamp kwim-start
+# --- kwim (river input manager) ------------------------------------------
+# Separate upstream (kewuaa/kwim), NOT built by kwm. The v0.2.0 tag still
+# reads Build.build_root (removed in Zig 0.17); commit a802d2d ("Update for
+# Zig 0.17", minimum_zig_version 0.17.0) builds clean on FreeBSD with no
+# patch. Verified: build_rc=0, ldd clean, sole Linux-ism is memfd_create
+# which FreeBSD libc has had since 13.
+KWIM_REV=a802d2d021e13709b2c130088510bfef5e902659
+if [ ! -d "$W/kwim" ]; then
+  git clone https://github.com/kewuaa/kwim.git "$W/kwim" >>"$LOG" 2>&1
+  git -C "$W/kwim" checkout "$KWIM_REV" >>"$LOG" 2>&1
+  log "== kwim checked out at $KWIM_REV (exit=$?)"
+fi
+if [ -d "$W/kwim" ]; then
+  if build_zig kwim "$W/kwim"; then
+    stage="$W/stage-dinx-kwim"
+    rm -rf "$stage"; mkdir -p "$stage/usr/local/bin"
+    [ -f "$W/kwim/zig-out/bin/kwim" ] && cp "$W/kwim/zig-out/bin/kwim" "$stage/usr/local/bin/"
+    package dinx-kwim 0.2.0 dinx/kwim "kwim input manager for the river compositor" "$stage"
+  fi
+else
+  log "== kwim source tree not found"
+fi
+stamp kwim-end
+
+stamp river-shifttags-start
+# --- river-shifttags (tag CLI the river shell shells out to) -------------
+# Upstream Makefile uses GNU pattern rules bmake cannot parse, links -lrt
+# (folded into libc here) and -lpixman-1 (zero pixman symbols in the source).
+# Generate the two vendored protocols with wayland-scanner and link only
+# wayland-client -- this is what compiled and ran in the build VM.
+RST_REV=master
+if [ ! -d "$W/river-shifttags" ]; then
+  fetch -q -o "$W/river-shifttags.tar.gz" \
+    "https://github.com/gnuunixchad/river-shifttags/archive/refs/heads/${RST_REV}.tar.gz" >>"$LOG" 2>&1
+  tar -xzf "$W/river-shifttags.tar.gz" -C "$W" >>"$LOG" 2>&1
+  mv "$W/river-shifttags-${RST_REV}" "$W/river-shifttags" 2>>"$LOG"
+fi
+if [ -d "$W/river-shifttags" ]; then
+  ( cd "$W/river-shifttags" || exit 1
+    for p in river-status-unstable-v1 river-control-unstable-v1; do
+      wayland-scanner private-code "$p.xml" "$p.c" && \
+        wayland-scanner client-header "$p.xml" "$p.h"
+    done
+    cc -O2 $(pkg-config --cflags wayland-client) -I. \
+      -o river-shifttags river-shifttags.c \
+      river-status-unstable-v1.c river-control-unstable-v1.c \
+      $(pkg-config --libs wayland-client) ) >>"$LOG" 2>&1
+  log "== river-shifttags cc exit=$?"
+  if [ -x "$W/river-shifttags/river-shifttags" ]; then
+    stage="$W/stage-dinx-river-shifttags"
+    rm -rf "$stage"; mkdir -p "$stage/usr/local/bin" "$stage/usr/local/share/man/man1"
+    cp "$W/river-shifttags/river-shifttags" "$stage/usr/local/bin/"
+    [ -f "$W/river-shifttags/river-shifttags.1" ] && \
+      cp "$W/river-shifttags/river-shifttags.1" "$stage/usr/local/share/man/man1/"
+    package dinx-river-shifttags 20260322 dinx/river-shifttags "river tag-shifting CLI for the river shell" "$stage"
+  fi
+else
+  log "== river-shifttags source tree not found"
+fi
+stamp river-shifttags-end
+
 pkg repo "$REPO" >>"$LOG" 2>&1
 log "== pkg repo exit=$?"
 stamp end

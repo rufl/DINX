@@ -20,6 +20,7 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/ports/files/kwm-freebsd.patch" ]] || fail 'missing kwm-freebsd.patch'
 [[ -f "$repo_root/scripts/bsd-vm/patch-kwm-freebsd.py" ]] || fail 'missing patch-kwm-freebsd.py'
 [[ -x "$bsd_dir/config/bin/dinx-river-session" ]] || fail 'missing dinx-river-session'
+[[ -f "$bsd_dir/ports/Makefile.river-shifttags" ]] || fail 'missing Makefile.river-shifttags'
 [[ -f "$bsd_dir/ports/Makefile.pearl" ]] || fail 'missing Makefile.pearl'
 [[ -f "$bsd_dir/ports/Makefile.octapkg" ]] || fail 'missing Makefile.octapkg'
 [[ -f "$bsd_dir/ports/Makefile.deetty" ]] || fail 'missing Makefile.deetty'

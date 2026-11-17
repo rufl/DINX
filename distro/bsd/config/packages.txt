@@ -39,6 +39,11 @@ x11-wm/river
 x11-wm/dinx-aqueous
 x11-wm/dinx-pearl
 x11-wm/dinx-kwm
+x11-wm/dinx-kwim
+# river-shifttags: the tag-shifting CLI the river shell shells out to
+# (morghulis's NavBar runs `river-shifttags --occupied --shifts N`). Not part
+# of river's plist and not built by kwm; packaged here from source.
+x11-wm/dinx-river-shifttags
 x11-wm/dome
 # Alternative shell (optional; native C++23/meson, not in FreeBSD ports yet)
 x11-wm/noctalia

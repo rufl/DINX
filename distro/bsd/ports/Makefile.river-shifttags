@@ -1,0 +1,64 @@
+# FreeBSD Port Makefile for river-shifttags (DINX-BSD)
+#
+# river-shifttags is the tag-shifting CLI the river desktop shell calls out to
+# (morghulis's NavBar/RiverTags runs `river-shifttags --occupied --shifts N`).
+# It is NOT part of river itself -- river's plist ships only bin/river plus the
+# protocol XMLs -- and it is not built by kwm either, so the river session needs
+# it as its own package.
+#
+# Upstream Makefile uses GNU pattern rules (%.c: %.xml), which FreeBSD's bmake
+# does not understand ("don't know how to make river-status-unstable-v1.c").
+# It also links -lrt (a real library on Linux; on FreeBSD rt is folded into
+# libc) and -lpixman-1 (pixman symbols are not used anywhere in the source --
+# grep -c pixman river-shifttags.c == 0). So do-build generates the wayland
+# protocol code with wayland-scanner directly and links only wayland-client,
+# which is what actually compiled and ran in the FreeBSD 15.1 build VM.
+PORTNAME=	river-shifttags
+PORTVERSION=	20260322
+CATEGORIES=	x11-wm wayland
+MASTER_SITES=	https://github.com/gnuunixchad/river-shifttags/archive/refs/heads/
+DISTNAME=	master
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	Tag-shifting CLI for the river compositor
+WWW=		https://github.com/gnuunixchad/river-shifttags
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+BUILD_DEPENDS=	wayland-scanner:graphics/wayland \
+		wayland-protocols>=0:graphics/wayland-protocols
+LIB_DEPENDS=	libwayland-client.so:graphics/wayland
+
+USES=		pkgconfig
+
+WRKSRC=		${WRKDIR}/${PORTNAME}-master
+
+# The two river protocols are vendored in the source tree; river-shifttags.c
+# does `#include "river-status-unstable-v1.h"` / `"river-control-unstable-v1.h"`,
+# so the scanner output must keep those exact base names (this is the invocation
+# that compiled and ran in the FreeBSD 15.1 build VM). Then link the single C
+# file with the two generated protocol objects against wayland-client only.
+do-build:
+	wayland-scanner private-code ${WRKSRC}/river-status-unstable-v1.xml \
+		${WRKSRC}/river-status-unstable-v1.c
+	wayland-scanner client-header ${WRKSRC}/river-status-unstable-v1.xml \
+		${WRKSRC}/river-status-unstable-v1.h
+	wayland-scanner private-code ${WRKSRC}/river-control-unstable-v1.xml \
+		${WRKSRC}/river-control-unstable-v1.c
+	wayland-scanner client-header ${WRKSRC}/river-control-unstable-v1.xml \
+		${WRKSRC}/river-control-unstable-v1.h
+	${CC} ${CFLAGS} $$(${PKG_CONFIG} --cflags wayland-client) -I${WRKSRC} \
+		-o ${WRKSRC}/river-shifttags \
+		${WRKSRC}/river-shifttags.c \
+		${WRKSRC}/river-status-unstable-v1.c \
+		${WRKSRC}/river-control-unstable-v1.c \
+		$$(${PKG_CONFIG} --libs wayland-client)
+
+do-install:
+	@${MKDIR} ${STAGEDIR}${PREFIX}/bin ${STAGEDIR}${PREFIX}/share/man/man1
+	${INSTALL_PROGRAM} ${WRKSRC}/river-shifttags ${STAGEDIR}${PREFIX}/bin/
+	${INSTALL_MAN} ${WRKSRC}/river-shifttags.1 \
+		${STAGEDIR}${PREFIX}/share/man/man1/
+
+.include <bsd.port.mk>

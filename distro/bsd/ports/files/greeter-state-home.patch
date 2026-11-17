@@ -1,0 +1,5 @@
+--- a/src/greeter_host_main.zig
++++ b/src/greeter_host_main.zig
+@@ -30 +30 @@ fn prepareEnvironment() void {
+-    _ = glib.setenv("XDG_STATE_HOME", "/var/lib/pearl-greeter", 1);
++    _ = glib.setenv("XDG_STATE_HOME", "/var/lib/pearl-greeter/.local/state", 1);

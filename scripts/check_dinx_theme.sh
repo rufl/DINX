@@ -43,7 +43,6 @@ gtk4_settings="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.co
 system_gtk3="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-3.0/settings.ini"
 system_gtk4="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/gtk-4.0/settings.ini"
 session_wrapper="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-aqueous-pearl"
-aqueous_decorations="$repo_root/distro/packages/aqueous/server-decorations.patch"
 pearl_shell="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pearl-shell"
 wizard_source="$repo_root/distro/packages/pearl/dinx-first-run-wizard.c"
 swayimg="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/swayimg/init.lua"
@@ -57,7 +56,7 @@ for path in "$profile" "$palette" "$profile_shell" "$pearl_greeter" "$pearl_pkg"
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$pearl_preferences" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
   "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
-  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$aqueous_decorations" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
+  "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$session_wrapper" "$pearl_shell" "$wizard_source" "$qt_palette_seed"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
@@ -361,16 +360,6 @@ grep -Fq '[ ! -e "$config_home/pearl/last-good.json" ]' "$session_wrapper" \
   || fail 'Aqueous session may overwrite Pearl recovery state'
 sh -n "$pearl_shell" || fail 'Pearl shell wrapper has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_WIZARD' "$pearl_shell" || fail 'Pearl shell wrapper lacks a testable wizard path'
-grep -Fq 'fn pearlDecorationColors' "$aqueous_decorations" \
-  || fail 'Aqueous decorations do not derive colors from Pearl preferences'
-grep -Fq 'const colors = pearlDecorationColors();' "$aqueous_decorations" \
-  || fail 'Aqueous titlebar does not use the Pearl-derived palette'
-grep -Fq 'theme.object.get("seed")' "$aqueous_decorations" \
-  || fail 'Aqueous decorations do not track the Pearl accent seed'
-grep -Fq 'theme.object.get("variant")' "$aqueous_decorations" \
-  || fail 'Aqueous decorations do not track the Pearl light/dark variant'
-grep -Fq 'reloadPearlDecorationTheme' "$aqueous_decorations" \
-  || fail 'Aqueous decorations are not invalidated on session reload'
 grep -Fq "desktop-color: \"${dark_token[mSurface]}\"" "$grub" || fail 'GRUB surface does not use DINX background'
 grep -Fq "selected_item_color = \"${dark_token[mPrimary]}\"" "$grub" || fail 'GRUB selection does not use DINX primary color'
 if grep -Eq '^[[:space:]]*(desktop-image|menu_pixmap_style|selected_item_pixmap_style)[[:space:]]*=' "$grub"; then

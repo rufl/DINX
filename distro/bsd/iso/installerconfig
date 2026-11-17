@@ -1,0 +1,60 @@
+PARTITIONS=DEFAULT
+DISTRIBUTIONS="kernel.txz base.txz dinx-bsd-overlay.txz"
+export nonInteractive="YES"
+export BSDINSTALL_LOG="/tmp/bsdinstall_log"
+export BSDINSTALL_SKIP_FIRMWARE="YES"
+#!/bin/sh
+# Post-install script: bsdinstall splits this file at the first '^#!' line and
+# runs this part chrooted inside the target. Keep it POSIX sh and base-only:
+# bash, pkg and network are not guaranteed here. Desktop setup runs at first
+# boot via rc.d/dinx_firstboot.
+set -eu
+
+test -r /etc/dinx-release
+
+sysrc hostname="dinx-bsd"
+sysrc ifconfig_DEFAULT="DHCP"
+sysrc dumpdev="NO"
+
+if ! grep -q '^boot_multicons=' /boot/loader.conf; then
+  printf '%s\n' 'boot_multicons="YES"' >> /boot/loader.conf
+fi
+if ! grep -q '^boot_serial=' /boot/loader.conf; then
+  printf '%s\n' 'boot_serial="YES"' >> /boot/loader.conf
+fi
+if ! grep -q '^comconsole_speed=' /boot/loader.conf; then
+  printf '%s\n' 'comconsole_speed="115200"' >> /boot/loader.conf
+fi
+
+sed -i '' 's|^ttyu0[[:space:]].*|ttyu0   "/usr/libexec/getty std.115200"   vt100   onifconsole secure|' /etc/ttys
+# Reserve ttyv0 for the first-run wizard and ttyv7 for greetd after it.
+# The serial console and ttyv1-ttyv6 remain available for recovery.
+sed -i '' 's|^ttyv0[[:space:]].*|ttyv0   "/usr/libexec/getty Pc"   xterm   off secure|' /etc/ttys
+sed -i '' 's|^ttyv7[[:space:]].*|ttyv7   "/usr/libexec/getty Pc"   xterm   off secure|' /etc/ttys
+
+if [ -f /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker ]; then
+  install -m 0555 /usr/local/share/dinx-bsd/distro/bsd/config/rc.d/dinx_marker /etc/rc.d/dinx_marker
+  sysrc dinx_marker_enable="YES"
+fi
+
+# Pearl reads /proc/self/exe, /proc/stat, /proc/meminfo, /proc/cpuinfo. The
+# session runs as the unprivileged `dinx` user and cannot mount filesystems,
+# so linprocfs must be mounted from fstab at boot.
+if ! grep -q '^linproc[[:space:]]' /etc/fstab 2>/dev/null; then
+  printf '%s\n' 'linproc	/proc	linprocfs	rw	0	0' >> /etc/fstab
+fi
+mkdir -p /proc
+
+# bsdinstall copies the live system's resolv.conf, which is empty when the
+# installer never configured DNS. Drop it so dhclient creates a real one.
+if [ -f /etc/resolv.conf ] && [ ! -s /etc/resolv.conf ]; then
+  rm -f /etc/resolv.conf
+fi
+
+sysrc dinx_firstboot_enable="YES"
+sysrc dinx_first_run_enable="YES"
+sysrc dinx_session_enable="YES"
+
+mkdir -p /var/db/dinx-bsd
+touch /var/db/dinx-bsd/base-installed
+printf '%s\n' 'DINX-BSD base installation completed.'

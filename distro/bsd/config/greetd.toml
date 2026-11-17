@@ -1,0 +1,22 @@
+# greetd configuration for DINX-BSD.
+#
+# Boot-time desktop autostart is handled by /etc/rc.d/dinx_session (direct
+# session launch, helloSystem/NomadBSD style); greetd is the interactive
+# greeter used after the session exits, so the installer keeps it disabled
+# (dinx_greetd_enable=NO). The DINX greetd fork's initial_session autologin
+# only works with a controlling terminal (ssh/console), never under daemon(8)
+# from rc, which is why it is not the boot path.
+#
+# [terminal] is required: without it greetd fails at startup with
+# "terminal: current vt invalid: 0" (VT numbers are zero-based in greetd,
+# whereas vidcontrol -s is one-based). ttyv7 is disabled in /etc/ttys and
+# reserved for greetd.
+[terminal]
+vt = 7
+switch = false
+
+# agreety needs the absolute path: the rc environment's PATH excludes
+# /usr/local/bin, and greetd execs the command directly (ENOENT panic).
+[default_session]
+command = "/usr/local/bin/agreety --cmd /usr/local/bin/dinx-session-select"
+user = "greeter"

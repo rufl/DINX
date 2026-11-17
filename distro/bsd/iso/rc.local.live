@@ -1,0 +1,80 @@
+#!/bin/sh
+# DINX-BSD live mode: replaces the disc1 auto-installer rc.local.
+# The disc1 root is read-only cd9660, so make /etc, /var and /usr/local
+# writable with memory disks (helloSystem/NomadBSD make the whole root
+# writable; we do it per-directory), extract the DINX overlay, then start
+# the first-run wizard and desktop. Permanent install: `dinx-installer`.
+# /home cannot get a layer (no mountpoint on the ro root); live homes live
+# in /tmp/home (tmpfs) and persistence nullfs-mounts over that on live.
+
+# rc.local stdout goes to the video console; mirror it to serial only when the
+# device can actually be opened (VirtualBox may expose an unusable ttyu0 node).
+if [ -c /dev/ttyu0 ] && ( : > /dev/ttyu0 ) 2>/dev/null; then
+  exec > /dev/ttyu0 2>&1
+fi
+# /tmp lives on the read-only cd9660 root, so every write (bsdinstall_etc,
+# the md staging dirs, the live home) fails until it is a tmpfs. mount(8)
+# does not need to create the mountpoint: /tmp already exists on the disc.
+mount -t tmpfs tmpfs /tmp || { echo 'dinx-live: tmpfs /tmp failed'; }
+mkdir -p /tmp/bsdinstall_etc /tmp/home
+touch /tmp/dinx-live
+
+make_writable() {
+  dir=$1
+  size=$2
+  md=$(mdconfig -a -t malloc -s "$size") || { echo "dinx-live: mdconfig $dir failed"; return 1; }
+  newfs "/dev/$md" >/dev/null 2>&1 || { echo "dinx-live: newfs $dir failed"; return 1; }
+  mkdir -p "/tmp/wr-$md"
+  mount "/dev/$md" "/tmp/wr-$md" || { echo "dinx-live: mount tmp $dir failed"; return 1; }
+  cp -a "$dir/." "/tmp/wr-$md/" 2>/dev/null
+  umount "/tmp/wr-$md" || { echo "dinx-live: umount tmp $dir failed"; return 1; }
+  mount "/dev/$md" "$dir" || { echo "dinx-live: mount $dir failed"; return 1; }
+}
+
+make_writable /etc 16m
+make_writable /var 64m
+make_writable /usr/local 128m
+# init launches getty after rc.local returns. Reserve ttyv7 for the greeter
+# but keep ttyv0's getty: the live medium carries no desktop packages (they
+# are installed on the target by install-dinx-bsd.sh), so the console login
+# is the operator's entry point here. On an installed system the ttyv0 getty
+# is switched off by installerconfig and dinx_session owns the console.
+sed -i '' '/^ttyv7[[:space:]]/s/onifexists/off/' /etc/ttys
+
+# The overlay is only extracted by bsdinstall during permanent install;
+# the live root needs it too (bins, rc.d units, greetd configs).
+if [ -f /usr/freebsd-dist/dinx-bsd-overlay.txz ]; then
+  tar -xmf /usr/freebsd-dist/dinx-bsd-overlay.txz --no-same-owner -C /
+fi
+touch /etc/dinx-live
+
+share=/usr/local/share/dinx-bsd/distro/bsd
+
+# Live session account + autologin greeter config.
+hostname dinx-bsd
+sysrc hostname="dinx-bsd" >/dev/null 2>&1
+pw useradd dinx -m -d /tmp/home/dinx -s /bin/sh -G video -c 'DINX Live' 2>/dev/null || true
+install -m 0644 "$share/config/greetd-live.toml" \
+  /usr/local/etc/greetd/config.toml
+
+# Qualification marker on live too.
+if [ -f "$share/config/rc.d/dinx_marker" ]; then
+  install -m 0555 "$share/config/rc.d/dinx_marker" /etc/rc.d/dinx_marker
+  sysrc dinx_marker_enable=YES >/dev/null 2>&1
+fi
+
+sysrc ifconfig_DEFAULT=DHCP background_dhclient=YES >/dev/null 2>&1
+sysrc dinx_live_persist_enable=YES dinx_first_run_enable=YES dinx_session_enable=YES >/dev/null 2>&1
+
+# rc.local runs after rc: apply this boot, not only the next one.
+# A live medium boots straight to the desktop (helloSystem/NomadBSD do the
+# same) once the session is available; this medium ships no desktop packages
+# (install-dinx-bsd.sh installs them on the target), so dinx_session is a
+# no-op here and the console login stays as the operator's entry point.
+# The first-run wizard still runs, but detached by rc.d/dinx_first_run with a
+# defaults watchdog: an interactive TUI must never gate a live boot whose
+# console nobody is watching.
+mkdir -p /var/db/dinx-bsd
+service seatd onestart >/dev/null 2>&1
+service dinx_first_run onestart >/dev/null 2>&1
+exit 0

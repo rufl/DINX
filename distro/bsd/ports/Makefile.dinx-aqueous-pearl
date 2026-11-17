@@ -1,9 +1,9 @@
 # FreeBSD Port Makefile for DINX Aqueous + Pearl Integration (DINX-BSD)
 PORTNAME=	dinx-aqueous-pearl
 PORTVERSION=	1.0.0
+DISTNAME=	${PORTNAME}-${PORTVERSION}
+
 CATEGORIES=	x11-wm wayland
-MASTER_SITES=	https://github.com/rufl/dinx-aqueous-pearl/releases/download/v1.0.0/
-DISTNAME=	dinx-aqueous-pearl-1.0.0
 
 MAINTAINER=	trafael@dinx.org
 COMMENT=	DINX Aqueous compositor and Pearl shell session bridge for DINX-BSD
@@ -12,13 +12,17 @@ WWW=		https://github.com/rufl/DINX
 LICENSE=	MIT
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
-BUILD_DEPENDS=	zig>=0.13.0:lang/zig
-RUN_DEPENDS=	aqueous>=1.0.5:x11-wm/aqueous \
-		pearl>=0.3.0:x11-wm/pearl
+# Requires dinx-aqueous and dinx-pearl from the local DINX repository;
+# they are not FreeBSD ports origins and cannot be BUILD_DEPENDS.
+BUILD_DEPENDS=	zig>=0.16.0:lang/zig
 
-USES=		zig
-USE_ZIG=	yes
+USES=		pkgconfig
 
+# Source tarball: Seafoam-Labs/pearl v0.3.0 release archive; port builds
+# dinx-aqueous-pearl from the pearl source tree (no upstream tarball exists).
+MASTER_SITES=	https://github.com/Seafoam-Labs/pearl/archive/refs/tags/
+DISTFILES=	v0.3.0.tar.gz
+WRKSRC=		${WRKDIR}/pearl-0.3.0
 do-build:
 	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
 

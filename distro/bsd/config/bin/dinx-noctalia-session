@@ -1,0 +1,56 @@
+#!/bin/sh
+# DINX alternative session: Aqueous compositor (Xwayland enabled) + Noctalia shell.
+#
+# Same lifecycle contract as dinx-pearl-session: Aqueous owns the session,
+# creates the Wayland/IPC sockets and Xwayland, injects the env into its init
+# child, and arms an idle exit timer that only a connected IPC client renews.
+# The shell must therefore be started BY the init child (aqueous -c <init>),
+# never launched in parallel -- a compositor with no IPC client tears down.
+set -eu
+. "${DINX_PREFIX:-/usr/local}/libexec/dinx/session-common"
+
+start_audio
+
+if ! command -v aqueous >/dev/null 2>&1; then
+  echo 'dinx-noctalia-session: aqueous compositor not installed' >&2
+  exit 1
+fi
+if ! command -v noctalia >/dev/null 2>&1; then
+  echo 'dinx-noctalia-session: noctalia shell not installed' >&2
+  exit 1
+fi
+
+# Xwayland socket directory must exist before the compositor starts.
+mkdir -p /tmp/.X11-unix 2>/dev/null || true
+chmod 1777 /tmp/.X11-unix 2>/dev/null || true
+
+# The IPC directory check requires 0700 (InsecureRuntimeDirectory otherwise).
+mkdir -p "$XDG_RUNTIME_DIR/aqueous" 2>/dev/null || true
+chmod 700 "$XDG_RUNTIME_DIR/aqueous" 2>/dev/null || true
+
+init="$XDG_RUNTIME_DIR/dinx-init"
+cat > "$init" <<'EOF'
+#!/bin/sh
+# The compositor does not set XDG_CURRENT_DESKTOP; shells may validate it.
+export XDG_CURRENT_DESKTOP=Aqueous
+
+# No DRM device (virtual GPUs have no FreeBSD driver): republish the headless
+# session over VNC so it stays reachable from the hypervisor host.
+if [ "${DINX_HEADLESS:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
+  wayvnc --render-cursor 0.0.0.0 "${DINX_VNC_PORT:-5900}" &
+fi
+
+exec noctalia
+EOF
+chmod 755 "$init"
+
+if [ ! -e /dev/dri/card0 ]; then
+  export WLR_BACKENDS=headless
+  export DINX_HEADLESS=1
+  echo 'dinx-noctalia-session: no /dev/dri, running headless' >&2
+  if command -v wayvnc >/dev/null 2>&1; then
+    echo "dinx-noctalia-session: desktop available over VNC on port ${DINX_VNC_PORT:-5900}" >&2
+  fi
+fi
+
+exec aqueous -c "$init"

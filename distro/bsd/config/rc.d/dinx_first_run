@@ -1,0 +1,44 @@
+#!/bin/sh
+# PROVIDE: dinx_first_run
+# REQUIRE: NETWORKING DAEMON dinx_live_persist
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="dinx_first_run"
+rcvar="dinx_first_run_enable"
+start_cmd="dinx_first_run_start"
+
+dinx_first_run_start()
+{
+	# Detached, exactly like dinx_firstboot: an interactive TUI must never
+	# block the boot transaction. rc.local has no controlling terminal, so
+	# script(1) hands bsddialog a PTY relayed to ttyv0; daemon(8) keeps rc
+	# moving even if the dialog waits for an operator (or fails to draw).
+	if [ -f /var/db/dinx-bsd/first-run-done ]; then
+		service dinx_session onestart >/dev/null 2>&1
+	elif [ -c /dev/ttyv0 ]; then
+		/usr/sbin/daemon -o /var/log/dinx-first-run.log -- \
+		  env TERM=xterm script -q /dev/null /usr/local/bin/dinx-first-run \
+		  </dev/ttyv0 >/dev/ttyv0 2>&1
+		# No operator may ever reach the console (headless VM, unattended
+		# install, dialog that cannot draw). After a grace period, apply
+		# the wizard's defaults non-interactively and start the desktop;
+		# an operator answering in time wins the race via the done flag.
+		/usr/sbin/daemon -o /var/log/dinx-first-run-watchdog.log -- sh -c '
+		  i=0
+		  while [ "$i" -lt "${DINX_FIRST_RUN_GRACE:-180}" ]; do
+		    [ -f /var/db/dinx-bsd/first-run-done ] && exit 0
+		    i=$((i + 1)); sleep 1
+		  done
+		  [ -f /var/db/dinx-bsd/first-run-done ] && exit 0
+		  DINX_FIRST_RUN_DEFAULTS=1 /usr/local/bin/dinx-first-run
+		  service dinx_session onestart
+		'
+	else
+		service dinx_session onestart >/dev/null 2>&1
+	fi
+}
+
+load_rc_config $name
+run_rc_command "$1"

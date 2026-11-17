@@ -1,0 +1,21 @@
+#!/bin/sh
+# PROVIDE: dinx_live_persist
+# REQUIRE: FILESYSTEMS
+# BEFORE: dinx_first_run
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="dinx_live_persist"
+rcvar="dinx_live_persist_enable"
+start_cmd="dinx_live_persist_start"
+
+dinx_live_persist_start()
+{
+	if [ -f /etc/dinx-live ]; then
+		/usr/local/bin/dinx-live-persist mount
+	fi
+}
+
+load_rc_config $name
+run_rc_command "$1"

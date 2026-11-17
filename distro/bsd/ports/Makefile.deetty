@@ -21,7 +21,10 @@ do-build:
 	@cd ${WRKSRC} && zig build -Doptimize=ReleaseSafe
 
 do-install:
-	@mkdir -p ${STAGEDIR}${PREFIX}/bin
-	@cp ${WRKSRC}/zig-out/bin/deetty ${STAGEDIR}${PREFIX}/bin/
+	@${MKDIR} ${STAGEDIR}${PREFIX}/bin
+	@${INSTALL_PROGRAM} ${WRKSRC}/zig-out/bin/deetty ${STAGEDIR}${PREFIX}/bin/
+	@if [ -f ${WRKSRC}/zig-out/bin/dintor ]; then \
+		${INSTALL_PROGRAM} ${WRKSRC}/zig-out/bin/dintor ${STAGEDIR}${PREFIX}/bin/; \
+	fi
 
 .include <bsd.port.mk>

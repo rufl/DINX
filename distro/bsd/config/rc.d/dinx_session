@@ -1,0 +1,69 @@
+#!/bin/sh
+# PROVIDE: dinx_session
+# REQUIRE: LOGIN DAEMON cleanvar seatd
+# KEYWORD: nojail
+#
+# Desktop autostart (helloSystem/NomadBSD style): rc launches the session
+# directly on the console. The DINX greetd fork cannot autologin under
+# daemon(8) (initial_session needs a controlling terminal) and its agreety
+# aborts writing to the reserved VT ("/dev/tty" ENXIO), so greetd stays as
+# the interactive greeter only. The session chain is
+# dinx-session-select -> dinx-pearl-session -> aqueous -c dinx-init ->
+# pearl + wayvnc; the getty on ttyv0 is switched off in /etc/ttys by the
+# installer/rc.local.live so nothing contends for the console.
+
+. /etc/rc.subr
+
+name="dinx_session"
+rcvar="dinx_session_enable"
+start_cmd="dinx_session_start"
+stop_cmd="dinx_session_stop"
+
+dinx_session_start()
+{
+	[ -x /usr/local/bin/dinx-session-select ] || return 0
+	# Live media ship without the desktop packages installed; leave the
+	# console free for the operator/installer instead of failing loudly.
+	if [ ! -x /usr/local/bin/aqueous ] || [ ! -x /usr/local/bin/pearl ]; then
+		echo 'dinx_session: desktop packages not installed; console login left enabled'
+		return 0
+	fi
+	id dinx >/dev/null 2>&1 || { echo 'dinx_session: user dinx missing'; return 1; }
+	if [ ! -f /var/db/dinx-bsd/first-run-done ]; then
+		echo "dinx_session: first-run wizard pending; start deferred"
+		return 1
+	fi
+	if pgrep -f 'aqueous -c' >/dev/null 2>&1; then
+		echo "dinx_session: compositor already running"
+		return 0
+	fi
+	# Pearl reads /proc/self/exe and /proc/meminfo; procfs is not mounted by
+	# the default rc on a live root.
+	if [ ! -e /proc/self/exe ]; then
+		mkdir -p /proc
+		mount -t procfs proc /proc >/dev/null 2>&1 \
+		  || mount -t linprocfs linproc /proc >/dev/null 2>&1 || true
+	fi
+	# The session user's runtime dir must pre-exist with 0700 and the right
+	# owner; live ISOs keep home on tmpfs (/tmp/home/dinx), so resolve it.
+	sess_home=$(awk -F: '$1=="dinx"{print $6; exit}' /etc/passwd)
+	[ -n "$sess_home" ] && install -d -m 0700 -o dinx -g dinx "$sess_home/.run" 2>/dev/null
+	# script(1) gives the session a real controlling terminal (pty), su -m
+	# drops privileges; session-common repairs HOME when su keeps the
+	# parent's (root) value. daemon(8) detaches the whole pipeline from rc.
+	/usr/sbin/daemon -p /var/run/dinx_session.pid -o /var/log/dinx-session.log -- \
+	  script -q /dev/null su -m dinx -c '/usr/local/bin/dinx-session-select' \
+	  </dev/ttyv0 >/dev/ttyv0 2>&1
+}
+
+dinx_session_stop()
+{
+	[ -f /var/run/dinx_session.pid ] && \
+	  kill "$(cat /var/run/dinx_session.pid)" 2>/dev/null
+	pkill -f 'aqueous -c' 2>/dev/null
+	pkill -f 'dinx-session-select' 2>/dev/null
+	return 0
+}
+
+load_rc_config $name
+run_rc_command "$1"

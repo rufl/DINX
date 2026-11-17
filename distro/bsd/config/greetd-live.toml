@@ -1,0 +1,11 @@
+[terminal]
+vt = 7
+switch = false
+
+[initial_session]
+command = "/usr/local/bin/dinx-live-session"
+user = "dinx"
+
+[default_session]
+command = "/usr/local/bin/agreety --cmd /usr/local/bin/dinx-session-select"
+user = "greeter"

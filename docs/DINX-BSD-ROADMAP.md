@@ -1,6 +1,6 @@
 # DINX-BSD Architecture and Porting Roadmap
 
-Target: FreeBSD 14.2+ base with dinit, seatd, wlroots, Aqueous, Pearl, PipeWire, OctaPkg, and linux-rl9.
+Target: FreeBSD 15.1 base with dinit, seatd, wlroots, Aqueous, Pearl, PipeWire, OctaPkg, and modern `linux-rl9` (Rocky Linux 9.7+ base layer).
 
 ## 1. Core Stack Mapping
 - **Kernel / Drivers**: FreeBSD kernel + `drm-kmod` (AMD/Intel/NVIDIA)
@@ -9,7 +9,7 @@ Target: FreeBSD 14.2+ base with dinit, seatd, wlroots, Aqueous, Pearl, PipeWire,
 - **Compositor**: Aqueous (Zig/wlroots)
 - **Desktop Shell**: Pearl Greeter / Pearl Panel (GTK4 / Qt6)
 - **Audio**: PipeWire + WirePlumber (OSS/sndio backend)
-- **Package Management**: OctaPkg (frontend) + FreeBSD `pkg` (native ports) + `linux-rl9` (compatibility layer)
+- **Package Management**: OctaPkg (frontend) + FreeBSD `pkg` (native ports) + `linux-rl9` (`linux_base-rl9` Rocky Linux 9.7+ compatibility layer)
 
 ## 2. Reusable DINX Components
 - Test harnesses and contract scripts (`scripts/check_*.sh`, `scripts/smoke_*.sh`)
@@ -18,4 +18,4 @@ Target: FreeBSD 14.2+ base with dinit, seatd, wlroots, Aqueous, Pearl, PipeWire,
 
 ## 3. Porting Inventory
 - Convert core application build recipes from Arch Linux `PKGBUILD` to FreeBSD Ports Makefiles.
-- Configure `linux-rl9` environment for Steam and proprietary Linux binaries.
+- Configure `linux-rl9` (`linux_base-rl9`) environment for Steam and proprietary Linux binaries.

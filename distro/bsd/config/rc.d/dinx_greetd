@@ -1,0 +1,60 @@
+#!/bin/sh
+# PROVIDE: dinx_greetd
+# REQUIRE: LOGIN
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="dinx_greetd"
+rcvar="dinx_greetd_enable"
+pidfile="/var/run/greetd.pid"
+command="/usr/sbin/daemon"
+command_args="-p ${pidfile} /usr/local/sbin/greetd --config /usr/local/etc/greetd/config.toml"
+start_precmd="dinx_greetd_precmd"
+
+dinx_greetd_precmd()
+{
+	if [ ! -f /var/db/dinx-bsd/first-run-done ]; then
+		echo "dinx_greetd: first-run wizard pending; start deferred"
+		return 1
+	fi
+
+	# VirtualBox guests: the session wrapper nests the compositor on X11 when
+	# /dev/vboxguest exists; without the module it stays headless (VNC only).
+	if [ ! -e /dev/vboxguest ]; then
+		kldload vboxguest >/dev/null 2>&1 || true
+	fi
+	if [ -x /usr/local/etc/rc.d/vboxservice ]; then
+		service vboxservice onestart >/dev/null 2>&1 || true
+	fi
+
+	# No VT switch here: greetd is the fallback interactive greeter on its own
+	# reserved ttyv7 (config [terminal] vt = 7, switch = false). The boot-time
+	# desktop autostart is rc.d/dinx_session, which owns ttyv0. Switching VTs
+	# here would fight the session for the console.
+
+	# greetd defaults to /run/greetd.sock (Linux path); FreeBSD has /var/run.
+	if [ ! -e /run ]; then
+		ln -s /var/run /run
+	fi
+	# The built greetd re-executes its session helper through
+	# /proc/self/exe; without procfs mounted, spawn panics with
+	# "unable to exec: ENOENT" before any greeter appears. Live roots
+	# never run `mount -a`, so mount it here instead of relying on fstab.
+	if [ ! -e /proc/self/exe ]; then
+		mkdir -p /proc
+		mount -t procfs proc /proc >/dev/null 2>&1 \
+		  || mount -t linprocfs linproc /proc >/dev/null 2>&1 \
+		  || echo "dinx_greetd: /proc unavailable; greetd spawn will fail"
+	fi
+	# greetd chdirs the greeter into its login home; `pw useradd` without
+	# -m never creates it.
+	install -d -m 0755 -o greeter -g greeter /home/greeter 2>/dev/null || true
+	# The runfile makes greetd resume a prior session instead of starting
+	# the configured default_session; the greeter is a login fallback, so
+	# always start clean.
+	rm -f /var/run/greetd.run
+}
+
+load_rc_config $name
+run_rc_command "$1"

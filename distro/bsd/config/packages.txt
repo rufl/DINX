@@ -7,21 +7,36 @@ sysutils/seatd
 multimedia/pipewire
 multimedia/wireplumber
 x11-wm/wayland
-x11/wlroots
+x11/wlroots020
+# X11 / VirtualBox guest video (LIVE ISO only): FreeBSD 15.1 has no
+# VirtualBox DRM driver, so the live desktop runs nested on X11 (vboxvideo)
+# inside the VM window. The installed system uses Wayland directly; wayvnc
+# stays as the fallback for headless guests without /dev/dri.
+x11/xorg
+x11/xkeyboard-config
+x11-drivers/xf86-video-vboxvideo
+emulators/virtualbox-ose-additions
 sysutils/dinit
 sysutils/pkg
 x11-toolkits/qt6-base
 graphics/swayimg
+# GTK4 icon themes: mandatory for the Pearl shell, not cosmetic. GTK4 resolves
+# fallback icons through Adwaita; without it every GtkImage reports baseline
+# INT32_MIN, gdkshm then rejects the resulting Cairo image surface and the
+# shell aborts right after event=ready.
+x11-themes/adwaita-icon-theme
+x11-themes/hicolor-icon-theme
 x11-wm/wdisplays
 audio/zrythm
 devel/godot
-x11-wm/shikane
+emulators/linux-rl9
 
 # DINX Custom / First-Party Ports (Requiring custom packaging)
-x11-wm/aqueous
-x11-wm/pearl
-x11-themes/dinx-pearl-themes
-x11-themes/dinx-gtk-themes
+x11-wm/dinx-aqueous
+x11-wm/dinx-pearl
+x11-wm/dome
+# Alternative shell (optional; native C++23/meson, not in FreeBSD ports yet)
+x11-wm/noctalia
 sysutils/octapkg
 x11/deetty
 sysutils/dinitui
@@ -73,3 +88,19 @@ sysutils/dinx-live-root-overrides
 sysutils/dinx-plymouth-theme
 sysutils/dinx-ray-mark
 sysutils/dinx-first-run-wizard
+
+# Gaming / Linux compatibility (HyprBSD-style stack)
+graphics/drm-kmod
+graphics/mesa-dri
+graphics/vulkan-loader
+graphics/vulkan-tools
+emulators/wine-proton
+emulators/libc6-shim
+games/linux-steam-utils
+emulators/linux-rl9-dbus-libs
+emulators/linux-rl9-devtools
+emulators/linux-rl9-nss
+security/ca_root_nss
+lang/ruby
+# benchmarks/mangohud: only in latest, not quarterly; optional overlay HUD.
+# Not in FreeBSD ports: dxvk, gamemode (Vulkan drivers ship in mesa-dri).

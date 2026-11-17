@@ -1,0 +1,22 @@
+#!/bin/sh
+# PROVIDE: dinx_firstboot
+# REQUIRE: NETWORKING DAEMON
+# KEYWORD: nojail
+
+. /etc/rc.subr
+
+name="dinx_firstboot"
+rcvar="dinx_firstboot_enable"
+start_cmd="dinx_firstboot_start"
+
+dinx_firstboot_start()
+{
+	# Detached: package installation must never block the boot transaction
+	# (getty/login and the qualification marker). The script starts seatd and
+	# greetd itself once the stack is installed.
+	/usr/sbin/daemon -o /var/log/dinx-firstboot.log \
+	  /bin/sh /usr/local/share/dinx-bsd/scripts/install-dinx-bsd.sh
+}
+
+load_rc_config $name
+run_rc_command "$1"

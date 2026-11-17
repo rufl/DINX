@@ -1,0 +1,126 @@
+# Sourced by DINX session wrappers. Provides the FreeBSD equivalent of the
+# turnstile roles we need: per-user XDG_RUNTIME_DIR and session-scoped
+# PipeWire/WirePlumber (children die with the session).
+PATH="/usr/local/sbin:/usr/local/bin:$PATH"
+export PATH
+# Launchers (su -m, capability-dropped greeters) can hand us the parent's
+# HOME; the session user must own its home or Pearl/wireplumber abort with
+# "AccessDenied" when creating state dirs. Fall back to the passwd entry.
+uid=$(id -u)
+if [ ! -w "${HOME:-/nonexistent}" ]; then
+  home=$(awk -F: -v u="$uid" '$3==u{print $6; exit}' /etc/passwd)
+  [ -n "$home" ] && [ -w "$home" ] && HOME="$home"
+fi
+if [ ! -w "${HOME:-/nonexistent}" ]; then
+  HOME="/tmp/dinx-home-$uid"
+  mkdir -p "$HOME" 2>/dev/null
+  chmod 700 "$HOME" 2>/dev/null
+fi
+export HOME
+XDG_RUNTIME_DIR="/var/run/user-${uid}"
+if ! mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null; then
+  XDG_RUNTIME_DIR="/tmp/xdg-runtime-${uid}"
+  mkdir -p "$XDG_RUNTIME_DIR"
+fi
+chmod 700 "$XDG_RUNTIME_DIR"
+export XDG_RUNTIME_DIR
+export XDG_SESSION_TYPE=wayland
+
+_session_pids=""
+session_cleanup() {
+  for p in $_session_pids; do
+    kill "$p" 2>/dev/null
+  done
+}
+trap session_cleanup EXIT INT TERM
+
+start_audio() {
+  if command -v pipewire >/dev/null 2>&1; then
+    pipewire &
+    _session_pids="$_session_pids $!"
+  fi
+  if command -v wireplumber >/dev/null 2>&1; then
+    wireplumber &
+    _session_pids="$_session_pids $!"
+  fi
+}
+
+wait_wayland() {
+  i=0
+  while [ "$i" -lt 50 ]; do
+    for s in "$XDG_RUNTIME_DIR"/wayland-*; do
+      if [ -S "$s" ]; then
+        WAYLAND_DISPLAY=$(basename "$s")
+        export WAYLAND_DISPLAY
+        return 0
+      fi
+    done
+    i=$((i + 1))
+    sleep 0.1
+  done
+  echo 'dinx-session: no Wayland socket appeared' >&2
+  return 1
+}
+
+# Locale/keyboard chosen by the first-run wizard.
+for f in /usr/local/etc/dinx/locale.conf /usr/local/etc/dinx/keyboard.conf; do
+  if [ -r "$f" ]; then
+    . "$f"
+  fi
+done
+export LANG LC_ALL XKB_DEFAULT_LAYOUT
+export TERMINAL="${TERMINAL:-deetty}"
+export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland;xcb}"
+export GDK_BACKEND="${GDK_BACKEND:-wayland,x11}"
+export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-wayland,x11}"
+export MOZ_ENABLE_WAYLAND="${MOZ_ENABLE_WAYLAND:-1}"
+if command -v jq >/dev/null 2>&1; then
+  _pearl_preferences="${XDG_CONFIG_HOME:-$HOME/.config}/pearl/preferences.json"
+  if [ -r "$_pearl_preferences" ]; then
+    _theme_variant=$(jq -r '.theme.variant // empty' "$_pearl_preferences" 2>/dev/null || true)
+    case "$_theme_variant" in
+      dark|light)
+        export DINX_COLOR_SCHEME="$_theme_variant"
+        export DINTOR_THEME="prefer-$_theme_variant"
+        export GTK_APPLICATION_PREFER_DARK_THEME=$([ "$_theme_variant" = dark ] && printf 1 || printf 0)
+        ;;
+    esac
+  fi
+fi
+
+# Pearl reads /proc (cpuinfo, meminfo, ...); provide linprocfs best-effort.
+if [ ! -f /proc/cpuinfo ] && command -v mount >/dev/null 2>&1; then
+  mkdir -p /proc 2>/dev/null
+  mount -t linprocfs linprocfs /proc 2>/dev/null || true
+fi
+
+# Backend selection: real GPU (DRM) > headless + wayvnc.
+# The nested-X11-on-VirtualBox-vboxvideo path is a LIVE-ISO testing hack:
+# FreeBSD has no VBoxSVGA DRM driver, so Aqueous cannot use wlroots' DRM
+# backend there, and the VM window is only reachable by nesting Xorg on top
+# of the vboxvideo DDX. On the installed system the desktop uses Wayland
+# normally; without a real GPU it degrades to headless + wayvnc instead of
+# nesting X11.
+if [ ! -e /dev/dri/card0 ] && [ -f /etc/dinx-live ] && [ -c /dev/vboxguest ]; then
+    export DINX_X11=1
+    export WLR_BACKENDS=x11
+elif [ ! -e /dev/dri/card0 ]; then
+    export WLR_BACKENDS=headless
+    export WLR_RENDERER=pixman
+    # Virtual machines expose no evdev devices and no DRM lease; libinput
+    # then aborts the headless backend with "AccessDenied". The session keeps
+    # keyboard/mouse through wayvnc's virtual input instead.
+    export WLR_LIBINPUT_NO_DEVICES=1
+    # GTK's default Vulkan path cannot present reliably through headless VNC.
+    export GSK_RENDERER=cairo
+fi
+
+# DINX theme sync: Pearl prefs -> GTK/qt6ct (from the themes branch).
+if [ -x /usr/local/libexec/dinx-sync-session-theme ]; then
+  /usr/local/libexec/dinx-sync-session-theme >/dev/null 2>&1 || true
+fi
+if [ -x /usr/local/libexec/dinx-qt6ct-palette-seed ]; then
+  /usr/local/libexec/dinx-qt6ct-palette-seed \
+    "$HOME/.config/qt6ct/colors/DINX.conf" \
+    /etc/skel/.config/qt6ct/colors/DINX.conf >/dev/null 2>&1 || true
+fi

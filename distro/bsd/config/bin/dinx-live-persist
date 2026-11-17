@@ -1,0 +1,43 @@
+#!/bin/sh
+# NomadBSD-style persistence for the live system: a DINX-DATA UFS partition
+# on the boot USB, nullfs-mounted over /home and DINX state dirs.
+set -u
+log() { printf 'dinx-live-persist: %s\n' "$*"; }
+
+dev=/dev/gpt/DINX-DATA
+
+do_mount() {
+  [ -c "$dev" ] || return 0
+  mkdir -p /data
+  mount -o rw "$dev" /data 2>/dev/null || { log 'mount /data failed'; return 1; }
+  homebase=/home
+  if [ -f /etc/dinx-live ]; then
+    homebase=/tmp/home
+  fi
+  mkdir -p /data/home /data/dinx-etc /data/dinx-db "$homebase" \
+    /usr/local/etc/dinx /var/db/dinx-bsd
+  mount -t nullfs /data/home "$homebase" 2>/dev/null || log 'nullfs home failed'
+  mount -t nullfs /data/dinx-etc /usr/local/etc/dinx 2>/dev/null \
+    || log 'nullfs dinx-etc failed'
+  mount -t nullfs /data/dinx-db /var/db/dinx-bsd 2>/dev/null \
+    || log 'nullfs dinx-db failed'
+  log 'persistent data mounted'
+}
+
+do_create() {
+  if [ -c "$dev" ]; then
+    do_mount
+    return $?
+  fi
+  disk=$(gpart show 2>/dev/null | awk '/^=>/ {print $3; exit}')
+  [ -n "$disk" ] || { log 'no boot disk found'; return 1; }
+  gpart add -t freebsd-ufs -l DINX-DATA "$disk" || { log 'gpart add failed'; return 1; }
+  newfs "$dev" || { log 'newfs failed'; return 1; }
+  do_mount
+}
+
+case "${1:-mount}" in
+  mount) do_mount ;;
+  create) do_create ;;
+  *) log "usage: $0 mount|create"; exit 1 ;;
+esac

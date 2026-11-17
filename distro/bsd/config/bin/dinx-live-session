@@ -1,0 +1,11 @@
+#!/bin/sh
+# Live-session entrypoint: expose a shell when desktop packages are absent.
+set -eu
+
+if command -v aqueous >/dev/null 2>&1 && command -v pearl >/dev/null 2>&1; then
+    exec /usr/local/bin/dinx-session-select
+fi
+
+printf '%s\n' 'DINX live: desktop packages are not installed.'
+printf '%s\n' 'Run dinx-installer to install DINX-BSD to disk.'
+exec /bin/sh

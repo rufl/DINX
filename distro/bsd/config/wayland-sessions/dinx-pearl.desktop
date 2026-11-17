@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=DINX (Pearl)
+Comment=Aqueous compositor with the Pearl shell
+Exec=/usr/local/bin/dinx-pearl-session
+Type=Application
+DesktopNames=DINX

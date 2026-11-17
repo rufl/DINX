@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=DINX (Noctalia)
+Comment=Aqueous compositor with the Noctalia shell
+Exec=/usr/local/bin/dinx-noctalia-session
+Type=Application
+DesktopNames=DINX

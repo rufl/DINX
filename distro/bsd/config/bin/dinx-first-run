@@ -1,0 +1,142 @@
+#!/bin/sh
+# DINX first-run wizard (macOS-style flow: language first). TUI via bsddialog
+# (base system); a graphical wizard replaces this once Pearl/Qt lands.
+# Runs on the video console before the desktop; works on live and installed.
+set -u
+
+confdir="${DINX_CONF_DIR:-/usr/local/etc/dinx}"
+statedir="${DINX_STATE_DIR:-/var/db/dinx-bsd}"
+mkdir -p "$confdir" "$statedir"
+
+dlg() {
+  exec 3>&1
+  _r=$(bsddialog "$@" 2>&1 1>&3)
+  _rc=$?
+  exec 3>&-
+  printf '%s' "$_r"
+  return $_rc
+}
+
+# DINX_FIRST_RUN_DEFAULTS=1 skips every prompt (unattended installs and the
+# no-operator fallback of rc.d/dinx_first_run). Same values as the menus'
+# first entries; users reconfigure later through Pearl's own settings.
+if [ "${DINX_FIRST_RUN_DEFAULTS:-0}" = 1 ]; then
+  lang=en_US.UTF-8
+  kbd=us
+  zone=UTC
+  theme_variant=dark
+  corner_radius=15
+  host=dinx-bsd
+  user=dinx
+  pass=""
+  session=pearl
+else
+lang=$(dlg --menu "Welcome to DINX-BSD\nChoose your language" 20 60 12 \
+  en_US.UTF-8 "English" \
+  pt_BR.UTF-8 "Portugues (Brasil)" \
+  es_ES.UTF-8 "Espanol" \
+  fr_FR.UTF-8 "Francais" \
+  de_DE.UTF-8 "Deutsch" \
+  it_IT.UTF-8 "Italiano" \
+  ja_JP.UTF-8 "Japanese" \
+  zh_CN.UTF-8 "Chinese (Simplified)" \
+  ru_RU.UTF-8 "Russian" \
+  ko_KR.UTF-8 "Korean") || exit 1
+
+kbd=$(dlg --menu "Keyboard layout" 20 60 12 \
+  us "English (US)" \
+  br "Portugues (Brasil)" \
+  es "Espanol" \
+  fr "Francais" \
+  de "Deutsch" \
+  it "Italiano" \
+  jp "Japanese" \
+  ru "Russian" \
+  kr "Korean") || exit 1
+
+zone=$(dlg --menu "Time zone" 20 60 12 \
+  UTC "UTC" \
+  America/Sao_Paulo "Sao Paulo" \
+  America/New_York "New York" \
+  America/Los_Angeles "Los Angeles" \
+  Europe/London "London" \
+  Europe/Paris "Paris" \
+  Europe/Berlin "Berlin" \
+  Asia/Tokyo "Tokyo" \
+  Asia/Shanghai "Shanghai" \
+  Australia/Sydney "Sydney") || exit 1
+theme_variant=$(dlg --menu "Theme" 12 60 2 \
+  dark "DINX Dark" \
+  light "DINX Light") || exit 1
+
+corner_radius=$(dlg --menu "Window corners" 12 60 2 \
+  15 "Rounded" \
+  0 "Square") || exit 1
+
+host=$(dlg --inputbox "Computer name" 10 60 "dinx-bsd") || exit 1
+user=$(dlg --inputbox "Your full name / account name" 10 60 "dinx") || exit 1
+pass=$(dlg --passwordbox "Password for $user" 10 60) || exit 1
+pass2=$(dlg --passwordbox "Confirm password" 10 60) || exit 1
+if [ "$pass" != "$pass2" ]; then
+  bsddialog --msgbox "Passwords do not match; using empty password." 8 60
+  pass=""
+fi
+
+session=$(dlg --menu "Desktop session" 12 60 4 \
+  pearl "Pearl (default)" \
+  noctalia "Noctalia (alternative)") || exit 1
+fi
+
+printf 'LANG=%s\nLC_ALL=%s\n' "$lang" "$lang" > "$confdir/locale.conf"
+printf 'XKB_DEFAULT_LAYOUT=%s\n' "$kbd" > "$confdir/keyboard.conf"
+if [ -f "/usr/share/zoneinfo/$zone" ]; then
+  cp "/usr/share/zoneinfo/$zone" /etc/localtime 2>/dev/null || true
+fi
+sysrc hostname="$host" >/dev/null 2>&1
+hostname "$host" 2>/dev/null || true
+homebase=/home
+if [ -f /etc/dinx-live ]; then
+  homebase=/tmp/home
+fi
+if ! pw user show "$user" >/dev/null 2>&1; then
+  pw useradd "$user" -m -d "$homebase/$user" -s /bin/sh -G video -c "DINX User"
+fi
+printf '%s\n%s\n' "$pass" "$pass" | pw usermod "$user" -h 0 >/dev/null 2>&1
+user_config="$homebase/$user/.config"
+mkdir -p "$user_config/pearl" "$user_config/dinx"
+umask 077
+cat > "$user_config/pearl/preferences.json" <<EOF
+{
+  "window_corner_radius": $corner_radius,
+  "theme": {
+    "mode": "gtk",
+    "variant": "$theme_variant",
+    "seed": "#F4515B",
+    "source": "seed",
+    "gtk_name": "DINX"
+  },
+  "wallpaper": {"mode": "solid", "path": "", "color": "#0b0d12", "crops": []},
+  "slideshow": {"enabled": false, "folder": "", "interval_seconds": 900, "transition": "fade"},
+  "bar": {"enabled": true, "edge": "top"},
+  "dock": {"enabled": true, "edge": "bottom", "top_icons": true},
+  "output": {"icon_size": 48, "show_hidden": false, "icons_layout": "automatic"}
+}
+EOF
+printf 'theme_variant=%s\nwindow_corner_radius=%s\n' \
+  "$theme_variant" "$corner_radius" > "$user_config/dinx/theme.conf"
+chown -R "$user" "$user_config"
+umask 022
+printf '%s\n' "$session" > "$statedir/session"
+
+if [ -f /etc/dinx-live ] && [ "${DINX_FIRST_RUN_DEFAULTS:-0}" != 1 ]; then
+  if bsddialog --yesno "Create a persistent data partition on the boot USB?\nKeeps /home and settings across reboots." 10 60; then
+    /usr/local/bin/dinx-live-persist create \
+      || bsddialog --msgbox "Persistence setup failed; running ephemeral." 8 60
+  fi
+fi
+
+touch "$statedir/first-run-done"
+[ "${DINX_FIRST_RUN_DEFAULTS:-0}" = 1 ] \
+  || bsddialog --msgbox "Setup complete. Starting your desktop." 8 60
+service dinx_session onestart >/dev/null 2>&1
+exit 0

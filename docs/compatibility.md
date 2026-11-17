@@ -24,7 +24,7 @@ The static DINX theme contract is the source of truth:
 - palette: `/usr/share/dinx/theme/DINX.json`;
 - user color choice: `DINTOR_THEME=prefer-light`;
 - Qt6ct colors: `~/.config/qt6ct/colors/DINX.conf`;
-- GTK theme: the system and skeleton defaults are Adwaita with `gtk-application-prefer-dark-theme=1`, and the session selects the DINX GTK theme, with Noto Sans 10 from DINX's Latin/Latin Extended font subset. `dinx-river-session` exports one fixed dark appearance; once session D-Bus is ready, `dinx-sync-session-theme` writes the dconf `prefer-dark` color scheme, `gtk-theme-name=DINX` and the DINX Qt6ct palette. There is no theme catalog and no saved dark/light variant. Unrelated toolkit settings are preserved.
+- GTK theme: the system and skeleton defaults are Adwaita with `gtk-application-prefer-dark-theme=1`, and the session applies the theme family chosen in the first-run wizard, with Noto Sans 10 from DINX's Latin/Latin Extended font subset. `dinx-river-session` exports `DINX_COLOR_SCHEME=dark` and `DINTOR_THEME=prefer-dark` as recovery defaults and no longer exports `GTK_APPLICATION_PREFER_DARK_THEME` or `ADW_DEBUG_COLOR_SCHEME`; once session D-Bus is ready, `dinx-sync-session-theme` reads `~/.config/dinx/appearance.json` and writes the matching dconf `prefer-dark`/`prefer-light` color scheme, the selected `gtk-theme-name` (DINX by default) and the DINX Qt6ct palette. A missing or invalid `appearance.json` falls back to the DINX dark default. Unrelated toolkit settings are preserved.
 - fixed-width text: Noto Sans Mono 10 from the same subset where the application requires it;
 - GUI bridges: DINX surface, control, hover, primary and error states with Adwaita icons where available; Papirus is the default desktop icon theme.
 
@@ -42,12 +42,12 @@ User scope uses `dinitctl --user`. System scope uses `dinitctl --system` and ret
 
 River and KWM negotiate `xdg-decoration` with each XDG client: windows that accept server-side decorations receive the compositor's own DINX-styled frame, while clients that keep client-side decorations are never decorated twice. `GTK_CSD=0` disables GTK's default CSD, not application-owned custom headerbars. `dinx-river-session` exports `MOZ_GTK_TITLEBAR_DECORATION=system` because Gecko clients such as Firefox select client decorations before checking `GTK_CSD`, and the shipped GTK defaults carry `gtk-decoration-layout=:minimize,maximize,close`.
 
-There is no compositor corner radius and no border-color synchronisation, so appearance is the fixed DINX dark theme only. kwim owns input-device configuration separately from the window manager, so keyboard layouts and touchpad settings live in kwim's configuration rather than in a shell settings application.
+There is no compositor corner radius and no border-color synchronisation, so appearance comes from the GTK theme the first-run wizard selected, DINX dark by default. kwim owns input-device configuration separately from the window manager, so keyboard layouts and touchpad settings live in kwim's configuration rather than in a shell settings application.
 
 - River/KWM is the only selectable and supported DINX user session.
 - The live ISO opens `dinx` from the restartable `dinx-live-session` Dinit service with seatd and a private runtime directory; greetd remains installed-only and the installed rootfs keeps manual login.
-- agreety under greetd is the installed login surface, not a second user session; the DINX image ships a single wayland-sessions entry, `River + KWM (DINX)`, and there is no silent session fallback.
-- `agreety --cmd /usr/local/libexec/dinx-river-session` starts the session. `dinx-river-init` registers `riverctl default-layout kwm`, and `dinx-session-supervisor river` waits for Wayland and session D-Bus readiness, then starts Shikane, the LXQt PolicyKit agent and the required idle helper. It starts the optional BC-250 daemon only when its separately installed signed package is present; install that package only after PCI `1002:13fe` is detected. The generic ISO omits all BC-250-specific packages.
+- agreety under greetd is the installed login surface, not a second user session; the DINX image ships a single wayland-sessions entry, `River + KWM + Morghulis (DINX)`, and there is no silent session fallback.
+- `agreety --cmd /usr/local/libexec/dinx-river-session` starts the session. `dinx-river-init` registers `riverctl default-layout kwm`, and `dinx-session-supervisor river` waits for Wayland and session D-Bus readiness, runs the first-run appearance glue `/usr/local/libexec/dinx-desktop-first-run`, then starts Shikane, the LXQt PolicyKit agent, the required idle helper and the required Morghulis shell. It starts `dinx-dock` as an optional helper and the optional BC-250 daemon only when its separately installed signed package is present; install that package only after PCI `1002:13fe` is detected. The generic ISO omits all BC-250-specific packages.
 - Required-helper or supervisor failure records an explicit failed state and terminates river instead of leaving a blank desktop.
 - The live session uses seatd/libseat; installed sessions retain runtime backend selection with elogind available. Both paths execute directly under dinit and require no systemd, systemctl, uwsm or user units.
 
@@ -71,14 +71,14 @@ DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO 
 | Desktop metadata | `.desktop` entries are valid and discoverable |
 | Optional desktop app launch | Gapless inherits the active Wayland session; firewall-config opens the Firewalld manager; Bluetooth Manager explains missing daemon/controller instead of failing silently (VirtualBox needs USB Bluetooth passthrough) |
 | Launch arguments | file, line and working-directory behavior is deterministic |
-| Theme contract | static DINX palette, system-wide GTK 3/4 dark defaults, session GTK dark selection, Qt6ct DINX palette, and GTK 3/4 fallback titlebar controls are configured |
+| Theme contract | static DINX palette, system-wide GTK 3/4 dark defaults, saved session GTK theme selection, Qt6ct DINX palette, and GTK 3/4 fallback titlebar controls are configured |
 | Greeter/installer/boot | agreety, Calamares and GRUB expose DINX surface, text, selection and focus states |
 | Firefox default | Firefox handles HTML/XHTML/HTTP/HTTPS by default |
 | Storage and files | Pori dinit persistence, Phyto directory handling, File Roller archives and GParted partition editing are present |
 | Desktop layout | River/KWM owns the only user session; KWM is river's default layout, so new windows are tiled by KWM and floating/stacking behavior and the workspace count come from the user's `~/.config/kwm/config.zon`. That file is seeded from `/etc/xdg/kwm/config.zon` only when absent, so existing user config is preserved |
 | VM graphics | A prior manual report reached the DINX desktop in VirtualBox 7.2.22 on Windows 11 (VMSVGA, 3D enabled, EFI, 4 vCPUs, 8 GiB); its log did not prove ISO boot selection or checksum, so it is not release-wide qualification. The current source now routes `vmwgfx`/`vboxvideo` and systems without accessible render nodes through the Vulkan renderer profile (`WLR_RENDERER=vulkan`) with `GSK_RENDERER` unset, while QEMU `virtio_gpu` retains reduced-effects GLES2. Client-surface rendering on the rebuilt ISO is still awaiting direct VirtualBox verification. |
 | VM graphics | The full P0 gate tests the live desktop on default VGA and QEMU Virtio-VGA. QEMU 11.1.2/KVM's `vmware-svga` path stalls in early udev with `vmwgfx` loaded and is not a reliable VirtualBox proxy; direct VirtualBox VMSVGA boot remains unqualified. |
-| Window chrome | Session smoke verifies the negotiated xdg-decoration policy, Firefox/Gecko system decorations, the fixed `:minimize,maximize,close` GTK decoration layout and the single fixed DINX dark appearance |
+| Window chrome | Session smoke verifies the negotiated xdg-decoration policy, Firefox/Gecko system decorations, the fixed `:minimize,maximize,close` GTK decoration layout and the saved DINX appearance |
 | Session safety | idle lock, suspend lock, explicit lock and brightness actions use fixed paths |
 | Display persistence | wdisplays changes atomically update and reload the named Shikane profile |
 | ZLS | Dintor finds the bundled matching Zig standard library without a full compiler |

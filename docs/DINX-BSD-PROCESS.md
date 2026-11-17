@@ -752,3 +752,15 @@ river+kwm) para decidir se sobe, e o stop limpa `river -c`/`kwm`. O que **não**
 está provado: o kwm gerenciando janelas reais com o bar desenhado (a VM de
 build é headless e sem cliente GTK), e o `kwim` (auxiliar de input, construído
 mas não exercitado).
+
+Nota de versionamento (verificada depois do build): os anchors do patch foram
+conferidos contra **ambos** os fontes — o clone da VM (`8dafe7e`, master) e o
+tarball do tag `v0.3.0` que o port fixa (`PORTVERSION=	0.3.0`,
+`v0.3.0.tar.gz`). Os 7 anchors batem nos dois. A única diferença entre o tag e
+o master no caminho portado é `key_repeat.zig:25`: o tag chama
+`timerfd_create(.MONOTONIC, .{ .NONBLOCK = true })` e o master já passou a pedir
+`.CLOEXEC` também. O `DinXTFD` declara os dois campos com default `false`, então
+o literal compila nas duas versões e o patch não precisa de ramo por versão; a
+consequência real é que, no `v0.3.0`, o fd do timer de key-repeat **não** fica
+close-on-exec — um fd a mais herdado pelos filhos que o kwm lança. Inofensivo
+para a sessão e corrigido ao subir o pin para o master.

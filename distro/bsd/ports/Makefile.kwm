@@ -24,10 +24,13 @@ LICENSE=	GPLv3
 LICENSE_FILE=	${WRKSRC}/LICENSE
 
 # wayland-scanner's pkgdatadir is resolved through pkg-config at configure
-# time; without pkgconf the build dies with
-# "FileNotFound: pkg-config --variable=pkgdatadir wayland-scanner".
-BUILD_DEPENDS=	${ZIG_CMD}:lang/zig \
-		pkgconf>=0:devel/pkgconf \
+# time; without it the build dies with
+# "FileNotFound: pkg-config --variable=pkgdatadir wayland-scanner", and scdoc
+# is required by kwm's own build.zig for the man page. The Zig compiler is NOT
+# a port dependency here: the pinned FreeBSD toolchain is vendored as a
+# distfile below, because lang/zig is 0.16 and this source is proven against
+# 0.17.1 (the porting patch assumes the 0.17 std.posix surface).
+BUILD_DEPENDS=	pkgconf>=0:devel/pkgconf \
 		wayland-protocols>=0:graphics/wayland-protocols \
 		scdoc>=0:textproc/scdoc
 LIB_DEPENDS=	libwayland-client.so:graphics/wayland \
@@ -57,11 +60,19 @@ ZIG_BUILD_ARGS=	-Doptimize=ReleaseSafe -Dbar=true -Dkwim=true
 post-patch:
 	@${PATCH} -d ${WRKSRC} -p0 < ${FILESDIR}/kwm-freebsd.patch
 
+# Vendored toolchain: the framework already unpacks the .tar.xz distfile into
+# ${WRKDIR}/zig-x86_64-freebsd-${ZIG_VERSION}; this only covers the case where
+# EXTRACT_ONLY is narrowed, and stays silent otherwise.
 post-extract:
-	@cd ${WRKDIR} && ${TAR} -xf ${DISTDIR}/${ZIG_DISTNAME}.tar.xz
+	@if [ ! -x ${ZIG_CMD} ]; then \
+	  ${TAR} -C ${WRKDIR} -xf ${DISTDIR}/${ZIG_DISTNAME}.tar.xz; \
+	fi
 
 do-build:
-	@cd ${WRKSRC} && ${ZIG_CMD} build ${ZIG_BUILD_ARGS}
+	@if [ ! -x ${ZIG_CMD} ]; then \
+	  ${ECHO_CMD} "missing pinned Zig at ${ZIG_CMD}"; exit 1; \
+	fi
+	@cd ${WRKSRC} && ${ZIG_CMD} build --fetch && ${ZIG_CMD} build ${ZIG_BUILD_ARGS}
 
 do-install:
 	@${MKDIR} ${STAGEDIR}${PREFIX}/bin

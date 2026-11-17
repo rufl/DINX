@@ -260,14 +260,17 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 - **[V]** Transferência host→guest: `python3 -m http.server 8099 --bind
   0.0.0.0` servindo `/tmp` no host + `fetch` no guest (rota
   `/dinx-vm-scripts/<arquivo>`). Guest→host: `curl -X PUT` / `-T` contra um
-  sink **com handler PUT** na 8097 (`/tmp/put-server.py`), gravando em
-  `/tmp/guest-uploads`. Nota de operação: `python3 -m http.server` **não**
-  aceita PUT — um sink sem `do_PUT` devolve 501 e o probe silenciosamente não
+  sink **com handler PUT** na 8097 (`scripts/bsd-vm/host-put-sink.py`),
+  gravando em `/tmp/guest-uploads`. Nota de operação: `python3 -m http.server`
+  **não** aceita PUT — um sink sem `do_PUT` devolve 501 e o probe silenciosamente não
   chega, o que foi a causa do travamento da sessão anterior no meio de uma
   sondagem de API. `nc -N` segue como alternativa.
 - **[V]** Scripts de prova: `headless-proof.sh`, `proof2.sh` (keepalive IPC +
-  grim cedo), `proof3.sh` (aninhado Weston — indisponível), `reinstall-proof.sh`
-  (reempacote + reinstall ordenado + prova).
+  grim cedo), `proof3.sh` (aninhado Weston — indisponível),
+  `reinstall-proof.sh` (reempacote + reinstall ordenado + prova headless),
+  `kwm-port-build.sh` (patch + `zig build` do kwm) e `kwm-runtime-proof.sh`
+  (river headless + prova de `SIGTERM` via self-pipe). Driver do serial no
+  host: `scripts/bsd-vm/serial-run.py SOCK "cmd" [segundos]`.
 - **[V]** Marcadores de conclusão via HTTP de volta ao host (listener 8001).
 
 ### Não funciona / restrições
@@ -372,25 +375,31 @@ sh build-native.sh            # idem; patches via patch-freebsd.py
 sh reinstall-proof.sh         # reempacote + reinstall ordenado + prova headless
 ```
 
-Transferências: host `python3 -m http.server 8099 --bind 0.0.0.0` servindo
-`/tmp` (scripts em `/dinx-vm-scripts/<arquivo>`) + o sink PUT
-`python3 /tmp/put-server.py` na **8097** (grava `/tmp/guest-uploads`); guest
-`fetch -q -o /tmp/x.sh http://10.0.2.2:8099/dinx-vm-scripts/x.sh && sh
-/tmp/x.sh`, volta `curl -s -X PUT --data-binary @/tmp/x.out
-http://10.0.2.2:8097/x.out`. `http.server` **não** aceita PUT: um sink sem
-`do_PUT` devolve 501 e o resultado nunca chega ao host — foi a causa do
-travamento no meio de uma sondagem de API. O console serial do QEMU trunca
-linhas acima de ~256 chars, então comando longo vai sempre por script.
+Transferências (tudo que a fila usa está versionado em `scripts/bsd-vm/`):
 
-Port do kwm (§26), na VM de build, serial `/tmp/dinx-s9.sock`:
-
+```sh
+# host: servir scripts/bsd-vm/ na 8099 e abrir o sink PUT na 8097
+python3 -m http.server 8099 --bind 0.0.0.0 --directory scripts/bsd-vm &
+python3 scripts/bsd-vm/host-put-sink.py &
+python3 scripts/bsd-vm/serial-run.py /tmp/dinx-s9.sock 'uname -K' 20
 ```
-fetch -q -o /tmp/kb.sh http://10.0.2.2:8099/dinx-vm-scripts/kwm-port-build.sh
-sh /tmp/kb.sh http://10.0.2.2:8099/dinx-vm-scripts/patch-kwm-freebsd.py
+
+`http.server` **não** aceita PUT: sem o `do_PUT` do sink o `curl` devolve 501 e
+o resultado do probe nunca chega ao host — foi a causa do travamento no meio de
+uma sondagem de API. O console serial do QEMU trunca linhas acima de ~256 chars,
+então comando longo vai sempre por script (`fetch -q -o /tmp/x.sh
+http://10.0.2.2:8099/x.sh && sh /tmp/x.sh`; volta `curl -s -X PUT
+--data-binary @/tmp/x.out http://10.0.2.2:8097/x.out`).
+
+Port do kwm (§26), na VM de build:
+
+```sh
+fetch -q -o /tmp/kb.sh http://10.0.2.2:8099/kwm-port-build.sh
+sh /tmp/kb.sh http://10.0.2.2:8099/patch-kwm-freebsd.py
 #   patch_rc=0 (7 blocos), build_rc=0, zig-out/bin/kwm
 pkg install -y terminus-font fontconfig && fc-cache -f
-fetch -q -o /tmp/kr3.sh http://10.0.2.2:8099/dinx-vm-scripts/kwm-runtime3.sh
-sh /tmp/kr3.sh   #   NoFont=0, KWM_ALIVE=yes, SIGNAL_HANDLED=yes
+fetch -q -o /tmp/kr.sh http://10.0.2.2:8099/kwm-runtime-proof.sh
+sh /tmp/kr.sh   #   NoFont=0, KWM_ALIVE=yes, SIGNAL_HANDLED=yes
 ```
 
 Liveness do kwm só com `ps -o stat` (`Z` = morto); `pgrep -x`/`pgrep -f`

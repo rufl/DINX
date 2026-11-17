@@ -161,6 +161,7 @@ monitor_send 'sendkey down'
 sleep 1
 monitor_send 'sendkey ret'
 
+<<<<<<< HEAD
 # The compatibility session must reach the graphical shell: the River/KWM +
 # Morghulis desktop, whose compositor window is titled "River + KWM +
 # Morghulis (DINX)" and whose shell surfaces (Morghulis NavBar, dinx-dock) or
@@ -168,6 +169,12 @@ monitor_send 'sendkey ret'
 # check_dinx_qemu_session.sh. A getty frame (`dinxlive login:`, `tty1`) proves
 # the session failed to start and must not pass, so require a positive marker
 # and reject the text login.
+=======
+# The compatibility session must reach the graphical shell: the Pearl
+# first-run `Dock` window or the Aqueous/Pearl surface. A getty frame
+# (`dinxlive login:`, `tty1`) proves the session failed to start and must
+# not pass, so require a positive marker and reject the text login.
+>>>>>>> 4586d38 (feat(iso): add legacy BIOS/MBR (compatibility) boot support)
 ready=false
 session_text=
 session_deadline=$((SECONDS + session_wait))
@@ -176,7 +183,11 @@ while (( SECONDS < session_deadline )); do
   monitor_send "screendump $session_frame"
   [[ -s "$session_frame" ]] || continue
   session_text=$(ocr_frame "$session_frame")
+<<<<<<< HEAD
   if grep -Eiq '(^|[^[:alnum:]_])(River|KWM|Morghulis|DINX)([^[:alnum:]_]|$)' <<<"$session_text" \
+=======
+  if grep -Eiq '(^|[^[:alnum:]_])(Dock|Pearl|Aqueous)([^[:alnum:]_]|$)' <<<"$session_text" \
+>>>>>>> 4586d38 (feat(iso): add legacy BIOS/MBR (compatibility) boot support)
     && ! grep -Eiq 'login[[:space:]]*:|tty[[:space:]]*[0-9]|password' <<<"$session_text"; then
     ready=true
     break

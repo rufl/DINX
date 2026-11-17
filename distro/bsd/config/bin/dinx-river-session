@@ -33,6 +33,16 @@ if ! command -v "$wm" >/dev/null 2>&1; then
   exit 1
 fi
 
+# The shell layer: morghulis is the DINX river desktop shell. Default to it when
+# present so `dinx-session-set river` yields a real desktop, not a bare tiling
+# compositor. river passes its environment to the init child, so this export
+# reaches the layer-shell launch inside $init; set DINX_RIVER_SHELL= (empty) to
+# run kwm with no shell.
+if [ -z "${DINX_RIVER_SHELL+x}" ] && command -v morghulis >/dev/null 2>&1; then
+  DINX_RIVER_SHELL=morghulis
+fi
+export DINX_RIVER_SHELL
+
 # Init child: runs inside river's environment (WAYLAND_DISPLAY, socket dir),
 # starts the window manager, and optionally republishes a headless session.
 init="$XDG_RUNTIME_DIR/dinx-river-init"
@@ -102,4 +112,13 @@ if [ "${WLR_BACKENDS:-}" = headless ]; then
   fi
 fi
 
+# morghulis (the shell layer) and the Astal bindings need a session D-Bus:
+# without one they abort with "Cannot autolaunch D-Bus without X11 $DISPLAY"
+# (verified on FreeBSD 15.1). greetd/a login session normally provides one, but
+# the rc.d/dinx_session autostart path does not, so bootstrap it here. If a bus
+# already exists (DBUS_SESSION_BUS_ADDRESS set by the login manager) or
+# dbus-run-session is unavailable, launch river directly.
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && command -v dbus-run-session >/dev/null 2>&1; then
+  exec dbus-run-session -- river -c "$init"
+fi
 exec river -c "$init"

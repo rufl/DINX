@@ -114,4 +114,82 @@ done
 
 log "== staging summary =="
 ls "$PREFIX/lib"/*.so* 2>/dev/null | head -20
-log DONE_ASTAL_MORGHULIS
+
+# 4. morghulis itself (the river desktop shell).
+#    - libnm/astal-network are carved out by files/morghulis-network-carve.patch:
+#      FreeBSD's only libnm is the symbol-less networkmanager-shim, and upstream
+#      NetworkManager is Linux-only, so the Network quick-settings panel cannot
+#      exist here. Bluetooth/powerprofiles are kept (they compile; inert without
+#      org.bluez / power-profiles-daemon at runtime).
+#    - the SCSS step needs dart-sass: main.scss uses @use module syntax
+#      (adw.$var) which libsass/sassc cannot parse, and the rubygem-dartsass
+#      port refuses amd64-freebsd. dart-sass is pure JS: npm local install +
+#      a `sass` wrapper over node. Proven: sass 1.108.2 compiles main.scss.
+# Pin: trunk at commit a3eb6d7, NOT the v0.14.0 tag. The tag (2025-11) predates
+# the current Astal main (2026-08): its NavBar calls river.get_focused_output()
+# / river.get_output(), which no longer exist -- AstalRiver now exposes
+# `focused_output` as a property plus find_output_by_name(). Trunk matches the
+# Astal main this script builds, and trunk already carries the explicit
+# astal-wl-0.1 / wayland-client deps that valac needs (it does not follow
+# pkg-config Requires transitively), so only the network carve is applied.
+MORGHULIS_REV=${MORGHULIS_REV:-a3eb6d76fce3d1993dcfc0b73bec4c4893050df9}
+M="$W/morghulis"
+if [ ! -d "$M" ]; then
+  fetch -q -o "$W/morghulis.tar.gz" \
+    "https://github.com/ARKye03/morghulis/archive/$MORGHULIS_REV.tar.gz" \
+    || log "FAIL fetch morghulis"
+  tar -xzf "$W/morghulis.tar.gz" -C "$W"
+  for d in "$W"/morghulis-*; do [ -d "$d" ] && mv "$d" "$M" && break; done
+fi
+if [ -d "$M" ]; then
+  # Two patches, both required and both verified against the pinned trunk rev:
+  #   morghulis-network-carve.patch -- drops libnm/astal-network and the Network
+  #     quick-settings panel. FreeBSD has no usable libnm (the only one,
+  #     net-mgmt/networkmanager-shim, is symbol-less) and upstream
+  #     NetworkManager is Linux-only, so morghulis cannot configure while
+  #     dependency('libnm')/('astal-network-0.1') are unconditional. Bluetooth
+  #     and powerprofiles stay (they compile; runtime-inert without org.bluez /
+  #     power-profiles-daemon).
+  #   morghulis-memfd-freebsd.patch -- Gamma.vala uses Linux.memfd_create, whose
+  #     Vala binding emits #include <linux/memfd.h> (absent on FreeBSD). Bound to
+  #     libc memfd_create in <sys/mman.h> instead (present since FreeBSD 13).
+  SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+  PATCH_DIR=${PATCH_DIR:-$SCRIPT_DIR/../../distro/bsd/ports/files}
+  for pname in morghulis-network-carve.patch morghulis-memfd-freebsd.patch; do
+    P="$PATCH_DIR/$pname"
+    if [ ! -f "$P" ]; then
+      log "FAIL missing patch $P"; exit 1
+    elif (cd "$M" && patch -p1 -N --dry-run -i "$P") >/dev/null 2>&1; then
+      (cd "$M" && patch -p1 -i "$P") >>"$LOG" 2>&1 \
+        && log "== applied $pname" || { log "FAIL applying $pname"; exit 1; }
+    else
+      # -N refuses already-applied hunks: idempotent re-run.
+      log "== $pname already applied"
+    fi
+  done
+  # dart-sass via local npm (pure JS; no node_modules shipped in the ISO)
+  if ! command -v sass >/dev/null 2>&1 || ! sass --version 2>/dev/null | grep -q dart2js; then
+    mkdir -p "$W/sasstool" && (cd "$W/sasstool" && [ -x node_modules/.bin/sass ] || npm install sass) >>"$LOG" 2>&1
+    cat > /usr/local/bin/sass <<SEOF
+#!/bin/sh
+exec /usr/local/bin/node "$W/sasstool/node_modules/sass/sass.js" "\$@"
+SEOF
+    chmod 755 /usr/local/bin/sass
+    log "== sass wrapper -> dart-sass ($(sass --version 2>&1 | head -1))"
+  fi
+  rm -rf "$M/build"
+  (cd "$M" && meson setup build --prefix="$PREFIX" > /tmp/morph-ms.log 2>&1)
+  log "== morghulis configure_rc=$?"
+  (cd "$M" && ninja -C build > /tmp/morph-nj.log 2>&1)
+  log "== morghulis build_rc=$?"
+  if [ -x "$M/build/src/morghulis" ]; then
+    (cd "$M" && DESTDIR="$W/stage-dinx-morghulis" ninja -C build install) >>"$LOG" 2>&1
+    log "== morghulis install=ok (staged)"
+  else
+    log "== morghulis FAILED; see /tmp/morph-ms.log /tmp/morph-nj.log"
+    grep -m6 'error:\|FAILED:' /tmp/morph-nj.log 2>/dev/null | tee -a "$LOG"
+  fi
+else
+  log "== morghulis source tree not found"
+fi
+log DONE_ASTAL_MORPHULIS

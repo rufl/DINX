@@ -1,0 +1,450 @@
+diff --git a/src/QuickMenu/QNetwork.blp b/home/lich/.cache/dinx-carvegen/trunkfix/morghulis-a3eb6d76fce3d1993dcfc0b73bec4c4893050df9/src/QuickMenu/QNetwork.blp
+deleted file mode 100644
+index 153750f..0000000
+--- a/src/QuickMenu/QNetwork.blp
++++ /dev/null
+@@ -1,32 +0,0 @@
+-using Gtk 4.0;
+-using Adw 1;
+-
+-template $QNetwork: Box {
+-  orientation: vertical;
+-
+-  Adw.HeaderBar {
+-    show-end-title-buttons: false;
+-
+-    [end]
+-    Button {
+-      clicked => $refresh();
+-
+-      Image scan_button_image {
+-        icon-name: "view-refresh-symbolic";
+-      }
+-    }
+-  }
+-
+-  $ScrollableIndicatorMenu scrolled_window {
+-    vexpand: true;
+-
+-    styles [
+-      "background",
+-      "padding_10",
+-    ]
+-
+-    ListBox wifi_list {
+-      selection-mode: none;
+-    }
+-  }
+-}
+diff --git a/src/QuickMenu/QNetwork.vala b/home/lich/.cache/dinx-carvegen/trunkfix/morghulis-a3eb6d76fce3d1993dcfc0b73bec4c4893050df9/src/QuickMenu/QNetwork.vala
+deleted file mode 100644
+index 065d128..0000000
+--- a/src/QuickMenu/QNetwork.vala
++++ /dev/null
+@@ -1,102 +0,0 @@
+-[GtkTemplate(ui = "/com/github/ARKye03/morghulis/ui/QuickMenu/QNetwork.ui")]
+-public class QNetwork : Gtk.Box {
+-    private AstalNetwork.Wifi _wifi;
+-    private HashTable<AstalNetwork.AccessPoint, QNetworkItem> ap_items;
+-
+-    public AstalNetwork.Network network { get; set; }
+-
+-    [GtkChild]
+-    private unowned ScrollableIndicatorMenu scrolled_window;
+-
+-    [GtkChild]
+-    private unowned Gtk.ListBox wifi_list;
+-
+-    [GtkChild]
+-    private unowned Gtk.Image scan_button_image;
+-
+-    construct {
+-        ap_items = new HashTable<AstalNetwork.AccessPoint, QNetworkItem>(direct_hash, direct_equal);
+-
+-        network = AstalNetwork.get_default();
+-        if (network == null || network.wifi == null) {
+-            warning("Network or WiFi interface not available");
+-            return;
+-        }
+-        _wifi = network.wifi;
+-
+-        wifi_list.set_sort_func(sort_network_items);
+-
+-        _wifi.access_point_added.connect(on_added_ap);
+-        _wifi.access_point_removed.connect(on_removed_ap);
+-        _wifi.notify["active-access-point"].connect(update_active_states);
+-        _wifi.access_points.foreach(on_added_ap);
+-        _wifi.notify["scanning"].connect(() => {
+-            if (_wifi.scanning) {
+-                scan_button_image.add_css_class("rotieren");
+-            } else {
+-                scan_button_image.remove_css_class("rotieren");
+-            }
+-        });
+-        update_active_states();
+-    }
+-
+-    private void on_added_ap(AstalNetwork.AccessPoint ap) {
+-        if (ap_items.contains(ap)) {
+-            return;
+-        }
+-
+-        var item = new QNetworkItem(ap, network);
+-        ap_items.insert(ap, item);
+-        wifi_list.append(item);
+-
+-        Idle.add(() => {
+-            scrolled_window.refresh_scroll_indicator();
+-            return Source.REMOVE;
+-        });
+-    }
+-
+-    private void on_removed_ap(AstalNetwork.AccessPoint ap) {
+-        var item = ap_items.lookup(ap);
+-
+-        if (item != null) {
+-            wifi_list.remove(item);
+-            ap_items.remove(ap);
+-
+-            Idle.add(() => {
+-                scrolled_window.refresh_scroll_indicator();
+-                return Source.REMOVE;
+-            });
+-        }
+-    }
+-
+-    private int sort_network_items(Gtk.ListBoxRow row1, Gtk.ListBoxRow row2) {
+-        var item1 = (QNetworkItem)row1;
+-        var item2 = (QNetworkItem)row2;
+-
+-        return item1.compare_to(item2);
+-    }
+-
+-    private void update_active_states() {
+-        if (network.wifi.active_access_point == null) {
+-            return;
+-        }
+-
+-        var active_ap = network.wifi.active_access_point;
+-
+-        ap_items.foreach((ap, item) => {
+-            item.active = false;
+-        });
+-
+-        var active_item = ap_items.lookup(active_ap);
+-        if (active_item != null) {
+-            active_item.active = true;
+-        }
+-
+-        wifi_list.invalidate_sort();
+-    }
+-
+-    [GtkCallback]
+-    public void refresh() {
+-        network.wifi.scan();
+-    }
+-}
+diff --git a/src/QuickMenu/QNetworkItem.blp b/home/lich/.cache/dinx-carvegen/trunkfix/morghulis-a3eb6d76fce3d1993dcfc0b73bec4c4893050df9/src/QuickMenu/QNetworkItem.blp
+deleted file mode 100644
+index b4e6bf9..0000000
+--- a/src/QuickMenu/QNetworkItem.blp
++++ /dev/null
+@@ -1,70 +0,0 @@
+-using Gtk 4.0;
+-using AstalNetwork 0.1;
+-using Adw 1;
+-
+-template $QNetworkItem: ListBoxRow {
+-  GestureClick {
+-    released => $switch_connection();
+-  }
+-
+-  styles [
+-    "padding_10",
+-  ]
+-
+-  Box {
+-    spacing: 10;
+-
+-    Image {
+-      pixel-size: 24;
+-      icon-name: bind template.access_point as <AstalNetwork.AccessPoint>.icon-name;
+-    }
+-
+-    Box {
+-      orientation: vertical;
+-      spacing: 2;
+-      hexpand: true;
+-      valign: center;
+-
+-      Label {
+-        halign: start;
+-        ellipsize: end;
+-        max-width-chars: 25;
+-        label: bind $ssid_name(template.access_point as <AstalNetwork.AccessPoint>.ssid) as <string>;
+-
+-        styles [
+-          "title-4",
+-        ]
+-      }
+-
+-      Label status_label {
+-        halign: start;
+-        ellipsize: end;
+-        max-width-chars: 30;
+-        label: bind $status_label(template.active) as <string>;
+-
+-        styles [
+-          "dim-label",
+-        ]
+-      }
+-    }
+-
+-    Box {
+-      spacing: 5;
+-      valign: center;
+-
+-      Image lock_icon {
+-        pixel-size: 16;
+-        icon-name: "network-wireless-encrypted-symbolic";
+-        visible: bind template.access_point as <AstalNetwork.AccessPoint>.requires-password;
+-      }
+-
+-      Revealer {
+-        transition-type: slide_left;
+-        transition-duration: 250;
+-        reveal-child: false;
+-
+-        Adw.Spinner {}
+-      }
+-    }
+-  }
+-}
+diff --git a/src/QuickMenu/QNetworkItem.vala b/home/lich/.cache/dinx-carvegen/trunkfix/morghulis-a3eb6d76fce3d1993dcfc0b73bec4c4893050df9/src/QuickMenu/QNetworkItem.vala
+deleted file mode 100644
+index 517b3e3..0000000
+--- a/src/QuickMenu/QNetworkItem.vala
++++ /dev/null
+@@ -1,81 +0,0 @@
+-[GtkTemplate(ui = "/com/github/ARKye03/morghulis/ui/QuickMenu/QNetworkItem.ui")]
+-public class QNetworkItem : Gtk.ListBoxRow {
+-    public AstalNetwork.AccessPoint access_point { get; construct; }
+-    public AstalNetwork.Network network { get; construct; }
+-
+-    public bool active {
+-        get {
+-            return this.has_css_class("accent");
+-        }
+-        set {
+-            if (value) {
+-                this.add_css_class("accent");
+-            } else {
+-                this.remove_css_class("accent");
+-            }
+-        }
+-    }
+-
+-    public QNetworkItem(AstalNetwork.AccessPoint ap, AstalNetwork.Network net) {
+-        Object(access_point: ap, network: net);
+-    }
+-
+-    [GtkCallback]
+-    public string ssid_name(string? ssid) {
+-        return ssid ?? "Unknown Network";
+-    }
+-
+-    [GtkCallback]
+-    public void switch_connection() {
+-        if (access_point == null) {
+-            return;
+-        }
+-
+-        if (active) {
+-            network.wifi.deactivate_connection.begin();
+-        } else {
+-            access_point.activate.begin();
+-        }
+-    }
+-
+-    [GtkCallback]
+-    private string status_label(bool active) {
+-        if (active) {
+-            return "Connected";
+-        } else if (access_point != null && access_point.requires_password) {
+-            return "Secured";
+-        } else {
+-            return "Open";
+-        }
+-    }
+-
+-    // For sorting - active connections should be at top
+-    public int compare_to(QNetworkItem other) {
+-        // Active connections first
+-        if (this.active && !other.active) {
+-            return -1;
+-        }
+-        if (!this.active && other.active) {
+-            return 1;
+-        }
+-
+-        // Then by signal strength
+-        if (this.access_point.strength > other.access_point.strength) {
+-            return -1;
+-        }
+-        if (this.access_point.strength < other.access_point.strength) {
+-            return 1;
+-        }
+-
+-        // Then by SSID alphabetically
+-        bool both_ssids_are_valid =
+-            (this.access_point.ssid != null && this.access_point.ssid != "") &&
+-            (other.access_point.ssid != null && other.access_point.ssid != "");
+-
+-        if (both_ssids_are_valid) {
+-            return this.access_point.ssid.collate(other.access_point.ssid);
+-        } else {
+-            return 1;
+-        }
+-    }
+-}
+diff --git a/src/QuickMenu/Settings.blp b/src/QuickMenu/Settings.blp
+index 46c65da..bcbddd2 100644
+--- a/src/QuickMenu/Settings.blp
++++ b/src/QuickMenu/Settings.blp
+@@ -1,6 +1,5 @@
+ using Gtk 4.0;
+ using Adw 1;
+-using AstalNetwork 0.1;
+ using AstalBluetooth 0.1;
+ using AstalWp 0.1;
+ using AstalNotifd 0.1;
+@@ -50,25 +49,6 @@ template $Settings: Adw.Bin {
+             "squares",
+           ]
+ 
+-          $QButton {
+-            layout {
+-              row: 0;
+-              column: 0;
+-            }
+-
+-            name: "Network";
+-            identity: bind $network_identity(
+-              template.network as <AstalNetwork.Network>.wifi as <AstalNetwork.Wifi>.ssid
+-              ) as <string>;
+-            status: bind $conn_status(
+-              template.network as <AstalNetwork.Network>.wifi as <AstalNetwork.Wifi>.enabled
+-              ) as <string>;
+-            icon: bind template.network as <AstalNetwork.Network>.wifi as <AstalNetwork.Wifi>.icon-name;
+-            active: bind template.network as <AstalNetwork.Network>.wifi as <AstalNetwork.Wifi>.enabled;
+-            clicked => $network_clicked();
+-            clicked_extras => $network_clicked_extras();
+-          }
+-
+           $QButton {
+             layout {
+               row: 0;
+@@ -220,13 +200,6 @@ template $Settings: Adw.Bin {
+       }
+     }
+ 
+-    Adw.NavigationPage {
+-      tag: "network";
+-      title: "Network";
+-
+-      $QNetwork {}
+-    }
+-
+     Adw.NavigationPage {
+       tag: "bluetooth";
+       title: "Bluetooth";
+diff --git a/src/QuickMenu/Settings.vala b/src/QuickMenu/Settings.vala
+index a35facf..4fae498 100644
+--- a/src/QuickMenu/Settings.vala
++++ b/src/QuickMenu/Settings.vala
+@@ -13,7 +13,6 @@ public class Settings : Adw.Bin {
+     }
+ 
+     public string color_scheme { get; set; }
+-    public AstalNetwork.Network network { get; private set; }
+     public AstalBluetooth.Bluetooth bluetooth { get; private set; }
+     public AstalNotifd.Notifd notifd { get; private set; }
+     public AstalWp.Wp? wp { get; private set; }
+@@ -26,7 +25,6 @@ public class Settings : Adw.Bin {
+     private unowned Adw.NavigationView quick_settings_navigation_view;
+ 
+     construct {
+-        network = AstalNetwork.get_default();
+         bluetooth = AstalBluetooth.get_default();
+         wp = AstalWp.get_default();
+         notifd = AstalNotifd.get_default();
+@@ -62,15 +60,7 @@ public class Settings : Adw.Bin {
+         return dnd ? "notifications-disabled-symbolic" : "preferences-system-notifications-symbolic";
+     }
+ 
+-    [GtkCallback]
+-    public void network_clicked() {
+-        this.network.wifi.enabled = !this.network.wifi.enabled;
+-    }
+ 
+-    [GtkCallback]
+-    public void network_clicked_extras() {
+-        quick_settings_navigation_view.push_by_tag("network");
+-    }
+ 
+     [GtkCallback]
+     public string conn_status(bool connected) {
+@@ -79,14 +69,6 @@ public class Settings : Adw.Bin {
+                            : "Off";
+     }
+ 
+-    [GtkCallback]
+-    public string network_identity(string? identity) {
+-        if (identity != null && identity != "") {
+-            return identity;
+-        } else {
+-            return "Wifi";
+-        }
+-    }
+ 
+     [GtkCallback]
+     public void bluetooth_clicked() {
+diff --git a/src/QuickMenu/meson.build b/src/QuickMenu/meson.build
+index decfcfa..bace405 100644
+--- a/src/QuickMenu/meson.build
++++ b/src/QuickMenu/meson.build
+@@ -8,8 +8,6 @@ project_resources += files(
+   'QBluetooth.vala',
+   'QBluetoothItem.vala',
+   'QButton.vala',
+-  'QNetwork.vala',
+-  'QNetworkItem.vala',
+   'QuickMenu.vala',
+   'Settings.vala',
+ )
+diff --git a/src/meson.build b/src/meson.build
+index ae9aeec..67352f4 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -31,12 +31,10 @@ deps = [
+     dependency('gtk4'),
+     dependency('gtk4-layer-shell-0'),
+     dependency('gsound'),
+-    dependency('libnm'),
+     dependency('astal-wireplumber-0.1'),
+     dependency('astal-mpris-0.1'),
+     dependency('astal-tray-0.1'),
+     dependency('astal-notifd-0.1'),
+-    dependency('astal-network-0.1'),
+     dependency('astal-bluetooth-0.1'),
+     dependency('astal-apps-0.1'),
+     dependency('gio-unix-2.0'),
+@@ -107,8 +105,6 @@ blp_rel = [
+     'QuickMenu/QBluetooth.blp',
+     'QuickMenu/QBluetoothItem.blp',
+     'QuickMenu/QButton.blp',
+-    'QuickMenu/QNetwork.blp',
+-    'QuickMenu/QNetworkItem.blp',
+     'QuickMenu/QuickMenu.blp',
+     'QuickMenu/Settings.blp',
+     'Runner/Runner.blp',

@@ -1,0 +1,27 @@
+diff --git a/src/Services/Gamma/Gamma.vala b/src/Services/Gamma/Gamma.vala
+index 0162c31..9c55ddd 100644
+--- a/src/Services/Gamma/Gamma.vala
++++ b/src/Services/Gamma/Gamma.vala
+@@ -2,6 +2,12 @@
+ [CCode(cheader_filename = "wayland-client.h", cname = "wl_output_interface")]
+ private extern Wl.Interface wl_output_interface;
+ 
++// FreeBSD: memfd_create(2) lives in <sys/mman.h> (since FreeBSD 13); the
++// Linux.memfd_create Vala binding instead emits #include <linux/memfd.h>,
++// which does not exist here. Bind libc directly.
++[CCode(cheader_filename = "sys/mman.h", cname = "memfd_create")]
++private extern int dinx_memfd_create(string name, uint flags);
++
+ /**
+  * Night light via wlr-gamma-control-unstable-v1.
+  *
+@@ -226,7 +232,8 @@ public class Gamma : Object {
+             Gamma.temperature_to_rgb(temp, out r, out g, out b);
+ 
+             size_t n = (size_t) (3 * size * sizeof(uint16));
+-            int fd = Linux.memfd_create("morghulis-gamma", Linux.MemfdFlags.CLOEXEC);
++            // MFD_CLOEXEC == 1 on both Linux and FreeBSD (<sys/mman.h>).
++            int fd = dinx_memfd_create("morghulis-gamma", 1);
+             if (fd < 0) {
+                 return -1;
+             }

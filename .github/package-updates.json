@@ -16,28 +16,6 @@
       "bump_pkgrel_path": "distro/packages/calamares/PKGBUILD"
     },
     {
-      "name": "dome",
-      "provider": "github",
-      "repository": "Seafoam-Labs/pearl",
-      "source_file": "distro/packages/dome/source.env",
-      "version_key": "DOME_SOURCE_VERSION",
-      "checksum_key": "DOME_SOURCE_SHA256",
-      "checksum": "sha256",
-      "url_template": "https://github.com/Seafoam-Labs/pearl/archive/refs/tags/{tag}.tar.gz",
-      "bump_pkgrel_path": "distro/packages/dome/PKGBUILD"
-    },
-    {
-      "name": "phyto",
-      "provider": "github",
-      "repository": "Seafoam-Labs/pearl",
-      "source_file": "distro/packages/phyto/source.env",
-      "version_key": "PHYTO_SOURCE_VERSION",
-      "checksum_key": "PHYTO_SOURCE_SHA256",
-      "checksum": "sha256",
-      "url_template": "https://github.com/Seafoam-Labs/pearl/archive/refs/tags/{tag}.tar.gz",
-      "bump_pkgrel_path": "distro/packages/phyto/PKGBUILD"
-    },
-    {
       "name": "pori",
       "provider": "github",
       "repository": "Seafoam-Labs/Pori",

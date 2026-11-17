@@ -15,7 +15,23 @@ MANIFEST = ROOT / ".github/package-updates.json"
 # astal (Aylur/astal has zero git tags; frozen to the revision Morghulis pins in its
 # flake.lock) and appmenu-glib-translator (gitlab.com; the refresher's gitlab provider
 # targets gitlab.gnome.org only).
-MANUAL_SOURCE_PINS = {"appmenu-glib-translator", "astal", "deetty", "dinx-gtk-themes", "zls"}
+#
+# dome and phyto are subprojects of the Seafoam-Labs/pearl monorepo, which DINX no
+# longer tracks: DINX retired the Pearl shell but still ships these two apps, patched
+# and pinned to the 0.3.0 archive. dome's discreet-header.patch does not apply to
+# 0.3.9 (`patch --fuzz=0` rejects both hunks: upstream reworked the header builder
+# and split buildOverview into paginated builders), and a bump would only surface at
+# P0 build time because no static gate applies the patch. Bump these deliberately,
+# regenerating the patch, not through the automated refresher.
+MANUAL_SOURCE_PINS = {
+    "appmenu-glib-translator",
+    "astal",
+    "deetty",
+    "dinx-gtk-themes",
+    "dome",
+    "phyto",
+    "zls",
+}
 
 
 def fail(message: str) -> None:

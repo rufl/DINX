@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=morghulis
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${MORGHULIS_VERSION:?missing MORGHULIS_VERSION}"
+: "${MORGHULIS_SOURCE_URL:?missing MORGHULIS_SOURCE_URL}"
+: "${MORGHULIS_SOURCE_SHA256:?missing MORGHULIS_SOURCE_SHA256}"
+pkgver="$MORGHULIS_VERSION"
+pkgrel=1
+pkgdesc='Wayland GTK4 desktop shell for the DINX River/KWM session'
+arch=('x86_64')
+url="$MORGHULIS_REPOSITORY"
+license=('MIT')
+depends=('astal' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'libadwaita'
+         'gsound' 'json-glib' 'libgtop' 'libnm' 'libportal')
+makedepends=('meson' 'ninja' 'vala' 'blueprint-compiler' 'dart-sass'
+             'gobject-introspection' 'glib2-devel')
+source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL")
+sha256sums=("$MORGHULIS_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/morghulis-$pkgver"
+  meson setup build --prefix=/usr --libdir=/usr/lib --buildtype=release
+  meson compile -C build
+}
+
+package() {
+  cd "$srcdir/morghulis-$pkgver"
+  DESTDIR="$pkgdir" meson install -C build
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

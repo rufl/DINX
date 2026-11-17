@@ -426,6 +426,21 @@ trap finish EXIT
               pacman_install_local \
                 "$package_repo"/kwm-*.pkg.tar.zst \
                 "$package_repo"/kwim-*.pkg.tar.zst
+              # Morghulis desktop shell chain. Each step is installed locally before the
+              # next builds, because astal-tray resolves appmenu-glib-translator and
+              # Morghulis resolves the astal libraries through pkg-config at build time.
+              # blueprint-compiler is not in the builder image manifest and makepkg runs
+              # --nodeps, so morghulis would fail at meson setup without it here.
+              pacman_retry -S --needed --noconfirm \
+                vala gobject-introspection glib2-devel dart-sass json-glib \
+                networkmanager wireplumber gsound libportal libgtop \
+                blueprint-compiler
+              build_package appmenu-glib-translator
+              pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst
+              build_package astal
+              pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
+              build_package morghulis
+              pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
               build_package pori
               build_package phyto
               build_package dome

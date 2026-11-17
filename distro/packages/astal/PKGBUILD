@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=astal
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${ASTAL_VERSION:?missing ASTAL_VERSION}"
+: "${ASTAL_COMMIT:?missing ASTAL_COMMIT}"
+: "${ASTAL_SOURCE_URL:?missing ASTAL_SOURCE_URL}"
+: "${ASTAL_SOURCE_SHA256:?missing ASTAL_SOURCE_SHA256}"
+pkgver="$ASTAL_VERSION"
+pkgrel=1
+pkgdesc='Astal Vala libraries required by the Morghulis desktop shell'
+arch=('x86_64')
+url="$ASTAL_REPOSITORY"
+license=('LGPL-2.1-only')
+depends=('glib2' 'glibc' 'gdk-pixbuf2' 'json-glib' 'libnm' 'appmenu-glib-translator'
+         'wayland' 'wireplumber')
+makedepends=('meson' 'ninja' 'vala' 'gobject-introspection' 'glib2-devel' 'wayland-protocols')
+provides=('libastal-apps.so=0-64' 'libastal-battery.so=0-64' 'libastal-bluetooth.so=0-64'
+          'libastal-mpris.so=0-64' 'libastal-network.so=0-64' 'libastal-notifd.so=0-64'
+          'libastal-power-profiles.so=0-64' 'libastal-river.so=0-64'
+          'libastal-tray.so=0-64' 'libastal-wireplumber.so=0-64')
+source=("astal-$ASTAL_COMMIT.tar.gz::$ASTAL_SOURCE_URL")
+sha256sums=("$ASTAL_SOURCE_SHA256")
+
+# river consumes wayland-glib as an in-tree subproject (lib/river/subprojects/
+# wayland-glib -> ../../wayland-glib), so wayland-glib is not built or installed
+# separately. tray needs appmenu-glib-translator. astal-io is deliberately
+# skipped: Morghulis does not link it.
+_astal_libs=(
+  apps
+  battery
+  bluetooth
+  mpris
+  network
+  notifd
+  powerprofiles
+  wireplumber
+  tray
+  river
+)
+
+build() {
+  cd "$srcdir/astal-$ASTAL_COMMIT"
+  local lib
+  for lib in "${_astal_libs[@]}"; do
+    msg2 "Building astal/$lib"
+    meson setup "build-$lib" "lib/$lib" \
+      --prefix=/usr --libdir=/usr/lib --buildtype=release
+    meson compile -C "build-$lib"
+    DESTDIR="$srcdir/astal-stage" meson install -C "build-$lib"
+  done
+}
+
+package() {
+  cd "$srcdir/astal-$ASTAL_COMMIT"
+  cp -a "$srcdir/astal-stage/." "$pkgdir/"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

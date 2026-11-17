@@ -1011,10 +1011,16 @@ grep -Fq 'source /boot/grub/kernels.cfg' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB does not load its live boot choices'
 grep -Fq 'set kopts="quiet splash"' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO boot menu does not enable Plymouth and silent boot'
-[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 1 ]] \
-  || fail 'DINX ISO GRUB does not contain exactly one default live boot choice'
+[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 2 ]] \
+  || fail 'DINX ISO GRUB does not contain exactly the default and compatibility live boot choices'
 grep -Fq 'menuentry "Start DINX Linux"' "$tmp_dir/iso-grub-kernels.cfg" \
   || fail 'DINX default live boot choice is missing'
+grep -Fq 'menuentry "Start DINX Linux (compatibility)"' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX compatibility live boot choice is missing'
+grep -Fqx '        linux /boot/vmlinuz-$2' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX default live boot choice does not boot the stock kernel parameters'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX compatibility live boot choice does not pass the legacy interrupt parameters'
 [[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub.cfg") -eq 1 ]] \
   || fail 'DINX ISO GRUB does not contain exactly one firmware choice'
 grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$tmp_dir/iso-grub.cfg" \

@@ -37,12 +37,13 @@ fi
   || fail "ISO SHA-512 checksum does not match: $iso_dir/$checksum_name"
 DINX_ISO_PATH="$iso_path" DINX_QEMU_TIMEOUT=${DINX_QEMU_TIMEOUT:-120} \
 "$script_dir/check-iso-content.sh" "$iso_path"
+"$script_dir/check-iso-boot-records.sh" "$iso_path"
 # Enforce the payload/startup budgets against the built image. The workflow runs
 # this script without DINX_ISO_PATH (no image exists yet), which reports
 # iso=not_measured; passing the path here is what actually binds the built ISO to
 # the size ceiling.
 DINX_ISO_PATH="$iso_path" "$script_dir/check_dinx_budget.sh"
-printf 'qualify-iso: static ISO, metadata, checksum, content and budget gates passed: %s\n' "$iso_path"
+printf 'qualify-iso: static ISO, metadata, checksum, content, boot records and budget gates passed: %s\n' "$iso_path"
 
 if [[ "$mode" == static ]]; then
   printf '%s\n' 'qualify-iso: STATIC ONLY; no boot, installation, VirtualBox or physical-hardware evidence was produced'
@@ -87,4 +88,12 @@ DINX_INSTALL_OUTPUT_DIR="$iso_dir" \
 DINX_INSTALL_TIMEOUT=${DINX_INSTALL_TIMEOUT:-180} \
 DINX_INSTALL_FIRMWARE=uefi \
   "$script_dir/smoke-install.sh" "$iso_path"
-printf 'qualify-iso: full QEMU VGA, Virtio-VGA, BIOS and UEFI installation gates passed: %s\n' "$iso_path"
+
+# Hybrid MBR path: boot the ISO as a raw disk through SeaBIOS (no CD
+# emulation, no OVMF) and use the compatibility entry for legacy
+# interrupt controllers; this is the BIOS-only notebook path.
+DINX_MBR_OUTPUT_DIR="$iso_dir" \
+DINX_MBR_TIMEOUT=${DINX_MBR_TIMEOUT:-420} \
+DINX_MBR_SESSION_WAIT=${DINX_MBR_SESSION_WAIT:-180} \
+  "$script_dir/smoke-iso-mbr.sh" "$iso_path"
+printf 'qualify-iso: full QEMU VGA, Virtio-VGA, hybrid-MBR, BIOS and UEFI installation gates passed: %s\n' "$iso_path"

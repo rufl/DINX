@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Build the Fluent and Jasper ports in `dinx-gtk-themes` next to Skeuos and Orchis: four GTK3/GTK4 themes, light and dark, each with rounded and square corner variants, from the pinned `rufl` fork sources compiled with `sassc`. The Jasper light accent is normalized to `#00796b` for WCAG AA and every port's raw upstream accent is replaced by the palette primary so window decorations, application profiles and GTK themes match. Fully freedesktop: consumed by gtk settings, gsettings, GTK_THEME and dinx-sync-session-theme on the river/kwm/kwim/morghulis stack, no compositor-specific assets. Pearl-free: the ports work with the river/kwm/morghulis stack.
 - Restore the Aqueous 1.0.5 and Pearl 0.3.0 source pins required by the existing DINX dinit/session patches. The newer 1.0.20/0.3.9 archives rejected those patches during the ISO contract, while the restored checksums and all Aqueous/Pearl contracts pass.
 
 - Set Pearl Greeter's post-install default to `material_dark` while keeping `high_contrast` disabled; the saved user's light/dark selection remains authoritative through the session theme synchronization.

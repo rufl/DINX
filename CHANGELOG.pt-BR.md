@@ -3,6 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Compilar os ports Fluent e Jasper no `dinx-gtk-themes` ao lado de Skeuos e Orchis: quatro temas GTK3/GTK4, claro e escuro, cada um com variantes de canto arredondado e quadrado, a partir dos forks `rufl` fixados e compilados com `sassc`. O acento claro do Jasper é normalizado para `#00796b` para WCAG AA e o acento bruto upstream de cada port é substituído pelo primário da paleta para que decorações de janela, perfis de aplicação e GTK coincidam. 100% freedesktop: consumido por gtk settings, gsettings, GTK_THEME e dinx-sync-session-theme na stack river/kwm/kwim/morghulis, sem ativos específicos do compositor. Sem Pearl: os ports funcionam com a stack river/kwm/morghulis.
 - Restaurar os pins de fonte Aqueous 1.0.5 e Pearl 0.3.0 exigidos pelos patches DINX existentes de dinit/sessão. Os archives 1.0.20/0.3.9 mais novos rejeitavam esses patches durante o contrato da ISO; os checksums restaurados e todos os contratos Aqueous/Pearl passam.
 
 - Definir o padrão pós-instalação do Pearl Greeter como `material_dark`, mantendo `high_contrast` desativado; a escolha salva de claro/escuro do usuário continua sendo a fonte de verdade pela sincronização de tema da sessão.

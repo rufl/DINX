@@ -248,7 +248,7 @@ for required in \
   '^[[:space:]]*DownloadUser[[:space:]]*=' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'local -a makepkg_options=(--nodeps --nocheck --noconfirm)' \
-  'dinitui|dinxpanel|seafoam-settings)' \
+  'dinitui|dinxpanel|dinx-dock|dinx-first-run|seafoam-settings)' \
   'makepkg_options+=(--clean)' \
   'source /workspace/scripts/lib/pacman-local-install.sh' \
   'source /workspace/scripts/lib/dinx-package-artifact-cache.sh' \

@@ -10,7 +10,9 @@ case "$locale_charmap" in
     ;;
 esac
 
-export XDG_CURRENT_DESKTOP=river:kwm
+# The exact string `river` is load-bearing: Morghulis enables its tag, mode and
+# view modules only when XDG_CURRENT_DESKTOP equals `river`.
+export XDG_CURRENT_DESKTOP=river
 export XDG_SESSION_DESKTOP=river
 export XDG_SESSION_TYPE=wayland
 export TERMINAL="${TERMINAL:-deetty}"
@@ -24,13 +26,12 @@ export QT_QPA_PLATFORMTHEME=qt6ct
 # Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
 
-# DINX ships a single fixed appearance: the DINX dark GTK theme. Pearl's
-# per-user theme catalog is gone, so the dark scheme is unconditional and
-# dinx-sync-session-theme keeps the toolkits aligned with it.
+# Appearance (theme, variant, corners) is per-user state in
+# $XDG_CONFIG_HOME/dinx/appearance.json, written by the first-run wizard and
+# applied to every toolkit by dinx-sync-session-theme. The values below are
+# only fallbacks for recovery shells that never ran the synchronizer.
 export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"
 export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"
-export GTK_APPLICATION_PREFER_DARK_THEME="${GTK_APPLICATION_PREFER_DARK_THEME:-1}"
-export ADW_DEBUG_COLOR_SCHEME="${ADW_DEBUG_COLOR_SCHEME:-prefer-dark}"
 
 export DINX_DISPLAY_AUTHORITY=shikane
 export DINX_SESSION_COMPOSITOR_PID=$$

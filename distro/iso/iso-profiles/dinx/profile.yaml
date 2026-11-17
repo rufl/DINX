@@ -35,6 +35,8 @@ rootfs:
     - kwm
     - kwim
     - morghulis
+    - dinx-dock
+    - dinx-first-run
     - greetd-agreety
     - seafoam-settings
     - zls

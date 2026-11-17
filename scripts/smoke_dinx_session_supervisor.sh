@@ -10,8 +10,10 @@ libexec="$tmp/libexec"
 state="$tmp/pids"
 mkdir -p "$fakebin" "$libexec" "$state"
 
-# Required helpers: shikane and the PolicyKit agent are resolved through PATH,
-# the idle wrapper through DINX_SESSION_LIBEXEC.
+# Required helpers: shikane, the PolicyKit agent and the Morghulis shell are
+# resolved through PATH, the idle wrapper through DINX_SESSION_LIBEXEC. The
+# first-run glue is a short-lived foreground helper that must complete before
+# the shell starts, so it records a marker and exits.
 make_helper() {
   name=$1
   dir=$2
@@ -24,7 +26,13 @@ EOF
 }
 make_helper shikane "$fakebin"
 make_helper lxqt-policykit-agent "$fakebin"
+make_helper morghulis "$fakebin"
 make_helper dinx-idle "$libexec"
+cat >"$libexec/dinx-desktop-first-run" <<EOF
+#!/bin/sh
+: >"$state/first-run-ran"
+EOF
+chmod +x "$libexec/dinx-desktop-first-run"
 
 export DINX_SESSION_SKIP_WAYLAND_CHECK=1
 export DINX_SESSION_SKIP_DBUS_CHECK=1
@@ -72,12 +80,20 @@ grep -Fqx 'mode=river' "$XDG_STATE_HOME/dinx/session.status" || {
   printf 'dinx_session_supervisor_smoke: the supervisor did not record its river mode\n' >&2
   exit 1
 }
-for helper in shikane lxqt-policykit-agent dinx-idle; do
+for helper in shikane lxqt-policykit-agent dinx-idle morghulis; do
   [ -s "$state/$helper.pid" ] || {
     printf 'dinx_session_supervisor_smoke: required helper never started: %s\n' "$helper" >&2
     exit 1
   }
 done
+if [ ! -e "$state/first-run-ran" ]; then
+  printf 'dinx_session_supervisor_smoke: the first-run helper never completed before the shell started\n' >&2
+  exit 1
+fi
+if [ "$(stat -c %Y "$state/first-run-ran")" -gt "$(stat -c %Y "$state/morghulis.pid")" ]; then
+  printf 'dinx_session_supervisor_smoke: Morghulis started before first-run finished\n' >&2
+  exit 1
+fi
 kill -TERM "$(cat "$state/dinx-idle.pid")"
 wait_for_status failed
 wait "$supervisor_pid" || true
@@ -85,7 +101,7 @@ grep -Fq 'reason=helper-idle-exited' "$XDG_STATE_HOME/dinx/session.log" || {
   printf 'dinx_session_supervisor_smoke: helper failure reason was not logged\n' >&2
   exit 1
 }
-for helper in shikane lxqt-policykit-agent; do
+for helper in shikane lxqt-policykit-agent morghulis; do
   helper_stopped "$helper" || exit 1
 done
 
@@ -96,7 +112,7 @@ supervisor_pid=$!
 wait_for_status ready
 kill -TERM "$supervisor_pid"
 wait "$supervisor_pid" || true
-for helper in shikane lxqt-policykit-agent dinx-idle; do
+for helper in shikane lxqt-policykit-agent dinx-idle morghulis; do
   helper_stopped "$helper" || exit 1
 done
 
@@ -128,7 +144,7 @@ if [ "$parent_alive" = true ]; then
   exit 1
 fi
 wait "$compositor_pid" || true
-for helper in shikane lxqt-policykit-agent dinx-idle; do
+for helper in shikane lxqt-policykit-agent dinx-idle morghulis; do
   helper_stopped "$helper" || exit 1
 done
 
@@ -142,8 +158,8 @@ wait_for_status ready
 kill -TERM "$compositor_pid"
 wait_for_status exited
 wait "$supervisor_pid" || true
-for helper in shikane lxqt-policykit-agent dinx-idle; do
+for helper in shikane lxqt-policykit-agent dinx-idle morghulis; do
   helper_stopped "$helper" || exit 1
 done
 
-printf 'dinx_session_supervisor_smoke river_ready=true required_helpers=shikane+policykit+idle retired_mode_rejected=true helper_failure=true signal_cleanup=true compositor_parent_terminated=true compositor_exit_status=exited\n'
+printf 'dinx_session_supervisor_smoke river_ready=true required_helpers=shikane+policykit+idle+morghulis first_run=before_shell retired_mode_rejected=true helper_failure=true signal_cleanup=true compositor_parent_terminated=true compositor_exit_status=exited\n'

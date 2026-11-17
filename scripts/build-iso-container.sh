@@ -240,7 +240,7 @@ trap finish EXIT
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 local -a package_archives=()
                 case "$package_name" in
-                  dinitui|dinxpanel|seafoam-settings)
+                  dinitui|dinxpanel|dinx-dock|dinx-first-run|seafoam-settings)
                     # These packages build directly from checked-in source trees.
                     ;;
                   dome)
@@ -441,6 +441,14 @@ trap finish EXIT
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
+              # First-party desktop shell components: the layer-shell dock and the
+              # GTK4 first-run wizard. Both build from checked-in Zig sources with
+              # the builder's Zig 0.17 toolchain, so no upstream download happens.
+              build_package dinx-dock
+              build_package dinx-first-run
+              pacman_install_local \
+                "$package_repo"/dinx-dock-*.pkg.tar.zst \
+                "$package_repo"/dinx-first-run-*.pkg.tar.zst
               build_package pori
               build_package phyto
               build_package dome

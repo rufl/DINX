@@ -17,7 +17,7 @@ graphics_environment="$overlay/usr/local/libexec/dinx-graphics-environment.sh"
 theme_sync="$overlay/usr/local/libexec/dinx-sync-session-theme"
 installer="$overlay/usr/local/libexec/dinx-installer"
 session_dir="$overlay/usr/share/wayland-sessions"
-river_entry="$session_dir/dinx-river-kwm.desktop"
+river_entry="$session_dir/dinx-river-kwm-morghulis.desktop"
 gaming_session="$session_dir/dinx-gaming.desktop"
 lock="$overlay/usr/local/libexec/dinx-lock"
 idle="$overlay/usr/local/libexec/dinx-idle"
@@ -66,7 +66,7 @@ done
 for session_path in "$session_dir"/*.desktop; do
   [[ -e "$session_path" ]] || continue
   case "${session_path##*/}" in
-    dinx-river-kwm.desktop|dinx-gaming.desktop) ;;
+    dinx-river-kwm-morghulis.desktop|dinx-gaming.desktop) ;;
     *) fail "unsupported user session entry remains: ${session_path#$root/}" ;;
   esac
 done
@@ -90,7 +90,7 @@ if grep -Eq '^    - [a-z0-9._-]*(aq|pea)[a-z0-9._-]*$' "$profile"; then
 fi
 while IFS= read -r helper_path; do
   case "${helper_path##*/}" in
-    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
+    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-desktop-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
     *) fail "unexpected session component: ${helper_path#$root/}" ;;
   esac
 done < <(find "$overlay/usr/local/libexec" -maxdepth 1 -type f)
@@ -186,9 +186,12 @@ grep -Fq 'd /var/cache/agreety 0700 greeter greeter -' "$tmpfiles" \
   || fail 'agreety private cache directory is not provisioned by tmpfiles'
 
 # The session wrapper owns desktop identity, seat backend probing, the graphics
-# profile, single-instance locking and the live-session shortcuts.
-grep -Fq 'export XDG_CURRENT_DESKTOP=river:kwm' "$river_session" \
-  || fail 'River session desktop identity is not river:kwm'
+# profile, single-instance locking and the live-session shortcuts. The identity
+# must be exactly `river`: Morghulis compares XDG_CURRENT_DESKTOP against the
+# literal string to enable its tag, mode and view modules, so a composite value
+# such as `river:kwm` silently produces a shell bar without workspaces.
+grep -Fqx 'export XDG_CURRENT_DESKTOP=river' "$river_session" \
+  || fail 'River session desktop identity is not the exact string river'
 grep -Fq 'export XDG_SESSION_DESKTOP=river' "$river_session" \
   || fail 'River session name is not exported'
 grep -Fq 'export XDG_SESSION_TYPE=wayland' "$river_session" \
@@ -296,17 +299,19 @@ grep -Fq 'start_optional bc250 bc250-control-centerd' "$supervisor" \
 grep -Fq 'set_status ready' "$supervisor" || fail 'session supervisor has no ready status boundary'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
 grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
-if grep -Eq 'start_(required|optional) (shell|kwm) ' "$supervisor"; then
-  fail 'session supervisor starts a shell or a second layout generator'
+grep -Fq 'start_required shell morghulis' "$supervisor" \
+  || fail 'session supervisor does not start the Morghulis desktop shell'
+if grep -Eq 'start_(required|optional|background)[[:space:]]+[[:alnum:]_-]+[[:space:]]+(kwm|river)([[:space:]]|$)' "$supervisor"; then
+  fail 'session supervisor starts a second layout generator or compositor'
 fi
 
 # Session catalogue identity.
-grep -Fq 'Name=River + KWM (DINX)' "$river_entry" || fail 'River session display name is incorrect'
+grep -Fq 'Name=River + KWM + Morghulis (DINX)' "$river_entry" || fail 'River session display name is incorrect'
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' "$river_entry" \
   || fail 'River session command is incorrect'
 grep -Fq 'TryExec=/usr/local/libexec/dinx-river-session' "$river_entry" \
   || fail 'River session TryExec is missing'
-grep -Fq 'DesktopNames=river;kwm' "$river_entry" || fail 'River session desktop names are missing'
+grep -Fq 'DesktopNames=river;kwm;morghulis' "$river_entry" || fail 'River session desktop names are missing'
 if grep -Eiq 'systemd|systemctl|uwsm' "$river_entry"; then
   fail 'River session entry contains a systemd or UWSM integration'
 fi
@@ -449,4 +454,4 @@ for doc in "$architecture" "$compatibility" "$pt_architecture" "$pt_compatibilit
   grep -Fq 'dinit' "$doc" || fail "dinit boundary is undocumented: ${doc#$root/}"
 done
 
-printf 'dinx_session_contract session=river_kwm_only=true greeter=agreety=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+greetd-agreety=true profiled_defaults=river=true tmpfiles=agreety_cache=true supervisor=river required_helpers=shikane+policykit+idle optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'
+printf 'dinx_session_contract session=river_kwm_morghulis=true shell=morghulis greeter=agreety=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+dinx-dock+dinx-first-run+greetd-agreety=true profiled_defaults=river=true tmpfiles=agreety_cache=true supervisor=river required_helpers=shikane+policykit+idle+morghulis optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'

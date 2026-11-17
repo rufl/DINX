@@ -248,12 +248,16 @@ fi
 # --- fixed dark session defaults ----------------------------------------------
 grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
 grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$profile_shell" || fail 'DINX editor dark scheme contract is missing'
-grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$session_wrapper" || fail 'River session does not export the DINX dark scheme'
-grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$session_wrapper" || fail 'River session does not export the dark editor scheme'
-grep -Fq 'GTK_APPLICATION_PREFER_DARK_THEME="${GTK_APPLICATION_PREFER_DARK_THEME:-1}"' "$session_wrapper" \
-  || fail 'River session does not prefer the dark GTK variant'
-grep -Fq 'ADW_DEBUG_COLOR_SCHEME="${ADW_DEBUG_COLOR_SCHEME:-prefer-dark}"' "$session_wrapper" \
-  || fail 'River session does not force the libadwaita dark scheme'
+grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$session_wrapper" || fail 'River session does not export the DINX default scheme'
+grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$session_wrapper" || fail 'River session does not export the default editor scheme'
+# The live per-user appearance is applied by dinx-sync-session-theme from
+# $config_home/dinx/appearance.json. The session must NOT force a dark toolkit
+# scheme through the environment: an exported GTK_APPLICATION_PREFER_DARK_THEME
+# or ADW_DEBUG_COLOR_SCHEME would pin every app to dark and silently defeat a
+# saved light selection.
+if grep -Eq 'GTK_APPLICATION_PREFER_DARK_THEME=|ADW_DEBUG_COLOR_SCHEME=' "$session_wrapper"; then
+  fail 'River session forces a toolkit scheme that would override the saved appearance'
+fi
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'River session does not force Qt6ct for GUI apps'
 grep -Fq 'qt6ct/qt6ct.conf' "$session_wrapper" || fail 'River session does not seed the Qt6ct config for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' "$session_wrapper" || fail 'River session does not seed the DINX Qt palette for existing users'
@@ -333,18 +337,28 @@ PY
 grep -Fq "color-scheme='prefer-dark'" "$dconf_dark" || fail 'system dconf database does not default to the dark color scheme'
 grep -Fq '[org/gnome/desktop/interface]' "$dconf_dark" || fail 'system dconf dark default has no interface schema'
 
-# --- per-user synchronization, now with no shell input ------------------------
+# --- per-user synchronization driven by the DINX appearance file -------------
 [[ -x "$theme_sync" ]] || fail 'GTK/Qt theme synchronizer is not executable'
 sh -n "$theme_sync" || fail 'GTK/Qt theme synchronizer has invalid shell syntax'
-grep -Fq 'gtk_theme=DINX' "$theme_sync" || fail 'Theme sync does not apply the fixed DINX dark GTK theme'
+grep -Fq 'appearance=$config_home/dinx/appearance.json' "$theme_sync" \
+  || fail 'Theme sync does not read the DINX per-user appearance file'
+grep -Fq 'gtk_theme=DINX' "$theme_sync" || fail 'Theme sync has no DINX default GTK theme'
+for supported_family in Skeuos Orchis Fluent Jasper; do
+  grep -Fq "$supported_family" "$theme_sync" \
+    || fail "Theme sync cannot resolve the ported GTK family: $supported_family"
+done
+grep -Fq 'variant_suffix=Light' "$theme_sync" || fail 'Theme sync cannot resolve light variants'
+grep -Fq 'variant_suffix=Dark' "$theme_sync" || fail 'Theme sync cannot resolve dark variants'
+grep -Fq -- '-Square' "$theme_sync" || fail 'Theme sync cannot resolve square corner variants'
 grep -Fq 'gtk-application-prefer-dark-theme' "$theme_sync" || fail 'GTK dark preference is not synchronized'
-grep -Fq 'gtk_prefer_dark=1' "$theme_sync" || fail 'GTK dark preference is not unconditionally enabled'
-grep -Fq "dconf write" "$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
+grep -Fq 'dconf write' "$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
 grep -Fq "'prefer-dark'" "$theme_sync" || fail 'Theme sync does not write the dark dconf color-scheme'
-grep -Fq 'custom_palette true' "$theme_sync" || fail 'Qt dark palette is not enabled for the fixed dark session'
+grep -Fq "'prefer-light'" "$theme_sync" || fail 'Theme sync does not write the light dconf color-scheme'
+grep -Fq 'custom_palette true' "$theme_sync" || fail 'Theme sync does not enable the DINX Qt palette for dark'
+grep -Fq 'custom_palette false' "$theme_sync" || fail 'Theme sync does not disable the custom Qt palette for light'
 grep -Fq 'colors/DINX.conf' "$theme_sync" || fail 'Theme sync does not consume the DINX Qt palette'
 grep -Fq 'preserving user-managed symlink' "$theme_sync" || fail 'Theme sync does not preserve user-managed symlinks'
-if grep -Eiq 'pearl' "$theme_sync"; then
+if grep -Eiq 'pearl|matugen' "$theme_sync"; then
   fail 'Theme sync still reads the retired shell theme catalog'
 fi
 for stale_input in 'preferences.json' 'last-good.json' 'gtk_drop_down_set_selected'; do
@@ -478,4 +492,4 @@ grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinxpanel_source" || fail 'DINXPan
 grep -Fq "background: ${dark_token[mSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings surface does not use DINX background'
 grep -Fq "color: ${dark_token[mOnSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings text does not use DINX foreground'
 grep -Fq "background-color: ${dark_token[mPrimary]}" "$seafoam_settings_source" || fail 'Seafoam Settings action does not use DINX primary'
-printf 'dinx_theme_contract session=river fixed_dark=true palette=true static=true typography=true states=true gtk=true gtk_system=true gtk_package=true qt=true qt_palette=true qt_session_seed=true dconf_dark=true theme_sync_no_input=true patchy_darkest=true swayimg=true haruna_dark=true no_pearl=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true boot_mark=true\n'
+printf 'dinx_theme_contract session=river appearance_selectable=true dark_default=true palette=true static=true typography=true states=true gtk=true gtk_system=true gtk_package=true qt=true qt_palette=true qt_session_seed=true dconf_scheme=true theme_sync_input=appearance.json theme_families=DINX+Skeuos+Orchis+Fluent+Jasper patchy_darkest=true swayimg=true haruna_dark=true no_pearl=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true boot_mark=true\n'

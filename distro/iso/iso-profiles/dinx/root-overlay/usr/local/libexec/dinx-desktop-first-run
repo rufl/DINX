@@ -1,0 +1,99 @@
+#!/bin/sh
+set -eu
+
+# DINX first-login glue. Runs the GTK4 wizard once, then turns the saved
+# selection into the live session environment and toolkit configuration.
+# Every failure path exits 0: the desktop must always come up, with defaults,
+# even when the wizard is missing or the user dismisses it.
+config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
+state_home=${XDG_STATE_HOME:-${HOME:-/nonexistent}/.local/state}
+runtime_dir=${XDG_RUNTIME_DIR:-/tmp}
+appearance=$config_home/dinx/appearance.json
+installer_preferences=$config_home/dinx/installer-preferences.json
+marker=$state_home/dinx/desktop-first-run-complete
+wizard=${DINX_FIRST_RUN_COMMAND:-/usr/bin/dinx-first-run}
+theme_sync=${DINX_THEME_SYNC_HELPER:-/usr/local/libexec/dinx-sync-session-theme}
+session_env=$runtime_dir/dinx-session.env
+
+run_wizard() {
+    if [ -e "$marker" ]; then
+        return 0
+    fi
+    if ! [ -x "$wizard" ]; then
+        return 0
+    fi
+    "$wizard" >/dev/null 2>&1 || true
+    marker_dir=${marker%/*}
+    if ! mkdir -p "$marker_dir"; then
+        return 0
+    fi
+    marker_tmp=$marker.tmp.$$
+    if (umask 077; : >"$marker_tmp"); then
+        mv -f -- "$marker_tmp" "$marker"
+    else
+        rm -f -- "$marker_tmp"
+    fi
+    return 0
+}
+
+# Locale and keyboard are session inputs, not just installer answers: a user
+# who picks pt-BR must get a pt-BR desktop on the very first login, not only
+# after installation. The values are restricted to the shipped locales, so a
+# hand-edited appearance.json cannot inject an environment value.
+apply_locale() {
+    if ! command -v jq >/dev/null 2>&1 || [ ! -r "$appearance" ]; then
+        return 0
+    fi
+    locale_value=$(jq -er '.locale | select(. == "pt_BR.UTF-8" or . == "en_US.UTF-8")' "$appearance" 2>/dev/null) || return 0
+    timezone_value=$(jq -er '.timezone | select(. == "America/Sao_Paulo" or . == "UTC")' "$appearance" 2>/dev/null) || timezone_value=UTC
+    keyboard_value=$(jq -er '.keyboard | select(. == "br" or . == "us")' "$appearance" 2>/dev/null) || keyboard_value=us
+    language_value=$(jq -er '.language | select(. == "pt-BR" or . == "en-US")' "$appearance" 2>/dev/null) || language_value=en-US
+    export LANG=$locale_value
+    export LANGUAGE=$language_value
+    if locale -a 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed 's/[.-]//g' \
+      | grep -Fqx "$(printf '%s' "$locale_value" | tr '[:upper:]' '[:lower:]' | sed 's/[.-]//g')"; then
+        export LC_ALL=$locale_value
+    else
+        unset LC_ALL
+    fi
+    export TZ=$timezone_value
+    export XKB_DEFAULT_LAYOUT=$keyboard_value
+    # The supervisor sources this file before starting any session component,
+    # because a child process can never export into its parent.
+    session_env_tmp=$session_env.tmp.$$
+    if (umask 077; printf 'export LANG=%s\nexport LANGUAGE=%s\nexport TZ=%s\nexport XKB_DEFAULT_LAYOUT=%s\n' \
+      "$locale_value" "$language_value" "$timezone_value" "$keyboard_value" >"$session_env_tmp"); then
+        mv -f -- "$session_env_tmp" "$session_env"
+    else
+        rm -f -- "$session_env_tmp"
+    fi
+    return 0
+}
+
+# The wizard already writes installer-preferences.json without overwriting an
+# existing file; keep that file authoritative for Calamares when it exists and
+# the appearance file was seeded by hand.
+seed_installer_preferences() {
+    if [ -r "$installer_preferences" ] || ! command -v jq >/dev/null 2>&1 || [ ! -r "$appearance" ]; then
+        return 0
+    fi
+    if jq -e '.language and .locale and .timezone and .keyboard' "$appearance" >/dev/null 2>&1; then
+        installer_tmp=$installer_preferences.tmp.$$
+        if (umask 077; jq '{version: 1, language, locale, timezone, keyboard}' "$appearance" >"$installer_tmp") 2>/dev/null; then
+            mv -f -- "$installer_tmp" "$installer_preferences"
+        else
+            rm -f -- "$installer_tmp"
+        fi
+    fi
+    return 0
+}
+
+run_wizard
+apply_locale
+seed_installer_preferences
+
+if [ -x "$theme_sync" ]; then
+    "$theme_sync" >/dev/null 2>&1 || true
+fi
+
+exit 0

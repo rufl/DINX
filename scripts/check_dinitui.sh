@@ -46,7 +46,7 @@ grep -Fq '    - dinitui' "$profile" || fail 'DINX profile does not install dinit
 grep -Fq '    - seafoam-settings' "$profile" || fail 'Seafoam Settings is missing from the DINX rootfs'
 grep -Fq 'build_package dinitui' "$builder" || fail 'ISO builder does not build dinitui'
 grep -Fq 'pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst' "$builder" || fail 'builder does not install packaged DinitUI through the retry-safe helper'
-grep -Fq 'dinitui|dinxpanel|seafoam-settings)' "$builder" || fail 'makepkg cleanup would remove checked-in Zig source trees'
+grep -Fq 'dinitui|dinxpanel|dinx-dock|dinx-first-run|seafoam-settings)' "$builder" || fail 'makepkg cleanup would remove checked-in Zig source trees'
 grep -Fq 'DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh' "$builder" || fail 'builder does not qualify the packaged DinitUI binary'
 grep -Fq 'std.process.run' "$backend" || fail 'DinitUI does not use argv-safe process execution'
 grep -Fq 'service-file discovery failed' "$frontend" || fail 'service-file discovery errors are not surfaced'

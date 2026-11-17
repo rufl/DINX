@@ -44,6 +44,14 @@ style=Fusion
 general="Noto Sans,10"
 INI
 
+# Appearance fixtures the inner session consumes from $tmp.
+cat >"$tmp/appearance-port.json" <<'JSON'
+{"version":1,"theme":"Jasper","variant":"light","corners":"square"}
+JSON
+cat >"$tmp/appearance-invalid.json" <<'JSON'
+{"version":1,"theme":"Bogus","variant":"neon","corners":"diagonal"}
+JSON
+
 env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
   dbus-run-session -- bash -c '
     set -euo pipefail
@@ -111,10 +119,35 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     done
     [[ $(ini_value "$fresh_config/qt6ct/qt6ct.conf" custom_palette) == true ]]
 
+    # A saved DINX appearance selection drives the ported theme families and
+    # their light/dark and rounded/square variants.
+    XDG_CONFIG_HOME="$config_home"
+    export XDG_CONFIG_HOME
+    mkdir -p "$config_home/dinx"
+    cp "$tmp/appearance-port.json" "$config_home/dinx/appearance.json"
+    run_sync
+    for gtk_version in 3.0 4.0; do
+      settings="$config_home/gtk-$gtk_version/settings.ini"
+      [[ $(ini_value "$settings" gtk-theme-name) == Jasper-Square-Light ]]
+      [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 0 ]]
+      [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
+    done
+    [[ $(dconf read "$color_scheme_key") == "'\''prefer-light'\''" ]]
+    [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == false ]]
+    grep -Fq "family=Jasper variant=light corners=square gtk_theme=Jasper-Square-Light prefer_dark=0" "$tmp/stdout"
+
+    # An unknown family, variant or corner value falls back to DINX dark.
+    cp "$tmp/appearance-invalid.json" "$config_home/dinx/appearance.json"
+    run_sync
+    [[ $(ini_value "$config_home/gtk-3.0/settings.ini" gtk-theme-name) == DINX ]]
+    [[ $(ini_value "$config_home/gtk-4.0/settings.ini" gtk-application-prefer-dark-theme) == 1 ]]
+    [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == true ]]
+    rm -f -- "$config_home/dinx/appearance.json"
+
     # With no config directory at all the synchronizer still succeeds.
     env -u HOME -u XDG_CONFIG_HOME "$theme_sync" >"$tmp/empty-stdout" 2>"$tmp/empty-stderr"
     grep -Fq "no config directory" "$tmp/empty-stderr"
     [[ ! -s "$tmp/empty-stdout" ]]
   ' smoke_dinx_theme_sync "$theme_sync" "$config_home" "$tmp"
 
-printf 'dinx_theme_sync_smoke no_input=true fixed_dark=true dconf_dark=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true idempotent=true symlink_guard=true fresh_home=true empty_home=true\n'
+printf 'dinx_theme_sync_smoke dark_default=true appearance_selection=true ported_family_variant=true light_variant=true invalid_falls_back=true dconf_scheme=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true idempotent=true symlink_guard=true fresh_home=true empty_home=true\n'

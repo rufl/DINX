@@ -15,9 +15,10 @@ pkgdesc='Dynamic tiling window manager for the River Wayland compositor'
 arch=('x86_64')
 url="$KWM_REPOSITORY"
 license=('GPL-3.0-only')
-# fcft and pixman are required because the status bar is enabled by default;
-# the bar is the DINX status surface until Morghulis replaces it.
-depends=('glibc' 'fcft' 'pixman' 'wayland' 'libxkbcommon')
+# The bar is built with -Dbar=false: the DINX status surface is the Morghulis
+# NavBar, so kwm's own bar would double it. Without the bar kwm neither links
+# nor needs fcft/pixman; river-window-management-v1 registration is unchanged.
+depends=('glibc' 'wayland' 'libxkbcommon')
 makedepends=('wayland-protocols' 'wayland-utils' 'zig>=0.16')
 optdepends=('kwim: river input-management helper, invoked automatically by kwm')
 source=("kwm-$pkgver.tar.gz::$KWM_SOURCE_URL")
@@ -36,7 +37,8 @@ build() {
   "$zig_bin" build install \
     --prefix "$srcdir/out" \
     -Dcpu=baseline \
-    -Doptimize=ReleaseSafe
+    -Doptimize=ReleaseSafe \
+    -Dbar=false
 }
 
 check() {

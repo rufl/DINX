@@ -469,7 +469,7 @@ required_paths=(
   etc/dconf/profile/user
   etc/dconf/db/local
   etc/dconf/db/local.d/99-dinx-dark
-  usr/share/wayland-sessions/dinx-river-kwm.desktop
+  usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
   usr/local/libexec/dinx-river-session
@@ -857,16 +857,16 @@ gaming_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" u
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-gaming' <<<"$gaming_session" || fail 'DINX gaming session command is incorrect'
 grep -Fq 'Hidden=true' <<<"$gaming_session" || fail 'DINX gaming session is not hidden'
 grep -Fq 'NoDisplay=true' <<<"$gaming_session" || fail 'DINX gaming session remains selectable'
-river_kwm_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-river-kwm.desktop)
-grep -Fq 'Name=River + KWM (DINX)' <<<"$river_kwm_session" || fail 'DINX River/KWM session name is incorrect'
+river_kwm_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop)
+grep -Fq 'Name=River + KWM + Morghulis (DINX)' <<<"$river_kwm_session" || fail 'DINX River/KWM/Morghulis session name is incorrect'
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$river_kwm_session" || fail 'DINX River/KWM session command is incorrect'
 grep -Fq 'TryExec=/usr/local/libexec/dinx-river-session' <<<"$river_kwm_session" || fail 'DINX River/KWM session TryExec is missing'
-grep -Fq 'DesktopNames=river;kwm' <<<"$river_kwm_session" || fail 'DINX River/KWM session does not advertise the river;kwm desktop names'
+grep -Fq 'DesktopNames=river;kwm;morghulis' <<<"$river_kwm_session" || fail 'DINX River/KWM/Morghulis session does not advertise its desktop names'
 river_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-session)
 river_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-init)
 session_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
-grep -Fq 'export XDG_CURRENT_DESKTOP=river:kwm' <<<"$river_session" \
-  || fail 'DINX River session does not advertise the river;kwm desktop identity'
+grep -Fqx 'export XDG_CURRENT_DESKTOP=river' <<<"$river_session" \
+  || fail 'DINX River session does not advertise the exact river desktop identity Morghulis requires'
 grep -Fq 'export XDG_SESSION_DESKTOP=river' <<<"$river_session" \
   || fail 'DINX River session does not advertise the river session desktop'
 river_session_listing=$(grep -m1 -F 'squashfs-root/usr/local/libexec/dinx-river-session' <<<"$manifest")
@@ -946,7 +946,7 @@ session_entries=$(grep -oE '/usr/share/(wayland-sessions|xsessions)/[^[:space:]]
 while IFS= read -r session_path; do
   [[ -n "$session_path" ]] || continue
   case "$session_path" in
-    /usr/share/wayland-sessions/dinx-river-kwm.desktop) continue ;;
+    /usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop) continue ;;
     /usr/share/wayland-sessions/dinx-gaming.desktop) ;;
     *) fail "unsupported user session remains: $session_path" ;;
   esac

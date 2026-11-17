@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-export XDG_CURRENT_DESKTOP=river:kwm
-export XDG_SESSION_DESKTOP=river
-export XDG_SESSION_TYPE=wayland
+# Desktop identity belongs to dinx-river-session: Morghulis enables its river
+# modules only when XDG_CURRENT_DESKTOP is exactly `river`, so re-exporting a
+# composite value here would blank the shell's bar.
 
 # river runs this script as its configuration once its Wayland socket exists.
 # kwm implements river-window-management-v1 and must be registered as the

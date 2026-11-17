@@ -28,7 +28,14 @@
 #   built here -- see NOTES at the end of this file.
 set -u
 W=${1:-/root/astal}
-PREFIX=$W/prefix
+# Install prefix. Defaults to /usr/local, NOT a private $W/prefix: the Astal
+# shared objects and the .pc files morghulis links against must land where the
+# runtime loader resolves them (/usr/local/lib is in the default
+# ldconfig_paths), and the prefix is baked into the generated GIR/vapi/typelib
+# paths. This matches the configuration the whole stack was proven against in
+# the build VM. Override with PREFIX=... only if you also extend
+# ldconfig_paths.
+PREFIX=${PREFIX:-/usr/local}
 LOG=$W/build-astal.log
 : > "$LOG"
 exec >>"$LOG" 2>&1
@@ -51,7 +58,10 @@ SHIM_SRC=${SHIM_SRC:-}
 [ -x /usr/local/bin/astal-valadoc-shim ] || { log "MISSING /usr/local/bin/astal-valadoc-shim (set SHIM_SRC)"; exit 1; }
 export VALADOC=/usr/local/bin/astal-valadoc-shim
 
-rm -rf "$PREFIX"; mkdir -p "$PREFIX"
+[ "$PREFIX" = "/usr/local" ] || rm -rf "$PREFIX"
+mkdir -p "$PREFIX"
+# astal-river must stay invisible to morghulis but present for others, so the
+# filtered pkgconfig dir below is rebuilt every run.
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/libdata/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig"
 
 build_mod() { # dir  (relative to $ASTAL/lib)

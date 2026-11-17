@@ -160,6 +160,24 @@ if [ "$pkg_ready" = 1 ]; then
   fi
 fi
 
+# Compile the GSettings schemas. FreeBSD has no package trigger for this, and a
+# GTK shell aborts at startup without its compiled schema: morghulis dies with
+# "Settings schema 'com.arkye.morghulis' is not installed" (verified on 15.1).
+# meson installs the .xml into $PREFIX/share/glib-2.0/schemas; only the binary
+# gschemas.compiled cache is missing.
+if command -v glib-compile-schemas >/dev/null 2>&1 \
+   && [ -d /usr/local/share/glib-2.0/schemas ]; then
+  glib-compile-schemas /usr/local/share/glib-2.0/schemas >/dev/null 2>&1 \
+    && log 'compiled GSettings schemas' \
+    || log 'WARNING: glib-compile-schemas failed'
+fi
+# Same reasoning for the desktop database: .desktop entries are not indexed
+# until it is rebuilt, so launchers/app-lists come up empty otherwise.
+if command -v update-desktop-database >/dev/null 2>&1 \
+   && [ -d /usr/local/share/applications ]; then
+  update-desktop-database /usr/local/share/applications >/dev/null 2>&1 || true
+fi
+
 sysrc seatd_enable=YES >/dev/null
 sysrc dinx_session_enable=YES >/dev/null
 sysrc vboxguest_enable=YES >/dev/null 2>&1 || log 'WARNING: vboxguest load failed'

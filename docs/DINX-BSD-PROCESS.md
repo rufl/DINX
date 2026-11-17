@@ -976,12 +976,29 @@ else {
 }
 ```
 
-A fonte da captura do **cursor** (`wayvnc --render-cursor`) não é nem um
-`wlr_output` nem um toplevel conhecido do `server.wm`, então cai no
-`else unreachable`. O upstream corrigiu exatamente isso no **river 0.5.x**:
-`handleNewCaptureSession` agora devolve `error.NotOutputOrToplevel` com o
-comentário *"Presumably a cursor session"* e o loop `else { return
-error.NotOutputOrToplevel; }`. Confirmado lendo `Server.zig` do tag v0.5.2.
+A fonte da captura (`wlr_capture_session.source`) não bate com nenhum
+`wlr_output` nem com nenhum toplevel em `server.wm.windows`, então a iteração
+termina sem `break` e cai no `else unreachable`. Duas precisões, para não
+superinterpretar a evidência:
+(a) O crash observado é **signal 11 (SIGSEGV)**, não o SIGILL/SIGABRT que um
+    `unreachable` em ReleaseSafe produziria, e o frame #0 do core aponta
+    `Server.zig:626` — a linha `if (wlr_capture_session.source ==
+    window.capture_source)`, não a 630 do `else unreachable`. Ou seja, o que
+    falha é a **comparação/desreferência durante a iteração** (a lista de
+    windows do WM externo não contém a fonte), e o `unreachable` é a rota
+    seguinte. A linha exata depende do layout otimizado; o ponto do código é o
+    ramo "capture não é output nem toplevel conhecido".
+(b) O trigger não é exclusivo do cursor. Reproduzi o crash **também** numa
+    execução sem `--render-cursor`, quando um cliente de framebuffer (o grab
+    VNC) conectou — ou seja, qualquer capture session cuja fonte o WM externo
+    não reconhece. `--render-cursor` só garante o crash mais cedo (a sessão de
+    cursor nunca é um toplevel do kwm).
+
+O upstream corrigiu exatamente esse ramo no **river 0.5.x**:
+`handleNewCaptureSession` agora chama `server.newCaptureSession(...) catch` e
+o loop passa a `else { return error.NotOutputOrToplevel; }`, com o handler
+tratando o erro como *"Presumably a cursor session"* (log, não crash).
+Confirmado lendo `Server.zig` do tag v0.5.2.
 
 Consequência para o lane:
 - O crash é do **river 0.4.8** (pacote do catálogo FreeBSD), não do port. Vale

@@ -741,26 +741,28 @@ porque o processo já estava morto antes do kill, não porque o handler falhou);
 Terminus`) o `NoFont` vai a zero. O pacote do guest não tem `fc-fontconfig`/
 `dejavufonts` (nomes que chutei); o certo é `x11-fonts/terminus-font`.
 
-Integração na pipeline: `dinx-kwm` entra no `build-native.sh` (clone na tag
-v0.3.0, patch, build, `pkg create`), no manifesto (`x11-wm/dinx-kwm` +
-`x11-wm/river`), no gate (`check_dinx_bsd.sh` exige o Makefile, o patch e o
-script), no `Makefile.kwm` do port, e a sessão `dinx-river-session` passa a
-existir como escolha de sessão (`dinx-session-set river`, `.desktop` próprio,
-instalada pelo overlay da ISO e cobrada pelo `check-bsd-iso.sh`). O
-`dinx_session` do rc aceita qualquer um dos dois stack (aqueous+pearl **ou**
-river+kwm) para decidir se sobe, e o stop limpa `river -c`/`kwm`. O que **não**
-está provado: o kwm gerenciando janelas reais com o bar desenhado (a VM de
-build é headless e sem cliente GTK), e o `kwim` (auxiliar de input, construído
-mas não exercitado).
+Integração na pipeline: `dinx-kwm` entra no `build-native.sh` (clone no
+`KWM_REV` pinado, patch, build, `pkg create`), no manifesto
+(`x11-wm/dinx-kwm` + `x11-wm/river`), no gate (`check_dinx_bsd.sh` exige o
+Makefile, o patch e o script), no `Makefile.kwm` do port, e a sessão
+`dinx-river-session` passa a existir como escolha de sessão
+(`dinx-session-set river`, `.desktop` próprio, instalado pelo overlay da ISO e
+cobrado pelo `check-bsd-iso.sh`). O `dinx_session` do rc aceita qualquer um dos
+dois stack (aqueous+pearl **ou** river+kwm) para decidir se sobe, e o stop
+limpa `river -c`/`kwm`. O que **não** está provado: o kwm gerenciando janelas
+reais com o bar desenhado (a VM de build é headless e sem cliente GTK).
 
-Nota de versionamento (verificada depois do build): os anchors do patch foram
-conferidos contra **ambos** os fontes — o clone da VM (`8dafe7e`, master) e o
-tarball do tag `v0.3.0` que o port fixa (`PORTVERSION=	0.3.0`,
-`v0.3.0.tar.gz`). Os 7 anchors batem nos dois. A única diferença entre o tag e
-o master no caminho portado é `key_repeat.zig:25`: o tag chama
-`timerfd_create(.MONOTONIC, .{ .NONBLOCK = true })` e o master já passou a pedir
-`.CLOEXEC` também. O `DinXTFD` declara os dois campos com default `false`, então
-o literal compila nas duas versões e o patch não precisa de ramo por versão; a
-consequência real é que, no `v0.3.0`, o fd do timer de key-repeat **não** fica
-close-on-exec — um fd a mais herdado pelos filhos que o kwm lança. Inofensivo
-para a sessão e corrigido ao subir o pin para o master.
+Nota de pin — corrigida depois do build: o port fixa o commit `8dafe7e`, **não**
+o tag `v0.3.0`. O `v0.3.0.tar.gz` que o rascunho fixava não compila com o Zig
+0.17 pinado: o `build.zig` do tag ainda lê `Build.build_root`, campo removido no
+0.17 (prova no host: `zig build --fetch` → `error: no field named 'build_root'`
+em `build.zig:64`), e o tag não traz cliente `kwim` algum. Os 7 anchors batem nas
+duas árvores; a única diferença no caminho portado é `key_repeat.zig:25` (o tag
+pede só `.NONBLOCK`, o commit pede `.NONBLOCK` + `.CLOEXEC`), e como `DinXTFD`
+declara os dois campos com default `false` o patch compila nas duas versões sem
+ramo por versão. O `WRKSRC` acompanha o nome do archive do GitHub
+(`kwm-<sha>`). O `kwim` é repositório separado (`kewuaa/kwim`): o tag v0.2.0 tem
+o mesmo mal do `build_root`, o master `a802d2d` ("Update for Zig 0.17",
+`minimum_zig_version = 0.17.0`) compila na VM FreeBSD sem patch — `build_rc=0`,
+`ldd` limpo — e seu único linuxismo é `memfd_create`, já nativo no FreeBSD 13+.
+Ou seja: nem kwm nem kwim dependem de morghulis; o caminho inverso é que trava.

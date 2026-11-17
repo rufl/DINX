@@ -188,11 +188,16 @@ stamp greetd-end
 
 stamp kwm-start
 # --- kwm (river window manager) ------------------------------------------
-# Built from the upstream tag pinned identically to distro/bsd/ports/Makefile.
-# kwm links libc, so the porting patches bind timerfd/memfd/pipe2 straight to
-# FreeBSD libc; see scripts/bsd-vm/patch-kwm-freebsd.py.
+# Built from the same pinned revision as distro/bsd/ports/Makefile.kwm, NOT the
+# v0.3.0 tag: the tag's build.zig still reads Build.build_root, which Zig 0.17
+# removed, so it fails at configure (proven: `zig build --fetch` -> "no field
+# named 'build_root'"). kwm links libc, so the porting patches bind
+# timerfd/pipe2 straight to FreeBSD libc; see patch-kwm-freebsd.py.
+KWM_REV=8dafe7ec636894131521990c2effa3daa09eb205
 if [ ! -d "$W/kwm" ]; then
-  git clone --depth 1 --branch v0.3.0 https://github.com/kewuaa/kwm.git "$W/kwm" >>"$LOG" 2>&1
+  git clone https://github.com/kewuaa/kwm.git "$W/kwm" >>"$LOG" 2>&1
+  git -C "$W/kwm" checkout "$KWM_REV" >>"$LOG" 2>&1
+  log "== kwm checked out at $KWM_REV (exit=$?)"
 fi
 if [ -d "$W/kwm" ]; then
   python3 "$W/patch-kwm-freebsd.py" "$W" >>"$LOG" 2>&1

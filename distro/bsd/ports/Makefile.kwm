@@ -11,9 +11,25 @@
 PORTNAME=	kwm
 PORTVERSION=	0.3.0
 CATEGORIES=	x11-wm wayland
-MASTER_SITES=	https://github.com/kewuaa/kwm/archive/refs/tags/ \
+
+# Pinned source revision and toolchain; keep in lockstep with kwm's
+# build.zig.zon minimum. Defined before use: GitHub names the archive
+# directory after the ref, so a commit tarball unpacks to
+# kwm-${KWM_REV}, not kwm-${PORTVERSION}.
+KWM_REV=	8dafe7ec636894131521990c2effa3daa09eb205
+ZIG_VERSION=	0.17.1
+ZIG_DISTNAME=	zig-x86_64-freebsd-${ZIG_VERSION}
+ZIG_CMD=	${WRKDIR}/${ZIG_DISTNAME}/zig
+
+# Pinned to ${KWM_REV}, NOT to the v0.3.0 tag: the tag's build.zig still reads
+# Build.build_root, which Zig 0.17 removed, so `zig build` fails at configure
+# (proven: "no field named 'build_root'"), and the tag ships no kwim client.
+# That commit's build.zig.zon still says .version = "0.3.0", and its src is
+# byte-identical to the tree the porting patch was built against (diff -rq
+# clean) and carries no build_root use.
+MASTER_SITES=	https://github.com/kewuaa/kwm/archive/ \
 		https://ziglang.org/download/${ZIG_VERSION}/:zig
-DISTFILES=	v${PORTVERSION}.tar.gz \
+DISTFILES=	${KWM_REV}.tar.gz \
 		${ZIG_DISTNAME}.tar.xz:zig
 
 MAINTAINER=	trafael@dinx.org
@@ -41,12 +57,14 @@ RUN_DEPENDS=	river>=0.4:x11-wm/river
 
 USES=		pkgconfig
 
-# Pinned toolchain; keep in lockstep with kwm's build.zig.zon minimum.
+# Pinned source revision and toolchain; keep in lockstep with kwm's
+# build.zig.zon minimum. GitHub names the archive directory after the ref, so
+# a commit tarball unpacks to kwm-${KWM_REV}, not kwm-${PORTVERSION}.
+KWM_REV=	8dafe7ec636894131521990c2effa3daa09eb205
+WRKSRC=		${WRKDIR}/${PORTNAME}-${KWM_REV}
 ZIG_VERSION=	0.17.1
 ZIG_DISTNAME=	zig-x86_64-freebsd-${ZIG_VERSION}
 ZIG_CMD=	${WRKDIR}/${ZIG_DISTNAME}/zig
-
-WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION}
 
 # The bar is the only status surface in a river session (river has no panel of
 # its own), and kwim configures input devices so a headless guest with no evdev

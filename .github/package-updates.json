@@ -329,6 +329,20 @@
       "tag_prefix": "v",
       "url_template": "https://github.com/kewuaa/kwm/archive/refs/tags/{tag}.tar.gz",
       "bump_pkgrel_path": "distro/packages/kwm/PKGBUILD"
+    },
+    {
+      "name": "morghulis",
+      "provider": "github",
+      "repository": "ARKye03/morghulis",
+      "source_file": "distro/packages/morghulis/source.env",
+      "version_key": "MORGHULIS_VERSION",
+      "package_version_key": "MORGHULIS_VERSION",
+      "source_url_key": "MORGHULIS_SOURCE_URL",
+      "checksum_key": "MORGHULIS_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/ARKye03/morghulis/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/morghulis/PKGBUILD"
     }
   ]
 }

@@ -421,6 +421,18 @@ trap finish EXIT
               build_package pori
               build_package kwim
               build_package kwm
+              # Morghulis desktop shell chain. Each step is installed locally before the
+              # next builds, because astal-tray resolves appmenu-glib-translator and
+              # Morghulis resolves the astal libraries through pkg-config at build time.
+              pacman_retry -S --needed --noconfirm \
+                vala gobject-introspection glib2-devel dart-sass json-glib \
+                networkmanager wireplumber gsound libportal libgtop
+              build_package appmenu-glib-translator
+              pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst
+              build_package astal
+              pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
+              build_package morghulis
+              pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
               build_package mission-center
               build_package zls
               pacman_install_local \

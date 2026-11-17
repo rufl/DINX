@@ -10,8 +10,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / ".github/package-updates.json"
-# These pins are intentionally coupled to DINX's private source revision or toolchain.
-MANUAL_SOURCE_PINS = {"deetty", "zls"}
+# These pins are intentionally coupled to DINX's private source revision or toolchain,
+# or to an upstream that publishes no release tags / sits outside the polled hosts:
+# astal (Aylur/astal has zero git tags; frozen to the revision Morghulis pins in its
+# flake.lock) and appmenu-glib-translator (gitlab.com; the refresher's gitlab provider
+# targets gitlab.gnome.org only).
+MANUAL_SOURCE_PINS = {"appmenu-glib-translator", "astal", "deetty", "zls"}
 
 
 def fail(message: str) -> None:

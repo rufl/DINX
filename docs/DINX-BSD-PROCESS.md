@@ -766,3 +766,86 @@ o mesmo mal do `build_root`, o master `a802d2d` ("Update for Zig 0.17",
 `minimum_zig_version = 0.17.0`) compila na VM FreeBSD sem patch — `build_rc=0`,
 `ldd` limpo — e seu único linuxismo é `memfd_create`, já nativo no FreeBSD 13+.
 Ou seja: nem kwm nem kwim dependem de morghulis; o caminho inverso é que trava.
+
+## 27. river + kwm + kwim + morghulis: o que falta e o que já está pronto
+
+Objetivo do lane (dono, 2026-11-17): **fazer morghulis funcionar sobre river,
+com kwm e kwim**. Estado medido na VM FreeBSD 15.1 (vala 0.56.19, meson 1.12,
+gtk4 4.20.4, libadwaita 1.8.5.1, gtk4-layer-shell 1.3.0, river 0.4.8,
+wireplumber 0.5.17, pipewire 1.6.9, upower 1.91.2, sassc 3.6.2):
+
+**Pronto (compilado e instalado nesta rodada, 15 typelibs)**
+- `river` 0.4.8: catálogo oficial (`x11-wm/river`), zero port necessário.
+- `kwm`: §26, commit `8dafe7e`, patch de 7 blocos, `build_rc=0` + prova de sinal.
+- `kwim`: repositório separado `kewuaa/kwim`, master `a802d2d` ("Update for Zig
+  0.17") compila na VM **sem nenhum patch** (`build_rc=0`, `ldd` limpo). O tag
+  v0.2.0 tem o mesmo defeito `Build.build_root` do kwm v0.3.0 — não usar.
+- Astal 0.1 (`Aylur/astal`, main): `quarrel`, `astal/io`, `wl/wl`,
+  `astal/gtk4`, `river`, `notifd`, `mpris`, `brightness`, `workspace`,
+  `idle-notify`, `apps`, `battery`, `bluetooth`, `powerprofiles`, `tray` —
+  todos `install=ok`, incluindo **`AstalRiver-0.1.typelib`**, que é exatamente o
+  namespace que `morghulis/src/NavBar/RiverTags.vala` consome.
+  `AstalWp-0.1` (wireplumber) também. Três correções, todas só-FreeBSD e neutras
+  para upstream, em `scripts/bsd-vm/build-astal-morghulis.sh`:
+  1. `valadoc` não existe (`lang/vala` é `--disable-valadoc`) e o `gir.py` de
+     **todo** módulo o invoca → shim `distro/bsd/ports/files/astal-valadoc-shim`
+     via a variável `VALADOC` que o próprio gir.py lê (`os.getenv`); `valac -C
+     --library` produz o mesmo GIR, só sem comentários de doc (que alimentavam
+     gi-docgen, não o typelib).
+  2. `appmenu-glib-translator` declara `ulong name_id` (tipo inexistente no
+     FreeBSD) → `gulong`. Cuidado: BSD sed não tem `\b`; `s/\bulong\b/` falha
+     com "RE error: trailing backslash".
+  3. O translator instala headers **flat**, mas seu `.vapi` declara
+     `cheader_filename = "exporter/exporter.h,importer/importer.h"` → sem o
+     layout em subdiretório o `lib/tray` morre com
+     `'exporter/exporter.h' file not found`.
+- `appmenu-glib-translator`: upstream real é
+  `gitlab.com/vala-panel-project/vala-panel-appmenu`, subdir
+  `subprojects/appmenu-glib-translator` (o `github.com/Aylur/...` **não
+  existe**, 404). Deps só `gio-unix-2.0` + `gdk-pixbuf-2.0` opcional, e grep em
+  `importer/`+`exporter/` não acha inotify/epoll/`/proc`/signalfd → portável.
+- `sass` (morghulis compila `.scss` no build): ausente, mas **`sassc` 3.6.2
+  existe** no catálogo → patch de uma linha no `find_program('sass')`.
+
+**Bloqueios duros (precisam de decisão do dono, não de patch)**
+1. **`libnm` / `astal-network`** — o único bloqueio *de link*. O `libnm` do
+   FreeBSD é `net-mgmt/networkmanager-shim`, e ele é um stub sem símbolos:
+   `nm -D libnm.so | grep -c nm_client` = **2**, e os dois são
+   `nm_client_error_get_type` / `nm_client_instance_flags_get_type`; um
+   `nm_client_new()` real falha com `undefined symbol`. Não há `NM-1.0.typelib`
+   nem `libnm.vapi`, então o `astal/network` nem chega ao link:
+   `error: Package 'libnm' not found in specified Vala API directories`. E o
+   NetworkManager upstream é Linux-only por declaração própria ("Linux kernel
+   >= 5.6", "only drivers shipped with the upstream Linux kernel"). Consequência:
+   **morghulis não configura** enquanto `dependency('libnm')` e
+   `dependency('astal-network-0.1')` forem incondicionais em `src/meson.build`.
+   Opções: (a) backend FreeBSD de rede (ifconfig/wpa_cli/dhcpcd) como módulo
+   próprio + fork do morghulis sem Network; (b) shim libnm real (símbolos +
+   GIR) sobre o stack nativo; (c) aceitar morghulis sem o painel de Wi-Fi.
+2. **`glycin-2` / `glycin-gtk4-2`** — dependência dura do morghulis, ausente no
+   FreeBSD. Glycin é Rust; sua própria `meson.build:161` já desliga os loaders
+   fora do Linux (`host_machine.system() == 'linux'`), então é portável por
+   desenho, mas exige `rust` no builder.
+3. **`astal/tray` em runtime**: OK compilado; `astal/bluetooth` compila mas é
+   morto em runtime (não há provedor `org.bluez` no FreeBSD — só o stack
+   netgraph da base, sem D-Bus); `astal/powerprofiles` idem (sem
+   `power-profiles-daemon`); `astal/battery` **funciona** (upower presente).
+4. **morghulis chama systemd diretamente**: `PowerMenu.vala:80/88/96/104/151` e
+   `QuickMenu/PowerBox.vala:85-119` fazem `Process.spawn_command_line_async`
+   com `systemctl poweroff|reboot|suspend|hibernate` e `loginctl
+   terminate-user|lock-session`. No FreeBSD o equivalente é
+   `shutdown`/`reboot`/`acpiconf -s`/`loginctl` inexistente → precisa patch ou
+   shim `systemctl`.
+5. **`river-shifttags`**: o `RiverTags` do morghulis executa
+   `river-shifttags --occupied --shifts -1` (7 usos de `shifttags`). Esse
+   binário **não vem** no river (`pkg-plist` do `x11-wm/river` tem só
+   `bin/river` + os 6 protocolos XML) e não está no kwm; upstream é
+   `gnuunixchad/river-shifttags` (C). Precisa port próprio.
+6. `astal/auth` (PAM) não compila: `security/_pam_types.h` ausente — o guest
+   não tem a dist `-dev` da base. `astal/cava` precisa `libcava` + `/dev/dsp`.
+   Nenhum dos dois é usado pelo morghulis.
+
+Nenhum módulo Astal usa inotify/epoll/signalfd/`/proc`/`/sys`: são clientes
+GLib/D-Bus, então o `devel/glib20` do FreeBSD já resolve a portabilidade
+(`file_monitor_backend=libinotify-kqueue` + `libepoll-shim`). O bloqueio é de
+**daemons e bindings de build**, não de código.

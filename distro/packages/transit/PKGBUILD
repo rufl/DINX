@@ -14,7 +14,7 @@ source_env="$startdir/source.env"
 : "${TRANSIT_ICON_URL:?missing TRANSIT_ICON_URL}"
 : "${TRANSIT_ICON_SHA256:?missing TRANSIT_ICON_SHA256}"
 pkgver="${TRANSIT_VERSION}"
-pkgrel=2
+pkgrel=3
 pkgdesc="Digital audio workstation written in Rust"
 arch=('x86_64')
 url='https://github.com/transit-audio/transit'

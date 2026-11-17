@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${ZENKAI_LICENSE_URL:?missing ZENKAI_LICENSE_URL}"
 : "${ZENKAI_LICENSE_SHA256:?missing ZENKAI_LICENSE_SHA256}"
 pkgver="${ZENKAI_VERSION}"
-pkgrel=2
+pkgrel=3
 pkgdesc="Fast app launcher written in Zig"
 arch=('x86_64')
 url='https://github.com/dayvster/zenkai'

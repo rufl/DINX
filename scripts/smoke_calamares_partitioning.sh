@@ -43,6 +43,37 @@ done
   fail "partition device did not appear: $device"
 }
 
+# `losetup --partscan` partition nodes are managed by udev, so on a busy CI
+# runner a node can be transiently removed and recreated while mkfs writes the
+# superblock. mount(2) then fails with ENOENT even though the path existed a
+# moment earlier and `[[ -b ]]` passed. Retry a bounded number of times so that
+# transient node churn does not fail the gate, while any persistent failure
+# (wrong filesystem, missing driver, real ENOENT) still aborts loudly.
+mount_with_retry() {
+  local attempt output status=1
+  for attempt in {1..10}; do
+    # The status must be captured in an `else` branch: after an `if` whose
+    # condition failed with no `else`, `$?` is the status of the `if` statement
+    # itself (0), which would silently report a failed mount as success.
+    if output=$(mount "$@" 2>&1); then
+      return 0
+    else
+      status=$?
+    fi
+    if grep -Eq 'No such file or directory|Device or resource busy' <<<"$output"; then
+      printf 'smoke-calamares-partitioning: mount attempt %s failed transiently, retrying: %s\n' \
+        "$attempt" "$output" >&2
+      udevadm settle 2>/dev/null || true
+      sleep 1
+      continue
+    fi
+    printf '%s\n' "$output" >&2
+    return "$status"
+  done
+  printf '%s\n' "$output" >&2
+  return "$status"
+}
+
 attach_image() {
   local image=$1
   attached_device=$(losetup --find --show --partscan "$image")
@@ -98,7 +129,7 @@ assert_layout_roundtrip() {
   mkfs.ext4 -F -L DINX_ROOT "$root_device" >/dev/null
   root_mount="$work_dir/${firmware}-root"
   mkdir -p "$root_mount"
-  mount "$root_device" "$root_mount"
+  mount_with_retry "$root_device" "$root_mount"
   mount_points+=("$root_mount")
   root_uuid=$(blkid -s UUID -o value "$root_device")
   printf 'UUID=%s / ext4 defaults 0 1\n' "$root_uuid" > "$root_mount/fstab"
@@ -107,7 +138,7 @@ assert_layout_roundtrip() {
   if [[ "$firmware" == uefi ]]; then
     efi_mount="$work_dir/${firmware}-efi"
     mkdir -p "$efi_mount"
-    mount "$efi_device" "$efi_mount"
+    mount_with_retry "$efi_device" "$efi_mount"
     mount_points+=("$efi_mount")
     efi_uuid=$(blkid -s UUID -o value "$efi_device")
     printf 'UUID=%s /boot/efi vfat umask=0077 0 2\n' "$efi_uuid" >> "$root_mount/fstab"
@@ -129,14 +160,14 @@ assert_layout_roundtrip() {
     root_device="${loop_device}p2"
   fi
   wait_for_block_device "$root_device"
-  mount "$root_device" "$root_mount"
+  mount_with_retry "$root_device" "$root_mount"
   mount_points+=("$root_mount")
   grep -Fq "$root_marker" "$root_mount/partition-smoke.marker" || fail "$firmware root filesystem transaction did not survive remount"
   grep -Fq "$root_uuid / ext4" "$root_mount/fstab" || fail "$firmware fstab transaction did not survive remount"
   umount "$root_mount"
   unset 'mount_points[${#mount_points[@]}-1]'
   if [[ "$firmware" == uefi ]]; then
-    mount "$efi_device" "$efi_mount"
+    mount_with_retry "$efi_device" "$efi_mount"
     grep -Fq "$efi_marker" "$efi_mount/partition-smoke.marker" || fail 'UEFI ESP transaction did not survive remount'
     umount "$efi_mount"
   fi
@@ -153,7 +184,7 @@ assert_existing_btrfs_subvolumes() {
   mkfs.btrfs -f "$loop_device" >/dev/null
   mount_point="$work_dir/btrfs"
   mkdir -p "$mount_point"
-  mount -t btrfs "$loop_device" "$mount_point"
+  mount_with_retry -t btrfs "$loop_device" "$mount_point"
   mount_points+=("$mount_point")
   btrfs subvolume create "$mount_point/@" >/dev/null
   btrfs subvolume create "$mount_point/@home" >/dev/null
@@ -162,7 +193,7 @@ assert_existing_btrfs_subvolumes() {
 
   # DINX's mount.conf intentionally mounts the top-level volume instead of
   # recreating @ or @home. This is the safe path for an existing Btrfs layout.
-  mount -t btrfs -o subvolid=5 "$loop_device" "$mount_point"
+  mount_with_retry -t btrfs -o subvolid=5 "$loop_device" "$mount_point"
   mount_points+=("$mount_point")
   btrfs subvolume list "$mount_point" | grep -Eq '[[:space:]]path @([[:space:]]|$)' || fail 'existing Btrfs @ subvolume disappeared'
   btrfs subvolume list "$mount_point" | grep -Eq '[[:space:]]path @home([[:space:]]|$)' || fail 'existing Btrfs @home subvolume disappeared'

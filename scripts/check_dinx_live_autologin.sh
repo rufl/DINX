@@ -78,6 +78,10 @@ grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
   || fail 'live user is missing DRM render-node access'
 grep -Fq 'getent group render' "$wrapper" \
   || fail 'live autologin does not guard render-group enrollment'
+grep -Fq 'usermod --append --groups video dinx' "$wrapper" \
+  || fail 'live user is missing the video group required for backlight control'
+grep -Fq 'getent group video' "$wrapper" \
+  || fail 'live autologin does not guard video-group enrollment'
 grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" \
   || fail 'live wrapper does not persist the dinxlive hostname'
 grep -Fq 'hostname dinxlive' "$wrapper" || fail 'live wrapper does not set the active dinxlive hostname'

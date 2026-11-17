@@ -27,16 +27,14 @@ fail() {
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
 for wrapper in "$gapless_wrapper" "$gapless_alias" "$pori_wrapper" \
-  "$root/distro/packages/patchy/patchy" \
-  "$root/distro/packages/impasto/impasto" \
-  "$root/distro/packages/onlyoffice/onlyoffice"; do
+  "$root/distro/packages/patchy/patchy"; do
   [[ -x "$wrapper" ]] || fail "dark-mode wrapper is missing or not executable: $wrapper"
   sh -n "$wrapper" || fail "dark-mode wrapper has invalid shell syntax: $wrapper"
   grep -Fqx 'export GTK_THEME=DINX' "$wrapper" || fail "DINX GTK theme is missing from $wrapper"
   grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$wrapper" || fail "GTK dark preference is missing from $wrapper"
 done
 for wrapper in "$gapless_wrapper" "$gapless_alias" "$pori_wrapper" \
-  "$root/distro/packages/patchy/patchy" "$root/distro/packages/impasto/impasto"; do
+  "$root/distro/packages/patchy/patchy"; do
   grep -Fqx 'export ADW_DEBUG_COLOR_SCHEME=prefer-dark' "$wrapper" \
     || fail "libadwaita dark preference is missing from $wrapper"
 done
@@ -45,12 +43,10 @@ grep -Fqx 'exec /usr/bin/g4music "$@"' "$gapless_alias" || fail 'Gapless alias c
 grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct haruna %U' "$haruna_override" || fail 'Haruna does not use the DINX Qt theme'
 grep -Fqx 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt6ct_config" || fail 'Qt6ct does not select the DINX dark palette'
 grep -Fqx 'custom_palette=true' "$qt6ct_config" || fail 'Qt6ct DINX dark palette is disabled'
-grep -Fqx 'theme=dark' "$root/distro/packages/onlyoffice/onlyoffice" || fail 'ONLYOFFICE does not seed its dark theme'
-grep -Fq -- '--theme=dark "$@"' "$root/distro/packages/onlyoffice/onlyoffice" || fail 'ONLYOFFICE does not launch in dark mode'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak impasto krita inkscape godot pixelorama paintfe blender patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays onlyoffice papirus-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak krita inkscape godot pixelorama paintfe blender patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
@@ -61,7 +57,10 @@ for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-s
     fail "$package remains in an ISO feature group"
   fi
 done
-for retired in vlc vlc-cli zrythm; do
+# River/KWM/Morghulis rework retired these apps from the roster; assert they stay
+# out of both the profile and the ISO feature groups so a future edit cannot
+# silently reintroduce a recipe-less or Pearl/office-coupled app.
+for retired in vlc vlc-cli zrythm impasto onlyoffice seafoam-settings floorp transit zenkai blockbench; do
   if grep -Fqx "    - $retired" "$profile" || grep -Fq "\"$retired\"" "$feature_groups"; then
     fail "$retired remains explicitly selected for the DINX ISO"
   fi
@@ -95,20 +94,16 @@ fi
 if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
   fail 'retired KolourPaint desktop override remains in the ISO overlay'
 fi
-for package in patchy impasto; do
+for package in patchy; do
   launcher="$root/distro/packages/$package/$package.desktop"
   [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
-  case "$package" in
-    patchy) expected_name=Patchy ;;
-    impasto) expected_name=Impasto ;;
-  esac
-  grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
-  grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
-  grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
-  grep -Fq '!strip' "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
-  if grep -Eq "^(Hidden|NoDisplay)=true$" "$launcher"; then
-    fail "$package desktop launcher is hidden"
+  grep -Fqx 'Name=Patchy' "$launcher" || fail 'Patchy desktop launcher name is missing'
+  grep -Fqx 'Name[pt_BR]=Patchy' "$launcher" || fail 'Patchy Portuguese desktop launcher name is missing'
+  grep -Fqx 'TryExec=patchy' "$launcher" || fail 'Patchy desktop launcher prerequisite is incorrect'
+  grep -Fq '!strip' "$root/distro/packages/patchy/PKGBUILD" || fail 'Patchy AppImage package must disable binary stripping'
+  if grep -Eq '^(Hidden|NoDisplay)=true$' "$launcher"; then
+    fail 'Patchy desktop launcher is hidden'
   fi
 done
 pixelorama_source="$root/distro/packages/pixelorama/source.env"
@@ -141,47 +136,8 @@ fi
 grep -Fq 'build_package pixelorama' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Pixelorama'
 
 
-for package in onlyoffice; do
-  launcher="$root/distro/packages/$package/$package.desktop"
-  wrapper="$root/distro/packages/$package/$package"
-  recipe="$root/distro/packages/$package/PKGBUILD"
-  [[ -r "$launcher" && -x "$wrapper" ]] || fail "$package launcher or wrapper is missing"
-  grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
-  grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
-  grep -Fq '!strip' "$recipe" || fail "$package AppImage package must disable binary stripping"
-  grep -Fq -- '--appimage-extract-and-run' "$wrapper" || fail "$package launcher does not support systems without FUSE"
-  sh -n "$wrapper" || fail "$package AppImage wrapper has invalid shell syntax"
-done
-office_launcher="$root/distro/packages/onlyoffice/onlyoffice.desktop"
-office_recipe="$root/distro/packages/onlyoffice/PKGBUILD"
-grep -Fq "'coreutils'" "$office_recipe" || fail 'ONLYOFFICE runtime does not declare coreutils for AppImage launcher utilities'
-for mime in \
-  application/msword \
-  application/vnd.openxmlformats-officedocument.wordprocessingml.document \
-  application/vnd.oasis.opendocument.text \
-  application/rtf \
-  application/vnd.ms-excel \
-  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet \
-  application/vnd.oasis.opendocument.spreadsheet \
-  text/csv \
-  application/vnd.ms-powerpoint \
-  application/vnd.openxmlformats-officedocument.presentationml.presentation \
-  application/vnd.oasis.opendocument.presentation \
-  application/pdf; do
-  grep -Fq "$mime;" "$office_launcher" || fail "ONLYOFFICE is missing supported MIME type $mime"
-done
-grep -Fqx 'Actions=NewDocument;NewSpreadsheet;NewPresentation;' "$office_launcher" || fail 'ONLYOFFICE quick-create actions expose an unexpected editor'
-grep -Fqx 'Exec=onlyoffice --new:word' "$office_launcher" || fail 'ONLYOFFICE document action is incorrect'
-grep -Fqx 'Exec=onlyoffice --new:cell' "$office_launcher" || fail 'ONLYOFFICE spreadsheet action is incorrect'
-grep -Fqx 'Exec=onlyoffice --new:slide' "$office_launcher" || fail 'ONLYOFFICE presentation action is incorrect'
-grep -Fq 'Forms and Diagram Viewer' "$root/distro/packages/onlyoffice/PKGBUILD" || fail 'ONLYOFFICE package does not document retained upstream modules'
-
 grep -Fqx 'Exec=patchy %F' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy launcher does not preserve file arguments'
 grep -Fqx 'Comment[pt_BR]=Editor de imagens com foco em PSD' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy Portuguese description is missing'
-grep -Fqx 'Exec=impasto %F' "$root/distro/packages/impasto/impasto.desktop" || fail 'Impasto launcher does not preserve image file arguments'
-grep -Fqx 'Comment[pt_BR]=Pinte, crie e edite imagens' "$root/distro/packages/impasto/impasto.desktop" || fail 'Impasto Portuguese description is missing'
-grep -Fqx 'exec /opt/impasto/Impasto-x86_64.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/impasto/impasto" || fail 'Impasto launcher does not use the no-FUSE AppImage runtime'
-grep -Fqx "depends=('glibc')" "$root/distro/packages/impasto/PKGBUILD" || fail 'Impasto package does not declare its glibc runtime'
 grep -Fqx 'exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/patchy/patchy" || fail 'Patchy launcher does not use the no-FUSE AppImage runtime'
 
 for removed in gvfs gvfs-gphoto2 gvfs-mtp gvfs-smb partitionmanager thunar thunar-archive-plugin thunar-volman tumbler; do
@@ -240,8 +196,6 @@ grep -Fqx 'Name=Services' "$root/distro/packages/dinitui/resources/dinitui.deskt
 grep -Fqx 'Name[pt_BR]=Serviços' "$root/distro/packages/dinitui/resources/dinitui.desktop" || fail 'DinitUI Portuguese desktop name is incorrect'
 grep -Fqx 'Name=Control Center' "$root/distro/packages/dinxpanel/resources/dinxpanel.desktop" || fail 'DINXPanel English desktop name is incorrect'
 grep -Fqx 'Name[pt_BR]=Central de Controle' "$root/distro/packages/dinxpanel/resources/dinxpanel.desktop" || fail 'DINXPanel Portuguese desktop name is incorrect'
-grep -Fqx 'Name=Desktop Settings' "$root/distro/packages/seafoam-settings/resources/seafoam-settings.desktop" || fail 'Seafoam Settings English desktop name is incorrect'
-grep -Fqx 'Name[pt_BR]=Ajustes do Desktop' "$root/distro/packages/seafoam-settings/resources/seafoam-settings.desktop" || fail 'Seafoam Settings Portuguese desktop name is incorrect'
 grep -Fqx '+Name=Editor' "$root/distro/packages/deetty/product-identity.patch" || fail 'Dintor English desktop name is incorrect'
 grep -Fqx '+Name[pt_BR]=Editor' "$root/distro/packages/deetty/product-identity.patch" || fail 'Dintor Portuguese desktop name is incorrect'
 grep -Fqx 'Name=Disks & Mounts' "$root/distro/packages/pori/PKGBUILD" || fail 'Pori English desktop name is incorrect'
@@ -302,17 +256,10 @@ done
 grep -Fqx '  usr/bin/scanimage' "$iso_check" || fail 'ISO payload is missing scanimage'
 grep -Fqx '  usr/bin/fwupdmgr' "$iso_check" || fail 'ISO payload is missing fwupdmgr'
 grep -Fqx '  usr/bin/flatpak' "$iso_check" || fail 'ISO payload is missing flatpak'
-grep -Fqx '  usr/bin/impasto' "$iso_check" || fail 'ISO payload is missing Impasto'
-grep -Fqx '  opt/impasto/Impasto-x86_64.AppImage' "$iso_check" || fail 'ISO payload is missing the Impasto AppImage'
-grep -Fqx '  usr/share/licenses/impasto/license-mit.txt' "$iso_check" || fail 'ISO payload is missing the Impasto license'
-grep -Fqx '  usr/share/licenses/impasto/license-mit-pinta.txt' "$iso_check" || fail 'ISO payload is missing the Pinta-derived license'
-grep -Fqx '  usr/share/licenses/impasto/license-lgpl.txt' "$iso_check" || fail 'ISO payload is missing the bundled GTK license text'
-grep -Fqx '  usr/share/licenses/impasto/THIRD-PARTY-NOTICES.md' "$iso_check" || fail 'ISO payload is missing Impasto third-party notices'
 grep -Fqx '  usr/bin/pcmanfm' "$iso_check" || fail 'ISO payload is missing PCManFM'
 grep -Fqx '  usr/bin/g4music' "$iso_check" || fail 'ISO payload is missing Gapless'
 grep -Fqx '  usr/bin/galculator' "$iso_check" || fail 'ISO payload is missing Galculator'
 grep -Fqx '  usr/share/flatpak/remotes.d/flathub.flatpakrepo' "$iso_check" || fail 'ISO payload is missing the Flatpak source descriptor'
-grep -Fqx '  usr/share/applications/com.github.zbcoding.Impasto.desktop' "$iso_check" || fail 'ISO payload is missing the Impasto desktop entry'
 grep -Fqx '  usr/share/applications/com.pori.app.desktop' "$iso_check" || fail 'ISO payload is missing the Pori desktop entry'
 grep -Fqx '  usr/local/share/applications/pcmanfm.desktop' "$iso_check" || fail 'ISO payload is missing the PCManFM desktop override'
 grep -Fqx '  usr/share/applications/com.github.neithern.g4music.desktop' "$iso_check" || fail 'ISO payload is missing the Gapless desktop entry'
@@ -335,7 +282,7 @@ for mime in audio/mpeg audio/x-mpeg audio/x-mp3 audio/ogg audio/x-vorbis audio/x
   grep -Fqx "$mime=com.github.neithern.g4music.desktop;" "$mimeapps" || fail "Gapless is not the default audio handler for $mime"
 done
 grep -Fqx 'image/png=swayimg.desktop;' "$mimeapps" || fail 'Swayimg is no longer the default image viewer'
-grep -Fqx 'application/pdf=onlyoffice.desktop;' "$mimeapps" || fail 'ONLYOFFICE is not the default PDF handler'
+grep -Fqx 'application/pdf=firefox.desktop;' "$mimeapps" || fail 'Firefox is not the default PDF handler'
 if grep -Fq 'application/epub+zip=' "$mimeapps"; then
   fail 'EPUB handler still points to the removed Zathura application'
 fi
@@ -344,8 +291,4 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-if grep -Fq 'application/vnd.oasis.opendocument.formula' "$office_launcher" \
-  || grep -Fq 'application/vnd.visio' "$office_launcher"; then
-  fail 'ONLYOFFICE launcher exposes an unsupported MIME association'
-fi
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true impasto=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=onlyoffice graphics_apps=impasto+krita+inkscape+godot+pixelorama+paintfe+blender office_apps=onlyoffice-docs+sheets+presentations+pdf zrythm=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=firefox graphics_apps=krita+inkscape+godot+pixelorama+paintfe+blender+patchy office=optional-channel impasto=false onlyoffice=false zrythm=false seafoam=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'

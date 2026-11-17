@@ -3,6 +3,7 @@
 ## Unreleased
 - Add Mission Center 1.2.0 as the GTK4 resource/process monitor, remove Qps and Dome from the ISO payload, and keep Pori/PCManFM as the storage/file-management stack. EuroOffice remains disabled.
 - Disable the Transit audio workstation and enable the pinned Audionaut multitrack audio editor in the DINX package profile and ISO pipeline.
+- Add the pinned DINX recipes `kwim` 0.2.0 and `kwm` 0.3.0 for the River session stack, built from checksum-verified upstream tarballs against a dedicated Zig 0.16.0 toolchain because their `build.zig` still reads the `Build.build_root` field Zig 0.17 removed. `fcft` joins the builder image for the KWM link step, both packages enter the reviewed upstream pin refresh, and `river`/`pcmanfm` keep resolving from the Artix `galaxy` repository already enabled in the image. Verified locally: `kwim-0.2.0-1-x86_64.pkg.tar.zst` and `kwm-0.3.0-1-x86_64.pkg.tar.zst` assembled. Morghulis still has no recipe: its Astal dependency set is absent from Artix and Arch.
 
 - Automate distribution maintenance: twice-daily Artix package prefetch, daily upstream pin refresh through reviewed PRs, Grype/Trivy/OSV SBOM audits for sources and the final rootfs, and a nightly P0 ISO retained for 14 days.
 - Make dark mode deterministic across Gapless, Haruna, OpenSnitch, ONLYOFFICE, Impasto, Pori, Patchy, DinitUI, DINXPanel, Seafoam Settings and the Pearl first-run wizard. Gapless now executes `/usr/bin/g4music` without wrapper recursion; internal libadwaita apps force the DINX dark scheme; the wizard defaults to DINX dark.

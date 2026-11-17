@@ -117,6 +117,22 @@ trap finish EXIT
               printf 'dinx-build-timing phase=toolchain-setup elapsed_seconds=%s exit_status=0\n' \
                 "$((SECONDS - toolchain_started))"
 
+              # KWM and KWIM build.zig still read the Build.build_root field that
+              # Zig 0.17 removed, so they compile against a verified 0.16 toolchain.
+              kwm_zig_version=0.16.0
+              kwm_zig_archive="zig-x86_64-linux-${kwm_zig_version}.tar.xz"
+              kwm_zig_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00
+              kwm_zig_archive_path="$toolchain_cache/$kwm_zig_archive"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-download.sh \
+                  "$kwm_zig_archive_path" \
+                  "https://ziglang.org/download/${kwm_zig_version}/${kwm_zig_archive}" \
+                  "$kwm_zig_sha256"
+              kwm_zig_root="$toolchain_extraction_cache/zig-${kwm_zig_version}-${kwm_zig_sha256}"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-extract.sh \
+                  "$kwm_zig_archive_path" "$kwm_zig_sha256" "$kwm_zig_version" zig "$kwm_zig_root"
+
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_morghulis_theme.sh
               package_repo=${DINX_PACKAGE_OUTPUT:-/workspace/dist/packages}
@@ -239,6 +255,8 @@ trap finish EXIT
                 fi
                 if [[ "$package_name" == pori ]]; then
                   extra_env+=("ZIG=$zig_root/zig")
+                elif [[ "$package_name" == kwim || "$package_name" == kwm ]]; then
+                  extra_env+=("ZIG=$kwm_zig_root/zig")
                 fi
 
                 installed_packages_sha256=$(pacman -Q | LC_ALL=C sort | sha256sum)
@@ -401,6 +419,8 @@ trap finish EXIT
               pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
               build_package pori
+              build_package kwim
+              build_package kwm
               build_package mission-center
               build_package zls
               pacman_install_local \

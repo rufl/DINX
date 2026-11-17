@@ -301,6 +301,34 @@
           "url_template": "https://raw.githubusercontent.com/kylejckson/PaintFE/{tag}/assets/icons/app_icon_256.png"
         }
       ]
+    },
+    {
+      "name": "kwim",
+      "provider": "github",
+      "repository": "kewuaa/kwim",
+      "source_file": "distro/packages/kwim/source.env",
+      "version_key": "KWIM_VERSION",
+      "package_version_key": "KWIM_VERSION",
+      "source_url_key": "KWIM_SOURCE_URL",
+      "checksum_key": "KWIM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kewuaa/kwim/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/kwim/PKGBUILD"
+    },
+    {
+      "name": "kwm",
+      "provider": "github",
+      "repository": "kewuaa/kwm",
+      "source_file": "distro/packages/kwm/source.env",
+      "version_key": "KWM_VERSION",
+      "package_version_key": "KWM_VERSION",
+      "source_url_key": "KWM_SOURCE_URL",
+      "checksum_key": "KWM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kewuaa/kwm/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/kwm/PKGBUILD"
     }
   ]
 }

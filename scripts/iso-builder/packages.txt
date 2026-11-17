@@ -29,6 +29,7 @@ gtk-layer-shell
 gamescope
 fontconfig
 freetype2
+fcft
 gtk3
 gtk4
 libadwaita

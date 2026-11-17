@@ -101,6 +101,31 @@ if dinx_apply_graphics_environment unknown >/dev/null 2>&1; then
   exit 1
 fi
 
-printf 'dinx_graphics_profile_contract vmsvga_vulkan=true no_render_node_vulkan=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true pre_gcn_radeon_gles=true\n'
+# The detector (dinx-graphics-profile) and the handler
+# (dinx-graphics-environment.sh) are an atomic pair: a session launcher does
+# `profile=$(dinx-graphics-profile); dinx_apply_graphics_environment "$profile"`
+# under `set -eu`, so any profile the detector can emit but the handler does
+# not accept makes the whole desktop die at login. dinx-river-session,
+# dinx-aqueous-pearl and dinx-pearl-greeter-host all rely on this. Assert the
+# two vocabularies stay identical so a partial cherry-pick of one file without
+# the other fails here instead of at runtime.
+emitted_profiles=$(grep -oE "printf '%s\\\\n' [a-z-]+" "$helper" | awk '{print $NF}' | LC_ALL=C sort -u)
+handled_profiles=$(grep -oE '^[[:space:]]+[a-z|-]+\)' "$graphics_environment" | tr -d ' )' | tr '|' '\n' | LC_ALL=C sort -u)
+if [[ -z "$emitted_profiles" || -z "$handled_profiles" ]]; then
+  printf 'check_dinx_graphics_profile: could not extract profile vocabularies (emitted=%s handled=%s)\n' "$emitted_profiles" "$handled_profiles" >&2
+  exit 1
+fi
+if [[ "$emitted_profiles" != "$handled_profiles" ]]; then
+  printf 'check_dinx_graphics_profile: detector/handler profile vocabularies diverge\n' >&2
+  diff <(printf '%s\n' "$emitted_profiles") <(printf '%s\n' "$handled_profiles") >&2 || true
+  exit 1
+fi
+# Every emitted profile must actually be accepted by the handler, not just listed.
+while IFS= read -r profile; do
+  dinx_apply_graphics_environment "$profile" >/dev/null 2>&1 \
+    || { printf 'check_dinx_graphics_profile: emitted profile rejected by handler: %s\n' "$profile" >&2; exit 1; }
+done <<<"$emitted_profiles"
+
+printf 'dinx_graphics_profile_contract vmsvga_vulkan=true no_render_node_vulkan=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true pre_gcn_radeon_gles=true detector_handler_vocabularies_match=true\n'
 
 

@@ -115,16 +115,22 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/com.noctty.NOCTTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
-tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocttyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
+# Upstream renamed its product files in commit 2b9aeb0 (com.noctty.* -> com.deetty.*,
+# nocttyhere.desktop -> deettyhere.desktop). The pinned source must carry the
+# renamed entries and must not regress to the retired noctty identities.
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/com.deetty.DEETTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/deettyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
 tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocted/styles/nocted-dark.xml' >/dev/null || fail 'pinned upstream Dintor source scheme is missing'
-upstream_dintor_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.noctty.NoctEd.desktop)
+if tar -tzf "$archive" | grep -Eq 'resources/(com\.noctty\.|nocttyhere)'; then
+  fail 'pinned upstream source still ships retired noctty identity files'
+fi
+upstream_dintor_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.deetty.NoctEd.desktop)
 grep -Fqx 'Exec=nocted %F' <<<"$upstream_dintor_desktop" || fail 'pinned upstream editor entry is missing'
-upstream_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.noctty.NOCTTY.desktop)
-grep -Fqx 'TryExec=noctty' <<<"$upstream_desktop" || fail 'pinned upstream terminal entry is missing'
-grep -Fqx 'Exec=noctty --open-uri %u' <<<"$upstream_desktop" || fail 'upstream terminal URI entry is missing'
+upstream_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.deetty.DEETTY.desktop)
+grep -Fqx 'TryExec=deetty' <<<"$upstream_desktop" || fail 'pinned upstream terminal entry is missing'
+grep -Fqx 'Exec=deetty --open-uri %u' <<<"$upstream_desktop" || fail 'upstream terminal URI entry is missing'
 grep -Fqx 'Categories=System;TerminalEmulator;' <<<"$upstream_desktop" || fail 'terminal desktop category is missing'
-service_menu=$(tar -xOf "$archive" deetty-0.1.0/resources/nocttyhere.desktop)
+service_menu=$(tar -xOf "$archive" deetty-0.1.0/resources/deettyhere.desktop)
 
 patched_source="$scratch/patched-source"
 mkdir -p "$patched_source"
@@ -166,22 +172,22 @@ grep -Fq './zig-out/bin/dintor --lsp-probe' "$lsp_smoke" || fail 'Dintor LSP smo
 if grep -Fq './zig-out/bin/nocted' "$lsp_smoke"; then
   fail 'Dintor LSP smoke still references the old executable'
 fi
-patched_desktop=$(<"$patched_source/resources/com.noctty.NOCTTY.desktop")
+patched_desktop=$(<"$patched_source/resources/com.deetty.DEETTY.desktop")
 grep -Fqx 'Name=Deetty' <<<"$patched_desktop" || fail 'Deetty desktop name is incorrect'
 grep -Fqx 'TryExec=deetty' <<<"$patched_desktop" || fail 'Deetty desktop command is incorrect'
 grep -Fqx 'Exec=deetty --open-uri %u' <<<"$patched_desktop" || fail 'Deetty URI handler is incorrect'
 grep -Fqx 'Icon=org.dinx.Deetty' <<<"$patched_desktop" || fail 'Deetty desktop icon identity is incorrect'
 grep -Fqx 'MimeType=x-scheme-handler/deetty;' <<<"$patched_desktop" || fail 'Deetty URI scheme declaration is incorrect'
-patched_editor_desktop=$(<"$patched_source/resources/com.noctty.NoctEd.desktop")
+patched_editor_desktop=$(<"$patched_source/resources/com.deetty.NoctEd.desktop")
 grep -Fqx 'Name=Editor' <<<"$patched_editor_desktop" || fail 'Dintor desktop name is incorrect'
 grep -Fqx 'Name[pt_BR]=Editor' <<<"$patched_editor_desktop" || fail 'Dintor Portuguese desktop name is incorrect'
 grep -Fqx 'Exec=dintor %F' <<<"$patched_editor_desktop" || fail 'Dintor file opening contract is missing'
 grep -Fqx 'Icon=org.dinx.Dintor' <<<"$patched_editor_desktop" || fail 'Dintor icon identity is incorrect'
-patched_service_menu=$(<"$patched_source/resources/nocttyhere.desktop")
+patched_service_menu=$(<"$patched_source/resources/deettyhere.desktop")
 grep -Fqx 'Exec=deetty --new-window --working-directory %f' <<<"$patched_service_menu" || fail 'Deetty service-menu command is incorrect'
-grep -Fq '<id>org.dinx.Deetty</id>' "$patched_source/resources/com.noctty.NOCTTY.metainfo.xml" || fail 'Deetty metainfo ID is incorrect'
-grep -Fq '<id>org.dinx.Dintor</id>' "$patched_source/resources/com.noctty.NoctEd.metainfo.xml" || fail 'Dintor metainfo ID is incorrect'
-grep -Fq '<binary>dintor</binary>' "$patched_source/resources/com.noctty.NoctEd.metainfo.xml" || fail 'Dintor metainfo binary is incorrect'
+grep -Fq '<id>org.dinx.Deetty</id>' "$patched_source/resources/com.deetty.DEETTY.metainfo.xml" || fail 'Deetty metainfo ID is incorrect'
+grep -Fq '<id>org.dinx.Dintor</id>' "$patched_source/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo ID is incorrect'
+grep -Fq '<binary>dintor</binary>' "$patched_source/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo binary is incorrect'
 grep -Fq 'style-scheme id="dintor-dark"' "$patched_source/resources/nocted/styles/nocted-dark.xml" || fail 'Dintor dark scheme identity is incorrect'
 grep -Fq 'style-scheme id="dintor-light"' "$patched_source/resources/nocted/styles/nocted-light.xml" || fail 'Dintor light scheme identity is incorrect'
 grep -Fq '"DINTOR_THEME"' "$patched_source/src/nocted/main.zig" || fail 'Dintor theme environment is missing'

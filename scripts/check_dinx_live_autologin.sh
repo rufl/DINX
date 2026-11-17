@@ -196,4 +196,4 @@ grep -Fq 'run: ./scripts/check_dinx_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract live=true direct_session=true seatd=true private_runtime_dir=true greeter_installed_only=true keyring_independent=true render_group=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'
+printf 'dinx_live_autologin_contract live=true direct_session=true seatd=true private_runtime_dir=true greeter_installed_only=true keyring_independent=true render_group=true video_group=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'

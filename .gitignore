@@ -17,9 +17,13 @@ dist/
 !/distro/packages/dinitui/src/
 !/distro/packages/dinxpanel/src/
 !/distro/packages/seafoam-settings/src/
+!/distro/packages/dinx-dock/src/
+!/distro/packages/dinx-first-run/src/
 /distro/packages/dinitui/src/stage/
 /distro/packages/dinxpanel/src/stage/
 /distro/packages/seafoam-settings/src/stage/
+/distro/packages/dinx-dock/src/stage/
+/distro/packages/dinx-first-run/src/stage/
 /distro/packages/*/pkg/
 /distro/packages/*/*.pkg.tar.zst
 /distro/packages/*/*.pkg.tar.zst.sig

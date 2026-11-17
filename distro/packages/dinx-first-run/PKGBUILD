@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=dinx-first-run
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='DINX desktop first-run setup wizard'
+arch=(x86_64)
+url='https://github.com/rufl/DINX'
+license=(Apache)
+# gtk4/libadwaita carry the wizard UI, glib2 provides the GSettings path used
+# for the Morghulis navbar anchor, and dconf applies the selected color scheme.
+# Consumers: the session glue /usr/local/libexec/dinx-desktop-first-run starts
+# this binary once per account, dinx-sync-session-theme reads the appearance
+# file it writes, and Calamares reads installer-preferences.json.
+depends=(gtk4 libadwaita glib2 dconf)
+makedepends=('zig>=0.17')
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir"
+  rm -rf "$srcdir/stage"
+  local -a zig_target_flags=(-Dcpu=baseline)
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
+}
+
+package() {
+  cd "$startdir"
+  install -Dm755 "$srcdir/stage/bin/dinx-first-run" "$pkgdir/usr/bin/dinx-first-run"
+  install -Dm644 resources/dinx-first-run.desktop "$pkgdir/usr/share/applications/dinx-first-run.desktop"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/dinx-first-run/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/dinx-first-run/LICENSE"
+}

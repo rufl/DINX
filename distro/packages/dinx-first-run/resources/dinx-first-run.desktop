@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+[Desktop Entry]
+Type=Application
+Name=DINX Initial Setup
+Name[pt_BR]=Configuração Inicial do DINX
+Comment=DINX first-run desktop configuration wizard
+Comment[pt_BR]=Assistente de configuração inicial do DINX
+Exec=dinx-first-run
+TryExec=dinx-first-run
+Icon=preferences-system
+Terminal=false
+Categories=Settings;System;
+NoDisplay=true

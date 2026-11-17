@@ -30,6 +30,7 @@
                 "libva",
                 "linux-firmware-amdgpu",
                 "linux-firmware-intel",
+                "linux-firmware-radeon",
                 "mesa",
                 "networkmanager",
                 "pipewire",

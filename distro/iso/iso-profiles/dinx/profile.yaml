@@ -59,6 +59,7 @@ rootfs:
     - greetd
     - linux-firmware-amdgpu
     - linux-firmware-intel
+    - linux-firmware-radeon
     - mesa
     - networkmanager
     - vulkan-radeon

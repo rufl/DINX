@@ -1082,6 +1082,17 @@ for gpu_firmware_dir in i915 xe; do
   grep -Eq "squashfs-root/usr/lib/firmware/${gpu_firmware_dir}/[^[:space:]]" <<<"$manifest" \
     || fail "rootfs omits Intel GPU firmware files: $gpu_firmware_dir"
 done
+# Legacy ATI Radeon GPUs need their microcode in the live rootfs: without it
+# `radeon` hangs in KMS init right after `[drm] radeon kernel modesetting
+# enabled.`, which the HP dm1 (AMD E-350 Zacate / Radeon HD 6310 = SUMO2)
+# reports as a black screen. Assert the directory plus the exact SUMO2 files
+# that board loads, so the omission cannot silently return.
+grep -Eq 'squashfs-root/usr/lib/firmware/radeon/[^[:space:]]' <<<"$manifest" \
+  || fail 'rootfs omits ATI Radeon GPU firmware files: radeon'
+for radeon_firmware in SUMO2_me.bin.zst SUMO2_pfp.bin.zst; do
+  grep -Fq "squashfs-root/usr/lib/firmware/radeon/${radeon_firmware}" <<<"$manifest" \
+    || fail "rootfs omits Radeon HD 6310 (Zacate) firmware: ${radeon_firmware}"
+done
 
 
 root_greetd_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/greetd/config.toml)

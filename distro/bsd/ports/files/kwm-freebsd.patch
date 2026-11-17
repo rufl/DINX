@@ -1,0 +1,150 @@
+--- src/posix.zig
++++ src/posix.zig
+@@ -19,7 +19,7 @@
+ 
+ pub const poll = posix.poll;
+ pub const read = posix.read;
+-pub const signalfd = posix.signalfd;
++pub const signalfd = if (dinx_is_freebsd) dinx_signalfd else posix.signalfd; // dinx-freebsd: signalfd dispatch
+ pub const sigaddset = posix.sigaddset;
+ pub const sigemptyset = posix.sigemptyset;
+ pub const sigprocmask = posix.sigprocmask;
+@@ -27,7 +27,80 @@
+ pub const mmap = posix.mmap;
+ pub const munmap = posix.munmap;
+ 
++// ---- dinx-freebsd: shim -------------------------------------------------
++// Zig declares the timerfd flag bitfield only for Linux; on FreeBSD
++// `std.c.TFD` is `void`. These are the FreeBSD bit positions, from
++// <sys/timerfd.h> + <sys/fcntl.h>.
++const dinx_is_freebsd = builtin.target.os.tag == .freebsd;
+ 
++const DinXTFD = packed struct(c_uint) {
++    ABSTIME: bool = false,
++    _1: u1 = 0,
++    NONBLOCK: bool = false,
++    _3: u17 = 0,
++    CLOEXEC: bool = false,
++    _21: u11 = 0,
++};
++
++pub const TFD = if (dinx_is_freebsd) DinXTFD else system.TFD;
++pub const TFD_TIMER = if (dinx_is_freebsd) DinXTFD else system.TFD.TIMER;
++
++// signalfd(2) has no FreeBSD equivalent: emulate it with a self-pipe written
++// by sigaction handlers. kwm's loop polls the read end and reads one
++// posix.siginfo_t per event, which this reproduces exactly. Zig 0.17 dropped
++// std.posix.write/pipe, so both come straight from libc.
++extern "c" fn pipe2(fds: *[2]posix.fd_t, flags: c_int) c_int;
++extern "c" fn write(fd: c_int, buf: [*]const u8, nbytes: usize) isize;
++
++var dinx_signalfd_write: posix.fd_t = -1;
++
++fn dinx_signalfd_handler(sig: posix.SIG) callconv(.c) void {
++    if (dinx_signalfd_write < 0) return;
++    var info: posix.siginfo_t = mem.zeroes(posix.siginfo_t);
++    info.signo = sig;
++    // write(2) is async-signal-safe; a short write just drops one event.
++    _ = write(dinx_signalfd_write, @ptrCast(mem.asBytes(&info)), @sizeOf(posix.siginfo_t));
++}
++
++const SignalfdError = error{
++    ProcessFdQuotaExceeded,
++    SystemFdQuotaExceeded,
++    SystemResources,
++} || posix.UnexpectedError;
++
++fn dinx_signalfd(fd: posix.fd_t, mask: *const posix.sigset_t, flags: u32) SignalfdError!posix.fd_t {
++    _ = fd; // signalfd's existing-fd argument is meaningless for a fresh pipe
++    var fds: [2]posix.fd_t = undefined;
++    // `flags` is O_NONBLOCK|O_CLOEXEC by value on FreeBSD, exactly what the
++    // pipe ends need.
++    switch (posix.errno(pipe2(&fds, @bitCast(flags)))) {
++        .SUCCESS => {},
++        .MFILE => return error.ProcessFdQuotaExceeded,
++        .NFILE => return error.SystemFdQuotaExceeded,
++        .NOMEM => return error.SystemResources,
++        else => |err| return posix.unexpectedErrno(err),
++    }
++    dinx_signalfd_write = fds[1];
++
++    var act: posix.Sigaction = .{
++        .handler = .{ .handler = dinx_signalfd_handler },
++        .mask = posix.sigemptyset(),
++        .flags = posix.SA.RESTART,
++    };
++    for ([_]posix.SIG{ .INT, .TERM, .QUIT, .CHLD }) |sig| {
++        if (!posix.sigismember(mask, sig)) continue;
++        posix.sigaction(sig, &act, null);
++    }
++    // Unlike signalfd, a self-pipe needs the signal to be delivered: clear the
++    // mask kwm set before calling us (handlers are installed for every signal
++    // in the set, so nothing can terminate kwm here).
++    var empty = posix.sigemptyset();
++    posix.sigprocmask(posix.SIG.SETMASK, &empty, null);
++    return fds[0];
++}
++
++
++
+ pub const TimerFdCreateError = error{
+     PermissionDenied,
+     ProcessFdQuotaExceeded,
+@@ -35,7 +108,7 @@
+     NoDevice,
+     SystemResources,
+ } || posix.UnexpectedError;
+-pub fn timerfd_create(clock_id: system.timerfd_clockid_t, flags: system.TFD) TimerFdCreateError!posix.fd_t {
++pub fn timerfd_create(clock_id: system.timerfd_clockid_t, flags: TFD) TimerFdCreateError!posix.fd_t { // dinx-freebsd: TFD type
+     const rc = system.timerfd_create(clock_id, @bitCast(flags));
+     return switch (posix.errno(rc)) {
+         .SUCCESS => @intCast(rc),
+@@ -54,7 +127,7 @@
+ pub const TimerFdSetError = TimerFdGetError || error{Canceled};
+ pub fn timerfd_settime(
+     fd: i32,
+-    flags: system.TFD.TIMER,
++    flags: TFD_TIMER,
+     new_value: *const system.itimerspec,
+     old_value: ?*system.itimerspec,
+ ) TimerFdSetError!void {
+@@ -358,9 +431,12 @@
+         .NOENT => return error.FileNotFound,
+         .NOTDIR => return error.NotDir,
+         .TXTBSY => return error.FileBusy,
+-        else => |err| switch (err) {
+-            .LIBBAD => return error.InvalidExe,
+-            else => return posix.unexpectedErrno(err),
++        else => |err| {
++            if (dinx_is_freebsd) return posix.unexpectedErrno(err); // dinx-freebsd: execve errno
++            switch (err) {
++                .LIBBAD => return error.InvalidExe,
++                else => return posix.unexpectedErrno(err),
++            }
+         },
+     }
+ }
+--- src/kwm/key_repeat.zig
++++ src/kwm/key_repeat.zig
+@@ -1,6 +1,7 @@
+ const Self = @This();
+ 
+ const std = @import("std");
++const builtin = @import("builtin"); // dinx-freebsd: os gate
+ const mem = std.mem;
+ const time = std.time;
+ const log = std.log.scoped(.key_repeat);
+@@ -45,7 +46,12 @@
+ 
+     const repeat_info = &ctx.cfg.bindings.repeat_info;
+ 
+-    const itimerspec: posix.system.itimerspec = .{
++    // dinx-freebsd: itimerspec fields: FreeBSD std.c names them
++    // `value`/`interval`, Linux spells them `it_value`/`it_interval`.
++    const itimerspec: posix.system.itimerspec = if (builtin.target.os.tag == .freebsd) .{
++        .value = .{ .sec = 0, .nsec = repeat_info.delay*time.ns_per_ms },
++        .interval = .{ .sec = 0, .nsec = @divFloor(time.ns_per_s, repeat_info.rate) },
++    } else .{
+         .it_value = .{ .sec = 0, .nsec = repeat_info.delay*time.ns_per_ms },
+         .it_interval = .{ .sec = 0, .nsec = @divFloor(time.ns_per_s, repeat_info.rate) },
+     };

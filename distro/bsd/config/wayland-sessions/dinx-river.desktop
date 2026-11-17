@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=DINX (River)
+Comment=River compositor with the kwm window manager
+Exec=/usr/local/bin/dinx-river-session
+Type=Application
+DesktopNames=DINX

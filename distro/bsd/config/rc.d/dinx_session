@@ -9,7 +9,8 @@
 # aborts writing to the reserved VT ("/dev/tty" ENXIO), so greetd stays as
 # the interactive greeter only. The session chain is
 # dinx-session-select -> dinx-pearl-session -> aqueous -c dinx-init ->
-# pearl + wayvnc; the getty on ttyv0 is switched off in /etc/ttys by the
+# pearl + wayvnc (or, for the river choice, dinx-river-session -> river -c
+# kwm); the getty on ttyv0 is switched off in /etc/ttys by the
 # installer/rc.local.live so nothing contends for the console.
 
 . /etc/rc.subr
@@ -24,7 +25,11 @@ dinx_session_start()
 	[ -x /usr/local/bin/dinx-session-select ] || return 0
 	# Live media ship without the desktop packages installed; leave the
 	# console free for the operator/installer instead of failing loudly.
-	if [ ! -x /usr/local/bin/aqueous ] || [ ! -x /usr/local/bin/pearl ]; then
+	# Two stacks qualify: Aqueous+Pearl (default) and river+kwm.
+	if { [ -x /usr/local/bin/aqueous ] && [ -x /usr/local/bin/pearl ]; } \
+	   || { [ -x /usr/local/bin/river ] && [ -x /usr/local/bin/kwm ]; }; then
+		:
+	else
 		echo 'dinx_session: desktop packages not installed; console login left enabled'
 		return 0
 	fi
@@ -33,7 +38,8 @@ dinx_session_start()
 		echo "dinx_session: first-run wizard pending; start deferred"
 		return 1
 	fi
-	if pgrep -f 'aqueous -c' >/dev/null 2>&1; then
+	if pgrep -f 'aqueous -c' >/dev/null 2>&1 \
+	   || pgrep -f 'river -c' >/dev/null 2>&1; then
 		echo "dinx_session: compositor already running"
 		return 0
 	fi
@@ -61,6 +67,8 @@ dinx_session_stop()
 	[ -f /var/run/dinx_session.pid ] && \
 	  kill "$(cat /var/run/dinx_session.pid)" 2>/dev/null
 	pkill -f 'aqueous -c' 2>/dev/null
+	pkill -f 'river -c' 2>/dev/null
+	pkill -x kwm 2>/dev/null
 	pkill -f 'dinx-session-select' 2>/dev/null
 	return 0
 }

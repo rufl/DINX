@@ -11,6 +11,7 @@ fi
 case "$choice" in
   pearl) exec "${DINX_PREFIX:-/usr/local}/bin/dinx-pearl-session" ;;
   noctalia) exec "${DINX_PREFIX:-/usr/local}/bin/dinx-noctalia-session" ;;
+  river) exec "${DINX_PREFIX:-/usr/local}/bin/dinx-river-session" ;;
   *)
     echo "dinx-session-select: unknown session '$choice'" >&2
     exit 1

@@ -644,3 +644,111 @@ O próximo passo é o `gdkshm` `cairo_image_surface_create` devolvendo
 `CAIRO_STATUS_INVALID_*` no backend wayland headless, precedido pelos
 `GtkImage` com baseline `INT32_MIN` — indício de ícone não carregado (tema de
 ícones ausente) alimentando uma superfície de tamanho inválido.
+
+## 26. Port do kwm (window manager do river) para FreeBSD
+
+O stack river exige duas peças: o compositor `river`, que existe no catálogo
+FreeBSD como `river-0.4.8` (origin `x11-wm/river`, verificado com `pkg which
+/usr/local/bin/river`), e o window manager `kwm`, que implementa
+`river-window-management-v1` e não tem port — o river recusa ser útil sem um.
+O kwm é Zig e compila para FreeBSD, mas choca com três diferenças de ABI que
+são de **tipo**, não de syscall. Fato decisivo medido na VM: o libc do FreeBSD
+15.1 resolve `timerfd_create`, `timerfd_settime`, `pipe`, `pipe2`,
+`memfd_create` e `sigaction` a partir de um `cc` puro (`cc_rc=0`, fd 3 e 8);
+`signalfd` é o único que não existe (`sys/signalfd.h` ausente).
+
+Como o kwm `.link_libc = true` (build.zig:246), `std.posix.system` resolve
+para `std.c`, então os `extern "c"` do std **já** existem; os gaps reais são:
+
+1. **`system.TFD` é `void` no FreeBSD.** O std só declara o bitfield de flags
+   do timerfd para Linux, então os literais `.{ .NONBLOCK = true,
+   .CLOEXEC = true }` de `src/kwm/key_repeat.zig:25` não compilam. Declaramos
+   `DinXTFD` com as posições do FreeBSD: `TFD_TIMER_ABSTIME` 0x01 (bit 0),
+   `TFD_NONBLOCK` = `O_NONBLOCK` 0x0004 (bit 2), `TFD_CLOEXEC` = `O_CLOEXEC`
+   0x00100000 (bit 20), lidas de `<sys/timerfd.h>` + `<sys/fcntl.h>` na própria
+   VM.
+2. **`signalfd` não existe.** Emulado com self-pipe: `pipe2` da libc + um
+   handler `sigaction(2)` que escreve um `posix.siginfo_t` por sinal, formato
+   que o loop do kwm (`kwm.zig:100`, `read(posix.siginfo_t, fd)` + `.signo`)
+   já consome sem alteração. Consequência comportamental que é fácil de
+   perder: o self-pipe só dispara se o sinal for **entregue**, mas o kwm chama
+   `sigprocmask(BLOCK)` antes de criar o fd — no Linux esse bloqueio é
+   exatamente o que roteia os sinais ao signalfd. O shim portanto instala os
+   handlers e depois **limpa a máscara** (`SETMASK` com conjunto vazio), o
+   mesmo reset que o próprio kwm já faz no double-fork de `context.zig:975`.
+3. **`std.c.itimerspec` renomeia os campos**: `interval`/`value` no FreeBSD,
+   `it_interval`/`it_value` no Linux. Só o literal que constrói em
+   `key_repeat.zig:48` precisa do rename; o de reset é `mem.zeroes()`.
+
+Um quarto erro não era nosso: `E.LIBBAD` (`src/posix.zig:362`, ramo aninhado
+do `execve`) é tag Linux-only e não membro do enum do FreeBSD — gap pré-
+existente do kwm. Varredura dos 34 tags `E.*` usados pelo fonte contra os 98
+membros de `c/freebsd.zig` devolveu **só** `LIBBAD` ausente (`@"2BIG"` existe;
+`CHLD`/`KILL`/`QUIT` são tags de `SIG`, não de `E`).
+
+Método desta vez, depois de duas rodadas queimadas em adivinhação de API:
+cada símbolo do shim foi provado por **compilação independente** na VM, um
+mini-programa por superfície, antes de qualquer patch ser escrito (sondas A–J
+em `sigprobe.sh`/`sigmulti.sh`). Isso exporou dois erros meus de rascunho:
+`std.posix.pipe` **não existe** no Zig 0.17 (idem `write`, `close` e `fcntl` —
+só `std.c.pipe`/`extern`), e `posix.empty_sigset` não existe (usar
+`sigemptyset()`). Também revelou que `O` do FreeBSD aceita
+`@bitOffsetOf(posix.O, "NONBLOCK")` (é packed struct) mas **não** expõe
+`O.NONBLOCK` como valor plano — então o argumento de flags que o kwm já computa
+no call site do signalfd é reutilizável, e com ele o `pipe2` recebe os `O_*`
+corretos por valor.
+
+`memfd_create` não precisa de patch: `std.posix.memfd_create` já trata
+`.freebsd` para ≥ 13, e o `linux.MFD.CLOEXEC` que o kwm passa em
+`render/buffer.zig:43` é 1 — igual ao `MFD_CLOEXEC` do FreeBSD. (Confira-se a
+afirmação anterior deste journal, que tratava o valor como 2: 2 é
+`MFD_ALLOW_SEALING`.)
+
+O patch vive em `scripts/bsd-vm/patch-kwm-freebsd.py` (7 correções
+idempotentes, uma por token de marcação próprio — um marcador global faria os
+patches seguintes serem pulados como "já aplicados", erro que cometi e corrigi
+antes do build). A versão de port usa o mesmo conteúdo como unified diff em
+`distro/bsd/ports/files/kwm-freebsd.patch`, aplicado com `-p0` porque os paths
+são relativos ao `WRKSRC`.
+
+Evidência, VM FreeBSD 15.1 (zig 0.17.1, river 0.4.8, backend headless):
+
+```
+patch_rc=0        # 7/7 blocos aplicados
+fetch_rc=0
+build_rc=0        # zig build -Doptimize=ReleaseSafe -Dbar=true -Dkwim=true
+kwm: ELF 64-bit LSB executable ... for FreeBSD 15.1
+deps: all resolved          # ldd sem "not found"
+dinxcompat refs = 0         # o port não depende do shim Linux-ABI
+after 6s: 19584   Ss   00:06   KWM_ALIVE=yes
+NoFont=0
+info(kwm): start running
+info(kwm): stop running      # após kill -TERM
+info(context): deinit context
+SIGNAL_HANDLED=yes (exited, awaiting reap)
+```
+
+A prova de sinal é a que importa: `start running` sobrevive 6 s no poll loop e
+só sai pelo caminho limpo (`stop running` + `deinit`) depois do `SIGTERM`, ou
+seja a emulação de signalfd entrega o sinal através do self-pipe em runtime,
+não apenas compila. Duas leituras erradas no caminho, ambas dignas de
+registro: (a) `pgrep -x kwm` responde **zumbis** — o estado real só sai de
+`ps -o stat` (item 5 do §25; a primeira rodada reportou `SIGNAL_HANDLED=no`
+porque o processo já estava morto antes do kill, não porque o handler falhou);
+(b) a queda nas duas primeiras rodadas não era o port, era a VM sem fontes:
+`fcft.c:572 monospace:size=10 failed to match font` → `error.NoFont` mata o
+`create output`. Com `terminus-font` + `fontconfig` instalados (`fc-match:
+Terminus`) o `NoFont` vai a zero. O pacote do guest não tem `fc-fontconfig`/
+`dejavufonts` (nomes que chutei); o certo é `x11-fonts/terminus-font`.
+
+Integração na pipeline: `dinx-kwm` entra no `build-native.sh` (clone na tag
+v0.3.0, patch, build, `pkg create`), no manifesto (`x11-wm/dinx-kwm` +
+`x11-wm/river`), no gate (`check_dinx_bsd.sh` exige o Makefile, o patch e o
+script), no `Makefile.kwm` do port, e a sessão `dinx-river-session` passa a
+existir como escolha de sessão (`dinx-session-set river`, `.desktop` próprio,
+instalada pelo overlay da ISO e cobrada pelo `check-bsd-iso.sh`). O
+`dinx_session` do rc aceita qualquer um dos dois stack (aqueous+pearl **ou**
+river+kwm) para decidir se sobe, e o stop limpa `river -c`/`kwm`. O que **não**
+está provado: o kwm gerenciando janelas reais com o bar desenhado (a VM de
+build é headless e sem cliente GTK), e o `kwim` (auxiliar de input, construído
+mas não exercitado).

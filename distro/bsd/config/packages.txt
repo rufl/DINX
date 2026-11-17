@@ -30,10 +30,15 @@ x11-wm/wdisplays
 audio/zrythm
 devel/godot
 emulators/linux-rl9
+# River session stack: river composites but manages no windows, so the DINX
+# kwm port (custom section) is its window manager. Verified present in the
+# FreeBSD 15.1 catalogue: river-0.4.8, origin x11-wm/river.
+x11-wm/river
 
 # DINX Custom / First-Party Ports (Requiring custom packaging)
 x11-wm/dinx-aqueous
 x11-wm/dinx-pearl
+x11-wm/dinx-kwm
 x11-wm/dome
 # Alternative shell (optional; native C++23/meson, not in FreeBSD ports yet)
 x11-wm/noctalia

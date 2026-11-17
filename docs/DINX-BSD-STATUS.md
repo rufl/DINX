@@ -1,10 +1,10 @@
 # DINX-BSD — Status completo: o que funciona e o que não funciona
 
-Data: 2026-11-14. Branch `feature/dinx-bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
+Data: 2026-11-17 (rodada do port do kwm). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
 Este documento consolida o estado real do effort BSD, separado por nível de
 evidência. Nada aqui é claim de roadmap: cada item cita a evidência observada
 ou a limitação encontrada. O journal detalhado de causas raiz está em
-`docs/DINX-BSD-PROCESS.md` (§§1–21).
+`docs/DINX-BSD-PROCESS.md` (§§1–26).
 
 Legenda:
 - **[V]** verificado nesta rodada por execução (log/saída citada).
@@ -257,10 +257,14 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 ### Funciona
 - **[V]** Controle por serial (`proc://` write/read), screendump via QMP
   (`screendump` + pnmtopng), powerdown ACPI limpo.
-- **[V]** Transferência host→guest: `python3 -m http.server 8000` no host +
-  `fetch` no guest. Guest→host: `tar -cf - … | nc -N 10.0.2.2 9000` + listener
-  python com idle-timeout (o probe de readiness consome o primeiro accept;
-  `nc` sem `-N` deadloca).
+- **[V]** Transferência host→guest: `python3 -m http.server 8099 --bind
+  0.0.0.0` servindo `/tmp` no host + `fetch` no guest (rota
+  `/dinx-vm-scripts/<arquivo>`). Guest→host: `curl -X PUT` / `-T` contra um
+  sink **com handler PUT** na 8097 (`/tmp/put-server.py`), gravando em
+  `/tmp/guest-uploads`. Nota de operação: `python3 -m http.server` **não**
+  aceita PUT — um sink sem `do_PUT` devolve 501 e o probe silenciosamente não
+  chega, o que foi a causa do travamento da sessão anterior no meio de uma
+  sondagem de API. `nc -N` segue como alternativa.
 - **[V]** Scripts de prova: `headless-proof.sh`, `proof2.sh` (keepalive IPC +
   grim cedo), `proof3.sh` (aninhado Weston — indisponível), `reinstall-proof.sh`
   (reempacote + reinstall ordenado + prova).
@@ -290,6 +294,7 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 | **Captura da tela do compositor (grim/wlr-screencopy)** | **Funciona** [V] |
 | **Pearl shell inicia (`event=ready mode=session`, app-index 5)** | **Funciona** [V] |
 | **Screenshot verificado (xterm Xwayland + bordas Vulkan)** | **Funciona** [V] |
+| kwm (WM do river) compila e roda no FreeBSD 15.1 | **Funciona** [V] |
 | Xwayland no Weston (segfault no launch do filho) | **Não funciona** [B] |
 | DRM em QEMU/VirtualBox (GPU virtual) | **Não existe no FreeBSD 15.1** [B] |
 | greetd greeter em tela | **Não verificado** (sem VT/DRM em VM) [B] |
@@ -308,6 +313,48 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 3. **greetd/VT**: validar o greeter em ttyv1 com o console vt(4) (não requer
    DRM) e a transição greeter → sessão.
 
+## 9. Stack river (compositor river + window manager kwm)
+
+### Funciona
+- **[V]** `river` existe no catálogo FreeBSD e instala: `river-0.4.8`, origin
+  `x11-wm/river`, confirmado por `pkg which /usr/local/bin/river` e
+  `pkg rquery '%n %o %v' river`.
+- **[V]** `kwm` compila para FreeBSD 15.1 com os patches de
+  `scripts/bsd-vm/patch-kwm-freebsd.py`: `build_rc=0` com
+  `zig build -Doptimize=ReleaseSafe -Dbar=true -Dkwim=true` (zig 0.17.1,
+  `--fetch` rc=0); artefato `kwm` ELF "for FreeBSD 15.1", `ldd` sem
+  "not found", zero dependência de `libdinxcompat.so`.
+- **[V]** Ciclo de runtime sob `river -c kwm` (backend headless): o WM entra
+  no loop (`info(kwm): start running`), permanece vivo 6 s (`ps -o stat` =
+  `Ss`) e sai pelo caminho limpo após `kill -TERM` (`stop running` +
+  `deinit context`), provando a emulação de `signalfd` por self-pipe em
+  execução, não só em compilação. Evidência:
+  `/root/kwmbuild/kwm-runtime3.out`.
+- **[V]** `NoFont=0` após instalar `terminus-font` + `fontconfig`
+  (`fc-match monospace` → Terminus): as duas quedas anteriores do kwm eram a
+  VM sem fontes, não o port.
+- **[I]** Port do kwm para `pkg` (`distro/bsd/ports/Makefile.kwm` +
+  `files/kwm-freebsd.patch`, aplicado `-p0`), build integrado ao
+  `build-native.sh` (`dinx-kwm`), manifesto (`x11-wm/dinx-kwm`,
+  `x11-wm/river`), gate (`check_dinx_bsd.sh`) e sessão
+  (`dinx-river-session`, escolha `dinx-session-set river`).
+
+### Não funciona / restrições
+- **[B]** `signalfd(2)` não existe no FreeBSD (sem `<sys/signalfd.h>`): só
+  emulação por self-pipe. Consequência obrigatória: a máscara que o kwm monta
+  com `sigprocmask(BLOCK)` precisa ser **limpa**, senão o handler nunca roda.
+- **[B]** `system.TFD` é `void` no FreeBSD (o bitfield de flags do timerfd só
+  existe para Linux) e `E.LIBBAD` não é membro do enum do FreeBSD — ambos no
+  fonte upstream do kwm, corrigidos pelo patch.
+- **[D]** Zig 0.17 removeu `std.posix.pipe`/`write`/`close`/`fcntl`: o shim
+  precisa de `extern "c"`, e `O` no FreeBSD aceita `@bitOffsetOf` mas não
+  expõe `O.NONBLOCK` como valor plano.
+- **[B]** Janelas reais gerenciadas com a barra desenhada: não verificado — a
+  VM de build é headless e não tem cliente GTK para mapear. `kwim` (helper de
+  input) compila mas não foi exercitado.
+
+---
+
 ## 10. Como reproduzir
 
 ```sh
@@ -325,6 +372,26 @@ sh build-native.sh            # idem; patches via patch-freebsd.py
 sh reinstall-proof.sh         # reempacote + reinstall ordenado + prova headless
 ```
 
-Transferências: host `python3 -m http.server 8000 --directory scripts/bsd-vm`;
-guest `fetch http://10.0.2.2:8000/<arquivo>`; volta `tar -cf - -C /root/build
-repo | nc -N 10.0.2.2 9000` com listener no host.
+Transferências: host `python3 -m http.server 8099 --bind 0.0.0.0` servindo
+`/tmp` (scripts em `/dinx-vm-scripts/<arquivo>`) + o sink PUT
+`python3 /tmp/put-server.py` na **8097** (grava `/tmp/guest-uploads`); guest
+`fetch -q -o /tmp/x.sh http://10.0.2.2:8099/dinx-vm-scripts/x.sh && sh
+/tmp/x.sh`, volta `curl -s -X PUT --data-binary @/tmp/x.out
+http://10.0.2.2:8097/x.out`. `http.server` **não** aceita PUT: um sink sem
+`do_PUT` devolve 501 e o resultado nunca chega ao host — foi a causa do
+travamento no meio de uma sondagem de API. O console serial do QEMU trunca
+linhas acima de ~256 chars, então comando longo vai sempre por script.
+
+Port do kwm (§26), na VM de build, serial `/tmp/dinx-s9.sock`:
+
+```
+fetch -q -o /tmp/kb.sh http://10.0.2.2:8099/dinx-vm-scripts/kwm-port-build.sh
+sh /tmp/kb.sh http://10.0.2.2:8099/dinx-vm-scripts/patch-kwm-freebsd.py
+#   patch_rc=0 (7 blocos), build_rc=0, zig-out/bin/kwm
+pkg install -y terminus-font fontconfig && fc-cache -f
+fetch -q -o /tmp/kr3.sh http://10.0.2.2:8099/dinx-vm-scripts/kwm-runtime3.sh
+sh /tmp/kr3.sh   #   NoFont=0, KWM_ALIVE=yes, SIGNAL_HANDLED=yes
+```
+
+Liveness do kwm só com `ps -o stat` (`Z` = morto); `pgrep -x`/`pgrep -f`
+respondem zumbis.

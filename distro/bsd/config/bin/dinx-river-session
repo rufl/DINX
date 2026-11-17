@@ -1,0 +1,105 @@
+#!/bin/sh
+# DINX default session: river compositor + kwm window manager.
+#
+# river is deliberately non-monolithic -- it composites but does not manage
+# windows, and refuses to be useful until a window manager implements
+# river-window-management-v1. kwm is that manager (a DWM-style tiler with its
+# own status bar), so the session is exactly what kwm documents: `river -c kwm`.
+#
+# river passes its Wayland socket through to the init executable, which is why
+# kwm can be launched from there rather than raced from a separate service.
+# Unlike Aqueous, river arms no idle-exit timer, so no IPC keepalive is needed:
+# river lives as long as this session does.
+set -eu
+. "${DINX_PREFIX:-/usr/local}/libexec/dinx/session-common"
+
+start_audio
+
+if ! command -v river >/dev/null 2>&1; then
+  echo 'dinx-river-session: river compositor not installed' >&2
+  exit 1
+fi
+
+# Xwayland needs its socket directory before the compositor starts.
+mkdir -p /tmp/.X11-unix 2>/dev/null || true
+chmod 1777 /tmp/.X11-unix 2>/dev/null || true
+
+# The window manager: kwm when it is installed, otherwise river's own
+# single-window-per-view fallback is unusable, so fail loudly instead of
+# presenting a compositor with no way to move or close windows.
+wm="${DINX_RIVER_WM:-kwm}"
+if ! command -v "$wm" >/dev/null 2>&1; then
+  echo "dinx-river-session: window manager '$wm' not installed" >&2
+  exit 1
+fi
+
+# Init child: runs inside river's environment (WAYLAND_DISPLAY, socket dir),
+# starts the window manager, and optionally republishes a headless session.
+init="$XDG_RUNTIME_DIR/dinx-river-init"
+# Quoted heredoc on purpose: river passes its own environment (including the
+# WLR_BACKENDS/DINX_HEADLESS set above) to the init child, so these expand when
+# the init actually runs rather than being baked in here. Only $wm is resolved
+# now, because it is this script's choice, not the child's.
+cat > "$init" <<EOF
+#!/bin/sh
+wm="$wm"
+EOF
+cat >> "$init" <<'EOF'
+# river sets XDG_CURRENT_DESKTOP itself; keep a sane value for shells that key
+# off it and for river-agnostic tooling.
+export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-river}"
+
+# No DRM device (virtual GPUs have no FreeBSD driver): river then runs on the
+# headless backend, so republish it over VNC to keep the session reachable from
+# the hypervisor host. wayvnc is an ordinary Wayland client (wlr-screencopy
+# plus virtual input) and needs no GPU.
+if [ "${DINX_HEADLESS:-0}" = 1 ] && command -v wayvnc >/dev/null 2>&1; then
+  wayvnc --render-cursor 0.0.0.0 "${DINX_VNC_PORT:-5900}" &
+fi
+
+# Optional shell layer (panels/indicators) on top of river; it is a plain
+# layer-shell client, so its absence does not affect the session.
+if [ -n "${DINX_RIVER_SHELL:-}" ] && command -v "${DINX_RIVER_SHELL}" >/dev/null 2>&1; then
+  "${DINX_RIVER_SHELL}" &
+fi
+
+exec "$wm"
+EOF
+chmod 755 "$init"
+
+# Nested X11 (LIVE ISO only): the vboxvideo X driver owns the VM window, so
+# start Xorg first and let river run on wlroots' X11 backend inside it. The
+# installed session never sets DINX_X11 and stays on Wayland.
+_xorg_pid=""
+if [ "${DINX_X11:-0}" = 1 ] && [ -z "${DISPLAY:-}" ]; then
+  Xorg :0 -nolisten tcp >/tmp/dinx-xorg.log 2>&1 &
+  _xorg_pid=$!
+  trap 'kill "$_xorg_pid" 2>/dev/null || true' EXIT INT TERM
+  i=0
+  while [ "$i" -lt 100 ]; do
+    [ -S /tmp/.X11-unix/X0 ] && break
+    kill -0 "$_xorg_pid" 2>/dev/null || break
+    i=$((i + 1))
+    sleep 0.1
+  done
+  if [ -S /tmp/.X11-unix/X0 ]; then
+    export DISPLAY=:0
+    echo 'dinx-river-session: X11 backend on :0 (VM window)' >&2
+  else
+    echo 'dinx-river-session: Xorg failed; falling back to headless + VNC' >&2
+    export WLR_BACKENDS=headless
+    export DINX_HEADLESS=1
+  fi
+fi
+
+if [ "${WLR_BACKENDS:-}" = headless ]; then
+  export DINX_HEADLESS=1
+  echo 'dinx-river-session: no /dev/dri, running headless' >&2
+  if command -v wayvnc >/dev/null 2>&1; then
+    echo "dinx-river-session: desktop available over VNC on port ${DINX_VNC_PORT:-5900}" >&2
+  else
+    echo 'dinx-river-session: install wayvnc to reach a headless session remotely' >&2
+  fi
+fi
+
+exec river -c "$init"

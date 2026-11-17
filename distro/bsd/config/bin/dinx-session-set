@@ -2,11 +2,11 @@
 # Set the per-user DINX session preference.
 set -eu
 if [ $# -ne 1 ]; then
-  echo 'usage: dinx-session-set pearl|noctalia' >&2
+  echo 'usage: dinx-session-set pearl|noctalia|river' >&2
   exit 1
 fi
 case "$1" in
-  pearl|noctalia) ;;
+  pearl|noctalia|river) ;;
   *)
     echo "dinx-session-set: unknown session: $1" >&2
     exit 1

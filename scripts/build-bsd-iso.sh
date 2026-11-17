@@ -136,13 +136,13 @@ for unit in dinx_firstboot dinx_greetd dinx_first_run dinx_live_persist dinx_ses
 done
 install -d "$overlay_root/usr/local/libexec/dinx" \
   "$overlay_root/usr/local/share/wayland-sessions"
-for s in dinx-pearl-session dinx-noctalia-session dinx-session-select dinx-live-session dinx-session-set dinx-wine-proton dinx-first-run dinx-live-persist dinx-installer; do
+for s in dinx-pearl-session dinx-noctalia-session dinx-river-session dinx-session-select dinx-live-session dinx-session-set dinx-wine-proton dinx-first-run dinx-live-persist dinx-installer; do
   install -m 0755 "$repo_root/distro/bsd/config/bin/$s" \
     "$overlay_root/usr/local/bin/$s"
 done
 install -m 0644 "$repo_root/distro/bsd/config/bin/dinx-session-common" \
   "$overlay_root/usr/local/libexec/dinx/session-common"
-for d in dinx-pearl dinx-noctalia; do
+for d in dinx-pearl dinx-noctalia dinx-river; do
   install -m 0644 "$repo_root/distro/bsd/config/wayland-sessions/$d.desktop" \
     "$overlay_root/usr/local/share/wayland-sessions/$d.desktop"
 done

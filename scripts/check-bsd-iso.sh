@@ -71,6 +71,7 @@ for required in \
   etc/pam.d/greetd \
   usr/local/bin/dinx-pearl-session \
   usr/local/bin/dinx-noctalia-session \
+  usr/local/bin/dinx-river-session \
   usr/local/bin/dinx-session-select \
   usr/local/bin/dinx-live-session \
   usr/local/bin/dinx-session-set \
@@ -83,6 +84,7 @@ for required in \
   usr/local/libexec/dinx/session-common \
   usr/local/share/wayland-sessions/dinx-pearl.desktop \
   usr/local/share/wayland-sessions/dinx-noctalia.desktop \
+  usr/local/share/wayland-sessions/dinx-river.desktop \
   usr/local/share/themes/DINX/index.theme \
   usr/local/share/dinx/theme/DINX.json \
   usr/local/libexec/dinx-sync-session-theme \

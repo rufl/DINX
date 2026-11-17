@@ -1,0 +1,77 @@
+# FreeBSD Port Makefile for kwm, the DINX-BSD window manager (DINX-BSD)
+#
+# kwm is a DWM-style dynamic tiling window manager implementing
+# river-window-management-v1, i.e. it is the window manager half of a river
+# session (river is the compositor and manages nothing by itself).
+#
+# Toolchain note: kwm requires Zig 0.17.x. The FreeBSD ports tree only ships
+# lang/zig (0.16) and lang/zig015 (0.15.2), so USES=zig cannot express this
+# dependency; the upstream toolchain tarball is fetched and pinned here
+# instead. Replace with USES=zig:017 once that port exists.
+PORTNAME=	kwm
+PORTVERSION=	0.3.0
+CATEGORIES=	x11-wm wayland
+MASTER_SITES=	https://github.com/kewuaa/kwm/archive/refs/tags/ \
+		https://ziglang.org/download/${ZIG_VERSION}/:zig
+DISTFILES=	v${PORTVERSION}.tar.gz \
+		${ZIG_DISTNAME}.tar.xz:zig
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	DWM-style tiling window manager for the river compositor
+WWW=		https://github.com/kewuaa/kwm
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+# wayland-scanner's pkgdatadir is resolved through pkg-config at configure
+# time; without pkgconf the build dies with
+# "FileNotFound: pkg-config --variable=pkgdatadir wayland-scanner".
+BUILD_DEPENDS=	${ZIG_CMD}:lang/zig \
+		pkgconf>=0:devel/pkgconf \
+		wayland-protocols>=0:graphics/wayland-protocols \
+		scdoc>=0:textproc/scdoc
+LIB_DEPENDS=	libwayland-client.so:graphics/wayland \
+		libxkbcommon.so:x11/libxkbcommon \
+		libpixman-1.so:x11/pixman \
+		libfcft.so:x11-fonts/fcft
+RUN_DEPENDS=	river>=0.4:x11-wm/river
+
+USES=		pkgconfig
+
+# Pinned toolchain; keep in lockstep with kwm's build.zig.zon minimum.
+ZIG_VERSION=	0.17.1
+ZIG_DISTNAME=	zig-x86_64-freebsd-${ZIG_VERSION}
+ZIG_CMD=	${WRKDIR}/${ZIG_DISTNAME}/zig
+
+WRKSRC=		${WRKDIR}/${PORTNAME}-${PORTVERSION}
+
+# The bar is the only status surface in a river session (river has no panel of
+# its own), and kwim configures input devices so a headless guest with no evdev
+# nodes still gets usable pointer/keyboard defaults.
+ZIG_BUILD_ARGS=	-Doptimize=ReleaseSafe -Dbar=true -Dkwim=true
+
+# FreeBSD porting patches (scripts/bsd-vm/patch-kwm-freebsd.py carries the
+# annotated rationale): std.c.TFD is void on FreeBSD, signalfd(2) does not
+# exist, itimerspec renames its fields, and E.LIBBAD is Linux-only. The diff
+# paths are WRKSRC-relative, hence -p0.
+post-patch:
+	@${PATCH} -d ${WRKSRC} -p0 < ${FILESDIR}/kwm-freebsd.patch
+
+post-extract:
+	@cd ${WRKDIR} && ${TAR} -xf ${DISTDIR}/${ZIG_DISTNAME}.tar.xz
+
+do-build:
+	@cd ${WRKSRC} && ${ZIG_CMD} build ${ZIG_BUILD_ARGS}
+
+do-install:
+	@${MKDIR} ${STAGEDIR}${PREFIX}/bin
+	${INSTALL_PROGRAM} ${WRKSRC}/zig-out/bin/kwm ${STAGEDIR}${PREFIX}/bin/
+	@if [ -f ${WRKSRC}/zig-out/bin/kwim ]; then \
+	  ${INSTALL_PROGRAM} ${WRKSRC}/zig-out/bin/kwim ${STAGEDIR}${PREFIX}/bin/; \
+	fi
+	@${MKDIR} ${STAGEDIR}${PREFIX}/etc/xdg/kwm
+	${INSTALL_DATA} ${WRKSRC}/config.def.zon ${STAGEDIR}${PREFIX}/etc/xdg/kwm/config.zon
+	@${MKDIR} ${STAGEDIR}${PREFIX}/share/man/man1
+	${INSTALL_MAN} ${WRKSRC}/doc/kwm.1 ${STAGEDIR}${PREFIX}/share/man/man1/
+
+.include <bsd.port.mk>

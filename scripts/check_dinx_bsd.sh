@@ -16,6 +16,10 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/config/packages.txt" ]] || fail 'missing packages.txt manifest'
 [[ -f "$repo_root/scripts/install-dinx-bsd.sh" ]] || fail 'missing install-dinx-bsd.sh installer'
 [[ -f "$bsd_dir/ports/Makefile.aqueous" ]] || fail 'missing Makefile.aqueous'
+[[ -f "$bsd_dir/ports/Makefile.kwm" ]] || fail 'missing Makefile.kwm'
+[[ -f "$bsd_dir/ports/files/kwm-freebsd.patch" ]] || fail 'missing kwm-freebsd.patch'
+[[ -f "$repo_root/scripts/bsd-vm/patch-kwm-freebsd.py" ]] || fail 'missing patch-kwm-freebsd.py'
+[[ -x "$bsd_dir/config/bin/dinx-river-session" ]] || fail 'missing dinx-river-session'
 [[ -f "$bsd_dir/ports/Makefile.pearl" ]] || fail 'missing Makefile.pearl'
 [[ -f "$bsd_dir/ports/Makefile.octapkg" ]] || fail 'missing Makefile.octapkg'
 [[ -f "$bsd_dir/ports/Makefile.deetty" ]] || fail 'missing Makefile.deetty'
@@ -73,5 +77,7 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -x "$bsd_dir/config/bin/dinx-live-session" ]] || fail 'missing live session fallback'
 [[ -x "$repo_root/scripts/bsd-vm/virtualbox-visual-test.sh" ]] || fail 'missing VirtualBox visual test launcher'
 bash -n "$repo_root/scripts/bsd-vm/virtualbox-visual-test.sh" || fail 'VirtualBox launcher has invalid shell syntax'
+
+PYTHONDONTWRITEBYTECODE=1 python3 "$repo_root/scripts/check_bsd_ports_syntax.py" || fail 'BSD port Makefiles failed static validation'
 
 printf 'dinx_bsd_contract roadmap=passed ports=passed octapkg=passed dinit_units=passed package_manifest=passed installer=passed upstream_reuse=passed custom_ports=passed editor_port=passed octapkg_primary=passed seafoam_port=passed governor_port=passed bc250_port=passed pixelorama_port=passed blockbench_port=passed bluetooth_port=passed gaming_port=passed graphics_profile_port=passed aqueous_init_port=passed live_autologin_port=passed pearl_greeter_port=passed aqueous_pearl_port=passed package_channel_port=passed plymouth_port=passed initramfs_port=passed doctor_port=passed hardware_probe_port=passed welcome_port=passed session_supervisor_port=passed qt_palette_port=passed noto_latin_port=passed tray_port=passed network_manager_port=passed audio_manager_port=passed power_manager_port=passed keyring_populate_port=passed refresh_package_sources_port=passed alpha7_report_port=passed idle_port=passed lock_port=passed installer_port=passed gtk_dark_mode_port=passed live_seeder_port=passed graphics_environment_port=passed configure_repository_port=passed mirrorlist_port=passed keyring_port=passed plymouth_quit_port=passed live_root_overrides_port=passed plymouth_theme_port=passed ray_mark_port=passed first_run_wizard_port=passed\n'

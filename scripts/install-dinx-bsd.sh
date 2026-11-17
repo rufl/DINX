@@ -103,6 +103,13 @@ if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo
     pkg install -y -r dinx "$optional_pkg" \
       || log "NOTE: optional package $optional_pkg not available"
   done
+  # river/kwm session stack: kwm is our patched port (window manager),
+  # river comes from the official catalogue (compositor). Both optional --
+  # the default session stays Aqueous+Pearl.
+  pkg install -y -r dinx dinx-kwm \
+    && pkg install -y river >/dev/null 2>&1 \
+    && log 'river session stack installed (select with: dinx-session-set river)' \
+    || log 'NOTE: river session stack not available'
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'
 else

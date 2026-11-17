@@ -186,6 +186,32 @@ if [ -d "$W/greetd" ]; then
 fi
 stamp greetd-end
 
+stamp kwm-start
+# --- kwm (river window manager) ------------------------------------------
+# Built from the upstream tag pinned identically to distro/bsd/ports/Makefile.
+# kwm links libc, so the porting patches bind timerfd/memfd/pipe2 straight to
+# FreeBSD libc; see scripts/bsd-vm/patch-kwm-freebsd.py.
+if [ ! -d "$W/kwm" ]; then
+  git clone --depth 1 --branch v0.3.0 https://github.com/kewuaa/kwm.git "$W/kwm" >>"$LOG" 2>&1
+fi
+if [ -d "$W/kwm" ]; then
+  python3 "$W/patch-kwm-freebsd.py" "$W" >>"$LOG" 2>&1
+  log "== patch-kwm-freebsd.py exit=$?"
+  # -Dbar=true needs fcft; -Dkwim=true is the input-device helper.
+  if build_zig kwm "$W/kwm" -Dbar=true -Dkwim=true; then
+    stage="$W/stage-dinx-kwm"
+    rm -rf "$stage"; mkdir -p "$stage/usr/local/bin" "$stage/usr/local/etc/xdg/kwm"
+    for b in kwm kwim; do
+      [ -f "$W/kwm/zig-out/bin/$b" ] && cp "$W/kwm/zig-out/bin/$b" "$stage/usr/local/bin/"
+    done
+    [ -f "$W/kwm/config.def.zon" ] && cp "$W/kwm/config.def.zon" "$stage/usr/local/etc/xdg/kwm/config.zon"
+    package dinx-kwm 0.3.0 dinx/kwm "kwm tiling window manager for the river compositor" "$stage"
+  fi
+else
+  log "== kwm source tree not found"
+fi
+stamp kwm-end
+
 pkg repo "$REPO" >>"$LOG" 2>&1
 log "== pkg repo exit=$?"
 stamp end

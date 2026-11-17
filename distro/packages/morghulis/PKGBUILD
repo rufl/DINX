@@ -17,6 +17,13 @@ depends=('astal' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'libadwaita'
          'gsound' 'json-glib' 'libgtop' 'libnm' 'libportal')
 makedepends=('meson' 'ninja' 'vala' 'blueprint-compiler' 'dart-sass'
              'gobject-introspection' 'glib2-devel')
+# Two shell features degrade instead of failing when their helper is absent:
+# ScreenRecord shells out to `wl-screenrec` and the NavBar tag scroller shells
+# out to `river-shifttags`. Neither is packaged by Artix, and both log a warning
+# and disable only that feature, so they stay optional rather than blocking the
+# session. Install them separately to enable screen recording and tag scrolling.
+optdepends=('wl-screenrec: screen recording from the shell'
+            'river-shifttags: scroll through river tags from the NavBar')
 source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL")
 sha256sums=("$MORGHULIS_SOURCE_SHA256")
 

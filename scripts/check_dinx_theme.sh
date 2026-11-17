@@ -340,16 +340,22 @@ awk '
 grep -Fq 'set kopts="quiet splash"' "$live_grub_cfg" || fail 'live ISO GRUB does not enable Plymouth and quiet boot'
 grep -Fq 'grub_theme=/boot/grub/themes/artix/theme.txt' "$live_grub_variable" \
   || fail 'live ISO GRUB does not select the DINX boot theme'
-[[ $(grep -Fc 'menuentry ' "$live_grub_kernels") -eq 2 ]] \
-  || fail 'live ISO GRUB does not define exactly the default and compatibility DINX boot options'
+[[ $(grep -Fc 'menuentry ' "$live_grub_kernels") -eq 4 ]] \
+  || fail 'live ISO GRUB does not define exactly the default, compatibility, safe-graphics and verbose DINX boot options'
 grep -Fq 'menuentry "Start DINX Linux"' "$live_grub_kernels" \
   || fail 'DINX default boot option is missing'
 grep -Fq 'menuentry "Start DINX Linux (compatibility)"' "$live_grub_kernels" \
   || fail 'DINX compatibility boot option is missing'
+grep -Fq 'menuentry "Start DINX Linux (safe graphics)"' "$live_grub_kernels" \
+  || fail 'DINX safe-graphics boot option is missing'
 grep -Fqx '        linux /boot/vmlinuz-$2' "$live_grub_kernels" \
   || fail 'DINX default boot option does not use the stock kernel parameters'
 grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll' "$live_grub_kernels" \
   || fail 'DINX compatibility boot option does not pass the legacy interrupt parameters'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll nomodeset plymouth.enable=0' "$live_grub_kernels" \
+  || fail 'DINX safe-graphics boot option does not disable the GPU modeset and splash'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll ignore_loglevel loglevel=8 plymouth.enable=0 vt.default_utf8=0' "$live_grub_kernels" \
+  || fail 'DINX verbose boot option does not expose the full kernel console'
 [[ $(grep -Fc 'menuentry ' "$live_grub_cfg") -eq 1 ]] \
   || fail 'live ISO GRUB has unexpected entries outside its single firmware option'
 grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$live_grub_cfg" \

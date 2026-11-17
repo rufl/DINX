@@ -1037,16 +1037,24 @@ grep -Fq 'source /boot/grub/kernels.cfg' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB does not load its live boot choices'
 grep -Fq 'set kopts="quiet splash"' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO boot menu does not enable Plymouth and silent boot'
-[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 2 ]] \
-  || fail 'DINX ISO GRUB does not contain exactly the default and compatibility live boot choices'
+[[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 4 ]] \
+  || fail 'DINX ISO GRUB does not contain exactly the default, compatibility, safe-graphics and verbose live boot choices'
 grep -Fq 'menuentry "Start DINX Linux"' "$tmp_dir/iso-grub-kernels.cfg" \
   || fail 'DINX default live boot choice is missing'
 grep -Fq 'menuentry "Start DINX Linux (compatibility)"' "$tmp_dir/iso-grub-kernels.cfg" \
   || fail 'DINX compatibility live boot choice is missing'
+grep -Fq 'menuentry "Start DINX Linux (safe graphics)"' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX safe-graphics live boot choice is missing'
+grep -Fq 'menuentry "Start DINX Linux (verbose boot)"' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX verbose live boot choice is missing'
 grep -Fqx '        linux /boot/vmlinuz-$2' "$tmp_dir/iso-grub-kernels.cfg" \
   || fail 'DINX default live boot choice does not boot the stock kernel parameters'
 grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll' "$tmp_dir/iso-grub-kernels.cfg" \
   || fail 'DINX compatibility live boot choice does not pass the legacy interrupt parameters'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll nomodeset plymouth.enable=0' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX safe-graphics live boot choice does not disable the GPU modeset and splash'
+grep -Fq 'linux /boot/vmlinuz-$2 noapic irqpoll ignore_loglevel loglevel=8 plymouth.enable=0 vt.default_utf8=0' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX verbose live boot choice does not expose the full kernel console'
 [[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub.cfg") -eq 1 ]] \
   || fail 'DINX ISO GRUB does not contain exactly one firmware choice'
 grep -Fq 'if [ "$grub_platform" = "efi" ]; then' "$tmp_dir/iso-grub.cfg" \

@@ -25,6 +25,9 @@ desktop="$overlay/usr/share/applications/dinx-lock.desktop"
 live_package="$root/distro/packages/dinx-live-autologin"
 kwm_pkgbuild="$root/distro/packages/kwm/PKGBUILD"
 kwim_pkgbuild="$root/distro/packages/kwim/PKGBUILD"
+kwm_env="$root/distro/packages/kwm/source.env"
+kwim_env="$root/distro/packages/kwim/source.env"
+builder="$root/scripts/build-iso-container.sh"
 architecture="$root/docs/architecture.md"
 compatibility="$root/docs/compatibility.md"
 pt_architecture="$root/docs/pt-BR/architecture.md"
@@ -148,6 +151,25 @@ if grep -Fq 'pkgdir/usr/share/wayland-sessions' "$kwm_pkgbuild"; then
 fi
 grep -Fq "provides=('river-input-manager')" "$kwim_pkgbuild" \
   || fail 'kwim does not provide the river input manager'
+# Owner decision 2026-11-17: kwm and kwim stay on released upstream tags built by
+# a dedicated Zig 0.16 toolchain, because their build.zig reads the Build.build_root
+# field that Zig 0.17 removed. Re-pin to a real tag once upstream cuts a
+# 0.17-compatible release; do not move to untagged master commits in the meantime.
+for env in "$kwm_env" "$kwim_env"; do
+  name=$(basename "$(dirname "$env")")
+  grep -Eq '^[A-Z]+_SOURCE_URL=https://github\.com/kewuaa/[a-z]+/archive/refs/tags/v[0-9]+(\.[0-9]+)*\.tar\.gz$' "$env" \
+    || fail "$name is not pinned to a released upstream tag archive"
+  grep -Eq '^[A-Z]+_VERSION=[0-9]+(\.[0-9]+)+$' "$env" \
+    || fail "$name version pin is not a semantic release version"
+  grep -Eq '^[A-Z]+_ZIG_VERSION=0\.16\.[0-9]+$' "$env" \
+    || fail "$name must stay on the Zig 0.16 toolchain until upstream supports 0.17"
+  grep -Eq '^[A-Z]+_ZIG_SOURCE_SHA256=[0-9a-f]{64}$' "$env" \
+    || fail "$name Zig toolchain checksum is not pinned"
+done
+grep -Fq 'zig016_version=0.16.0' "$builder" \
+  || fail 'builder no longer provides the dedicated Zig 0.16 toolchain for KWM/KWIM'
+grep -Fq '|| "$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
+  || fail 'builder no longer routes KWM/KWIM to the Zig 0.16 toolchain'
 grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$live_package/dinx-live-session" \
   || fail 'the live session does not launch the River session wrapper under a session bus'
 

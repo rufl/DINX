@@ -8,6 +8,7 @@ source_env="$startdir/source.env"
 : "${KWIM_REPOSITORY:?missing KWIM_REPOSITORY}"
 : "${KWIM_SOURCE_URL:?missing KWIM_SOURCE_URL}"
 : "${KWIM_SOURCE_SHA256:?missing KWIM_SOURCE_SHA256}"
+: "${KWIM_ZIG_VERSION:?missing KWIM_ZIG_VERSION}"
 pkgver="$KWIM_VERSION"
 pkgrel=1
 pkgdesc='River input-management helper configuring input devices independently of the window manager'
@@ -22,9 +23,15 @@ sha256sums=("$KWIM_SOURCE_SHA256")
 
 build() {
   cd "$srcdir/kwim-$pkgver"
+  local zig_bin="${ZIG:-zig}"
+  local zig_version="$("$zig_bin" version)"
+  [[ "$zig_version" == "$KWIM_ZIG_VERSION" ]] || {
+    printf 'kwim %s requires Zig %s, found %s\n' "$pkgver" "$KWIM_ZIG_VERSION" "$zig_version" >&2
+    return 1
+  }
   export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
   export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
-  "${ZIG:-zig}" build install \
+  "$zig_bin" build install \
     --prefix "$srcdir/out" \
     -Dcpu=baseline \
     -Doptimize=ReleaseSafe

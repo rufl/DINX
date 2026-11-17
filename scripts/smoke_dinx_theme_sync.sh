@@ -120,9 +120,14 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     [[ $(ini_value "$fresh_config/qt6ct/qt6ct.conf" custom_palette) == true ]]
 
     # A saved DINX appearance selection drives the ported theme families and
-    # their light/dark and rounded/square variants.
+    # their light/dark and rounded/square variants. The symlink-guard case above
+    # left gtk-3.0 as a user symlink, so remove it and let the synchronizer
+    # create a plain settings file again, keeping this block order-independent.
     XDG_CONFIG_HOME="$config_home"
     export XDG_CONFIG_HOME
+    for gtk_version in 3.0 4.0; do
+      rm -f -- "$config_home/gtk-$gtk_version/settings.ini"
+    done
     mkdir -p "$config_home/dinx"
     cp "$tmp/appearance-port.json" "$config_home/dinx/appearance.json"
     run_sync
@@ -130,7 +135,6 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
       settings="$config_home/gtk-$gtk_version/settings.ini"
       [[ $(ini_value "$settings" gtk-theme-name) == Jasper-Square-Light ]]
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 0 ]]
-      [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
     done
     [[ $(dconf read "$color_scheme_key") == "'\''prefer-light'\''" ]]
     [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == false ]]

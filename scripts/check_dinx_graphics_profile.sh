@@ -65,6 +65,8 @@ run_case virtualbox-legacy vboxvideo true vulkan
 run_case headless-no-render-node "" false vulkan
 run_case qemu-qxl qxl true cpu
 run_case physical-amdgpu amdgpu true hardware
+run_case physical-radeon-pre-gcn radeon true legacy-gl
+run_case physical-radeon-no-render-node radeon false vulkan
 run_multi_case physical-gpu-after-simpledrm hardware simpledrm amdgpu amdgpu
 run_multi_case physical-render-node-not-virtio hardware virtio_gpu amdgpu amdgpu
 check_renderers() {
@@ -82,6 +84,7 @@ check_renderers() {
 
 check_renderers cpu pixman,unset
 check_renderers virtual-gl gles2,unset
+check_renderers legacy-gl gles2,unset
 check_renderers vulkan vulkan,unset
 check_renderers hardware unset,unset
 hardware_renderers=$(WLR_RENDERER=custom GSK_RENDERER=custom bash -c '
@@ -98,6 +101,6 @@ if dinx_apply_graphics_environment unknown >/dev/null 2>&1; then
   exit 1
 fi
 
-printf 'dinx_graphics_profile_contract vmsvga_vulkan=true no_render_node_vulkan=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true\n'
+printf 'dinx_graphics_profile_contract vmsvga_vulkan=true no_render_node_vulkan=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true pre_gcn_radeon_gles=true\n'
 
 

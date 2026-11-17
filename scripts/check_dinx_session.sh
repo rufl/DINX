@@ -208,8 +208,10 @@ grep -Fq 'compositor=/usr/bin/aqueous-cpu' "$aqueous_wrapper" \
   || fail 'Aqueous compatibility compositor selection is missing'
 grep -Fq 'graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not select the graphics profile'
-grep -Fq 'virtual-gl)' "$aqueous_wrapper" \
-  || fail 'Aqueous VM GLES branch is missing'
+grep -Fq 'cpu|virtual-gl|legacy-gl)' "$aqueous_wrapper" \
+  || fail 'Aqueous GLES branch for VM and pre-GCN AMD profiles is missing'
+grep -Fq 'radeon)' "$graphics_helper" \
+  || fail 'graphics profile does not classify pre-GCN radeon GPUs'
 grep -Fq '. /usr/local/libexec/dinx-graphics-environment.sh' "$aqueous_wrapper" \
   || fail 'Aqueous wrapper does not load the shared renderer policy'
 grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' "$aqueous_wrapper" \

@@ -76,7 +76,12 @@ graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
 . /usr/local/libexec/dinx-graphics-environment.sh
 dinx_apply_graphics_environment "$graphics_profile"
 case "$graphics_profile" in
-  cpu|virtual-gl)
+  # Pre-GCN AMD (Terascale, e.g. Radeon HD 6310) has OpenGL but no Vulkan, so
+  # it uses the Vulkan-effects-free build with the GLES2 renderer. Without this
+  # the default build initializes its Vulkan effects pipeline, which wlroots
+  # satisfies with llvmpipe: the whole desktop renders on the CPU and the
+  # session becomes unusably slow on such hardware.
+  cpu|virtual-gl|legacy-gl)
     compositor=/usr/bin/aqueous-cpu
     ;;
   hardware|vulkan)

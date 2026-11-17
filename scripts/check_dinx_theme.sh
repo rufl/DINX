@@ -233,7 +233,9 @@ grep -Fq "makedepends=('sassc' 'python')" "$gtk_themes_pkgbuild" \
 grep -Fq 'theme_dir="$pkgdir/usr/share/themes"' "$gtk_themes_pkgbuild" \
   || fail 'GTK theme package does not install into /usr/share/themes'
 for gtk_theme_name in Orchis-Light Orchis-Dark Orchis-Square-Light Orchis-Square-Dark \
-  Skeuos-Blue-Light Skeuos-Blue-Dark Skeuos-Blue-Light-Square Skeuos-Blue-Dark-Square; do
+  Skeuos-Blue-Light Skeuos-Blue-Dark Skeuos-Blue-Light-Square Skeuos-Blue-Dark-Square \
+  Fluent-Light Fluent-Dark Fluent-Square-Light Fluent-Square-Dark \
+  Jasper-Light Jasper-Dark Jasper-Square-Light Jasper-Square-Dark; do
   grep -Fq "$gtk_theme_name" "$gtk_themes_pkgbuild" \
     || fail "GTK theme package does not ship the ported theme: $gtk_theme_name"
 done

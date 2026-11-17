@@ -541,6 +541,14 @@ required_paths=(
   usr/share/themes/Skeuos-Blue-Dark/index.theme
   usr/share/themes/Skeuos-Blue-Light-Square/index.theme
   usr/share/themes/Skeuos-Blue-Dark-Square/index.theme
+  usr/share/themes/Fluent-Light/index.theme
+  usr/share/themes/Fluent-Dark/index.theme
+  usr/share/themes/Fluent-Square-Light/index.theme
+  usr/share/themes/Fluent-Square-Dark/index.theme
+  usr/share/themes/Jasper-Light/index.theme
+  usr/share/themes/Jasper-Dark/index.theme
+  usr/share/themes/Jasper-Square-Light/index.theme
+  usr/share/themes/Jasper-Square-Dark/index.theme
 )
 
 for path in "${required_paths[@]}"; do

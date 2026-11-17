@@ -277,7 +277,15 @@ Verify that the checksum passed, the image was written to the whole device, the 
 
 ### The boot stalls with `No irq handler for vector`
 
-Old legacy-BIOS chipsets (AMD E-350 "Zacate" and similar pre-2012 notebooks, such as the HP dm1) can stop early at `do_IRQ: 1.55 No irq handler for vector`. The GRUB menu itself booted through the hybrid MBR; the kernel needs the legacy interrupt workaround. Reboot and choose `Start DINX Linux (compatibility)`, which adds `noapic irqpoll` (add `nomodeset` via `e` only for a GPU-driver hang). The text-mode recovery TTY (`Ctrl+Alt+F2`/`F3`) remains available if the frame buffer still fails.
+Old legacy-BIOS chipsets (AMD E-350 "Zacate" and similar pre-2012 notebooks, such as the HP dm1) can stop early at `do_IRQ: 1.55 No irq handler for vector`. The GRUB menu itself booted through the hybrid MBR; the kernel needs the legacy interrupt workaround. Reboot and choose `Start DINX Linux (compatibility)`, which adds `noapic irqpoll`. If a black screen follows, see below. The text-mode recovery TTY (`Ctrl+Alt+F2`/`F3`) remains available if the frame buffer still fails.
+
+### Black screen even after choosing `Start DINX Linux (compatibility)`
+
+When the screen stays black after `noapic irqpoll` fixes the interrupt stall, the GPU modeset or the Plymouth splash is the remaining suspect (common on pre-2012 integrated graphics such as the Radeon HD 6310 in the HP dm1). Boot order:
+
+1. `Start DINX Linux (verbose boot)` — prints the full kernel console instead of a splash, showing exactly where boot stops. Note the last lines.
+2. `Start DINX Linux (safe graphics)` — adds `nomodeset plymouth.enable=0` and runs the session in text mode, bypassing the modeset hang.
+3. If (2) works, keep it: after installing, set the same parameters permanently with `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash noapic irqpoll nomodeset plymouth.enable=0"` in `/etc/default/grub`, then `sudo grub-mkconfig -o /boot/grub/grub.cfg`.
 
 ### The screen is blank
 

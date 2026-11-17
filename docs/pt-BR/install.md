@@ -279,7 +279,15 @@ Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro,
 
 ### A inicialização trava com `No irq handler for vector`
 
-Chipsets BIOS legados antigos (AMD E-350 "Zacate" e notebooks semelhantes anteriores a 2012, como o HP dm1) podem parar no início em `do_IRQ: 1.55 No irq handler for vector`. O menu GRUB em si iniciou pelo MBR híbrido; o kernel precisa da correção de interrupção legado. Reinicie e escolha `Start DINX Linux (compatibility)`, que adiciona `noapic irqpoll` (adicione `nomodeset` pelo `e` apenas para travamento do driver da GPU). O TTY de recuperação em modo texto (`Ctrl+Alt+F2`/`F3`) continua disponível se o frame buffer ainda falhar.
+Chipsets BIOS legados antigos (AMD E-350 "Zacate" e notebooks semelhantes anteriores a 2012, como o HP dm1) podem parar no início em `do_IRQ: 1.55 No irq handler for vector`. O menu GRUB em si iniciou pelo MBR híbrido; o kernel precisa da correção de interrupção legado. Reinicie e escolha `Start DINX Linux (compatibility)`, que adiciona `noapic irqpoll`. Se a tela ficar preta depois disso, veja abaixo. O TTY de recuperação em modo texto (`Ctrl+Alt+F2`/`F3`) continua disponível se o frame buffer ainda falhar.
+
+### Tela preta mesmo escolhendo `Start DINX Linux (compatibility)`
+
+Quando a tela continua preta depois que `noapic irqpoll` resolve a travada de interrupção, o suspeito restante é o modeset da GPU ou o splash do Plymouth (comum em gráficos integrados anteriores a 2012, como a Radeon HD 6310 do HP dm1). Ordem de boot:
+
+1. `Start DINX Linux (verbose boot)` — imprime o console completo do kernel em vez do splash, mostrando exatamente onde o boot para. Anote as últimas linhas.
+2. `Start DINX Linux (safe graphics)` — adiciona `nomodeset plymouth.enable=0` e roda a sessão em modo texto, contornando a travada do modeset.
+3. Se (2) funcionar, mantenha: após instalar, fixe os mesmos parâmetros permanentemente com `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash noapic irqpoll nomodeset plymouth.enable=0"` em `/etc/default/grub`, depois `sudo grub-mkconfig -o /boot/grub/grub.cfg`.
 
 ### A tela fica vazia
 

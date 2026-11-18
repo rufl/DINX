@@ -452,9 +452,6 @@ trap finish EXIT
                 "$package_repo"/dinx-dock-*.pkg.tar.zst \
                 "$package_repo"/dinx-first-run-*.pkg.tar.zst
               build_package pori
-              build_package zls
-              pacman_install_local "$package_repo"/zls-*.pkg.tar.zst
-              ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
               build_package dinx-gtk-themes
@@ -526,7 +523,11 @@ trap finish EXIT
                   print "NoExtract = usr/lib/calamares/modules/basestrap/*"
                   print "NoExtract = usr/share/calamares/modules/basestrap.conf"
                   print "NoExtract = usr/share/calamares/branding/artix/*"
-                  print "NoExtract = usr/share/calamares/branding/artix-next/*"
+                  print "NoExtract = usr/share/doc/*"
+                  print "NoExtract = usr/share/info/*"
+                  print "NoExtract = usr/share/man/*"
+                  print "NoExtract = usr/lib/modules/*/build"
+                  print "NoExtract = usr/share/gtk-doc/*"
                   injected = 1
                   next
                 }
@@ -541,7 +542,11 @@ trap finish EXIT
               grep -Fqx 'NoExtract = usr/lib/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = etc/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/share/uwsm/*' "$pacman_conf"
-              grep -Fqx 'NoExtract = usr/share/wayland-sessions/plasma.desktop' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/doc/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/info/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/man/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/lib/modules/*/build' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/gtk-doc/*' "$pacman_conf"
               for excluded_path in \
                 'NoExtract = etc/calamares-config-switcher.conf' \
                 'NoExtract = usr/bin/calamares-config-switcher' \

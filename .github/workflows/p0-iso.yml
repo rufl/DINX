@@ -87,8 +87,7 @@ on:
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
       - "scripts/check_pori_storage.sh"
-      - "scripts/check_zls_display_tools.sh"
-      - "scripts/smoke_zls.sh"
+      - "scripts/check_display_tools.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_session_supervisor.sh"
@@ -214,8 +213,8 @@ jobs:
         run: ./scripts/check_desktop_packages.sh
       - name: Verify Pori, PCManFM, dinit storage and NTFS contracts
         run: ./scripts/check_pori_storage.sh
-      - name: Verify ZLS and display tool package contract
-        run: ./scripts/check_zls_display_tools.sh
+      - name: Verify display tool package contract
+        run: ./scripts/check_display_tools.sh
 
       - name: Install pinned Zig for native session contracts
         env:

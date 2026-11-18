@@ -110,7 +110,7 @@ print_value display.actions not-run
 
 for package in \
   dinit pcmanfm pori wdisplays shikane file-roller gparted \
-  dinitui dinxpanel octopi zls river kwm kwim morghulis; do
+  dinitui dinxpanel octopi river kwm kwim morghulis; do
   package_state "$package"
 done
 

@@ -38,7 +38,6 @@ rootfs:
     - dinx-dock
     - dinx-first-run
     - greetd-agreety
-    - zls
     - pcmanfm
     - e2fsprogs
     - efibootmgr
@@ -49,7 +48,6 @@ rootfs:
     - file-roller
     - flatpak
     - fwupd
-    - fuse2
     - gparted
     - pixelorama
     - godot
@@ -79,6 +77,7 @@ rootfs:
     - firefox
     - paintfe
     - eurooffice
+    - inkscape
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
@@ -118,7 +117,6 @@ rootfs:
     - firewalld
     - firewall-config
     - inxi
-    - inkscape
     - jq
     - less
     - nm-connection-editor

@@ -67,11 +67,9 @@ A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Blueto
 
 CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuário habilita o serviço pelo DinitUI quando necessário.
 
-### Ferramentas de display e ZLS
+### Ferramentas de display
 
 A configuração de display da DINX passa pelo wrapper `dinx-wdisplays`: ele executa o `wdisplays` e depois o `dinx-save-shikane-profile` exporta o resultado como o perfil `DINX wdisplays` em `~/.config/shikane/config.toml`; o botão `Display` da DINXPanel abre esse mesmo wrapper. Deetty é o único emulador de terminal da ISO; Nano continua como editor de recuperação.
-
-`zls` é o pacote oficial Zig Language Server 0.16.0 com fonte fixada. Carrega a árvore `lib/std` correspondente e o shim de metadados `/usr/lib/zls/zig-env`; completion e navegação do Dintor funcionam sem compilador Zig completo. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; a árvore 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP. Um pacote Artix `zig` opcional habilita comandos de compilação pelo mesmo shim.
 
 ### River, KWM e o limite dinit
 

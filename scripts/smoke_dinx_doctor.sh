@@ -16,7 +16,7 @@ cat > "$tmp/bin/pacman" <<'EOF'
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
 if [ "$1" = -Q ]; then
   case "$2" in
-    dinit|pcmanfm|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|octopi|zls|river|kwm|kwim|morghulis) exit 0 ;;
+    dinit|pcmanfm|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|octopi|river|kwm|kwim|morghulis) exit 0 ;;
   esac
 fi
 exit 1

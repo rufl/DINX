@@ -349,14 +349,6 @@ required_paths=(
   usr/bin/pori
   usr/local/libexec/pori-mount-service
   usr/bin/file-roller
-  usr/bin/zls
-  usr/share/licenses/zls/LICENSE
-  usr/share/licenses/zls/zig-LICENSE
-  etc/zls.json
-  etc/xdg/zls.json
-  usr/lib/zls/zig-env
-  usr/lib/zls/zig-env.zon
-  usr/lib/zls/zig/std/std.zig
   usr/bin/gparted
   usr/share/polkit-1/actions/org.gnome.gparted.policy
   usr/bin/shikane
@@ -1643,15 +1635,6 @@ file_roller_mime_cache=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootf
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" <<<"$file_roller_mime_cache" || fail "File Roller MIME cache is missing $mime"
 done
-zls_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/zls.json)
-zls_xdg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/zls.json)
-[[ "$zls_config" == "$zls_xdg_config" ]] || fail 'ZLS XDG configuration alias is not identical'
-grep -Fq '"zig_exe_path": "/usr/lib/zls/zig-env"' <<<"$zls_config" || fail 'ZLS Zig executable configuration is missing'
-grep -Fq '"zig_lib_path": "/usr/lib/zls/zig"' <<<"$zls_config" || fail 'ZLS Zig library configuration is missing'
-zls_shim=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/zls/zig-env)
-grep -Fq 'case "${1:-}" in' <<<"$zls_shim" || fail 'ZLS Zig shim command contract is missing'
-grep -Fq '/usr/bin/zig' <<<"$zls_shim" || fail 'ZLS Zig shim compiler delegation is missing'
-grep -Fq 'printf '\''%s\n'\'' 0.16.0' <<<"$zls_shim" || fail 'ZLS Zig shim version contract is missing'
 grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missing'
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'

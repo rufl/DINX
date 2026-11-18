@@ -13,7 +13,7 @@ checks=(
   check_package_managers.sh
   check_desktop_packages.sh
   check_pori_storage.sh
-  check_zls_display_tools.sh
+  check_display_tools.sh
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh

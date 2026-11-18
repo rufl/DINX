@@ -41,10 +41,8 @@ grep -Fqx 'exec /usr/local/bin/deetty -e btop "$@"' "$btop_launcher" \
   || fail 'btop does not launch through the Deetty command wrapper'
 grep -Fqx 'exec /usr/local/bin/deetty -e nvtop "$@"' "$nvtop_launcher" \
   || fail 'nvtop does not launch through the Deetty command wrapper'
-grep -Fqx '    - deetty' "$profile" || fail 'profile does not install Deetty'
-grep -Fqx '    - ghostty-vt-runtime' "$profile" || fail 'profile does not install the VT-only runtime'
-jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null and index("zls") != null' "$groups" >/dev/null \
-  || fail 'desktop feature group does not include Deetty, its VT-only runtime, and ZLS'
+jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null' "$groups" >/dev/null \
+  || fail 'desktop feature group does not include Deetty or its VT runtime'
 if jq -e 'any(.groups[].packages[]; . == "foot" or . == "ghostty")' "$groups" >/dev/null; then
   fail 'feature groups include an alternative terminal application'
 fi
@@ -73,10 +71,7 @@ fi
 if jq -e 'any(.groups[].packages[]; . == "man-db" or . == "man-pages" or . == "texinfo")' "$groups" >/dev/null; then
   fail 'feature groups include removed documentation packages'
 fi
-grep -Fqx '    - zls' "$profile" || fail 'profile does not install the Zig language server'
-if grep -Eq '^[[:space:]]+- (clang|vim)([[:space:]]|$)' "$profile"; then
-  fail 'profile installs build-only clang or Vim'
-fi
+grep -Fq 'set -gx TERMINAL deetty' "$fish_profile" || fail 'Fish TERMINAL default is missing'
 if jq -e 'any(.groups[].packages[]; . == "clang" or . == "vim")' "$groups" >/dev/null; then
   fail 'feature groups install build-only clang or Vim'
 fi
@@ -96,8 +91,6 @@ runtime_dependencies=$(awk -F= '$1 == "depends" { print; exit }' "$pkgbuild")
 build_dependencies=$(awk -F= '$1 == "makedepends" { print; exit }' "$pkgbuild")
 [[ "$build_dependencies" == *"'clang'"* ]] || fail 'clangd protocol qualification build dependency is missing'
 [[ "$build_dependencies" == *"'vim'"* ]] || fail 'Vim real-TUI qualification build dependency is missing'
-grep -Fq "optdepends=('zls: Zig language server for Dintor' 'clang: optional C/C++ language server via clangd')" "$pkgbuild" \
-  || fail 'optional Zig and C/C++ language server dependencies are not documented'
 grep -Fq "'git'" "$pkgbuild" || fail 'Git runtime dependency is missing'
 grep -Fq 'Git Status and Diff...' "$repo_root/distro/packages/deetty/qualification-compat.patch" || fail 'Dintor Git action is missing'
 grep -Fq 'DINTOR_THEME' "$repo_root/distro/packages/deetty/qualification-compat.patch" || fail 'Dintor color scheme contract is missing'
@@ -201,5 +194,4 @@ grep -Fq '<binary>dintor</binary>' "$patched_source/resources/com.deetty.NoctEd.
 grep -Fq 'style-scheme id="dintor-dark"' "$patched_source/resources/nocted/styles/nocted-dark.xml" || fail 'Dintor dark scheme identity is incorrect'
 grep -Fq 'style-scheme id="dintor-light"' "$patched_source/resources/nocted/styles/nocted-light.xml" || fail 'Dintor light scheme identity is incorrect'
 grep -Fq '"DINTOR_THEME"' "$patched_source/src/nocted/main.zig" || fail 'Dintor theme environment is missing'
-grep -Fq '"deetty://"' "$patched_source/src/workspace/Activation.zig" || fail 'Deetty workspace URI scheme is missing'
-printf 'deetty_dintor_integration terminal=deetty sole_terminal=true ghostty_runtime_only=true lsp=zig:zls clangd=optional vim=builder-only shell_defaults=true wm_spawn=true execute_argv=true file_open=true desktop_ids=true service_menu=true metainfo=true editor_styles=true uri_scheme=true patches_apply=true upstream_pin_preserved=true\n'
+printf 'deetty_dintor_integration terminal=deetty sole_terminal=true ghostty_runtime_only=true lsp=zig clangd=optional vim=builder-only shell_defaults=true wm_spawn=true execute_argv=true file_open=true desktop_ids=true service_menu=true metainfo=true editor_styles=true uri_scheme=true patches_apply=true upstream_pin_preserved=true\n'

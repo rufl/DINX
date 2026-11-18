@@ -1,8 +1,11 @@
 #!/bin/sh
 set -eu
 
-export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Morghulis}"
-export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-Morghulis}"
+# Morghulis compares XDG_CURRENT_DESKTOP as a literal string (NavBar.vala
+# `current_session == "river"`), so it must be exactly `river`; any other value
+# makes NavBar skip setup_river() and the shell loses its tag/mode/view modules.
+export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-river}"
+export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-river}"
 export XDG_SESSION_TYPE=wayland
 export TERMINAL="${TERMINAL:-deetty}"
 export QT_QPA_PLATFORM='wayland;xcb'

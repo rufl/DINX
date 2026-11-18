@@ -110,7 +110,7 @@ grep -Fq "'$qualification_patch_sha'" "$pkgbuild" \
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
-grep -Fqx 'TERMINAL=deetty EDITOR=dintor VISUAL=dintor XDG_CURRENT_DESKTOP=Morghulis' <<<"$shell_output" || fail 'shell defaults are not deterministic'
+grep -Fqx 'TERMINAL=deetty EDITOR=dintor VISUAL=dintor XDG_CURRENT_DESKTOP=river' <<<"$shell_output" || fail 'shell defaults are not deterministic'
 
 
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/dinx-deetty-integration.XXXXXX")

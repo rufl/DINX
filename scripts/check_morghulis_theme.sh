@@ -19,8 +19,12 @@ for path in "$session" "$init" "$first_run" "$theme_sync"; do
   [[ -x "$path" ]] || fail "not executable: ${path#$root/}"
   sh -n "$path" || fail "invalid shell syntax: ${path#$root/}"
 done
-grep -Fqx 'export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Morghulis}"' "$session" || fail 'session desktop is not Morghulis'
-grep -Fqx 'export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-Morghulis}"' "$session" || fail 'session identity is not Morghulis'
+# Morghulis NavBar matches XDG_CURRENT_DESKTOP literally against "river"; anything
+# else silently disables its tag/mode/view modules, so pin the exact value here.
+grep -Fqx 'export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-river}"' "$session" \
+  || fail 'session must export XDG_CURRENT_DESKTOP=river for the Morghulis river backend'
+grep -Fqx 'export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-river}"' "$session" \
+  || fail 'session identity is not river'
 grep -Fq 'preferences="$config_home/morghulis/preferences.json"' "$theme_sync" || fail 'theme sync is not Morghulis-specific'
 grep -Fq 'morghulis-first-run-complete' "$first_run" || fail 'first-run marker is not Morghulis-specific'
 grep -Fq 'DINX_THEME_VARIANT=$variant' "$first_run" || fail 'first-run result is not passed to theme sync'

@@ -17,6 +17,7 @@ checks=(
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh
+  check_mission_center.sh
   check_dinx_noto_latin.sh
   check_dinx_package_provenance.sh
   check_cyan_skillfish.sh

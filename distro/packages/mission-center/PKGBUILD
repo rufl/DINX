@@ -1,0 +1,52 @@
+pkgname=mission-center
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${MISSION_CENTER_VERSION:?missing MISSION_CENTER_VERSION}"
+: "${MISSION_CENTER_REPOSITORY:?missing MISSION_CENTER_REPOSITORY}"
+: "${MISSION_CENTER_SOURCE_URL:?missing MISSION_CENTER_SOURCE_URL}"
+: "${MISSION_CENTER_SOURCE_SHA256:?missing MISSION_CENTER_SOURCE_SHA256}"
+: "${MISSION_CENTER_MAGPIE_COMMIT:?missing MISSION_CENTER_MAGPIE_COMMIT}"
+: "${MISSION_CENTER_MAGPIE_SOURCE_URL:?missing MISSION_CENTER_MAGPIE_SOURCE_URL}"
+: "${MISSION_CENTER_MAGPIE_SOURCE_SHA256:?missing MISSION_CENTER_MAGPIE_SOURCE_SHA256}"
+: "${MISSION_CENTER_GRAPH_WIDGET_COMMIT:?missing MISSION_CENTER_GRAPH_WIDGET_COMMIT}"
+: "${MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL:?missing MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL}"
+: "${MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256:?missing MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256}"
+pkgver="$MISSION_CENTER_VERSION"
+pkgrel=1
+pkgdesc='System monitor for CPU, memory, disk, network and GPU usage'
+arch=('x86_64')
+url="$MISSION_CENTER_REPOSITORY"
+license=('GPL-3.0-or-later')
+depends=('dconf' 'dmidecode' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk4' 'libadwaita' 'libdrm' 'libudev' 'mesa' 'udisks2')
+makedepends=('blueprint-compiler' 'cargo' 'cmake' 'meson' 'ninja')
+source=(
+  "mission-center-v$pkgver.tar.gz::$MISSION_CENTER_SOURCE_URL"
+  "gng-$MISSION_CENTER_MAGPIE_COMMIT.tar.gz::$MISSION_CENTER_MAGPIE_SOURCE_URL"
+  "graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL"
+)
+sha256sums=(
+  "$MISSION_CENTER_SOURCE_SHA256"
+  "$MISSION_CENTER_MAGPIE_SOURCE_SHA256"
+  "$MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256"
+)
+
+prepare() {
+  local root="$srcdir/mission-center-v$pkgver"
+  rm -rf "$root/subprojects/magpie" "$root/subprojects/graph-widget"
+  mv "$srcdir/gng-$MISSION_CENTER_MAGPIE_COMMIT" "$root/subprojects/magpie"
+  mv "$srcdir/graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT" "$root/subprojects/graph-widget"
+}
+
+build() {
+  cd "$srcdir/mission-center-v$pkgver"
+  export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
+  meson setup build --prefix=/usr --buildtype=release -Db_lto=false
+  meson compile -C build
+}
+
+package() {
+  cd "$srcdir/mission-center-v$pkgver"
+  DESTDIR="$pkgdir" meson install -C build
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+}

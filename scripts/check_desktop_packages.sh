@@ -213,7 +213,7 @@ grep -RqF 'pkexec' "$octopi_dir" \
 # octopi declares its dependencies as a multi-line depends=(...) array, so match
 # the dependency tokens on their own lines rather than on the depends= line.
 if grep -Eq '^[[:space:]]*(sudo|qt-sudo)([[:space:]]|$)' "$octopi_recipe"; then
-  fail 'Octopi package still depends on sudo, which DINX does not ship'
+  fail 'Octopi package still depends on sudo, which DINX replaced with pkexec/polkit elevation'
 fi
 grep -Eq '^[[:space:]]*polkit([[:space:]]|$)' "$octopi_recipe" \
   || fail 'Octopi package does not depend on polkit for pkexec elevation'

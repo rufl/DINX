@@ -433,6 +433,8 @@ trap finish EXIT
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
+              build_package mission-center
+              pacman_install_local "$package_repo"/mission-center-*.pkg.tar.zst
               # Octopi is a Qt6/CMake package not available from Artix. Its build
               # toolchain is fetched explicitly because makepkg runs --nodeps, so
               # makedepends are not resolved from the PKGBUILD.

@@ -43,8 +43,8 @@ grep -Fq 'pkgver="$OCTOPI_VERSION"' distro/packages/octopi/PKGBUILD \
   || fail 'Octopi PKGBUILD version is not wired to source.env'
 grep -Fq '"$OCTOPI_SOURCE_SHA256"' distro/packages/octopi/PKGBUILD \
   || fail 'Octopi PKGBUILD checksum is not wired to source.env'
-# DINX has no sudo: Octopi must elevate through pkexec/polkit like the installer
-# and GParted, never through qt-sudo's su/sudo/doas backends.
+# DINX ships sudo for general use, but Octopi must still elevate through pkexec/polkit like
+# the installer and GParted, never through qt-sudo's su/sudo/doas backends.
 octopi_patch=$(ls distro/packages/octopi/*.patch 2>/dev/null | head -1)
 [[ -n "$octopi_patch" ]] || fail 'Octopi has no pkexec elevation patch'
 grep -Fq 'pkexec' "$octopi_patch" \

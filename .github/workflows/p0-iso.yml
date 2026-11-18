@@ -101,6 +101,7 @@ on:
       - "scripts/check_dinxpanel.sh"
       - "scripts/check_dinx_live_autologin.sh"
       - "scripts/check_dinx_session.sh"
+      - "scripts/check_mission_center.sh"
       - "scripts/smoke_dinx_theme_sync.sh"
       - "scripts/check_dinx_doctor.sh"
       - "scripts/smoke_dinx_doctor.sh"

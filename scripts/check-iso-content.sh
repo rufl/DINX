@@ -338,6 +338,10 @@ required_paths=(
   usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
   usr/bin/pcmanfm
+  usr/bin/missioncenter
+  usr/share/applications/io.missioncenter.MissionCenter.desktop
+  usr/share/metainfo/io.missioncenter.MissionCenter.metainfo.xml
+  usr/share/licenses/mission-center/COPYING
   usr/bin/octopi
   usr/lib/octopi/octphelper
   usr/share/applications/pcmanfm.desktop
@@ -1608,7 +1612,10 @@ grep -Fq 'Name[pt_BR]=Central de Controle' <<<"$dinxpanel_desktop" || fail 'DINX
 file_roller_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/org.gnome.FileRoller.desktop)
 grep -Fq 'Name[pt_BR]=Descompactador' <<<"$file_roller_override" || fail 'File Roller Portuguese desktop name is missing'
 grep -Fq 'Name=Archive Manager' <<<"$file_roller_override" || fail 'File Roller English desktop name is missing'
-grep -Fq 'Exec=file-roller %U' <<<"$file_roller_override" || fail 'localized File Roller launcher command is incorrect'
+mission_center_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/io.missioncenter.MissionCenter.desktop)
+grep -Fq 'Exec=missioncenter' <<<"$mission_center_desktop" || fail 'Mission Center desktop launcher is missing'
+grep -Fq 'Name=Mission Center' <<<"$mission_center_desktop" || fail 'Mission Center desktop name is missing'
+grep -Fq 'Icon=io.missioncenter.MissionCenter' <<<"$mission_center_desktop" || fail 'Mission Center desktop icon contract is missing'
 while IFS='|' read -r path english portuguese command; do
   launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"

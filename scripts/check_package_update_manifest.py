@@ -21,6 +21,7 @@ MANIFEST = ROOT / ".github/package-updates.json"
 MANUAL_SOURCE_PINS = {
     "appmenu-glib-translator",
     "astal",
+    "blender",
     "deetty",
     "dinx-gtk-themes",
     "octopi",

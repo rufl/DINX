@@ -219,6 +219,23 @@ grep -Eq '^[[:space:]]*polkit([[:space:]]|$)' "$octopi_recipe" \
   || fail 'Octopi package does not depend on polkit for pkexec elevation'
 grep -Fq 'build_package octopi' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Octopi'
 
+# Blender is a local DINX recipe (lean build, ~1.8 GB Artix bloat stripped)
+blender_dir="$root/distro/packages/blender"
+blender_recipe="$blender_dir/PKGBUILD"
+blender_source="$blender_dir/source.env"
+for recipe_file in "$blender_recipe" "$blender_source"; do
+  [[ -r "$recipe_file" ]] || fail "Blender contract file is missing: ${recipe_file#$root/}"
+done
+grep -Fq 'build_package blender' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not build blender'
+# Verify bloat deps are stripped from depends/makedepends arrays
+if sed -n '/^depends=\|^makedepends=/{/depends=\|^makedepends=/,/)/p}' "$blender_recipe" \
+  | grep -Eq '(intel-oneapi|^usd$|^materialx$|^openvdb$|^opensubdiv$|^embree$|^openimagedenoise$)'; then
+  fail 'Blender package still carries Artix bloat deps'
+fi
+grep -Eq '^\s*-DWITH_CYCLES_DEVICE_ONEAPI=OFF' "$blender_recipe" \
+  || fail 'Blender does not disable Intel oneAPI (SYCL) device support'
+
 if grep -RqF 'shelly' "$root/distro/packages/dinxpanel/src/main.zig" "$root/distro/packages/dinx-dock/src/main.zig"; then
   fail 'the retired Shelly package manager still backs DINXPanel or the DINX dock'
 fi
@@ -226,7 +243,7 @@ grep -Fq '"octopi.desktop"' "$root/distro/packages/dinx-dock/src/main.zig" || fa
 grep -Fq '"pcmanfm.desktop"' "$root/distro/packages/dinx-dock/src/main.zig" || fail 'DINX dock does not favourite pcmanfm.desktop'
 grep -Fq '"octopi"' "$root/distro/packages/dinxpanel/src/main.zig" || fail 'DINXPanel does not launch Octopi as the package manager'
 grep -Fq '"checkupdates"' "$root/distro/packages/dinxpanel/src/main.zig" || fail 'DINXPanel does not use checkupdates from pacman-contrib'
-for artix_only in pcmanfm blender pacman-contrib; do
+for artix_only in pcmanfm pacman-contrib; do
   if [[ -e "$root/distro/packages/$artix_only" ]]; then
     fail "$artix_only must ship from the Artix repository, not a local DINX recipe"
   fi

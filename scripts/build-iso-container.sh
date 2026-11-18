@@ -1,3 +1,4 @@
+# P0 trigger: force workflow dispatch via path-match
 #!/usr/bin/env bash
 set -euo pipefail
 

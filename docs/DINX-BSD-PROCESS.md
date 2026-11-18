@@ -1035,3 +1035,65 @@ nunca de backlight). O port pode instalar o arquivo (inofensivo) ou suprimi-lo;
 manter a instalação preserva paridade com upstream e custa nada. O que **não**
 pode faltar é o `glib-compile-schemas` (sem ele o shell aborta) — ver o
 `install-dinx-bsd.sh`.
+
+### river 0.5.2: exige Zig 0.17 (o catálogo FreeBSD tem 0.16)
+
+Para obter o fix do crash de screencopy (river 0.5.x), tentei compilar o river
+0.5.2 do fonte. O `zig build` com o **zig 0.16.0 do catálogo** falha em
+configure:
+
+```
+build.zig:24:10: error: enum 'builtin.OptimizeMode' has no member named 'debug'
+```
+
+O river 0.5 renomeou os modos de otimização do Zig (`OptimizeMode.debug` não
+existe mais nessa forma), então precisa do **Zig 0.17** — o mesmo toolchain
+pinado que o kwm usa (`zig-x86_64-freebsd-0.17.1`). O `zig build --fetch` passa
+(deps baixadas); só o configure/build exige o 0.17. Consequência para o lane:
+subir o river do port de 0.4.8 → 0.5.x não é só bump de versão — arrasta o
+toolchain Zig 0.17 junto (o port atual usa `USES=zig:016`). Até lá, o river
+0.4.8 do catálogo serve para a sessão (estável, provado 65s+), mas **não** para
+prova visual via screencopy. O binário river 0.5.2, se compilar aqui, é para
+verificação local do fix, não para entrar na ISO sem o bump de toolchain do
+port.
+
+### kwim não é lançado à mão — o kwm o spawna (e por que o `-Dkwim=true` importa)
+
+O objetivo "river, kwm e kwim" tem uma subtileza que o source confirma: o
+`kwim` não é um processo que a sessão inicia. Com o kwm construído em
+`-Dkwim=true` (o default, e o que `build-native.sh` usa), o próprio kwm:
+- faz bind dos protocolos de input do river em `main.zig:170-176`
+  (`river-input-management-v1`, `river-libinput-config-v1`,
+  `river-xkb-config-v1`), todos sob `comptime build_options.kwim_enabled`;
+- spawna o binário `kwim` no hotplug de dispositivos de entrada
+  (`context.zig:1391`: `self.spawn(&.{ "kwim" })` dentro de `hotplug_inputs`,
+  armado quando `any_inputs_plugged`).
+
+Consequência: o `kwim` precisa estar no `PATH` do kwm no momento do spawn. Como
+o `install-dinx-bsd.sh` instala `dinx-kwim` em `/usr/local/bin/kwim` e a sessão
+roda com esse PATH, o spawn resolve. Sem `-Dkwim=true`, os binds de input nem
+são compilados e o kwm não configura teclado/mouse — daí o build do port
+manter a flag explícita em `Makefile.kwm` (`ZIG_BUILD_ARGS`).
+
+### Lacuna de empacotamento conhecida (não resolvida — documentada de propósito)
+
+`build-astal-morphulis.sh` instala toda a espinha (astal-*, glycin,
+appmenu-glib-translator) via `ninja install` em `/usr/local` da VM de build, mas
+só empacota **`dinx-morphulis`** (`package_plain`). Os `.so` do astal/glycin que
+o morghulis linka (`ldd` mostrou `libastal-river.so.0`, `libastal-tray.so.0`,
+`libglycin-2.so`, etc.) **não** viram `.pkg`. Consequência: num alvo limpo,
+`pkg install -r dinx dinx-morphulis` instalaria o binário mas o `ldd` falharia
+por faltar as libs — e elas também não estão no catálogo FreeBSD (foram
+compiladas do fonte aqui).
+
+Para o morghulis ser instalável na ISO faltam duas coisas que ainda não fiz:
+1. empacotar também cada `libastal-*`, `glycin`/`glycin-gtk4`, e
+   `appmenu-glib-translator` (ou um metapacote que os carrege), na mesma forma
+   `pkg create` do `build-native.sh`; **e**
+2. listar `dinx-morphulis` (+ os pacotes astal) na seção de ports customizados
+   do `install-dinx-bsd.sh`, que é o que de fato instala no alvo.
+
+Hoje o estado provado é: **o stack compila, instala em `/usr/local` e roda junto
+na VM** (river+kwm+morghulis vivos, morghulis "initialized primary monitor"). O
+que NÃO está pronto é o empacotamento para uma instalação limpa na ISO. Isso é
+trabalho restante explícito, não algo que eu deva fingir estar ligado.

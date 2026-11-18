@@ -1252,3 +1252,41 @@ todos os pacotes. Os payloads estão lá (quarrel 20 entradas tar, glycin 33,
 morghulis 7 incluindo `/usr/local/bin/morghulis`); o mapa `files` com checksums vive no
 `+MANIFEST`, não no `+COMPACT_MANIFEST`. Meu método de inspeção estava errado,
 não o pacote.
+
+### Cadeia empacotamento → instalação → runtime: fechada
+
+Prova final de que o empacotamento funciona de verdade (não só no papel), com a
+instalação **real** a partir do repo gerado:
+
+```
+install_rc=0            # não dry-run: extração de verdade
+12/12 pacotes           # appmenu-glib-translator, quarrel, 8× astal-*,
+                        # glycin, dinx-morghulis
+pkg info (DB scratch)   # 12 pacotes registrados
+ldd /usr/local/bin/morghulis  # "not found" = 0
+catalogue               # 19 pacotes, comentários íntegros
+```
+
+E o gatilho do glib disparou sozinho, compilando o schema:
+
+```
+/usr/local/share/glib-2.0/schemas/gschemas.compiled   47775 bytes (hora da instalação)
+/usr/local/share/glib-2.0/schemas/com.arkye.morghulis.gschema.xml
+gsettings list-keys com.arkye.morghulis   -> clipboard-max-entries, clipboard-persist,
+                                       clipboard-watch, gtk-theme, navbar-anchor, ...
+gsettings get com.arkye.morghulis night-temp  -> 4000
+```
+
+Executado sem compositor, o binário instalado falha só com
+`Gtk-WARNING: Failed to open display` e **zero** ocorrências de "Settings schema
+... is not installed" — que era exatamente o abort do bring-up manual. Ou seja:
+`pkg install -r dinx dinx-morghulis` num alvo limpo resolve as 12 dependências,
+compila o schema via trigger e produz um binário que inicia.
+
+Duas lições de método deste trecho, ambas custando rodada:
+(a) `pkg install -n` (dry-run) prova **resolução de dependências**, não
+instalação; eu havia descrito o dry-run como verificação do empacotamento. A
+prova real exige extração + `ldd` + execução.
+(b) `files: 0` no `+COMPACT_MANIFEST` não significa pacote vazio — o mapa de
+arquivos com checksums fica no `+MANIFEST`. Contar entradas do `tar -tf` é o
+teste certo.

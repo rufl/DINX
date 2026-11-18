@@ -1,0 +1,154 @@
+pkgname=blender
+pkgver=5.2.3
+pkgrel=1
+epoch=17
+pkgdesc="A fully integrated 3D graphics creation suite (lean build — 3D modeling + gamedev only)"
+arch=(x86_64)
+url="https://www.blender.org/"
+license=(GPL-3.0-or-later)
+# Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
+# openvdb, opensubdiv, embree, openimagedenoise.
+# Essentials kept: cycles, python, ffmpeg, bullet, openxr, alembic, draco,
+# jolt, opencolorio, openimageio, audaspace, freestyle, ik-solvers,
+# fluid/ocean/remesh modifiers, meshoptimizer, ktx, nanovdb, potrace,
+# pugixml, manifold, quadriflow, rubberband.
+depends=(
+  alembic
+  audaspace
+  boost-libs
+  bullet
+  bzip2
+  draco
+  fftw
+  fontconfig
+  freetype2
+  fribidi
+  gmp
+  harfbuzz
+  ilmbase
+  jolt
+  ktx
+  libdecor
+  libgl
+  libpng
+  libtiff
+  libwebp
+  libxml2
+  libx11
+  libxi
+  libxrandr
+  llvm-libs
+  lzo
+  manifold
+  nanovdb
+  ncurses
+  openal
+  opencolorio
+  opengl-driver
+  openimageio
+  openjpeg2
+  openxr
+  potrace
+  pugixml
+  python
+  python-numpy
+  quadriflow
+  rubberband
+  sdl2
+  speexdsp
+  tbb
+  wayland
+  xxd
+  zlib
+  zstd
+)
+makedepends=(
+  boost
+  cmake
+  cython
+  git
+  hip-runtime-amd
+  libxcursor
+  llvm
+  ninja
+  openexr
+  patch
+  pkgconf
+  python-numpy
+  wayland-protocols
+)
+optdepends=(
+  'cuda: Cycles renderer CUDA support'
+  'intel-compute-runtime: Cycles renderer Intel oneAPI support'
+  'intel-level-zero-raytracing-support: Cycles renderer Intel oneAPI RT support'
+  'hiprt: Ray tracing AMD ROCm support'
+  'openexr: OpenEXR image format support'
+)
+source=("${pkgname}-${pkgver}.tar.xz::https://download.blender.org/source/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('5c66e0ab20da26d684deecfc27e84c4d39e456daaa9112b47eeb45d0e0283876')
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  cmake -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DWITH_INSTALL_PORTABLE=OFF \
+    -DWITH_PYTHON_INSTALL=ON \
+    -DWITH_PYTHON_INSTALL_NUMPY=ON \
+    -DWITH_CYCLES=ON \
+    -DWITH_CYCLES_OSL=ON \
+    -DWITH_CYCLES_PATH_GUIDING=ON \
+    -DWITH_CYCLES_DEVICE_CUDA=ON \
+    -DWITH_CYCLES_DEVICE_OPTIX=ON \
+    -DWITH_CYCLES_DEVICE_HIP=ON \
+    -DWITH_CYCLES_DEVICE_ONEAPI=OFF \
+    -DWITH_CYCLES_EMBREE=OFF \
+    -DWITH_CYCLES_NANOVDB=ON \
+    -DWITH_MOD_FLUID=ON \
+    -DWITH_MOD_OCEAN=ON \
+    -DWITH_MOD_REMESH=ON \
+    -DWITH_INPUT_NDOF=ON \
+    -DWITH_SYSTEM_GLEW=ON \
+    -DWITH_SYSTEM_OPENJPEG=ON \
+    -DWITH_OPENXR=ON \
+    -DWITH_ALEMBIC=ON \
+    -DWITH_DRACO=ON \
+    -DWITH_JOLT=ON \
+    -DWITH_OPENCOLORIO=ON \
+    -DWITH_OPENIMAGEDENOISE=OFF \
+    -DWITH_OPENSUBDIV=OFF \
+    -DWITH_OPENVDB=OFF \
+    -DWITH_USD=OFF \
+    -DWITH_MATERIALX=OFF \
+    -DWITH_EMBREE=OFF \
+    -DWITH_HYDRA=OFF \
+    -DWITH_OPENIMAGEDENOISE=OFF \
+    -DWITH_POTRACE=ON \
+    -DWITH_PUGIXML=ON \
+    -DWITH_MANIFOLD=ON \
+    -DWITH_QUADRIFLOW=ON \
+    -DWITH_RUBBERBAND=ON \
+    -DWITH_FREESTYLE=ON \
+    -DWITH_IK_ITASC=ON \
+    -DWITH_IK_SOLVER=ON \
+    -DWITH_MESH_OPTIMIZER=ON \
+    -DWITH_KTX=ON \
+    -DWITH_NANOVDB=ON \
+    -DWITH_FFTW3=ON \
+    -DWITH_OPENAL=ON \
+    -DWITH_AUDASPACE=ON \
+    -DWITH_ALEMBIC=ON \
+    -DWITH_GMP=ON \
+    -DWITH_HARU=ON \
+    -DWITH_SDL=ON \
+    -DWITH_XR_OPENXR=ON
+
+  cmake --build build
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  DESTDIR="${pkgdir}" cmake --install build
+}

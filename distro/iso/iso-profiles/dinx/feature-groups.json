@@ -37,6 +37,7 @@
                 "pipewire-pulse",
                 "polkit",
                 "seatd",
+                "sudo",
                 "vulkan-radeon",
                 "vulkan-tools",
                 "vulkan-swrast",

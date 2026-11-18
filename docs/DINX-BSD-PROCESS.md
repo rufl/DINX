@@ -1161,3 +1161,32 @@ para 0.5.x no port (bump de `USES=zig:016`→`017`) para não crashar em
 screencopy/wayvnc. A sessão com river 0.4.8 do catálogo funciona sem VNC
 (`DINX_RIVER_VNC` off), que é o caso de uso real num desktop com GPU/DRM onde o
 scanout é direto, não via screencopy.
+
+### Por que rodar o script inteiro (não só as peças) encontrou dois bugs reais
+
+Depois de provar cada peça isoladamente (Astal spine, glycin, translator,
+morghulis, empacotamento do quarrel e do morghulis), rodei o
+`build-astal-morphulis.sh` **inteiro** num workdir limpo (`/root/astalfull`), sem
+reaproveitar estado de probe. Resultado da primeira rodada: 17 `.pkg` (translator
++ quarrel + 15 astal), mas **glycin e dinx-morphulis ausentes**, `exit=1`. Dois
+bugs que os testes parciais não pegavam:
+
+1. **glycin nunca foi empacotado.** O guard era
+   `if ! pkg-config --exists glycin-2`. A minha VM já tinha `glycin-2.pc` de um
+   probe anterior, então o bloco inteiro — build **e** `pkg create` — foi pulado.
+   O guard confundia "o sistema tem" com "o repo dinx tem o .pkg". Num alvo limpo
+   teria compilado, mas o repositório ficaria sem o pacote do qual o morghulis
+   depende. Corrigido: glycin agora sempre estagia e empacota (build reutiliza o
+   `build/` existente a menos de `REBUILD_GLYCIN=1`, mas o `.pkg` é sempre
+   gerado).
+2. **patch memfd faltando** → morghulis abortou em `FAIL missing patch`. Causa:
+   meu runner de teste buscava o patch por um nome que não tinha sido servido.
+   Não era bug do script de build, mas o run integrado o pegou porque o script
+   exige os dois patches e falha duro (`exit 1`) se um falta — comportamento
+   correto.
+
+Lição: provar as peças é necessário mas não suficiente. Só o run integrado de
+ponta a ponta num workdir limpo revela guards que dependem de estado residual e
+ordens de empacotamento. Os 17 pacotes corretos + a falha ruidosa confirmam que
+o `fail hard` do script funciona; o glycin era o único empacotamento
+condicionalmente pulado.

@@ -222,15 +222,21 @@ ls "$PREFIX/lib"/*.so* 2>/dev/null | head -20
 #     Verified: configure_rc=0, build_rc=0, install_rc=0 -> glycin-2.pc +
 #     glycin-gtk4-2.pc. The first build is slow (~minutes, rust); the earlier
 #     "FAIL" I hit was my own ninja timeout, not a compile error.
-if ! pkg-config --exists glycin-2 2>/dev/null || [ "${REBUILD_GLYCIN:-0}" = 1 ]; then
-  GLY=${GLYCIN_REV:-main}
-  [ -d "$W/glycin" ] || {
-    fetch -q -o "$W/glycin.tar.gz" \
-      "https://gitlab.gnome.org/GNOME/glycin/-/archive/$GLY/glycin-$GLY.tar.gz" || { log "FAIL fetch glycin"; }
-    tar -xzf "$W/glycin.tar.gz" -C "$W" && mv "$W/glycin-$GLY" "$W/glycin" 2>/dev/null
-  }
-  if [ -d "$W/glycin" ]; then
-    command -v rustc >/dev/null 2>&1 || pkg install -y rust >/dev/null 2>&1
+#
+#     Always build from our own source tree and always pkg-create it. Do NOT
+#     gate on `pkg-config --exists glycin-2`: a glycin already installed in the
+#     build VM (e.g. from an earlier manual run) would make that true and skip
+#     packaging, leaving the dinx repo without the glycin .pkg that a clean
+#     target needs. The guard conflates "system has it" with "repo has it".
+GLY=${GLYCIN_REV:-main}
+[ -d "$W/glycin" ] || {
+  fetch -q -o "$W/glycin.tar.gz" \
+    "https://gitlab.gnome.org/GNOME/glycin/-/archive/$GLY/glycin-$GLY.tar.gz" || { log "FAIL fetch glycin"; }
+  tar -xzf "$W/glycin.tar.gz" -C "$W" && mv "$W/glycin-$GLY" "$W/glycin" 2>/dev/null
+}
+if [ -d "$W/glycin" ]; then
+  command -v rustc >/dev/null 2>&1 || pkg install -y rust >/dev/null 2>&1
+  if [ "${REBUILD_GLYCIN:-0}" = 1 ] || [ ! -d "$W/glycin/build" ]; then
     log "== building glycin (rust=$(rustc --version 2>/dev/null | head -1))"
     rm -rf "$W/glycin/build"
     (cd "$W/glycin" && meson setup build --prefix="$PREFIX" >/tmp/gly-ms.log 2>&1) \
@@ -239,16 +245,20 @@ if ! pkg-config --exists glycin-2 2>/dev/null || [ "${REBUILD_GLYCIN:-0}" = 1 ];
       (cd "$W/glycin" && ninja -C build >/tmp/gly-nj.log 2>&1) \
         && log "== glycin build=ok" || { log "FAIL glycin build"; grep -m4 'error' /tmp/gly-nj.log | tee -a "$LOG"; }
       (cd "$W/glycin" && ninja -C build install >>"$LOG" 2>&1) && log "== glycin install=ok"
-      gstage="$W/stage-glycin"; rm -rf "$gstage"; mkdir -p "$gstage"
-      (cd "$W/glycin" && DESTDIR="$gstage" ninja -C build install >/tmp/gly-stage.log 2>&1) \
-        && package glycin 2.3.0 dinx/glycin "glycin image loader (morghulis hard dep, loaders embedded off-Linux)" "$gstage" \
-        || log "FAIL stage/package glycin"
     fi
   else
-    log "== glycin source tree not found"
+    log "== glycin build dir present; reusing (set REBUILD_GLYCIN=1 to rebuild)"
+  fi
+  if [ -d "$W/glycin/build" ]; then
+    # Stage + package regardless of whether we just built or reused, so the
+    # dinx repo always carries the glycin .pkg.
+    gstage="$W/stage-glycin"; rm -rf "$gstage"; mkdir -p "$gstage"
+    (cd "$W/glycin" && DESTDIR="$gstage" ninja -C build install >/tmp/gly-stage.log 2>&1) \
+      && package glycin 2.3.0 dinx/glycin "glycin image loader (morghulis hard dep, loaders embedded off-Linux)" "$gstage" \
+      || log "FAIL stage/package glycin"
   fi
 else
-  log "== glycin already present (glycin-2.pc found); set REBUILD_GLYCIN=1 to rebuild"
+  log "== glycin source tree not found"
 fi
 
 # 4. morghulis itself (the river desktop shell).

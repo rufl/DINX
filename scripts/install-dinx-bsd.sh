@@ -103,12 +103,23 @@ if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo
     pkg install -y -r dinx "$optional_pkg" \
       || log "NOTE: optional package $optional_pkg not available"
   done
-  # river session stack: river is the compositor (official catalogue), kwm the
-  # window manager (our patched port), kwim the input manager (separate
-  # upstream), river-shifttags the tag CLI the shell shells out to. All
-  # optional -- the default session stays Aqueous+Pearl.
-  if pkg install -y -r dinx dinx-kwm dinx-kwim dinx-river-shifttags >/dev/null 2>&1 \
-     && pkg install -y river >/dev/null 2>&1; then
+  # river session stack. river is the compositor (official catalogue, verified
+  # river-0.4.8 / x11-wm/river); kwm is our patched port, kwim the input manager
+  # (separate upstream), river-shifttags the tag CLI the shell shells out to.
+  # All optional -- the default session stays Aqueous+Pearl.
+  #
+  # The catalogue packages carry runtime deps the local dinx packages do not
+  # declare, so install them explicitly; each was observed to be required:
+  #   dbus          -- dinx-river-session wraps river in dbus-run-session; the
+  #                    shell aborts with "Cannot autolaunch D-Bus" without it
+  #   fcft          -- kwm's bar links libfcft (build.zig linkSystemLibrary)
+  #   terminus-font -- kwm died with fcft "failed to match font" -> error.NoFont
+  #                    -> "create output failed" until a font exists; the
+  #                    package names I first tried (dejavufonts, fc-fontconfig)
+  #                    do not exist in this catalogue
+  #   fontconfig    -- resolves the fcft font pattern above
+  if pkg install -y river dbus fcft terminus-font fontconfig >/dev/null 2>&1 \
+     && pkg install -y -r dinx dinx-kwm dinx-kwim dinx-river-shifttags >/dev/null 2>&1; then
     log 'river session stack installed (select with: dinx-session-set river)'
   else
     log 'NOTE: river session stack incomplete or unavailable'

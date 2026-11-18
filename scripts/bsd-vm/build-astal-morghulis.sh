@@ -43,6 +43,32 @@ export PATH=/usr/local/bin:$PATH
 
 log() { printf '%s\n' "$*" | tee -a "$LOG"; }
 
+REPO="$W/repo"
+mkdir -p "$REPO"
+
+# pkg create + catalog, same shape as build-native.sh so the artefacts land in
+# the same local `dinx` repo that install-dinx-bsd.sh already consumes.
+# morghulis ships a binary plus data (gschema/css/desktop/metainfo) and no
+# shared library of its own, so there is no shlibs_provided injection here.
+package_plain() { # name version origin comment stage
+  _n=$1; _v=$2; _o=$3; _c=$4; _stage=$5
+  _meta="$W/meta-$_n"
+  rm -rf "$_meta"; mkdir -p "$_meta"
+  cat > "$_meta/+MANIFEST" <<EOF
+name: $_n
+version: "$_v"
+origin: $_o
+comment: $_c
+maintainer: trafael@dinx.org
+prefix: /usr/local
+EOF
+  printf '%s\n' "$_c" > "$_meta/+DESC"
+  # plist paths are absolute install paths; pkg add installs them literally.
+  (cd "$_stage" && find . -type f | sed 's|^\./|/|') > "$_meta/plist"
+  pkg create -m "$_meta" -p "$_meta/plist" -r "$_stage" -o "$REPO" >>"$LOG" 2>&1
+  log "== pkg create $_n exit=$?"
+}
+
 [ -d "$W/astal-main" ] || {
   mkdir -p "$W"
   fetch -q -o "$W/astal.tar.gz" https://github.com/Aylur/astal/archive/refs/heads/main.tar.gz || { log "FETCH_FAIL astal"; exit 1; }
@@ -228,13 +254,31 @@ SEOF
      ninja -C build > /tmp/morph-nj.log 2>&1)
   log "== morghulis build_rc=$?"
   if [ -x "$M/build/src/morghulis" ]; then
-    (cd "$M" && DESTDIR="$W/stage-dinx-morghulis" ninja -C build install) >>"$LOG" 2>&1
-    log "== morghulis install=ok (staged)"
+    # Stage into a DESTDIR tree, then pkg-create it. Version comes from the
+    # source `version` file so the package tracks the pinned rev.
+    MVER=$(cat "$M/version" 2>/dev/null || echo 0.0.0)
+    MVER=${MVER#v}
+    stage="$W/stage-dinx-morghulis"
+    rm -rf "$stage"; mkdir -p "$stage"
+    (cd "$M" && DESTDIR="$stage" ninja -C build install) >>"$LOG" 2>&1
+    log "== morghulis staged (DESTDIR) exit=$?"
+    # meson installs the gschema .xml; FreeBSD has no compile trigger for it, so
+    # install-dinx-bsd.sh runs glib-compile-schemas at first boot. Ship the .xml.
+    package_plain dinx-morghulis "$MVER" dinx/morghulis \
+      "morghulis GTK4/Astal shell for the river session (no river tag bar: AstalRiver needs river<=0.3, kwm needs >=0.4)" \
+      "$stage"
   else
     log "== morghulis FAILED; see /tmp/morph-ms.log /tmp/morph-nj.log"
     grep -m6 'error:\|FAILED:' /tmp/morph-nj.log 2>/dev/null | tee -a "$LOG"
   fi
 else
   log "== morghulis source tree not found"
+fi
+# Refresh the local repo catalog so `pkg install -r dinx dinx-morghulis` resolves.
+# POSIX sh has no compgen; ls tolerates the no-match case via the guard.
+if ls "$REPO"/*.pkg >/dev/null 2>&1; then
+  pkg repo "$REPO" >>"$LOG" 2>&1
+  log "== pkg repo exit=$?"
+  ls -la "$REPO" | tee -a "$LOG"
 fi
 log DONE_ASTAL_MORPHULIS

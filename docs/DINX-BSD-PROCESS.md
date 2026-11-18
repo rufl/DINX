@@ -1022,3 +1022,16 @@ Próximo passo em andamento: compilar **river 0.5.2** do fonte no guest (zig
 0.16 do catálogo, wlroots020 0.20.2 vs o 0.20.3 pedido — linka
 `wlroots-0.20` do sistema, compatível), para (a) eliminar o crash de captura e
 (b) finalmente obter um framebuffer do morghulis desenhado via wayvnc.
+
+Nota de empacotamento (levantada ao enumerar o `meson install` do morghulis):
+além do binário, do gschema, do `.desktop`, do metainfo e do CSS, o
+`src/Services/meson.build` instala uma regra **udev**
+(`/etc/udev/rules.d/90-backlight.rules`, `ACTION==add SUBSYSTEM==backlight
+RUN+=chgrp video /sys/class/backlight/%k/brightness`). No FreeBSD isso é
+inerte: não há udev nem `/sys/class/backlight`, então o serviço Backlight do
+morghulis simplesmente não controla brilho (degrada sem crash — confirmado no
+run de runtime, onde os `CRITICAL` foram de bluetooth/power-profiles/battery,
+nunca de backlight). O port pode instalar o arquivo (inofensivo) ou suprimi-lo;
+manter a instalação preserva paridade com upstream e custa nada. O que **não**
+pode faltar é o `glib-compile-schemas` (sem ele o shell aborta) — ver o
+`install-dinx-bsd.sh`.

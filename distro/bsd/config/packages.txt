@@ -1,4 +1,11 @@
 # DINX-BSD Package Manifest (Upstream FreeBSD ports + DINX custom/first-party ports)
+#
+# NOTE: this file is a CONTRACT/DOCUMENTATION manifest, not an install list.
+# The only consumers repo-wide are scripts/check-bsd-iso.sh (asserts this file
+# ships inside the ISO overlay) and scripts/check_dinx_bsd.sh (asserts it
+# exists). Nothing reads it to `pkg install`. What actually gets installed on
+# the target is the hardcoded package list in scripts/install-dinx-bsd.sh --
+# add new runtime dependencies THERE as well, or they will never be installed.
 
 # Upstream FreeBSD Ports (Existing in ecosystem)
 sysutils/gparted
@@ -34,6 +41,15 @@ emulators/linux-rl9
 # kwm port (custom section) is its window manager. Verified present in the
 # FreeBSD 15.1 catalogue: river-0.4.8, origin x11-wm/river.
 x11-wm/river
+# Runtime deps the river stack needs but the local dinx packages do not declare,
+# each observed required on FreeBSD 15.1: dbus (dinx-river-session wraps river
+# in dbus-run-session; the shell aborts without a session bus), fcft (kwm's bar
+# links libfcft), terminus-font + fontconfig (kwm died with fcft NoFont /
+# "create output failed" until a font resolves). All verified in the catalogue.
+devel/dbus
+x11-fonts/fcft
+x11-fonts/terminus-font
+x11-fonts/fontconfig
 
 # DINX Custom / First-Party Ports (Requiring custom packaging)
 x11-wm/dinx-aqueous

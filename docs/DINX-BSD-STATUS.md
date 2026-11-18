@@ -1,6 +1,6 @@
 # DINX-BSD — Status completo: o que funciona e o que não funciona
 
-Data: 2026-11-17 (rodada do port do kwm). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
+Data: 2026-11-18 (rodada river + kwm + kwim + morghulis). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
 Este documento consolida o estado real do effort BSD, separado por nível de
 evidência. Nada aqui é claim de roadmap: cada item cita a evidência observada
 ou a limitação encontrada. O journal detalhado de causas raiz está em
@@ -298,6 +298,15 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 | **Pearl shell inicia (`event=ready mode=session`, app-index 5)** | **Funciona** [V] |
 | **Screenshot verificado (xterm Xwayland + bordas Vulkan)** | **Funciona** [V] |
 | kwm (WM do river) compila e roda no FreeBSD 15.1 | **Funciona** [V] |
+| kwim compila sem patch (commit a802d2d) | **Funciona** [V] |
+| river-shifttags porta e roda (cc, wayland-scanner) | **Funciona** [V] |
+| Astal 0.1 (16 módulos) + glycin + translator compilam | **Funciona** [V] |
+| **morghulis compila/linka (150 deps, 0 não resolvidas)** | **Funciona** [V] |
+| **river+kwm+morghulis rodam juntos e DESENHAM (framebuffer)** | **Funciona** [V] |
+| Empacotamento: `pkg install` real → 12/12, schema compilado | **Funciona** [V] |
+| Barra de tags do morghulis (AstalRiver) com kwm | **Impossível** (conflito de protocolo upstream) [B] |
+| river 0.4.8 + screencopy (wayvnc/grim) | **Não funciona** (SIGSEGV; fix no 0.5.x) [B] |
+| Painel Network do morghulis | **Não funciona** (libnm do FreeBSD é stub) [B] |
 | Xwayland no Weston (segfault no launch do filho) | **Não funciona** [B] |
 | DRM em QEMU/VirtualBox (GPU virtual) | **Não existe no FreeBSD 15.1** [B] |
 | greetd greeter em tela | **Não verificado** (sem VT/DRM em VM) [B] |
@@ -316,7 +325,7 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 3. **greetd/VT**: validar o greeter em ttyv1 com o console vt(4) (não requer
    DRM) e a transição greeter → sessão.
 
-## 9. Stack river (compositor river + window manager kwm)
+## 9. Stack river: compositor river + kwm + kwim + shell morghulis
 
 ### Funciona
 - **[V]** `river` existe no catálogo FreeBSD e instala: `river-0.4.8`, origin
@@ -336,11 +345,38 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 - **[V]** `NoFont=0` após instalar `terminus-font` + `fontconfig`
   (`fc-match monospace` → Terminus): as duas quedas anteriores do kwm eram a
   VM sem fontes, não o port.
-- **[I]** Port do kwm para `pkg` (`distro/bsd/ports/Makefile.kwm` +
-  `files/kwm-freebsd.patch`, aplicado `-p0`), build integrado ao
-  `build-native.sh` (`dinx-kwm`), manifesto (`x11-wm/dinx-kwm`,
-  `x11-wm/river`), gate (`check_dinx_bsd.sh`) e sessão
-  (`dinx-river-session`, escolha `dinx-session-set river`).
+- **[V]** `kwim` (input manager, repositório separado `kewuaa/kwim`) compila
+  sem patch no commit `a802d2d` ("Update for Zig 0.17"): `build_rc=0`, `ldd`
+  limpo, único linuxismo `memfd_create` já nativo no FreeBSD 13+. O kwm o spawna
+  sozinho (`context.zig:1391`, quando construído em `-Dkwim=true`), então só
+  precisa estar no PATH — que `dinx-kwim` provê.
+- **[V]** `river-shifttags` (CLI que o shell chama para trocar tags) porta e
+  roda: `cc_rc=0`, binário 20 KB, `ldd` limpo. O Makefile upstream não serve no
+  FreeBSD (GNU pattern rules que o bmake rejeita, `-lrt` inexistente,
+  `-lpixman-1` com zero usos no fonte); o port gera os protocolos com
+  wayland-scanner e linka só wayland-client.
+- **[V]** **morghulis** (shell GTK4/Libadwaita/Astal) compila e linka: ELF
+  "for FreeBSD 15.1", `ldd` com 150 deps e 0 não resolvidas. Dois patches
+  (network carve + memfd). A espinha Astal (16 módulos) + glycin + translator
+  compilam do fonte; nada existe no catálogo FreeBSD.
+- **[V] — PROVA VISUAL**: river 0.5.2 (fonte) + kwm + morghulis + wayvnc, vivos
+  juntos 8+ min sem core. Framebuffer capturado
+  (`docs/proof/river-kwm-morghulis-freebsd.png`): barra de tags do kwm no topo
+  (`1-9 []=`), NavBar do morghulis embaixo (âncora 14, 200 px) com launcher,
+  volume, **relógio `00:59→01:05`** e power. Render **vivo**, não cache: dois
+  grabs 6 min apart diferem em 122 px **todos** nas linhas 695-702 (o relógio).
+  `WAYLAND_DEBUG` confirma `get_layer_surface "Morghulis.NavBar"` + commit +
+  attach/frame-callback. `gtk4-layer-demo` (controle) também pinta.
+- **[V] — empacotamento ponta-a-ponta**: `pkg install` real (não dry-run) do
+  repo gerado → 12/12 pacotes, DB lista 12, `ldd` do binário instalado = 0 não
+  resolvidas, catálogo 19 pacotes. Trigger do glib compila o schema
+  (`gschemas.compiled` 47775 B); `gsettings get com.arkye.morghulis night-temp`
+  → 4000; binário instalado roda sem o abort "schema not installed".
+- **[I]** Ports: `Makefile.kwm` (+ `kwm-freebsd.patch`), `Makefile.river-shifttags`,
+  `Makefile.morghulis`; build Astal/glycin/morghulis via
+  `scripts/bsd-vm/build-astal-morghulis.sh` → `dinx-*` `.pkg`; wiring em
+  `build-native.sh`, manifesto, `install-dinx-bsd.sh`, `check_dinx_bsd.sh`,
+  sessão `dinx-river-session` + `dinx-session-set river`.
 
 ### Não funciona / restrições
 - **[B]** `signalfd(2)` não existe no FreeBSD (sem `<sys/signalfd.h>`): só
@@ -352,9 +388,32 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 - **[D]** Zig 0.17 removeu `std.posix.pipe`/`write`/`close`/`fcntl`: o shim
   precisa de `extern "c"`, e `O` no FreeBSD aceita `@bitOffsetOf` mas não
   expõe `O.NONBLOCK` como valor plano.
-- **[B]** Janelas reais gerenciadas com a barra desenhada: não verificado — a
-  VM de build é headless e não tem cliente GTK para mapear. `kwim` (helper de
-  input) compila mas não foi exercitado.
+- **[B] — conflito de protocolo river (bloqueio de produto, não do port)**: a
+  barra de tags do morghulis (`AstalRiver`) precisa de `river-status-unstable-v1`
+  (removido pelo river em `a309d18e`, 2024-07-21); o kwm precisa de
+  `river-window-management-v1` (só river ≥0.4). Nenhuma release do river tem os
+  dois (v0.3.x só status, v0.4.x–v0.5.2 só window-management). Logo o morghulis
+  roda **sem** o módulo river (`required:false` → sem `RiverTags`/`--define=river`);
+  as tags visíveis no topo são as do **kwm**. Vale em qualquer SO, não é custo do
+  port. kwm vence por ser o WM.
+- **[B]** river 0.4.8 (catálogo) SIGSEGV em qualquer cliente de screencopy
+  (`Server.zig:626`, `else unreachable`; fix no 0.5.x → `error.NotOutputOrToplevel`).
+  Não impede a sessão (sem captura fica estável), só a prova visual via
+  wayvnc/grim. Daí a prova usar river 0.5.2 do fonte (precisa Zig 0.17, não o
+  0.16 do catálogo) e o `dinx-river-session` deixar o VNC opt-in
+  (`DINX_RIVER_VNC=1`) até o port subir para 0.5.x.
+- **[B]** `libnm` do FreeBSD (`networkmanager-shim`) é stub sem símbolos
+  (`nm_client_new` undefined; 2 símbolos totais, sem `NM-1.0.typelib`/`libnm.vapi`)
+  e NetworkManager é Linux-only → o painel **Network** do morghulis é removido
+  (`network-carve.patch`). Bluetooth/power-profiles compilam mas são inertes sem
+  `org.bluez`/`power-profiles-daemon`; battery funciona se upower presente.
+- **[D]** scss do morghulis exige **dart-sass** (`@use` modules); `sassc`/libsass
+  não interpreta e `rubygem-dartsass` recusa amd64-freebsd. O build usa
+  `npm install sass` local + wrapper `sass`→node (dart-sass puro JS).
+- **[I]** Não verificado: janelas de aplicação reais sendo gerenciadas pelo kwm
+  (o framebuffer prova o shell desenhado, não um app tiling), e os daemons
+  ausentes na VM (bluetooth/battery/power-profiles/pipewire logam `Could not
+  connect` e degradam sem crash).
 
 ---
 
@@ -373,6 +432,37 @@ python3 scripts/build-bsd-iso-unattended.py --disk /tmp/gate.qcow2 \
 sh setup-build-vm.sh          # scripts/bsd-vm/
 sh build-native.sh            # idem; patches via patch-freebsd.py
 sh reinstall-proof.sh         # reempacote + reinstall ordenado + prova headless
+```
+
+Stack river + shell (também dentro da VM; produz 19 `.pkg` em `$W/repo`):
+
+```sh
+# deps do catálogo que a lista base não cobre (ver §9)
+pkg install -y vala meson ninja blueprint-compiler gobject-introspection \
+  gsound libadwaita libgtop cmark muparser libportal json-glib libsoup3 \
+  glib-networking rust node terminus-font fontconfig fcft dbus river
+pkg install -y terminus-font fontconfig && fc-cache -f   # sem fonte o kwm morre (NoFont)
+
+# espinha Astal + glycin + translator + morghulis -> pacotes dinx-*
+SHIM_SRC=distro/bsd/ports/files/astal-valadoc-shim \
+  PATCH_DIR=distro/bsd/ports/files \
+  sh scripts/bsd-vm/build-astal-morghulis.sh /root/astal
+#   requer node/npm: o scss usa @use (dart-sass); sassc/libsass não serve
+
+# instalar do repo gerado (prova real, não dry-run) e conferir
+pkg repo /root/astal/repo
+pkg install -y -r dinx dinx-morghulis   # puxa 12 pacotes; trigger compila o schema
+gsettings get com.arkye.morghulis night-temp   # -> 4000
+```
+
+river 0.5.2 (só necessário para captura/screencopy; o 0.4.8 do catálogo crasha
+em wayvnc/grim): build do fonte com o Zig 0.17.1 pinado do kwm, pois o
+`zig:016` do catálogo falha em `OptimizeMode.debug`.
+
+```sh
+# sessão completa + prova de framebuffer (host captura via VNC forward)
+WLR_BACKENDS=headless dbus-run-session river -c init   # init: kwm + morghulis [+ wayvnc]
+python3 scripts/bsd-vm/vnc-framebuffer-grab.py 127.0.0.1 5907 /tmp/fb.ppm
 ```
 
 Transferências (tudo que a fila usa está versionado em `scripts/bsd-vm/`):

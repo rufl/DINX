@@ -197,11 +197,15 @@ if [ "$pkg_ready" = 1 ]; then
   fi
 fi
 
-# Compile the GSettings schemas. FreeBSD has no package trigger for this, and a
-# GTK shell aborts at startup without its compiled schema: morghulis dies with
-# "Settings schema 'com.arkye.morghulis' is not installed" (verified on 15.1).
-# meson installs the .xml into $PREFIX/share/glib-2.0/schemas; only the binary
-# gschemas.compiled cache is missing.
+# Compile the GSettings schemas. glib DOES ship a pkg trigger --
+# /usr/local/share/pkg/triggers/glib-schemas.ucl, installed by glib-2.88.3
+# (verified) -- and the packaging run showed it firing: "==> Running trigger:
+# glib-schemas.ucl / Compiling glib schemas". So for pkg-installed packages this
+# call is redundant. It is kept because the trigger only fires on pkg-managed
+# installs: a schema dropped by `meson install`/`ninja install` is never
+# compiled, and a GTK shell then aborts at startup with "Settings schema
+# 'com.arkye.morghulis' is not installed" -- exactly what happened when morghulis
+# was installed by hand during bring-up. Idempotent either way.
 if command -v glib-compile-schemas >/dev/null 2>&1 \
    && [ -d /usr/local/share/glib-2.0/schemas ]; then
   glib-compile-schemas /usr/local/share/glib-2.0/schemas >/dev/null 2>&1 \

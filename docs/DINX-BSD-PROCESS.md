@@ -1014,27 +1014,36 @@ Consequência para o lane:
   inicializa o monitor sem erro de renderer (mesma classe do fix do Pearl no
   §24).
 - Morghulis carrega o CSS do tema (`main.css`, 5680 bytes, `:root
-  --master-border-radius`) e o GSettings (`com.arkye.morghulis`) — sem o schema
-  instalado ele aborta com "Settings schema is not installed", então o port tem
-  que instalar o `.gschema.xml` + `glib-compile-schemas`.
+  --master-border-radius`) e o GSettings (`com.arkye.morghulis`). Sem o schema
+  **compilado** ele aborta com "Settings schema is not installed". Correção de
+  uma afirmação minha anterior: o FreeBSD **tem** trigger de pacote para isso —
+  `/usr/local/share/pkg/triggers/glib-schemas.ucl`, instalado pelo
+  `glib-2.88.3` (verificado com `pkg which`), e o run de empacotamento o mostrou
+  disparando: `==> Running trigger: glib-schemas.ucl / Compiling glib schemas`.
+  Logo, para instalação via `pkg`, basta o `.gschema.xml` no pacote — o
+  `glib-compile-schemas` explícito no `install-dinx-bsd.sh` é redundante nesse
+  caminho. Ele continua necessário (e é idempotente) para qualquer schema que
+  chegue por `meson install`/`ninja install`, que não dispara trigger de pkg:
+  foi exatamente assim que o abort aconteceu durante o bring-up manual.
 
-Próximo passo em andamento: compilar **river 0.5.2** do fonte no guest (zig
-0.16 do catálogo, wlroots020 0.20.2 vs o 0.20.3 pedido — linka
-`wlroots-0.20` do sistema, compatível), para (a) eliminar o crash de captura e
-(b) finalmente obter um framebuffer do morghulis desenhado via wayvnc.
+Passo seguinte **executado**: river 0.5.2 compilado do fonte no guest com o Zig
+0.17.1 pinado (`build_rc=0`, `river -version` → "0.5.2 -xwayland"), o que
+eliminou o crash de captura e permitiu a prova visual do §30.
 
 Nota de empacotamento (levantada ao enumerar o `meson install` do morghulis):
 além do binário, do gschema, do `.desktop`, do metainfo e do CSS, o
 `src/Services/meson.build` instala uma regra **udev**
-(`/etc/udev/rules.d/90-backlight.rules`, `ACTION==add SUBSYSTEM==backlight
+(instalado em `/usr/local/etc/udev/rules.d/90-backlight.rules` conforme o
+plist do pacote gerado; `ACTION==add SUBSYSTEM==backlight
 RUN+=chgrp video /sys/class/backlight/%k/brightness`). No FreeBSD isso é
 inerte: não há udev nem `/sys/class/backlight`, então o serviço Backlight do
 morghulis simplesmente não controla brilho (degrada sem crash — confirmado no
 run de runtime, onde os `CRITICAL` foram de bluetooth/power-profiles/battery,
 nunca de backlight). O port pode instalar o arquivo (inofensivo) ou suprimi-lo;
-manter a instalação preserva paridade com upstream e custa nada. O que **não**
-pode faltar é o `glib-compile-schemas` (sem ele o shell aborta) — ver o
-`install-dinx-bsd.sh`.
+manter a instalação preserva paridade com upstream e custa nada. Sobre o schema: o disparo de `glib-compile-schemas` vem do trigger do
+próprio glib quando a instalação é via `pkg` (ver a correção acima); o
+`install-dinx-bsd.sh` o chama de novo só para cobrir schemas que cheguem por
+`meson install` fora do pkg.
 
 ### river 0.5.2: exige Zig 0.17 (o catálogo FreeBSD tem 0.16)
 

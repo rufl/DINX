@@ -16,7 +16,7 @@
 
 ```text
 Aplicativos DINX
-  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS
+  Deetty · Dintor · DinitUI · DINXPanel · ZLS
 
 Contratos compartilhados
   Tema DINX estático · XDG · .desktop · $TERMINAL · D-Bus padrão
@@ -39,7 +39,7 @@ O alvo é Artix Linux com dinit em x86_64. A imagem base fornece:
 - login gráfico com TTY de recuperação;
 - rede, PipeWire, D-Bus, portais, polkit e gráficos acelerados;
 - Pori para discos/montagens sobre UDisks2, com serviços persistentes dinit em `/etc/dinit.d`;
-- Phyto como gerenciador de arquivos e handler padrão de diretórios;
+- PCManFM como gerenciador de arquivos, handler padrão de diretórios e renderizador dos ícones de `~/Desktop` via `pcmanfm --desktop`;
 - File Roller para abrir/criar/extrair arquivos compactados e GParted para particionamento independente;
 - `wdisplays` e `shikane` para configuração Wayland e reaplicação de layouts;
 - manifestos que identificam cada entrada específica da DINX;
@@ -63,15 +63,13 @@ O escopo de usuário usa `dinitctl --user`. O escopo de sistema usa `dinitctl --
 
 ### DINXPanel
 
-A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, serviços dinit, upgrades e firmware, além do catálogo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). O botão Firewall abre a interface `firewall-config`; `firewalld-dinit` habilita o daemon no boot. Checks de upgrade são somente leitura; ações explícitas usam argv fixo e confirmação do usuário. Kernels nunca são removidos, e mudanças informam a necessidade de reinicialização.
+A DINXPanel é o centro de controle. Ela agrupa entradas fixas para rede, Bluetooth, display, áudio, firewall, serviços dinit, upgrades e firmware, além do catálogo de kernels Artix (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). O botão Firewall abre a interface `firewall-config`; `firewalld-dinit` habilita o daemon no boot. O relatório somente leitura de upgrades usa `checkupdates` do `pacman-contrib` para os repositórios oficiais, `paru -Qu` para o AUR e metadados opcionais de fwupd; o botão `Package manager` abre o Octopi, cuja elevação ocorre por `pkexec` e polkit porque a DINX não envia sudo. Kernels nunca são removidos, e mudanças informam a necessidade de reinicialização.
 
 CUPS é uma opção pós-instalação: a DINXPanel baixa `cups-dinit` e o usuário habilita o serviço pelo DinitUI quando necessário.
 
-### Dome, Seafoam Settings e ZLS
+### Ferramentas de display e ZLS
 
-`Dome` é um monitor nativo Zig/GTK4 incluído na ISO e no repositório DINX assinado. Suas telas de recursos/processos são dinit-safe; o pacote não instala integração com systemd, systemctl ou uwsm.
-
-`Seafoam Settings` é um launcher base nativo em Zig/GTK4 para as superfícies de display/sessão DINX: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. Usa vetores de argumentos fixos, abre diretamente no Dintor o arquivo documentado de configuração de display `~/.config/shikane/config.toml`, e executa o exportador de perfil de display no Deetty. Deetty é o único emulador de terminal da ISO; Nano continua como editor de recuperação.
+A configuração de display da DINX passa pelo wrapper `dinx-wdisplays`: ele executa o `wdisplays` e depois o `dinx-save-shikane-profile` exporta o resultado como o perfil `DINX wdisplays` em `~/.config/shikane/config.toml`; o botão `Display` da DINXPanel abre esse mesmo wrapper. Deetty é o único emulador de terminal da ISO; Nano continua como editor de recuperação.
 
 `zls` é o pacote oficial Zig Language Server 0.16.0 com fonte fixada. Carrega a árvore `lib/std` correspondente e o shim de metadados `/usr/lib/zls/zig-env`; completion e navegação do Dintor funcionam sem compilador Zig completo. Os pacotes Zig nativos da DINX são compilados com Zig 0.17.0; a árvore 0.16.0 aqui é somente o runtime de compatibilidade do ZLS/LSP. Um pacote Artix `zig` opcional habilita comandos de compilação pelo mesmo shim.
 
@@ -114,7 +112,7 @@ DINX Gaming é um launcher manual oculto, não uma sessão selecionável. A ISO 
 
 Pori usa UDisks2 e grava serviços dinit `process` em `/etc/dinit.d` que aguardam dispositivos, repetem montagens, mantêm somente montagens próprias e desmontam no encerramento. Nenhuma unidade de montagem systemd é gerada.
 
-O Phyto é o único gerenciador de arquivos base. File Roller e GParted cobrem arquivos compactados e particionamento independente. O módulo `ntfs3` fornece leitura/escrita NTFS na live e no sistema instalado; `ntfs-3g` é opcional pós-instalação. Fast Startup e hibernação do Windows devem ser desativados antes de montar um volume compartilhado.
+O PCManFM é o único gerenciador de arquivos base e renderiza os ícones de `~/Desktop` via `pcmanfm --desktop`. File Roller e GParted cobrem arquivos compactados e particionamento independente. O módulo `ntfs3` fornece leitura/escrita NTFS na live e no sistema instalado; `ntfs-3g` é opcional pós-instalação. Fast Startup e hibernação do Windows devem ser desativados antes de montar um volume compartilhado.
 
 `dinx-wdisplays` serializa exports com `flock`, substitui atomicamente o perfil `DINX wdisplays` em `~/.config/shikane/config.toml` e falha visivelmente se o reload do Shikane falhar. Shikane inicia dentro da sessão River/KWM e reaplica perfis quando as saídas mudam.
 
@@ -122,4 +120,4 @@ O Phyto é o único gerenciador de arquivos base. File Roller e GParted cobrem a
 
 `feature-groups.json` inventaria rootfs, init dinit, boot e livefs. `scripts/check_dinx_feature_groups.sh` compara inventários com as fontes YAML, rejeita ownership duplicado e impede pacotes opcionais no perfil base. `contracts.yml` executa checks não privilegiados; o workflow P0 permanece o gate privilegiado de build, QEMU, instalação, recuperação, atestação e release.
 
-`scripts/check_dinx_budget.sh` mantém os tetos de pacotes rootfs, entradas dinit, binários e ISO. `scripts/check_dinx_session.sh`, `check_dinx_theme.sh`, `check_dinx_display_persistence.sh`, `check_pori_phyto.sh` e `check-iso-content.sh` verificam a integração observável antes da montagem final.
+`scripts/check_dinx_budget.sh` mantém os tetos de pacotes rootfs, entradas dinit, binários e ISO. `scripts/check_dinx_session.sh`, `check_dinx_theme.sh`, `check_dinx_display_persistence.sh`, `check_pori_storage.sh` e `check-iso-content.sh` verificam a integração observável antes da montagem final.

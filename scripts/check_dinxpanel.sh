@@ -23,7 +23,7 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
-grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit octopi brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'DINXPanel build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
@@ -39,7 +39,7 @@ grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install din
 [[ -x "$bluetooth_helper" ]] || fail "desktop helper is missing or not executable: $bluetooth_helper"
 sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'PaintFE' 'Zenkai' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'PaintFE' 'Package manager' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
 grep -Fq 'gtk_label_new("System control center")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
@@ -56,15 +56,19 @@ grep -Fq 'dinitui_command = command' "$frontend" || fail 'GPU command is not ret
 grep -Fq 'const argv = [_][]const u8{ "dinitui", task.dinitui_command }' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
 grep -Fq -- '--gpu-status' "$frontend" || fail 'GPU detection action is missing'
 grep -Fq -- '--install-gpu-drivers' "$frontend" || fail 'GPU installation action is missing'
-grep -Fq '"shelly", "sync"' "$frontend" || fail 'Shelly metadata refresh is missing'
-grep -Fq '"shelly", "list-updates", "all"' "$frontend" || fail 'Shelly update discovery is missing'
-grep -Fq '"shelly", "upgrade", "all"' "$frontend" || fail 'Shelly upgrade action is missing'
+# The upgrade report is read-only: checkupdates (pacman-contrib) covers the
+# official repositories and paru -Qu covers the AUR. Octopi is the interactive
+# package manager and has no CLI, so it is launched as an app, not queried here.
+grep -Fq '"checkupdates"' "$frontend" || fail 'official-repository update discovery is missing'
+grep -Fq '"paru", "-Qu"' "$frontend" || fail 'AUR update discovery is missing'
+if grep -Fq 'shelly' "$frontend"; then
+  fail 'DINXPanel still invokes the retired Shelly upgrade workflow'
+fi
 grep -Fq '"fwupdmgr", "refresh"' "$frontend" || fail 'fwupd metadata refresh is missing'
 grep -Fq '"fwupdmgr", "get-updates"' "$frontend" || fail 'firmware update discovery is missing'
 for terminal_call in \
   '"paintfe"' \
-  '"zenkai"' \
-  '"deetty", "-e", "shelly", "upgrade", "all"' \
+  '"octopi"' \
   '"deetty", "-e", "inxi", "-GSC"'; do
   grep -Fq "$terminal_call" "$frontend" || fail "terminal action does not use Deetty with fixed argv: $terminal_call"
 done

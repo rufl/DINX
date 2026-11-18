@@ -54,9 +54,19 @@ fi
 if [[ -e "$terminal_wrapper" || -e "$terminal_fallback" ]]; then
   fail 'retired terminal fallback wrapper or launcher remains'
 fi
-for package in dialog fzf glances less libnewt nano openssh procps-ng sqlite tmux; do
+# glances is deliberately absent: it is a build/qualification-only input (deetty's
+# makedepends and the P2 TUI qualification resolve it from the builder image, see
+# scripts/iso-builder/packages.txt), not a shipped ISO package.
+for package in dialog fzf less libnewt nano openssh procps-ng sqlite tmux; do
   grep -Fqx "    - $package" "$profile" || fail "profile does not install $package"
 done
+builder_packages="$repo_root/scripts/iso-builder/packages.txt"
+[[ -r "$builder_packages" ]] || fail "builder package manifest is missing: $builder_packages"
+grep -Fqx 'glances' "$builder_packages" \
+  || fail 'builder image does not provide glances for the Deetty TUI qualification'
+if grep -Fqx '    - glances' "$profile"; then
+  fail 'glances is a builder-only qualification input and must not ship in the ISO'
+fi
 if grep -Eq '^[[:space:]]+- (man-db|man-pages|texinfo)([[:space:]]|$)' "$profile"; then
   fail 'profile installs removed documentation packages'
 fi

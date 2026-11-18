@@ -86,9 +86,8 @@ on:
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
-      - "scripts/check_pori_phyto.sh"
-      - "scripts/check_seafoam_apps.sh"
-      - "scripts/check_seafoam_settings.sh"
+      - "scripts/check_pori_storage.sh"
+      - "scripts/check_zls_display_tools.sh"
       - "scripts/smoke_zls.sh"
       - "scripts/check_dinx_display_persistence.sh"
       - "scripts/smoke_dinx_display_persistence.sh"
@@ -212,12 +211,10 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
-      - name: Verify Pori, Phyto, dinit storage and NTFS contracts
-        run: ./scripts/check_pori_phyto.sh
-      - name: Verify Seafoam app selection and Dome package contract
-        run: ./scripts/check_seafoam_apps.sh
-      - name: Verify Seafoam Settings package and argv contract
-        run: ./scripts/check_seafoam_settings.sh
+      - name: Verify Pori, PCManFM, dinit storage and NTFS contracts
+        run: ./scripts/check_pori_storage.sh
+      - name: Verify ZLS and display tool package contract
+        run: ./scripts/check_zls_display_tools.sh
 
       - name: Install pinned Zig for native session contracts
         env:

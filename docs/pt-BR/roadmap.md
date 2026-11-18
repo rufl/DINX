@@ -31,7 +31,7 @@ Implementação entregue:
 - os defaults Fish, o limite do payload base e os smokes de build limpo/VM;
 - A sessão live inicia River/KWM sem pedir credenciais; sistemas instalados usam o agreety e não habilitam autologin. River/KWM é a única sessão, iniciada e supervisionada diretamente pelo dinit, sem payload de systemd ou UWSM.
 - O KWM é registrado como layout padrão do river antes de qualquer janela ser mapeada, então sessões novas mosaicanam por padrão, e o `~/.config/kwm/config.zon` do usuário controla colocação, workspaces e a barra; o `dinx-river-session` semeia esse arquivo a partir do default empacotado somente quando ele não existe, preservando a configuração existente. A compatibilidade com todos os aplicativos GTK, Qt e XWayland ainda precisa ser qualificada.
-- Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, Phyto, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Dome, Seafoam Settings e ZLS, além das ferramentas DINX de controle/diagnóstico.
+- Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Blender, Audionaut e ZLS, além das ferramentas DINX de controle/diagnóstico.
 - GTK 3/4 usa o tema escuro DINX por padrão; a identidade visual do sistema não substitui ícones de aplicativos nem da área de trabalho. Os sistemas live e instalado usam o `ntfs3` do kernel para leitura e escrita em NTFS, e as alterações de configuração dos monitores podem ser salvas em perfis do Shikane.
 - O Calamares oferece particionamento guiado e manual, mantém opções destrutivas desmarcadas e deixa swap opcional. O CI cobre transações do instalador, mas a instalação em discos físicos e alegações de preservação de dados ainda exigem qualificação em hardware.
 
@@ -68,7 +68,7 @@ Evidências de saída da P2:
 
 - o archive upstream Deetty exato é fixado por SHA-256, verificado e compilado no pacote DINX `deetty`;
 - o core nativo Zig qualifica criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, compatibilidade de protocolo/Unicode, ciclo de vida com contabilização do allocator e fairness em 30 panes com paste de 8 MiB;
-- a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
+- a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite, o monitor TUI somente do builder, Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
 - o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta do River/KWM e runtime do pacote estão verificados;
 - a execução P0 final prova criação do pacote, geração da ISO, boot no QEMU, payload gráfico, instalação persistente, TTY de recuperação, atestação e upload do artefato.
 
@@ -131,7 +131,7 @@ Gate de release P3:
 **Entregue:**
 
 - launcher standalone `DINX Gaming` e entrada Wayland oculta continuam disponíveis; Gamescope, Steam, regras de dispositivos Steam e dependências Mesa/RADV/Vulkan de 32 bits ficam no grupo Artix opcional `gaming`, fora da ISO base;
-- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração do perfil com propagação de falhas ao redor do launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel (Central de Controle), com atalhos fixos para painéis de controle, ações de upgrade Shelly, descoberta opcional de fwupd, botões de launch do PaintFE e Zenkai e instalador de kernels Artix sem remoção;
+- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração do perfil com propagação de falhas ao redor do launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel (Central de Controle), com atalhos fixos para painéis de controle, relatório somente leitura de upgrades via `checkupdates`/`paru -Qu` com descoberta opcional de fwupd, botão de gerenciador de pacotes Octopi e botão de lançamento do PaintFE, e instalador de kernels Artix sem remoção;
 - fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
 - checks da ISO exigem launcher/entrada ocultos e rejeitam binários e metadata dos pacotes gaming opcionais no rootfs/livefs;
 - GameMode e MangoHud são membros opcionais do grupo; `dinx-gaming` suporta `DINX_GAMEMODE=auto|on|off` e `DINX_MANGOHUD=on|off` opcional sem remover o fallback normal do launcher.
@@ -156,7 +156,7 @@ Gate de release P3:
 
 - o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
 - o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
-- os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, Phyto, File Roller, GParted, TTY de recuperação e comportamento de hardware.
+- os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, PCManFM, File Roller, GParted, TTY de recuperação e comportamento de hardware.
 - entregue o River com o layout `kwm` e o gerenciador de entrada `kwim` da DINX como a única sessão do usuário por wrappers DINX diretos: o autologin live e o agreety iniciam o `dinx-river-session`, o `dinx-river-init` registra `riverctl default-layout kwm` e passa o controle ao `dinx-session-supervisor river`, que inicia os helpers de sessão da DINX com identidade direta de processo dinit, e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
 
 **Gates de release restantes:**

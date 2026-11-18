@@ -80,7 +80,7 @@ fi
 path_state dinit.system_directory /etc/dinit.d
 path_state dinit.user_directory "${XDG_CONFIG_HOME:-${home:-/nonexistent}/.config}/dinit.d"
 
-command_state storage.command.phyto phyto
+command_state storage.command.pcmanfm pcmanfm
 command_state storage.command.pori pori
 command_state storage.command.udisksctl udisksctl
 path_state storage.udisks2_socket /run/udisks2
@@ -109,8 +109,8 @@ fi
 print_value display.actions not-run
 
 for package in \
-  dinit phyto pori wdisplays shikane file-roller gparted \
-  dinitui dinxpanel dome seafoam-settings zls river kwm kwim; do
+  dinit pcmanfm pori wdisplays shikane file-roller gparted \
+  dinitui dinxpanel octopi zls river kwm kwim morghulis; do
   package_state "$package"
 done
 

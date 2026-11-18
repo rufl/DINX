@@ -127,17 +127,19 @@ ZLS/Zig 0.16 pins remain manual. After merge, a separate signed package-only
 workflow publishes packages to the GitHub Release tag `dinx-packages-latest`,
 without ISO assembly. These workflows are configured but have not yet been
 confirmed green or published. `dinx-keyring` configures the required-signature
-`[dinx]` repository and editable `/etc/pacman.d/dinx-mirrorlist`; Shelly uses
-pacman to sync and update packages. See the [release guide](../../docs/release.md)
+`[dinx]` repository and editable `/etc/pacman.d/dinx-mirrorlist`; pacman updates the
+packages, with Octopi as the graphical front-end. See the [release guide](../../docs/release.md)
 for signing-secret setup and manual key verification/bootstrap.
 
 DINX packages are built as signed binary `.pkg.tar.zst` archives. One `deetty`
 package contains the precompiled Deetty terminal and Dintor editor. Binary
-AppImage apps (PaintFE, Transit, Zenkai, Patchy, Blockbench) are repacked at
+AppImage apps (PaintFE and Patchy) are repacked at
 build time by `scripts/lib/repack-appimage.sh` into pre-extracted
 `/opt/<package>/` trees: ELF binaries stripped (Electron left unstripped),
 locales trimmed to en/pt, and `/usr/bin/<package>` launchers exec the tree's
-`AppRun` directly — no FUSE and no per-launch tmpfs extraction. EuroOffice
+`AppRun` directly — no FUSE and no per-launch tmpfs extraction. Audionaut ships
+as a single `/opt/audionaut/Audionaut.AppImage` whose `/usr/bin/audionaut` launcher runs
+it with `--appimage-extract-and-run` rather than a pre-extracted tree. EuroOffice
 ships as a lean repack published by the office branch. Local and P0 builds
 restore verified package archives keyed by package source, recipe, builder
 environment and installed dependency set; a cache miss rebuilds the package.
@@ -185,11 +187,11 @@ GTK 3/4 system and skeleton defaults use Adwaita with `gtk-application-prefer-da
 
 
 The runtime payload is Wayland/XWayland only: legacy Xorg/XLibre servers, drivers and Plasma session entries are omitted. Xvfb remains builder-only for package qualification.
-For storage, Pori is the DINX disk/mount manager and Phyto is the default file manager. File Roller provides graphical archive actions and GParted provides standalone partition editing outside Calamares. Pori uses UDisks2 for block-device discovery and creates persistent scripted mount services under `/etc/dinit.d`; it does not use systemd units. The base image does not install Thunar, GVFS, Tumbler or KDE Partition Manager. Phyto handles directory browsing; the standalone LXQt PolicyKit agent remains for privileged actions, and the River/KWM session remains the active desktop.
-For display setup, DINX's `dinx-wdisplays` wrapper opens the interactive Wayland editor; closing it atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the Shikane user daemon. Shikane starts inside the River/KWM session and reapplies matching profiles when outputs change. `Dome`, `Seafoam Settings` and `zls` are part of the base ISO and the signed DINX package repository. Dome provides dinit-safe resource/process monitoring without systemd integration; Seafoam Settings is the fixed-argv native Zig/GTK4 launcher for the display/session entry points; ZLS is the bundled Zig language server used by Dintor with its matching `lib/std` tree and metadata-only shim, so the full Zig compiler remains optional. River and KWM are the only selectable session components.
+For storage, Pori is the DINX disk/mount manager and PCManFM is the default file manager. File Roller provides graphical archive actions and GParted provides standalone partition editing outside Calamares. Pori uses UDisks2 for block-device discovery and creates persistent scripted mount services under `/etc/dinit.d`; it does not use systemd units. The base image does not install Thunar, GVFS, Tumbler or KDE Partition Manager. PCManFM handles directory browsing and renders the `~/Desktop` icons through `pcmanfm --desktop`; the standalone LXQt PolicyKit agent remains for privileged actions, and the River/KWM session remains the active desktop.
+For display setup, DINX's `dinx-wdisplays` wrapper opens the interactive Wayland editor; closing it atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reloads the Shikane user daemon. Shikane starts inside the River/KWM session and reapplies matching profiles when outputs change. DINXPanel's `Display` action opens the same wrapper, and `dinx-save-shikane-profile` saves the current layout without reopening the editor. `zls` is part of the base ISO and the signed DINX package repository; ZLS is the bundled Zig language server used by Dintor with its matching `lib/std` tree and metadata-only shim, so the full Zig compiler remains optional. River and KWM are the only selectable session components.
 
 For web browsing, the profile installs Artix's `firefox` package and makes it the default HTML/XHTML/HTTP/HTTPS handler. Firefox updates come from the Artix package sources through the existing reviewed package-source refresh; DINX ships no browser policy file and Mozilla account sign-in remains optional.
-The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless (G4Music), Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman/UPower, `nm-connection-editor`, SANE's `scanimage` backend, `fwupdmgr`, the Flatpak runtime, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, Blockbench, Transit (digital audio workstation), Zenkai (application launcher) and EuroOffice (documents, spreadsheets, presentations and PDFs; default `application/pdf` and OOXML handler). Krita, Inkscape, Pixelorama and PaintFE provide raster and vector graphics editing; Godot is the game engine. PaintFE, Transit, Zenkai, Patchy and Blockbench are version-pinned upstream AppImages repacked at build time into pre-extracted `/opt/<package>/` trees (ELF stripped where safe, locales trimmed to en/pt) whose `/usr/bin/<package>` launchers exec `AppRun` directly, so neither FUSE nor per-launch tmpfs extraction is required; EuroOffice arrives as the office branch's lean SHA256-verified pacman package plus /-rooted live squashfs. PaintFE ships the upstream MIT text, Transit ships both upstream license texts for its MIT OR Apache-2.0 dual license, and Zenkai ships the upstream GPL-3.0-or-later text; each package also carries a `usr/share/doc/<package>/SOURCE` provenance record naming the pinned upstream tree, and PaintFE and Transit install the upstream 256x256 application icon, while Zenkai uses the themed `system-search` icon because upstream publishes no square app icon. The ISO content gate requires those license and icon paths; each recipe still writes the `usr/share/doc/<package>/SOURCE` provenance record, which the squashfs wrapper removes from the final images together with the rest of `usr/share/doc`. Patchy defaults its own Qt color-scheme preference to dark on first launch while preserving later user theme choices. Pixelorama uses its checksum-pinned official Linux x86_64 release, wrapper, desktop entry, icon, MIT license and `.pxo` MIME registration. Galculator is a compact GTK 3 calculator using the existing GTK stack, with no separate GUI toolkit added. Gapless is built from pinned upstream v4.6.2 with GStreamer base/good codec support and gapless playback enabled by default. It supports MPRIS media controls. Swayimg is built from pinned upstream 5.6 with Wayland, JPEG and PNG support and remains the default image viewer. River/KWM needs no shell plugin or private shell asset; the static DINX bridges carry the appearance. No Flatpak applications are preinstalled. The retired OnlyOffice, Zrythm, Impasto, Floorp, Topgrade and ArtCraft (WordCraft/GridCraft/DeckCraft/PdfCraft) payloads are rejected by the content gate.
+The profile also ships btop/nvtop/inxi, PCI and USB diagnostics, Git/curl/less/jq/rsync, Swayimg, Haruna, Gapless (G4Music), Galculator, `wl-clipboard`, pwvucontrol, BlueZ/Blueman/UPower, `nm-connection-editor`, `fwupdmgr`, the Flatpak runtime, PCManFM, Octopi, `pacman-contrib`, PaintFE, Krita, Inkscape, Godot, Pixelorama, Patchy, Blender (3D creation suite), Audionaut (multitrack audio editor and recorder) and EuroOffice (documents, spreadsheets, presentations and PDFs; default `application/pdf` and OOXML handler). Krita, Inkscape, Pixelorama and PaintFE provide raster and vector graphics editing; Godot is the game engine and Blender is the 3D creation suite. PaintFE and Patchy are version-pinned upstream AppImages repacked at build time into pre-extracted `/opt/<package>/` trees (ELF stripped where safe, locales trimmed to en/pt) whose `/usr/bin/<package>` launchers exec `AppRun` directly, so neither FUSE nor per-launch tmpfs extraction is required; Audionaut is a version-pinned upstream AppImage kept as the single `/opt/audionaut/Audionaut.AppImage` that its `/usr/bin/audionaut` launcher runs with `--appimage-extract-and-run`, and Blender and PCManFM come from the Artix repositories; EuroOffice arrives as the office branch's lean SHA256-verified pacman package plus /-rooted live squashfs. PaintFE ships the upstream MIT text, Patchy ships its upstream MIT text and Audionaut ships the upstream `LICENSE.md`; each package also carries a `usr/share/doc/<package>/SOURCE` provenance record naming the pinned upstream tree, and PaintFE and Pixelorama install the upstream 256x256 application icon. The ISO content gate requires those license and icon paths; each recipe still writes the `usr/share/doc/<package>/SOURCE` provenance record, which the squashfs wrapper removes from the final images together with the rest of `usr/share/doc`. Patchy defaults its own Qt color-scheme preference to dark on first launch while preserving later user theme choices. Pixelorama uses its checksum-pinned official Linux x86_64 release, wrapper, desktop entry, icon, MIT license and `.pxo` MIME registration. Galculator is a compact GTK 3 calculator using the existing GTK stack, with no separate GUI toolkit added. Gapless is built from pinned upstream v4.6.2 with GStreamer base/good codec support and gapless playback enabled by default. It supports MPRIS media controls. Swayimg is built from pinned upstream 5.6 with Wayland, JPEG and PNG support and remains the default image viewer. River/KWM needs no shell plugin or private shell asset; the static DINX bridges carry the appearance. No Flatpak applications are preinstalled. The retired OnlyOffice, Zrythm, Impasto, Floorp, Topgrade and ArtCraft (WordCraft/GridCraft/DeckCraft/PdfCraft) payloads are rejected by the content gate.
 
 ### Application launcher labels
 
@@ -197,15 +199,13 @@ Launcher names follow the desktop locale. Swayimg remains hidden from the app me
 
 | App | English | Português (Brasil) |
 | --- | --- | --- |
-| Dome | System Monitor | Monitor do Sistema |
 | DinitUI | Services | Serviços |
 | DINXPanel | Control Center | Central de Controle |
-| Seafoam Settings | Desktop Settings | Ajustes do Desktop |
 | Dintor | Editor | Editor |
 | Pori | Disks & Mounts | Discos e Montagens |
-| Phyto | Files | Arquivos |
+| PCManFM | File Manager | Gerenciador de Arquivos |
 | Display setup | Display Settings | Ajustes de Tela |
-| Shelly | Software & Updates | Aplicações e Updates |
+| Octopi | Add/Remove Software | Adicionar/remover programas |
 | Galculator | Calculator | Calculadora |
 | GParted | Partition Editor | Particionador |
 | PaintFE | Image Editor | Editor de Imagens |
@@ -215,11 +215,10 @@ Launcher names follow the desktop locale. Swayimg remains hidden from the app me
 | Godot | Game Engine | Motor de Jogos |
 | Pixelorama | Pixel Art & Animation | Arte de Pixel e Animação |
 | Patchy | Image Editor | Editor de Imagens |
-| Blockbench | 3D Model Editor | Editor de Modelos 3D |
+| Blender | 3D Modeler | Modelador 3D |
 | Swayimg | Image Viewer | Visualizador de Imagens |
 | EuroOffice | Office & PDF Editors | Suíte de Escritório e PDF |
-| Transit | Audio Studio | Estúdio de Áudio |
-| Zenkai | App Launcher | Lançador de Aplicativos |
+| Audionaut | Audionaut | Audionaut |
 | Gapless | Music Player | Tocador de Música |
 | Haruna | Media Player | Tocador de Mídia |
 | Blueman | Bluetooth | Bluetooth |
@@ -228,19 +227,18 @@ Launcher names follow the desktop locale. Swayimg remains hidden from the app me
 | File Roller | Archive Manager | Descompactador |
 | DINX installer | Install DINX | Instalar DINX |
 | Firewall configuration | Firewall | Firewall |
-| Qps | Process Manager | Processos |
 
 CUPS is intentionally outside the offline profile. After installation,
 DINXPanel offers the fixed `cups-dinit` download from the configured Artix
 repository; the package pulls CUPS and provides the `cupsd` dinit service.
-The package-management payload adds `paru` and Shelly alongside Artix's own `pacman`. paru is built from its pinned source release against Artix ALPM; Shelly delegates to Artix's `pacman` configuration. Their package metadata has no `systemd` dependency or unit, no Arch repository is added, and AUR recipes remain subject to review. None starts automatically at boot.
+The package-management payload adds `paru`, Octopi and `pacman-contrib` alongside Artix's own `pacman`. paru is built from its pinned source release against Artix ALPM; Octopi is built from its pinned upstream tagged release and elevates through `pkexec` and polkit with `lxqt-policykit-agent`, because DINX ships no sudo, and `pacman-contrib` provides `checkupdates` for read-only update discovery. Octopi has no command-line interface: it is the interactive GUI reached from DINXPanel's `Package manager` button and from the dock. Their package metadata has no `systemd` dependency or unit, no Arch repository is added, and AUR recipes remain subject to review. None starts automatically at boot.
 For gaming, the `gaming` feature group has `iso:false`; Gamescope, Steam, Steam device rules, GameMode, MangoHud and 32-bit libraries are excluded from the base rootfs/livefs. The base profile retains AMDGPU and Intel GPU firmware, 64-bit Mesa RADV and Vulkan tools. P0 no longer enables Artix's `[lib32]` repository for ISO assembly; users can opt in after installation using the steps in [`docs/install.md`](../../docs/install.md). No Arch repository is added.
 AMDGPU firmware, Mesa RADV and Vulkan tools remain generic AMD graphics support in the base profile. The BC-250-only Cyan Skillfish governor, its dinit package and BC250 Control Center are not installed in the generic live or installed root. CI keeps the pinned packages in the signed DINX repository.
 Install those packages only after `lspci -n -d 1002:13fe` confirms the device; configure the signed DINX repository and follow the guarded steps in [`docs/install.md`](../../docs/install.md#optional-bc-250-support).
 The compact ISO ships AMDGPU and Intel GPU firmware, Mesa RADV and Vulkan tools for generic graphics, while omitting the broad `linux-firmware` bundle and `powertop`. `linux-headers` remain in the Artix build root only until initramfs generation, then `linux-headers` and its build-only `pahole` dependency are removed before rootfs/livefs SquashFS packaging. exFAT uses `exfatprogs` with the kernel driver; NTFS uses the kernel `ntfs3` driver.
-The firewall/process payload includes Firewalld, firewall-config and Qps. Firewalld uses a Dinit service enabled in both live and installed root filesystems; live autologin waits for Firewalld's startup attempt but still proceeds if it fails. The live-only PolicyKit rule allows firewall-config to manage Firewalld without a password; installed systems keep Firewalld's normal authentication policy. Firewalld is the image's filtering mechanism. UFW, Gufw and Portmaster are not shipped.
+The firewall payload includes Firewalld and firewall-config. Firewalld uses a Dinit service enabled in both live and installed root filesystems; live autologin waits for Firewalld's startup attempt but still proceeds if it fails. The live-only PolicyKit rule allows firewall-config to manage Firewalld without a password; installed systems keep Firewalld's normal authentication policy. Firewalld is the image's filtering mechanism. UFW, Gufw and Portmaster are not shipped.
 
-DinitUI installs `normal`, `lite` and `gaming` system-service profiles and supports custom profiles at `~/.config/dinx/dinitui/profiles.conf`. `lite` only disables optional Bluetooth; Gaming enables Bluetooth for controllers. Built-in profiles do not alter Firewalld. The standalone launcher enters Gaming and restores the previous profile on exit; entry or restoration failures stop the launcher and remain visible. DINXPanel owns the visible hardware and driver actions, fixed control-panel shortcuts, the Shelly upgrade workflow, the PaintFE and Zenkai launch shortcuts, optional fwupd discovery and the safe Artix kernel installer; River/KWM does not require a shell plugin.
+DinitUI installs `normal`, `lite` and `gaming` system-service profiles and supports custom profiles at `~/.config/dinx/dinitui/profiles.conf`. `lite` only disables optional Bluetooth; Gaming enables Bluetooth for controllers. Built-in profiles do not alter Firewalld. The standalone launcher enters Gaming and restores the previous profile on exit; entry or restoration failures stop the launcher and remain visible. DINXPanel owns the visible hardware and driver actions, fixed control-panel shortcuts, the read-only `checkupdates`/`paru -Qu` upgrade report, the Octopi package-manager and PaintFE launch shortcuts, optional fwupd discovery and the safe Artix kernel installer; River/KWM does not require a shell plugin.
 agreety under greetd provides the installed login surface and launches the session through `/usr/local/libexec/dinx-river-session`. River/KWM is the sole user session.
 ### Session safety, hierarchy and resource guard
 
@@ -250,7 +248,7 @@ In the live session, `swayidle` and `wlopm` power off all displays after 600 sec
 
 The Artix builder still consumes one `profile.yaml`; the feature-group manifest is a contract, not a package-composition mechanism. The generic ISO profile contains the foundation and desktop groups while gaming and BC-250-specific packages remain outside the base image. DinitUI's Normal/Lite/Gaming service policies continue to provide runtime service separation.
 
-The P0 content gate requires the root and live-session SquashFS images to contain the expected compositor, shell, greeter, session, Deetty as the sole terminal emulator, Nano recovery editor, Pori dinit storage manager, Phyto file manager, kernel `ntfs3` support, SANE scanner backend, fwupd firmware tooling, Flatpak runtime, the PaintFE, Krita, Inkscape, Godot, Patchy and Blockbench graphics apps, the EuroOffice office/PDF suite, Transit, Zenkai, Firefox, and dinit payloads. It rejects KolourPaint binaries, launchers and package metadata, the retired OnlyOffice/Zrythm/Impasto/Floorp/Topgrade/ArtCraft payloads, and optional gaming binaries and metadata, in both images. `scripts/check_desktop_packages.sh` and `scripts/check_pori_phyto.sh` verify package/profile contracts before the build. `scripts/smoke-install.sh` exercises the offline contract on ephemeral BIOS/UEFI disks, checks the dinit first boot and enables recovery TTYs. The workflow's PPM capture is visual evidence to inspect, not arbitrary hardware qualification.
+The P0 content gate requires the root and live-session SquashFS images to contain the expected compositor, shell, greeter, session, Deetty as the sole terminal emulator, Nano recovery editor, Pori dinit storage manager, PCManFM file manager, kernel `ntfs3` support, fwupd firmware tooling, Flatpak runtime, the PaintFE, Krita, Inkscape, Godot, Patchy, Blender and Audionaut graphics apps, the EuroOffice office/PDF suite, Octopi, Firefox, and dinit payloads. It rejects KolourPaint binaries, launchers and package metadata, the retired OnlyOffice/Zrythm/Impasto/Floorp/Topgrade/ArtCraft payloads, and optional gaming binaries and metadata, in both images. `scripts/check_desktop_packages.sh` and `scripts/check_pori_storage.sh` verify package/profile contracts before the build. `scripts/smoke-install.sh` exercises the offline contract on ephemeral BIOS/UEFI disks, checks the dinit first boot and enables recovery TTYs. The workflow's PPM capture is visual evidence to inspect, not arbitrary hardware qualification.
 
 The installed runtime-library check covers dynamically linked applications. The pinned upstream ZLS release is statically linked; the install smoke checks its version and selected configuration inside the target chroot instead.
 
@@ -258,7 +256,7 @@ The P0 live-session gate requires `AUTOLOGIN=true`, the live-only autologin dini
 
 The installed-disk BIOS/UEFI smoke also requires the captured greeter screen to show agreety's session identity together with a sign-in control and a `Password` field; service-ready logs and a valid framebuffer alone do not qualify login readiness.
 
-The payload contract also requires `wdisplays`, `shikane` and the DINX display persistence entry points. Dome and ZLS external sources are pinned; Seafoam Settings is built from checked-in repository source. All three are required and checked as part of the base ISO payload.
+The payload contract also requires `wdisplays`, `shikane` and the DINX display persistence entry points. The ZLS external source is pinned; shikane is built from its pinned upstream tagged release. Both are required and checked as part of the base ISO payload.
 Requirements: a reachable rootful Docker Engine, `--privileged` and loop-device support, network access, and enough free disk for the temporary rootfs and ISO. The local build runs the same full qualification as P0 by default. It also requires the commands listed by `scripts/check-iso-qualification-host.sh full`, QEMU with the `virtio-vga` device, Tesseract's `eng` model, OVMF firmware, and `sudo` (or root). Check prerequisites before starting:
 The workflow stores a separate `dinx-boot-screen.ppm` capture taken before the boot-menu keys are sent. Review this frame when qualifying the GRUB kernel-selection surface; it is the regression evidence for the removed opaque menu panel.
 

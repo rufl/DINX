@@ -16,7 +16,7 @@
 
 ```text
 DINX applications
-  Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Dome · ZLS (base ISO)
+  Deetty · Dintor · DinitUI · DINXPanel · ZLS (base ISO)
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · standard D-Bus adapters
@@ -39,7 +39,7 @@ The first target is Artix Linux with dinit on x86_64. The base image must provid
 - graphical login with a recovery TTY;
 - networking, PipeWire, D-Bus, portals, polkit and accelerated graphics;
 - Pori manages disks and mounts through UDisks2, with persistent dinit services under `/etc/dinit.d`;
-- Phyto provides native file management and is the default directory handler; DINX includes File Roller for archive actions and GParted for standalone partition editing, while `wdisplays` and `shikane` cover Wayland display setup; Thunar, GVFS, Tumbler and KDE Partition Manager remain omitted;
+- PCManFM provides native file management, is the default directory handler and renders the `~/Desktop` icons through `pcmanfm --desktop`; DINX includes File Roller for archive actions and GParted for standalone partition editing, while `wdisplays` and `shikane` cover Wayland display setup; Thunar, GVFS, Tumbler and KDE Partition Manager remain omitted;
 - package manifests that identify every DINX-specific input;
 - a known-good snapshot that can be reproduced from a clean build environment.
 
@@ -75,7 +75,7 @@ DinitUI also owns explicit `normal`, `lite`, `gaming` and user-defined system-se
 
 ### DINXPanel
 
-DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its Firewall button opens the `firewall-config` GUI; `firewalld-dinit` enables the daemon at boot. Its read-only upgrade report uses Shelly and optional fwupd metadata, `Shelly upgrade` runs `shelly upgrade all` in a terminal, and the PaintFE and Zenkai buttons launch those applications without elevated privileges. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
+DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its Firewall button opens the `firewall-config` GUI; `firewalld-dinit` enables the daemon at boot. Its read-only upgrade report uses `checkupdates` from `pacman-contrib` for the official repositories, `paru -Qu` for the AUR and optional fwupd metadata, its `Package manager` button opens Octopi, whose elevation runs through `pkexec` and polkit because DINX ships no sudo, and the PaintFE button launches that application without elevated privileges. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
 
 Printing is an explicit post-install option rather than an ISO dependency:
 DINXPanel downloads the fixed `cups-dinit` package from the configured Artix
@@ -84,13 +84,9 @@ enables or starts that service through DinitUI when printing is required.
 
 The standalone Gamescope session is independent of the River/KWM session supervisor and does not install a shell plugin or systemd integration.
 
-### Dome
+### Display tools and ZLS
 
-`Dome` is a base native Zig/GTK4 system monitor delivered in the signed DINX package repository and included in the ISO. Its resource and process views are dinit-safe; the package installs no systemd, systemctl or uwsm integration.
-
-### Seafoam Settings and ZLS
-
-`Seafoam Settings` is a base native Zig/GTK4 launcher for DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Dome. It uses fixed argument vectors, opens the documented `~/.config/shikane/config.toml` display configuration directly in Dintor, and runs the display-profile exporter in Deetty. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
+DINX display configuration goes through the `dinx-wdisplays` wrapper: it runs `wdisplays`, then `dinx-save-shikane-profile` exports the result as the named `DINX wdisplays` profile in `~/.config/shikane/config.toml`, and DINXPanel's `Display` button opens that same wrapper. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
 
 `zls` is the bundled source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim, so Dintor completion and navigation work in the base ISO without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0; the 0.16.0 tree here is only the ZLS/LSP compatibility runtime. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
 ### River, KWM and the dinit session boundary
@@ -144,14 +140,14 @@ Gaming is a hidden manual launcher, not a selectable user session. The base ISO 
 
 ## Storage and filesystem boundary
 
-Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. Phyto is the only base file manager and the default `inode/directory` handler. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside the River/KWM session and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
+Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. PCManFM is the only base file manager and the default `inode/directory` handler, and it renders the `~/Desktop` icons through `pcmanfm --desktop`. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside the River/KWM session and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
 
 The kernel `ntfs3` module supplies NTFS read/write support in both the live ISO and the installed system. Pori maps UDisks2's `ntfs` filesystem type to `ntfs3`. The legacy `ntfs-3g` package is not in the ISO or base install; it remains an optional post-install package for compatibility and repair tooling. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 
 ## Installation path selected
 
 
-The base image includes Phyto as its default file manager, File Roller for archive actions, Pori as its dinit storage manager, GParted for standalone partition editing, `dinx-wdisplays` for interactive display configuration with persistent Shikane export, and the Shikane user daemon. The profile deliberately omits Thunar, GVFS, Tumbler and KDE Partition Manager rather than shipping competing file-manager, volume-monitor and partitioning stacks.
+The base image includes PCManFM as its default file manager, File Roller for archive actions, Pori as its dinit storage manager, GParted for standalone partition editing, `dinx-wdisplays` for interactive display configuration with persistent Shikane export, and the Shikane user daemon. The profile deliberately omits Thunar, GVFS, Tumbler and KDE Partition Manager rather than shipping competing file-manager, volume-monitor and partitioning stacks.
 
 The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. The profile preserves existing Windows ESP/NTFS layouts, enables a separate DINX EFI boot directory and keeps `os-prober` for Windows discovery. CI qualifies disposable BIOS/UEFI, Btrfs-existing-subvolume and Windows side-by-side/manual transaction smokes; the overall path remains experimental until destructive-device safeguards, physical hardware installation, installed-ISO upgrades and filesystem recovery are qualified.
 

@@ -9,7 +9,8 @@ mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
 file_roller_mime_cache="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/mimeinfo.cache"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
-qps_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/qps.desktop"
+pcmanfm_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/pcmanfm.desktop"
+retired_overrides=(qps.desktop org.aqueous.Phyto.desktop com.shellyorg.shelly.desktop org.aqueous.Dome.desktop)
 local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications"
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
@@ -29,8 +30,13 @@ sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syn
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak paintfe krita inkscape godot pixelorama patchy blockbench phyto pori shikane udisks2 udisks2-btrfs wdisplays transit zenkai firefox papirus-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna fwupd flatpak paintfe krita inkscape godot pixelorama patchy pori shikane udisks2 udisks2-btrfs wdisplays firefox eurooffice papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
+done
+for package in pcmanfm blender audionaut octopi pacman-contrib; do
+  grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
+  jq -e --arg package "$package" '.groups.desktop.packages | index($package) != null' "$feature_groups" >/dev/null \
+    || fail "desktop feature group is missing $package"
 done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
   if grep -Fqx "    - $package" "$profile"; then
@@ -40,9 +46,22 @@ for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-s
     fail "$package remains in an ISO feature group"
   fi
 done
-for retired in vlc vlc-cli wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto floorp topgrade; do
+for retired in vlc vlc-cli wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto floorp topgrade \
+  qps glances sane blockbench transit zenkai phyto dome shelly seafoam-settings; do
+  # glances stays in scripts/iso-builder/packages.txt for the builder-only Deetty P2
+  # qualification; it must not be selected for the ISO itself.
   if grep -Fqx "    - $retired" "$profile" || grep -Fq "\"$retired\"" "$feature_groups"; then
     fail "$retired remains explicitly selected for the DINX ISO"
+  fi
+done
+for retired_override in "${retired_overrides[@]}"; do
+  if [[ -e "$local_apps/$retired_override" ]]; then
+    fail "retired $retired_override desktop override remains in the ISO overlay"
+  fi
+done
+for retired_recipe in blockbench transit phyto dome shelly seafoam-settings zenkai; do
+  if [[ -e "$root/distro/packages/$retired_recipe" ]]; then
+    fail "retired $retired_recipe package recipe remains in the tree"
   fi
 done
 [[ ! -e "$local_apps/vlc.desktop" ]] || fail 'retired VLC desktop override remains in the ISO overlay'
@@ -77,6 +96,19 @@ for mime in text/html application/xhtml+xml x-scheme-handler/http x-scheme-handl
   grep -Fqx "$mime=firefox.desktop;" "$mimeapps" || fail "Firefox is not the default handler for $mime"
 done
 grep -Fqx 'application/pdf=eurooffice.desktop;' "$mimeapps" || fail 'EuroOffice is not the default PDF handler'
+grep -Fqx 'inode/directory=pcmanfm.desktop;' "$mimeapps" || fail 'pcmanfm is not the default directory handler'
+if grep -Fq 'org.aqueous.Phyto.desktop' "$mimeapps"; then
+  fail 'MIME defaults retain the retired Phyto directory handler'
+fi
+[[ -r "$pcmanfm_override" ]] || fail 'the pcmanfm file manager desktop override is missing'
+grep -Fqx 'Exec=pcmanfm %U' "$pcmanfm_override" || fail 'the pcmanfm desktop override command is incorrect'
+grep -Fqx 'TryExec=pcmanfm' "$pcmanfm_override" || fail 'the pcmanfm desktop override prerequisite is incorrect'
+grep -Fqx 'MimeType=inode/directory;' "$pcmanfm_override" || fail 'the pcmanfm desktop override does not register inode/directory'
+if grep -Eq '^(Hidden|NoDisplay)=true$' "$pcmanfm_override"; then
+  fail 'the pcmanfm desktop override is hidden'
+fi
+grep -Fq -- 'start_optional desktop pcmanfm --desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
+  || fail 'the DINX session supervisor does not start the pcmanfm desktop layer'
 if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi
@@ -89,29 +121,25 @@ fi
 if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
   fail 'retired KolourPaint desktop override remains in the ISO overlay'
 fi
-for package in patchy blockbench paintfe transit zenkai; do
+for package in patchy paintfe; do
   launcher="$root/distro/packages/$package/$package.desktop"
   [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
   case "$package" in
     patchy) expected_name=Patchy ;;
-    blockbench) expected_name=Blockbench ;;
     paintfe) expected_name=PaintFE ;;
-    transit) expected_name=Transit ;;
-    zenkai) expected_name=Zenkai ;;
   esac
   grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
   grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
   grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
-  case "$package" in
-    paintfe|transit)
-      grep -Eq '^MimeType=[^;]+;' "$launcher" || fail "$package desktop launcher registers no MIME types"
-      ;;
-  esac
+  if [[ "$package" == paintfe ]]; then
+    grep -Eq '^MimeType=[^;]+;' "$launcher" || fail "$package desktop launcher registers no MIME types"
+  fi
   grep -Fq '!strip' "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
   if grep -Eq "^(Hidden|NoDisplay)=true$" "$launcher"; then
     fail "$package desktop launcher is hidden"
   fi
+  grep -Fq "build_package $package" "$root/scripts/build-iso-container.sh" || fail "ISO builder does not build $package"
 done
 pixelorama_source="$root/distro/packages/pixelorama/source.env"
 pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"
@@ -141,5 +169,68 @@ if grep -Eq '^(Hidden|NoDisplay)=true$' "$pixelorama_desktop"; then
   fail 'Pixelorama desktop entry is hidden'
 fi
 grep -Fq 'build_package pixelorama' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Pixelorama'
+audionaut_source="$root/distro/packages/audionaut/source.env"
+audionaut_recipe="$root/distro/packages/audionaut/PKGBUILD"
+audionaut_launcher="$root/distro/packages/audionaut/audionaut"
+audionaut_desktop="$root/distro/packages/audionaut/audionaut.desktop"
+for recipe_file in "$audionaut_source" "$audionaut_recipe" "$audionaut_launcher" "$audionaut_desktop"; do
+  [[ -r "$recipe_file" ]] || fail "Audionaut contract file is missing: ${recipe_file#$root/}"
+done
+source "$audionaut_source"
+[[ "$AUDIONAUT_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Audionaut version: $AUDIONAUT_VERSION"
+[[ "$AUDIONAUT_SOURCE_URL" == "https://github.com/kvoltmer/Audionaut/releases/download/v${AUDIONAUT_VERSION}/Audionaut-${AUDIONAUT_VERSION}-x86_64.AppImage" ]] \
+  || fail 'Audionaut source URL does not match its pinned AppImage release'
+[[ "$AUDIONAUT_LICENSE_URL" == "https://raw.githubusercontent.com/kvoltmer/Audionaut/v${AUDIONAUT_VERSION}/LICENSE.md" ]] \
+  || fail 'Audionaut license URL does not match its pinned release'
+for pin in AUDIONAUT_SOURCE_SHA256 AUDIONAUT_LICENSE_SHA256; do
+  [[ "${!pin}" =~ ^[0-9a-f]{64}$ ]] || fail "Audionaut $pin is invalid"
+  grep -Fq "\"\$$pin\"" "$audionaut_recipe" || fail "Audionaut package does not verify $pin"
+done
+grep -Fq 'pkgver="$AUDIONAUT_VERSION"' "$audionaut_recipe" || fail 'Audionaut package version is not wired to source.env'
+grep -Fq '${AUDIONAUT_SOURCE_URL}' "$audionaut_recipe" || fail 'Audionaut source URL is not wired to source.env'
+grep -Fq '!strip' "$audionaut_recipe" || fail 'Audionaut AppImage package must disable binary stripping'
+[[ -x "$audionaut_launcher" ]] || fail 'Audionaut launcher is missing or not executable'
+sh -n "$audionaut_launcher" || fail 'Audionaut launcher has invalid shell syntax'
+grep -Fqx 'exec /opt/audionaut/Audionaut.AppImage --appimage-extract-and-run "$@"' "$audionaut_launcher" \
+  || fail 'Audionaut launcher does not run the packaged AppImage in extract-and-run mode'
+grep -Fqx 'Name=Audionaut' "$audionaut_desktop" || fail 'Audionaut desktop name is missing'
+grep -Fqx 'Name[pt_BR]=Audionaut' "$audionaut_desktop" || fail 'Audionaut Portuguese desktop name is missing'
+grep -Fqx 'Exec=audionaut %F' "$audionaut_desktop" || fail 'Audionaut desktop command is incorrect'
+grep -Fqx 'TryExec=audionaut' "$audionaut_desktop" || fail 'Audionaut desktop prerequisite is incorrect'
+if grep -Eq '^(Hidden|NoDisplay)=true$' "$audionaut_desktop"; then
+  fail 'Audionaut desktop entry is hidden'
+fi
+grep -Fq 'build_package audionaut' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Audionaut'
+
+octopi_dir="$root/distro/packages/octopi"
+octopi_recipe="$octopi_dir/PKGBUILD"
+octopi_source="$octopi_dir/source.env"
+for recipe_file in "$octopi_recipe" "$octopi_source"; do
+  [[ -r "$recipe_file" ]] || fail "Octopi contract file is missing: ${recipe_file#$root/}"
+done
+grep -RqF 'pkexec' "$octopi_dir" \
+  || fail 'Octopi package does not elevate through pkexec'
+# octopi declares its dependencies as a multi-line depends=(...) array, so match
+# the dependency tokens on their own lines rather than on the depends= line.
+if grep -Eq '^[[:space:]]*(sudo|qt-sudo)([[:space:]]|$)' "$octopi_recipe"; then
+  fail 'Octopi package still depends on sudo, which DINX does not ship'
+fi
+grep -Eq '^[[:space:]]*polkit([[:space:]]|$)' "$octopi_recipe" \
+  || fail 'Octopi package does not depend on polkit for pkexec elevation'
+grep -Fq 'build_package octopi' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Octopi'
+
+if grep -RqF 'shelly' "$root/distro/packages/dinxpanel/src/main.zig" "$root/distro/packages/dinx-dock/src/main.zig"; then
+  fail 'the retired Shelly package manager still backs DINXPanel or the DINX dock'
+fi
+grep -Fq '"octopi.desktop"' "$root/distro/packages/dinx-dock/src/main.zig" || fail 'DINX dock does not favourite octopi.desktop'
+grep -Fq '"pcmanfm.desktop"' "$root/distro/packages/dinx-dock/src/main.zig" || fail 'DINX dock does not favourite pcmanfm.desktop'
+grep -Fq '"octopi"' "$root/distro/packages/dinxpanel/src/main.zig" || fail 'DINXPanel does not launch Octopi as the package manager'
+grep -Fq '"checkupdates"' "$root/distro/packages/dinxpanel/src/main.zig" || fail 'DINXPanel does not use checkupdates from pacman-contrib'
+for artix_only in pcmanfm blender pacman-contrib; do
+  if [[ -e "$root/distro/packages/$artix_only" ]]; then
+    fail "$artix_only must ship from the Artix repository, not a local DINX recipe"
+  fi
+done
+printf 'desktop_packages_contract pcmanfm=true blender=true audionaut=true octopi=true pacman-contrib=true directory_handler=pcmanfm.desktop retired_appimage=false\n'
 
 

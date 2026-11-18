@@ -40,11 +40,14 @@ and dictionary (the builder's squashfs-tools maximum) and 4 compression threads,
 per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
-The current profile ships PaintFE, Transit and Zenkai plus the repacked binary
-apps Patchy and Blockbench as pre-extracted `/opt/<package>/` trees (repack
-convention in `distro/iso/README.md`), and EuroOffice as the office/PDF suite.
-Each binary package installs a `/usr/bin/<package>` launcher that execs the
-tree's `AppRun` — no FUSE and no per-launch tmpfs extraction. EuroOffice is the
+The current profile ships PaintFE and the repacked binary app Patchy as
+pre-extracted `/opt/<package>/` trees (repack
+convention in `distro/iso/README.md`), Pixelorama from its checksum-pinned
+official Linux release, Audionaut as the multitrack audio editor and recorder,
+Blender as the 3D creation suite, and EuroOffice as the office/PDF suite.
+PaintFE and Patchy install a `/usr/bin/<package>` launcher that execs the
+tree's `AppRun`, while Audionaut installs a `/usr/bin/audionaut` launcher that
+runs its single bundled AppImage with `--appimage-extract-and-run` — no FUSE and no per-launch extraction. EuroOffice is the
 default `application/pdf` and OOXML handler, consumed from the office branch's
 lean `eurooffice/v*` releases with a SHA256-verified pacman package and live
 squashfs. Images over GitHub's 2 GiB per-asset limit use the split release
@@ -130,8 +133,8 @@ printf '%s  %s\n' \
 gpg --show-keys --with-colons "$key" |
   awk -F: '$1 == "fpr" { print $10; exit }' |
   grep --fixed-strings --line-regexp 'D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
-sudo pacman-key --add "$key"
-sudo pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+pkexec pacman-key --add "$key"
+pkexec pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
 ```
 
 Add the repository to `/etc/pacman.conf` after the Artix repositories:
@@ -151,12 +154,14 @@ Server = https://github.com/rufl/DINX/releases/download/dinx-packages-latest
 Refresh databases and install the keyring when it becomes available:
 
 ```bash
-sudo pacman -Syu --needed dinx-keyring
+pkexec pacman -Syu --needed dinx-keyring
 ```
 
-After setup, Shelly uses pacman and the `[dinx]` repository for package updates:
-run `shelly sync`, review with `shelly list-updates all`, then apply with
-`shelly upgrade all` (or `sudo pacman -Syu`). Required signatures make pacman
+After setup, use pacman and the `[dinx]` repository for package updates:
+discover pending updates read-only with `checkupdates` (from `pacman-contrib`) for
+the official repositories and `paru -Qu` for the AUR, then apply them interactively in
+Octopi, which has no command-line interface and elevates through `pkexec` and polkit
+because DINX ships no sudo. `pkexec pacman -Syu` is the direct alternative. Required signatures make pacman
 reject unsigned or untrusted repository packages.
 
 The currently documented tagged-release workflow may also attach signed

@@ -12,9 +12,8 @@ checks=(
   check_swayimg.sh
   check_package_managers.sh
   check_desktop_packages.sh
-  check_pori_phyto.sh
-  check_seafoam_apps.sh
-  check_seafoam_settings.sh
+  check_pori_storage.sh
+  check_zls_display_tools.sh
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh

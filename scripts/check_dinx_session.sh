@@ -168,7 +168,7 @@ for env in "$kwm_env" "$kwim_env"; do
 done
 grep -Fq 'zig016_version=0.16.0' "$builder" \
   || fail 'builder no longer provides the dedicated Zig 0.16 toolchain for KWM/KWIM'
-grep -Fq '|| "$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
+grep -Fq '"$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
   || fail 'builder no longer routes KWM/KWIM to the Zig 0.16 toolchain'
 grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$live_package/dinx-live-session" \
   || fail 'the live session does not launch the River session wrapper under a session bus'

@@ -37,7 +37,7 @@ marcar um resultado como `pass`.
 4. Em um volume NTFS descartável, monte pelo Pori ou UDisks2, crie e remova um
    arquivo de teste, desmonte e monte novamente. Não use um volume Windows
    hibernado ou com Fast Startup habilitado.
-5. Use o Phyto para navegar no volume montado, o File Roller para criar e
+5. Use o PCManFM para navegar no volume montado, o File Roller para criar e
    extrair um archive e o GParted somente contra um disco descartável.
 6. Confirme que `Ctrl+Alt+F2` ou `Ctrl+Alt+F3` abre a TTY de recuperação e
    depois retorne à sessão gráfica.

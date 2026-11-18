@@ -240,12 +240,8 @@ trap finish EXIT
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 local -a package_archives=()
                 case "$package_name" in
-                  dinitui|dinxpanel|dinx-dock|dinx-first-run|seafoam-settings)
+                  dinitui|dinxpanel|dinx-dock|dinx-first-run)
                     # These packages build directly from checked-in source trees.
-                    ;;
-                  dome)
-                    # A failed Zig build can leave partial dependency state in $srcdir.
-                    makepkg_options+=(--clean --cleanbuild)
                     ;;
                   *)
                     makepkg_options+=(--clean)
@@ -258,8 +254,7 @@ trap finish EXIT
                 if [[ "$package_name" == cyan-skillfish-governor-smu ]]; then
                   extra_env+=(CARGO_BUILD_JOBS=1)
                 fi
-                if [[ "$package_name" == phyto || "$package_name" == dome \
-                  || "$package_name" == kwm || "$package_name" == kwim ]]; then
+                if [[ "$package_name" == kwm || "$package_name" == kwim ]]; then
                   extra_env+=("ZIG=$zig016_root/zig")
                 elif [[ "$package_name" == pori ]]; then
                   extra_env+=("ZIG=$zig_root/zig")
@@ -404,9 +399,6 @@ trap finish EXIT
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
               build_package paru
-              build_package shelly
-              pacman_install_local \
-                "$package_repo"/shelly-*.pkg.tar.zst
               build_package dinitui
               pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
@@ -441,6 +433,14 @@ trap finish EXIT
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
+              # Octopi is a Qt6/CMake package not available from Artix. Its build
+              # toolchain is fetched explicitly because makepkg runs --nodeps, so
+              # makedepends are not resolved from the PKGBUILD.
+              pacman_retry -S --needed --noconfirm \
+                cmake ninja qt6-tools qt6-5compat qt6-multimedia qt6-svg \
+                qtermwidget pacman-contrib
+              build_package octopi
+              pacman_install_local "$package_repo"/octopi-*.pkg.tar.zst
               # First-party desktop shell components: the layer-shell dock and the
               # GTK4 first-run wizard. Both build from checked-in Zig sources with
               # the builder's Zig 0.17 toolchain, so no upstream download happens.
@@ -450,15 +450,8 @@ trap finish EXIT
                 "$package_repo"/dinx-dock-*.pkg.tar.zst \
                 "$package_repo"/dinx-first-run-*.pkg.tar.zst
               build_package pori
-              build_package phyto
-              build_package dome
               build_package zls
-              build_package seafoam-settings
-              pacman_install_local \
-                "$package_repo"/dome-*.pkg.tar.zst \
-                "$package_repo"/seafoam-settings-*.pkg.tar.zst \
-                "$package_repo"/zls-*.pkg.tar.zst
-              SEAFOAM_SETTINGS_BIN=/usr/bin/seafoam-settings scripts/seafoam_settings_smoke.sh
+              pacman_install_local "$package_repo"/zls-*.pkg.tar.zst
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
@@ -474,11 +467,9 @@ trap finish EXIT
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
               build_package patchy
-              build_package blockbench
+              build_package audionaut
               build_package paintfe
               build_package pixelorama
-              build_package transit
-              build_package zenkai
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
               pacman_retry -S --needed --noconfirm \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \

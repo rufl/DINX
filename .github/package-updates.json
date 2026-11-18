@@ -27,18 +27,6 @@
       "url_template": "https://github.com/Seafoam-Labs/Pori/archive/refs/tags/{tag}.tar.gz"
     },
     {
-      "name": "shelly",
-      "provider": "github",
-      "repository": "Seafoam-Labs/Shelly-ALPM",
-      "source_file": "distro/packages/shelly/source.env",
-      "version_key": "SHELLY_VERSION",
-      "package_version_key": "SHELLY_VERSION",
-      "source_url_key": "SHELLY_SOURCE_URL",
-      "checksum_key": "SHELLY_SOURCE_SHA256",
-      "checksum": "sha256",
-      "url_template": "https://github.com/Seafoam-Labs/Shelly-ALPM/releases/download/{tag}/Shelly-ALPM-linux-x64.tar.gz"
-    },
-    {
       "name": "swayimg",
       "provider": "github",
       "repository": "artemsen/swayimg",
@@ -166,26 +154,6 @@
       ]
     },
     {
-      "name": "blockbench",
-      "provider": "github",
-      "repository": "JannisX11/Blockbench",
-      "source_file": "distro/packages/blockbench/source.env",
-      "version_key": "BLOCKBENCH_VERSION",
-      "package_version_key": "BLOCKBENCH_VERSION",
-      "source_url_key": "BLOCKBENCH_SOURCE_URL",
-      "checksum_key": "BLOCKBENCH_SOURCE_SHA256",
-      "checksum": "sha256",
-      "tag_prefix": "v",
-      "url_template": "https://github.com/JannisX11/Blockbench/releases/download/{tag}/Blockbench_{version}.AppImage",
-      "additional_sources": [
-        {
-          "source_url_key": "BLOCKBENCH_LICENSE_URL",
-          "checksum_key": "BLOCKBENCH_LICENSE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/JannisX11/Blockbench/{tag}/LICENSE.MD"
-        }
-      ]
-    },
-    {
       "name": "pixelorama",
       "provider": "github",
       "repository": "Orama-Interactive/Pixelorama",
@@ -213,63 +181,6 @@
           "source_url_key": "PIXELORAMA_MIME_URL",
           "checksum_key": "PIXELORAMA_MIME_SHA256",
           "url_template": "https://raw.githubusercontent.com/Orama-Interactive/Pixelorama/{tag}/Misc/Linux/com.orama_interactive.Pixelorama.xml"
-        }
-      ]
-    },
-    {
-      "name": "transit",
-      "provider": "github",
-      "repository": "transit-audio/transit",
-      "source_file": "distro/packages/transit/source.env",
-      "version_key": "TRANSIT_VERSION",
-      "package_version_key": "TRANSIT_VERSION",
-      "source_url_key": "TRANSIT_SOURCE_URL",
-      "checksum_key": "TRANSIT_SOURCE_SHA256",
-      "checksum": "sha256",
-      "tag_prefix": "v",
-      "url_template": "https://github.com/transit-audio/transit/releases/download/v{version}/transit-{version}-linux-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/transit/PKGBUILD",
-      "additional_sources": [
-        {
-          "source_url_key": "TRANSIT_LICENSE_MIT_URL",
-          "checksum_key": "TRANSIT_LICENSE_MIT_SHA256",
-          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/LICENSE-MIT"
-        },
-        {
-          "source_url_key": "TRANSIT_LICENSE_APACHE_URL",
-          "checksum_key": "TRANSIT_LICENSE_APACHE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/LICENSE-APACHE"
-        },
-        {
-          "source_url_key": "TRANSIT_ICON_URL",
-          "checksum_key": "TRANSIT_ICON_SHA256",
-          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/assets/app-icon/hicolor/256x256/apps/transit.png"
-        },
-        {
-          "source_url_key": "TRANSIT_MIME_URL",
-          "checksum_key": "TRANSIT_MIME_SHA256",
-          "url_template": "https://raw.githubusercontent.com/transit-audio/transit/{tag}/packaging/linux/transit.mime.xml"
-        }
-      ]
-    },
-    {
-      "name": "zenkai",
-      "provider": "github",
-      "repository": "dayvster/zenkai",
-      "source_file": "distro/packages/zenkai/source.env",
-      "version_key": "ZENKAI_VERSION",
-      "package_version_key": "ZENKAI_VERSION",
-      "source_url_key": "ZENKAI_SOURCE_URL",
-      "checksum_key": "ZENKAI_SOURCE_SHA256",
-      "checksum": "sha256",
-      "tag_prefix": "v",
-      "url_template": "https://github.com/dayvster/zenkai/releases/download/v{version}/zenkai-v{version}-x86_64.AppImage",
-      "bump_pkgrel_path": "distro/packages/zenkai/PKGBUILD",
-      "additional_sources": [
-        {
-          "source_url_key": "ZENKAI_LICENSE_URL",
-          "checksum_key": "ZENKAI_LICENSE_SHA256",
-          "url_template": "https://raw.githubusercontent.com/dayvster/zenkai/{tag}/LICENCE.md"
         }
       ]
     },
@@ -340,6 +251,27 @@
       "tag_prefix": "v",
       "url_template": "https://github.com/ARKye03/morghulis/archive/refs/tags/{tag}.tar.gz",
       "bump_pkgrel_path": "distro/packages/morghulis/PKGBUILD"
+    },
+    {
+      "name": "audionaut",
+      "provider": "github",
+      "repository": "kvoltmer/Audionaut",
+      "source_file": "distro/packages/audionaut/source.env",
+      "version_key": "AUDIONAUT_VERSION",
+      "package_version_key": "AUDIONAUT_VERSION",
+      "source_url_key": "AUDIONAUT_SOURCE_URL",
+      "checksum_key": "AUDIONAUT_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kvoltmer/Audionaut/releases/download/v{version}/Audionaut-{version}-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/audionaut/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "AUDIONAUT_LICENSE_URL",
+          "checksum_key": "AUDIONAUT_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/kvoltmer/Audionaut/{tag}/LICENSE.md"
+        }
+      ]
     }
   ]
 }

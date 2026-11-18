@@ -59,10 +59,14 @@ Cada release alpha contém:
 O perfil atual inclui o EuroOffice (fork lean do ONLYOFFICE, AGPL-3.0) como
 suíte de escritório e PDF, consumido dos releases `eurooffice/v*` da branch
 office com pacote pacman e squashfs live verificados por SHA256; o EuroOffice
-é o handler padrão de `application/pdf` e dos formatos OOXML. PaintFE, Transit,
-Zenkai, Patchy e Blockbench são empacotados como árvores `/opt/<pacote>/`
+é o handler padrão de `application/pdf` e dos formatos OOXML. O perfil também
+envia PaintFE e o aplicativo binário Patchy como árvores `/opt/<pacote>/`
 pré-extraídas (convenção de repack no `distro/iso/README.pt-BR.md`), com
-launchers que executam `AppRun` sem FUSE nem extração em tmpfs. Imagens acima
+launchers que executam `AppRun` sem FUSE nem extração em tmpfs, o Pixelorama do
+release oficial Linux com checksum fixado, o Audionaut como editor e gravador de
+áudio multifaixa, executado como um único AppImage com
+`--appimage-extract-and-run` em vez de uma árvore pré-extraída, e o Blender
+como suíte de criação 3D. Imagens acima
 do limite de 2 GiB por asset do GitHub usam a entrega dividida; o alias ISO de
 arquivo único só avança quando o release publica uma imagem que cabe nesse
 limite.
@@ -135,8 +139,8 @@ printf '%s  %s\n' \
 gpg --show-keys --with-colons "$key" |
   awk -F: '$1 == "fpr" { print $10; exit }' |
   grep --fixed-strings --line-regexp 'D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
-sudo pacman-key --add "$key"
-sudo pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+pkexec pacman-key --add "$key"
+pkexec pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
 ```
 
 Adicione o repositório a `/etc/pacman.conf`, depois dos repositórios Artix:
@@ -156,12 +160,15 @@ Server = https://github.com/rufl/DINX/releases/download/dinx-packages-latest
 Atualize os bancos e instale o keyring quando estiver disponível:
 
 ```bash
-sudo pacman -Syu --needed dinx-keyring
+pkexec pacman -Syu --needed dinx-keyring
 ```
 
-Depois da configuração, o Shelly usa pacman e o repositório `[dinx]` para
-atualizar pacotes: execute `shelly sync`, confira com `shelly list-updates all`
-e aplique com `shelly upgrade all` (ou `sudo pacman -Syu`). As assinaturas
+Depois da configuração, o pacman e o repositório `[dinx]` carregam as
+atualizações de pacotes: descubra pendências somente leitura com `checkupdates`
+(do `pacman-contrib`) para os repositórios oficiais e `paru -Qu` para o AUR,
+depois aplique-as interativamente no Octopi, que não tem interface de linha de
+comando e eleva por `pkexec` e polkit porque a DINX não envia sudo
+(ou `pkexec pacman -Syu` no terminal). As assinaturas
 obrigatórias fazem o pacman rejeitar pacotes não assinados ou não confiáveis.
 
 O workflow de releases marcados atualmente documentado também pode anexar assets

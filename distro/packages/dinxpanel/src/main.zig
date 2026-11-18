@@ -95,8 +95,7 @@ const App = struct {
         const updates = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         c.gtk_box_append(@ptrCast(updates), makeButton("Check upgrades", "Refresh package and firmware metadata, then show available upgrades without installing them", &onUpgradeCheckClicked, self));
         c.gtk_box_append(@ptrCast(updates), makeButton("PaintFE", "Open PaintFE raster image editor", &onPaintfeClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Zenkai", "Open Zenkai app launcher", &onZenkaiClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Shelly upgrade", "Run Shelly's all-backend upgrade workflow in a terminal", &onShellyClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("Package manager", "Open Octopi, the graphical pacman/AUR package manager", &onOctopiClicked, self));
         c.gtk_box_append(@ptrCast(content), updates);
 
         appendSectionTitle(content, "Optional packages");
@@ -412,8 +411,12 @@ fn collectUpgradeReport(task: *AsyncTask) ![]u8 {
     var report: std.Io.Writer.Allocating = .init(allocator);
     errdefer report.deinit();
     const commands = [_]struct { argv: []const []const u8, label: []const u8, no_action_ok: bool }{
-        .{ .argv = &.{ "shelly", "sync" }, .label = "shelly sync", .no_action_ok = false },
-        .{ .argv = &.{ "shelly", "list-updates", "all" }, .label = "shelly list-updates all", .no_action_ok = false },
+        // checkupdates (pacman-contrib) refreshes a private sync db copy and
+        // prints pending official-repo upgrades; it exits 0 whether or not
+        // updates are pending. paru -Qu adds the AUR side. Both are read-only,
+        // so the report never installs anything.
+        .{ .argv = &.{ "checkupdates" }, .label = "checkupdates", .no_action_ok = false },
+        .{ .argv = &.{ "paru", "-Qu" }, .label = "paru -Qu", .no_action_ok = true },
         .{ .argv = &.{ "fwupdmgr", "refresh" }, .label = "fwupdmgr refresh", .no_action_ok = false },
         .{ .argv = &.{ "fwupdmgr", "get-updates" }, .label = "fwupdmgr get-updates", .no_action_ok = true },
     };
@@ -625,15 +628,11 @@ fn onPaintfeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{ "paintfe" });
 }
 
-fn onZenkaiClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "zenkai" });
+fn onOctopiClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "octopi" });
 }
 fn onCupsInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).installCups();
-}
-
-fn onShellyClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "shelly", "upgrade", "all" });
 }
 
 fn onDisplayClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

@@ -9,7 +9,6 @@ seed="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/shikane/c
 desktop="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
 iso_check="$root/scripts/check-iso-content.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
-seafoam_source="$root/distro/packages/seafoam-settings/src/main.zig"
 dinxpanel_source="$root/distro/packages/dinxpanel/src/main.zig"
 smoke="$root/scripts/smoke_dinx_display_persistence.sh"
 
@@ -18,7 +17,7 @@ fail() {
   exit 1
 }
 
-for path in "$saver" "$launcher" "$seed" "$desktop" "$iso_check" "$workflow" "$seafoam_source" \
+for path in "$saver" "$launcher" "$seed" "$desktop" "$iso_check" "$workflow" \
   "$dinxpanel_source" "$smoke" "$supervisor"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
@@ -40,7 +39,6 @@ grep -Fq 'dinx-wdisplays' "$seed" || fail 'seed config does not document the DIN
 grep -Fq 'timeout = 0' "$seed" || fail 'seed config is not valid Shikane TOML'
 grep -Fq 'Exec=dinx-wdisplays' "$desktop" || fail 'display desktop entry does not use the DINX wrapper'
 grep -Fq 'TryExec=dinx-wdisplays' "$desktop" || fail 'display desktop entry TryExec is incorrect'
-grep -Fq 'dinx-wdisplays' "$seafoam_source" || fail 'Seafoam Settings bypasses the DINX display wrapper'
 grep -Fq 'dinx-wdisplays' "$dinxpanel_source" || fail 'DINXPanel bypasses the DINX display wrapper'
 grep -Fqx '  etc/skel/.config/shikane/config.toml' "$iso_check" || fail 'ISO contract omits the Shikane seed config'
 grep -Fqx '  usr/local/bin/dinx-save-shikane-profile' "$iso_check" || fail 'ISO contract omits the profile saver'

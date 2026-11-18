@@ -12,8 +12,8 @@ Obrigatório para a ISO base:
 - O Dintor possui uma entrada `.desktop` válida, abre arquivos e diretórios por launchers XDG padrão e aceita argumentos de arquivo/linha suportados.
 - A ISO inclui o ZLS 0.16.0 para a integração LSP de Zig do Dintor. O suporte LSP para C/C++ usa `clangd` do pacote opcional `clang` e não faz parte da imagem padrão.
 - O Firefox é o manipulador padrão de HTML, XHTML, HTTP e HTTPS.
-- O Firewalld é instalado com o `firewall-config` e o serviço gerenciado pelo Dinit habilitado no boot tanto no sistema live quanto no instalado; o Qps fornece monitoramento de processos.
-- O Phyto é o manipulador padrão de diretórios; o File Roller cuida de abrir/criar/extrair arquivos compactados; o GParted cuida do particionamento independente.
+- O Firewalld é instalado com o `firewall-config` e o serviço gerenciado pelo Dinit habilitado no boot tanto no sistema live quanto no instalado.
+- O PCManFM é o manipulador padrão de diretórios e renderiza os ícones de `~/Desktop` via `pcmanfm --desktop`; o File Roller cuida de abrir/criar/extrair arquivos compactados; o GParted cuida do particionamento independente.
 - O Pori descobre dispositivos de bloco pelo UDisks2 e persiste montagens do usuário por serviços dinit em `/etc/dinit.d`.
 - Navegação por teclado e locais XDG de configuração/dados continuam utilizáveis sem integração privada de shell.
 
@@ -53,11 +53,11 @@ Não há raio de canto no compositor nem sincronização de cor de borda: a apar
 
 - `swayidle` bloqueia após 600 segundos e em `before-sleep`; a ação de launcher `dinx-lock` e a DINXPanel usam o mesmo caminho `swaylock`, e o `dinx-lock` se recusa a bloquear a sessão live descartável. `brightnessctl` fornece passos fixos de 5% para brilho.
 
-## Integração de display e Seafoam
+## Configuração de display
 
 `dinx-wdisplays` inicia o editor interativo de displays Wayland. Ao fechar, serializa o resultado com `flock`, substitui atomicamente o perfil DINX `DINX wdisplays` em `~/.config/shikane/config.toml` e recarrega o Shikane. Falha no reload é reportada como falha. O Shikane inicia dentro da sessão River/KWM e reaplica perfis correspondentes quando as saídas mudam.
 
-O Seafoam Settings expõe entradas fixas para wdisplays, salvador de perfil, Shikane, DinitUI, DINXPanel, Qt6ct e Dome. O Dome fornece monitoramento dinit-safe de recursos/processos. Os pacotes Zig nativos da DINX usam Zig 0.17.0. O ZLS continua sendo backend do editor; seu runtime compacto contém a biblioteca padrão Zig 0.16.0 correspondente e um shim de metadados, não o compilador completo. Instalar o pacote opcional `zig` do Artix habilita comandos de compilação pelo mesmo shim.
+A configuração de display é alcançada pelo wrapper `dinx-wdisplays`, pelo exportador `dinx-save-shikane-profile`, pelo daemon de usuário Shikane e pela ação `Display` da DINXPanel; não há launcher de ajustes separado. Os pacotes Zig nativos da DINX usam Zig 0.17.0. O ZLS continua sendo backend do editor; seu runtime compacto contém a biblioteca padrão Zig 0.16.0 correspondente e um shim de metadados, não o compilador completo. Instalar o pacote opcional `zig` do Artix habilita comandos de compilação pelo mesmo shim.
 
 ## Limite do gaming
 
@@ -74,7 +74,7 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 | Contrato de tema | paleta DINX estática, defaults escuros GTK 3/4 no sistema, seleção de tema GTK salva na sessão, paleta DINX do Qt6ct e controles de fallback na barra de título GTK 3/4 estão configurados |
 | Greeter/instalador/boot | agreety, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
 | Firefox padrão | O Firefox trata HTML/XHTML/HTTP/HTTPS por padrão |
-| Armazenamento e arquivos | persistência dinit do Pori, diretórios no Phyto, arquivos compactados no File Roller e edição no GParted estão presentes |
+| Armazenamento e arquivos | persistência dinit do Pori, diretórios no PCManFM, arquivos compactados no File Roller e edição no GParted estão presentes |
 | Layout do desktop | River/KWM é a única sessão de usuário; o KWM é o layout padrão do river, então janelas novas são mosaicaladas pelo KWM e o comportamento flutuante/em pilha e a quantidade de workspaces vêm do `~/.config/kwm/config.zon` do usuário. Esse arquivo é semeado a partir de `/etc/xdg/kwm/config.zon` somente quando não existe, preservando configurações existentes |
 | Gráficos em VM | Um relato manual anterior chegou ao desktop DINX no VirtualBox 7.2.22/Windows 11 (VMSVGA, 3D habilitado, EFI, 4 vCPUs, 8 GiB); o log não comprovou origem de boot nem checksum da ISO, portanto não qualifica o release. O código atual direciona `vmwgfx`/`vboxvideo` e sistemas sem render nodes acessíveis ao perfil de renderizador Vulkan (`WLR_RENDERER=vulkan`) com `GSK_RENDERER` sem override; QEMU `virtio_gpu` mantém GLES2 com efeitos reduzidos. A renderização de superfícies de clientes na ISO reconstruída ainda aguarda verificação direta no VirtualBox. |
 | Gráficos em VM | O gate P0 completo testa o desktop live no VGA padrão e Virtio-VGA do QEMU. O caminho `vmware-svga` do QEMU 11.1.2/KVM trava no udev inicial com `vmwgfx` carregado e não é um proxy confiável do VirtualBox; o boot direto VMSVGA no VBox continua sem qualificação. |
@@ -82,8 +82,8 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 | Segurança da sessão | lock por idle, lock antes de suspend, lock explícito e brilho usam caminhos fixos |
 | Persistência de display | mudanças do wdisplays atualizam atomicamente e recarregam o perfil nomeado do Shikane |
 | ZLS | Dintor encontra a biblioteca Zig correspondente sem compilador completo |
-| Gerenciamento de pacotes | pacman, Shelly e paru usam a configuração Artix e são executados pelo usuário |
-| Firewall/monitoramento | Firewalld e Qps são descobertos; firewalld-dinit é habilitado no boot nos root filesystems live e instalado |
+| Gerenciamento de pacotes | pacman, `paru` e Octopi usam a configuração Artix e são executados pelo usuário |
+| Firewall | Firewalld e `firewall-config` são descobertos; firewalld-dinit é habilitado no boot nos root filesystems live e instalado |
 | DinitUI | descoberta e controle usam argv validado do dinitctl com fallback pkexec restrito |
 | Gaming | launcher oculto mantido, grupo de pacotes opcional fora da base, falta de Gamescope/Steam falha antes da mudança de perfil; gaming real permanece sem qualificação |
 | Isolamento de falhas | helpers ou endpoints D-Bus opcionais indisponíveis produzem falha visível sem bloquear o startup |
@@ -91,4 +91,4 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 
 ## Gates de release
 
-`scripts/check_deetty_integration.sh`, `scripts/dintor_p3_qualification.sh`, `scripts/check_dinitui.sh`, `scripts/check_dinx_session.sh`, `scripts/check_dinx_display_persistence.sh`, `scripts/check_dinx_theme.sh`, `scripts/check_pori_phyto.sh` e `scripts/check-iso-content.sh` verificam os contratos de pacote, sessão e ISO. O workflow P0 continua sendo o gate de criação dos pacotes, montagem da ISO, boot QEMU, instalação Calamares, TTY de recuperação, atestação e publicação.
+`scripts/check_deetty_integration.sh`, `scripts/dintor_p3_qualification.sh`, `scripts/check_dinitui.sh`, `scripts/check_dinx_session.sh`, `scripts/check_dinx_display_persistence.sh`, `scripts/check_dinx_theme.sh`, `scripts/check_pori_storage.sh` e `scripts/check-iso-content.sh` verificam os contratos de pacote, sessão e ISO. O workflow P0 continua sendo o gate de criação dos pacotes, montagem da ISO, boot QEMU, instalação Calamares, TTY de recuperação, atestação e publicação.

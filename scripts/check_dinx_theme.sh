@@ -32,7 +32,6 @@ grub_logo="$overlay/usr/share/grub/themes/artix/logo.png"
 boot_mark_source="$repo_root/design/brand/dinx-boot-mark.svg"
 dinitui_source="$repo_root/distro/packages/dinitui/src/main.zig"
 dinxpanel_source="$repo_root/distro/packages/dinxpanel/src/main.zig"
-seafoam_settings_source="$repo_root/distro/packages/seafoam-settings/src/main.zig"
 gtk_index="$overlay/usr/share/themes/DINX/index.theme"
 gtk3="$overlay/usr/share/themes/DINX/gtk-3.0/gtk.css"
 gtk3_dark="$overlay/usr/share/themes/DINX/gtk-3.0/gtk-dark.css"
@@ -59,7 +58,7 @@ for path in "$profile" "$feature_groups" "$palette" "$profile_shell" \
   "$grub" "$grub_defaults" "$grub_logo" "$boot_mark_source" "$calamares" "$calamares_notes" "$calamares_branding" "$calamares_wordmark" \
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
-  "$seafoam_settings_source" "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
+  "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$dconf_dark" \
   "$session_wrapper" "$gtk_themes_pkgbuild" "$qt_palette_seed" "$theme_sync" \
   "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper"; do
@@ -484,7 +483,7 @@ fi
 if grep -Eq '#(31415d|151923|2859a8)' "$calamares"; then
   fail 'Calamares contains an out-of-contract color'
 fi
-for source in "$dinitui_source" "$dinxpanel_source" "$seafoam_settings_source"; do
+for source in "$dinitui_source" "$dinxpanel_source"; do
   grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$source" || fail "internal app does not force the DINX dark scheme: $source"
 done
 grep -Fq "background: ${dark_token[mSurface]}" "$dinitui_source" || fail 'DinitUI output surface does not use DINX background'
@@ -501,7 +500,4 @@ grep -Fq "background: ${dark_token[mSurface]}" "$dinxpanel_source" || fail 'DINX
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinxpanel_source" || fail 'DINXPanel output text does not use DINX foreground'
 grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action does not use DINX primary'
 grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action text does not use DINX on-primary'
-grep -Fq "background: ${dark_token[mSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings surface does not use DINX background'
-grep -Fq "color: ${dark_token[mOnSurface]}" "$seafoam_settings_source" || fail 'Seafoam Settings text does not use DINX foreground'
-grep -Fq "background-color: ${dark_token[mPrimary]}" "$seafoam_settings_source" || fail 'Seafoam Settings action does not use DINX primary'
 printf 'dinx_theme_contract session=river appearance_selectable=true dark_default=true palette=true static=true typography=true states=true gtk=true gtk_system=true gtk_package=true qt=true qt_palette=true qt_session_seed=true dconf_scheme=true theme_sync_input=appearance.json theme_families=DINX+Skeuos+Orchis+Fluent+Jasper patchy_darkest=true swayimg=true haruna_dark=true no_pearl=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true boot_mark=true\n'

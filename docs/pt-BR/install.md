@@ -155,7 +155,7 @@ Quando o desktop aparecer, o estado gráfico testado é River/KWM. Rede, áudio,
 O River é o compositor ativo e o KWM o gerenciador de janelas ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o greeter instalado é o agreety sob o greetd, executado pela conta `greeter` com `command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"`, sem arquivo JSON de greeter e sem X11 nem UWSM.
 
 O KWM organiza as janelas em mosaico por padrão; o usuário edita `~/.config/kwm/config.zon`, que o `dinx-river-session` semeia a partir do `/etc/xdg/kwm/config.zon` empacotado somente quando o arquivo não existe, para que suas alterações sobrevivam aos próximos boots. River e KWM negociam `xdg-decoration`: janelas decoradas pelo compositor recebem a decoração própria dele, e clientes que mantêm a própria decoração não são decorados duas vezes. O layout fixo `:minimize,maximize,close` se aplica aos toolkits com decoração do cliente.
-O Phyto é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro da sessão River/KWM e reaplica perfis correspondentes. `Dome`, `Seafoam Settings` e `zls` vêm na ISO base assinada. Dome oferece monitoramento de recursos/processos compatível com dinit sem integração com systemd; Seafoam Settings agrupa os pontos documentados de configuração de display/sessão; o Dintor usa o ZLS incluído para projetos Zig.
+O PCManFM é o manipulador padrão de diretórios e o gerenciador de arquivos, e renderiza os ícones de `~/Desktop` via `pcmanfm --desktop`. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro da sessão River/KWM e reaplica perfis correspondentes. O pacote `zls` vem na ISO base assinada; o Dintor o usa para projetos Zig.
 O runtime base do ZLS é compacto por design: completion e navegação usam a árvore `lib/std` correspondente incluída pela ISO por meio de `/usr/lib/zls/zig-env`; um compilador Zig completo é opcional e não faz parte do payload da ISO.
 
 ### Suporte opcional à BC-250
@@ -164,7 +164,7 @@ A ISO genérica da Alpha 12 exclui o BC250 Control Center e o governor Cyan Skil
 
 ```bash
 if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
-  sudo pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
+  pkexec pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
 else
   printf 'PCI 1002:13fe não detectado; os pacotes BC-250 não foram instalados.\n' >&2
   exit 1
@@ -185,17 +185,21 @@ pacotes integradas usam um workflow separado, assinado e sem montagem de ISO;
 elas não acionam a montagem P0. Os workflows estão configurados, mas ainda
 não foram confirmados verdes nem publicados.
 
-Quando `dinx-keyring` estiver disponível, instale-o e atualize pelo Shelly:
+Quando `dinx-keyring` estiver disponível, instale-o e atualize pelo pacman e pelo Octopi:
 
 ```bash
-sudo pacman -Syu --needed dinx-keyring
-shelly sync
+pkexec pacman -Syu --needed dinx-keyring
+checkupdates
+paru -Qu
 ```
 
-Depois execute `shelly sync`, confira com `shelly list-updates all` e aplique
-com `shelly upgrade all`; `sudo pacman -Syu` é a alternativa direta. O Shelly
-delegará as operações ao pacman, que exige assinaturas válidas para o
-repositório `[dinx]`.
+O `checkupdates` (do `pacman-contrib`) lista as atualizações pendentes dos
+repositórios oficiais e o `paru -Qu` lista o lado do AUR; ambos são somente
+leitura. Aplique as atualizações interativamente no **Octopi**, aberto pelo
+botão `Package manager` da DINXPanel ou pelo dock, ou execute
+`pkexec pacman -Syu` no terminal. O Octopi não tem interface de linha de
+comando. A DINX não envia sudo, então a elevação do Octopi usa `pkexec` e
+polkit com o `lxqt-policykit-agent`. O pacman exige assinaturas válidas para o repositório `[dinx]`.
 
 Para preparar o sistema quando o repositório móvel estiver publicado, mas
 `dinx-keyring` ainda não estiver disponível, siga a verificação manual da
@@ -218,7 +222,7 @@ A partir do desktop live:
    - **Substituir uma partição** apaga a partição selecionada. **Particionamento manual** é para usuários avançados; exige `/` e, em UEFI, uma partição EFI FAT32 montada em `/boot/efi`.
 5. Swap é opcional. O padrão é sem swap; a DINX instala e inicia sem uma partição de swap.
 6. Confira o disco-alvo, o modo do firmware, os pontos de montagem e as alterações previstas na página de resumo antes de confirmar.
-7. Para operações avançadas de armazenamento, abra o **Pori** pelo launcher de aplicativos Zenkai. Ele descobre dispositivos de bloco pelo UDisks2 e persiste as montagens escolhidas pelo usuário como serviços dinit em `/etc/dinit.d`; use o **GParted** para editar partições fora do Calamares, o **File Roller** para trabalhar com arquivos compactados, o `dinx-wdisplays` para configurar saídas interativamente e persistir automaticamente o perfil Shikane.
+7. Para operações avançadas de armazenamento, abra o **Pori** pelo launcher de aplicativos. Ele descobre dispositivos de bloco pelo UDisks2 e persiste as montagens escolhidas pelo usuário como serviços dinit em `/etc/dinit.d`; use o **GParted** para editar partições fora do Calamares, o **File Roller** para trabalhar com arquivos compactados, o `dinx-wdisplays` para configurar saídas interativamente e persistir automaticamente o perfil Shikane.
 8. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O root filesystem DINX ocupa cerca de 7 GiB instalado. No VirtualBox, use um disco virtual de pelo menos 16 GiB e mantenha espaço livre no host para o arquivo do disco virtual. Um disco-alvo pequeno ou o armazenamento do host cheio pode fazer o Calamares falhar ao copiar o root filesystem; o código 11 do rsync indica erro de E/S de arquivo, não uma causa específica.
@@ -256,7 +260,7 @@ O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `mi
 - inicialização do river (`riverctl default-layout kwm`) e o supervisor de sessão DINX;
 - presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO;
 - smoke transacional de layout GPT Windows side-by-side e manual: a ESP FAT32/caminho Microsoft e a partição NTFS existentes permanecem intactos enquanto a raiz DINX, o fstab e os dados GRUB são adicionados;
-- contrato de instalação do rootfs persistente em discos BIOS e UEFI descartáveis, primeiro boot dinit, Pori, Phyto, caminho de armazenamento `ntfs3` e captura da TTY de recuperação no CI.
+- contrato de instalação do rootfs persistente em discos BIOS e UEFI descartáveis, primeiro boot dinit, Pori, PCManFM, caminho de armazenamento `ntfs3` e captura da TTY de recuperação no CI.
 
 ### Ainda não suportado para produção
 
@@ -287,7 +291,7 @@ Quando a tela continua preta depois que `noapic irqpoll` resolve a travada de in
 
 1. `Start DINX Linux (verbose boot)` — imprime o console completo do kernel em vez do splash, mostrando exatamente onde o boot para. Anote as últimas linhas.
 2. `Start DINX Linux (safe graphics)` — adiciona `nomodeset plymouth.enable=0` e roda a sessão em modo texto, contornando a travada do modeset.
-3. Se (2) funcionar, mantenha: após instalar, fixe os mesmos parâmetros permanentemente com `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash noapic irqpoll nomodeset plymouth.enable=0"` em `/etc/default/grub`, depois `sudo grub-mkconfig -o /boot/grub/grub.cfg`.
+3. Se (2) funcionar, mantenha: após instalar, fixe os mesmos parâmetros permanentemente com `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash noapic irqpoll nomodeset plymouth.enable=0"` em `/etc/default/grub`, depois `pkexec grub-mkconfig -o /boot/grub/grub.cfg`.
 
 ### A tela fica vazia
 
@@ -312,13 +316,15 @@ No VirtualBox, qualifique a ISO reconstruída exata com SHA-512 verificado em um
 
 Para hardware real, use a matriz de dispositivos e o procedimento de relatório em [qualificação de hardware DINX](alpha7-qualification.md). Verifique o checksum exato da ISO e registre função da máquina, firmware, GPU e cada resultado observado; use um disco externo descartável para testes de instalação. Evidências de CI/QEMU e VirtualBox não substituem as verificações físicas de display, entrada, áudio, rede, suspensão/retomada, brilho e GPU.
 
-A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
+A DINX também fornece
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,
 Flatpak para fontes de aplicativos escolhidas pelo usuário e PaintFE como editor
 de imagens, junto com Krita, Inkscape, Pixelorama e Patchy. O PaintFE é um
-AppImage upstream com checksum fixado que inicia com
-`--appimage-extract-and-run`, sem precisar de FUSE. O Swayimg continua sendo o
-visualizador padrão.
+AppImage upstream com checksum fixado reempacotado como árvore pré-extraída em
+`/opt/paintfe/`, sem precisar de FUSE. O Audionaut, editor e gravador de áudio
+multifaixa, vem como um único AppImage executado com
+`--appimage-extract-and-run`, e o Blender é a suíte de criação 3D. O Swayimg
+continua sendo o visualizador padrão.
 
 ### Pacotes gaming opcionais
 
@@ -334,7 +340,7 @@ A ISO genérica da Alpha 12 exclui Gamescope, Steam, GameMode, MangoHud, regras 
 2. Instale os pacotes gaming opcionais:
 
    ```bash
-   sudo pacman -Syu --needed \
+   pkexec pacman -Syu --needed \
      gamescope gamemode mangohud steam steam-devices \
      lib32-gamemode lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers
    ```

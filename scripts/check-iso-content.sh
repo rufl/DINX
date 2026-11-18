@@ -273,7 +273,6 @@ required_paths=(
   usr/share/wayland-sessions/dinx-gaming.desktop
   usr/bin/flatpak
   usr/bin/fwupdmgr
-  usr/bin/scanimage
   usr/bin/paintfe
   usr/local/bin/haruna
   usr/share/color-schemes/DINXDark.colors
@@ -281,35 +280,25 @@ required_paths=(
   usr/share/applications/paintfe.desktop
   usr/share/icons/hicolor/256x256/apps/paintfe.png
   usr/share/licenses/paintfe/LICENSE.md
-  usr/bin/transit
-  opt/transit/AppRun
-  usr/share/applications/transit.desktop
-  usr/share/icons/hicolor/256x256/apps/transit.png
-  usr/share/licenses/transit/LICENSE-MIT
-  usr/share/licenses/transit/LICENSE-APACHE
-  usr/share/mime/packages/transit.xml
-  usr/bin/zenkai
-  opt/zenkai/AppRun
-  usr/share/applications/zenkai.desktop
-  usr/share/licenses/zenkai/LICENCE.md
+  usr/bin/audionaut
+  opt/audionaut/Audionaut.AppImage
+  usr/share/applications/audionaut.desktop
+  usr/share/licenses/audionaut/LICENSE.md
   usr/bin/eurooffice
   opt/eurooffice/DesktopEditors
   usr/share/applications/eurooffice.desktop
   usr/bin/krita
   usr/bin/inkscape
   usr/bin/godot
+  usr/bin/blender
   usr/bin/patchy
   usr/lib/patchy/patchy-force-darkest
-  usr/bin/blockbench
   opt/patchy/AppRun
-  opt/blockbench/AppRun
   usr/share/applications/org.kde.krita.desktop
   usr/share/applications/org.inkscape.Inkscape.desktop
   usr/share/applications/org.godotengine.Godot.desktop
   usr/share/applications/patchy.desktop
-  usr/share/applications/blockbench.desktop
   usr/share/licenses/patchy/LICENSE
-  usr/share/licenses/blockbench/LICENSE.MD
   usr/bin/pixelorama
   opt/pixelorama/Pixelorama.x86_64
   opt/pixelorama/Pixelorama.pck
@@ -348,19 +337,15 @@ required_paths=(
   usr/lib/dri/virtio_gpu_dri.so
   usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
-  usr/bin/phyto
+  usr/bin/pcmanfm
+  usr/bin/octopi
+  usr/lib/octopi/octphelper
+  usr/share/applications/pcmanfm.desktop
+  usr/share/applications/octopi.desktop
   usr/bin/pori
   usr/local/libexec/pori-mount-service
   usr/bin/file-roller
-  usr/bin/dome
-  usr/bin/seafoam-settings
   usr/bin/zls
-  usr/share/applications/org.aqueous.Dome.desktop
-  usr/share/applications/seafoam-settings.desktop
-  usr/share/icons/hicolor/scalable/apps/org.aqueous.Dome.svg
-  usr/share/icons/hicolor/scalable/apps/org.seafoam.Settings.svg
-  usr/share/metainfo/org.aqueous.Dome.metainfo.xml
-  usr/share/licenses/seafoam-settings/LICENSE
   usr/share/licenses/zls/LICENSE
   usr/share/licenses/zls/zig-LICENSE
   etc/zls.json
@@ -379,7 +364,6 @@ required_paths=(
   usr/bin/btop
   usr/bin/dialog
   usr/bin/fzf
-  usr/bin/glances
   usr/bin/sftp
   usr/bin/sqlite3
   usr/bin/tmux
@@ -406,11 +390,7 @@ required_paths=(
   usr/bin/g4music
   usr/bin/galculator
   usr/bin/paru
-  usr/bin/shelly
-  usr/bin/shelly-ui
-  usr/bin/shelly-key
-  usr/bin/shelly-notifications
-  usr/bin/shelly-flatpak-integrate
+  usr/bin/checkupdates
   usr/lib/firmware/amdgpu/cyan_skillfish2_pfp.bin.zst
   usr/share/vulkan/icd.d/radeon_icd.json
   usr/share/vulkan/icd.d/lvp_icd.json
@@ -419,7 +399,6 @@ required_paths=(
   usr/lib/dri/virtio_gpu_dri.so
   usr/lib/dri/vmwgfx_dri.so
   etc/paru.conf
-  etc/shellybuild.conf
   usr/share/flatpak/remotes.d/flathub.flatpakrepo
   usr/bin/firefox
   usr/share/applications/firefox.desktop
@@ -433,8 +412,6 @@ required_paths=(
   usr/share/glib-2.0/schemas/com.arkye.morghulis.gschema.xml
   usr/share/glib-2.0/schemas/gschemas.compiled
   usr/share/applications/swayimg.desktop
-  usr/share/applications/com.shellyorg.shelly.desktop
-  usr/share/applications/com.shellyorg.shelly-notifications.desktop
   usr/bin/firewall-cmd
   usr/bin/firewall-offline-cmd
   usr/bin/firewalld
@@ -442,9 +419,6 @@ required_paths=(
   usr/share/applications/firewall-config.desktop
   usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.desktop.policy.choice
   etc/dinit.d/firewalld
-  usr/bin/qps
-  usr/share/applications/qps.desktop
-  usr/local/share/applications/qps.desktop
   usr/bin/wl-copy
   usr/bin/wl-paste
   usr/lib/bluetooth/bluetoothd
@@ -499,12 +473,9 @@ required_paths=(
   usr/bin/swaylock
   usr/bin/wlopm
   usr/share/applications/com.pori.app.desktop
-  usr/share/applications/org.aqueous.Phyto.desktop
   usr/share/applications/org.gnome.FileRoller.desktop
   usr/local/share/applications/org.gnome.FileRoller.desktop
-  usr/local/share/applications/org.aqueous.Dome.desktop
-  usr/local/share/applications/org.aqueous.Phyto.desktop
-  usr/local/share/applications/com.shellyorg.shelly.desktop
+  usr/local/share/applications/pcmanfm.desktop
   usr/local/share/applications/galculator.desktop
   usr/local/share/applications/gparted.desktop
   usr/local/share/applications/swayimg.desktop
@@ -601,11 +572,11 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy blockbench paintfe transit zenkai eurooffice haruna; do
+for package in krita inkscape godot pixelorama patchy paintfe audionaut eurooffice haruna pcmanfm blender octopi; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
-for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto; do
+for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto blockbench transit zenkai shelly qps glances sane seafoam-settings phyto dome; do
   if grep -Eq "/var/lib/pacman/local/${retired_app}-[^/]*/" <<<"$manifest"; then
     fail "retired office/graphics package metadata remains in rootfs: $retired_app"
   fi
@@ -1125,7 +1096,9 @@ grep -Fq '/usr/share/applications/swayimg.desktop' <<<"$manifest" || fail 'Swayi
 grep -Fq 'org.kde.haruna.desktop' <<<"$manifest" || fail 'Haruna desktop entry is not in the ISO payload'
 grep -Fq 'com.github.neithern.g4music.desktop' <<<"$manifest" || fail 'Gapless desktop entry is not in the ISO payload'
 grep -Fq 'galculator.desktop' <<<"$manifest" || fail 'Galculator desktop entry is not in the ISO payload'
-grep -Fq 'com.shellyorg.shelly.desktop' <<<"$manifest" || fail 'Shelly desktop entry is not in the ISO payload'
+grep -Fq 'pcmanfm.desktop' <<<"$manifest" || fail 'PCManFM desktop entry is not in the ISO payload'
+grep -Fq 'octopi.desktop' <<<"$manifest" || fail 'Octopi desktop entry is not in the ISO payload'
+grep -Fq 'audionaut.desktop' <<<"$manifest" || fail 'Audionaut desktop entry is not in the ISO payload'
 gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
 gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
 
@@ -1330,7 +1303,7 @@ users_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc
 grep -Fq 'shell: /bin/fish' <<<"$users_config" || fail 'Calamares user shell is not Fish'
 grep -Fq '    - render' <<<"$users_config" || fail 'Calamares users are missing DRM render-node access'
 mimeapps_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/mimeapps.list)
-grep -Fq 'inode/directory=org.aqueous.Phyto.desktop;' <<<"$mimeapps_config" || fail 'Phyto is not the default directory handler'
+grep -Fq 'inode/directory=pcmanfm.desktop;' <<<"$mimeapps_config" || fail 'PCManFM is not the default directory handler'
 grep -Fq 'text/html=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTML handler'
 grep -Fq 'application/xhtml+xml=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default XHTML handler'
 grep -Fq 'x-scheme-handler/http=firefox.desktop;' <<<"$mimeapps_config" || fail 'Firefox is not the default HTTP handler'
@@ -1342,11 +1315,17 @@ for office_mime in \
   application/vnd.openxmlformats-officedocument.presentationml.presentation; do
   grep -Fq "$office_mime=eurooffice.desktop;" <<<"$mimeapps_config" || fail "EuroOffice is not the default handler for $office_mime"
 done
-for appimage_launcher in paintfe transit zenkai patchy blockbench; do
+# Pixelorama is excluded: it execs /opt/pixelorama/Pixelorama.x86_64 rather than
+# an AppRun entry point. Audionaut ships a single AppImage with no pre-extracted
+# /opt tree, so its wrapper runs the image with --appimage-extract-and-run.
+for appimage_launcher in paintfe patchy; do
   launcher_script=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$appimage_launcher")
   grep -Fq "exec /opt/$appimage_launcher/AppRun" <<<"$launcher_script" \
     || fail "$appimage_launcher launcher does not exec its pre-extracted /opt tree"
 done
+audionaut_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/audionaut)
+grep -Fq 'exec /opt/audionaut/Audionaut.AppImage --appimage-extract-and-run' <<<"$audionaut_launcher" \
+  || fail 'Audionaut launcher does not exec its bundled AppImage'
 if grep -Fq 'application/epub+zip=' <<<"$mimeapps_config"; then
   fail 'orphan EPUB handler remains after Zathura removal'
 fi
@@ -1626,16 +1605,6 @@ grep -Fq 'Exec=dinxpanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop lau
 grep -Fq 'Icon=org.dinx.DinxPanel' <<<"$dinxpanel_desktop" || fail 'DINXPanel desktop icon contract is missing'
 grep -Fq 'Name=Control Center' <<<"$dinxpanel_desktop" || fail 'DINXPanel English desktop name is missing'
 grep -Fq 'Name[pt_BR]=Central de Controle' <<<"$dinxpanel_desktop" || fail 'DINXPanel Portuguese desktop name is missing'
-dome_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/org.aqueous.Dome.desktop)
-grep -Fq 'Exec=dome' <<<"$dome_desktop" || fail 'Dome desktop launcher is missing'
-grep -Fq 'Name=System Monitor' <<<"$dome_desktop" || fail 'Dome English desktop name is missing'
-grep -Fq 'Name[pt_BR]=Monitor do Sistema' <<<"$dome_desktop" || fail 'Dome Portuguese desktop name is missing'
-grep -Fq 'Icon=org.aqueous.Dome' <<<"$dome_desktop" || fail 'Dome desktop icon contract is missing'
-settings_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/seafoam-settings.desktop)
-grep -Fq 'Exec=seafoam-settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop launcher is missing'
-grep -Fq 'Icon=org.seafoam.Settings' <<<"$settings_desktop" || fail 'Seafoam Settings desktop icon contract is missing'
-grep -Fq 'Name=Desktop Settings' <<<"$settings_desktop" || fail 'Seafoam Settings English desktop name is missing'
-grep -Fq 'Name[pt_BR]=Ajustes do Desktop' <<<"$settings_desktop" || fail 'Seafoam Settings Portuguese desktop name is missing'
 file_roller_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/org.gnome.FileRoller.desktop)
 grep -Fq 'Name[pt_BR]=Descompactador' <<<"$file_roller_override" || fail 'File Roller Portuguese desktop name is missing'
 grep -Fq 'Name=Archive Manager' <<<"$file_roller_override" || fail 'File Roller English desktop name is missing'
@@ -1644,14 +1613,11 @@ while IFS='|' read -r path english portuguese command; do
   launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"
 done <<'EOF'
-usr/local/share/applications/org.aqueous.Dome.desktop|System Monitor|Monitor do Sistema|dome
-usr/local/share/applications/org.aqueous.Phyto.desktop|Files|Arquivos|phyto %u
-usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
+usr/local/share/applications/pcmanfm.desktop|File Manager|Gerenciador de Arquivos|pcmanfm %U
+usr/share/applications/audionaut.desktop|Audionaut|Audionaut|audionaut %F
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
-usr/share/applications/transit.desktop|Transit|Transit|transit %U
-usr/share/applications/zenkai.desktop|Zenkai|Zenkai|zenkai %U
 usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
@@ -1683,12 +1649,12 @@ grep -Fq '/usr/bin/dinitui' <<<"$manifest" || fail 'DinitUI executable is missin
 grep -Fq '/usr/bin/dinxpanel' <<<"$manifest" || fail 'DINXPanel executable is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinitUI.svg' <<<"$manifest" || fail 'DinitUI icon is missing'
 grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$manifest" || fail 'DINXPanel icon is missing'
-# The three native Zig control apps force the DINX dark palette from compiled-in CSS.
+# The two native Zig control apps force the DINX dark palette from compiled-in CSS.
 # Assert the shipped binaries carry it, not just their source: a recipe change that
 # leaves pkgrel unchanged makes the builder install a stale precompiled artifact whose
 # binary predates the theme, which is how DinitUI shipped a light UI while
 # check_dinitui.sh still passed on the source.
-for native_dark_app in dinitui dinxpanel seafoam-settings; do
+for native_dark_app in dinitui dinxpanel; do
   native_dark_binary=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$native_dark_app")
   grep -Fq 'window.background { background-color: #0b0d12; }' <<<"$native_dark_binary" \
     || fail "$native_dark_app binary does not embed the DINX dark window background; a stale precompiled artifact may have been installed"

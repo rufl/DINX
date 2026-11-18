@@ -241,7 +241,7 @@ printf 'smoke-install: root UUID=%s\n' "$root_uuid"
 printf 'smoke-install: checking installed runtime payload before boot\n'
 mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
-chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel dome seafoam-settings zls \
+chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel morghulis dinx-dock dinx-first-run octopi pcmanfm zls \
   >/dev/null 2>&1 || fail 'installed core packages are missing'
 [[ -f "$target_dir/etc/zls.json" || -f "$target_dir/etc/xdg/zls.json" ]] \
   || fail 'installed ZLS configuration is missing'
@@ -259,7 +259,7 @@ grep -Eq '/etc/(zls|xdg/zls)\.json' <<<"$zls_environment" \
   || fail 'installed ZLS configuration is not selected'
 printf 'smoke-install: checking installed runtime libraries\n'
 # ZLS is statically linked; version and configuration are checked above.
-for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/dome /usr/bin/seafoam-settings; do
+for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/morghulis /usr/bin/dinx-dock /usr/bin/dinx-first-run /usr/bin/octopi; do
   [[ -x "$target_dir$binary" ]] || fail "installed binary is missing: ${binary##*/}"
   ldd_output=$(chroot "$target_dir" /usr/bin/ldd "$binary" 2>&1) \
     || fail "installed library check failed: ${binary##*/}"

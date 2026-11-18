@@ -30,7 +30,6 @@ rootfs:
     - dinxpanel
     - dinx-keyring
     - dinx-plymouth-theme
-    - dome
     - river
     - kwm
     - kwim
@@ -38,8 +37,8 @@ rootfs:
     - dinx-dock
     - dinx-first-run
     - greetd-agreety
-    - seafoam-settings
     - zls
+    - pcmanfm
     - e2fsprogs
     - efibootmgr
     - elogind
@@ -53,8 +52,8 @@ rootfs:
     - gparted
     - pixelorama
     - godot
+    - blender
     - libva
-    - phyto
     - pori
     - greetd
     - linux-firmware-amdgpu
@@ -78,8 +77,6 @@ rootfs:
     - papirus-icon-theme
     - firefox
     - paintfe
-    - transit
-    - zenkai
     - eurooffice
     - dconf
     - gsettings-desktop-schemas
@@ -99,13 +96,11 @@ rootfs:
     - xorg-xwayland
     - bluez
     - blueman
-    - blockbench
     - bluez-utils
     - btop
     - brightnessctl
     - dialog
     - fzf
-    - glances
     - libnewt
     - openssh
     - patchy
@@ -126,14 +121,14 @@ rootfs:
     - less
     - nm-connection-editor
     - nvtop
+    - octopi
+    - pacman-contrib
     - paru
     - pciutils
     - pwvucontrol
-    - qps
     - rsync
-    - sane
-    - shelly
     - gapless
+    - audionaut
     - swayimg
     - swayidle
     - swaylock

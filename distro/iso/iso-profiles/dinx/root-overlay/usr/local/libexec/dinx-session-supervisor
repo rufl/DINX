@@ -152,6 +152,10 @@ fi
 # placement chosen above.
 start_required shell morghulis
 start_optional dock dinx-dock
+# pcmanfm --desktop draws the desktop layer, including the ~/Desktop shortcuts
+# that dinx-river-session seeds and approves for the live user. It is optional
+# so a desktop-renderer failure degrades to no icons rather than no session.
+start_optional desktop pcmanfm --desktop
 start_optional bc250 bc250-control-centerd
 # kwm is deliberately not started here: river spawns it as its default layout
 # (see dinx-river-init), so starting it again would contend for the layout slot.

@@ -34,7 +34,7 @@ as `pass`.
 4. On a disposable NTFS volume, mount it through Pori or UDisks2, create and
    remove a test file, unmount it, and mount it again. Do not use a Windows
    volume left hibernated or with Fast Startup enabled.
-5. Use Phyto to browse the mounted volume, File Roller to create and extract an
+5. Use PCManFM to browse the mounted volume, File Roller to create and extract an
    archive, and GParted only against a disposable disk.
 6. Verify `Ctrl+Alt+F2` or `Ctrl+Alt+F3` opens the recovery TTY, then return to
    the graphical session.

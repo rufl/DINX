@@ -32,19 +32,24 @@ The button list is fixed and compiled in. Each button resolves a desktop entry
 id with `g_desktop_app_info_new` and launches the resolved `GAppInfo` directly,
 with no arguments and no shell:
 
-| Button   | Desktop entry            |
-| -------- | ------------------------ |
+| Button   | Desktop entry             |
+| -------- | ------------------------- |
 | Terminal | `org.dinx.Deetty.desktop` |
-| Files    | `org.aqueous.Phyto.desktop` |
+| Files    | `pcmanfm.desktop`         |
 | Browser  | `firefox.desktop`         |
 | Editor   | `org.dinx.Dintor.desktop` |
-| Settings | `seafoam-settings.desktop` |
+| Packages | `octopi.desktop`          |
 | Dashboard | `dinxpanel.desktop`      |
 
 An entry that is absent or hidden resolves to nothing and its button is
 skipped: the dock never fails because an application is not installed. The
 icon comes from the entry's `Icon=` key and the tooltip from its localized
 `Name=`, so both follow the installed desktop entry and the session locale.
+
+The installer has no dock button on purpose: `pcmanfm --desktop` renders
+`~/Desktop`, where the session seeds an approved `Install DINX.desktop` for the
+live user and removes it on installed systems, so a pinned button would
+duplicate that affordance.
 
 ## Appearance and identity
 
@@ -66,4 +71,4 @@ zig build -Dcpu=baseline -Doptimize=ReleaseSafe
 
 Requires Zig 0.17 and the `gtk4` and `gtk4-layer-shell` development files, both
 present in the builder image. The package builds in place from the checked-in
-source tree, like `dinxpanel` and `seafoam-settings`.
+source tree, like `dinxpanel` and `dinx-first-run`.

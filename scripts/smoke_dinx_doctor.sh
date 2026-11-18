@@ -16,7 +16,7 @@ cat > "$tmp/bin/pacman" <<'EOF'
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
 if [ "$1" = -Q ]; then
   case "$2" in
-    dinit|phyto|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|dome|seafoam-settings|zls|river|kwm|kwim) exit 0 ;;
+    dinit|pcmanfm|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|octopi|zls|river|kwm|kwim|morghulis) exit 0 ;;
   esac
 fi
 exit 1
@@ -28,7 +28,7 @@ printf '%s\n' "$*" >> "$DINX_DOCTOR_DINIT_LOG"
 [ "$1" = --user ] && [ "$2" = list ]
 EOF
 
-for command in dinitui dinxpanel agreety river kwm kwim phyto pori wdisplays shikane shikanectl udisksctl; do
+for command in dinitui dinxpanel agreety river kwm kwim morghulis pcmanfm pori wdisplays shikane shikanectl udisksctl octopi; do
   : > "$tmp/bin/$command"
 done
 chmod +x "$tmp/bin/pacman" "$tmp/bin/dinitctl" "$tmp/bin"/*

@@ -14,22 +14,16 @@ MANIFEST = ROOT / ".github/package-updates.json"
 # or to an upstream that publishes no release tags / sits outside the polled hosts:
 # astal (Aylur/astal has zero git tags; frozen to the revision Morghulis pins in its
 # flake.lock) and appmenu-glib-translator (gitlab.com; the refresher's gitlab provider
-# targets gitlab.gnome.org only).
-#
-# dome and phyto are subprojects of the Seafoam-Labs/pearl monorepo, which DINX no
-# longer tracks: DINX retired the Pearl shell but still ships these two apps, patched
-# and pinned to the 0.3.0 archive. dome's discreet-header.patch does not apply to
-# 0.3.9 (`patch --fuzz=0` rejects both hunks: upstream reworked the header builder
-# and split buildOverview into paginated builders), and a bump would only surface at
-# P0 build time because no static gate applies the patch. Bump these deliberately,
-# regenerating the patch, not through the automated refresher.
+# targets gitlab.gnome.org only). octopi carries a 117-hunk DINX patch that rewrites its
+# qt-sudo elevation to pkexec/polkit (DINX ships no sudo) and a second source pinned to a
+# tagless alpm_octopi_utils commit; an automated version bump would orphan both, so it is
+# bumped deliberately like deetty, regenerating the patch in the same change.
 MANUAL_SOURCE_PINS = {
     "appmenu-glib-translator",
     "astal",
     "deetty",
     "dinx-gtk-themes",
-    "dome",
-    "phyto",
+    "octopi",
     "zls",
 }
 

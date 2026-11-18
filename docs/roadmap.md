@@ -31,7 +31,7 @@ Implementation delivered:
 - the Fish defaults, base package boundary and clean-build/VM smoke paths;
 - The live session starts River/KWM without asking for live credentials; installed systems use agreety and do not enable autologin. River/KWM is the only session, launched and supervised directly by dinit, with no systemd or UWSM payload.
 - KWM is registered as river's default layout before any window maps, so new sessions tile by default, and the user's `~/.config/kwm/config.zon` controls placement, workspaces and the bar; `dinx-river-session` seeds that file from the packaged default only when it is absent, so existing configuration is preserved. Compatibility with every GTK, Qt and XWayland app remains to be qualified.
-- Fish is the default shell and Deetty the only terminal emulator. The base roster includes Dintor, Phyto, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Dome, Seafoam Settings and ZLS, alongside the DINX control/diagnostic tools.
+- Fish is the default shell and Deetty the only terminal emulator. The base roster includes Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Blender, Audionaut and ZLS, alongside the DINX control/diagnostic tools.
 - GTK 3/4 defaults to the DINX dark theme; system branding is applied without replacing application or desktop icons. The live and installed systems use kernel `ntfs3` for NTFS read/write, and display changes can persist to Shikane profiles.
 - Calamares offers guided and manual partitioning, keeps destructive choices unselected and makes swap optional. CI covers installer transactions, but physical-disk installation and data-preservation claims still require hardware qualification.
 
@@ -69,7 +69,7 @@ P2 exit evidence:
 
 - the exact pinned upstream archive that supplies Deetty and Dintor is SHA-256 verified and built into the Artix `deetty` package;
 - the native Zig core qualifies PTY spawn/resize/exit, VT grid/title/paste, terminal-session exit, protocol/Unicode compatibility, allocator-accounted lifecycle and fairness under 30 panes with an 8 MiB paste;
-- the ReleaseSafe matrix qualifies actual tmux, a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/local SFTP, real Vim/btop, and the installed `info` command or its deterministic styled fallback for minimal/non-TTY surfaces;
+- the ReleaseSafe matrix qualifies actual tmux, a deterministic Zellij shim, real Nano/Less/Dialog, top/watch/whiptail/fzf/SQLite/the builder-only TUI system monitor/Bash/man/local SFTP, real Vim/btop, and the installed `info` command or its deterministic styled fallback for minimal/non-TTY surfaces;
 - the package is present in the ISO; `$TERMINAL`, shell defaults, `.desktop`, working-directory, River/KWM discovery and package-runtime contracts are verified;
 - the final P0 workflow proves package creation, ISO generation, QEMU boot, graphical payload, persistent installation, recovery TTY, attestation and artifact upload.
 
@@ -133,7 +133,7 @@ P3 release gate:
 **Delivered:**
 
 - standalone `DINX Gaming` launcher and hidden Wayland desktop entry remain available; Gamescope, Steam, Steam device rules and 32-bit Mesa/RADV/Vulkan dependencies are in the optional Artix `gaming` group, not the base ISO;
-- safe Normal/Lite/Gaming service semantics, profile enter/restore with failure propagation around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the DINXPanel system control center with fixed control-panel shortcuts, a read-only Shelly upgrade report with optional fwupd discovery, PaintFE and Zenkai launch buttons, and a non-removing Artix kernel installer;
+- safe Normal/Lite/Gaming service semantics, profile enter/restore with failure propagation around the standalone launcher, fixed GPU detection/driver plans for AMD, Intel and modern NVIDIA hardware, and the DINXPanel system control center with fixed control-panel shortcuts, a read-only `checkupdates`/`paru -Qu` upgrade report with optional fwupd discovery, an Octopi package-manager button and a PaintFE launch button, and a non-removing Artix kernel installer;
 - fixed launcher argv/return fixture and real headless Gamescope child launch/exit qualification;
 - ISO checks require the hidden launcher and entry while rejecting optional game binaries and package metadata from rootfs/livefs;
 - GameMode and MangoHud are optional group members; `dinx-gaming` supports `DINX_GAMEMODE=auto|on|off` and optional `DINX_MANGOHUD=on|off` without weakening the normal launcher fallback.
@@ -158,7 +158,7 @@ P3 release gate:
 
 - build metadata now binds the recorded ISO byte count and SHA-512 to the exact artifact checked by CI and the tagged release preflight;
 - metadata records the largest installed packages so size regressions have an actionable diagnostic;
-- the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, Phyto, File Roller, GParted, recovery TTY and hardware behavior.
+- the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, PCManFM, File Roller, GParted, recovery TTY and hardware behavior.
 - shipped River with the DINX `kwm` layout and `kwim` input manager as the sole user session through direct DINX wrappers: live autologin and agreety launch `dinx-river-session`, `dinx-river-init` registers `riverctl default-layout kwm` and hands off to `dinx-session-supervisor river`, which starts the DINX user-session helpers from direct dinit process identity, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
 
 **Remaining release gates:**

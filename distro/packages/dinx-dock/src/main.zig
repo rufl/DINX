@@ -69,6 +69,11 @@ const Config = struct {
 /// `GDesktopAppInfo` with no arguments and no shell, so nothing read from
 /// appearance.json can influence what is executed. `fallback_icon` only
 /// covers entries whose Icon= key is missing.
+///
+/// The installer is deliberately absent: `pcmanfm --desktop` renders
+/// `~/Desktop`, where dinx-river-session seeds an approved `Install DINX.desktop`
+/// for the live user and removes it on installed systems, so a dock button
+/// would duplicate that affordance.
 const Favorite = struct {
     desktop_id: [*:0]const u8,
     fallback_icon: [*:0]const u8,
@@ -76,10 +81,10 @@ const Favorite = struct {
 
 const favorites = [_]Favorite{
     .{ .desktop_id = "org.dinx.Deetty.desktop", .fallback_icon = "utilities-terminal" },
-    .{ .desktop_id = "org.aqueous.Phyto.desktop", .fallback_icon = "system-file-manager" },
+    .{ .desktop_id = "pcmanfm.desktop", .fallback_icon = "system-file-manager" },
     .{ .desktop_id = "firefox.desktop", .fallback_icon = "web-browser" },
     .{ .desktop_id = "org.dinx.Dintor.desktop", .fallback_icon = "text-editor" },
-    .{ .desktop_id = "seafoam-settings.desktop", .fallback_icon = "applications-system" },
+    .{ .desktop_id = "octopi.desktop", .fallback_icon = "system-software-install" },
     .{ .desktop_id = "dinxpanel.desktop", .fallback_icon = "org.dinx.DinxPanel" },
 };
 

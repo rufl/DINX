@@ -896,7 +896,7 @@ river ≥ 0.4 (necessário para o kwm) o morghulis só roda **sem** o módulo
 river, o que derruba a barra de tags. Isso vale igualmente no Linux — não é
 custo do port.
 
-A escolha do `build-astal-morphulis.sh` é kwm + river 0.4.8 + morghulis sem
+A escolha do `build-astal-morghulis.sh` é kwm + river 0.4.8 + morghulis sem
 AstalRiver, porque o kwm é o window manager (sem ele não há como mover/fechar
 janelas) e o morghulis trata `astal-river-0.1` como `required: false`
 (`src/meson.build:26`), o que já exclui `RiverTags.vala` e o
@@ -1077,12 +1077,12 @@ manter a flag explícita em `Makefile.kwm` (`ZIG_BUILD_ARGS`).
 
 ### Lacuna de empacotamento conhecida (não resolvida — documentada de propósito)
 
-`build-astal-morphulis.sh` instala toda a espinha (astal-*, glycin,
+`build-astal-morghulis.sh` instala toda a espinha (astal-*, glycin,
 appmenu-glib-translator) via `ninja install` em `/usr/local` da VM de build, mas
-só empacota **`dinx-morphulis`** (`package_plain`). Os `.so` do astal/glycin que
+só empacota **`dinx-morghulis`** (`package_plain`). Os `.so` do astal/glycin que
 o morghulis linka (`ldd` mostrou `libastal-river.so.0`, `libastal-tray.so.0`,
 `libglycin-2.so`, etc.) **não** viram `.pkg`. Consequência: num alvo limpo,
-`pkg install -r dinx dinx-morphulis` instalaria o binário mas o `ldd` falharia
+`pkg install -r dinx dinx-morghulis` instalaria o binário mas o `ldd` falharia
 por faltar as libs — e elas também não estão no catálogo FreeBSD (foram
 compiladas do fonte aqui).
 
@@ -1090,10 +1090,63 @@ Para o morghulis ser instalável na ISO faltam duas coisas que ainda não fiz:
 1. empacotar também cada `libastal-*`, `glycin`/`glycin-gtk4`, e
    `appmenu-glib-translator` (ou um metapacote que os carrege), na mesma forma
    `pkg create` do `build-native.sh`; **e**
-2. listar `dinx-morphulis` (+ os pacotes astal) na seção de ports customizados
+2. listar `dinx-morghulis` (+ os pacotes astal) na seção de ports customizados
    do `install-dinx-bsd.sh`, que é o que de fato instala no alvo.
 
 Hoje o estado provado é: **o stack compila, instala em `/usr/local` e roda junto
 na VM** (river+kwm+morghulis vivos, morghulis "initialized primary monitor"). O
 que NÃO está pronto é o empacotamento para uma instalação limpa na ISO. Isso é
 trabalho restante explícito, não algo que eu deva fingir estar ligado.
+
+## 30. river + kwm + kwim + morghulis: prova visual no FreeBSD 15.1
+
+Objetivo do lane alcançado e **provado em tela**. Build do river 0.5.2 do fonte
+(zig 0.17.1 pinado; `build_rc=0`, `river -version` = "0.5.2 -xwayland"), stack
+completo via `dbus-run-session river -c init` com `WLR_BACKENDS=headless`,
+`GSK_RENDERER=cairo`:
+
+```
+river 0.5.2 (S)  kwm (I)  morghulis (S)  wayvnc (I)   -- 8+ min, NO CORES
+river 0.4.8: SIGSEGV no primeiro cliente de screencopy; 0.5.2: none
+```
+
+Frame do wayvnc (1280×720) capturado pelo host mostra, de cima a baixo:
+- **Barra do kwm** no topo: tags `1 2 3 4 5 6 7 8 9 [ ] =`, tag 1 focada
+  (estilo DWM, exatamente o layout do kwm).
+- **NavBar do morghulis** embaixo (anchor=14 = bottom+left+right, `set_size(0,
+  200)` confirmado no `WAYLAND_DEBUG`): grade de launcher (2×2), ícone de
+  volume/mudo, **relógio `00:59 Nov 18`**, botão de power.
+- Centro preto (nenhuma janela de app aberta; só o shell).
+
+Prova de que é render **vivo** e não frame em cache: dois grabs ~6 min apart
+diferem em **122 px, todos nas linhas 695-702** — a região do relógio, que
+avançou `00:59 → 01:05`. `gtk4-layer-demo` (controle) também pintou (134 cores),
+provando que o caminho layer-shell + screencopy + wayvnc funciona no 0.5.2; o
+morghulis pinta no mesmo caminho.
+
+Evidência de protocolo (`WAYLAND_DEBUG=1` no morghulis): ele faz
+`wl_registry.bind(zwlr_layer_shell_v1)`, `get_layer_surface(... "Morghulis.NavBar")`,
+`set_anchor(14)`, `set_size(0,200)`, `wl_surface.commit()`, e depois
+attach/damage/frame-callback (buffer=9, shm=22) — o ciclo de paint completo.
+Logo o "framebuffer uniforme" das runs do river 0.4.8 era só o compositor morto
+antes de capturar, não o morghulis falhando em desenhar.
+
+**O que isso confirma e o que não confirma:**
+- Confirmado: river+kwm+morghulis rodam juntos e o morghulis **desenha o shell**
+  (NavBar com relógio vivo) num framebuffer real do FreeBSD 15.1, sobre o
+  compositor river, com kwm gerenciando tags.
+- Não confirmado aqui: painéis que dependem de daemon ausente na VM
+  (bluetooth/power-profiles/battery/pipewire logam `Could not connect` e ficam
+  inertes; o volume aparece mudo porque não há áudio). A **tag bar do rio**
+  (`RiverTags`) não aparece porque o build é sem `astal-river` (conflito de
+  protocolo do §28 — kwm precisa river ≥0.4, AstalRiver precisa ≤0.3). As tags
+  visíveis no topo são as do **kwm**, não as do morghulis.
+- Captura: `docs/proof/river-kwm-morghulis-freebsd.png` (frame do grab limpo).
+
+**Para a ISO** (restante, ver §29): empacotar a espinha Astal + glycin +
+translator + `dinx-morghulis` (hoje só o morghulis é `pkg create`-ado; as
+`.so` do astal/glycin ficam só em `/usr/local` da VM), e o river precisa subir
+para 0.5.x no port (bump de `USES=zig:016`→`017`) para não crashar em
+screencopy/wayvnc. A sessão com river 0.4.8 do catálogo funciona sem VNC
+(`DINX_RIVER_VNC` off), que é o caso de uso real num desktop com GPU/DRM onde o
+scanout é direto, não via screencopy.

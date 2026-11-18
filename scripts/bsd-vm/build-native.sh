@@ -248,10 +248,13 @@ stamp river-shifttags-start
 # (folded into libc here) and -lpixman-1 (zero pixman symbols in the source).
 # Generate the two vendored protocols with wayland-scanner and link only
 # wayland-client -- this is what compiled and ran in the build VM.
-RST_REV=master
+# Pinned to the exact upstream commit (date 2026-03-22), not floating master, so
+# the build is reproducible. The GitHub archive of a SHA extracts to
+# river-shifttags-<sha>.
+RST_REV=76076b83b6a66245cc02467924692d2b6f40fdbe
 if [ ! -d "$W/river-shifttags" ]; then
   fetch -q -o "$W/river-shifttags.tar.gz" \
-    "https://github.com/gnuunixchad/river-shifttags/archive/refs/heads/${RST_REV}.tar.gz" >>"$LOG" 2>&1
+    "https://github.com/gnuunixchad/river-shifttags/archive/${RST_REV}.tar.gz" >>"$LOG" 2>&1
   tar -xzf "$W/river-shifttags.tar.gz" -C "$W" >>"$LOG" 2>&1
   mv "$W/river-shifttags-${RST_REV}" "$W/river-shifttags" 2>>"$LOG"
 fi

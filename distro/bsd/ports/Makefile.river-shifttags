@@ -16,8 +16,12 @@
 PORTNAME=	river-shifttags
 PORTVERSION=	20260322
 CATEGORIES=	x11-wm wayland
-MASTER_SITES=	https://github.com/gnuunixchad/river-shifttags/archive/refs/heads/
-DISTNAME=	master
+# Pinned to the exact upstream commit, not the floating refs/heads/master, so
+# the port is reproducible. PORTVERSION is that commit's date (2026-03-22);
+# the GitHub archive of a SHA extracts to river-shifttags-<sha>.
+MASTER_SITES=	https://github.com/gnuunixchad/river-shifttags/archive/
+RST_REV=	76076b83b6a66245cc02467924692d2b6f40fdbe
+DISTNAME=	${RST_REV}
 
 MAINTAINER=	trafael@dinx.org
 COMMENT=	Tag-shifting CLI for the river compositor
@@ -32,7 +36,7 @@ LIB_DEPENDS=	libwayland-client.so:graphics/wayland
 
 USES=		pkgconfig
 
-WRKSRC=		${WRKDIR}/${PORTNAME}-master
+WRKSRC=		${WRKDIR}/${PORTNAME}-${RST_REV}
 
 # The two river protocols are vendored in the source tree; river-shifttags.c
 # does `#include "river-status-unstable-v1.h"` / `"river-control-unstable-v1.h"`,

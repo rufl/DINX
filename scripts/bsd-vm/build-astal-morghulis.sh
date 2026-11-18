@@ -50,18 +50,28 @@ mkdir -p "$REPO"
 # the same local `dinx` repo that install-dinx-bsd.sh already consumes, with
 # shlibs_provided injected (pkg create drops it, which makes `pkg add` fail with
 # "Missing shlib" once anything links these .so files).
-package() { # name version origin comment stage
-  _n=$1; _v=$2; _o=$3; _c=$4; _stage=$5
+package() { # name version origin comment stage [deps_ucl]
+  _n=$1; _v=$2; _o=$3; _c=$4; _stage=$5; _deps=${6:-}
   _meta="$W/meta-$_n"
   rm -rf "$_meta"; mkdir -p "$_meta"
-  cat > "$_meta/+MANIFEST" <<EOF
-name: $_n
-version: "$_v"
-origin: $_o
-comment: $_c
-maintainer: trafael@dinx.org
-prefix: /usr/local
-EOF
+  # The comment MUST be quoted: pkg's UCL parser terminates an unquoted value at
+  # a comma, so any comment containing one was silently truncated. Observed in
+  # the integrated run: glycin's stored comment came out as
+  # "glycin image loader (morghulis hard dep" -- everything after the comma,
+  # including the closing paren, was dropped.
+  {
+    printf 'name: %s\n' "$_n"
+    printf 'version: "%s"\n' "$_v"
+    printf 'origin: %s\n' "$_o"
+    printf 'comment: "%s"\n' "$_c"
+    printf 'maintainer: trafael@dinx.org\n'
+    printf 'prefix: /usr/local\n'
+    if [ -n "$_deps" ]; then
+      printf 'deps: {\n'
+      printf '  %s\n' "$_deps"
+      printf '}\n'
+    fi
+  } > "$_meta/+MANIFEST"
   printf '%s\n' "$_c" > "$_meta/+DESC"
   # plist paths are absolute install paths; pkg add installs them literally.
   (cd "$_stage" && find . -type f -o -type l | sed 's|^\./|/|') > "$_meta/plist"
@@ -254,7 +264,7 @@ if [ -d "$W/glycin" ]; then
     # dinx repo always carries the glycin .pkg.
     gstage="$W/stage-glycin"; rm -rf "$gstage"; mkdir -p "$gstage"
     (cd "$W/glycin" && DESTDIR="$gstage" ninja -C build install >/tmp/gly-stage.log 2>&1) \
-      && package glycin 2.3.0 dinx/glycin "glycin image loader (morghulis hard dep, loaders embedded off-Linux)" "$gstage" \
+      && package glycin 2.3.0 dinx/glycin "glycin image loader; sandbox loaders embedded off-Linux" "$gstage" \
       || log "FAIL stage/package glycin"
   fi
 else
@@ -374,9 +384,18 @@ SEOF
     log "== morghulis staged (DESTDIR) exit=$?"
     # meson installs the gschema .xml; FreeBSD has no compile trigger for it, so
     # install-dinx-bsd.sh runs glib-compile-schemas at first boot. Ship the .xml.
+    # glycin must be an EXPLICIT dep. Unlike every other library morghulis links,
+    # glycin's .so files carry no DT_SONAME, so the linker recorded them as
+    # absolute-path DT_NEEDED entries (/usr/local/lib/libglycin-2.so and
+    # libglycin-gtk4-2.so). pkg's shlibs mechanism keys on SONAME and cannot
+    # see them: readelf shows 29 DT_NEEDED on morghulis while shlibs_required has
+    # 27 -- the two missing ones are exactly those glycin libs. Without this
+    # dep a clean target installs a morghulis that fails at load time, and the
+    # `pkg install -n` plan confirms glycin is not pulled automatically.
     package dinx-morghulis "$MVER" dinx/morghulis \
-      "morghulis GTK4/Astal shell for the river session (no river tag bar: AstalRiver needs river<=0.3, kwm needs >=0.4)" \
-      "$stage"
+      "morghulis GTK4/Astal shell for the river session (no river tag bar: AstalRiver needs river<=0.3; kwm needs >=0.4)" \
+      "$stage" \
+      'glycin: { origin: dinx/glycin, version: "2.3.0" }'
   else
     log "== morghulis FAILED; see /tmp/morph-ms.log /tmp/morph-nj.log"
     grep -m6 'error:\|FAILED:' /tmp/morph-nj.log 2>/dev/null | tee -a "$LOG"

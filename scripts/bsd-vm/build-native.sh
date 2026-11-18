@@ -59,11 +59,15 @@ package() {
   meta="$W/meta-$name"
   rm -rf "$meta"
   mkdir -p "$meta"
+  # `comment` is quoted: pkg's UCL parser terminates an unquoted value at a
+  # comma, silently truncating any comment that contains one (observed with the
+  # glycin/morghulis packages). No current comment has a comma, so this is
+  # latent rather than broken -- quoted either way.
   cat > "$meta/+MANIFEST" <<EOF
 name: $name
 version: "$version"
 origin: $origin
-comment: $comment
+comment: "$comment"
 maintainer: trafael@dinx.org
 prefix: /usr/local
 EOF

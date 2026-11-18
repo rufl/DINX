@@ -125,14 +125,28 @@ if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo
     log 'NOTE: river session stack incomplete or unavailable'
   fi
   # morghulis (the river desktop shell). Guarded separately so a missing
-  # morghulis does not fail the kwm stack above. Its shlibs_required
-  # (libastal-*, libglycin-*, libappmenu-glib-translator) are satisfied by the
-  # matching dinx packages, which pkg resolves from the same local repo via the
-  # injected shlibs_provided -- so installing dinx-morghulis pulls the Astal
-  # spine, glycin and the translator. Those packages are produced by
-  # scripts/bsd-vm/build-astal-morghulis.sh and copied into dist/bsd/ports/pkg/repo.
-  # GSettings/desktop-db are compiled at first boot (see the glib-compile-schemas
-  # step below); without the schema morghulis aborts at startup.
+  # morghulis does not fail the kwm stack above. Most of its shlibs_required
+  # (libastal-*, libappmenu-glib-translator) are satisfied by the matching dinx
+  # packages, which pkg resolves from the same local repo via the injected
+  # shlibs_provided. glycin is the exception: its .so files carry no DT_SONAME,
+  # so the linker recorded absolute-path DT_NEEDED entries that pkg's shlibs
+  # matching cannot see -- dinx-morghulis therefore declares glycin as an
+  # explicit manifest dep. Those packages are produced by
+  # scripts/bsd-vm/build-astal-morghulis.sh and copied into
+  # dist/bsd/ports/pkg/repo. GSettings/desktop-db are compiled at first boot
+  # (see the glib-compile-schemas step below); without the compiled schema
+  # morghulis aborts at startup.
+  # System libraries morghulis hard-requires that the base desktop list above
+  # does not cover (read from the packaged binary's shlibs_required; every name
+  # verified present in the FreeBSD 15.1 catalogue). libgraphene and
+  # libwayland-client come with gtk4 and wayland respectively, which the base
+  # list already installs. The Astal/glycin/translator shared objects are NOT
+  # here: pkg resolves those from the local dinx repo via shlibs_provided, plus
+  # the explicit glycin dep declared in the dinx-morghulis manifest.
+  for p in libadwaita gsound libgtop cmark muparser libportal json-glib libsoup3; do
+    pkg install -y "$p" >/dev/null 2>&1 \
+      && log "installed $p" || log "WARNING: failed to install $p"
+  done
   pkg install -y -r dinx dinx-morghulis >/dev/null 2>&1 \
     && log 'morghulis river shell installed (its Astal/glycin deps resolved from the local repo)' \
     || log 'NOTE: morghulis not available (Astal/glycin packages not in repo)'

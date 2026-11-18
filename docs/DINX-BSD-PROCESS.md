@@ -1166,9 +1166,9 @@ scanout é direto, não via screencopy.
 
 Depois de provar cada peça isoladamente (Astal spine, glycin, translator,
 morghulis, empacotamento do quarrel e do morghulis), rodei o
-`build-astal-morphulis.sh` **inteiro** num workdir limpo (`/root/astalfull`), sem
+`build-astal-morghulis.sh` **inteiro** num workdir limpo (`/root/astalfull`), sem
 reaproveitar estado de probe. Resultado da primeira rodada: 17 `.pkg` (translator
-+ quarrel + 15 astal), mas **glycin e dinx-morphulis ausentes**, `exit=1`. Dois
++ quarrel + 15 astal), mas **glycin e dinx-morghulis ausentes**, `exit=1`. Dois
 bugs que os testes parciais não pegavam:
 
 1. **glycin nunca foi empacotado.** O guard era
@@ -1190,3 +1190,56 @@ ponta a ponta num workdir limpo revela guards que dependem de estado residual e
 ordens de empacotamento. Os 17 pacotes corretos + a falha ruidosa confirmam que
 o `fail hard` do script funciona; o glycin era o único empacotamento
 condicionalmente pulado.
+
+### Dois defeitos de empacotamento que só a inspeção do `.pkg` revelou
+
+Depois do run integrado produzir 19 pacotes, abri os manifests em vez de confiar
+no `pkg create exit=0`. Dois defeitos reais:
+
+**1. Comentário truncado por vírgula (UCL sem aspas).** O `+MANIFEST` era gerado
+com `comment: $comment` sem aspas. O parser UCL do pkg termina um valor não
+aspado na primeira vírgula, então o comentário armazenado saiu mutilado:
+
+```
+glycin:           "glycin image loader (morghulis hard dep      <- cortado
+dinx-morghulis: "morghulis GTK4/Astal shell for the river session (no river
+                  tag bar: AstalRiver needs river<=0.3            <- cortado
+```
+
+Tudo depois da vírgula — inclusive o parêntese de fechamento — foi descartado.
+Cosmético em si, mas corrompe o catálogo e quebra qualquer ferramenta que leia
+`comment`. Corrigido com `printf 'comment: "%s"\n'`. O mesmo padrão existia em
+`build-native.sh` (herdado, e a origem do meu modelo); lá nenhum comentário
+atual tem vírgula, então era latente e não corrompido — quotei igual.
+
+**2. glycin não seria instalado num alvo limpo.** `readelf -d` no binário mostra
+**29** `DT_NEEDED`, mas o `shlibs_required` do pacote tem **27**. Os dois que
+faltam são exatamente:
+
+```
+NEEDED  Shared library: [/usr/local/lib/libglycin-2.so]
+NEEDED  Shared library: [/usr/local/lib/libglycin-gtk4-2.so]
+```
+
+Caminhos **absolutos**, não sonames: as `.so` do glycin não têm `DT_SONAME`. O
+mecanismo de shlibs do pkg casa por soname, então não enxerga a dependência — e
+o `pkg install -n` confirmou: o plano puxa `appmenu-glib-translator` (via
+astal-tray), `quarrel` (via astal-mpris/notifd) e os 8 `astal-*`, mas **não**
+glycin. Num alvo limpo o `ldd` do morghulis falharia.
+
+Correção: `dinx-morghulis` declara `glycin` como dep explícita no manifest
+(`package()` ganhou um 6º argumento opcional com UCL de `deps`). É a solução
+certa aqui porque o problema é a ausência de soname no glycin, não algo que o
+nosso empacotamento possa derivar.
+
+Fragilidade registrada de propósito: como o `DT_NEEDED` é o caminho absoluto do
+`.so` **sem versão**, a resolução depende de o pacote do glycin embarcar tanto o
+link não-versionado quanto o versionado — o que ele faz
+(`libglycin-2.so` + `.so.0`), confirmado no stage. Se um dia o glycin passar a
+emitir soname, essa dep explícita vira redundante mas inofensiva.
+
+**Falso alarme que quase virei "bug":** `files: 0` no `+COMPACT_MANIFEST` de
+todos os pacotes. Os payloads estão lá (quarrel 20 entradas tar, glycin 33,
+morghulis 7 incluindo `/usr/local/bin/morghulis`); o mapa `files` com checksums vive no
+`+MANIFEST`, não no `+COMPACT_MANIFEST`. Meu método de inspeção estava errado,
+não o pacote.

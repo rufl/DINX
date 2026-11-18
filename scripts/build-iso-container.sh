@@ -1,5 +1,5 @@
 # P0 trigger: force workflow dispatch via path-match
-# P0 full build trigger: 2026-11-18-2
+# P0 full build trigger: 2026-11-18-3
 #!/usr/bin/env bash
 set -euo pipefail
 

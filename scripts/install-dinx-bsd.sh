@@ -124,6 +124,18 @@ if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo
   else
     log 'NOTE: river session stack incomplete or unavailable'
   fi
+  # morghulis (the river desktop shell). Guarded separately so a missing
+  # morghulis does not fail the kwm stack above. Its shlibs_required
+  # (libastal-*, libglycin-*, libappmenu-glib-translator) are satisfied by the
+  # matching dinx packages, which pkg resolves from the same local repo via the
+  # injected shlibs_provided -- so installing dinx-morphulis pulls the Astal
+  # spine, glycin and the translator. Those packages are produced by
+  # scripts/bsd-vm/build-astal-morphulis.sh and copied into dist/bsd/ports/pkg/repo.
+  # GSettings/desktop-db are compiled at first boot (see the glib-compile-schemas
+  # step below); without the schema morghulis aborts at startup.
+  pkg install -y -r dinx dinx-morghulis >/dev/null 2>&1 \
+    && log 'morghulis river shell installed (its Astal/glycin deps resolved from the local repo)' \
+    || log 'NOTE: morghulis not available (Astal/glycin packages not in repo)'
   pkg install -y -r dinx noctalia \
     || log 'NOTE: noctalia alternative shell not available'
 else

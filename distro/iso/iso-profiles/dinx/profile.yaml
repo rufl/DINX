@@ -47,7 +47,6 @@ rootfs:
     - fish
     - file-roller
     - flatpak
-    - fwupd
     - fuse2
     - gparted
     - pixelorama
@@ -114,7 +113,6 @@ rootfs:
     - python-psutil
     - curl
     - git
-    - galculator
     - firewalld
     - firewall-config
     - inxi

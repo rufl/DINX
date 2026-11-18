@@ -38,8 +38,10 @@ sha256sums=(
 prepare() {
   local root="$srcdir/mission-center-v$pkgver"
   rm -rf "$root/subprojects/magpie" "$root/subprojects/graph-widget"
-  rm -rf "$root/subprojects/magpie/platform-linux/crates/app-rummage"
-  mv "$srcdir/app-detection-$APP_DETECTION_COMMIT" "$root/subprojects/magpie/platform-linux/crates/app-rummage"
+  mv "$srcdir/gng-$MISSION_CENTER_MAGPIE_COMMIT" "$root/subprojects/magpie"
+  mv "$srcdir/graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT" "$root/subprojects/graph-widget"
+  mkdir -p "$root/subprojects/magpie/platform-linux/crates/app-rummage"
+  mv "$srcdir/app-detection-$APP_DETECTION_COMMIT"/* "$root/subprojects/magpie/platform-linux/crates/app-rummage"/
 }
 
 build() {

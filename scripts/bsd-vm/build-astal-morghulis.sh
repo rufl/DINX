@@ -47,10 +47,10 @@ REPO="$W/repo"
 mkdir -p "$REPO"
 
 # pkg create + catalog, same shape as build-native.sh so the artefacts land in
-# the same local `dinx` repo that install-dinx-bsd.sh already consumes.
-# morghulis ships a binary plus data (gschema/css/desktop/metainfo) and no
-# shared library of its own, so there is no shlibs_provided injection here.
-package_plain() { # name version origin comment stage
+# the same local `dinx` repo that install-dinx-bsd.sh already consumes, with
+# shlibs_provided injected (pkg create drops it, which makes `pkg add` fail with
+# "Missing shlib" once anything links these .so files).
+package() { # name version origin comment stage
   _n=$1; _v=$2; _o=$3; _c=$4; _stage=$5
   _meta="$W/meta-$_n"
   rm -rf "$_meta"; mkdir -p "$_meta"
@@ -64,9 +64,28 @@ prefix: /usr/local
 EOF
   printf '%s\n' "$_c" > "$_meta/+DESC"
   # plist paths are absolute install paths; pkg add installs them literally.
-  (cd "$_stage" && find . -type f | sed 's|^\./|/|') > "$_meta/plist"
+  (cd "$_stage" && find . -type f -o -type l | sed 's|^\./|/|') > "$_meta/plist"
   pkg create -m "$_meta" -p "$_meta/plist" -r "$_stage" -o "$REPO" >>"$LOG" 2>&1
   log "== pkg create $_n exit=$?"
+  _prov=$(sed -n 's|^/usr/local/lib/\(lib[^/]*\.so[^/]*\)$|\1|p' "$_meta/plist" \
+    | sed 's/.*/"&"/' | paste -sd, -)
+  if [ -n "$_prov" ] && [ -f "$REPO/$_n-$_v.pkg" ]; then
+    rm -rf "$_meta/inject"; mkdir -p "$_meta/inject"
+    tar -xf "$REPO/$_n-$_v.pkg" -C "$_meta/inject" >>"$LOG" 2>&1
+    python3 - "$_meta/inject" "[$_prov]" >>"$LOG" 2>&1 <<'PY'
+import json, os, sys
+d, prov = sys.argv[1], json.loads(sys.argv[2])
+for nm in ("+MANIFEST", "+COMPACT_MANIFEST"):
+    p = os.path.join(d, nm)
+    if os.path.exists(p):
+        m = json.load(open(p))
+        m["shlibs_provided"] = prov
+        json.dump(m, open(p, "w"), separators=(",", ":"))
+PY
+    (cd "$_meta/inject" && tar -P -cf "$REPO/$_n-$_v.pkg" -s '|^usr|/usr|' \
+      +COMPACT_MANIFEST +MANIFEST usr) >>"$LOG" 2>&1
+    log "== shlibs_provided injected into $_n exit=$?"
+  fi
 }
 
 [ -d "$W/astal-main" ] || {
@@ -90,8 +109,12 @@ mkdir -p "$PREFIX"
 # filtered pkgconfig dir below is rebuilt every run.
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$PREFIX/libdata/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig"
 
-build_mod() { # dir  (relative to $ASTAL/lib)
-  mod=$1
+# Each module is installed twice: once into the live $PREFIX so downstream
+# modules resolve their deps at configure/link time, and once into a DESTDIR
+# staging tree (layout $stage$PREFIX/...) that is pkg-created so the artefact is
+# installable on a clean target. pkgname = the .pc/library base name.
+build_mod() { # dir pkgname version  (dir relative to $ASTAL/lib)
+  mod=$1; pkgname=$2; ver=${3:-0.1.0}
   d=$ASTAL/lib/$mod
   [ -d "$d" ] || { log "SKIP $mod (no dir)"; return 1; }
   rm -rf "$d/build"
@@ -102,6 +125,15 @@ build_mod() { # dir  (relative to $ASTAL/lib)
   (cd "$d" && ninja -C build >/tmp/astal-nj.log 2>&1) || {
     log "FAIL build $mod: $(grep -m1 'error:' /tmp/astal-nj.log)"; return 1; }
   (cd "$d" && ninja -C build install >>/tmp/astal-in.log 2>&1) || { log "FAIL install $mod"; return 1; }
+  # stage for packaging
+  if [ -n "$pkgname" ]; then
+    stage="$W/stage-$pkgname"; rm -rf "$stage"; mkdir -p "$stage"
+    (cd "$d" && DESTDIR="$stage" ninja -C build install >/tmp/astal-stage.log 2>&1) || {
+      log "FAIL stage $mod"; return 1; }
+    # meson's DESTDIR layout is $stage$PREFIX/... ; pkg create wants the stage
+    # root that contains usr/local/... so the plist paths become /usr/local/...
+    package "$pkgname" "$ver" "dinx/$pkgname" "Astal $mod (FreeBSD build)" "$stage"
+  fi
   log "OK $mod"
 }
 
@@ -131,14 +163,46 @@ if [ -d "$T" ]; then
   for d in exporter importer; do
     [ -f "$H/$d.h" ] && { mkdir -p "$H/$d"; ln -sf "$H/$d.h" "$H/$d/$d.h"; }
   done
+  # stage + package the translator so lib/tray's dep is installable on target
+  tstage="$W/stage-appmenu-glib-translator"; rm -rf "$tstage"; mkdir -p "$tstage"
+  (cd "$T" && DESTDIR="$tstage" ninja -C build install >/tmp/amt-stage.log 2>&1) \
+    && package appmenu-glib-translator 26.11 dinx/appmenu-glib-translator \
+         "appmenu-glib-translator (Astal tray dependency, FreeBSD ulong fix)" "$tstage" \
+    || log "FAIL stage/package translator"
+  # the mirrored header subdir lives only in the live PREFIX; recreate it in the
+  # stage so the package is self-consistent for downstream builds.
+  for d in exporter importer; do
+    if [ -f "$tstage$PREFIX/include/appmenu-glib-translator/$d.h" ]; then
+      mkdir -p "$tstage$PREFIX/include/appmenu-glib-translator/$d"
+      ln -sf "../$d.h" "$tstage$PREFIX/include/appmenu-glib-translator/$d/$d.h"
+    fi
+  done
 else
   log "FAIL translator: no tree"; exit 1
 fi
 
 # 2. astal modules in dependency order. tray is last: it needs translator.
+#    Format: dir:pkgname:version (pkgname matches the installed .so/.pc base).
 ok=0; fail=0
-for m in quarrel astal/io wl/wl astal/gtk4 river notifd mpris brightness workspace idle-notify apps battery bluetooth powerprofiles tray; do
-  if build_mod "$m"; then ok=$((ok+1)); else fail=$((fail+1)); fi
+for entry in \
+  "quarrel:quarrel:0.1.0" \
+  "astal/io:astal-io:0.1.0" \
+  "wl/wl:astal-wl:0.1.0" \
+  "astal/gtk4:astal-4:4.0" \
+  "river:astal-river:0.1.0" \
+  "notifd:astal-notifd:0.1.0" \
+  "mpris:astal-mpris:0.1.0" \
+  "brightness:astal-brightness:0.1.0" \
+  "workspace:astal-workspace:0.1.0" \
+  "idle-notify:astal-idle-notify:0.1.0" \
+  "apps:astal-apps:0.1.0" \
+  "battery:astal-battery:0.1.0" \
+  "bluetooth:astal-bluetooth:0.1.0" \
+  "powerprofiles:astal-power-profiles:0.1.0" \
+  "wireplumber:astal-wireplumber:0.1.0" \
+  "tray:astal-tray:0.1.0"; do
+  d=${entry%%:*}; rest=${entry#*:}; pn=${rest%%:*}; ver=${rest##*:}
+  if build_mod "$d" "$pn" "$ver"; then ok=$((ok+1)); else fail=$((fail+1)); fi
 done
 log "== astal modules: ok=$ok fail=$fail"
 
@@ -150,6 +214,42 @@ done
 
 log "== staging summary =="
 ls "$PREFIX/lib"/*.so* 2>/dev/null | head -20
+
+# 3b. glycin: morghulis hard-depends glycin-2 + glycin-gtk4-2 (image loading),
+#     which the FreeBSD catalogue does not ship. glycin's own meson disables its
+#     Linux sandbox loaders off-Linux (host_machine.system()=='linux') and embeds
+#     them instead, so it is portable by design. It needs rust (catalogue has it).
+#     Verified: configure_rc=0, build_rc=0, install_rc=0 -> glycin-2.pc +
+#     glycin-gtk4-2.pc. The first build is slow (~minutes, rust); the earlier
+#     "FAIL" I hit was my own ninja timeout, not a compile error.
+if ! pkg-config --exists glycin-2 2>/dev/null || [ "${REBUILD_GLYCIN:-0}" = 1 ]; then
+  GLY=${GLYCIN_REV:-main}
+  [ -d "$W/glycin" ] || {
+    fetch -q -o "$W/glycin.tar.gz" \
+      "https://gitlab.gnome.org/GNOME/glycin/-/archive/$GLY/glycin-$GLY.tar.gz" || { log "FAIL fetch glycin"; }
+    tar -xzf "$W/glycin.tar.gz" -C "$W" && mv "$W/glycin-$GLY" "$W/glycin" 2>/dev/null
+  }
+  if [ -d "$W/glycin" ]; then
+    command -v rustc >/dev/null 2>&1 || pkg install -y rust >/dev/null 2>&1
+    log "== building glycin (rust=$(rustc --version 2>/dev/null | head -1))"
+    rm -rf "$W/glycin/build"
+    (cd "$W/glycin" && meson setup build --prefix="$PREFIX" >/tmp/gly-ms.log 2>&1) \
+      && log "== glycin configure=ok" || log "FAIL glycin configure: $(grep -m1 ERROR /tmp/gly-ms.log)"
+    if [ -d "$W/glycin/build" ]; then
+      (cd "$W/glycin" && ninja -C build >/tmp/gly-nj.log 2>&1) \
+        && log "== glycin build=ok" || { log "FAIL glycin build"; grep -m4 'error' /tmp/gly-nj.log | tee -a "$LOG"; }
+      (cd "$W/glycin" && ninja -C build install >>"$LOG" 2>&1) && log "== glycin install=ok"
+      gstage="$W/stage-glycin"; rm -rf "$gstage"; mkdir -p "$gstage"
+      (cd "$W/glycin" && DESTDIR="$gstage" ninja -C build install >/tmp/gly-stage.log 2>&1) \
+        && package glycin 2.3.0 dinx/glycin "glycin image loader (morghulis hard dep, loaders embedded off-Linux)" "$gstage" \
+        || log "FAIL stage/package glycin"
+    fi
+  else
+    log "== glycin source tree not found"
+  fi
+else
+  log "== glycin already present (glycin-2.pc found); set REBUILD_GLYCIN=1 to rebuild"
+fi
 
 # 4. morghulis itself (the river desktop shell).
 #    - libnm/astal-network are carved out by files/morghulis-network-carve.patch:
@@ -264,7 +364,7 @@ SEOF
     log "== morghulis staged (DESTDIR) exit=$?"
     # meson installs the gschema .xml; FreeBSD has no compile trigger for it, so
     # install-dinx-bsd.sh runs glib-compile-schemas at first boot. Ship the .xml.
-    package_plain dinx-morghulis "$MVER" dinx/morghulis \
+    package dinx-morghulis "$MVER" dinx/morghulis \
       "morghulis GTK4/Astal shell for the river session (no river tag bar: AstalRiver needs river<=0.3, kwm needs >=0.4)" \
       "$stage"
   else

@@ -21,6 +21,15 @@ provides=('river-input-manager')
 source=("kwim-$pkgver.tar.gz::$KWIM_SOURCE_URL")
 sha256sums=("$KWIM_SOURCE_SHA256")
 
+# CI runners cannot resolve codeberg.org (DNS: NoAddressReturned), and kwim's
+# build.zig.zon fetches zig-wayland/zig-xkbcommon from there at build time.
+# The ifreund GitHub mirrors are byte-identical (zig content hash is
+# unchanged), so rewrite the host and keep the pinned .hash entries valid.
+prepare() {
+  cd "$srcdir/kwim-$pkgver"
+  sed -i 's#https://codeberg\.org/ifreund/#https://github.com/ifreund/#g' build.zig.zon
+}
+
 build() {
   cd "$srcdir/kwim-$pkgver"
   local zig_bin="${ZIG:-zig}"

@@ -24,6 +24,15 @@ optdepends=('kwim: river input-management helper, invoked automatically by kwm')
 source=("kwm-$pkgver.tar.gz::$KWM_SOURCE_URL")
 sha256sums=("$KWM_SOURCE_SHA256")
 
+
+# CI runners cannot resolve codeberg.org (DNS: NoAddressReturned), and kwm's
+# build.zig.zon fetches zig-xkbcommon/zig-wayland/zig-pixman from there at build
+# time. The ifreund GitHub mirrors are byte-identical (zig content hash is
+# unchanged), so rewrite the host and keep the pinned .hash entries valid.
+prepare() {
+  cd "$srcdir/kwm-$pkgver"
+  sed -i 's#https://codeberg\.org/ifreund/#https://github.com/ifreund/#g' build.zig.zon
+}
 build() {
   cd "$srcdir/kwm-$pkgver"
   local zig_bin="${ZIG:-zig}"

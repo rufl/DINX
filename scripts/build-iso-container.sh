@@ -379,7 +379,7 @@ trap finish EXIT
               icon_png=/usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
               tar -xOf \
                 "/workspace/distro/packages/deetty/deetty-${DEETTY_VERSION}.tar.gz" \
-                "deetty-${DEETTY_VERSION}/resources/com.noctty.NoctEd.svg" \
+                "deetty-${DEETTY_VERSION}/resources/com.deetty.NoctEd.svg" \
                 > "$icon_svg"
               mkdir -p "$(dirname "$icon_png")"
               rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"

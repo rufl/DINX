@@ -23,6 +23,7 @@ bsd_dir="$repo_root/distro/bsd"
 [[ -f "$bsd_dir/ports/Makefile.river-shifttags" ]] || fail 'missing Makefile.river-shifttags'
 [[ -f "$bsd_dir/ports/files/morghulis-network-carve.patch" ]] || fail 'missing morghulis-network-carve.patch'
 [[ -f "$bsd_dir/ports/files/morghulis-memfd-freebsd.patch" ]] || fail 'missing morghulis-memfd-freebsd.patch'
+[[ -f "$bsd_dir/ports/Makefile.morghulis" ]] || fail 'missing Makefile.morghulis'
 [[ -f "$repo_root/scripts/bsd-vm/build-astal-morghulis.sh" ]] || fail 'missing build-astal-morghulis.sh'
 [[ -f "$bsd_dir/ports/files/astal-valadoc-shim" ]] || fail 'missing astal-valadoc-shim'
 [[ -f "$bsd_dir/ports/Makefile.pearl" ]] || fail 'missing Makefile.pearl'

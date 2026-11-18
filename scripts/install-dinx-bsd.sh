@@ -128,9 +128,9 @@ if [ -f "$share/ports/pkg/repo/packagesite.txz" ] || [ -f "$share/ports/pkg/repo
   # morghulis does not fail the kwm stack above. Its shlibs_required
   # (libastal-*, libglycin-*, libappmenu-glib-translator) are satisfied by the
   # matching dinx packages, which pkg resolves from the same local repo via the
-  # injected shlibs_provided -- so installing dinx-morphulis pulls the Astal
+  # injected shlibs_provided -- so installing dinx-morghulis pulls the Astal
   # spine, glycin and the translator. Those packages are produced by
-  # scripts/bsd-vm/build-astal-morphulis.sh and copied into dist/bsd/ports/pkg/repo.
+  # scripts/bsd-vm/build-astal-morghulis.sh and copied into dist/bsd/ports/pkg/repo.
   # GSettings/desktop-db are compiled at first boot (see the glib-compile-schemas
   # step below); without the schema morghulis aborts at startup.
   pkg install -y -r dinx dinx-morghulis >/dev/null 2>&1 \

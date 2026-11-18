@@ -1075,28 +1075,39 @@ roda com esse PATH, o spawn resolve. Sem `-Dkwim=true`, os binds de input nem
 são compilados e o kwm não configura teclado/mouse — daí o build do port
 manter a flag explícita em `Makefile.kwm` (`ZIG_BUILD_ARGS`).
 
-### Lacuna de empacotamento conhecida (não resolvida — documentada de propósito)
+### Empacotamento: de lacuna a resolvido
 
-`build-astal-morghulis.sh` instala toda a espinha (astal-*, glycin,
-appmenu-glib-translator) via `ninja install` em `/usr/local` da VM de build, mas
-só empacota **`dinx-morghulis`** (`package_plain`). Os `.so` do astal/glycin que
-o morghulis linka (`ldd` mostrou `libastal-river.so.0`, `libastal-tray.so.0`,
-`libglycin-2.so`, etc.) **não** viram `.pkg`. Consequência: num alvo limpo,
-`pkg install -r dinx dinx-morghulis` instalaria o binário mas o `ldd` falharia
-por faltar as libs — e elas também não estão no catálogo FreeBSD (foram
-compiladas do fonte aqui).
+A primeira versão do `build-astal-morghulis.sh` instalava toda a espinha
+(astal-*, glycin, appmenu-glib-translator) via `ninja install` em `/usr/local`
+da VM, mas só empacotava **`dinx-morghulis`**. Os `.so` do astal/glycin que o
+morghulis linka não viravam `.pkg` e também não estão no catálogo FreeBSD, então num
+alvo limpo `pkg install -r dinx dinx-morghulis` instalaria o binário com `ldd`
+quebrado. **Resolvido**: agora cada módulo é instalado no prefixo vivo (para os
+módulos seguintes resolverem deps em configure/link) **e** estagiado via DESTDIR
+num `.pkg` (`package()` com injeção de `shlibs_provided`, o mesmo repack bsdtar
+do `build-native.sh`). glycin ganhou sua própria seção (precisa rust; os loaders
+sandbox dele já se desligam fora do Linux). O `install-dinx-bsd.sh` instala
+`dinx-morghulis` num bloco próprio e guardado.
 
-Para o morghulis ser instalável na ISO faltam duas coisas que ainda não fiz:
-1. empacotar também cada `libastal-*`, `glycin`/`glycin-gtk4`, e
-   `appmenu-glib-translator` (ou um metapacote que os carrege), na mesma forma
-   `pkg create` do `build-native.sh`; **e**
-2. listar `dinx-morghulis` (+ os pacotes astal) na seção de ports customizados
-   do `install-dinx-bsd.sh`, que é o que de fato instala no alvo.
+Verificado de ponta a ponta, não assumido:
+- `quarrel` → `quarrel-0.1.0.pkg` com plist absoluto, `shlibs_provided`
+  [libquarrel.so.0.1.0/.so.0/.so] e `shlibs_required`
+  [libc.so.7, libgio-2.0.so.0, libglib-2.0.so.0, libgobject-2.0.so.0].
+- `dinx-morghulis-0.14.0.pkg` → `shlibs_required` lista a espinha inteira
+  (libastal-apps/battery/bluetooth/mpris/notifd/power-profiles/tray/
+  wireplumber.so.0 + libadwaita-1 + libgtk-4); como cada `dinx-astal-*` provê
+  esses sonames, `pkg install -r dinx dinx-morghulis` puxa a cadeia sozinho.
+- o binário instalado tem **0 símbolos `RiverTags`** e **não** linka
+  `libastal-river` (o carve do §28), mas linka `libglycin-2.so`/
+  `libglycin-gtk4-2.so` — bate com o documentado e com a prova visual do §30.
 
-Hoje o estado provado é: **o stack compila, instala em `/usr/local` e roda junto
-na VM** (river+kwm+morghulis vivos, morghulis "initialized primary monitor"). O
-que NÃO está pronto é o empacotamento para uma instalação limpa na ISO. Isso é
-trabalho restante explícito, não algo que eu deva fingir estar ligado.
+Nomes dos pacotes conferidos contra os `.pc`/`.so` reais instalados (`astal-4` é
+o core gtk4, `astal-power-profiles` e não `astal-powerprofiles`, `astal-
+wireplumber` que faltava na lista e é dep dura do morghulis).
+
+Resta para uma ISO de verdade (fora do escopo deste lane): copiar os `.pkg` da
+VM para `dist/bsd/ports/pkg/repo/` no build da ISO, e subir o port do river de
+0.4.8 → 0.5.x (com o toolchain Zig 0.17) para o screencopy/wayvnc não crashar.
 
 ## 30. river + kwm + kwim + morghulis: prova visual no FreeBSD 15.1
 

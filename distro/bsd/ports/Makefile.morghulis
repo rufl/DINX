@@ -1,0 +1,88 @@
+# FreeBSD Port Makefile for morghulis, the DINX-BSD river desktop shell (DINX-BSD)
+#
+# morghulis (github.com/ARKye03/morghulis) is a GTK4/Libadwaita/Astal Wayland
+# shell. It is the shell for the river session (river compositor + kwm window
+# manager + kwim input manager). This Makefile is the declarative port record;
+# the actual build that produces the dinx-morghulis package runs through
+# scripts/bsd-vm/build-astal-morghulis.sh inside the FreeBSD build VM, the same
+# way dinx-aqueous / dinx-pearl are produced by build-native.sh.
+#
+# Dependencies that are NOT FreeBSD ports origins (so they cannot be
+# BUILD_DEPENDS / LIB_DEPENDS here -- they are built from source by the harness
+# into the local dinx repo, exactly like dinx-aqueous-pearl documents for its
+# deps): the Astal 0.1 modules (no ports origin exists; verified 404 on
+# x11-toolkits/astal4), glycin (no graphics/glycin port; needs rust), and
+# appmenu-glib-translator (no port). Those ship as dinx-astal-*, glycin and
+# appmenu-glib-translator packages from build-astal-morghulis.sh, and
+# dinx-morghulis's shlibs_required resolves them from the same local repo.
+#
+# Two FreeBSD-only patches are applied (both in files/, both verified -p1 clean):
+#   - morghulis-network-carve.patch: drops libnm/astal-network and the Network
+#     panel. FreeBSD's only libnm is the symbol-less networkmanager-shim
+#     (nm_client_new undefined), and NetworkManager is Linux-only.
+#   - morghulis-memfd-freebsd.patch: Gamma.vala's Linux.memfd_create binding
+#     emits #include <linux/memfd.h> (absent on FreeBSD); binds libc
+#     memfd_create in <sys/mman.h> instead (present since FreeBSD 13).
+PORTNAME=	morghulis
+PORTVERSION=	0.14.0
+CATEGORIES=	x11 wayland
+MASTER_SITES=	https://github.com/ARKye03/morghulis/archive/
+DISTNAME=	a3eb6d76fce3d1993dcfc0b73bec4c4893050df9
+
+MAINTAINER=	trafael@dinx.org
+COMMENT=	GTK4/Astal Wayland desktop shell for the river session
+WWW=		https://github.com/ARKye03/morghulis
+
+LICENSE=	MIT
+LICENSE_FILE=	${WRKSRC}/LICENSE
+
+# Real ports origins only (verified 200 on the FreeBSD ports cgit):
+BUILD_DEPENDS=	vala>=0.56:lang/vala \
+		meson:devel/meson \
+		ninja:devel/ninja \
+		blueprint-compiler:devel/blueprint-compiler \
+		gobject-introspection:devel/gobject-introspection \
+		pkgconf:devel/pkgconf \
+		node:www/node \
+		gettext-tools:devel/gettext-tools \
+		itstool:textproc/itstool \
+		scdoc:textproc/scdoc
+LIB_DEPENDS=	libgtk-4.so:x11-toolkits/gtk40 \
+		libadwaita-1.so:x11-toolkits/libadwaita \
+		liblayer-shell-0.so:x11-toolkits/gtk4-layer-shell \
+		libgsound.so:audio/gsound \
+		libsoup-3.0.so:devel/libsoup3 \
+		libjson-glib-1.0.so:devel/json-glib \
+		libgtop-2.0.so:devel/libgtop \
+		libportal.so:deskutils/libportal \
+		libcmark.so:textproc/cmark \
+		libmuparser.so:math/muparser
+
+# scss uses @use module syntax -> needs dart-sass, which is not a port
+# (textproc/dart-sass is 404) and rubygem-dartsass refuses amd64-freebsd.
+# The build harness installs dart-sass via a local npm `sass` and a wrapper.
+RUN_DEPENDS=	river>=0.4:x11-wm/river \
+		kwm>=0:x11-wm/dinx-kwm
+
+# river floor is 0.4 (the catalogue version) because kwm needs river>=0.4's
+# river-window-management-v1. The visual proof in PROCESS §30 used a source-built
+# river 0.5.2 only because 0.4.8 SIGSEGVs on screencopy clients (wayvnc/grim);
+# that is a headless-capture limitation, not a runtime requirement of the shell.
+# On a real desktop with DRM the compositor presents directly and 0.4.8 is fine.
+# Bump this to >=0.5 once the river port moves off 0.4.8.
+
+USES=		gnome meson pkgconfig gettext
+USE_GNOME=	glib20 gdkpixbuf2 cairo
+
+WRKSRC=		${WRKDIR}/${PORTNAME}-${DISTNAME}
+
+# meson's data/meson.build installs the gschema .xml but FreeBSD has no compile
+# trigger; install-dinx-bsd.sh runs glib-compile-schemas at first boot (morghulis
+# aborts at startup without the compiled com.arkye.morghulis schema).
+MESON_ARGS=	-Dprofile=release
+
+post-patch:
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/morghulis-network-carve.patch
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/morghulis-memfd-freebsd.patch
+
+.include <bsd.port.mk>

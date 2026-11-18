@@ -21,7 +21,7 @@ arch=('x86_64')
 url="$MISSION_CENTER_REPOSITORY"
 license=('GPL-3.0-or-later')
 depends=('dconf' 'dmidecode' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk4' 'libadwaita' 'libdrm' 'libudev' 'mesa' 'udisks2')
-makedepends=('blueprint-compiler' 'cargo' 'cmake' 'meson' 'ninja' 'perl')
+makedepends=('blueprint-compiler' 'cargo' 'clang' 'cmake' 'meson' 'ninja' 'perl')
 source=(
   "mission-center-v$pkgver.tar.gz::$MISSION_CENTER_SOURCE_URL"
   "gng-$MISSION_CENTER_MAGPIE_COMMIT.tar.gz::$MISSION_CENTER_MAGPIE_SOURCE_URL"
@@ -47,6 +47,7 @@ prepare() {
 build() {
   cd "$srcdir/mission-center-v$pkgver"
   export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
+  export CC=clang
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false
   meson compile -C build
 }

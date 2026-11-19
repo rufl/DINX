@@ -11,6 +11,7 @@ source_env="$startdir/source.env"
 pkgver="$BLENDER_VERSION"
 pkgrel=1
 epoch=17
+options=(!lto)
 # Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
 # openvdb, opensubdiv, embree, openimagedenoise.
 # Essentials kept: cycles, python, ffmpeg, bullet, openxr, alembic, draco,

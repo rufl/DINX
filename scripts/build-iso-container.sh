@@ -446,6 +446,9 @@ trap finish EXIT
               build_package octopi
               pacman_install_local "$package_repo"/octopi-*.pkg.tar.zst
               # Blender lean build — ~1.8 GB Artix bloat deps stripped
+              # fmt is not in makedepends because makepkg runs --nodeps;
+              # it is required by CMake's find_package(fmt).
+              pacman_retry -S --needed --noconfirm fmt
               build_package blender
               pacman_install_local "$package_repo"/blender-*.pkg.tar.zst
               # First-party desktop shell components: the layer-shell dock and the

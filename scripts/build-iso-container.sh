@@ -449,8 +449,13 @@ trap finish EXIT
               # makedepends are not resolved because makepkg runs --nodeps;
               # install the build-time deps CMake needs explicitly.
               pacman_retry -S --needed --noconfirm \
-                fmt python python-numpy cython boost libxcursor openexr openimageio \
-                wayland-protocols
+                alembic audaspace boost boost-libs bullet bzip2 cmake cython draco \
+                eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
+                ilmbase jolt ktx libdecor libgl libpng libtiff libwebp libxcursor \
+                libxml2 libx11 libxi libxrandr llvm ninja manifold nanovdb ncurses openal \
+                opencolorio openexr openimageio openjpeg2 openpgl openxr patch \
+                pkgconf potrace pugixml python python-numpy quadriflow rubberband \
+                sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
               build_package blender
               pacman_install_local "$package_repo"/blender-*.pkg.tar.zst
               # First-party desktop shell components: the layer-shell dock and the

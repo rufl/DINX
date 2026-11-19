@@ -23,7 +23,6 @@ url="https://www.blender.org/"
 license=(GPL-3.0-or-later)
 depends=(
   alembic
-  audaspace
   boost-libs
   bullet
   bzip2
@@ -34,7 +33,6 @@ depends=(
   fribidi
   gmp
   harfbuzz
-  jolt
   libdecor
   libgl
   libpng
@@ -120,7 +118,7 @@ build() {
     -DWITH_SYSTEM_OPENJPEG=ON \
     -DWITH_ALEMBIC=ON \
     -DWITH_DRACO=ON \
-    -DWITH_JOLT=ON \
+    -DWITH_JOLT=OFF \
     -DWITH_OPENCOLORIO=ON \
     -DWITH_OPENIMAGEDENOISE=OFF \
     -DWITH_OPENSUBDIV=OFF \
@@ -142,7 +140,7 @@ build() {
     -DWITH_NANOVDB=OFF \
     -DWITH_FFTW3=ON \
     -DWITH_OPENAL=ON \
-    -DWITH_AUDASPACE=ON \
+    -DWITH_AUDASPACE=OFF \
     -DWITH_GMP=ON \
     -DWITH_HARU=ON \
     -DWITH_SDL=ON \

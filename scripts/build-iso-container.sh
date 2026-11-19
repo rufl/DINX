@@ -449,9 +449,9 @@ trap finish EXIT
               # makedepends are not resolved because makepkg runs --nodeps;
               # install the build-time deps CMake needs explicitly.
               pacman_retry -S --needed --noconfirm \
-                alembic audaspace boost boost-libs bullet bzip2 cmake cython draco \
+                alembic boost boost-libs bullet bzip2 cmake cython draco \
                 eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
-                jolt libdecor libgl libpng libtiff libwebp libxcursor \
+                libdecor libgl libpng libtiff libwebp libxcursor \
                 libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
                 opencolorio openexr openimageio openjpeg2 openpgl openxr patch \
                 pkgconf potrace pugixml python python-numpy rubberband \

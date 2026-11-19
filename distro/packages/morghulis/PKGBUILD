@@ -26,10 +26,22 @@ optdepends=('wl-screenrec: screen recording from the shell'
             'river-shifttags: scroll through river tags from the NavBar')
 source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL")
 sha256sums=("$MORGHULIS_SOURCE_SHA256")
+prepare() {
+  cd "$srcdir/morghulis-$pkgver"
+  # Make libgtop optional (removed from Artix repos in 2026)
+  sed -i "s/dependency('libgtop-2.0')/dependency('libgtop-2.0', required: false)/" src/meson.build
+  # Exclude SysInfoCmd and SysInfoItem from the build
+  sed -i "/'SysInfoCmd.vala',/d" src/Runner/Commands/meson.build
+  sed -i "/'SysInfoItem.vala',/d" src/Runner/Commands/meson.build
+  # Remove SysInfoItem reference from Main.vala
+  sed -i "/typeof(SysInfoItem).ensure();/d" src/Main.vala
+  # Replace SysInfo() with empty Gtk.Box() in Runner.vala
+  sed -i 's/new SysInfo()/new Gtk.Box()/' src/Runner/Runner.vala
+}
 
 build() {
   cd "$srcdir/morghulis-$pkgver"
-  meson setup build --prefix=/usr --libdir=/usr/lib --buildtype=release -Dwith_libgtop=false
+  meson setup build --prefix=/usr --libdir=/usr/lib --buildtype=release
   meson compile -C build
 }
 

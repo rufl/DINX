@@ -425,10 +425,10 @@ trap finish EXIT
               # Morghulis resolves the astal libraries through pkg-config at build time.
               # blueprint-compiler is not in the builder image manifest and makepkg runs
               # --nodeps, so morghulis would fail at meson setup without it here.
-              pacman_retry -S --needed --noconfirm \
-                vala gobject-introspection glib2-devel dart-sass json-glib \
-                networkmanager wireplumber gsound libportal \
-                blueprint-compiler
+pacman_retry -S --needed --noconfirm \
+  vala gobject-introspection glib2-devel dart-sass json-glib \
+  networkmanager wireplumber gsound libportal \
+  blueprint-compiler
               build_package appmenu-glib-translator
               pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst
               build_package astal

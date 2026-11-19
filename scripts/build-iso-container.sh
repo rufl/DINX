@@ -427,7 +427,7 @@ trap finish EXIT
               # --nodeps, so morghulis would fail at meson setup without it here.
               pacman_retry -S --needed --noconfirm \
                 vala gobject-introspection glib2-devel dart-sass json-glib \
-                networkmanager wireplumber gsound libportal libgtop \
+                networkmanager wireplumber gsound libportal \
                 blueprint-compiler
               build_package appmenu-glib-translator
               pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst

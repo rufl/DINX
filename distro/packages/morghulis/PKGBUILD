@@ -14,7 +14,7 @@ arch=('x86_64')
 url="$MORGHULIS_REPOSITORY"
 license=('MIT')
 depends=('astal' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'libadwaita'
-         'gsound' 'json-glib' 'libgtop' 'libnm' 'libportal')
+         'gsound' 'json-glib' 'libnm' 'libportal')
 makedepends=('meson' 'ninja' 'vala' 'blueprint-compiler' 'dart-sass'
              'gobject-introspection' 'glib2-devel')
 # Two shell features degrade instead of failing when their helper is absent:

@@ -75,6 +75,7 @@ makedepends=(
   boost
   cmake
   cython
+  fmt
   git
   hip-runtime-amd
   libxcursor

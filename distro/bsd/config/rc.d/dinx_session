@@ -8,10 +8,11 @@
 # daemon(8) (initial_session needs a controlling terminal) and its agreety
 # aborts writing to the reserved VT ("/dev/tty" ENXIO), so greetd stays as
 # the interactive greeter only. The session chain is
-# dinx-session-select -> dinx-pearl-session -> aqueous -c dinx-init ->
-# pearl + wayvnc (or, for the river choice, dinx-river-session -> river -c
-# kwm); the getty on ttyv0 is switched off in /etc/ttys by the
-# installer/rc.local.live so nothing contends for the console.
+# dinx-session-select -> dinx-river-session -> river -c kwm (river is the
+# default; STATUS §9 proves it draws a desktop on FreeBSD 15.1). Pearl/Aqueous
+# (§4) cannot bring up a graphical session in a VM, so river is preferred. The
+# getty on ttyv0 is switched off in /etc/ttys by the installer/rc.local.live
+# so nothing contends for the console.
 
 . /etc/rc.subr
 
@@ -25,7 +26,7 @@ dinx_session_start()
 	[ -x /usr/local/bin/dinx-session-select ] || return 0
 	# Live media ship without the desktop packages installed; leave the
 	# console free for the operator/installer instead of failing loudly.
-	# Two stacks qualify: Aqueous+Pearl (default) and river+kwm.
+	# Two stacks qualify: river+kwm (default) and Aqueous+Pearl.
 	if { [ -x /usr/local/bin/aqueous ] && [ -x /usr/local/bin/pearl ]; } \
 	   || { [ -x /usr/local/bin/river ] && [ -x /usr/local/bin/kwm ]; }; then
 		:

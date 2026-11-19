@@ -1,0 +1,239 @@
+diff --git a/src/kwm.zig b/src/kwm.zig
+index 93be08c..ecb174a 100644
+--- a/src/kwm.zig
++++ b/src/kwm.zig
+@@ -19,6 +19,7 @@ const FDType = enum {
+     signal,
+     bar_status,
+     key_repeat,
++    tags, // dinx-tags: tag state socket
+ };
+ 
+ pub const Layout = @import("kwm/layout.zig");
+@@ -75,6 +76,11 @@ pub fn run(wl_display: *wl.Display) !void {
+             try fd_types.appendBounded(.bar_status);
+         }
+ 
++        if (ctx.tags_fd) |fd| {
++            try poll_fds.appendBounded(.{ .fd = fd, .events = posix.POLL.IN, .revents = 0 });
++            try fd_types.appendBounded(.tags);
++        }
++
+         if (ctx.key_repeat) |key_repeat| {
+             if (key_repeat.is_repeating()) {
+                 try poll_fds.appendBounded(.{ .fd = key_repeat.timer_fd, .events = posix.POLL.IN, .revents = 0 });
+@@ -101,6 +107,7 @@ pub fn run(wl_display: *wl.Display) !void {
+                         ctx.handle_signal(signal_info.signo);
+                     },
+                     .bar_status => ctx.update_bar_status(),
++                    .tags => ctx.handle_tags_input(),
+                     .key_repeat => {
+                         const count = try read(u64, poll_fd.fd) orelse continue;
+                         ctx.key_repeat.?.repeat(count);
+diff --git a/src/kwm/context.zig b/src/kwm/context.zig
+index f0a58c3..c23e539 100644
+--- a/src/kwm/context.zig
++++ b/src/kwm/context.zig
+@@ -81,6 +81,9 @@ focus_stack: wl.list.Head(Window, .flink) = undefined,
+ key_repeat: ?KeyRepeat = @as(KeyRepeat, undefined),
+ 
+ bar_status_fd: ?posix.fd_t = null,
++    tags_fd: ?posix.fd_t = null, // dinx-tags: tag state socket
++    tags_clients: std.ArrayList(posix.fd_t) = .empty, // dinx-tags: connected clients
++    tags_socket_path: [128]u8 = @splat(0), // dinx-tags: socket path buffer
+ 
+ terminal_windows: std.AutoHashMap(i32, *Window) = undefined,
+ output_states: std.StringHashMap(*Output.State) = undefined,
+@@ -391,6 +394,7 @@ pub fn reload_config(self: *Self) void {
+ 
+ pub fn start_listening_status(self: *Self) void {
+     self.stop_listening_status();
++    self.start_listening_tags(); // dinx-tags: always publish tag state
+ 
+     self.bar_status_fd = if (self.cfg.bar.status) |area|
+         switch (area.data) {
+@@ -481,6 +485,158 @@ pub fn update_bar_status(self: *Self) void {
+ }
+ 
+ 
++
++
++// dinx-tags: tag state socket. river 0.5.x removed zriver_status_manager_v1
++// and kwm is the sole owner of tag state, so we publish it over a Unix socket
++// for morghulis's RiverTags widget. Protocol: newline-delimited UTF-8.
++//   kwm -> client: "T <focused_hex> <occupied_hex>\n"
++//   client -> kwm: "F <mask_hex>\n" (focus) | "X <mask_hex>\n" (toggle)
++pub fn start_listening_tags(self: *Self) void {
++    if (self.tags_fd != null) return;
++
++    const runtime_dir = posix.getenv("XDG_RUNTIME_DIR") orelse "/tmp";
++    const path = std.fmt.bufPrint(&self.tags_socket_path, "{s}/dinx-kwm-tags.sock", .{runtime_dir}) catch return;
++
++    // Remove stale socket from prior run
++    std.fs.cwd().deleteFile(path) catch {};
++
++    const addr = std.net.Address.initUnix(path) catch return;
++    const fd = posix.socket(posix.AF.UNIX, posix.SOCK.STREAM, 0) catch |err| {
++        log.warn("tags socket() failed: {}", .{err});
++        return;
++    };
++    // NONBLOCK | CLOEXEC via fcntl (Zig 0.17 has no SOCK.NONBLOCK/CLOEXEC flags)
++    const fl = posix.fcntl(fd, posix.F.GETFL, 0) catch |err| {
++        posix.close(fd);
++        log.warn("tags fcntl GETFL failed: {}", .{err});
++        return;
++    };
++    const fl2 = fl | (1 << @bitOffsetOf(posix.O, "NONBLOCK")) | (1 << @bitOffsetOf(posix.O, "CLOEXEC"));
++    posix.fcntl(fd, posix.F.SETFL, fl2) catch |err| {
++        posix.close(fd);
++        log.warn("tags fcntl SETFL failed: {}", .{err});
++        return;
++    };
++
++    posix.bind(fd, &addr.any, addr.getOsSockLen()) catch |err| {
++        log.warn("tags bind({s}) failed: {}", .{ path, err });
++        posix.close(fd);
++        return;
++    };
++    posix.listen(fd, 4) catch |err| {
++        log.warn("tags listen failed: {}", .{err});
++        posix.close(fd);
++        return;
++    };
++
++    self.tags_fd = fd;
++    log.info("tags socket listening at {s}", .{path});
++}
++
++pub fn stop_listening_tags(self: *Self) void {
++    if (self.tags_fd) |fd| {
++        posix.close(fd);
++        self.tags_fd = null;
++    }
++    for (self.tags_clients.items) |fd| posix.close(fd);
++    self.tags_clients.clearRetainingCapacity();
++    const path = std.mem.sliceTo(&self.tags_socket_path, 0);
++    if (path.len > 0) {
++        std.fs.cwd().deleteFile(path) catch {};
++        @memset(&self.tags_socket_path, 0);
++    }
++}
++
++pub fn notify_tags(self: *Self) void {
++    if (self.tags_fd == null) return;
++    if (self.tags_clients.items.len == 0) return;
++
++    var buf: [64]u8 = undefined;
++    var it = self.outputs.safeIterator(.forward);
++    while (it.next()) |output| {
++        const line = std.fmt.bufPrint(&buf, "T {x} {x}\n", .{ output.tag, output.occupied_tags() }) catch continue;
++        var i: usize = 0;
++        while (i < self.tags_clients.items.len) {
++            const cfd = self.tags_clients.items[i];
++            const n = write_to(cfd, line) catch {
++                posix.close(cfd);
++                _ = self.tags_clients.orderedRemove(i);
++                continue;
++            };
++            if (n != line.len) {
++                posix.close(cfd);
++                _ = self.tags_clients.orderedRemove(i);
++                continue;
++            }
++            i += 1;
++        }
++    }
++}
++
++pub fn handle_tags_input(self: *Self) void {
++    if (self.tags_fd == null) return;
++
++    // Accept new clients
++    while (true) {
++        const fd = posix.accept(self.tags_fd.?, null, null) catch |err| {
++            if (err == error.WouldBlock) break;
++            log.warn("tags accept failed: {}", .{err});
++            break;
++        };
++        const fl = posix.fcntl(fd, posix.F.GETFL, 0) catch |err| {
++            posix.close(fd);
++            break;
++        };
++        const fl2 = fl | (1 << @bitOffsetOf(posix.O, "NONBLOCK")) | (1 << @bitOffsetOf(posix.O, "CLOEXEC"));
++        posix.fcntl(fd, posix.F.SETFL, fl2) catch |err| {
++            posix.close(fd);
++            break;
++        };
++        self.tags_clients.append(ctx.gpa, fd) catch {
++            posix.close(fd);
++            break;
++        };
++    }
++
++    // Read commands from clients
++    var i: usize = 0;
++    while (i < self.tags_clients.items.len) {
++        const fd = self.tags_clients.items[i];
++        var buf: [64]u8 = undefined;
++        const n = posix.read(fd, &buf) catch |err| {
++            if (err == error.WouldBlock) { i += 1; continue; }
++            posix.close(fd);
++            _ = self.tags_clients.orderedRemove(i);
++            continue;
++        };
++        if (n == 0) {
++            posix.close(fd);
++            _ = self.tags_clients.orderedRemove(i);
++            continue;
++        }
++        // Parse "F <hex>" / "X <hex>"
++        const line = std.mem.trim(u8, buf[0..n], " \t\r\n");
++        if (line.len >= 3 and (line[0] == 'F' or line[0] == 'X')) {
++            const mask = std.fmt.parseInt(u32, line[2..], 16) catch 0;
++            if (mask != 0) {
++                if (self.current_output) |output| {
++                    if (line[0] == 'F') output.set_tag(mask) else output.toggle_tag(mask);
++                }
++            }
++        }
++        i += 1;
++    }
++}
++
++/// extern "c" write wrapper (Zig 0.17 removed std.posix.write).
++pub fn write_to(fd: posix.fd_t, data: []const u8) !usize {
++    extern "c" fn write(fd: i32, buf: [*]const u8, count: usize) isize;
++    const n = write(@intCast(fd), data, data.len);
++    if (n < 0) return error.WriteFailed;
++    return @intCast(n);
++}
++
+ pub fn handle_signal(self: *Self, sig: posix.SIG) void {
+     switch (sig) {
+         .INT, .TERM, .QUIT => self.quit(false),
+@@ -527,6 +683,7 @@ pub fn register_quit_hook(self: *Self, argv: []const []const u8, exit_session: b
+ 
+ 
+ pub fn quit(self: *Self, exit_session: bool) void {
++    self.stop_listening_tags(); // dinx-tags: cleanup socket
+     if (exit_session) {
+         log.debug("exit session", .{});
+ 
+diff --git a/src/kwm/output.zig b/src/kwm/output.zig
+index 8057573..c812fed 100644
+--- a/src/kwm/output.zig
++++ b/src/kwm/output.zig
+@@ -241,6 +241,7 @@ pub fn set_tag(self: *Self, tag: u32) void {
+     }
+ 
+     if (comptime build_options.bar_enabled) self.bar.damage(.tags);
++    ctx.notify_tags(); // dinx-tags: publish tag state
+ }
+ 
+ 
+@@ -281,6 +282,7 @@ pub fn toggle_tag(self: *Self, mask: u32) void {
+     }
+ 
+     if (comptime build_options.bar_enabled) self.bar.damage(.tags);
++    ctx.notify_tags(); // dinx-tags: publish tag state
+ }

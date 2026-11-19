@@ -1,6 +1,6 @@
 # DINX-BSD — Status completo: o que funciona e o que não funciona
 
-Data: 2026-11-19 (rodada river + kwm + kwim + morghulis + KwmTags). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
+Data: 2026-11-20 (rodada river + kwm + kwim + morghulis + KwmTags; publisher+consumer; river como sessão padrão). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
 Este documento consolida o estado real do effort BSD, separado por nível de
 evidência. Nada aqui é claim de roadmap: cada item cita a evidência observada
 ou a limitação encontrada. O journal detalhado de causas raiz está em
@@ -304,7 +304,7 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 | **morghulis compila/linka (150 deps, 0 não resolvidas)** | **Funciona** [V] |
 | **river+kwm+morghulis rodam juntos e DESENHAM (framebuffer)** | **Funciona** [V] |
 | Empacotamento: `pkg install` real → 12/12, schema compilado | **Funciona** [V] |
-| Barra de tags do morghulis com kwm (KwmTags via socket dinx-kwm-tags.sock) | **Implementado; compilado no host** [I] |
+| Barra de tags do morghulis com kwm (KwmTags via socket dinx-kwm-tags.sock: publisher `kwm-tags.patch` + consumer `morghulis-kwm-tags.patch`) | **Implementado; ambos os lados no repo; patch chain byte-idêntico ao build dourado /tmp/kwm-build** [I] |
 | Barra de tags do morghulis (AstalRiver) com kwm | **Impossível** (conflito de protocolo upstream; substituído por KwmTags) [B] |
 | Painel Network do morghulis | **Não funciona** (libnm do FreeBSD é stub) [B] |
 | Xwayland no Weston (segfault no launch do filho) | **Não funciona** [B] |
@@ -313,6 +313,7 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 | Temas aplicados em tela | **Não verificável sem scanout** [B] |
 | Gaming/Linuxulator exercitado | **Não testado** [I] |
 | Live/first-run/persist | **Implementado; gate final re-verificado** [V] |
+| Sessão padrão do ISO = river+kwm (dxinx-session-select) | **Fonte alterada; runtime pendente de VM** [I] |
 
 1. **[V]** ISO 15.1 atual (`sha256=749a95310a1eab6b10412e28aed5c77179c0a4411efa14702075a5f1294b56a2`): gate unattended final executado em QEMU/KVM com 2 GiB, instalação completa, primeiro boot com `dinx-bsd: first-boot-ready` + `login:` e shutdown limpo.
 2. **VirtualBox (sem DRM)**: dois caminhos, ambos sem driver DRM:
@@ -361,11 +362,17 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
   compilam do fonte; nada existe no catálogo FreeBSD.
 - **[I]** **KwmTags** (substitui `RiverTags`/`AstalRiver`): widget GTK4 que lê
   o estado de tags do kwm sobre `$XDG_RUNTIME_DIR/dinx-kwm-tags.sock` e envia
-  "F"/"X" de volta. Fonte `distro/bsd/ports/files/morghulis-kwm-tags.vala` +
-  patch `morghulis-kwm-tags.patch` (aplicado por
-  `scripts/bsd-vm/build-astal-morghulis.sh`). Compilado no host com
-  valac 0.56.19 + gtk4 + gio-unix (rc=0); patch aplica limpo (-p1) no trunk
-  pinado. Ainda não executado em FreeBSD real (sem VM livre p/ sessão gráfica).
+  "F"/"X" de volta. **Ambos os lados no repo**: consumer
+  `distro/bsd/ports/files/morghulis-kwm-tags.vala` + patch
+  `morghulis-kwm-tags.patch` (aplicado por
+  `scripts/bsd-vm/build-astal-morghulis.sh`); publisher
+  `distro/bsd/ports/files/kwm-tags.patch` (aplicado pelo `Makefile.kwm`
+  `post-patch`, -p1, depois de `kwm-freebsd.patch`). Patch chain verificada:
+  `kwm-freebsd.patch` + `kwm-tags.patch` sobre o trunk pinado 8dafe7ec gera
+  arquivos **byte-idênticos** ao build dourado `/tmp/kwm-build` (src/kwm.zig,
+  src/kwm/context.zig, src/kwm/output.zig). Consumer compilado no host com
+  valac 0.56.19 + gtk4 + gio-unix (rc=0). Ainda não executado em FreeBSD real
+  (sem VM livre p/ sessão gráfica).
 - **[V] — PROVA VISUAL**: river 0.5.2 (fonte) + kwm + morghulis + wayvnc, vivos
   juntos 8+ min sem core. Framebuffer capturado
   (`docs/proof/river-kwm-morghulis-freebsd.png`): barra de tags do kwm no topo
@@ -379,8 +386,8 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
   resolvidas, catálogo 19 pacotes. Trigger do glib compila o schema
   (`gschemas.compiled` 47775 B); `gsettings get com.arkye.morghulis night-temp`
   → 4000; binário instalado roda sem o abort "schema not installed".
-- **[I]** Ports: `Makefile.kwm` (+ `kwm-freebsd.patch`), `Makefile.river-shifttags`,
-  `Makefile.morghulis`; build Astal/glycin/morghulis via
+- **[I]** Ports: `Makefile.kwm` (+ `kwm-freebsd.patch`, `kwm-tags.patch`),
+  `Makefile.river-shifttags`, `Makefile.morghulis`; build Astal/glycin/morghulis via
   `scripts/bsd-vm/build-astal-morghulis.sh` → `dinx-*` `.pkg`; wiring em
   `build-native.sh`, manifesto, `install-dinx-bsd.sh`, `check_dinx_bsd.sh`,
   sessão `dinx-river-session` + `dinx-session-set river`.

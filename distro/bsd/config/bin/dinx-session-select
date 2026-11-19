@@ -1,12 +1,14 @@
 #!/bin/sh
-# Select the DINX session: per-user preference, then system default (pearl).
+# Select the DINX session: per-user preference, then system default (river).
+# river+kwm+morghulis is the proven stack on FreeBSD 15.1 (STATUS §9); the
+# Aqueous+Pearl stack cannot bring up a graphical session in a VM (§4).
 set -eu
 choice=""
 if [ -r "$HOME/.config/dinx/session" ]; then
   choice=$(cat "$HOME/.config/dinx/session")
 fi
 if [ -z "$choice" ]; then
-  choice=$(cat /var/db/dinx-bsd/session 2>/dev/null || echo pearl)
+  choice=$(cat /var/db/dinx-bsd/session 2>/dev/null || echo river)
 fi
 case "$choice" in
   pearl) exec "${DINX_PREFIX:-/usr/local}/bin/dinx-pearl-session" ;;

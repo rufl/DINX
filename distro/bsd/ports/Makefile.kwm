@@ -75,8 +75,16 @@ ZIG_BUILD_ARGS=	-Doptimize=ReleaseSafe -Dbar=true -Dkwim=true
 # annotated rationale): std.c.TFD is void on FreeBSD, signalfd(2) does not
 # exist, itimerspec renames its fields, and E.LIBBAD is Linux-only. The diff
 # paths are WRKSRC-relative, hence -p0.
+# Tag-state socket publisher (kwm-tags.patch, -p1): river >= 0.5 removed
+# zriver_status_manager_v1, so kwm is the sole owner of tag state and
+# publishes it over "$XDG_RUNTIME_DIR/dinx-kwm-tags.sock"
+# ("T <focused_hex> <occupied_hex>") for the morghulis KwmTags widget. Its
+# consumer lives on the morghulis port (files/morghulis-kwm-tags.vala, applied
+# by scripts/bsd-vm/build-astal-morghulis.sh). Without it KwmTags renders an
+# empty bar.
 post-patch:
 	@${PATCH} -d ${WRKSRC} -p0 < ${FILESDIR}/kwm-freebsd.patch
+	@${PATCH} -d ${WRKSRC} -p1 < ${FILESDIR}/kwm-tags.patch
 
 # Vendored toolchain: the framework already unpacks the .tar.xz distfile into
 # ${WRKDIR}/zig-x86_64-freebsd-${ZIG_VERSION}; this only covers the case where

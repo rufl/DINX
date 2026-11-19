@@ -451,10 +451,10 @@ trap finish EXIT
               pacman_retry -S --needed --noconfirm \
                 alembic audaspace boost boost-libs bullet bzip2 cmake cython draco \
                 eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
-                ilmbase jolt ktx libdecor libgl libpng libtiff libwebp libxcursor \
-                libxml2 libx11 libxi libxrandr llvm ninja manifold nanovdb ncurses openal \
+                jolt libdecor libgl libpng libtiff libwebp libxcursor \
+                libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
                 opencolorio openexr openimageio openjpeg2 openpgl openxr patch \
-                pkgconf potrace pugixml python python-numpy quadriflow rubberband \
+                pkgconf potrace pugixml python python-numpy rubberband \
                 sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
               build_package blender
               pacman_install_local "$package_repo"/blender-*.pkg.tar.zst

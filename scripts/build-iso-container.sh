@@ -449,12 +449,12 @@ trap finish EXIT
               # makedepends are not resolved because makepkg runs --nodeps;
               # install the build-time deps CMake needs explicitly.
               pacman_retry -S --needed --noconfirm \
-                alembic boost boost-libs bullet bzip2 cmake cython draco \
+                alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
                 eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
-                libdecor libgl libpng libtiff libwebp libxcursor \
+                libdecor libgl libharu libpng libtiff libwebp libxcursor \
                 libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
-                opencolorio openexr openimageio openjpeg2 openpgl openxr patch \
-                pkgconf potrace pugixml python python-numpy rubberband \
+                opencolorio openexr openimageio openjpeg2 openpgl openshadinglanguage \
+                openxr patch pkgconf potrace pugixml python python-numpy rubberband \
                 sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
               build_package blender
               pacman_install_local "$package_repo"/blender-*.pkg.tar.zst

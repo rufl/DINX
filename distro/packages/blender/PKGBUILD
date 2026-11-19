@@ -26,6 +26,7 @@ depends=(
   boost-libs
   bullet
   bzip2
+  ceres-solver
   draco
   fftw
   fontconfig
@@ -35,8 +36,8 @@ depends=(
   harfbuzz
   libdecor
   libgl
+  libharu
   libpng
-  libtiff
   libwebp
   libxml2
   libx11
@@ -46,7 +47,7 @@ depends=(
   lzo
   ncurses
   openal
-  opencolorio
+  openshadinglanguage
   opengl-driver
   openimageio
   openjpeg2

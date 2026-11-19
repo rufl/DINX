@@ -1,6 +1,6 @@
 # DINX-BSD — Status completo: o que funciona e o que não funciona
 
-Data: 2026-11-18 (rodada river + kwm + kwim + morghulis). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
+Data: 2026-11-19 (rodada river + kwm + kwim + morghulis + KwmTags). Branch `feat/bsd`. Alvo: FreeBSD 15.1-RELEASE amd64.
 Este documento consolida o estado real do effort BSD, separado por nível de
 evidência. Nada aqui é claim de roadmap: cada item cita a evidência observada
 ou a limitação encontrada. O journal detalhado de causas raiz está em
@@ -304,8 +304,8 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 | **morghulis compila/linka (150 deps, 0 não resolvidas)** | **Funciona** [V] |
 | **river+kwm+morghulis rodam juntos e DESENHAM (framebuffer)** | **Funciona** [V] |
 | Empacotamento: `pkg install` real → 12/12, schema compilado | **Funciona** [V] |
-| Barra de tags do morghulis (AstalRiver) com kwm | **Impossível** (conflito de protocolo upstream) [B] |
-| river 0.4.8 + screencopy (wayvnc/grim) | **Não funciona** (SIGSEGV; fix no 0.5.x) [B] |
+| Barra de tags do morghulis com kwm (KwmTags via socket dinx-kwm-tags.sock) | **Implementado; compilado no host** [I] |
+| Barra de tags do morghulis (AstalRiver) com kwm | **Impossível** (conflito de protocolo upstream; substituído por KwmTags) [B] |
 | Painel Network do morghulis | **Não funciona** (libnm do FreeBSD é stub) [B] |
 | Xwayland no Weston (segfault no launch do filho) | **Não funciona** [B] |
 | DRM em QEMU/VirtualBox (GPU virtual) | **Não existe no FreeBSD 15.1** [B] |
@@ -359,6 +359,13 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
   "for FreeBSD 15.1", `ldd` com 150 deps e 0 não resolvidas. Dois patches
   (network carve + memfd). A espinha Astal (16 módulos) + glycin + translator
   compilam do fonte; nada existe no catálogo FreeBSD.
+- **[I]** **KwmTags** (substitui `RiverTags`/`AstalRiver`): widget GTK4 que lê
+  o estado de tags do kwm sobre `$XDG_RUNTIME_DIR/dinx-kwm-tags.sock` e envia
+  "F"/"X" de volta. Fonte `distro/bsd/ports/files/morghulis-kwm-tags.vala` +
+  patch `morghulis-kwm-tags.patch` (aplicado por
+  `scripts/bsd-vm/build-astal-morghulis.sh`). Compilado no host com
+  valac 0.56.19 + gtk4 + gio-unix (rc=0); patch aplica limpo (-p1) no trunk
+  pinado. Ainda não executado em FreeBSD real (sem VM livre p/ sessão gráfica).
 - **[V] — PROVA VISUAL**: river 0.5.2 (fonte) + kwm + morghulis + wayvnc, vivos
   juntos 8+ min sem core. Framebuffer capturado
   (`docs/proof/river-kwm-morghulis-freebsd.png`): barra de tags do kwm no topo
@@ -388,20 +395,24 @@ diagnóstico; a causa real era SIGSYS por syscalls Linux crus, não o socket.
 - **[D]** Zig 0.17 removeu `std.posix.pipe`/`write`/`close`/`fcntl`: o shim
   precisa de `extern "c"`, e `O` no FreeBSD aceita `@bitOffsetOf` mas não
   expõe `O.NONBLOCK` como valor plano.
-- **[B] — conflito de protocolo river (bloqueio de produto, não do port)**: a
-  barra de tags do morghulis (`AstalRiver`) precisa de `river-status-unstable-v1`
-  (removido pelo river em `a309d18e`, 2024-07-21); o kwm precisa de
-  `river-window-management-v1` (só river ≥0.4). Nenhuma release do river tem os
-  dois (v0.3.x só status, v0.4.x–v0.5.2 só window-management). Logo o morghulis
-  roda **sem** o módulo river (`required:false` → sem `RiverTags`/`--define=river`);
-  as tags visíveis no topo são as do **kwm**. Vale em qualquer SO, não é custo do
-  port. kwm vence por ser o WM.
+- **[I] — barra de tags via socket (substitui RiverTags):** o `AstalRiver` do
+  morghulis liga `river-status-unstable-v1` (removido pelo river em `a309d18e`),
+  enquanto o kwm exige `river-window-management-v1` (só river ≥0.4). Nenhuma
+  release do river tem os dois, então `RiverTags`/`--define=river` está
+  desativado. Em vez disso, o `KwmTags` (files/morghulis-kwm-tags.vala, aplicado
+  por `scripts/bsd-vm/build-astal-morghulis.sh`) lê o estado de tags do kwm
+  sobre `$XDG_RUNTIME_DIR/dinx-kwm-tags.sock` ("T <focused_hex>
+  <occupied_hex>" → 9 botões com destaque do foco) e envia "F"/"X" de volta
+  para focar/trocar tags. Implementado e compilado no host (valac 0.56 +
+  gtk4 + gio-unix); ainda não executado em FreeBSD real (sem VM livre para a
+  sessão gráfica).
 - **[B]** river 0.4.8 (catálogo) SIGSEGV em qualquer cliente de screencopy
   (`Server.zig:626`, `else unreachable`; fix no 0.5.x → `error.NotOutputOrToplevel`).
   Não impede a sessão (sem captura fica estável), só a prova visual via
   wayvnc/grim. Daí a prova usar river 0.5.2 do fonte (precisa Zig 0.17, não o
   0.16 do catálogo) e o `dinx-river-session` deixar o VNC opt-in
   (`DINX_RIVER_VNC=1`) até o port subir para 0.5.x.
+
 - **[B]** `libnm` do FreeBSD (`networkmanager-shim`) é stub sem símbolos
   (`nm_client_new` undefined; 2 símbolos totais, sem `NM-1.0.typelib`/`libnm.vapi`)
   e NetworkManager é Linux-only → o painel **Network** do morghulis é removido

@@ -34,9 +34,7 @@ depends=(
   fribidi
   gmp
   harfbuzz
-  ilmbase
   jolt
-  ktx
   libdecor
   libgl
   libpng
@@ -48,8 +46,6 @@ depends=(
   libxrandr
   llvm-libs
   lzo
-  manifold
-  nanovdb
   ncurses
   openal
   opencolorio
@@ -61,7 +57,6 @@ depends=(
   pugixml
   python
   python-numpy
-  quadriflow
   rubberband
   sdl2
   speexdsp
@@ -116,7 +111,7 @@ build() {
     -DWITH_CYCLES_DEVICE_HIP=ON \
     -DWITH_CYCLES_DEVICE_ONEAPI=OFF \
     -DWITH_CYCLES_EMBREE=OFF \
-    -DWITH_CYCLES_NANOVDB=ON \
+    -DWITH_CYCLES_NANOVDB=OFF \
     -DWITH_MOD_FLUID=ON \
     -DWITH_MOD_OCEAN=ON \
     -DWITH_MOD_REMESH=ON \
@@ -137,14 +132,14 @@ build() {
     -DWITH_POTRACE=ON \
     -DWITH_PUGIXML=ON \
     -DWITH_MANIFOLD=ON \
-    -DWITH_QUADRIFLOW=ON \
+    -DWITH_QUADRIFLOW=OFF \
     -DWITH_RUBBERBAND=ON \
     -DWITH_FREESTYLE=ON \
     -DWITH_IK_ITASC=ON \
     -DWITH_IK_SOLVER=ON \
     -DWITH_MESH_OPTIMIZER=ON \
-    -DWITH_KTX=ON \
-    -DWITH_NANOVDB=ON \
+    -DWITH_KTX=OFF \
+    -DWITH_NANOVDB=OFF \
     -DWITH_FFTW3=ON \
     -DWITH_OPENAL=ON \
     -DWITH_AUDASPACE=ON \

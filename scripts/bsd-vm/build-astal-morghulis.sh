@@ -311,7 +311,7 @@ if [ -d "$M" ]; then
   #     libc memfd_create in <sys/mman.h> instead (present since FreeBSD 13).
   SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
   PATCH_DIR=${PATCH_DIR:-$SCRIPT_DIR/../../distro/bsd/ports/files}
-  for pname in morghulis-network-carve.patch morghulis-memfd-freebsd.patch; do
+  for pname in morghulis-network-carve.patch morghulis-memfd-freebsd.patch morghulis-kwm-tags.patch; do
     P="$PATCH_DIR/$pname"
     if [ ! -f "$P" ]; then
       log "FAIL missing patch $P"; exit 1

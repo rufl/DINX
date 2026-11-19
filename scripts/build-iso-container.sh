@@ -449,7 +449,7 @@ trap finish EXIT
               # makedepends are not resolved because makepkg runs --nodeps;
               # install the build-time deps CMake needs explicitly.
               pacman_retry -S --needed --noconfirm \
-                fmt python python-numpy cython boost libxcursor openexr \
+                fmt python python-numpy cython boost libxcursor openexr openimageio \
                 wayland-protocols
               build_package blender
               pacman_install_local "$package_repo"/blender-*.pkg.tar.zst

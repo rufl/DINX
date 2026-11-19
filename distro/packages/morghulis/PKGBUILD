@@ -29,7 +29,7 @@ sha256sums=("$MORGHULIS_SOURCE_SHA256")
 
 build() {
   cd "$srcdir/morghulis-$pkgver"
-  meson setup build --prefix=/usr --libdir=/usr/lib --buildtype=release
+  meson setup build --prefix=/usr --libdir=/usr/lib --buildtype=release -Dwith_libgtop=false
   meson compile -C build
 }
 

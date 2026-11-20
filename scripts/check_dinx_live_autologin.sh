@@ -99,8 +99,8 @@ grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live autologin must not be gated on pacman keyring setup'
 grep -Fqx 'waits-for = firewalld' "$service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
-grep -Fq "depends=('dinit' 'seatd' 'firewalld-dinit')" "$pkgbuild" \
-  || fail 'live autologin dependencies must be dinit, seatd and firewalld-dinit only'
+grep -Fq "depends=('dinit' 'seatd' 'firewalld-dinit' 'kbd')" "$pkgbuild" \
+  || fail 'live autologin dependencies must include dinit, seatd, firewalld-dinit and openvt from kbd'
 grep -Fq "'firewalld-dinit'" "$pkgbuild" \
   || fail 'live autologin package does not declare its Firewalld service dependency'
 ! grep -Fqx 'depends-on = local.target artix-live' "$service" \
@@ -124,6 +124,8 @@ grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
 grep -Fqx 'depends-on = dinx-live-autologin' "$session_service" \
   || fail 'live session does not wait for live boot preparation'
+grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' "$session_launcher" \
+  || fail 'live session does not acquire and activate dedicated VT 7'
 grep -Fq 'runuser -u dinx' "$session_launcher" \
   || fail 'live session does not start as the dinx user'
 grep -Fq 'DINX_LIVE_SESSION=1' "$session_launcher" \

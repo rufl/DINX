@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 set -eu
 
-# Launch the live River/KWM session as the live user. runuser performs the
-# PAM session setup; river takes the seat from seatd and owns VT handling.
-# There is no display manager in the live path: greetd stays installed-only.
+# Launch the live River/KWM session as the live user on dedicated VT 7.
+# openvt creates and activates the controlling terminal River needs; runuser
+# performs the PAM session setup. greetd stays installed-only.
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
-exec runuser -u dinx -- env \
+exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx -- env \
   HOME=/home/dinx \
   USER=dinx \
   LOGNAME=dinx \

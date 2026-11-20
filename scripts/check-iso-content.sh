@@ -146,6 +146,8 @@ live_autologin=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" u
 grep -Fq 'install -d -o dinx -g dinx -m 0700 /run/dinx-session' <<<"$live_autologin" \
   || fail 'livefs autologin does not provision the private session runtime dir'
 live_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-session)
+grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' <<<"$live_session" \
+  || fail 'livefs session does not acquire and activate dedicated VT 7'
 grep -Fq 'runuser -u dinx' <<<"$live_session" \
   || fail 'livefs session does not start as the dinx user'
 grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$live_session" \
@@ -1706,6 +1708,8 @@ grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" <<<"$live_autologin_wrapper
 grep -Fq 'hostname dinxlive' <<<"$live_autologin_wrapper" \
   || fail 'live boot does not set the active hostname to dinxlive'
 live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-session)
+grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' <<<"$live_session_launcher" \
+  || fail 'live session launcher does not acquire and activate dedicated VT 7'
 grep -Fq 'runuser -u dinx' <<<"$live_session_launcher" \
   || fail 'live session launcher does not switch to the dinx user'
 grep -Fq 'DINX_LIVE_SESSION=1' <<<"$live_session_launcher" \

@@ -172,6 +172,8 @@ grep -Fq 'zig016_version=0.16.0' "$builder" \
   || fail 'builder no longer provides the dedicated Zig 0.16 toolchain for KWM/KWIM'
 grep -Fq '"$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
   || fail 'builder no longer routes KWM/KWIM to the Zig 0.16 toolchain'
+grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' "$live_package/dinx-live-session" \
+  || fail 'the live session does not acquire and activate dedicated VT 7'
 grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$live_package/dinx-live-session" \
   || fail 'the live session does not launch the River session wrapper under a session bus'
 

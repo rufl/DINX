@@ -37,6 +37,7 @@
                 "polkit",
                 "seatd",
                 "sudo",
+                "tinyxxd",
                 "vulkan-radeon",
                 "vulkan-tools",
                 "vulkan-swrast",

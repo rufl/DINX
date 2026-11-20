@@ -55,7 +55,7 @@ for render_node in "$dri_root"/renderD*; do
 done
 
 if [ "$has_render_node" = false ]; then
-  printf '%s\n' vulkan
+  printf '%s\n' cpu
 elif [ "$has_legacy_gl" = true ]; then
   printf '%s\n' legacy-gl
 elif [ "$has_hardware" = true ]; then

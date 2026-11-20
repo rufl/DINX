@@ -169,6 +169,7 @@ assert_vim_compat_aliases_removed() {
   done
 }
 pruned_packages=(
+  clang
   breeze
   breeze-cursors
   plasma-integration

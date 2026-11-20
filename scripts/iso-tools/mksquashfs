@@ -145,6 +145,7 @@ prune_excluded_packages() {
   local local_db="$root/var/lib/pacman/local"
   local -a removable_packages=()
   local -a prune_candidates=(
+    clang
     breeze
     breeze-cursors
     plasma-integration

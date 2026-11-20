@@ -163,6 +163,7 @@ prune_excluded_packages() {
     texinfo
   )
   local -a package_records
+  local -a removable_packages=()
   local package
   local pacman_config
 

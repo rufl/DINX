@@ -1278,7 +1278,10 @@ grep -Fq 'install -Dm644 /etc/xdg/kwm/config.zon "$config_home/kwm/config.zon"' 
   || fail 'River session does not seed the system KWM configuration for the user'
 grep -Fq '[ ! -e "$config_home/kwm/config.zon" ]' <<<"$river_session" \
   || fail 'River session may overwrite a saved KWM configuration'
-grep -Fq 'riverctl default-layout kwm' <<<"$river_init" || fail 'River init does not register KWM as the default layout'
+if grep -Fq 'riverctl' <<<"$river_init"; then
+  fail 'River 0.5 init calls the removed riverctl executable'
+fi
+grep -Fq 'start_required wm kwm' <<<"$session_supervisor" || fail 'River session supervisor does not require KWM'
 grep -Fq 'start_required shikane shikane' <<<"$session_supervisor" || fail 'River session supervisor does not require the display authority'
 grep -Fq 'start_required policykit lxqt-policykit-agent' <<<"$session_supervisor" || fail 'River session supervisor does not require the Polkit authentication agent'
 grep -Fq 'start_required idle "$libexec_dir/dinx-idle"' <<<"$session_supervisor" || fail 'River session supervisor does not require the DINX idle manager'

@@ -262,8 +262,9 @@ grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$river_session" \
   || fail 'River session does not force the Qt6ct platform theme'
 grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$river_session" \
   || fail 'River session does not force Gecko browsers to use the system/compositor titlebar'
-grep -Fq 'riverctl default-layout kwm' "$river_init" \
-  || fail 'River init does not register kwm as the default layout'
+if grep -Eq '^[[:space:]]*(exec[[:space:]]+)?([^#[:space:]]*/)?riverctl([[:space:]]|$)' "$river_init"; then
+  fail 'River 0.5 init still calls the removed riverctl executable'
+fi
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' "$river_init" \
   || fail 'River init does not launch the supervisor in river mode'
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$river_session"; then
@@ -312,6 +313,8 @@ grep -Fq '[ "$mode" = river ]' "$supervisor" \
   || fail 'session supervisor does not restrict itself to the river mode'
 grep -Fq 'wait_for_wayland' "$supervisor" || fail 'session supervisor does not gate Wayland readiness'
 grep -Fq 'wait_for_dbus' "$supervisor" || fail 'session supervisor does not gate D-Bus readiness'
+grep -Fq 'start_required wm kwm' "$supervisor" \
+  || fail 'session supervisor does not start the required River window manager'
 grep -Fq 'start_required shikane shikane' "$supervisor" \
   || fail 'session supervisor does not start the required display daemon'
 grep -Fq 'start_required policykit lxqt-policykit-agent' "$supervisor" \
@@ -325,8 +328,8 @@ grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no fa
 grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
 grep -Fq 'start_required shell morghulis' "$supervisor" \
   || fail 'session supervisor does not start the Morghulis desktop shell'
-if grep -Eq 'start_(required|optional|background)[[:space:]]+[[:alnum:]_-]+[[:space:]]+(kwm|river)([[:space:]]|$)' "$supervisor"; then
-  fail 'session supervisor starts a second layout generator or compositor'
+if grep -Eq 'start_(required|optional|background)[[:space:]]+[[:alnum:]_-]+[[:space:]]+river([[:space:]]|$)' "$supervisor"; then
+  fail 'session supervisor starts a second compositor'
 fi
 
 # Session catalogue identity.
@@ -478,4 +481,4 @@ for doc in "$architecture" "$compatibility" "$pt_architecture" "$pt_compatibilit
   grep -Fq 'dinit' "$doc" || fail "dinit boundary is undocumented: ${doc#$root/}"
 done
 
-printf 'dinx_session_contract session=river_kwm_morghulis=true shell=morghulis greeter=agreety=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+dinx-dock+dinx-first-run+greetd-agreety=true profiled_defaults=river=true tmpfiles=agreety_cache=true supervisor=river required_helpers=shikane+policykit+idle+morghulis optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'
+printf 'dinx_session_contract session=river_kwm_morghulis=true shell=morghulis greeter=agreety=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+dinx-dock+dinx-first-run+greetd-agreety=true profiled_defaults=river=true tmpfiles=agreety_cache=true supervisor=river required_helpers=kwm+shikane+policykit+idle+morghulis optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'

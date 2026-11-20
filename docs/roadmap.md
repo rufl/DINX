@@ -30,7 +30,7 @@ Implementation delivered:
 - the direct River/KWM session, agreety through greetd, and dinit-only runtime with no systemd/UWSM;
 - the Fish defaults, base package boundary and clean-build/VM smoke paths;
 - The live session starts River/KWM without asking for live credentials; installed systems use agreety and do not enable autologin. River/KWM is the only session, launched and supervised directly by dinit, with no systemd or UWSM payload.
-- KWM is registered as river's default layout before any window maps, so new sessions tile by default, and the user's `~/.config/kwm/config.zon` controls placement, workspaces and the bar; `dinx-river-session` seeds that file from the packaged default only when it is absent, so existing configuration is preserved. Compatibility with every GTK, Qt and XWayland app remains to be qualified.
+- The supervisor starts KWM as river's required `river-window-management-v1` implementation before any window maps, so new sessions tile by default, and the user's `~/.config/kwm/config.zon` controls placement and workspaces; `dinx-river-session` seeds that file from the packaged default only when it is absent, so existing configuration is preserved. Compatibility with every GTK, Qt and XWayland app remains to be qualified.
 - Fish is the default shell and Deetty the only terminal emulator. The base roster includes Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Blender, Audionaut and ZLS, alongside the DINX control/diagnostic tools.
 - GTK 3/4 defaults to the DINX dark theme; system branding is applied without replacing application or desktop icons. The live and installed systems use kernel `ntfs3` for NTFS read/write, and display changes can persist to Shikane profiles.
 - Calamares offers guided and manual partitioning, keeps destructive choices unselected and makes swap optional. CI covers installer transactions, but physical-disk installation and data-preservation claims still require hardware qualification.
@@ -159,7 +159,7 @@ P3 release gate:
 - build metadata now binds the recorded ISO byte count and SHA-512 to the exact artifact checked by CI and the tagged release preflight;
 - metadata records the largest installed packages so size regressions have an actionable diagnostic;
 - the English and Portuguese qualification guides now include an installed-system checklist for display persistence, NTFS read/write, Pori, PCManFM, File Roller, GParted, recovery TTY and hardware behavior.
-- shipped River with the DINX `kwm` layout and `kwim` input manager as the sole user session through direct DINX wrappers: live autologin and agreety launch `dinx-river-session`, `dinx-river-init` registers `riverctl default-layout kwm` and hands off to `dinx-session-supervisor river`, which starts the DINX user-session helpers from direct dinit process identity, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
+- shipped River with the DINX `kwm` window manager and `kwim` input manager as the sole user session through direct DINX wrappers: live autologin and agreety launch `dinx-river-session`, `dinx-river-init` hands off to `dinx-session-supervisor river`, and the supervisor starts and monitors KWM plus the DINX user-session helpers from direct dinit process identity; KWM starts KWIM, and no upstream `uwsm` or systemd user units, systemd library or runtime are installed;
 
 **Remaining release gates:**
 

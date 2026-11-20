@@ -127,6 +127,9 @@ set_status starting
 wait_for_wayland || fail_session wayland-not-ready
 wait_for_dbus || fail_session dbus-not-ready
 
+# River 0.5 does not ship riverctl or start a window manager itself. KWM is
+# the required river-window-management-v1 implementation and starts KWIM.
+start_required wm kwm
 start_required shikane shikane
 start_required policykit lxqt-policykit-agent
 start_required idle "$libexec_dir/dinx-idle"
@@ -157,8 +160,8 @@ start_optional dock dinx-dock
 # so a desktop-renderer failure degrades to no icons rather than no session.
 start_optional desktop pcmanfm --desktop
 start_optional bc250 bc250-control-centerd
-# kwm is deliberately not started here: river spawns it as its default layout
-# (see dinx-river-init), so starting it again would contend for the layout slot.
+# KWM is supervised above as a required session component. Its default build
+# starts KWIM for river-input-management-v1.
 
 set_status ready
 log 'status=ready'

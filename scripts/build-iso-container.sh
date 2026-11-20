@@ -538,6 +538,7 @@ trap finish EXIT
                   print "NoExtract = usr/lib/calamares/modules/basestrap/*"
                   print "NoExtract = usr/share/calamares/modules/basestrap.conf"
                   print "NoExtract = usr/share/calamares/branding/artix/*"
+                  print "NoExtract = usr/share/calamares/branding/artix-next/*"
                   print "NoExtract = usr/share/doc/*"
                   print "NoExtract = usr/share/info/*"
                   print "NoExtract = usr/share/man/*"

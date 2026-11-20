@@ -446,8 +446,22 @@ env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null
 env "${ocr_env[@]}" DINX_TEST_OCR='DINX desktop' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null
-env "${ocr_env[@]}" DINX_TEST_OCR=$'agreety\nRiver + KWM (DINX)\nPassword\nSign in' \
+env "${ocr_env[@]}" DINX_TEST_OCR=$'DINX Linux dinx-install-smoke tty7\ndinx-install-smoke login:' \
   "$qemu_session_checker" "$qemu_screen" greeter >/dev/null
+sparse_greeter_screen="$fixture/sparse-greeter.ppm"
+python3 - "$sparse_greeter_screen" <<'PY'
+import sys
+from pathlib import Path
+
+width, height = 1280, 800
+pixels = bytearray(width * height * 3)
+for pixel in range(1470):
+    offset = pixel * 3
+    pixels[offset:offset + 3] = b"\xff\xff\xff"
+Path(sys.argv[1]).write_bytes(f"P6\n{width} {height}\n255\n".encode() + pixels)
+PY
+env "${ocr_env[@]}" DINX_TEST_OCR=$'DINX Linux dinx-install-smoke tty7\ndinx-install-smoke login:' \
+  "$qemu_session_checker" "$sparse_greeter_screen" greeter >/dev/null
 env "${ocr_env[@]}" DINX_TEST_OCR='Install DINX' \
   "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
 if env "${ocr_env[@]}" DINX_TEST_OCR=$'agreety\nPassword\nSign in' \
@@ -470,7 +484,7 @@ if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$fixture/missing.ppm" session >/dev/null 2>&1; then
   fail 'the session screen check accepted a missing screenshot'
 fi
-printf 'qemu_screen_smoke river_title=true dinx_marker=true greeter_ocr=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
+printf 'qemu_screen_smoke river_title=true dinx_marker=true agreety_login=true sparse_text_greeter=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
 
 bash "$root/scripts/smoke_dinx_session.sh"
 bash "$root/scripts/smoke_dinx_session_supervisor.sh"

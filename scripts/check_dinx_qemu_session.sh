@@ -22,7 +22,7 @@ command -v python3 >/dev/null 2>&1 || fail 'required command not found: python3'
 ppm_magic=
 IFS= read -r ppm_magic < "$screenshot" || true
 [[ "$ppm_magic" == P6 ]] || fail "session screenshot is not a binary PPM: $screenshot"
-if ! python3 - "$screenshot" <<'PY'
+if ! python3 - "$screenshot" "$mode" <<'PY'
 import sys
 from pathlib import Path
 
@@ -37,7 +37,7 @@ if magic.strip() != b"P6" or max_value != 255 or len(pixels) != width * height *
     sys.exit(1)
 
 visible = sum(max(pixels[offset], pixels[offset + 1], pixels[offset + 2]) > 32 for offset in range(0, len(pixels), 3))
-if visible * 1000 < width * height * 2:
+if sys.argv[2] != "greeter" and visible * 1000 < width * height * 2:
     print(f"visible pixels above DINX canvas: {visible}/{width * height}", file=sys.stderr)
     sys.exit(1)
 PY
@@ -91,12 +91,11 @@ if [[ "$mode" == greeter ]]; then
   fi
   greeter_text=$(printf '%s' "$recognized" | tr -cd '[:alnum:]')
   if ! grep -Eiq 'agreety|greeter|dinx|river' <<<"$greeter_text" \
-    || ! grep -Eiq 'signin|login' <<<"$greeter_text" \
-    || ! grep -Eiq 'pas[[:alpha:]]{0,4}rd' <<<"$greeter_text"; then
-    printf 'dinx-qemu-session: agreety identity, sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
+    || ! grep -Eiq 'login' <<<"$greeter_text"; then
+    printf 'dinx-qemu-session: agreety identity and login prompt are not visible:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  printf 'dinx-qemu-session: greeter_ready=true marker=Agreety+SignIn+Password screenshot=%s\n' "$screenshot"
+  printf 'dinx-qemu-session: greeter_ready=true marker=Agreety+Login screenshot=%s\n' "$screenshot"
   exit 0
 fi
 

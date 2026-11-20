@@ -45,6 +45,12 @@ done
 for family in DINX Skeuos Orchis Fluent Jasper; do
   grep -Fq "$family" "$frontend" || fail "first-run does not offer the $family theme family"
 done
+grep -Fq 'c.adw_window_title_new("DINX", "Configuração inicial / Initial setup")' "$frontend" \
+  || fail 'first-run header does not expose DINX setup identity'
+grep -Fq 'c.adw_toolbar_view_set_content(@ptrCast(toolbar), stack_widget);' "$frontend" \
+  || fail 'first-run pages are not attached below the branded toolbar'
+grep -Fq 'c.adw_application_window_set_content(window, toolbar);' "$frontend" \
+  || fail 'first-run window bypasses the branded toolbar'
 
 # The session glue runs the wizard once, applies locale, then syncs the toolkits,
 # and it must never be able to abort the session.

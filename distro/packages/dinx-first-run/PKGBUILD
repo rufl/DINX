@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 pkgname=dinx-first-run
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='DINX desktop first-run setup wizard'
 arch=(x86_64)
 url='https://github.com/rufl/DINX'

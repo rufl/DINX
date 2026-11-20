@@ -567,7 +567,8 @@ const App = struct {
         self.dock_bottom_button = self.addCheck(dock_page, "Inferior / Bottom", self.dock_none_button, false);
         self.addButton(dock_page, "Aplicar / Apply", &onApplyClicked);
 
-        c.adw_application_window_set_content(window, stack_widget);
+        c.adw_toolbar_view_set_content(@ptrCast(toolbar), stack_widget);
+        c.adw_application_window_set_content(window, toolbar);
         c.gtk_stack_set_visible_child_name(stack, "language");
         c.gtk_window_present(@ptrCast(window));
     }

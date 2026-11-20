@@ -61,6 +61,7 @@ esac
 for pattern in \
   'failed to load.*module' \
   'could not find.*settings\.conf' \
+  'directory filesystem restriction layout entry.*lacks mandatory attributes' \
   'unknown module' \
   'no module named'; do
   if grep -Eiq "$pattern" "$work_dir/calamares.log"; then

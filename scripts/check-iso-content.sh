@@ -636,14 +636,11 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     printf '%s\n' "$forbidden_matches" >&2
     fail 'retired Qogir/Breeze style/cursor, Plasma, Zathura or MuPDF packages remain in the ISO'
   fi
-  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang|ex-vi-compat|vim|vim-runtime)-[^/]*/' <<<"$image_manifest"); then
-    printf '%s\n' "$forbidden_matches" >&2
-    fail 'build-only clang or Vim qualification packages remain in the ISO'
+  if forbidden_matches=$(grep -E "/var/lib/pacman/local/(ex-vi-compat|vim|vim-runtime)-[^/]*" <<<"$image_manifest"); then
+    printf "%s\n" "$forbidden_matches" >&2
+    fail "build-only Vim qualification packages remain in the ISO"
   fi
   for build_only_path in \
-    usr/bin/clang \
-    usr/bin/clang++ \
-    usr/bin/clangd \
     usr/bin/ex \
     usr/bin/vedit \
     usr/bin/vi \

@@ -169,7 +169,7 @@ assert_vim_compat_aliases_removed() {
   done
 }
 pruned_packages=(
-  clang
+  linux-headers
   breeze
   breeze-cursors
   plasma-integration
@@ -186,7 +186,6 @@ pruned_packages=(
   vim
   vim-runtime
 )
-add_fixture_package clang
 add_fixture_package dinx-breeze-runtime '' 1
 add_fixture_package breeze dinx-breeze-runtime
 add_fixture_package dinx-vim-runtime '' 1

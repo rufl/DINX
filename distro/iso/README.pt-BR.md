@@ -153,13 +153,22 @@ e conjunto de dependências instaladas; cache miss recompila o pacote. Assim,
 cache hit evita recompilação sem enfraquecer pins de fonte ou verificação de
 assinatura.
 
-A ISO inclui o ZLS para a integração LSP de Zig do Dintor. `clang`/`clangd` e
-Vim são ferramentas de qualificação usadas somente no builder: o clangd
-exercita o cliente LSP genérico contra um servidor real, enquanto o Vim
-verifica a tela alternativa e o bracketed paste em uma TUI real. Nenhum dos
-dois é distribuído na imagem de execução.
+A ISO inclui o ZLS para a integração LSP de Zig do Dintor. O Vim continua
+como ferramenta de qualificação exclusiva do builder. Clang/clangd também
+qualificam o cliente LSP genérico no builder, mas o pacote `clang` permanece
+no runtime porque a dependência `openshadinglanguage` do Blender exige suas
+bibliotecas.
 
-Antes da compressão SquashFS, o wrapper executa transações fail-closed `pacman -Rns` no rootfs e no livefs para estas raízes de pacotes excluídas quando instaladas: `clang`, `breeze`, `breeze-cursors`, `dhcpcd`, `dhcpcd-dinit`, `ex-vi-compat`, `linux-headers`, `man-db`, `man-pages`, `pahole`, `plasma-integration`, `plasma-workspace`, `qogir-icon-theme`, `qqc2-breeze-style`, `texinfo`, `vim`, `vim-runtime` e `xdg-desktop-portal-kde`. `pahole` só é removido quando os headers do kernel estão presentes. Isso remove o toolchain de qualificação Clang/Vim usado somente no build, a dependência do seletor Artix `vi` sobre Vim e o cliente/adaptador de serviço `dhcpcd` sem uso; o NetworkManager usa seu cliente DHCP interno. Os pacotes de documentação ficam ausentes dos dois rootfs; `man-db` e `texinfo` permanecem somente no builder isolado para build/qualificação do Deetty. O Calamares instala o mesmo `rootfs.img`, portanto os pacotes também ficam ausentes do sistema instalado. `breeze-icons` é mantido porque Calamares → KParts → KIO → KIconThemes depende dele; o Papirus continua sendo o tema de ícones da área de trabalho. Dependências só são removidas quando nenhum pacote mantido precisa delas; conflitos abortam o build. O gate de conteúdo rejeita os registros dos pacotes excluídos e os executáveis `man`/`info`.
+Antes da compressão SquashFS, o wrapper executa transações fail-closed
+`pacman -Rns` no rootfs e no livefs para estas raízes de pacotes excluídas
+quando instaladas: `breeze`, `breeze-cursors`, `dhcpcd`, `dhcpcd-dinit`,
+`ex-vi-compat`, `linux-headers`, `man-db`, `man-pages`, `pahole`,
+`plasma-integration`, `plasma-workspace`, `qogir-icon-theme`,
+`qqc2-breeze-style`, `texinfo`, `vim`, `vim-runtime` e
+`xdg-desktop-portal-kde`. `pahole` só é removido quando os headers do kernel
+estão presentes. `breeze-icons` permanece porque Calamares → KParts → KIO →
+KIconThemes exige esse pacote, embora Papirus seja o tema de ícones selecionado
+para a área de trabalho.
 
 O perfil controla bridges visuais estáticas DINX: `/usr/share/dinx/theme/DINX.json` é a fonte das cores semânticas e ANSI; GTK e Qt consomem arquivos DINX versionados, e `DINX_COLOR_SCHEME` é o contrato de cor da sessão do usuário. `qt6ct`, `adw-gtk-theme` e `dinx-noto-latin` são instalados para esses consumidores, alinhados à tipografia GTK padrão do CachyOS. O pacote fornece Noto Sans 10 regular/negrito/itálico/negrito itálico e Noto Sans Mono 10, subsetados para latim, marcas combinantes, pontuação comum e moedas; ele substitui o pacote completo `noto-fonts`. A DINX distribui uma aparência selecionável — o default é o esquema escuro DINX, e o assistente de primeira execução registra a família, variante, cantos e posição escolhidos em `~/.config/dinx/appearance.json` — e `River + KWM + Morghulis (DINX)` é o único contrato de sessão do usuário. `scripts/check_dinx_theme.sh` valida esse contrato antes do build da ISO.
 

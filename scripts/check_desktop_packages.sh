@@ -228,12 +228,18 @@ for recipe_file in "$blender_recipe" "$blender_source"; do
 done
 grep -Fq 'build_package blender' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not build blender'
-# Verify bloat deps are stripped from depends/makedepends arrays
-if sed -n '/^depends=\|^makedepends=/{/depends=\|^makedepends=/,/)/p}' "$blender_recipe" \
-  | grep -Eq '(intel-oneapi|^usd$|^materialx$|^openvdb$|^opensubdiv$|^embree$|^openimagedenoise$)'; then
-  fail 'Blender package still carries Artix bloat deps'
+# Verify bloat dependencies are stripped from both dependency arrays.
+blender_all_deps=$(sed -n '/^depends=(/,/^)/p; /^makedepends=(/,/^)/p' "$blender_recipe")
+if grep -Eq '^[[:space:]]*(intel-oneapi|usd|materialx|openvdb|opensubdiv|embree|openimagedenoise)([[:space:]]|$)' <<<"$blender_all_deps"; then
+  fail 'Blender package still carries Artix bloat dependencies'
 fi
-grep -Eq '^\s*-DWITH_CYCLES_DEVICE_ONEAPI=OFF' "$blender_recipe" \
+blender_runtime_deps=$(sed -n '/^depends=(/,/^)/p' "$blender_recipe")
+if grep -Eq '^[[:space:]]*(openshadinglanguage|clang|clang-libs|llvm)([[:space:]]|$)' <<<"$blender_runtime_deps"; then
+  fail 'Blender runtime still pulls the Cycles OSL compiler toolchain'
+fi
+grep -Eq '^[[:space:]]*-DWITH_CYCLES_OSL=OFF' "$blender_recipe" \
+  || fail 'Blender does not disable Cycles Open Shading Language support'
+grep -Eq '^[[:space:]]*-DWITH_CYCLES_DEVICE_ONEAPI=OFF' "$blender_recipe" \
   || fail 'Blender does not disable Intel oneAPI (SYCL) device support'
 
 if grep -RqF 'shelly' "$root/distro/packages/dinxpanel/src/main.zig" "$root/distro/packages/dinx-dock/src/main.zig"; then

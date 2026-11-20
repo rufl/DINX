@@ -755,6 +755,15 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
   if grep -Eq '/var/lib/pacman/local/(linux-headers|pahole)-[^/]*/' <<<"$image_manifest"; then
     fail 'build-only linux-headers or pahole package metadata is present in a final ISO filesystem'
   fi
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(clang-[0-9]|clang-libs-[0-9]|llvm-[0-9]|openshadinglanguage-[0-9])[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'builder-only compiler or disabled Cycles OSL package metadata is present in a final ISO filesystem'
+  fi
+  for compiler_path in usr/bin/clang usr/bin/clang++ usr/bin/clangd usr/bin/llvm-config usr/bin/oslc; do
+    if iso_manifest_contains_path "$compiler_path" <<<"$image_manifest"; then
+      fail "builder-only compiler or disabled Cycles OSL executable is present in the ISO: $compiler_path"
+    fi
+  done
 done
 terminal_desktops=$(grep -oE 'squashfs-root/usr/share/applications/[^[:space:]]+\.desktop' <<<"$manifest" | sort -u || true)
 while IFS= read -r desktop_path; do
@@ -1644,8 +1653,10 @@ grep -Fq '/usr/share/icons/hicolor/scalable/apps/org.dinx.DinxPanel.svg' <<<"$ma
 # binary predates the theme, which is how DinitUI shipped a light UI while
 # check_dinitui.sh still passed on the source.
 for native_dark_app in dinitui dinxpanel; do
-  native_dark_binary=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$native_dark_app")
-  grep -Fq 'window.background { background-color: #0b0d12; }' <<<"$native_dark_binary" \
+  native_dark_binary="$tmp_dir/$native_dark_app"
+  unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "usr/bin/$native_dark_app" > "$native_dark_binary" \
+    || fail "could not extract $native_dark_app for compiled theme inspection"
+  grep -aFq 'window.background { background-color: #0b0d12; }' "$native_dark_binary" \
     || fail "$native_dark_app binary does not embed the DINX dark window background; a stale precompiled artifact may have been installed"
 done
 grep -Fq '/usr/share/dintor/styles/dintor-light.xml' <<<"$manifest" || fail 'Dintor light scheme is missing'

@@ -445,7 +445,8 @@ trap finish EXIT
                 qtermwidget pacman-contrib
               build_package octopi
               pacman_install_local "$package_repo"/octopi-*.pkg.tar.zst
-              # Blender lean build — ~1.8 GB Artix bloat deps stripped
+              # Blender lean build — ~1.8 GB Artix bloat deps and the
+              # runtime-only Cycles OSL compiler toolchain are stripped.
               # makedepends are not resolved because makepkg runs --nodeps;
               # install the build-time deps CMake needs explicitly.
               pacman_retry -S --needed --noconfirm \
@@ -453,7 +454,7 @@ trap finish EXIT
                 eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
                 libdecor libgl libharu libpng libtiff libwebp libxcursor \
                 libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
-                opencolorio openexr openimageio openjpeg2 openpgl openshadinglanguage \
+                opencolorio openexr openimageio openjpeg2 openpgl \
                 openxr patch pkgconf potrace pugixml python python-numpy rubberband \
                 sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
               build_package blender

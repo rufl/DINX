@@ -9,15 +9,17 @@ source_env="$startdir/source.env"
 : "${BLENDER_SOURCE_URL:?missing BLENDER_SOURCE_URL}"
 : "${BLENDER_SOURCE_SHA256:?missing BLENDER_SOURCE_SHA256}"
 pkgver="$BLENDER_VERSION"
-pkgrel=1
+pkgrel=2
 epoch=17
 options=(!lto)
 # Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
-# openvdb, opensubdiv, embree, openimagedenoise.
+# openvdb, opensubdiv, embree and openimagedenoise. Cycles OSL is disabled
+# because its runtime-only shader compiler pulls clang, clang-libs and llvm
+# into the base image.
 # Essentials kept: cycles, python, ffmpeg, bullet, openxr, alembic, draco,
 # jolt, opencolorio, openimageio, audaspace, freestyle, ik-solvers,
 # fluid/ocean/remesh modifiers, meshoptimizer, ktx, nanovdb, potrace,
-# pugixml, manifold, quadriflow, rubberband.
+# pugixml, manifold, quadriflow and rubberband.
 pkgdesc="A fully integrated 3D graphics creation suite (lean build — 3D modeling + gamedev only)"
 arch=(x86_64)
 url="https://www.blender.org/"
@@ -44,11 +46,9 @@ depends=(
   libx11
   libxi
   libxrandr
-  llvm-libs
   lzo
   ncurses
   openal
-  openshadinglanguage
   opengl-driver
   openimageio
   openjpeg2
@@ -104,7 +104,7 @@ build() {
     -DPYTHON_VERSION=3.14 \
     -DWITH_PYTHON_INSTALL_NUMPY=ON \
     -DWITH_CYCLES=ON \
-    -DWITH_CYCLES_OSL=ON \
+    -DWITH_CYCLES_OSL=OFF \
     -DWITH_CYCLES_PATH_GUIDING=ON \
     -DWITH_CYCLES_DEVICE_CUDA=ON \
     -DWITH_CYCLES_DEVICE_OPTIX=ON \

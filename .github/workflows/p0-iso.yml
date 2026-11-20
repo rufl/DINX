@@ -120,6 +120,8 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
+      - name: Verify Mission Center package and ISO contract
+        run: ./scripts/check_mission_center.sh
       - name: Verify Pori, PCManFM, dinit storage and NTFS contracts
         run: ./scripts/check_pori_storage.sh
       - name: Verify display tool package contract
@@ -157,6 +159,8 @@ jobs:
         run: scripts/check_dinx_package_provenance.sh
       - name: Smoke-test verified package-artifact cache
         run: ./scripts/smoke_package_artifact_cache.sh
+      - name: Smoke-test verified download cache
+        run: ./scripts/smoke_cache_verified_download.sh
       - name: Smoke-test verified toolchain extraction cache
         run: ./scripts/smoke_cache_verified_extract.sh
       - name: Verify DINX feature-group coverage
@@ -313,6 +317,15 @@ jobs:
           printf 'iso_dir=%s\n' "$iso_dir" >> "$GITHUB_OUTPUT"
           printf 'metadata_path=%s\n' "$metadata_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
+      - name: Verify built DINX package repository
+        run: scripts/check_dinx_package_repository.sh dist/packages
+      - name: Smoke-test signed DINX package updates
+        run: |
+          docker run --rm --privileged \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            dinx-iso-builder:ci \
+            scripts/smoke_dinx_update.sh dist/packages
       - name: Bundle signed package repository for artifact portability
         run: |
           set -euo pipefail

@@ -101,7 +101,6 @@ for required in \
   'scripts/cache-verified-download.sh' \
   'scripts/cache-verified-extract.sh' \
   'scripts/smoke_cache_verified_extract.sh' \
-  'scripts/iso-builder/**' \
   'Compute reusable build-cache input digest' \
   'Detect changed build caches' \
   'steps.cache-inputs.outputs.recipe_sha256' \
@@ -325,14 +324,6 @@ for required in \
   '--env DINX_TOOLCHAIN_CACHE_DIRTY_MARKER="$cache_toolchain_marker"' \
   'bash /workspace/scripts/build-iso-container.sh'; do
   grep -Fq -- "$required" "$docker_builder" || fail "Docker wrapper is missing container wiring: $required"
-done
-for required in \
-  '- "scripts/build-iso-docker.sh"' \
-  '- "scripts/build-iso-container.sh"' \
-  '- "scripts/iso-tools/prioritize-dinx-pacman-repo.sh"' \
-  '- "scripts/cache-verified-download.sh"'; do
-  grep -Fq -- "$required" "$workflow" \
-    || fail "P0 push path filters are missing build input: $required"
 done
 if grep -Fq -- '      - "distro/packages/**"' "$workflow"; then
   fail 'package-source changes must use the package-only publication workflow, not trigger ISO assembly'

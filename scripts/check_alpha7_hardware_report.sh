@@ -22,7 +22,7 @@ bash -n "$evidence" || fail 'hardware evidence validator has invalid shell synta
 grep -Fq '[qualification-context]' "$report" || fail 'qualification context is missing'
 grep -Fq 'DINX_ALPHA7_BUILD_COMMIT' "$report" || fail 'build commit input is missing'
 grep -Fq 'result_update_path' "$report" || fail 'update result field is missing'
-grep -Fq 'scripts/check_dinx_hardware_evidence.sh' "$workflow" || fail 'workflow does not track the hardware evidence validator'
+grep -Fq 'check_dinx_hardware_evidence.sh' "$root/scripts/check_dinx_contracts.sh" || fail 'contract runner does not track the hardware evidence validator'
 grep -Fq 'filesystem_rollback=unsupported' "$evidence" || fail 'filesystem rollback boundary is missing'
 grep -Fq 'schema=dinx-alpha7-hardware-report/v1' "$report" || fail 'report schema is missing'
 grep -Fq '1002:13fe' "$report" || fail 'BC250 PCI contract is missing'

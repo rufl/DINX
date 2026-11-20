@@ -16,6 +16,7 @@ profile_yaml="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
 common_profile="$repo_root/distro/iso/iso-profiles/common/common.yaml"
 feature_groups="$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json"
 workflow="$repo_root/.github/workflows/p0-iso.yml"
+builder="$repo_root/scripts/build-iso-container.sh"
 startup_smoke="$repo_root/scripts/smoke_calamares_startup.sh"
 branding_conf="$calamares_root/branding/dinx/branding.desc"
 slideshow_qml="$calamares_root/branding/dinx/show.qml"
@@ -37,7 +38,7 @@ require_text() {
   grep -Fq -- "$needle" "$path" || fail "missing '$needle' in ${path#$repo_root/}"
 }
 
-for path in "$partition_conf" "$notes_conf" "$notes_qml" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset" "$branding_mark_asset"; do
+for path in "$partition_conf" "$notes_conf" "$notes_qml" "$mount_conf" "$bootloader_conf" "$grub_windows_conf" "$settings_conf" "$packages_conf" "$unpackfs_conf" "$profile_yaml" "$common_profile" "$feature_groups" "$workflow" "$builder" "$startup_smoke" "$branding_conf" "$slideshow_qml" "$branding_asset" "$branding_mark_asset"; do
   require_file "$path"
 done
 
@@ -69,7 +70,7 @@ if grep -Fqx '    - ntfs-3g' "$profile_yaml"; then
 fi
 require_text 'Smoke-test Windows side-by-side and manual partition transactions' "$workflow"
 require_text 'scripts/smoke_calamares_windows.sh' "$workflow"
-require_text 'scripts/smoke_calamares_startup.sh' "$workflow"
+require_text 'scripts/smoke_calamares_startup.sh' "$builder"
 require_text 'app_data="$work_dir/appdata"' "$startup_smoke"
 require_text 'ln -s "$qml_dir" "$app_data/qml"' "$startup_smoke"
 require_text 'calamares --debug --config "$app_data"' "$startup_smoke"

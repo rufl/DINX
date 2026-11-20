@@ -141,6 +141,8 @@ jobs:
           scripts/cache-verified-extract.sh \
             "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
           echo "$zig_root" >> "$GITHUB_PATH"
+      - name: Smoke-test the pinned Pori Zig source
+        run: ./scripts/smoke_pori_zig.sh
       - name: Verify wdisplays to Shikane persistence contract
         run: ./scripts/check_dinx_display_persistence.sh
       - name: Smoke-test wdisplays to Shikane persistence

@@ -64,6 +64,7 @@ rootfs:
     - vulkan-swrast
     - vulkan-tools
     - nano
+    - tinyxxd
     - deetty
     - ghostty-vt-runtime
     - qt6-wayland

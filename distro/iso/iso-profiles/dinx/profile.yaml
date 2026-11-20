@@ -48,6 +48,7 @@ rootfs:
     - file-roller
     - flatpak
     - fuse2
+    - galculator
     - gparted
     - pixelorama
     - godot

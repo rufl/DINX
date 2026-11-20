@@ -145,7 +145,6 @@ prune_excluded_packages() {
   local local_db="$root/var/lib/pacman/local"
   local -a prune_candidates=(
     dinx-breeze-runtime
-    clang
     breeze
     breeze-cursors
     plasma-integration

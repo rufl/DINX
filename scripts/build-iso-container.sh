@@ -414,7 +414,7 @@ trap finish EXIT
               pacman_install_local "$package_repo"/dinxpanel-*.pkg.tar.zst
               build_package shikane
               pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
-              pacman_retry -S --needed --noconfirm wdisplays qt6ct
+              pacman_sync_install wdisplays qt6ct
               build_package kwm
               build_package kwim
               pacman_install_local \
@@ -425,7 +425,7 @@ trap finish EXIT
               # Morghulis resolves the astal libraries through pkg-config at build time.
               # blueprint-compiler is not in the builder image manifest and makepkg runs
               # --nodeps, so morghulis would fail at meson setup without it here.
-              pacman_retry -S --needed --noconfirm \
+              pacman_sync_install \
                 vala gobject-introspection glib2-devel dart-sass json-glib \
                 networkmanager wireplumber gsound libportal \
                 blueprint-compiler
@@ -440,7 +440,7 @@ trap finish EXIT
               # Octopi is a Qt6/CMake package not available from Artix. Its build
               # toolchain is fetched explicitly because makepkg runs --nodeps, so
               # makedepends are not resolved from the PKGBUILD.
-              pacman_retry -S --needed --noconfirm \
+              pacman_sync_install \
                 cmake ninja qt6-tools qt6-5compat qt6-multimedia qt6-svg \
                 qtermwidget pacman-contrib
               build_package octopi
@@ -449,7 +449,7 @@ trap finish EXIT
               # runtime-only Cycles OSL compiler toolchain are stripped.
               # makedepends are not resolved because makepkg runs --nodeps;
               # install the build-time deps CMake needs explicitly.
-              pacman_retry -S --needed --noconfirm \
+              pacman_sync_install \
                 alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
                 eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
                 libdecor libgl libharu libpng libtiff libwebp libxcursor \
@@ -468,7 +468,7 @@ trap finish EXIT
                 "$package_repo"/dinx-dock-*.pkg.tar.zst \
                 "$package_repo"/dinx-first-run-*.pkg.tar.zst
               build_package pori
-              pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
+              pacman_sync_install python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin
               build_package dinx-gtk-themes
               build_package dinx-plymouth-theme
@@ -486,7 +486,7 @@ trap finish EXIT
               build_package paintfe
               build_package pixelorama
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
-              pacman_retry -S --needed --noconfirm \
+              pacman_sync_install \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \
                 kdeclarative kdsingleapplication kfilemetadata ki18n kio kirigami \
                 kitemmodels kservice kwindowsystem mpvqt qqc2-desktop-style \

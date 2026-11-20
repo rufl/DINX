@@ -1278,7 +1278,7 @@ grep -Fq 'install -Dm644 /etc/xdg/kwm/config.zon "$config_home/kwm/config.zon"' 
   || fail 'River session does not seed the system KWM configuration for the user'
 grep -Fq '[ ! -e "$config_home/kwm/config.zon" ]' <<<"$river_session" \
   || fail 'River session may overwrite a saved KWM configuration'
-if grep -Fq 'riverctl' <<<"$river_init"; then
+if grep -Eq '^[[:space:]]*(exec[[:space:]]+)?([^#[:space:]]*/)?riverctl([[:space:]]|$)' <<<"$river_init"; then
   fail 'River 0.5 init calls the removed riverctl executable'
 fi
 grep -Fq 'start_required wm kwm' <<<"$session_supervisor" || fail 'River session supervisor does not require KWM'

@@ -213,6 +213,8 @@ for required in \
   'pacman_install_local() {' \
   'if pacman -U --noconfirm "$@"; then' \
   'pacman_retry -Syy --noconfirm' \
+  'pacman_sync_install() {' \
+  'pacman_retry -Syu --noconfirm' \
   'sleep 15'; do
   grep -Fq -- "$required" "$local_package_installer" \
     || fail "local package retry helper is missing: $required"

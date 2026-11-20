@@ -55,6 +55,7 @@ rootfs:
     - libva
     - pori
     - greetd
+    - fwupd
     - linux-firmware-amdgpu
     - linux-firmware-intel
     - linux-firmware-radeon

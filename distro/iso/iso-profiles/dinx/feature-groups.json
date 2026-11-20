@@ -24,6 +24,7 @@
                 "ffmpeg",
                 "flatpak",
                 "firewalld",
+                "fwupd",
                 "greetd",
                 "greetd-agreety",
                 "libva",

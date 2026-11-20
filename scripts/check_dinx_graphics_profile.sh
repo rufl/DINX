@@ -60,8 +60,8 @@ run_multi_case() {
 
 run_case qemu-virgl virtio_gpu true virtual-gl
 run_case virtualbox-vmsvga-no-render-node vmwgfx false cpu
-run_case virtualbox-vmsvga-render-node vmwgfx true vulkan
-run_case virtualbox-legacy vboxvideo true vulkan
+run_case virtualbox-vmsvga-render-node vmwgfx true cpu
+run_case virtualbox-legacy vboxvideo true cpu
 run_case headless-no-render-node "" false cpu
 run_case qemu-bochs-no-render-node bochs false cpu
 run_case physical-amdgpu amdgpu true hardware
@@ -126,6 +126,6 @@ while IFS= read -r profile; do
     || { printf 'check_dinx_graphics_profile: emitted profile rejected by handler: %s\n' "$profile" >&2; exit 1; }
 done <<<"$emitted_profiles"
 
-printf 'dinx_graphics_profile_contract vmsvga_vulkan=true no_render_node_cpu=true qemu_default_vga_cpu=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true pre_gcn_radeon_gles=true detector_handler_vocabularies_match=true\n'
+printf 'dinx_graphics_profile_contract vmsvga_cpu=true no_render_node_cpu=true qemu_default_vga_cpu=true qemu_virgl_gles=true gtk4_auto=true greeter_renderer_policy=true render_node_driver_bound=true cpu_fallback=true hardware_passthrough=true pre_gcn_radeon_gles=true detector_handler_vocabularies_match=true\n'
 
 

@@ -264,8 +264,8 @@ grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$river_session" \
   || fail 'River session does not force the Qt6ct platform theme'
 grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$river_session" \
   || fail 'River session does not force Gecko browsers to use the system/compositor titlebar'
-if grep -Eq '^[[:space:]]*(exec[[:space:]]+)?([^#[:space:]]*/)?riverctl([[:space:]]|$)' "$river_init"; then
-  fail 'River 0.5 init still calls the removed riverctl executable'
+if grep -Fq 'riverctl' "$river_init"; then
+  fail 'River 0.5 rejects any riverctl string in its init file, including comments'
 fi
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' "$river_init" \
   || fail 'River init does not launch the supervisor in river mode'

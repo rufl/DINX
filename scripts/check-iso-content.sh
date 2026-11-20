@@ -887,10 +887,12 @@ grep -Fqx 'user-db:user' <<<"$dconf_profile" \
   || fail 'the dconf user profile does not include the user database, so saved theme changes would not apply'
 grep -Fqx 'system-db:local' <<<"$dconf_profile" \
   || fail 'the dconf user profile does not include the system database'
-dconf_database=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/db/local)
-grep -aq 'color-scheme' <<<"$dconf_database" \
+dconf_database="$tmp_dir/dconf-local"
+unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dconf/db/local \
+  >"$dconf_database"
+grep -aq 'color-scheme' "$dconf_database" \
   || fail 'the compiled system dconf database is missing or carries no color-scheme default'
-grep -aq 'prefer-dark' <<<"$dconf_database" \
+grep -aq 'prefer-dark' "$dconf_database" \
   || fail 'the compiled system dconf database does not default to the dark color scheme'
 grep -Fq 'exec river -c /usr/local/libexec/dinx-river-init' <<<"$river_session" || fail 'DINX River session does not execute the DINX river configuration'
 grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' <<<"$river_init" || fail 'DINX River init does not launch the supervisor'

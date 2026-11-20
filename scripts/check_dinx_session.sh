@@ -149,6 +149,8 @@ grep -Fq 'install -Dm644 "$srcdir/out/share/doc/kwm/config.zon" "$pkgdir/etc/xdg
 if grep -Fq 'pkgdir/usr/share/wayland-sessions' "$kwm_pkgbuild"; then
   fail 'kwm installs a competing upstream session entry'
 fi
+grep -Fq 'NoExtract = usr/share/wayland-sessions/river.desktop' "$builder" \
+  || fail 'builder does not suppress the competing upstream River session entry'
 grep -Fq "provides=('river-input-manager')" "$kwim_pkgbuild" \
   || fail 'kwim does not provide the river input manager'
 # Owner decision 2026-11-17: kwm and kwim stay on released upstream tags built by

@@ -236,6 +236,7 @@ for required in \
   'NoExtract = usr/lib/systemd/*' \
   'NoExtract = etc/systemd/*' \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
+  'NoExtract = usr/share/wayland-sessions/river.desktop' \
   'NoExtract = usr/share/uwsm/*' \
   'NoExtract = etc/calamares-config-switcher.conf' \
   'NoExtract = usr/bin/calamares-config-switcher' \

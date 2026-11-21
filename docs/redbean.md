@@ -23,8 +23,10 @@ accessibility, theme, and hardware qualification gates.
 The qualified prototype closes the shell gaps without adding a resident
 daemon:
 
-- KWM's stock `Mod4-p` launcher is migrated to Redbean on NEXT when the
-  package is installed; custom KWM bindings are preserved.
+- KWM's pinned stock `Mod4-p` binding is migrated to Redbean on NEXT only when
+  the package is installed. The session first seeds KWM's checked-in
+  `config.def.zon`, replaces exactly one `wmenu-run` launcher occurrence
+  atomically, and leaves custom bindings untouched.
 - Astal Apps provides fuzzy application search. `settings:` searches the
   curated settings catalog, and `file:` searches the user's home directory
   with bounded recursion.

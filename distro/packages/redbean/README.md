@@ -20,7 +20,9 @@ so the four DINX GTK theme families control the final light/dark appearance.
 
 ## Integrated shell features
 
-- `Mod4-p` opens Redbean when KWM seeds a new user config on NEXT.
+- `Mod4-p` opens Redbean only when the package is installed: the session seeds
+  KWM's pinned `config.def.zon`, replaces exactly one stock `wmenu-run`
+  binding atomically, and leaves custom KWM bindings unchanged.
 - App search uses Astal Apps; `settings:` searches the settings catalog.
 - `file:` searches the home directory up to a bounded depth and opens the
   selected path with the desktop default.

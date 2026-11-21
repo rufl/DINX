@@ -35,6 +35,13 @@ if [[ -z "$full_sha" ]]; then
   full_sha=$(curl -fsSL -A "$user_agent" "$full_checksum_url" \
     | awk -v name="$full_asset" '$2 == name { print $1; exit }')
 fi
+downloaded_full_sha=$(sha256sum "$full_archive" | awk '{ print $1 }')
+if [[ -n "$full_sha" && "$full_sha" != "$downloaded_full_sha" ]]; then
+  printf 'build: full archive checksum mismatch (expected %s, got %s)\n' \
+    "$full_sha" "$downloaded_full_sha" >&2
+  exit 1
+fi
+full_sha="$downloaded_full_sha"
 [[ "$source_sha" =~ ^[0-9a-f]{64}$ && "$full_sha" =~ ^[0-9a-f]{64}$ ]] || {
   printf 'build: missing verified Blender source checksums\n' >&2; exit 1
 }

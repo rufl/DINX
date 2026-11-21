@@ -69,12 +69,12 @@ jobs:
             artixlinux/artixlinux:latest bash -euxo pipefail -c '
               pacman -Sy --noconfirm --needed base-devel curl jq git \
                 alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
-                eigen fftw fmt fontconfig freetype2 fribidi gmp harfbuzz hip-runtime-amd \
-                hicolor-icon-theme imath libdecor libepoxy libgl libharu libjpeg-turbo \
+                eigen fftw ffmpeg fmt fontconfig freetype2 fribidi gmp harfbuzz hip-runtime-amd \
+                hicolor-icon-theme imath libdecor libepoxy libgl libjpeg-turbo \
                 libpng libsndfile libtiff libwebp libxcursor libxfixes libxi libxkbcommon \
                 libxrandr libxrender libxxf86vm libxml2 libx11 lzo llvm manifold ncurses \
                 openal opengl-driver opencolorio openexr openimageio openjpeg2 openpgl \
-                openxr libspnav patch pkgconf potrace pugixml python python-numpy \
+                libspnav patch pkgconf potrace pugixml python python-numpy \
                 rubberband sdl2 shared-mime-info speexdsp tbb wayland wayland-protocols \
                 xdg-utils xxd yaml-cpp zlib zstd
               useradd -m builder

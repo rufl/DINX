@@ -14,3 +14,9 @@ The `blender` branch owns Blender generation. It publishes two verified packages
 assembly. Both packages are staged in the signed DINX package repository, but
 only the lean package is installed by the base profile so the ISO remains under
 the strict 2 GiB GitHub asset ceiling.
+
+During a full-package build gap, `main` may temporarily pin a
+`blender-staging/v<version>-dinx<pkgrel>` release with
+`mode=lean-only-staging`. The consumer verifies only the published lean
+asset; `full_package` repeats that filename only for the existing ISO staging
+interface, and no `blender-full` package is advertised or installed.

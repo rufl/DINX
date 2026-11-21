@@ -248,12 +248,24 @@ grep -Eq '^[[:space:]]*-DWITH_CYCLES_OSL=OFF' "$blender_recipe" \
   || fail 'Blender does not disable Cycles Open Shading Language support'
 grep -Eq '^[[:space:]]*-DWITH_CYCLES_DEVICE_ONEAPI=OFF' "$blender_recipe" \
   || fail 'Blender does not disable Intel oneAPI (SYCL) device support'
-grep -Eq '^tag=blender/v[0-9]+(\.[0-9]+)+-dinx[1-9][0-9]*$' "$blender_pin" \
-  || fail 'Blender pin tag is invalid'
+if grep -Eq '^tag=blender(-staging)?/v[0-9]+(\.[0-9]+)+-dinx[1-9][0-9]*$' "$blender_pin"; then
+  :
+else
+  fail 'Blender pin tag is invalid'
+fi
 grep -Eq '^package=blender-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
   || fail 'Blender lean package pin is invalid'
-grep -Eq '^full_package=blender-full-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
-  || fail 'Blender full package pin is invalid'
+if grep -Eq '^tag=blender-staging/' "$blender_pin"; then
+  grep -Eq '^mode=lean-only-staging$' "$blender_pin" \
+    || fail 'Blender staging pin mode is invalid'
+  staging_package=$(awk -F= '$1 == "package" { print $2; exit }' "$blender_pin")
+  staging_full_package=$(awk -F= '$1 == "full_package" { print $2; exit }' "$blender_pin")
+  [[ "$staging_package" == "$staging_full_package" ]] \
+    || fail 'Blender lean-only staging pin must not advertise a supplemental package'
+else
+  grep -Eq '^full_package=blender-full-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
+    || fail 'Blender full package pin is invalid'
+fi
 grep -Fq 'packed_tag=$(gh api' "$root/distro/graphics/blender/detect-release.sh" \
   || fail 'Blender detector does not compare published package releases'
 

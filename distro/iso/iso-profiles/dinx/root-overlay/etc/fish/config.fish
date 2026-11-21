@@ -13,21 +13,13 @@ end
 if not set -q XDG_CURRENT_DESKTOP
     set -gx XDG_CURRENT_DESKTOP river
 end
-if not set -q DINX_COLOR_SCHEME
-    set -gx DINX_COLOR_SCHEME dark
-end
-if not set -q DINTOR_THEME
-    set -gx DINTOR_THEME prefer-dark
-end
-if not set -q QT_STYLE_OVERRIDE
-    set -gx QT_STYLE_OVERRIDE fusion
-end
-if not set -q XCURSOR_THEME
-    set -gx XCURSOR_THEME Adwaita
-end
-if not set -q XCURSOR_SIZE
-    set -gx XCURSOR_SIZE 24
-end
+set -gx DINX_COLOR_SCHEME dark
+set -gx DINTOR_THEME prefer-dark
+set -gx ADW_COLOR_SCHEME_FORCE_DARK 1
+set -gx GTK_THEME 'DINX:dark'
+set -gx QT_STYLE_OVERRIDE fusion
+set -gx XCURSOR_THEME Adwaita
+set -gx XCURSOR_SIZE 24
 
 if status is-interactive
     set -g fish_greeting

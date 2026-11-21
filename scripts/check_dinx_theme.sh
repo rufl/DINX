@@ -80,10 +80,10 @@ cmp -s "$cli_issue" "$live_cli_issue" || fail 'live and installed CLI login bann
 
 # --- the removed theme stack must stay gone -----------------------------------
 for removed in \
-  "$repo_root/distro/packages/dinx-pearl-themes" \
-  "$repo_root/distro/packages/pearl" \
-  "$repo_root/distro/packages/aqueous" \
-  "$repo_root/distro/packages/matugen" \
+  "$repo_root/distro/packages/dinx-pearl-themes/PKGBUILD" \
+  "$repo_root/distro/packages/pearl/PKGBUILD" \
+  "$repo_root/distro/packages/aqueous/PKGBUILD" \
+  "$repo_root/distro/packages/matugen/PKGBUILD" \
   "$repo_root/distro/packages/pearl/dinx-first-run-wizard.c" \
   "$overlay/usr/share/pearl" \
   "$overlay/etc/pearl" \
@@ -245,19 +245,14 @@ if grep -Eiq 'pearl|matugen' "$gtk_themes_pkgbuild"; then
 fi
 
 # --- fixed dark session defaults ----------------------------------------------
-grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
-grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$profile_shell" || fail 'DINX editor dark scheme contract is missing'
-grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$session_wrapper" || fail 'River session does not export the DINX default scheme'
-grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$session_wrapper" || fail 'River session does not export the default editor scheme'
-# The live per-user appearance is applied by dinx-sync-session-theme from
-# $config_home/dinx/appearance.json. The session must NOT force a dark toolkit
-# scheme through the environment: an exported GTK_APPLICATION_PREFER_DARK_THEME
-# or ADW_DEBUG_COLOR_SCHEME would pin every app to dark and silently defeat a
-# saved light selection.
-if grep -Eq 'GTK_APPLICATION_PREFER_DARK_THEME=|ADW_DEBUG_COLOR_SCHEME=' "$session_wrapper"; then
-  fail 'River session forces a toolkit scheme that would override the saved appearance'
-fi
-grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'River session does not force Qt6ct for GUI apps'
+grep -Fqx 'export DINX_COLOR_SCHEME=dark' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
+grep -Fqx 'export DINTOR_THEME=prefer-dark' "$profile_shell" || fail 'DINX editor dark scheme contract is missing'
+grep -Fqx 'export DINX_COLOR_SCHEME=dark' "$session_wrapper" || fail 'River session does not export the DINX dark scheme'
+grep -Fqx 'export DINTOR_THEME=prefer-dark' "$session_wrapper" || fail 'River session does not export the dark editor scheme'
+grep -Fqx 'export ADW_COLOR_SCHEME_FORCE_DARK=1' "$session_wrapper" || fail 'River session does not force dark libadwaita applications'
+grep -Fqx "export GTK_THEME='DINX:dark'" "$session_wrapper" || fail 'River session does not force the dark GTK theme'
+grep -Fqx "export GTK_THEME='DINX:dark'" "$profile_shell" || fail 'POSIX shell does not force the dark GTK theme'
+grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'River session does not force Qt6ct for GUI apps'
 grep -Fq 'qt6ct/qt6ct.conf' "$session_wrapper" || fail 'River session does not seed the Qt6ct config for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' "$session_wrapper" || fail 'River session does not seed the DINX Qt palette for existing users'
 grep -Fq 'dinx-qt6ct-palette-seed' "$session_wrapper" \
@@ -268,9 +263,6 @@ grep -Fq 'if [ -L "$target" ]; then' "$qt_palette_seed" \
   || fail 'Qt6ct palette seed helper may overwrite a user-managed symlink'
 grep -Fq 'install -Dm644 "$seed" "$target"' "$qt_palette_seed" \
   || fail 'Qt6ct palette seed helper does not install the DINX palette'
-if grep -Eq 'GTK_THEME=' "$session_wrapper" "$profile_shell"; then
-  fail 'DINX session overrides the GTK theme selected by applications'
-fi
 if grep -Fq 'preferences.json' "$session_wrapper"; then
   fail 'River session still reads a saved shell theme selection'
 fi

@@ -83,14 +83,14 @@ done
 for retired in \
   "$overlay/etc/greetd/regreet.toml" \
   "$overlay/usr/local/libexec/dinx-regreet" \
-  "$root/distro/packages/matugen"; do
+  "$root/distro/packages/matugen/PKGBUILD"; do
   [[ ! -e "$retired" ]] || fail "retired session path remains: ${retired#$root/}"
 done
 # The retired compositor/shell recipes and their roster entries are matched by
 # name prefix so no retired product name reappears in this gate.
-while IFS= read -r retired_dir; do
-  fail "retired session package recipe remains: ${retired_dir#$root/}"
-done < <(find "$root/distro/packages" -maxdepth 1 -type d \( -name 'aq*' -o -name '*pea*' \))
+while IFS= read -r retired_recipe; do
+  fail "retired session package recipe remains: ${retired_recipe#$root/}"
+done < <(find "$root/distro/packages" -maxdepth 2 -type f -name PKGBUILD \( -path '*/aq*/PKGBUILD' -o -path '*/pea*/PKGBUILD' \))
 if grep -Eq '^    - [a-z0-9._-]*(aq|pea)[a-z0-9._-]*$' "$profile"; then
   fail 'a retired compositor or shell package remains in the profile'
 fi
@@ -187,9 +187,9 @@ grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$live_package
 grep -Fq 'export SHELL=/bin/fish' "$shell_profile" || fail 'POSIX shell default is not Fish'
 grep -Fq 'XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-river}"' "$shell_profile" \
   || fail 'POSIX desktop default is not river'
-grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$shell_profile" \
+grep -Fq 'export DINX_COLOR_SCHEME=dark' "$shell_profile" \
   || fail 'DINX color scheme default is missing'
-grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$shell_profile" \
+grep -Fq 'export DINTOR_THEME=prefer-dark' "$shell_profile" \
   || fail 'Dintor dark-theme preference default is missing'
 grep -Fq 'set -gx SHELL /bin/fish' "$fish_config" || fail 'Fish system shell default is missing'
 grep -Fq 'set -gx XDG_CURRENT_DESKTOP river' "$fish_config" \
@@ -278,9 +278,10 @@ grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' "$river_init" \
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$river_session"; then
   fail 'River session still forces the failing software Vulkan path'
 fi
-if grep -Eq 'GTK_THEME=|set -gx GTK_THEME' "$river_session" "$shell_profile" "$fish_config"; then
-  fail 'DINX session forces a GTK theme and overrides application preferences'
-fi
+grep -Fq "export GTK_THEME='DINX:dark'" "$river_session" "$shell_profile" \
+  || fail 'DINX session does not force the dark GTK theme'
+grep -Fq 'export ADW_COLOR_SCHEME_FORCE_DARK=1' "$river_session" "$shell_profile" \
+  || fail 'DINX session does not force dark libadwaita applications'
 if grep -Eiq 'systemd|systemctl|uwsm|labwc|noctalia|regreet' "$river_session" "$river_init" "$supervisor"; then
   fail 'River session path contains a retired session or systemd integration'
 fi

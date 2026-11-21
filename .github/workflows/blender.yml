@@ -76,7 +76,7 @@ jobs:
                 openal opengl-driver opencolorio openexr openimageio openjpeg2 openpgl \
                 libspnav patch pkgconf potrace pugixml python python-numpy \
                 rubberband sdl2 shared-mime-info speexdsp tbb wayland wayland-protocols \
-                xdg-utils xxd yaml-cpp zlib zstd
+                vulkan-headers xdg-utils xxd yaml-cpp zlib zstd
               useradd -m builder
               chown -R builder:builder /workspace
               su builder -c "distro/graphics/blender/build.sh"

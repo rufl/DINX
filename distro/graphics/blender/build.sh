@@ -55,8 +55,9 @@ makepkg --cleanbuild --syncdeps --noconfirm --clean --log --dir "$recipe_dir" \
 lean_package=$(find "$recipe_dir" -maxdepth 1 -type f -name 'blender-*.pkg.tar.zst' -print -quit)
 [[ -n "$lean_package" ]] || { printf 'build: lean Blender package missing\n' >&2; exit 1; }
 if [[ "${BLENDER_LEAN_ONLY:-0}" == 1 ]]; then
-  lean_name=$(basename -- "$lean_package")
-  cp -- "$lean_package" "$outdir/"
+  lean_source_name=$(basename -- "$lean_package")
+  lean_name=${lean_source_name//:/\.}
+  cp -- "$lean_package" "$outdir/$lean_name"
   (cd "$outdir" && sha256sum "$lean_name" > SHA256SUMS)
   jq -n --arg version "$version" --arg pkgrel "$pkgrel" --arg source_sha "$source_sha" \
     --arg full_sha "$full_sha" --arg lean "$lean_name" \
@@ -121,8 +122,12 @@ makepkg --cleanbuild --syncdeps --noconfirm --clean --log --dir "$full_dir" \
   SRCDEST="$source_dest"
 full_package=$(find "$full_dir" -maxdepth 1 -type f -name 'blender-full-*.pkg.tar.zst' -print -quit)
 [[ -n "$full_package" ]] || { printf 'build: full Blender package missing\n' >&2; exit 1; }
-cp -- "$lean_package" "$full_package" "$outdir/"
-lean_name=$(basename -- "$lean_package"); full_name=$(basename -- "$full_package")
+lean_source_name=$(basename -- "$lean_package")
+full_source_name=$(basename -- "$full_package")
+lean_name=${lean_source_name//:/\.}
+full_name=${full_source_name//:/\.}
+cp -- "$lean_package" "$outdir/$lean_name"
+cp -- "$full_package" "$outdir/$full_name"
 (cd "$outdir" && sha256sum "$lean_name" "$full_name" > SHA256SUMS)
 jq -n --arg version "$version" --arg pkgrel "$pkgrel" --arg source_sha "$source_sha" \
   --arg full_sha "$full_sha" --arg lean "$lean_name" --arg full "$full_name" \

@@ -48,13 +48,16 @@ full_sha="$downloaded_full_sha"
 printf 'BLENDER_VERSION=%s\nBLENDER_SOURCE_URL=%s\nBLENDER_SOURCE_SHA256=%s\n' \
   "$version" "$source_url" "$source_sha" > "$recipe_dir/source.env"
 rm -f "$recipe_dir"/*.pkg.tar.zst
-makepkg --cleanbuild --syncdeps --noconfirm --clean --log --dir "$recipe_dir"
+source_dest="$workdir/sources"
+mkdir -p "$source_dest"
+makepkg --cleanbuild --syncdeps --noconfirm --clean --log --dir "$recipe_dir" \
+  SRCDEST="$source_dest"
 lean_package=$(find "$recipe_dir" -maxdepth 1 -type f -name 'blender-*.pkg.tar.zst' -print -quit)
 [[ -n "$lean_package" ]] || { printf 'build: lean Blender package missing\n' >&2; exit 1; }
 full_dir="$workdir/blender-full"
 mkdir -p "$full_dir"
 full_source_name=$(basename -- "$full_archive")
-ln -- "$full_archive" "$full_dir/$full_source_name"
+cp -- "$full_archive" "$full_dir/$full_source_name"
 cat > "$full_dir/PKGBUILD" <<EOF
 pkgname=blender-full
 pkgver=$version
@@ -89,7 +92,8 @@ MimeType=application/x-blender;
 DESKTOP
 }
 EOF
-makepkg --cleanbuild --syncdeps --noconfirm --clean --log --dir "$full_dir"
+makepkg --cleanbuild --syncdeps --noconfirm --clean --log --dir "$full_dir" \
+  SRCDEST="$source_dest"
 full_package=$(find "$full_dir" -maxdepth 1 -type f -name 'blender-full-*.pkg.tar.zst' -print -quit)
 [[ -n "$full_package" ]] || { printf 'build: full Blender package missing\n' >&2; exit 1; }
 cp -- "$lean_package" "$full_package" "$outdir/"

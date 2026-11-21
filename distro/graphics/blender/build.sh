@@ -31,7 +31,6 @@ source_url="file://$source_archive"
 full_asset=$(basename -- "$full_url")
 full_archive="$workdir/$full_asset"
 curl -fsSL -A "$user_agent" "$full_url" -o "$full_archive"
-full_url="file://$full_archive"
 if [[ -z "$full_sha" ]]; then
   full_sha=$(curl -fsSL -A "$user_agent" "$full_checksum_url" \
     | awk -v name="$full_asset" '$2 == name { print $1; exit }')
@@ -47,6 +46,8 @@ lean_package=$(find "$recipe_dir" -maxdepth 1 -type f -name 'blender-*.pkg.tar.z
 [[ -n "$lean_package" ]] || { printf 'build: lean Blender package missing\n' >&2; exit 1; }
 full_dir="$workdir/blender-full"
 mkdir -p "$full_dir"
+full_source_name=$(basename -- "$full_archive")
+ln -- "$full_archive" "$full_dir/$full_source_name"
 cat > "$full_dir/PKGBUILD" <<EOF
 pkgname=blender-full
 pkgver=$version
@@ -59,7 +60,7 @@ conflicts=(blender)
 provides=("blender=\$pkgver")
 replaces=(blender)
 depends=(bash glibc libglvnd wayland xdg-utils)
-source=("blender-full-\$pkgver.tar.xz::$full_url")
+source=("$full_source_name")
 sha256sums=(\"$full_sha\")
 package() {
   local payload=\"\$srcdir/blender-\$pkgver-linux-x64\"

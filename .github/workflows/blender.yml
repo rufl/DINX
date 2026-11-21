@@ -13,12 +13,17 @@ on:
         required: false
         type: string
         default: ""
+      lean_only:
+        description: Publish only the lean workflow package to a staging release
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: dinx-blender
+  group: dinx-blender-${{ inputs.lean_only && 'lean' || 'full' }}
   cancel-in-progress: false
 
 jobs:
@@ -43,7 +48,7 @@ jobs:
           BLENDER_VERSION_OVERRIDE: ${{ inputs.version }}
         run: distro/graphics/blender/detect-release.sh
   build:
-    name: Build and publish lean/full Blender packages
+    name: Build and publish ${{ inputs.lean_only && 'lean staging' || 'lean/full' }} Blender packages
     needs: detect
     if: needs.detect.outputs.needs_build == 'true'
     runs-on: ubuntu-24.04
@@ -60,11 +65,13 @@ jobs:
         env:
           VERSION: ${{ needs.detect.outputs.version }}
           PKGREL: ${{ needs.detect.outputs.pkgrel }}
+          LEAN_ONLY: ${{ inputs.lean_only && '1' || '0' }}
         run: |
           set -euo pipefail
           mkdir -p dist/graphics/blender
           docker run --rm --privileged \
             -e BLENDER_VERSION="$VERSION" -e BLENDER_PKREL="$PKGREL" \
+            -e BLENDER_LEAN_ONLY="$LEAN_ONLY" \
             -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
             artixlinux/artixlinux:latest bash -euxo pipefail -c '
               pacman -Sy --noconfirm --needed base-devel curl jq git \
@@ -79,7 +86,7 @@ jobs:
                 vulkan-headers xdg-utils xxd yaml-cpp zlib zstd
               useradd -m builder
               chown -R builder:builder /workspace
-              su builder -c "distro/graphics/blender/build.sh"
+              su builder -c "BLENDER_LEAN_ONLY=$BLENDER_LEAN_ONLY distro/graphics/blender/build.sh"
             '
       - name: Verify package artifacts
         run: |
@@ -91,11 +98,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.detect.outputs.version }}
           PKGREL: ${{ needs.detect.outputs.pkgrel }}
+          LEAN_ONLY: ${{ inputs.lean_only && '1' || '0' }}
         run: |
           set -euo pipefail
           cd dist/graphics/blender
-          tag="blender/v${VERSION}-dinx${PKGREL}"
-          notes=$(jq -r '"Blender \(.version) DINX generated packages \(.pkgrel).\\n\\nLean package: \(.artifacts.lean_package)\\nFull replacement package: \(.artifacts.full_package)\\n\\nThe full package conflicts with and replaces the lean package when users opt in."' build-metadata.json)
+          if [[ "$LEAN_ONLY" == 1 ]]; then
+            tag="blender-staging/v${VERSION}-dinx${PKGREL}"
+            title="Blender ${VERSION} (DINX lean staging ${PKGREL})"
+            notes=$(jq -r '"Blender \(.version) DINX lean staging package \(.pkgrel).\\n\\nLean package: \(.artifacts.lean_package)\\n\\nThis staging release contains only the DINX lean workflow package."' build-metadata.json)
+          else
+            tag="blender/v${VERSION}-dinx${PKGREL}"
+            title="Blender ${VERSION} (DINX lean/full ${PKGREL})"
+            notes=$(jq -r '"Blender \(.version) DINX generated packages \(.pkgrel).\\n\\nLean package: \(.artifacts.lean_package)\\nFull replacement package: \(.artifacts.full_package)\\n\\nThe full package conflicts with and replaces the lean package when users opt in."' build-metadata.json)
+          fi
           gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "Blender ${VERSION} (DINX lean/full ${PKGREL})" --notes "$notes" --latest=false \
+            --title "$title" --notes "$notes" --latest=false \
             *.pkg.tar.zst SHA256SUMS build-metadata.json

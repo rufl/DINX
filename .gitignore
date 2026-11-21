@@ -17,6 +17,8 @@ dist/
 !/distro/packages/dinitui/src/
 !/distro/packages/dinxpanel/src/
 !/distro/packages/seafoam-settings/src/
+!/distro/packages/redbean/src/
+!/distro/packages/redbean/src/**
 /distro/packages/dinitui/src/stage/
 /distro/packages/dinxpanel/src/stage/
 /distro/packages/seafoam-settings/src/stage/

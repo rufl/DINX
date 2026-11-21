@@ -103,7 +103,7 @@ package() {
   cp -a "\$payload/." "\$pkgdir/opt/blender/"
   ln -s /opt/blender/blender "\$pkgdir/usr/bin/blender"
   ln -s /opt/blender/blender "\$pkgdir/usr/bin/blender-full"
-  install -Dm644 "\$payload/license" "\$pkgdir/usr/share/licenses/blender-full/LICENSE"
+  cp -a "\$payload/license/." "\$pkgdir/usr/share/licenses/blender-full/"
   cat > "\$pkgdir/usr/share/applications/blender.desktop" <<DESKTOP
 [Desktop Entry]
 Name=Blender (Full)

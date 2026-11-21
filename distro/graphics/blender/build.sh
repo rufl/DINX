@@ -12,6 +12,7 @@ source_sha=${BLENDER_SOURCE_SHA256:-}
 full_url=${BLENDER_FULL_URL:-https://download.blender.org/release/Blender${version%.*}/blender-${version}-linux-x64.tar.xz}
 full_checksum_url=${BLENDER_FULL_CHECKSUM_URL:-https://download.blender.org/release/Blender${version%.*}/blender-${version}.sha256}
 full_sha=${BLENDER_FULL_SHA256:-}
+user_agent=${BLENDER_DOWNLOAD_USER_AGENT:-DINX-Blender-Build/1}
 [[ "$version" =~ ^[0-9]+(\.[0-9]+)+$ ]] || { printf 'build: invalid Blender version\n' >&2; exit 1; }
 command -v jq >/dev/null || { printf 'build: jq is required\n' >&2; exit 1; }
 command -v makepkg >/dev/null || { printf 'build: makepkg is required\n' >&2; exit 1; }
@@ -20,15 +21,20 @@ workdir=$(mktemp -d)
 trap 'rm -rf -- "$workdir"' EXIT
 recipe_dir="$workdir/blender"
 cp -a "$repo_root/distro/packages/blender/." "$recipe_dir/"
+source_asset=$(basename -- "$source_url")
+source_archive="$workdir/$source_asset"
+curl -fsSL -A "$user_agent" "$source_url" -o "$source_archive"
 if [[ -z "$source_sha" ]]; then
-  source_archive="$workdir/blender-source.tar.xz"
-  curl -fsSL "$source_url" -o "$source_archive"
   source_sha=$(sha256sum "$source_archive" | awk '{ print $1 }')
-  source_url="file://$source_archive"
 fi
+source_url="file://$source_archive"
+full_asset=$(basename -- "$full_url")
+full_archive="$workdir/$full_asset"
+curl -fsSL -A "$user_agent" "$full_url" -o "$full_archive"
+full_url="file://$full_archive"
 if [[ -z "$full_sha" ]]; then
-  full_asset=$(basename -- "$full_url")
-  full_sha=$(curl -fsSL "$full_checksum_url" | awk -v name="$full_asset" '$2 == name { print $1; exit }')
+  full_sha=$(curl -fsSL -A "$user_agent" "$full_checksum_url" \
+    | awk -v name="$full_asset" '$2 == name { print $1; exit }')
 fi
 [[ "$source_sha" =~ ^[0-9a-f]{64}$ && "$full_sha" =~ ^[0-9a-f]{64}$ ]] || {
   printf 'build: missing verified Blender source checksums\n' >&2; exit 1

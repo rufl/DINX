@@ -45,12 +45,13 @@ cat > "$full_dir/PKGBUILD" <<EOF
 pkgname=blender-full
 pkgver=$version
 pkgrel=$pkgrel
-pkgdesc='Full-featured Blender release replacing the DINX lean Blender package'
+pkgdesc='Full upstream Blender release with all features; replaces the DINX lean package'
 arch=(x86_64)
 url=https://www.blender.org/
 license=(GPL-3.0-or-later)
 conflicts=(blender)
 provides=("blender=\$pkgver")
+replaces=(blender)
 depends=(bash glibc libglvnd wayland xdg-utils)
 source=("blender-full-\$pkgver.tar.xz::$full_url")
 sha256sums=(\"$full_sha\")
@@ -82,7 +83,17 @@ lean_name=$(basename -- "$lean_package"); full_name=$(basename -- "$full_package
 (cd "$outdir" && sha256sum "$lean_name" "$full_name" > SHA256SUMS)
 jq -n --arg version "$version" --arg pkgrel "$pkgrel" --arg source_sha "$source_sha" \
   --arg full_sha "$full_sha" --arg lean "$lean_name" --arg full "$full_name" \
-  '{schema:"dinx-blender-build/v1",version:$version,pkgrel:($pkgrel|tonumber),
+  --argjson lean_workflows '["modeling","rigging","texturing","animation"]' \
+  --argjson lean_omitted '["xr","usd","materialx","openvdb","opensubdiv","embree","openimagedenoise","oneapi","cycles-osl","grease-pencil","haru"]' \
+  '{
+    schema:"dinx-blender-build/v1",
+    version:$version,
+    pkgrel:($pkgrel|tonumber),
     upstream:{source_sha256:$source_sha,full_binary_sha256:$full_sha},
-    artifacts:{lean_package:$lean,full_package:$full}}' > "$outdir/build-metadata.json"
+    artifacts:{lean_package:$lean,full_package:$full},
+    packages:{
+      lean:{artifact:$lean,workflows:$lean_workflows,omitted:$lean_omitted},
+      full:{artifact:$full,scope:"all-upstream-features",replaces:"blender"}
+    }
+  }' > "$outdir/build-metadata.json"
 printf 'blender-build: lean=%s full=%s\n' "$lean_name" "$full_name"

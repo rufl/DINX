@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+pkgname=redbean
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Experimental DINX desktop shell for the NEXT branch'
+arch=('x86_64')
+url='https://github.com/rufl/DINX'
+license=('Apache-2.0')
+depends=('astal' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'polkit' 'zenity')
+makedepends=('zig>=0.17')
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir"
+  rm -rf "$srcdir/stage"
+  local -a zig_target_flags=(-Dcpu=baseline)
+  zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe --prefix "$srcdir/stage"
+}
+
+package() {
+  cd "$startdir"
+  install -Dm755 "$srcdir/stage/bin/redbean" "$pkgdir/usr/bin/redbean"
+  install -Dm755 redbean-uninstall "$pkgdir/usr/lib/redbean/uninstall"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/redbean/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/redbean/LICENSE"
+}

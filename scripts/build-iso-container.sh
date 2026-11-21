@@ -51,6 +51,8 @@ trap finish EXIT
               set -euxo pipefail
               package_repository_only=${DINX_PACKAGE_REPOSITORY_ONLY:-false}
               [[ "$package_repository_only" == true || "$package_repository_only" == false ]]
+              redbean_build=${DINX_BUILD_REDBEAN:-false}
+              [[ "$redbean_build" == true || "$redbean_build" == false ]]
               DINX_ARTIX_IMAGE="${DINX_ARTIX_IMAGE:-artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507}"
               export DINX_ARTIX_IMAGE
               : "${DINX_BUILDER_RECIPE_SHA256:?builder recipe checksum was not forwarded}"
@@ -431,6 +433,10 @@ trap finish EXIT
               pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst
               build_package astal
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
+              if [[ "$redbean_build" == true ]]; then
+                build_package redbean
+                pacman_install_local "$package_repo"/redbean-*.pkg.tar.zst
+              fi
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
               build_package mission-center

@@ -30,6 +30,7 @@ checks=(
   check_firewall_tools.sh
   check_dinitui.sh
   check_dinxpanel.sh
+  check_redbean.sh
   check_dinx_graphics_profile.sh
   check_dinx_live_autologin.sh
   check_dinx_doctor.sh

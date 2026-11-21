@@ -1,0 +1,32 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+set -eu
+
+id=${1-}
+case "$id" in
+  *.desktop) ;;
+  *) exit 2 ;;
+esac
+
+# The desktop id is validated above and is used only as a find name, never as
+# shell source. Package ownership comes from pacman rather than Exec= text.
+desktop=$(find /usr/share/applications /usr/local/share/applications \
+  -type f -name "$id" -print -quit 2>/dev/null || true)
+[ -n "$desktop" ] || {
+  zenity --error --title='Redbean' --text="No installed desktop entry matches $id." 2>/dev/null || true
+  exit 1
+}
+
+package=$(pacman -Qo -- "$desktop" 2>/dev/null | awk 'NR == 1 { print $5 }')
+[ -n "$package" ] || {
+  zenity --error --title='Redbean' --text="No package owns $id." 2>/dev/null || true
+  exit 1
+}
+
+if ! zenity --question --title='Remove application' \
+  --text="Remove $package and its unused dependencies?" 2>/dev/null; then
+  exit 0
+fi
+
+exec pkexec pacman -Rns --noconfirm -- "$package"

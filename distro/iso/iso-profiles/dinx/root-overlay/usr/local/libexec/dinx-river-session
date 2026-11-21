@@ -56,5 +56,18 @@ fi
 graphics_profile=$(/usr/local/libexec/dinx-graphics-profile)
 . /usr/local/libexec/dinx-graphics-environment.sh
 dinx_apply_graphics_environment "$graphics_profile"
+if [ -n "${HOME:-}" ] && [ ! -e "$config_home/kwm/config.zon" ] \
+  && [ -r /usr/share/doc/kwm/config.def.zon ]; then
+  install -Dm644 /usr/share/doc/kwm/config.def.zon "$config_home/kwm/config.zon"
+fi
+
+# NEXT keeps Morghulis as the default shell. If Redbean is installed for
+# qualification, migrate only KWM's stock launcher and preserve custom bindings.
+if [ -n "${HOME:-}" ] && [ -x /usr/bin/redbean ] \
+  && [ -f "$config_home/kwm/config.zon" ] \
+  && grep -Fq '.spawn_shell = .{ .cmd = "wmenu-run" }' "$config_home/kwm/config.zon"; then
+  sed -i 's|\.spawn_shell = \.{ \.cmd = "wmenu-run" }|\.spawn_shell = .{ .cmd = "redbean" }|' \
+    "$config_home/kwm/config.zon"
+fi
 
 exec river -c /usr/local/libexec/dinx-river-init

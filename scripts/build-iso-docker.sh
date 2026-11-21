@@ -58,6 +58,12 @@ case "$skip_postbuild_checks" in
   false|0) skip_postbuild_checks=false ;;
   *) fail 'DINX_SKIP_POSTBUILD_CHECKS must be true/false or 1/0' ;;
 esac
+redbean_build=${DINX_BUILD_REDBEAN:-false}
+case "$redbean_build" in
+  true|1) redbean_build=true ;;
+  false|0) redbean_build=false ;;
+  *) fail 'DINX_BUILD_REDBEAN must be true/false or 1/0' ;;
+esac
 builder_attempt_log=
 wrapper_started=$SECONDS
 wrapper_finish() {
@@ -482,6 +488,7 @@ if docker run "${docker_run_args[@]}" "${docker_mount_args[@]}" \
   --env DINX_ISO_OUTPUT="$iso_output_container" \
   --env DINX_PACKAGE_OUTPUT="$package_output_container" \
   --env DINX_PACKAGE_REPOSITORY_ONLY="$package_repository_only" \
+  --env DINX_BUILD_REDBEAN="$redbean_build" \
   --env DINX_COMMIT="$commit" \
   --env DINX_RUN_ID="$run_id" \
   --env DINX_REPOSITORY="$repository" \

@@ -254,6 +254,8 @@ grep -Eq '^package=blender-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$bl
   || fail 'Blender lean package pin is invalid'
 grep -Eq '^full_package=blender-full-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
   || fail 'Blender full package pin is invalid'
+grep -Fq 'packed_tag=$(gh api' "$root/distro/graphics/blender/detect-release.sh" \
+  || fail 'Blender detector does not compare published package releases'
 
 if grep -RqF 'shelly' "$root/distro/packages/dinxpanel/src/main.zig" "$root/distro/packages/dinx-dock/src/main.zig"; then
   fail 'the retired Shelly package manager still backs DINXPanel or the DINX dock'

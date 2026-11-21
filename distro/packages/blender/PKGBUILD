@@ -9,7 +9,7 @@ source_env="$startdir/source.env"
 : "${BLENDER_SOURCE_URL:?missing BLENDER_SOURCE_URL}"
 : "${BLENDER_SOURCE_SHA256:?missing BLENDER_SOURCE_SHA256}"
 pkgver="$BLENDER_VERSION"
-pkgrel=2
+pkgrel=3
 epoch=17
 options=(!lto)
 # Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
@@ -26,43 +26,62 @@ url="https://www.blender.org/"
 license=(GPL-3.0-or-later)
 depends=(
   alembic
+  bash
   boost-libs
   bullet
   bzip2
   ceres-solver
   draco
+  expat
+  ffmpeg
   fftw
   fontconfig
   freetype2
   fribidi
+  glew
   gmp
   harfbuzz
+  hicolor-icon-theme
+  imath
   libdecor
+  libepoxy
   libgl
   libharu
+  libjpeg-turbo
   libpng
+  libsndfile
+  libtiff
   libwebp
-  libxml2
   libx11
+  libxfixes
   libxi
+  libxkbcommon
+  libxml2
   libxrandr
+  libxrender
+  libxxf86vm
   lzo
   ncurses
   openal
+  opencolorio
+  openexr
   opengl-driver
   openimageio
   openjpeg2
   openxr
+  libspnav
   potrace
   pugixml
   python
   python-numpy
   rubberband
   sdl2
+  shared-mime-info
   speexdsp
-  tbb
   wayland
+  xdg-utils
   xxd
+  yaml-cpp
   zlib
   zstd
 )

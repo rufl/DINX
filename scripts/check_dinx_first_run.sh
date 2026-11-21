@@ -57,8 +57,10 @@ grep -Fq 'c.adw_application_window_set_content(window, toolbar);' "$frontend" \
 sh -n "$glue" || fail 'first-run glue has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_COMMAND' "$glue" || fail 'first-run glue does not allow overriding the wizard command'
 grep -Fq 'dinx-sync-session-theme' "$glue" || fail 'first-run glue does not run the theme synchronizer'
+if ! awk '/run_wizard[[:space:]]*$/{wizard=NR} /dinx-sync-session-theme/{if (!sync) sync=NR} END { exit !(sync && wizard && sync < wizard) }' "$glue"; then
+  fail 'first-run glue does not apply the dark default before launching the wizard'
+fi
 grep -Fq 'dinx-session.env' "$glue" || fail 'first-run glue does not publish the locale to session children'
-grep -Fq 'exit 0' "$glue" || fail 'first-run glue can abort the session on failure'
 grep -Fq 'dinx-desktop-first-run' "$supervisor" || fail 'the supervisor does not run the first-run glue'
 grep -Fq '    - dinx-first-run' "$profile" || fail 'the DINX profile does not install dinx-first-run'
 

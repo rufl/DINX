@@ -88,6 +88,10 @@ seed_installer_preferences() {
     return 0
 }
 
+if [ -x "$theme_sync" ]; then
+    "$theme_sync" >/dev/null 2>&1 || true
+fi
+
 run_wizard
 apply_locale
 seed_installer_preferences

@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+export GDK_BACKEND="${GDK_BACKEND:-wayland,x11}"
+export XDG_CURRENT_DESKTOP=river
+export XDG_SESSION_DESKTOP=river
+
+if command -v xdg-user-dirs-update >/dev/null 2>&1; then
+  xdg-user-dirs-update
+fi
+desktop_dir=$(xdg-user-dir DESKTOP 2>/dev/null || printf '%s/Desktop' "${HOME:-/tmp}")
+case "$desktop_dir" in
+  /*) mkdir -p -- "$desktop_dir" ;;
+  *) desktop_dir=${HOME:-/tmp}/Desktop; mkdir -p -- "$desktop_dir" ;;
+esac
+
+exec pcmanfm --desktop --profile=dinx

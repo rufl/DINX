@@ -1,0 +1,91 @@
+name: Blender generated packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild the current upstream version with a new package release
+        required: false
+        type: boolean
+        default: false
+      version:
+        description: Blender version override without a leading v
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-blender
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    name: Detect new Blender release
+    runs-on: ubuntu-24.04
+    outputs:
+      needs_build: ${{ steps.detect.outputs.needs_build }}
+      version: ${{ steps.detect.outputs.version }}
+      pkgrel: ${{ steps.detect.outputs.pkgrel }}
+    steps:
+      - name: Checkout Blender branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: blender
+          persist-credentials: false
+      - name: Compare upstream release with generated packages
+        id: detect
+        env:
+          BLENDER_FORCE: ${{ inputs.force && '1' || '0' }}
+          BLENDER_VERSION_OVERRIDE: ${{ inputs.version }}
+        run: distro/graphics/blender/detect-release.sh
+  build:
+    name: Build and publish lean/full Blender packages
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Blender branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: blender
+          persist-credentials: false
+      - name: Build packages in Artix
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          PKGREL: ${{ needs.detect.outputs.pkgrel }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/graphics/blender
+          docker run --rm --privileged \
+            -e BLENDER_VERSION="$VERSION" -e BLENDER_PKREL="$PKGREL" \
+            -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            artixlinux/artixlinux:latest bash -euxo pipefail -c '
+              pacman -Sy --noconfirm --needed base-devel curl jq git
+              useradd -m builder
+              chown -R builder:builder /workspace
+              su builder -c "distro/graphics/blender/build.sh"
+            '
+      - name: Verify package artifacts
+        run: |
+          set -euo pipefail
+          cd dist/graphics/blender
+          sha256sum -c SHA256SUMS
+      - name: Publish Blender package release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.detect.outputs.version }}
+          PKGREL: ${{ needs.detect.outputs.pkgrel }}
+        run: |
+          set -euo pipefail
+          cd dist/graphics/blender
+          tag="blender/v${VERSION}-dinx${PKGREL}"
+          notes=$(jq -r '"Blender \(.version) DINX generated packages \(.pkgrel).\\n\\nLean package: \(.artifacts.lean_package)\\nFull replacement package: \(.artifacts.full_package)\\n\\nThe full package conflicts with and replaces the lean package when users opt in."' build-metadata.json)
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Blender ${VERSION} (DINX lean/full ${PKGREL})" --notes "$notes" --latest=false \
+            *.pkg.tar.zst SHA256SUMS build-metadata.json

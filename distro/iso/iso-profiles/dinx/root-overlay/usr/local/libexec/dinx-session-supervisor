@@ -150,15 +150,21 @@ if [ -r "$session_env" ]; then
     # shellcheck disable=SC1090
     . "$session_env"
 fi
-# The DINX desktop shell: Morghulis provides the bar, runner, quick menu and
-# notifications; the dock is a first-party layer-shell app honoring the
-# placement chosen above.
+# Morghulis is the DINX bar: force its selected anchor before construction so
+# the first-run result is applied even when the wizard could not reach dconf.
+if command -v gsettings >/dev/null 2>&1 \
+    && gsettings writable com.arkye.morghulis navbar-anchor >/dev/null 2>&1; then
+    bar_anchor=bottom
+    appearance=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}/dinx/appearance.json
+    if command -v jq >/dev/null 2>&1 && [ -r "$appearance" ]; then
+        bar_anchor=$(jq -er '.bar | select(. == "top" or . == "bottom")' "$appearance" 2>/dev/null) || bar_anchor=bottom
+    fi
+    gsettings set com.arkye.morghulis navbar-anchor "$bar_anchor" >/dev/null 2>&1 \
+        || log "bar anchor update failed: $bar_anchor"
+fi
 start_required shell morghulis
 start_optional dock dinx-dock
-# pcmanfm --desktop draws the desktop layer, including the ~/Desktop shortcuts
-# that dinx-river-session seeds and approves for the live user. It is optional
-# so a desktop-renderer failure degrades to no icons rather than no session.
-start_optional desktop pcmanfm --desktop
+start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"
 start_optional bc250 bc250-control-centerd
 # KWM is supervised above as a required session component. Its default build
 # starts KWIM for river-input-management-v1.

@@ -446,6 +446,8 @@ required_paths=(
   usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
+  usr/local/libexec/dinx-logout
+  usr/local/libexec/dinx-pcmanfm-desktop
   usr/local/libexec/dinx-river-session
   usr/local/libexec/dinx-sync-session-theme
   usr/local/libexec/dinx-river-init

@@ -445,20 +445,34 @@ trap finish EXIT
                 qtermwidget pacman-contrib
               build_package octopi
               pacman_install_local "$package_repo"/octopi-*.pkg.tar.zst
-              # Blender lean build — ~1.8 GB Artix bloat deps and the
-              # runtime-only Cycles OSL compiler toolchain are stripped.
-              # makedepends are not resolved because makepkg runs --nodeps;
-              # install the build-time deps CMake needs explicitly.
-              pacman_sync_install \
-                alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
-                eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
-                libdecor libgl libharu libpng libtiff libwebp libxcursor \
-                libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
-                opencolorio openexr openimageio openjpeg2 openpgl \
-                openxr patch pkgconf potrace pugixml python python-numpy rubberband \
-                sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
-              build_package blender
-              pacman_install_local "$package_repo"/blender-*.pkg.tar.zst
+              # Blender packages are generated on the blender branch and pinned on main.
+              # Bootstrap builds keep the old source recipe until the first generated
+              # release has been published and pinned.
+              blender_stage_dir=$(scripts/lib/stage-blender.sh)
+              if [[ -n "$blender_stage_dir" ]]; then
+                blender_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
+                blender_full_package=$(awk -F= '$1 == "full_package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
+                cp -- "$blender_stage_dir/$blender_package" "$blender_stage_dir/$blender_full_package" "$package_repo/"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_package"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_full_package"
+                pacman_install_local "$package_repo/$blender_package"
+                printf 'dinx-build-timing phase=blender-staged lean=%s full=%s\n' \
+                  "$blender_package" "$blender_full_package"
+              else
+                pacman_sync_install \
+                  alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
+                  eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
+                  libdecor libgl libharu libpng libtiff libwebp libxcursor \
+                  libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
+                  opencolorio openexr openimageio openjpeg2 openpgl \
+                  openxr patch pkgconf potrace pugixml python python-numpy rubberband \
+                  sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
+                build_package blender
+                blender_package=$(basename -- "$(find "$package_repo" -maxdepth 1 -type f -name 'blender-*.pkg.tar.zst' -print -quit)")
+                blender_full_package=
+                pacman_install_local "$package_repo/$blender_package"
+                printf 'dinx-build-timing phase=blender-source-bootstrap package=%s\n' "$blender_package"
+              fi
               # First-party desktop shell components: the layer-shell dock and the
               # GTK4 first-run wizard. Both build from checked-in Zig sources with
               # the builder's Zig 0.17 toolchain, so no upstream download happens.
@@ -744,6 +758,11 @@ trap finish EXIT
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
                 printf "common_profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/common/common.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
+                if [[ -n "$blender_stage_dir" ]]; then
+                  printf "blender_tag=%s\n" "$(awk -F= '$1 == "tag" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)"
+                  printf "blender_package_sha256=%s\n" "$(sha256sum "$package_repo/$blender_package" | cut -d " " -f 1)"
+                  printf "blender_full_package_sha256=%s\n" "$(sha256sum "$package_repo/$blender_full_package" | cut -d " " -f 1)"
+                fi
                 if [[ -f /workspace/distro/office/eurooffice.pin ]]; then
                   printf "eurooffice_tag=%s\n" "$(awk -F= '$1 == "tag" { print $2; exit }' /workspace/distro/office/eurooffice.pin)"
                   printf "eurooffice_package_sha256=%s\n" "$(sha256sum "$package_repo/$eurooffice_package" | cut -d " " -f 1)"

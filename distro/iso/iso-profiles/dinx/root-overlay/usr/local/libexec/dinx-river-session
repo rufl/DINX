@@ -26,12 +26,13 @@ export QT_QPA_PLATFORMTHEME=qt6ct
 # Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
 
-# Appearance (theme, variant, corners) is per-user state in
-# $XDG_CONFIG_HOME/dinx/appearance.json, written by the first-run wizard and
-# applied to every toolkit by dinx-sync-session-theme. The values below are
-# only fallbacks for recovery shells that never ran the synchronizer.
-export DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"
-export DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"
+# DINX is intentionally dark across every toolkit and application.
+export DINX_COLOR_SCHEME=dark
+export DINTOR_THEME=prefer-dark
+export ADW_COLOR_SCHEME_FORCE_DARK=1
+export GTK_THEME='DINX:dark'
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE=fusion
 
 export DINX_DISPLAY_AUTHORITY=shikane
 export DINX_SESSION_COMPOSITOR_PID=$$

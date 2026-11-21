@@ -35,6 +35,11 @@ for path in "$launcher" "$btop_launcher" "$nvtop_launcher"; do
   [[ -x "$path" ]] || fail "terminal launcher is not executable: $path"
   sh -n "$path" || fail "terminal launcher has invalid shell syntax: $path"
 done
+grep -Fq 'export SHELL=/bin/fish' "$launcher" || fail 'Deetty wrapper does not force Fish'
+grep -Fq 'export NOCTTY_DESKTOP_SHELL=/bin/fish' "$launcher" || fail 'Deetty wrapper does not identify Fish to Deetty'
+grep -Fq -- '--dropdown' "$launcher" || fail 'Deetty wrapper lacks dropdown mode selection'
+grep -Fq -- '--windowed' "$launcher" || fail 'Deetty wrapper lacks windowed mode selection'
+grep -Fq -- '--zen-fullscreen' "$launcher" || fail 'Deetty wrapper lacks zen fullscreen selection'
 [[ $(grep -Fc 'exec /usr/bin/deetty --new-window --execute "$@"' "$launcher") -eq 2 ]] \
   || fail 'Deetty command launcher does not consistently request an independent window'
 grep -Fqx 'exec /usr/local/bin/deetty -e btop "$@"' "$btop_launcher" \

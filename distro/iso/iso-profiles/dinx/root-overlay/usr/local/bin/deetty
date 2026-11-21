@@ -1,6 +1,17 @@
 #!/bin/sh
 set -eu
+export SHELL=/bin/fish
+export NOCTTY_DESKTOP_SHELL=/bin/fish
 case "${1:-}" in
+  --dropdown)
+    exec /usr/bin/deetty --native-grid
+    ;;
+  --windowed)
+    exec /usr/bin/deetty --native-grid-windowed
+    ;;
+  --zen|--zen-fullscreen)
+    exec /usr/bin/deetty --native-grid-zen
+    ;;
   -h|--help|--version|--package-smoke|--show|--hide|--toggle|--status|--hidden|--native-grid|--native-grid-windowed|--native-grid-zen|--open-workspace|--open-uri)
     exec /usr/bin/deetty "$@"
     ;;

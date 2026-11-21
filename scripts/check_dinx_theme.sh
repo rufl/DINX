@@ -346,15 +346,13 @@ for supported_family in Skeuos Orchis Fluent Jasper; do
   grep -Fq "$supported_family" "$theme_sync" \
     || fail "Theme sync cannot resolve the ported GTK family: $supported_family"
 done
-grep -Fq 'variant_suffix=Light' "$theme_sync" || fail 'Theme sync cannot resolve light variants'
 grep -Fq 'variant_suffix=Dark' "$theme_sync" || fail 'Theme sync cannot resolve dark variants'
 grep -Fq -- '-Square' "$theme_sync" || fail 'Theme sync cannot resolve square corner variants'
 grep -Fq 'gtk-application-prefer-dark-theme' "$theme_sync" || fail 'GTK dark preference is not synchronized'
 grep -Fq 'dconf write' "$theme_sync" || fail 'GTK/libadwaita color-scheme is not synchronized'
 grep -Fq "'prefer-dark'" "$theme_sync" || fail 'Theme sync does not write the dark dconf color-scheme'
-grep -Fq "'prefer-light'" "$theme_sync" || fail 'Theme sync does not write the light dconf color-scheme'
-grep -Fq 'custom_palette true' "$theme_sync" || fail 'Theme sync does not enable the DINX Qt palette for dark'
-grep -Fq 'custom_palette false' "$theme_sync" || fail 'Theme sync does not disable the custom Qt palette for light'
+grep -Fq 'theme_variant=dark' "$theme_sync" || fail 'Theme sync is not locked to the DINX dark variant'
+grep -Fq 'custom_palette true' "$theme_sync" || fail 'Theme sync does not enable the DINX Qt palette'
 grep -Fq 'colors/DINX.conf' "$theme_sync" || fail 'Theme sync does not consume the DINX Qt palette'
 grep -Fq 'preserving user-managed symlink' "$theme_sync" || fail 'Theme sync does not preserve user-managed symlinks'
 if grep -Eiq 'pearl|matugen' "$theme_sync"; then

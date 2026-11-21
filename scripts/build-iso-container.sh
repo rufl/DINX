@@ -462,10 +462,10 @@ trap finish EXIT
                 pacman_sync_install \
                   alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
                   eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
-                  libdecor libgl libharu libpng libtiff libwebp libxcursor \
+                  libdecor libgl libpng libtiff libwebp libxcursor \
                   libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
                   opencolorio openexr openimageio openjpeg2 openpgl \
-                  openxr patch pkgconf potrace pugixml python python-numpy rubberband \
+                  patch pkgconf potrace pugixml python python-numpy rubberband \
                   sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
                 build_package blender
                 blender_package=$(basename -- "$(find "$package_repo" -maxdepth 1 -type f -name 'blender-*.pkg.tar.zst' -print -quit)")

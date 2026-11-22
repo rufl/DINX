@@ -87,6 +87,8 @@ const App = struct {
             .{ .name = "audio", .label = "Audio" },
             .{ .name = "hardware", .label = "Hardware" },
             .{ .name = "services", .label = "Services & updates" },
+            .{ .name = "system", .label = "System tools" },
+            .{ .name = "session", .label = "Session" },
         };
         for (nav_items) |item| appendNavigationRow(navigation, item.name, item.label);
         c.gtk_box_append(@ptrCast(sidebar), navigation);
@@ -124,9 +126,6 @@ const App = struct {
         const compositor = makePage("Compositor & windows", "River owns the compositor; KWM owns tiling and KWIM owns input. Changes stay in the user's config.");
         appendAction(compositor, "Edit KWM config", "Open the persistent KWM configuration", &onKwmConfigClicked, self);
         appendAction(compositor, "DinitUI profiles", "Manage session service and performance profiles", &onServicesClicked, self);
-        if (!self.live_session) {
-            appendAction(compositor, "Lock screen", "Lock the installed DINX session", &onLockClicked, self);
-        }
         _ = c.gtk_stack_add_titled(@ptrCast(stack), compositor, "compositor", "Compositor & windows");
 
         const displays = makePage("Displays", "Edit layouts with wdisplays and save them back into Shikane atomically.");
@@ -138,16 +137,19 @@ const App = struct {
         appendAction(devices, "Bluetooth", "Open the adapter-aware Blueman launcher", &onBluetoothClicked, self);
         appendAction(devices, "Brightness down", "Lower display brightness by five percent", &onBrightnessDownClicked, self);
         appendAction(devices, "Brightness up", "Raise display brightness by five percent", &onBrightnessUpClicked, self);
+        appendAction(devices, "USB devices", "Inspect connected USB hardware", &onUsbClicked, self);
         appendAction(devices, "Hardware report", "Open the read-only inxi hardware report", &onHardwareClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), devices, "devices", "Devices");
 
         const network = makePage("Network", "NetworkManager and the DINX firewall remain separate, visible controls.");
         appendAction(network, "Network connections", "Open NetworkManager connection editor", &onNetworkClicked, self);
         appendAction(network, "Firewall", "Manage network access with Firewalld", &onFirewallClicked, self);
+        appendAction(network, "Network diagnostics", "Show NetworkManager device status in Deetty", &onNetworkDiagnosticsClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), network, "network", "Network");
 
         const audio = makePage("Audio", "PipeWire volume and mute controls through the native DINX-friendly mixer.");
         appendAction(audio, "Audio controls", "Open pwvucontrol", &onAudioClicked, self);
+        appendAction(audio, "Audio diagnostics", "Show PipeWire device and stream status in Deetty", &onAudioDiagnosticsClicked, self);
         appendAction(audio, "Brightness down", "Lower display brightness by five percent", &onBrightnessDownClicked, self);
         appendAction(audio, "Brightness up", "Raise display brightness by five percent", &onBrightnessUpClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), audio, "audio", "Audio");
@@ -171,6 +173,21 @@ const App = struct {
         c.gtk_widget_add_css_class(@ptrCast(@alignCast(self.kernel_status)), "dim-label");
         c.gtk_box_append(@ptrCast(hardware), @ptrCast(@alignCast(self.kernel_status)));
         _ = c.gtk_stack_add_titled(@ptrCast(stack), hardware, "hardware", "Hardware");
+
+        const system = makePage("System tools", "Common desktop utilities are one click away; privileged changes stay inside their native authorization flows.");
+        appendAction(system, "System monitor", "Open Mission Center for CPU, memory, disk, network and GPU usage", &onMissionCenterClicked, self);
+        appendAction(system, "File manager", "Open the DINX PCManFM desktop and file manager", &onFileManagerClicked, self);
+        appendAction(system, "Disks & mounts", "Open Pori for removable media and mount management", &onPoriClicked, self);
+        appendAction(system, "Partition editor", "Open GParted for explicit disk partitioning", &onGpartedClicked, self);
+        appendAction(system, "Archive manager", "Open File Roller for archive operations", &onFileRollerClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), system, "system", "System tools");
+
+        const session = makePage("Session", "Read-only diagnostics and safe session actions for the running River/KWM desktop.");
+        if (!self.live_session) {
+            appendAction(session, "Lock screen", "Lock the installed DINX session", &onLockClicked, self);
+        }
+        appendAction(session, "Session diagnostics", "Open the read-only DINX doctor report in Deetty", &onDoctorClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), session, "session", "Session");
 
         const services = makePage("Services & updates", "Review first, then choose the explicit action. Missing optional tools stay visible in the output.");
         appendAction(services, "Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self);
@@ -695,6 +712,42 @@ fn onThemeRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 fn onKwmConfigClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{ "deetty", "-e", "dintor", ".config/kwm/config.zon" });
 }
+fn onMissionCenterClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"missioncenter"});
+}
+
+fn onFileManagerClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"pcmanfm"});
+}
+
+fn onPoriClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"pori"});
+}
+
+fn onGpartedClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"gparted"});
+}
+
+fn onFileRollerClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"file-roller"});
+}
+
+fn onDoctorClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "dinx-doctor" });
+}
+
+fn onUsbClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "lsusb" });
+}
+
+fn onNetworkDiagnosticsClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "nmcli", "device", "status" });
+}
+
+fn onAudioDiagnosticsClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "wpctl", "status" });
+}
+
 
 fn onRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).refreshKernelStatus();
@@ -728,7 +781,7 @@ fn onBrightnessUpClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 }
 
 fn onLockClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "swaylock", "-f" });
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-lock"});
 }
 
 fn onQtClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

@@ -23,7 +23,7 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
-grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit topgrade shelly brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit topgrade shelly brightnessctl swaylock wdisplays mission-center pcmanfm pori gparted file-roller networkmanager pipewire usbutils)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
 grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'DINXPanel build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
@@ -39,7 +39,7 @@ grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install din
 [[ -x "$bluetooth_helper" ]] || fail "desktop helper is missing or not executable: $bluetooth_helper"
 sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'USB devices' 'Network diagnostics' 'Audio diagnostics'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
 grep -Fq 'gtk_label_new("Control Panel")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
@@ -67,6 +67,15 @@ if grep -Fq 'launch(&.{"wdisplays"})' "$frontend"; then
 fi
 grep -Fq 'launch(&.{"/usr/local/libexec/dinx-bluetooth-manager"})' "$frontend" || fail 'Bluetooth action does not use the DINX adapter-aware launcher'
 grep -Fq 'launch(&.{"firewall-config"})' "$frontend" || fail 'Firewall action does not launch firewall-config'
+grep -Fq 'launch(&.{"/usr/local/libexec/dinx-lock"})' "$frontend" || fail 'lock action does not use the DINX session helper'
+for direct_call in \
+  'launch(&.{"missioncenter"})' \
+  'launch(&.{"pcmanfm"})' \
+  'launch(&.{"pori"})' \
+  'launch(&.{"gparted"})' \
+  'launch(&.{"file-roller"})'; do
+  grep -Fq "$direct_call" "$frontend" || fail "system tool action is missing: $direct_call"
+done
 grep -Fq 'dinitui_command = command' "$frontend" || fail 'GPU command is not retained for the asynchronous task'
 grep -Fq 'const argv = [_][]const u8{ "dinitui", task.dinitui_command }' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
 grep -Fq -- '--gpu-status' "$frontend" || fail 'GPU detection action is missing'
@@ -81,7 +90,11 @@ for terminal_call in \
   '"deetty", "-e", "topgrade", "--dry-run"' \
   '"deetty", "-e", "topgrade"' \
   '"deetty", "-e", "shelly", "upgrade", "all"' \
-  '"deetty", "-e", "inxi", "-GSC"'; do
+  '"deetty", "-e", "inxi", "-GSC"' \
+  '"deetty", "-e", "dinx-doctor"' \
+  '"deetty", "-e", "lsusb"' \
+  '"deetty", "-e", "nmcli", "device", "status"' \
+  '"deetty", "-e", "wpctl", "status"'; do
   grep -Fq "$terminal_call" "$frontend" || fail "terminal action does not use Deetty with fixed argv: $terminal_call"
 done
 if grep -Eq '"(foot|ghostty)"' "$frontend"; then
@@ -108,4 +121,4 @@ if grep -Eq '/bin/sh|systemctl|g_spawn_command_line' "$frontend" "$kernels"; the
   fail 'DINXPanel contains shell/systemd or command-line-string execution'
 fi
 
-printf 'dinxpanel_contract package=true shortcuts=true upgrades=true firmware=true optional_cups=true privilege_fallback=true gpu_bridge=true kernels=true argv_safe=true no_removal=true\n'
+printf 'dinxpanel_contract package=true shortcuts=true upgrades=true firmware=true optional_cups=true system_tools=true diagnostics=true privilege_fallback=true gpu_bridge=true kernels=true argv_safe=true no_removal=true\n'

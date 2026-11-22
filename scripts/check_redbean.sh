@@ -59,6 +59,10 @@ fi
 
 # UI, integration and launch contracts.
 grep -Fq 'astal_apps_apps_fuzzy_query' "$header" || fail 'Astal fuzzy application search is missing'
+grep -Fq 'astal_apps_application_get_categories(application, &category_count)' "$header" \
+  || fail 'Redbean does not pass the Astal categories array length'
+grep -Fq 'g_strfreev(categories)' "$header" \
+  || fail 'Redbean does not release the Astal categories array'
 grep -Fq 'redbean_file_search' "$header" || fail 'file search is missing'
 grep -Fq 'settings_items' "$frontend" || fail 'settings search catalog is missing'
 grep -Fq 'gtk_layer_set_anchor' "$frontend" || fail 'redbean does not use layer-shell anchoring'

@@ -76,12 +76,18 @@ static inline const char *redbean_app_icon_name(void *application) {
 
 static inline gboolean redbean_app_has_category(void *application, const char *wanted) {
     if (application == NULL || wanted == NULL) return FALSE;
-    char **categories = astal_apps_application_get_categories(application);
+    gint category_count = 0;
+    char **categories = astal_apps_application_get_categories(application, &category_count);
     if (categories == NULL) return FALSE;
-    for (gsize index = 0; categories[index] != NULL; index++) {
-        if (g_strcmp0(categories[index], wanted) == 0) return TRUE;
+    gboolean found = FALSE;
+    for (gint index = 0; index < category_count; index++) {
+        if (g_strcmp0(categories[index], wanted) == 0) {
+            found = TRUE;
+            break;
+        }
     }
-    return FALSE;
+    g_strfreev(categories);
+    return found;
 }
 
 static inline gboolean redbean_app_launch(void *application) {

@@ -44,6 +44,7 @@ gtk4_skel="$overlay/etc/skel/.config/gtk-4.0/settings.ini"
 qemu_session_checker="$root/scripts/check_dinx_qemu_session.sh"
 iso_smoke="$root/scripts/smoke-iso.sh"
 install_smoke="$root/scripts/smoke-install.sh"
+logout="$overlay/usr/local/libexec/dinx-logout"
 
 fail() {
   printf 'check_dinx_session: %s\n' "$*" >&2

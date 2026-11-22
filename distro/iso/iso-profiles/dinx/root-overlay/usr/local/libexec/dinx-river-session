@@ -30,7 +30,6 @@ export MOZ_GTK_TITLEBAR_DECORATION=system
 export DINX_COLOR_SCHEME=dark
 export DINTOR_THEME=prefer-dark
 export ADW_COLOR_SCHEME_FORCE_DARK=1
-export GTK_THEME='DINX:dark'
 export QT_QPA_PLATFORMTHEME=qt6ct
 export QT_STYLE_OVERRIDE=fusion
 

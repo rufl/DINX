@@ -23,6 +23,8 @@ const App = struct {
     status_label: *c.GtkLabel = undefined,
     spinner: *c.GtkSpinner = undefined,
     navigation: *c.GtkListBox = undefined,
+    navigation_count: usize = 0,
+    navigation_empty: *c.GtkLabel = undefined,
     stack: *c.GtkStack = undefined,
     window_ready: bool = false,
     kernel_status_loaded: bool = false,
@@ -80,6 +82,15 @@ const App = struct {
         c.gtk_widget_set_margin_bottom(sidebar_hint, 16);
         c.gtk_box_append(@ptrCast(sidebar), sidebar_hint);
 
+        const navigation_search = c.gtk_search_entry_new() orelse return;
+        c.gtk_widget_set_margin_start(navigation_search, 12);
+        c.gtk_widget_set_margin_end(navigation_search, 12);
+        c.gtk_widget_set_margin_bottom(navigation_search, 12);
+        c.gtk_search_entry_set_placeholder_text(@ptrCast(navigation_search), "Search settings");
+        c.gtk_widget_set_tooltip_text(navigation_search, "Filter DINXPanel settings pages");
+        connect(navigation_search, "search-changed", &onNavigationSearchChanged, self);
+        c.gtk_box_append(@ptrCast(sidebar), navigation_search);
+
         const navigation = c.gtk_list_box_new() orelse return;
         self.navigation = @ptrCast(navigation);
         c.gtk_list_box_set_selection_mode(@ptrCast(navigation), c.GTK_SELECTION_SINGLE);
@@ -100,8 +111,17 @@ const App = struct {
             .{ .name = "session", .label = "Session" },
             .{ .name = "power", .label = "Power" },
         };
+        self.navigation_count = nav_items.len;
         for (nav_items) |item| appendNavigationRow(navigation, item.name, item.label);
         c.gtk_box_append(@ptrCast(sidebar), navigation);
+        const navigation_empty = c.gtk_label_new("No matching settings") orelse return;
+        self.navigation_empty = @ptrCast(navigation_empty);
+        c.gtk_label_set_xalign(@ptrCast(navigation_empty), 0.0);
+        c.gtk_widget_add_css_class(navigation_empty, "dim-label");
+        c.gtk_widget_set_margin_start(navigation_empty, 20);
+        c.gtk_widget_set_margin_top(navigation_empty, 8);
+        c.gtk_widget_set_visible(navigation_empty, 0);
+        c.gtk_box_append(@ptrCast(sidebar), navigation_empty);
         c.gtk_box_append(@ptrCast(shell), sidebar);
 
         const right = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 0) orelse return;
@@ -182,6 +202,7 @@ const App = struct {
         c.gtk_label_set_xalign(self.kernel_status, 0.0);
         c.gtk_widget_add_css_class(@ptrCast(@alignCast(self.kernel_status)), "dim-label");
         c.gtk_box_append(@ptrCast(hardware), @ptrCast(@alignCast(self.kernel_status)));
+        appendAction(hardware, "Hardware qualification report", "Open the read-only DINX hardware qualification report", &onHardwareQualificationClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), hardware, "hardware", "Hardware");
 
         const system = makePage("System tools", "Common desktop utilities are one click away; privileged changes stay inside their native authorization flows.");
@@ -735,6 +756,22 @@ fn onNavigationRowSelected(_: *c.GtkListBox, row: ?*c.GtkListBoxRow, data: ?*any
     const selected = row orelse return;
     c.gtk_stack_set_visible_child_name(app.stack, c.gtk_widget_get_name(@ptrCast(selected)));
 }
+fn onNavigationSearchChanged(entry: *c.GtkSearchEntry, data: ?*anyopaque) callconv(.c) void {
+    const app = asApp(data);
+    const query = std.mem.span(c.gtk_editable_get_text(@ptrCast(entry)));
+    var matched = false;
+    var index: c_int = 0;
+    while (index < @as(c_int, @intCast(app.navigation_count))) : (index += 1) {
+        const row = c.gtk_list_box_get_row_at_index(app.navigation, index) orelse continue;
+        const child = c.gtk_list_box_row_get_child(row) orelse continue;
+        const label = c.gtk_label_get_text(@ptrCast(child));
+        const visible = query.len == 0 or std.ascii.findIgnoreCase(std.mem.span(label), query) != null;
+        c.gtk_widget_set_visible(@ptrCast(row), if (visible) 1 else 0);
+        matched = matched or visible;
+    }
+    c.gtk_widget_set_visible(@ptrCast(@alignCast(app.navigation_empty)), if (query.len > 0 and !matched) 1 else 0);
+}
+
 
 
 fn onActivate(_: *c.GApplication, data: ?*anyopaque) callconv(.c) void {
@@ -894,6 +931,9 @@ fn onDisplayClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 
 fn onHardwareClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{ "deetty", "-e", "inxi", "-GSC" });
+}
+fn onHardwareQualificationClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "dinx-alpha7-hardware-report" });
 }
 
 fn onKernelInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

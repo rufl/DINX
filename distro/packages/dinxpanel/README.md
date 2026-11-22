@@ -11,6 +11,7 @@ DINXPanel is the DINX-native, lean GTK4/libadwaita control panel. A left navigat
 - **Displays** uses the DINX `dinx-wdisplays` persistence wrapper; **Services & updates** contains DinitUI, upgrades, Shelly, Topgrade and optional CUPS.
 - **System tools** exposes Mission Center, PCManFM, Pori, GParted and File Roller; **Session** exposes the read-only `dinx-doctor` report and installed-session locking.
 - **Power** reports UPower state and exposes suspend, restart and power-off only in installed sessions; every destructive action uses an Adwaita confirmation dialog before calling `loginctl`.
+- The sidebar search filters settings pages in place and exposes an explicit empty state; **Hardware** also opens the read-only DINX qualification report.
 - Network, audio and USB pages include Deetty-backed diagnostics using fixed `nmcli`, `wpctl` and `lsusb` argv.
 
 ## Safety boundary

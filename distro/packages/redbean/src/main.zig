@@ -627,7 +627,7 @@ fn onManageClicked(button: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 
 fn onSettingClicked(button: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     const self: *App = @ptrCast(@alignCast(data orelse return));
-    const widget = @ptrCast(button orelse return);
+    const widget: *c.GtkWidget = @ptrCast(button orelse return);
     const desktop_id = c.redbean_get_string_data(widget, "redbean-desktop-id") orelse return;
     if (c.redbean_launch_desktop(desktop_id) == 0) log.warn("setting launch failed", .{});
     if (self.menu_window) |menu| c.gtk_widget_set_visible(menu, 0);
@@ -635,7 +635,7 @@ fn onSettingClicked(button: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void 
 
 fn onFileClicked(button: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     const self: *App = @ptrCast(@alignCast(data orelse return));
-    const widget = @ptrCast(button orelse return);
+    const widget: *c.GtkWidget = @ptrCast(button orelse return);
     const path = c.redbean_get_string_data(widget, "redbean-file-path") orelse return;
     if (c.redbean_launch_path(path) == 0) log.warn("file launch failed", .{});
     if (self.menu_window) |menu| c.gtk_widget_set_visible(menu, 0);
@@ -677,7 +677,7 @@ fn onCategoryClicked(button: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void
 }
 
 fn onDesktopShortcutClicked(button: ?*c.GtkButton, _: ?*anyopaque) callconv(.c) void {
-    const widget = @ptrCast(button orelse return);
+    const widget: *c.GtkWidget = @ptrCast(button orelse return);
     const configured = c.redbean_get_string_data(widget, "redbean-desktop-id");
     const label = c.gtk_button_get_label(button orelse return) orelse return;
     const desktop_id: [*:0]const u8 = configured orelse switch (std.mem.span(label)) {
@@ -748,7 +748,7 @@ fn onTrayClicked(_: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 
 fn appendNotification(
     id: c.guint,
-    app_name: [*:0]const u8,
+    notification_app_name: [*:0]const u8,
     summary: [*:0]const u8,
     body: [*:0]const u8,
     data: ?*anyopaque,
@@ -759,7 +759,7 @@ fn appendNotification(
     c.gtk_widget_add_css_class(button, "redbean-notification");
     c.redbean_set_uint_data(button, "redbean-notification-id", id);
     const row = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 2) orelse return;
-    const title_text = std.fmt.allocPrintSentinel(allocator, "{s}: {s}", .{ app_name, summary }) catch return;
+    const title_text = std.fmt.allocPrintSentinel(allocator, "{s}: {s}", .{ notification_app_name, summary }) catch return;
     defer allocator.free(title_text);
     const title = makeLabel(title_text.ptr, "redbean-app-name") orelse return;
     const detail = makeLabel(body, "redbean-app-description") orelse return;
@@ -1077,7 +1077,6 @@ pub fn main(init: std.process.Init) !void {
         return error.OutOfMemory;
     };
     var shell = App{
-        .io = init.io,
         .home = home,
         .mode_path = mode_path,
         .apps = @ptrCast(apps),

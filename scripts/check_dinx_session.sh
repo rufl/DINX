@@ -22,6 +22,7 @@ gaming_session="$session_dir/dinx-gaming.desktop"
 lock="$overlay/usr/local/libexec/dinx-lock"
 idle="$overlay/usr/local/libexec/dinx-idle"
 desktop="$overlay/usr/share/applications/dinx-lock.desktop"
+desktop_surface="$overlay/usr/local/libexec/dinx-pcmanfm-desktop"
 live_package="$root/distro/packages/dinx-live-autologin"
 kwm_pkgbuild="$root/distro/packages/kwm/PKGBUILD"
 kwim_pkgbuild="$root/distro/packages/kwim/PKGBUILD"
@@ -51,9 +52,9 @@ fail() {
 
 for path in \
   "$profile" "$greetd_config" "$tmpfiles" \
-  "$river_session" "$river_init" "$supervisor" \
+  "$river_session" "$river_init" "$supervisor" "$logout" \
   "$desktop_approval" "$palette_seed" "$desktop_installer" "$theme_sync" "$installer" \
-  "$river_entry" "$gaming_session" "$lock" "$idle" "$desktop" \
+  "$river_entry" "$gaming_session" "$lock" "$idle" "$desktop" "$desktop_surface" \
   "$shell_profile" "$fish_config" "$useradd_defaults" "$users_conf" \
   "$graphics_helper" "$graphics_environment" \
   "$kwm_pkgbuild" "$root/distro/packages/kwm/source.env" \
@@ -93,7 +94,7 @@ if grep -Eq '^    - [a-z0-9._-]*(aq|pea)[a-z0-9._-]*$' "$profile"; then
 fi
 while IFS= read -r helper_path; do
   case "${helper_path##*/}" in
-    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-desktop-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
+    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-logout|dinx-pcmanfm-desktop|dinx-desktop-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
     *) fail "unexpected session component: ${helper_path#$root/}" ;;
   esac
 done < <(find "$overlay/usr/local/libexec" -maxdepth 1 -type f)
@@ -117,8 +118,11 @@ sh -n "$river_session" || fail 'River session wrapper has invalid shell syntax'
 sh -n "$river_init" || fail 'River session init has invalid shell syntax'
 [[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
 sh -n "$supervisor" || fail 'session supervisor has invalid shell syntax'
+[[ -x "$logout" ]] || fail 'logout helper is not executable'
+sh -n "$logout" || fail 'logout helper has invalid shell syntax'
+[[ -x "$desktop_surface" ]] || fail 'PCManFM desktop wrapper is not executable'
+sh -n "$desktop_surface" || fail 'PCManFM desktop wrapper has invalid shell syntax'
 [[ -x "$desktop_installer" ]] || fail 'live installer desktop shortcut is not executable'
-[[ -x "$desktop_approval" ]] || fail 'desktop approval helper is not executable'
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), sys.argv[1], "exec")' "$desktop_approval" \
   || fail 'desktop approval helper has invalid Python syntax'
 [[ -x "$palette_seed" ]] || fail 'Qt6ct palette seed helper is not executable'

@@ -1,0 +1,51 @@
+name: Blender release refresh
+
+on:
+  schedule:
+    - cron: "17 6 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-blender-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Check for new generated Blender packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: write
+    steps:
+      - name: Checkout DINX main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Check and stage newest Blender packages
+        id: refresh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check_blender_release.sh
+      - name: Create pin pull request
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.refresh.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add distro/graphics/blender/blender.pin
+          git commit --message "chore(blender): pin generated packages ${TAG}"
+          branch="automation/blender-${TAG//\//-}"
+          git switch -c "$branch"
+          git push --set-upstream origin "$branch"
+          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+            --title "chore(blender): pin generated packages ${TAG}" \
+            --body "Updates the verified Blender lean/full package pin to ${TAG}. Merge this PR to qualify the lean package in P0."

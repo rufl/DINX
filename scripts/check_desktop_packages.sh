@@ -107,8 +107,8 @@ grep -Fqx 'MimeType=inode/directory;' "$pcmanfm_override" || fail 'the pcmanfm d
 if grep -Eq '^(Hidden|NoDisplay)=true$' "$pcmanfm_override"; then
   fail 'the pcmanfm desktop override is hidden'
 fi
-grep -Fq -- 'start_optional desktop pcmanfm --desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
-  || fail 'the DINX session supervisor does not start the pcmanfm desktop layer'
+grep -Fq 'start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
+  || fail 'the DINX session supervisor does not start the PCManFM desktop wrapper'
 if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi
@@ -219,16 +219,19 @@ grep -Eq '^[[:space:]]*polkit([[:space:]]|$)' "$octopi_recipe" \
   || fail 'Octopi package does not depend on polkit for pkexec elevation'
 grep -Fq 'build_package octopi' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Octopi'
 
-# Blender is a local DINX recipe (lean build, ~1.8 GB Artix bloat stripped)
+# Blender is generated on the blender branch and consumed from a verified pin.
 blender_dir="$root/distro/packages/blender"
 blender_recipe="$blender_dir/PKGBUILD"
 blender_source="$blender_dir/source.env"
-for recipe_file in "$blender_recipe" "$blender_source"; do
-  [[ -r "$recipe_file" ]] || fail "Blender contract file is missing: ${recipe_file#$root/}"
+blender_pin="$root/distro/graphics/blender/blender.pin"
+for blender_file in "$blender_recipe" "$blender_source" "$blender_pin" \
+  "$root/scripts/lib/stage-blender.sh"; do
+  [[ -r "$blender_file" ]] || fail "Blender contract file is missing: ${blender_file#$root/}"
 done
-grep -Fq 'build_package blender' "$root/scripts/build-iso-container.sh" \
-  || fail 'ISO builder does not build blender'
-# Verify bloat dependencies are stripped from both dependency arrays.
+grep -Fq 'scripts/lib/stage-blender.sh' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not stage generated Blender packages'
+grep -Fq 'pacman_install_local "$package_repo/$blender_package"' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not install the pinned lean Blender package'
 blender_all_deps=$(sed -n '/^depends=(/,/^)/p; /^makedepends=(/,/^)/p' "$blender_recipe")
 if grep -Eq '^[[:space:]]*(intel-oneapi|usd|materialx|openvdb|opensubdiv|embree|openimagedenoise)([[:space:]]|$)' <<<"$blender_all_deps"; then
   fail 'Blender package still carries Artix bloat dependencies'
@@ -245,6 +248,14 @@ grep -Eq '^[[:space:]]*-DWITH_CYCLES_OSL=OFF' "$blender_recipe" \
   || fail 'Blender does not disable Cycles Open Shading Language support'
 grep -Eq '^[[:space:]]*-DWITH_CYCLES_DEVICE_ONEAPI=OFF' "$blender_recipe" \
   || fail 'Blender does not disable Intel oneAPI (SYCL) device support'
+grep -Eq '^tag=blender/v[0-9]+(\.[0-9]+)+-dinx[1-9][0-9]*$' "$blender_pin" \
+  || fail 'Blender pin tag is invalid'
+grep -Eq '^package=blender-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
+  || fail 'Blender lean package pin is invalid'
+grep -Eq '^full_package=blender-full-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
+  || fail 'Blender full package pin is invalid'
+grep -Fq 'packed_tag=$(gh api' "$root/distro/graphics/blender/detect-release.sh" \
+  || fail 'Blender detector does not compare published package releases'
 
 if grep -RqF 'shelly' "$root/distro/packages/dinxpanel/src/main.zig" "$root/distro/packages/dinx-dock/src/main.zig"; then
   fail 'the retired Shelly package manager still backs DINXPanel or the DINX dock'

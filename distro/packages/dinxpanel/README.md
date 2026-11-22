@@ -1,6 +1,15 @@
 # DINXPanel
 
-DINXPanel is the DINX-native, YaST-inspired system control center. It groups fixed entry points for hardware, network, Bluetooth, audio, display, brightness, session lock, Dinit services, firewall, updates and kernel installation.
+DINXPanel is the DINX-native, lean GTK4/libadwaita control panel. A left navigation rail keeps the session categories stable while the selected page occupies the right side.
+
+## Layout and persistence
+
+- **Overview** keeps the most common Redbean, display, network and audio actions visible.
+- **Redbean shell** opens Redbean and edits `$XDG_CONFIG_HOME/dinx/redbean.json`; Redbean persists its mode and pinned launchers there.
+- **Appearance** opens Qt6ct, Morghulis and the session-theme synchronizer. The panel forces dark mode but uses Adwaita semantic roles, so all four DINX theme families retain their accents and contrast.
+- **Compositor & windows** edits `~/.config/kwm/config.zon` and opens DinitUI profiles. River remains the compositor, KWM remains the tiling manager and KWIM remains the input manager.
+- **Displays** uses the DINX `dinx-wdisplays` persistence wrapper; **Services & updates** contains DinitUI, upgrades, Shelly, Topgrade and optional CUPS.
+- The bottom operation view reports asynchronous output; no action accepts shell text or an arbitrary package name.
 
 ## Safety boundary
 
@@ -23,7 +32,7 @@ Firmware discovery uses `fwupdmgr refresh` and `fwupdmgr get-updates`; a `fwupdm
 ## Optional printing support
 
 The DINX ISO does not bundle CUPS. After installation, open DINXPanel and choose
-**Optional packages → Install CUPS**. DINX downloads the signed `cups-dinit`
+**Services & updates → Install CUPS**. DINX downloads the signed `cups-dinit`
 package from the configured Artix repository; its dependency installs CUPS and
 the package supplies the `cupsd` dinit service. Enable or start `cupsd` from
 DinitUI after installation when printing is needed. The fixed package action

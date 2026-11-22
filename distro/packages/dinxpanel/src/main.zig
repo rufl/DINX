@@ -15,6 +15,8 @@ const App = struct {
     output_view: *c.GtkTextView = undefined,
     status_label: *c.GtkLabel = undefined,
     spinner: *c.GtkSpinner = undefined,
+    navigation: *c.GtkListBox = undefined,
+    stack: *c.GtkStack = undefined,
     window_ready: bool = false,
     kernel_status_loaded: bool = false,
     kernel_status_completed: bool = false,
@@ -33,109 +35,171 @@ const App = struct {
 
         const window_widget = c.adw_application_window_new(@ptrCast(self.application)) orelse return;
         const window: *c.AdwApplicationWindow = @ptrCast(window_widget);
-        c.gtk_window_set_title(@ptrCast(window), "DINXPanel");
-        c.gtk_window_set_default_size(@ptrCast(window), 1080, 760);
+        c.gtk_window_set_title(@ptrCast(window), "DINX Control Panel");
+        c.gtk_window_set_default_size(@ptrCast(window), 1180, 780);
         c.gtk_window_set_resizable(@ptrCast(window), 1);
 
         const toolbar = c.adw_toolbar_view_new() orelse return;
         const header = c.adw_header_bar_new() orelse return;
         c.adw_header_bar_set_show_title(@ptrCast(header), 1);
         c.adw_toolbar_view_add_top_bar(@ptrCast(toolbar), @ptrCast(header));
-        const title = c.gtk_label_new("DINXPanel") orelse return;
+        const title = c.gtk_label_new("Control Panel") orelse return;
         c.gtk_widget_add_css_class(title, "title-2");
         c.adw_header_bar_set_title_widget(@ptrCast(header), title);
-
         const refresh = c.gtk_button_new_with_label("Refresh") orelse return;
-        c.gtk_widget_set_tooltip_text(refresh, "Refresh kernel status");
+        c.gtk_widget_set_tooltip_text(refresh, "Refresh kernel and device status");
         connect(refresh, "clicked", &onRefreshClicked, self);
         c.adw_header_bar_pack_end(@ptrCast(header), refresh);
 
-        const scroll = c.gtk_scrolled_window_new() orelse return;
-        c.gtk_scrolled_window_set_policy(@ptrCast(scroll), c.GTK_POLICY_NEVER, c.GTK_POLICY_AUTOMATIC);
-        const content = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 0) orelse return;
-        c.gtk_widget_set_margin_start(content, 24);
-        c.gtk_widget_set_margin_end(content, 24);
-        c.gtk_widget_set_margin_top(content, 20);
-        c.gtk_widget_set_margin_bottom(content, 24);
+        const shell = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 0) orelse return;
+        c.gtk_widget_add_css_class(shell, "dinx-shell");
 
-        const heading = c.gtk_label_new("System control center") orelse return;
-        c.gtk_label_set_xalign(@ptrCast(heading), 0.0);
-        c.gtk_widget_add_css_class(heading, "title-1");
-        c.gtk_widget_set_margin_bottom(heading, 18);
-        c.gtk_box_append(@ptrCast(content), heading);
+        const sidebar = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 0) orelse return;
+        c.gtk_widget_set_size_request(sidebar, 236, -1);
+        c.gtk_widget_add_css_class(sidebar, "dinx-sidebar");
+        const brand = c.gtk_label_new("DINX") orelse return;
+        c.gtk_label_set_xalign(@ptrCast(brand), 0.0);
+        c.gtk_widget_add_css_class(brand, "dinx-brand");
+        c.gtk_widget_set_margin_start(brand, 20);
+        c.gtk_widget_set_margin_top(brand, 20);
+        c.gtk_widget_set_margin_bottom(brand, 4);
+        c.gtk_box_append(@ptrCast(sidebar), brand);
+        const sidebar_hint = c.gtk_label_new("System settings") orelse return;
+        c.gtk_label_set_xalign(@ptrCast(sidebar_hint), 0.0);
+        c.gtk_widget_add_css_class(sidebar_hint, "dim-label");
+        c.gtk_widget_set_margin_start(sidebar_hint, 20);
+        c.gtk_widget_set_margin_bottom(sidebar_hint, 16);
+        c.gtk_box_append(@ptrCast(sidebar), sidebar_hint);
 
-        appendSectionTitle(content, "Hardware");
-        const hardware = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_box_append(@ptrCast(hardware), makeButton("GPU drivers", "Detect and install fixed AMD, Intel, or NVIDIA Artix driver plans", &onGpuDetectClicked, self));
-        c.gtk_box_append(@ptrCast(hardware), makeButton("Install GPU plan", "Install the detected fixed GPU driver plan", &onGpuInstallClicked, self));
-        c.gtk_box_append(@ptrCast(hardware), makeButton("Display", "Open DINX display setup; closing it saves the Shikane profile", &onDisplayClicked, self));
-        c.gtk_box_append(@ptrCast(hardware), makeButton("Hardware info", "Open the read-only inxi hardware report", &onHardwareClicked, self));
-        c.gtk_box_append(@ptrCast(content), hardware);
+        const navigation = c.gtk_list_box_new() orelse return;
+        self.navigation = @ptrCast(navigation);
+        c.gtk_list_box_set_selection_mode(@ptrCast(navigation), c.GTK_SELECTION_SINGLE);
+        c.gtk_widget_add_css_class(navigation, "dinx-navigation");
+        connect(navigation, "row-selected", &onNavigationRowSelected, self);
+        const nav_items = [_]struct { name: [*:0]const u8, label: [*:0]const u8 }{
+            .{ .name = "overview", .label = "Overview" },
+            .{ .name = "redbean", .label = "Redbean shell" },
+            .{ .name = "appearance", .label = "Appearance" },
+            .{ .name = "compositor", .label = "Compositor & windows" },
+            .{ .name = "displays", .label = "Displays" },
+            .{ .name = "devices", .label = "Devices" },
+            .{ .name = "network", .label = "Network" },
+            .{ .name = "audio", .label = "Audio" },
+            .{ .name = "hardware", .label = "Hardware" },
+            .{ .name = "services", .label = "Services & updates" },
+        };
+        for (nav_items) |item| appendNavigationRow(navigation, item.name, item.label);
+        c.gtk_box_append(@ptrCast(sidebar), navigation);
+        c.gtk_box_append(@ptrCast(shell), sidebar);
 
-        appendSectionTitle(content, "Desktop and devices");
-        const desktop = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Network", "Open NetworkManager connection editor", &onNetworkClicked, self));
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Bluetooth", "Open Blueman device manager", &onBluetoothClicked, self));
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Audio", "Open PipeWire volume controls", &onAudioClicked, self));
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Brightness down", "Lower display brightness by 5 percent", &onBrightnessDownClicked, self));
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Brightness up", "Raise display brightness by 5 percent", &onBrightnessUpClicked, self));
+        const right = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 0) orelse return;
+        c.gtk_widget_set_hexpand(right, 1);
+        const page_scroll = c.gtk_scrolled_window_new() orelse return;
+        c.gtk_scrolled_window_set_policy(@ptrCast(page_scroll), c.GTK_POLICY_NEVER, c.GTK_POLICY_AUTOMATIC);
+        c.gtk_widget_set_vexpand(page_scroll, 1);
+        const stack = c.gtk_stack_new() orelse return;
+        self.stack = @ptrCast(stack);
+        c.gtk_widget_set_hexpand(stack, 1);
+        c.gtk_widget_set_vexpand(stack, 1);
+
+        const overview = makePage("Overview", "Quiet, fixed-argv controls for the DINX session.");
+        appendAction(overview, "Open Redbean", "Open the Redbean shell surface", &onRedbeanClicked, self);
+        appendAction(overview, "Display setup", "Open display layout and persist the DINX Shikane profile", &onDisplayClicked, self);
+        appendAction(overview, "Network connections", "Manage NetworkManager connections", &onNetworkClicked, self);
+        appendAction(overview, "Audio controls", "Open PipeWire volume controls", &onAudioClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), overview, "overview", "Overview");
+
+        const redbean = makePage("Redbean shell", "Launcher, workspace, notification and application actions live in the Redbean surface.");
+        appendAction(redbean, "Open Redbean", "Open the Redbean shell surface", &onRedbeanClicked, self);
+        appendAction(redbean, "Edit Redbean settings", "Open the persisted Redbean mode and pin configuration", &onRedbeanSettingsClicked, self);
+        appendAction(redbean, "Open display layout", "Configure display placement used by the shell", &onDisplayClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), redbean, "redbean", "Redbean shell");
+
+        const appearance = makePage("Appearance", "DINX stays dark while preserving the active theme family's semantic accent and surfaces.");
+        appendAction(appearance, "Qt appearance", "Open Qt6ct with the DINX palette", &onQtClicked, self);
+        appendAction(appearance, "Open Morghulis", "Open the active desktop shell", &onMorghulisClicked, self);
+        appendAction(appearance, "Refresh session theme", "Reapply the saved DINX appearance to GTK and Qt", &onThemeRefreshClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), appearance, "appearance", "Appearance");
+
+        const compositor = makePage("Compositor & windows", "River owns the compositor; KWM owns tiling and KWIM owns input. Changes stay in the user's config.");
+        appendAction(compositor, "Edit KWM config", "Open the persistent KWM configuration", &onKwmConfigClicked, self);
+        appendAction(compositor, "DinitUI profiles", "Manage session service and performance profiles", &onServicesClicked, self);
         if (!self.live_session) {
-            c.gtk_box_append(@ptrCast(desktop), makeButton("Lock screen", "Lock the DINX session immediately", &onLockClicked, self));
+            appendAction(compositor, "Lock screen", "Lock the installed DINX session", &onLockClicked, self);
         }
-        c.gtk_box_append(@ptrCast(desktop), makeButton("Qt appearance", "Open Qt6 appearance settings", &onQtClicked, self));
-        c.gtk_box_append(@ptrCast(content), desktop);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), compositor, "compositor", "Compositor & windows");
 
-        appendSectionTitle(content, "DINX services and compositor");
-        const services = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_box_append(@ptrCast(services), makeButton("Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self));
-        c.gtk_box_append(@ptrCast(services), makeButton("Firewall", "Manage network access with Firewalld", &onFirewallClicked, self));
-        c.gtk_box_append(@ptrCast(content), services);
+        const displays = makePage("Displays", "Edit layouts with wdisplays and save them back into Shikane atomically.");
+        appendAction(displays, "Open display setup", "Configure and save the DINX display profile", &onDisplayClicked, self);
+        appendAction(displays, "Hardware report", "Inspect graphics devices and active drivers", &onHardwareClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), displays, "displays", "Displays");
 
-        appendSectionTitle(content, "Updates and firmware");
-        const updates = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_box_append(@ptrCast(updates), makeButton("Check upgrades", "Refresh package and firmware metadata, then show available upgrades without installing them", &onUpgradeCheckClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade preview", "Show Topgrade's package, firmware and tool upgrade plan without applying it", &onTopgradePreviewClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Topgrade", "Run the complete Topgrade update workflow in a terminal", &onTopgradeClicked, self));
-        c.gtk_box_append(@ptrCast(updates), makeButton("Shelly upgrade", "Run Shelly's all-backend upgrade workflow in a terminal", &onShellyClicked, self));
-        c.gtk_box_append(@ptrCast(content), updates);
+        const devices = makePage("Devices", "Common hardware controls without a resident daemon.");
+        appendAction(devices, "Bluetooth", "Open the adapter-aware Blueman launcher", &onBluetoothClicked, self);
+        appendAction(devices, "Brightness down", "Lower display brightness by five percent", &onBrightnessDownClicked, self);
+        appendAction(devices, "Brightness up", "Raise display brightness by five percent", &onBrightnessUpClicked, self);
+        appendAction(devices, "Hardware report", "Open the read-only inxi hardware report", &onHardwareClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), devices, "devices", "Devices");
 
-        appendSectionTitle(content, "Optional packages");
-        const optional = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_box_append(@ptrCast(optional), makeButton("Install CUPS", "Download and install optional CUPS printing support from the configured Artix repository", &onCupsInstallClicked, self));
-        c.gtk_box_append(@ptrCast(content), optional);
+        const network = makePage("Network", "NetworkManager and the DINX firewall remain separate, visible controls.");
+        appendAction(network, "Network connections", "Open NetworkManager connection editor", &onNetworkClicked, self);
+        appendAction(network, "Firewall", "Manage network access with Firewalld", &onFirewallClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), network, "network", "Network");
 
-        appendSectionTitle(content, "Kernel installer");
+        const audio = makePage("Audio", "PipeWire volume and mute controls through the native DINX-friendly mixer.");
+        appendAction(audio, "Audio controls", "Open pwvucontrol", &onAudioClicked, self);
+        appendAction(audio, "Brightness down", "Lower display brightness by five percent", &onBrightnessDownClicked, self);
+        appendAction(audio, "Brightness up", "Raise display brightness by five percent", &onBrightnessUpClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), audio, "audio", "Audio");
+
+        const hardware = makePage("Hardware", "Driver plans are delegated to DinitUI; kernel installation never removes the running kernel.");
+        appendAction(hardware, "Detect GPU drivers", "Read the fixed AMD, Intel or NVIDIA driver plan", &onGpuDetectClicked, self);
+        appendAction(hardware, "Install GPU plan", "Install the detected fixed GPU driver plan", &onGpuInstallClicked, self);
         const kernel_row = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
         const kernel_label = c.gtk_label_new("Kernel") orelse return;
         c.gtk_label_set_xalign(@ptrCast(kernel_label), 0.0);
-        c.gtk_widget_set_size_request(kernel_label, 120, -1);
+        c.gtk_widget_set_size_request(kernel_label, 110, -1);
         self.kernel_dropdown = @ptrCast(c.gtk_drop_down_new_from_strings(&kernel_strings) orelse return);
         c.gtk_widget_set_hexpand(@ptrCast(@alignCast(self.kernel_dropdown)), 1);
-        c.gtk_widget_set_tooltip_text(@ptrCast(@alignCast(self.kernel_dropdown)), "Install an additional fixed Artix kernel plus headers; DINX never removes the running kernel");
-        const kernel_install = makeButton("Install kernel", "Install the selected kernel and headers; reboot after installation", &onKernelInstallClicked, self);
+        c.gtk_widget_set_tooltip_text(@ptrCast(@alignCast(self.kernel_dropdown)), "Install a supported kernel and headers; DINX never removes the running kernel");
         c.gtk_box_append(@ptrCast(kernel_row), kernel_label);
         c.gtk_box_append(@ptrCast(kernel_row), @ptrCast(@alignCast(self.kernel_dropdown)));
-        c.gtk_box_append(@ptrCast(kernel_row), kernel_install);
-        c.gtk_box_append(@ptrCast(content), kernel_row);
+        c.gtk_box_append(@ptrCast(kernel_row), makeButton("Install kernel", "Install the selected kernel and headers; reboot after installation", &onKernelInstallClicked, self));
+        c.gtk_box_append(@ptrCast(hardware), kernel_row);
         self.kernel_status = @ptrCast(c.gtk_label_new("Kernel status unavailable") orelse return);
         c.gtk_label_set_xalign(self.kernel_status, 0.0);
         c.gtk_widget_add_css_class(@ptrCast(@alignCast(self.kernel_status)), "dim-label");
-        c.gtk_widget_set_margin_top(@ptrCast(@alignCast(self.kernel_status)), 6);
-        c.gtk_box_append(@ptrCast(content), @ptrCast(@alignCast(self.kernel_status)));
+        c.gtk_box_append(@ptrCast(hardware), @ptrCast(@alignCast(self.kernel_status)));
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), hardware, "hardware", "Hardware");
 
-        appendSectionTitle(content, "Operation output");
+        const services = makePage("Services & updates", "Review first, then choose the explicit action. Missing optional tools stay visible in the output.");
+        appendAction(services, "Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self);
+        appendAction(services, "Check upgrades", "Refresh package and firmware metadata without installing", &onUpgradeCheckClicked, self);
+        appendAction(services, "Topgrade preview", "Review the complete update plan", &onTopgradePreviewClicked, self);
+        appendAction(services, "Topgrade", "Run the complete update workflow", &onTopgradeClicked, self);
+        appendAction(services, "Shelly upgrade", "Run Shelly's all-backend upgrade workflow", &onShellyClicked, self);
+        appendAction(services, "Install CUPS", "Install optional printing support", &onCupsInstallClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), services, "services", "Services & updates");
+
+        c.gtk_stack_set_visible_child_name(@ptrCast(stack), "overview");
+        c.gtk_scrolled_window_set_child(@ptrCast(page_scroll), stack);
+        c.gtk_box_append(@ptrCast(right), page_scroll);
+
         const output_scroll = c.gtk_scrolled_window_new() orelse return;
-        c.gtk_widget_set_size_request(output_scroll, -1, 240);
+        c.gtk_widget_set_size_request(output_scroll, -1, 150);
         self.output_view = @ptrCast(c.gtk_text_view_new() orelse return);
         c.gtk_text_view_set_editable(self.output_view, 0);
         c.gtk_text_view_set_cursor_visible(self.output_view, 0);
         c.gtk_text_view_set_monospace(self.output_view, 1);
         c.gtk_widget_add_css_class(@ptrCast(@alignCast(self.output_view)), "dinx-output");
         c.gtk_scrolled_window_set_child(@ptrCast(output_scroll), @ptrCast(@alignCast(self.output_view)));
-        c.gtk_box_append(@ptrCast(content), output_scroll);
+        c.gtk_box_append(@ptrCast(right), output_scroll);
 
         const footer = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
-        c.gtk_widget_set_margin_top(footer, 12);
+        c.gtk_widget_set_margin_start(footer, 18);
+        c.gtk_widget_set_margin_end(footer, 18);
+        c.gtk_widget_set_margin_top(footer, 8);
+        c.gtk_widget_set_margin_bottom(footer, 10);
         self.spinner = @ptrCast(c.gtk_spinner_new() orelse return);
         c.gtk_widget_set_size_request(@ptrCast(@alignCast(self.spinner)), 24, 24);
         self.status_label = @ptrCast(c.gtk_label_new("Ready") orelse return);
@@ -144,10 +208,10 @@ const App = struct {
         c.gtk_widget_add_css_class(@ptrCast(@alignCast(self.status_label)), "dim-label");
         c.gtk_box_append(@ptrCast(footer), @ptrCast(@alignCast(self.spinner)));
         c.gtk_box_append(@ptrCast(footer), @ptrCast(@alignCast(self.status_label)));
-        c.gtk_box_append(@ptrCast(content), footer);
+        c.gtk_box_append(@ptrCast(right), footer);
 
-        c.gtk_scrolled_window_set_child(@ptrCast(scroll), content);
-        c.adw_toolbar_view_set_content(@ptrCast(toolbar), scroll);
+        c.gtk_box_append(@ptrCast(shell), right);
+        c.adw_toolbar_view_set_content(@ptrCast(toolbar), shell);
         c.adw_application_window_set_content(window, toolbar);
         applyTheme();
         c.gtk_window_present(@ptrCast(window));
@@ -550,14 +614,50 @@ const kernel_strings = [_:null]?[*:0]const u8{
     null,
 };
 
-fn appendSectionTitle(parent: *c.GtkWidget, text: [*:0]const u8) void {
-    const label = c.gtk_label_new(text) orelse return;
-    c.gtk_label_set_xalign(@ptrCast(label), 0.0);
-    c.gtk_widget_add_css_class(label, "heading");
-    c.gtk_widget_set_margin_top(label, 18);
-    c.gtk_widget_set_margin_bottom(label, 6);
-    c.gtk_box_append(@ptrCast(parent), label);
+fn makePage(title_text: [*:0]const u8, subtitle_text: [*:0]const u8) *c.GtkWidget {
+    const page = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 12) orelse return c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 0).?;
+    c.gtk_widget_add_css_class(page, "dinx-page");
+    c.gtk_widget_set_margin_start(page, 28);
+    c.gtk_widget_set_margin_end(page, 28);
+    c.gtk_widget_set_margin_top(page, 28);
+    c.gtk_widget_set_margin_bottom(page, 32);
+
+    const title = c.gtk_label_new(title_text) orelse return page;
+    c.gtk_label_set_xalign(@ptrCast(title), 0.0);
+    c.gtk_widget_add_css_class(title, "dinx-page-title");
+    c.gtk_box_append(@ptrCast(page), title);
+
+    const subtitle = c.gtk_label_new(subtitle_text) orelse return page;
+    c.gtk_label_set_xalign(@ptrCast(subtitle), 0.0);
+    c.gtk_label_set_wrap(@ptrCast(subtitle), 1);
+    c.gtk_widget_add_css_class(subtitle, "dinx-page-subtitle");
+    c.gtk_box_append(@ptrCast(page), subtitle);
+    return page;
 }
+
+fn appendAction(parent: *c.GtkWidget, label: [*:0]const u8, tooltip: [*:0]const u8, callback: anytype, app: *App) void {
+    const row = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 0) orelse return;
+    const button = makeButton(label, tooltip, callback, app);
+    c.gtk_widget_add_css_class(button, "dinx-action");
+    c.gtk_widget_set_hexpand(button, 1);
+    c.gtk_box_append(@ptrCast(row), button);
+    c.gtk_box_append(@ptrCast(parent), row);
+}
+
+fn appendNavigationRow(parent: *c.GtkWidget, name: [*:0]const u8, label: [*:0]const u8) void {
+    const row = c.gtk_list_box_row_new() orelse return;
+    c.gtk_widget_set_name(row, name);
+    c.gtk_widget_add_css_class(row, "dinx-nav-row");
+    const text = c.gtk_label_new(label) orelse return;
+    c.gtk_label_set_xalign(@ptrCast(text), 0.0);
+    c.gtk_widget_set_margin_start(text, 12);
+    c.gtk_widget_set_margin_end(text, 12);
+    c.gtk_widget_set_margin_top(text, 8);
+    c.gtk_widget_set_margin_bottom(text, 8);
+    c.gtk_list_box_row_set_child(@ptrCast(row), text);
+    c.gtk_list_box_append(@ptrCast(parent), row);
+}
+
 
 fn makeButton(label: [*:0]const u8, tooltip: [*:0]const u8, callback: anytype, app: *App) *c.GtkWidget {
     const button = c.gtk_button_new_with_label(label) orelse return c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 0).?;
@@ -566,8 +666,34 @@ fn makeButton(label: [*:0]const u8, tooltip: [*:0]const u8, callback: anytype, a
     return button;
 }
 
+fn onNavigationRowSelected(_: *c.GtkListBox, row: ?*c.GtkListBoxRow, data: ?*anyopaque) callconv(.c) void {
+    const app = asApp(data);
+    const selected = row orelse return;
+    c.gtk_stack_set_visible_child_name(app.stack, c.gtk_widget_get_name(@ptrCast(selected)));
+}
+
+
 fn onActivate(_: *c.GApplication, data: ?*anyopaque) callconv(.c) void {
     asApp(data).buildWindow();
+}
+fn onRedbeanClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"redbean"});
+}
+
+fn onRedbeanSettingsClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "dintor", ".config/dinx/redbean.json" });
+}
+
+fn onMorghulisClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"morghulis"});
+}
+
+fn onThemeRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-sync-session-theme"});
+}
+
+fn onKwmConfigClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "dintor", ".config/kwm/config.zon" });
 }
 
 fn onRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
@@ -668,11 +794,18 @@ fn applyTheme() void {
     c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
-        ".dinx-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" +
-        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" +
-        "window.background { background-color: #0b0d12; }\n" +
-        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" +
-        "label.heading { color: #8fb8ff; font-weight: 700; }\n";
+        ".dinx-shell { background-color: @window_bg_color; color: @window_fg_color; }\n" ++
+        ".dinx-sidebar { background-color: @view_bg_color; border-right: 1px solid @borders; }\n" ++
+        ".dinx-brand { color: @accent_color; font-size: 1.45rem; font-weight: 800; }\n" ++
+        ".dinx-navigation { background-color: transparent; padding: 0 8px; }\n" ++
+        ".dinx-nav-row { min-height: 42px; border-radius: 10px; margin: 2px 0; }\n" ++
+        ".dinx-nav-row:selected { background-color: @accent_bg_color; color: @accent_fg_color; }\n" ++
+        ".dinx-nav-row:hover { background-color: @accent_bg_color; }\n" ++
+        ".dinx-page { background-color: @window_bg_color; }\n" ++
+        ".dinx-page-title { font-size: 1.6rem; font-weight: 700; }\n" ++
+        ".dinx-page-subtitle { color: @dim_color; margin-bottom: 12px; }\n" ++
+        "button.dinx-action { min-height: 40px; }\n" ++
+        ".dinx-output { font-family: monospace; background-color: @card_bg_color; color: @view_fg_color; padding: 12px; }\n";
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;
     c.gtk_style_context_add_provider_for_display(display, @ptrCast(provider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);

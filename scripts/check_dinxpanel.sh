@@ -39,10 +39,25 @@ grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install din
 [[ -x "$bluetooth_helper" ]] || fail "desktop helper is missing or not executable: $bluetooth_helper"
 sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
-grep -Fq 'gtk_label_new("System control center")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
+grep -Fq 'gtk_label_new("Control Panel")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
+grep -Fq 'gtk_list_box_new' "$frontend" || fail 'DINXPanel left navigation is missing'
+grep -Fq 'gtk_stack_new' "$frontend" || fail 'DINXPanel right content stack is missing'
+grep -Fq 'gtk_stack_add_titled' "$frontend" || fail 'DINXPanel content pages are missing'
+grep -Fq 'dinx-sidebar' "$frontend" || fail 'DINXPanel sidebar styling is missing'
+grep -Fq 'dinx-page' "$frontend" || fail 'DINXPanel page styling is missing'
+grep -Fq 'onRedbeanSettingsClicked' "$frontend" || fail 'Redbean persistence action is missing'
+grep -Fq '.config/dinx/redbean.json' "$frontend" || fail 'Redbean settings path is missing'
+grep -Fq 'onKwmConfigClicked' "$frontend" || fail 'KWM persistence action is missing'
+grep -Fq '.config/kwm/config.zon' "$frontend" || fail 'KWM settings path is missing'
+grep -Fq 'dinx-sync-session-theme' "$frontend" || fail 'session theme persistence action is missing'
+grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" || fail 'DINXPanel dark mode is missing'
+grep -Fq '@accent_bg_color' "$frontend" || fail 'DINXPanel semantic theme roles are missing'
+if grep -Eq 'background(-color)?:[[:space:]]*#[0-9A-Fa-f]{6}' "$frontend"; then
+  fail 'DINXPanel uses hard-coded background colors instead of theme roles'
+fi
 if grep -Fq 'YaST-inspired' "$frontend"; then
   fail 'DINXPanel still exposes the retired YaST-inspired subtitle'
 fi

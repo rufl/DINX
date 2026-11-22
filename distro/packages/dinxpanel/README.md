@@ -10,6 +10,7 @@ DINXPanel is the DINX-native, lean GTK4/libadwaita control panel. A left navigat
 - **Compositor & windows** edits `~/.config/kwm/config.zon` and opens DinitUI profiles. River remains the compositor, KWM remains the tiling manager and KWIM remains the input manager.
 - **Displays** uses the DINX `dinx-wdisplays` persistence wrapper; **Services & updates** contains DinitUI, upgrades, Shelly, Topgrade and optional CUPS.
 - **System tools** exposes Mission Center, PCManFM, Pori, GParted and File Roller; **Session** exposes the read-only `dinx-doctor` report and installed-session locking.
+- **Power** reports UPower state and exposes suspend, restart and power-off only in installed sessions; every destructive action uses an Adwaita confirmation dialog before calling `loginctl`.
 - Network, audio and USB pages include Deetty-backed diagnostics using fixed `nmcli`, `wpctl` and `lsusb` argv.
 
 ## Safety boundary
@@ -41,7 +42,7 @@ does not accept arbitrary package names.
 
 ## Session controls
 
-In installed sessions, `Brightness down`, `Brightness up` and `Lock screen` use fixed argv for `brightnessctl set 5%-`, `brightnessctl set 5%+` and `/usr/local/libexec/dinx-lock`. The live session hides the `Lock screen` button and disables session locking; it retains display blanking through `/usr/local/libexec/dinx-idle`. Installed-session idle and suspend ordering are owned by the same wrapper.
+In installed sessions, `Brightness down`, `Brightness up` and `Lock screen` use fixed argv for `brightnessctl set 5%-`, `brightnessctl set 5%+` and `/usr/local/libexec/dinx-lock`. The live session hides the `Lock screen`, suspend, restart and power-off buttons; it retains display blanking through `/usr/local/libexec/dinx-idle`. Installed-session idle and suspend ordering are owned by the same wrapper.
 
 ## CLI-backed operations
 

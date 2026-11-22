@@ -5,8 +5,15 @@ const optional_packages = @import("optional_packages.zig");
 
 const allocator = std.heap.c_allocator;
 
+const PowerAction = enum {
+    sleep,
+    reboot,
+    poweroff,
+};
+
 const App = struct {
     application: *c.AdwApplication,
+    window: *c.AdwApplicationWindow = undefined,
     io: std.Io,
     home: []const u8,
     live_session: bool,
@@ -23,6 +30,7 @@ const App = struct {
     smoke: bool = false,
     busy: bool = false,
     active_tasks: usize = 0,
+    pending_power_action: PowerAction = .sleep,
 
     fn init(application: *c.AdwApplication, io: std.Io, home: []const u8, smoke: bool, live_session: bool) App {
         return .{ .application = application, .io = io, .home = home, .smoke = smoke, .live_session = live_session };
@@ -35,6 +43,7 @@ const App = struct {
 
         const window_widget = c.adw_application_window_new(@ptrCast(self.application)) orelse return;
         const window: *c.AdwApplicationWindow = @ptrCast(window_widget);
+        self.window = window;
         c.gtk_window_set_title(@ptrCast(window), "DINX Control Panel");
         c.gtk_window_set_default_size(@ptrCast(window), 1180, 780);
         c.gtk_window_set_resizable(@ptrCast(window), 1);
@@ -89,6 +98,7 @@ const App = struct {
             .{ .name = "services", .label = "Services & updates" },
             .{ .name = "system", .label = "System tools" },
             .{ .name = "session", .label = "Session" },
+            .{ .name = "power", .label = "Power" },
         };
         for (nav_items) |item| appendNavigationRow(navigation, item.name, item.label);
         c.gtk_box_append(@ptrCast(sidebar), navigation);
@@ -188,6 +198,15 @@ const App = struct {
         }
         appendAction(session, "Session diagnostics", "Open the read-only DINX doctor report in Deetty", &onDoctorClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), session, "session", "Session");
+
+        const power = makePage("Power", "Battery status and explicit session power actions. Destructive actions always require confirmation.");
+        appendAction(power, "Power & battery status", "Open the read-only UPower report in Deetty", &onPowerStatusClicked, self);
+        if (!self.live_session) {
+            appendAction(power, "Suspend", "Suspend the installed DINX session after confirmation", &onSuspendClicked, self);
+            appendAction(power, "Restart", "Restart the installed DINX session after confirmation", &onRebootClicked, self);
+            appendAction(power, "Power off", "Power off the installed DINX session after confirmation", &onPoweroffClicked, self);
+        }
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), power, "power", "Power");
 
         const services = makePage("Services & updates", "Review first, then choose the explicit action. Missing optional tools stay visible in the output.");
         appendAction(services, "Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self);
@@ -318,6 +337,34 @@ const App = struct {
         task.* = .{ .app = self, .kind = .upgrade_check };
         self.startAsync(task);
     }
+    fn requestPowerAction(self: *App, action: PowerAction) void {
+        self.pending_power_action = action;
+        const heading = switch (action) {
+            .sleep => "Suspend DINX?",
+            .reboot => "Restart DINX?",
+            .poweroff => "Power off DINX?",
+        };
+        const body = switch (action) {
+            .sleep => "The current session will be suspended.",
+            .reboot => "All applications will be closed and the session will restart.",
+            .poweroff => "All applications will be closed and the machine will power off.",
+        };
+        const confirm_label = switch (action) {
+            .sleep => "Suspend",
+            .reboot => "Restart",
+            .poweroff => "Power off",
+        };
+        const dialog = c.adw_alert_dialog_new(heading, body) orelse return;
+        const alert: *c.AdwAlertDialog = @ptrCast(dialog);
+        c.adw_alert_dialog_add_response(alert, "cancel", "Cancel");
+        c.adw_alert_dialog_add_response(alert, "confirm", confirm_label);
+        c.adw_alert_dialog_set_response_appearance(alert, "confirm", c.ADW_RESPONSE_DESTRUCTIVE);
+        c.adw_alert_dialog_set_default_response(alert, "cancel");
+        c.adw_alert_dialog_set_close_response(alert, "cancel");
+        connect(alert, "response", &onPowerResponse, self);
+        c.adw_dialog_present(dialog, @ptrCast(self.window));
+    }
+
 
     fn launch(self: *App, argv: []const []const u8) void {
         var child_argv: [16]?[*:0]u8 = undefined;
@@ -747,6 +794,32 @@ fn onNetworkDiagnosticsClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) 
 fn onAudioDiagnosticsClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{ "deetty", "-e", "wpctl", "status" });
 }
+fn onPowerStatusClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "deetty", "-e", "upower", "-d" });
+}
+
+fn onSuspendClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).requestPowerAction(.sleep);
+}
+
+fn onRebootClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).requestPowerAction(.reboot);
+}
+
+fn onPoweroffClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).requestPowerAction(.poweroff);
+}
+
+fn onPowerResponse(_: *c.AdwAlertDialog, response: [*:0]const u8, data: ?*anyopaque) callconv(.c) void {
+    const app = asApp(data);
+    if (!std.mem.eql(u8, std.mem.span(response), "confirm")) return;
+    switch (app.pending_power_action) {
+        .sleep => app.launch(&.{ "loginctl", "suspend" }),
+        .reboot => app.launch(&.{ "loginctl", "reboot" }),
+        .poweroff => app.launch(&.{ "loginctl", "poweroff" }),
+    }
+}
+
 
 
 fn onRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

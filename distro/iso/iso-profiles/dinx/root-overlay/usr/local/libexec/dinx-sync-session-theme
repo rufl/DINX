@@ -24,17 +24,26 @@ theme_corners=rounded
 if command -v jq >/dev/null 2>&1 && [ -r "$appearance" ]; then
   parsed_theme=$(jq -er '.theme | select(. == "DINX" or . == "Skeuos" or . == "Orchis" or . == "Fluent" or . == "Jasper")' "$appearance" 2>/dev/null) || parsed_theme=
   parsed_corners=$(jq -er '.corners | select(. == "rounded" or . == "square")' "$appearance" 2>/dev/null) || parsed_corners=
+  parsed_variant=$(jq -er '.variant | select(. == "dark" or . == "light")' "$appearance" 2>/dev/null) || parsed_variant=
   if [ -n "$parsed_theme" ]; then
     theme_family=$parsed_theme
   fi
   if [ -n "$parsed_corners" ]; then
     theme_corners=$parsed_corners
   fi
+  if [ -n "$parsed_variant" ]; then
+    theme_variant=$parsed_variant
+  fi
 fi
 
 variant_suffix=Dark
 gtk_prefer_dark=1
 dconf_value="'prefer-dark'"
+if [ "$theme_variant" = light ]; then
+  variant_suffix=Light
+  gtk_prefer_dark=0
+  dconf_value="'prefer-light'"
+fi
 if [ "$theme_corners" = square ]; then
   square=1
 else

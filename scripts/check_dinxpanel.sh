@@ -42,6 +42,11 @@ grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install din
 [[ -x "$theme_helper" && -x "$desktop_helper" ]] || fail 'appearance helpers are missing or not executable'
 sh -n "$bluetooth_helper" "$theme_helper" "$desktop_helper" || fail 'DINX desktop helper has invalid shell syntax'
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
+pori_build_line=$(grep -nF 'build_package pori' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build pori'
+mission_center_build_line=$(grep -nF 'build_package mission-center' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build mission-center'
+panel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build dinxpanel'
+(( pori_build_line < panel_build_line && mission_center_build_line < panel_build_line )) \
+  || fail 'ISO builder installs DINXPanel before its system-tool runtime dependencies'
 for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'PCManFM desktop preferences' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'Hardware qualification report' 'USB devices' 'Network diagnostics' 'Audio diagnostics' 'Power & battery status' 'Suspend' 'Restart' 'Power off' 'DINX tools' 'Open Deetty' 'Open Dintor' 'Refresh DINX Dock' 'Apply dark session theme' 'Apply light session theme' 'Choose wallpaper' 'Show desktop icons' 'Hide desktop icons'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done

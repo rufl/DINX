@@ -413,12 +413,15 @@ trap finish EXIT
                 pacman -Rns --noconfirm plasma-integration
               fi
               scripts/smoke_calamares_startup.sh
+              build_package pori
+              pacman_install_local "$package_repo"/pori-*.pkg.tar.zst
+              build_package mission-center
+              pacman_install_local "$package_repo"/mission-center-*.pkg.tar.zst
               build_package dinxpanel
               pacman_install_local "$package_repo"/dinxpanel-*.pkg.tar.zst
               build_package shikane
               pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
-              build_package pori
               build_package kwim
               build_package kwm
               # Morghulis desktop shell chain. Each step is installed locally before the
@@ -435,11 +438,8 @@ trap finish EXIT
               pacman_install_local "$package_repo"/redbean-*.pkg.tar.zst
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
-              build_package mission-center
               build_package zls
-              pacman_install_local \
-                "$package_repo"/mission-center-*.pkg.tar.zst \
-                "$package_repo"/zls-*.pkg.tar.zst
+              pacman_install_local "$package_repo"/zls-*.pkg.tar.zst
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
               build_package dinx-noto-latin

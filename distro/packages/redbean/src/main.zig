@@ -552,7 +552,7 @@ fn toggleMenu(self: *App) void {
     if (!visible) {
         c.gtk_window_present(@ptrCast(menu));
         if (self.search_entry) |entry| {
-            c.gtk_widget_grab_focus(entry);
+            _ = c.gtk_widget_grab_focus(entry);
             c.gtk_editable_set_position(@ptrCast(entry), -1);
         }
     }
@@ -680,11 +680,11 @@ fn onDesktopShortcutClicked(button: ?*c.GtkButton, _: ?*anyopaque) callconv(.c) 
     const widget: *c.GtkWidget = @ptrCast(button orelse return);
     const configured = c.redbean_get_string_data(widget, "redbean-desktop-id");
     const label = c.gtk_button_get_label(button orelse return) orelse return;
-    const desktop_id: [*:0]const u8 = configured orelse switch (std.mem.span(label)) {
-        "Files" => "pcmanfm.desktop",
-        "Terminal" => "org.dinx.Deetty.desktop",
-        "Browser" => "firefox.desktop",
-        else => return,
+    const desktop_id: [*:0]const u8 = configured orelse blk: {
+        if (std.mem.eql(u8, std.mem.span(label), "Files")) break :blk "pcmanfm.desktop";
+        if (std.mem.eql(u8, std.mem.span(label), "Terminal")) break :blk "org.dinx.Deetty.desktop";
+        if (std.mem.eql(u8, std.mem.span(label), "Browser")) break :blk "firefox.desktop";
+        return;
     };
     if (c.redbean_launch_desktop(desktop_id) == 0) log.warn("desktop shortcut launch failed", .{});
 }
@@ -759,7 +759,7 @@ fn appendNotification(
     c.gtk_widget_add_css_class(button, "redbean-notification");
     c.redbean_set_uint_data(button, "redbean-notification-id", id);
     const row = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 2) orelse return;
-    const title_text = std.fmt.allocPrintSentinel(allocator, "{s}: {s}", .{ notification_app_name, summary }) catch return;
+    const title_text = std.fmt.allocPrintSentinel(allocator, "{s}: {s}", .{ notification_app_name, summary }, 0) catch return;
     defer allocator.free(title_text);
     const title = makeLabel(title_text.ptr, "redbean-app-name") orelse return;
     const detail = makeLabel(body, "redbean-app-description") orelse return;
@@ -775,7 +775,7 @@ fn appendNotification(
 fn refreshNotifications(self: *App) void {
     const list = self.notifications_list orelse return;
     clearBox(list);
-    c.redbean_notifications_each(&appendNotification, self);
+    c.redbean_notifications_each(@ptrCast(&appendNotification), self);
     if (c.gtk_widget_get_first_child(list) == null) {
         const empty = makeLabel("No unread notifications", "redbean-caption") orelse return;
         c.gtk_box_append(@ptrCast(list), empty);
@@ -836,7 +836,7 @@ fn rebuildPinnedPanel(self: *App) void {
     clearBox(panel);
     const ids = if (self.custom_pins) self.pinned.items else default_pins[0..];
     for (ids) |id| {
-        const label = std.fmt.allocPrintSentinel(allocator, "{s}", .{pinLabel(id)}) catch continue;
+        const label = std.fmt.allocPrintSentinel(allocator, "{s}", .{pinLabel(id)}, 0) catch continue;
         defer allocator.free(label);
         const button = makeButton(self, label.ptr, "redbean-shortcut", &onDesktopShortcutClicked) orelse continue;
         c.redbean_set_string_data(button, "redbean-desktop-id", id.ptr);

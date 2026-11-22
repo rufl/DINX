@@ -38,12 +38,12 @@ static inline void redbean_object_unref(void *object) {
     if (object != NULL) g_object_unref(object);
 }
 
-static inline GList *redbean_apps_list(AstalAppsApps *apps) {
-    return apps == NULL ? NULL : astal_apps_apps_get_list(apps);
+static inline GList *redbean_apps_list(void *apps) {
+    return apps == NULL ? NULL : astal_apps_apps_get_list((AstalAppsApps *)apps);
 }
 
-static inline GList *redbean_apps_query(AstalAppsApps *apps, const char *search) {
-    return apps == NULL ? NULL : astal_apps_apps_fuzzy_query(apps, search);
+static inline GList *redbean_apps_query(void *apps, const char *search) {
+    return apps == NULL ? NULL : astal_apps_apps_fuzzy_query((AstalAppsApps *)apps, search);
 }
 
 static inline void redbean_list_free(GList *list) {

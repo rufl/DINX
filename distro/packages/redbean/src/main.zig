@@ -383,7 +383,7 @@ fn makeAppRow(self: *App, application: *anyopaque) ?*c.GtkWidget {
     connect(app_button, "clicked", &onAppClicked, self);
 
     const app_content = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 12) orelse return null;
-    const icon_name = c.redbean_app_icon_name(application) orelse "application-x-executable";
+    const icon_name: [*:0]const u8 = if (c.redbean_app_icon_name(application)) |name| @ptrCast(name) else "application-x-executable";
     const icon = c.gtk_image_new_from_icon_name(icon_name) orelse return null;
     c.gtk_image_set_pixel_size(@ptrCast(icon), 32);
     c.gtk_widget_set_valign(icon, c.GTK_ALIGN_CENTER);
@@ -782,12 +782,14 @@ fn refreshNotifications(self: *App) void {
     }
     if (self.notifications_button) |button| {
         var text: [32]u8 = undefined;
-        const rendered = std.fmt.bufPrintZ(&text, "Alerts ({d})", .{c.redbean_notification_count()}) catch return;
+        const rendered = std.fmt.bufPrint(text[0 .. text.len - 1], "Alerts ({d})", .{c.redbean_notification_count()}) catch return;
+        text[rendered.len] = 0;
         c.gtk_button_set_label(@ptrCast(button), rendered.ptr);
     }
     if (self.tray_button) |button| {
         var text: [32]u8 = undefined;
-        const rendered = std.fmt.bufPrintZ(&text, "Tray ({d})", .{c.redbean_tray_count()}) catch return;
+        const rendered = std.fmt.bufPrint(text[0 .. text.len - 1], "Tray ({d})", .{c.redbean_tray_count()}) catch return;
+        text[rendered.len] = 0;
         c.gtk_button_set_label(@ptrCast(button), rendered.ptr);
     }
 }

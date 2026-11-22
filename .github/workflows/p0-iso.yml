@@ -342,9 +342,9 @@ jobs:
           DINX_EXPECTED_COMMIT: ${{ github.sha }}
           DINX_QEMU_TIMEOUT: 120
           DINX_INSTALL_TIMEOUT: 180
-          DINX_MBR_TIMEOUT: 300
+          DINX_MBR_TIMEOUT: 600
           DINX_MBR_MENU_WAIT: 300
-          DINX_MBR_SESSION_WAIT: 300
+          DINX_MBR_SESSION_WAIT: 180
         run: scripts/qualify-iso.sh "$DINX_ISO"
       - name: Extract final ISO filesystems for vulnerability scan
         run: |

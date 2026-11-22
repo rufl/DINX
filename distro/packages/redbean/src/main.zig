@@ -390,8 +390,8 @@ fn makeAppRow(self: *App, application: *anyopaque) ?*c.GtkWidget {
 
     const text_box = c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 2) orelse return null;
     c.gtk_widget_set_hexpand(text_box, 1);
-    const name = c.redbean_app_name(application) orelse "Application";
-    const description = c.redbean_app_description(application) orelse "Launch application";
+    const name: [*:0]const u8 = if (c.redbean_app_name(application)) |value| @ptrCast(value) else "Application";
+    const description: [*:0]const u8 = if (c.redbean_app_description(application)) |value| @ptrCast(value) else "Launch application";
     const name_label = makeLabel(name, "redbean-app-name") orelse return null;
     const description_label = makeLabel(description, "redbean-app-description") orelse return null;
     c.gtk_label_set_ellipsize(@ptrCast(description_label), c.PANGO_ELLIPSIZE_END);

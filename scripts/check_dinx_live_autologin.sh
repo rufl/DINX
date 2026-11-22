@@ -56,8 +56,8 @@ livefs_packages=$(awk '
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
 
-grep -Fq 'command = "agreety --cmd /usr/local/libexec/dinx-river-session"' "$root_greetd" \
-  || fail 'installed greetd fallback does not launch the River session'
+grep -Fq 'command = "tuigreet --sessions /usr/share/wayland-sessions --remember --time --cmd /usr/local/libexec/dinx-river-session"' "$root_greetd" \
+  || fail 'installed greetd fallback does not expose the River session menu'
 grep -Fqx 'vt = 7' "$root_greetd" \
   || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
 grep -Fq 'user = "greeter"' "$root_greetd" \

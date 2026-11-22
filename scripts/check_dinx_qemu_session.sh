@@ -94,7 +94,7 @@ if [[ "$mode" == greeter ]]; then
     printf 'dinx-qemu-session: sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  printf 'dinx-qemu-session: greeter_ready=true marker=agreety+SignIn+Password screenshot=%s\n' "$screenshot"
+  printf 'dinx-qemu-session: greeter_ready=true marker=tuigreet+SignIn+Password screenshot=%s\n' "$screenshot"
   exit 0
 fi
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then

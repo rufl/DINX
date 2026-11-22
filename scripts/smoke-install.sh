@@ -456,7 +456,7 @@ if [[ "$monitor_ready" == true ]]; then
   done
   if [[ "$greeter_ready" != true ]]; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
-    fail "installed agreety did not start before the QEMU timeout: ${greeter_output}"
+    fail "installed tuigreet did not start before the QEMU timeout: ${greeter_output}"
   fi
   [[ -s "$screen_path" ]] || fail "installed greeter screenshot was not created: $screen_path"
   printf 'sendkey ctrl-alt-f2\n' \

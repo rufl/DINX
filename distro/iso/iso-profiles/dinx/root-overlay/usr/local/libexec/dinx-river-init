@@ -28,14 +28,25 @@ start_optional() {
 }
 
 command -v kwm >/dev/null 2>&1 || exit 127
-command -v morghulis >/dev/null 2>&1 || exit 127
+shell=${DINX_SHELL:-morghulis}
+case "$shell" in
+  morghulis) command -v morghulis >/dev/null 2>&1 || exit 127 ;;
+  redbean) command -v redbean >/dev/null 2>&1 || exit 127 ;;
+  *) printf 'dinx-river-init: unsupported shell: %s\n' "$shell" >&2; exit 64 ;;
+esac
 command -v pcmanfm >/dev/null 2>&1 || exit 127
 command -v shikane >/dev/null 2>&1 || exit 127
 command -v lxqt-policykit-agent >/dev/null 2>&1 || exit 127
 
-start_background /usr/local/libexec/dinx-morghulis-first-run
+if [ "$shell" = morghulis ]; then
+  start_background /usr/local/libexec/dinx-morghulis-first-run
+fi
 start kwm
-start morghulis
+if [ "$shell" = morghulis ]; then
+  start morghulis
+else
+  start redbean
+fi
 start pcmanfm --desktop
 start shikane
 start lxqt-policykit-agent

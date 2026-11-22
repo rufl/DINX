@@ -61,23 +61,5 @@ if [ -n "${HOME:-}" ] && [ ! -e "$config_home/kwm/config.zon" ] \
   install -Dm644 /usr/share/doc/kwm/config.def.zon "$config_home/kwm/config.zon"
 fi
 
-# NEXT keeps Morghulis as the default shell. If Redbean is installed for
-# qualification, migrate only KWM's single stock launcher binding atomically.
-if [ -n "${HOME:-}" ] && [ -x /usr/bin/redbean ] \
-  && [ -f "$config_home/kwm/config.zon" ]; then
-  stock_launcher='.spawn_shell = .{ .cmd = "wmenu-run" }'
-  redbean_launcher='.spawn_shell = .{ .cmd = "redbean" }'
-  stock_count=$(grep -Fc "$stock_launcher" "$config_home/kwm/config.zon" || true)
-  redbean_count=$(grep -Fc "$redbean_launcher" "$config_home/kwm/config.zon" || true)
-  if [ "$stock_count" -eq 1 ] && [ "$redbean_count" -eq 0 ]; then
-    kwm_config_tmp="$config_home/kwm/.config.zon.redbean.$$"
-    if sed "s|$stock_launcher|$redbean_launcher|" \
-      "$config_home/kwm/config.zon" >"$kwm_config_tmp"; then
-      mv -f -- "$kwm_config_tmp" "$config_home/kwm/config.zon"
-    else
-      rm -f -- "$kwm_config_tmp"
-    fi
-  fi
-fi
 
 exec river -c /usr/local/libexec/dinx-river-init

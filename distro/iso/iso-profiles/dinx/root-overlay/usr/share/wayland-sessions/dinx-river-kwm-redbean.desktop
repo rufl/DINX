@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=River + KWM + Redbean (DINX)
+Comment=River compositor with KWM and the Redbean shell
+Exec=/usr/local/libexec/dinx-redbean-session
+TryExec=/usr/local/libexec/dinx-redbean-session
+Type=Application
+DesktopNames=River;KWM;Redbean

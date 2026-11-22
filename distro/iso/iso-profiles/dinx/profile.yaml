@@ -35,6 +35,7 @@ rootfs:
     - river
     - kwm
     - morghulis
+    - redbean
     - e2fsprogs
     - efibootmgr
     - elogind
@@ -54,6 +55,7 @@ rootfs:
     - pcmanfm
     - pori
     - greetd
+    - greetd-tuigreet
     - linux-firmware-amdgpu
     - linux-firmware-intel
     - mesa

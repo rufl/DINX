@@ -454,6 +454,10 @@ required_paths=(
   usr/bin/dconf
   usr/share/glib-2.0/schemas/org.gnome.desktop.interface.gschema.xml
   usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop
+  usr/share/wayland-sessions/dinx-river-kwm-redbean.desktop
+  usr/local/libexec/dinx-redbean-session
+  usr/bin/redbean
+  usr/bin/tuigreet
   usr/local/libexec/dinx-idle
   usr/local/libexec/dinx-lock
   usr/bin/dbus-send
@@ -784,6 +788,14 @@ river_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" us
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$river_session" \
   || fail 'DINX River session command is incorrect'
 grep -Fq 'DesktopNames=Morghulis' <<<"$river_session" || fail 'DINX session desktop identity is not Morghulis'
+redbean_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-river-kwm-redbean.desktop)
+grep -Fq 'Exec=/usr/local/libexec/dinx-redbean-session' <<<"$redbean_session" \
+  || fail 'Redbean session does not select the Redbean wrapper'
+grep -Fq 'Name=River + KWM + Redbean (DINX)' <<<"$redbean_session" \
+  || fail 'Redbean session identity is incorrect'
+redbean_wrapper=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-redbean-session)
+grep -Fq 'export DINX_SHELL=redbean' <<<"$redbean_wrapper" \
+  || fail 'Redbean wrapper does not select the Redbean shell'
 river_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-session)
 river_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-init)
 grep -Fq 'exec river -c /usr/local/libexec/dinx-river-init' <<<"$river_launcher" || fail 'DINX River wrapper does not start River'
@@ -791,6 +803,8 @@ grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$river_launch
   || fail 'DINX River wrapper does not apply the selected renderer policy'
 grep -Fq 'start kwm' <<<"$river_init" || fail 'DINX River init does not start KWM'
 grep -Fq 'start morghulis' <<<"$river_init" || fail 'DINX River init does not start Morghulis'
+grep -Fq 'start redbean' <<<"$river_init" || fail 'DINX River init does not start Redbean'
+grep -Fq 'shell=${DINX_SHELL:-morghulis}' <<<"$river_init" || fail 'DINX River init has no shell selector'
 grep -Fq 'start pcmanfm --desktop' <<<"$river_init" || fail 'DINX River init does not start PCManFM desktop mode'
 grep -Fq 'start shikane' <<<"$river_init" || fail 'DINX River init does not start Shikane'
 grep -Fq 'start /usr/local/libexec/dinx-idle' <<<"$river_init" || fail 'DINX River init does not start the idle manager'
@@ -819,7 +833,7 @@ session_entries=$(grep -oE '/usr/share/(wayland-sessions|xsessions)/[^[:space:]]
 while IFS= read -r session_path; do
   [[ -n "$session_path" ]] || continue
   case "$session_path" in
-    /usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop) ;;
+    /usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop|/usr/share/wayland-sessions/dinx-river-kwm-redbean.desktop) ;;
     /usr/share/wayland-sessions/dinx-gaming.desktop)
       session_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "${session_path#/}")
       grep -Fq 'Hidden=true' <<<"$session_config" \
@@ -948,8 +962,8 @@ grep -Fq '[general]' <<<"$root_greetd_config" || fail 'installed greetd general 
 grep -Fq 'source_profile = false' <<<"$root_greetd_config" || fail 'installed greetd sources the greeter profile'
 grep -Fq 'vt = 7' <<<"$root_greetd_config" \
   || fail 'installed greetd does not use the dedicated VT, separate from tty1 getty'
-grep -Fq 'command = "agreety --cmd /usr/local/libexec/dinx-river-session"' <<<"$root_greetd_config" \
-  || fail 'installed greetd does not launch the River session'
+grep -Fq 'command = "tuigreet --sessions /usr/share/wayland-sessions --remember --time --cmd /usr/local/libexec/dinx-river-session"' <<<"$root_greetd_config" \
+  || fail 'installed greetd does not launch the selectable River/KWM sessions'
 grep -Fq 'user = "greeter"' <<<"$root_greetd_config" \
   || fail 'installed greetd does not use the greeter account'
 if grep -Fq '[initial_session]' <<<"$root_greetd_config"; then

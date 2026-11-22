@@ -16,17 +16,20 @@ accessibility, theme, and hardware qualification gates.
   desktop-entry APIs, never shell interpolation.
 - Theme colors come from GTK semantic roles. Redbean does not override the
   selected DINX theme, dark/light variant, font, or corner policy.
-- The package is not in `profile.yaml` and the current supervisor does not
-  start it. That is deliberate until NEXT qualification is complete.
+- The package is installed in NEXT and listed as a secondary `tuigreet` session.
+  Morghulis remains the default session. Both sessions use the same River/KWM
+  stack; the selected shell is passed through `DINX_SHELL`.
+
 ## Integrated shell surface
 
 The qualified prototype closes the shell gaps without adding a resident
 daemon:
 
-- KWM's pinned stock `Mod4-p` binding is migrated to Redbean on NEXT only when
-  the package is installed. The session first seeds KWM's checked-in
-  `config.def.zon`, replaces exactly one `wmenu-run` launcher occurrence
-  atomically, and leaves custom bindings untouched.
+- Redbean is selected from the greeter session menu; it does not mutate KWM
+  configuration or replace custom bindings.
+- The shared session wrapper seeds KWM's checked-in `config.def.zon` only when
+  the user's config is absent, then starts exactly one KWM and the selected
+  shell.
 - Astal Apps provides fuzzy application search. `settings:` searches the
   curated settings catalog, and `file:` searches the user's home directory
   with bounded recursion.

@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+export DINX_SHELL=redbean
+exec /usr/local/libexec/dinx-river-session "$@"

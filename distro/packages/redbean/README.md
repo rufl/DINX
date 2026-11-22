@@ -4,9 +4,10 @@ Redbean is the experimental DINX shell for the `SHELL` branch and the future
 NEXT image. It is a small Zig/GTK4 layer-shell process with Astal Apps for
 freedesktop application discovery and fuzzy search.
 
-The package is intentionally not in the current DINX profile or session
-supervisor. This keeps the existing Morghulis session unchanged while Redbean
-is qualified on the NEXT branch.
+The package is included in the NEXT profile. Tuigreet lists Redbean as the
+secondary River/KWM session; Morghulis remains the default. Both sessions use
+the same compositor and window manager, and select only the shell process
+through `DINX_SHELL`.
 
 ## Interaction modes
 
@@ -20,9 +21,8 @@ so the four DINX GTK theme families control the final light/dark appearance.
 
 ## Integrated shell features
 
-- `Mod4-p` opens Redbean only when the package is installed: the session seeds
-  KWM's pinned `config.def.zon`, replaces exactly one stock `wmenu-run`
-  binding atomically, and leaves custom KWM bindings unchanged.
+- The greeter session menu starts Redbean without changing KWM configuration
+  or replacing custom bindings.
 - App search uses Astal Apps; `settings:` searches the settings catalog.
 - `file:` searches the home directory up to a bounded depth and opens the
   selected path with the desktop default.
@@ -60,12 +60,8 @@ are validated against the desktop-entry filename grammar before persistence.
 zig build -Dcpu=baseline -Doptimize=ReleaseSafe
 ./zig-out/bin/redbean
 ```
-The DINX container builder compiles the package only when explicitly enabled:
-
-```sh
-DINX_BUILD_REDBEAN=true DINX_PACKAGE_REPOSITORY_ONLY=true \
-  scripts/build-iso-docker.sh
-```
+The DINX container builder compiles and installs Redbean as part of NEXT; it is
+not an opt-in package flag.
 
 Inside a running NEXT Wayland session, the runtime smoke keeps Redbean alive
 long enough to validate GTK/layer-shell startup:

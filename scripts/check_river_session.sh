@@ -11,6 +11,8 @@ session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessi
 pcmanfm="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/pcmanfm.desktop"
 first_run="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-morghulis-first-run"
 theme_sync="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
+theme_set="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-set-theme"
+desktop_toggle="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pcmanfm-desktop"
 kwm_env="$root/distro/packages/kwm/source.env"
 kwim_env="$root/distro/packages/kwim/source.env"
 builder="$root/scripts/build-iso-container.sh"
@@ -32,13 +34,14 @@ for retired_path in \
   [[ ! -e "$retired_path" ]] || fail "retired launcher remains: ${retired_path#$root/}"
 done
 grep -Fqx 'inode/directory=pcmanfm.desktop;' "$mimeapps" || fail 'PCManFM is not the default directory handler'
-[[ -x "$launcher" && -x "$init" && -x "$first_run" ]] || fail 'River session launchers are not executable'
+[[ -x "$launcher" && -x "$init" && -x "$first_run" && -x "$theme_set" && -x "$desktop_toggle" ]] || fail 'River session launchers are not executable'
 [[ -r "$theme_sync" ]] || fail 'Morghulis theme synchronizer is missing'
-sh -n "$launcher" "$init" "$first_run" "$theme_sync" || fail 'River session launcher has invalid shell syntax'
+sh -n "$launcher" "$init" "$first_run" "$theme_sync" "$theme_set" "$desktop_toggle" || fail 'River session launcher has invalid shell syntax'
 grep -Fq 'exec river -c /usr/local/libexec/dinx-river-init' "$launcher" || fail 'session does not start River'
 grep -Fq 'start kwm' "$init" || fail 'session does not start KWM'
 grep -Fq 'start morghulis' "$init" || fail 'session does not start Morghulis'
 grep -Fq 'start pcmanfm --desktop' "$init" || fail 'session does not start the PCManFM desktop manager'
+grep -Fq 'dinx-pcmanfm-desktop --enabled' "$init" || fail 'session does not persist the PCManFM desktop visibility setting'
 grep -Fq 'dinx-morghulis-first-run' "$init" || fail 'session does not start the Morghulis first-run setup'
 grep -Fq 'start_optional bc250-control-centerd' "$init" || fail 'session does not supervise the optional BC-250 daemon'
 grep -Fq 'preferences="$config_home/morghulis/preferences.json"' "$theme_sync" || fail 'theme sync still reads Pearl preferences'
@@ -64,4 +67,4 @@ grep -Fq 'kwm_zig_version=0.16.0' "$builder" \
   || fail 'builder no longer provides the dedicated Zig 0.16 toolchain for KWM/KWIM'
 grep -Fq '[[ "$package_name" == kwim || "$package_name" == kwm ]]' "$builder" \
   || fail 'builder no longer routes KWM/KWIM to the Zig 0.16 toolchain'
-printf 'river_session_contract session=river+kwm+morghulis file_manager=pcmanfm desktop=pcmanfm first_run=morghulis kwm_kwim=tagged+zig0.16 disabled=aqueous+pearl+phyto+qps+dome\n'
+printf 'river_session_contract session=river+kwm+morghulis file_manager=pcmanfm desktop=pcmanfm persistent_theme=dinx-set-theme persistent_desktop=dinx-pcmanfm-desktop kwm_kwim=tagged+zig0.16 disabled=aqueous+pearl+phyto+qps+dome\n'

@@ -5,14 +5,31 @@ DINXPanel is the DINX-native, lean GTK4/libadwaita control panel. A left navigat
 ## Layout and persistence
 
 - **Overview** keeps the most common Redbean, display, network and audio actions visible.
-- **Redbean shell** opens Redbean and edits `$XDG_CONFIG_HOME/dinx/redbean.json`; Redbean persists its mode and pinned launchers there.
-- **Appearance** opens Qt6ct, Morghulis and the session-theme synchronizer. The panel forces dark mode but uses Adwaita semantic roles, so all four DINX theme families retain their accents and contrast.
+- **Redbean shell** opens Redbean and edits `$XDG_CONFIG_HOME/dinx/redbean.json`; Redbean persists its mode and pinned launchers there, and **DINX tools** can refresh `dinx-dock` after pin changes.
+- **Appearance** applies the persisted light/dark Morghulis theme, opens Qt6ct and Morghulis, chooses a PCManFM wallpaper and persists desktop-icon visibility. The panel itself forces dark mode but uses Adwaita semantic roles, so all four DINX theme families retain their accents and contrast.
 - **Compositor & windows** edits `~/.config/kwm/config.zon` and opens DinitUI profiles. River remains the compositor, KWM remains the tiling manager and KWIM remains the input manager.
 - **Displays** uses the DINX `dinx-wdisplays` persistence wrapper; **Services & updates** contains DinitUI, upgrades, Shelly, Topgrade and optional CUPS.
-- **System tools** exposes Mission Center, PCManFM, Pori, GParted and File Roller; **Session** exposes the read-only `dinx-doctor` report and installed-session locking.
+- **System tools** exposes Mission Center, PCManFM, PCManFM desktop preferences, Pori, GParted and File Roller; **DINX tools** exposes Deetty, Dintor, Redbean/KWM editors and the dock refresh action.
+- **Session** exposes the read-only `dinx-doctor` report and installed-session locking.
 - **Power** reports UPower state and exposes suspend, restart and power-off only in installed sessions; every destructive action uses an Adwaita confirmation dialog before calling `loginctl`.
 - The sidebar search filters settings pages in place and exposes an explicit empty state; **Hardware** also opens the read-only DINX qualification report.
 - Network, audio and USB pages include Deetty-backed diagnostics using fixed `nmcli`, `wpctl` and `lsusb` argv.
+
+## Appearance integration
+
+`Apply dark session theme` and `Apply light session theme` update Morghulis' persisted
+`preferences.json` atomically, then synchronize GTK, dconf and Qt6ct through
+`dinx-sync-session-theme`. `Choose wallpaper` uses GTK's local-file dialog and passes
+the selected path directly to `pcmanfm -w`; no shell command line is assembled.
+`Show desktop icons` and `Hide desktop icons` persist a DINX visibility flag and call
+PCManFM's documented `--desktop`/`--desktop-off` controls. River restores that choice
+on the next login.
+
+## Shell and tool integration
+
+Deetty is the terminal surface for diagnostics and update previews; Dintor edits
+Redbean and KWM configuration files. Redbean remains the secondary shell and its
+pin changes can signal `dinx-dock` with the fixed `pkill -HUP dinx-dock` argv.
 
 ## Safety boundary
 

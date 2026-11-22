@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
+state="$config_home/dinx/pcmanfm-desktop"
+
+read_state() {
+  if [ -r "$state" ]; then
+    IFS= read -r value <"$state" || true
+    case "$value" in
+      on|off) printf '%s\n' "$value"; return 0 ;;
+    esac
+  fi
+  printf '%s\n' on
+}
+
+write_state() {
+  value=$1
+  mkdir -p "${state%/*}"
+  umask 077
+  state_tmp="$state.tmp.$$"
+  trap 'rm -f -- "$state_tmp"' EXIT HUP INT TERM
+  printf '%s\n' "$value" >"$state_tmp"
+  mv -f -- "$state_tmp" "$state"
+  trap - EXIT HUP INT TERM
+}
+
+if [ "$#" -eq 1 ] && [ "$1" = --enabled ]; then
+  [ "$(read_state)" = on ]
+  exit $?
+fi
+[ "$#" -eq 1 ] || {
+  printf '%s\n' 'usage: dinx-pcmanfm-desktop on|off|toggle' >&2
+  exit 64
+}
+case "$1" in
+  on) value=on ;;
+  off) value=off ;;
+  toggle)
+    if [ "$(read_state)" = on ]; then value=off; else value=on; fi
+    ;;
+  *)
+    printf 'dinx-pcmanfm-desktop: unsupported action: %s\n' "$1" >&2
+    exit 64
+    ;;
+esac
+write_state "$value"
+if [ "$value" = on ]; then
+  exec pcmanfm --desktop
+else
+  exec pcmanfm --desktop-off
+fi

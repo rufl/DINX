@@ -3,6 +3,7 @@
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 
 ## Não lançado
+- Polir o DINXPanel com integração a Deetty/Dintor, editores do Redbean e KWM, refresh fixo do DINX Dock, temas claro/escuro persistentes, seleção de wallpaper pelo PCManFM e visibilidade persistente dos ícones do desktop. Adicionar a página DINX tools mantendo todas as ações em argv fixo.
 - Adicionar o Mission Center 1.2.0 como monitor GTK4 de recursos/processos, remover Qps e Dome do payload da ISO e manter Pori/PCManFM como stack de armazenamento/gerenciamento de arquivos. EuroOffice continua desabilitado.
 - Desabilitar a estação de áudio Transit e habilitar o editor de áudio multifaixa Audionaut, fixado por checksum, no perfil de pacotes e no pipeline da ISO.
 - Adicionar as receitas DINX fixadas `kwim` 0.2.0 e `kwm` 0.3.0 para a stack da sessão River, compiladas de archives upstream verificados por checksum contra uma toolchain Zig 0.16.0 dedicada, porque o `build.zig` deles ainda lê o campo `Build.build_root` que o Zig 0.17 removeu. `fcft` entra na imagem do builder para o link do KWM, ambos entram no fluxo revisado de renovação de pins upstream, e `river`/`pcmanfm` continuam resolvendo do repositório `galaxy` do Artix já habilitado na imagem. Verificado localmente: `kwim-0.2.0-1-x86_64.pkg.tar.zst` e `kwm-0.3.0-1-x86_64.pkg.tar.zst` montados.

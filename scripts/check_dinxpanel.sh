@@ -13,12 +13,14 @@ profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 workflow="$root/.github/workflows/p0-iso.yml"
 builder="$root/scripts/build-iso-container.sh"
 bluetooth_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-bluetooth-manager"
+theme_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-set-theme"
+desktop_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pcmanfm-desktop"
 fail() {
   printf 'check_dinxpanel: %s\n' "$*" >&2
   exit 1
 }
 
-for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "$readme" "$profile" "$workflow"; do
+for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "$readme" "$profile" "$workflow" "$theme_helper" "$desktop_helper"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
 
@@ -37,9 +39,10 @@ grep -Fqx 'Name[pt_BR]=Central de Controle' "$desktop" || fail 'localized deskto
 grep -Fq 'Icon=org.dinx.DinxPanel' "$desktop" || fail 'desktop icon is missing'
 grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install dinxpanel'
 [[ -x "$bluetooth_helper" ]] || fail "desktop helper is missing or not executable: $bluetooth_helper"
-sh -n "$bluetooth_helper" || fail "desktop helper has invalid shell syntax: $bluetooth_helper"
+[[ -x "$theme_helper" && -x "$desktop_helper" ]] || fail 'appearance helpers are missing or not executable'
+sh -n "$bluetooth_helper" "$theme_helper" "$desktop_helper" || fail 'DINX desktop helper has invalid shell syntax'
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'Hardware qualification report' 'USB devices' 'Network diagnostics' 'Audio diagnostics' 'Power & battery status' 'Suspend' 'Restart' 'Power off'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'PCManFM desktop preferences' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'Hardware qualification report' 'USB devices' 'Network diagnostics' 'Audio diagnostics' 'Power & battery status' 'Suspend' 'Restart' 'Power off' 'DINX tools' 'Open Deetty' 'Open Dintor' 'Refresh DINX Dock' 'Apply dark session theme' 'Apply light session theme' 'Choose wallpaper' 'Show desktop icons' 'Hide desktop icons'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
 grep -Fq 'gtk_label_new("Control Panel")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
@@ -53,9 +56,15 @@ grep -Fq 'onNavigationSearchChanged' "$frontend" || fail 'DINXPanel settings sea
 grep -Fq 'No matching settings' "$frontend" || fail 'DINXPanel empty search state is missing'
 grep -Fq 'onRedbeanSettingsClicked' "$frontend" || fail 'Redbean persistence action is missing'
 grep -Fq '.config/dinx/redbean.json' "$frontend" || fail 'Redbean settings path is missing'
+grep -Fq 'onDockRefreshClicked' "$frontend" || fail 'DINX Dock refresh action is missing'
+grep -Fq 'pkill", "-HUP", "dinx-dock' "$frontend" || fail 'DINX Dock refresh does not use the fixed signal argv'
 grep -Fq 'onKwmConfigClicked' "$frontend" || fail 'KWM persistence action is missing'
 grep -Fq '.config/kwm/config.zon' "$frontend" || fail 'KWM settings path is missing'
-grep -Fq 'dinx-sync-session-theme' "$frontend" || fail 'session theme persistence action is missing'
+grep -Fq 'dinx-set-theme' "$frontend" || fail 'persistent session theme action is missing'
+grep -Fq 'dinx-pcmanfm-desktop' "$frontend" || fail 'persistent PCManFM desktop toggle is missing'
+grep -Fq 'gtk_file_dialog_open' "$frontend" || fail 'wallpaper chooser is missing'
+grep -Fq '"pcmanfm", "-w"' "$frontend" || fail 'wallpaper action does not use PCManFM'
+grep -Fq 'dinx-sync-session-theme' "$frontend" || fail 'session theme refresh action is missing'
 grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" || fail 'DINXPanel dark mode is missing'
 grep -Fq '@accent_bg_color' "$frontend" || fail 'DINXPanel semantic theme roles are missing'
 if grep -Eq 'background(-color)?:[[:space:]]*#[0-9A-Fa-f]{6}' "$frontend"; then
@@ -135,4 +144,4 @@ if grep -Eq '/bin/sh|systemctl|g_spawn_command_line' "$frontend" "$kernels"; the
   fail 'DINXPanel contains shell/systemd or command-line-string execution'
 fi
 
-printf 'dinxpanel_contract package=true shortcuts=true upgrades=true firmware=true search=true qualification_report=true system_tools=true diagnostics=true power=true confirmations=true privilege_fallback=true gpu_bridge=true kernels=true argv_safe=true no_removal=true\n'
+printf 'dinxpanel_contract package=true shortcuts=true upgrades=true firmware=true search=true qualification_report=true system_tools=true diagnostics=true power=true confirmations=true privilege_fallback=true gpu_bridge=true kernels=true argv_safe=true shell_integrations=true appearance_controls=true wallpaper=true no_removal=true\n'

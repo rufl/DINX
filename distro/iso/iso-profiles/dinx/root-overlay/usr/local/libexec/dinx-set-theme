@@ -1,0 +1,39 @@
+#!/bin/sh
+set -eu
+
+[ "$#" -eq 1 ] || {
+  printf '%s\n' 'usage: dinx-set-theme dark|light' >&2
+  exit 64
+}
+variant=$1
+case "$variant" in
+  dark|light) ;;
+  *)
+    printf 'dinx-set-theme: unsupported variant: %s\n' "$variant" >&2
+    exit 64
+    ;;
+esac
+
+config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
+preferences="$config_home/morghulis/preferences.json"
+if [ -L "$preferences" ]; then
+  printf 'dinx-set-theme: preserving user-managed symlink: %s\n' "$preferences" >&2
+  exit 1
+fi
+if [ -e "$preferences" ] && [ ! -f "$preferences" ]; then
+  printf 'dinx-set-theme: not a regular settings file: %s\n' "$preferences" >&2
+  exit 1
+fi
+mkdir -p "${preferences%/*}"
+umask 077
+preferences_tmp="$preferences.tmp.$$"
+trap 'rm -f -- "$preferences_tmp"' EXIT HUP INT TERM
+printf '{"theme":{"variant":"%s"}}\n' "$variant" >"$preferences_tmp"
+mode=600
+if [ -f "$preferences" ]; then
+  mode=$(stat -c '%a' -- "$preferences" 2>/dev/null || printf '600')
+fi
+chmod "$mode" "$preferences_tmp"
+mv -f -- "$preferences_tmp" "$preferences"
+trap - EXIT HUP INT TERM
+DINX_THEME_VARIANT=$variant exec /usr/local/libexec/dinx-sync-session-theme

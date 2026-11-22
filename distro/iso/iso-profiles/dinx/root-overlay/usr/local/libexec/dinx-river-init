@@ -47,7 +47,9 @@ if [ "$shell" = morghulis ]; then
 else
   start redbean
 fi
-start pcmanfm --desktop
+if /usr/local/libexec/dinx-pcmanfm-desktop --enabled; then
+  start pcmanfm --desktop
+fi
 start shikane
 start lxqt-policykit-agent
 start /usr/local/libexec/dinx-idle

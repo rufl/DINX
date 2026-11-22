@@ -334,6 +334,8 @@ required_paths=(
   usr/local/libexec/dinx-river-init
   usr/local/libexec/dinx-morghulis-first-run
   usr/local/libexec/dinx-sync-session-theme
+  usr/local/libexec/dinx-set-theme
+  usr/local/libexec/dinx-pcmanfm-desktop
   usr/local/libexec/dinx-qt6ct-palette-seed
   usr/bin/river
   usr/bin/kwm

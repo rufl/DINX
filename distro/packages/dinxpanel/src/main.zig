@@ -106,8 +106,8 @@ const App = struct {
             .{ .name = "network", .label = "Network" },
             .{ .name = "audio", .label = "Audio" },
             .{ .name = "hardware", .label = "Hardware" },
-            .{ .name = "services", .label = "Services & updates" },
             .{ .name = "system", .label = "System tools" },
+            .{ .name = "tools", .label = "DINX tools" },
             .{ .name = "session", .label = "Session" },
             .{ .name = "power", .label = "Power" },
         };
@@ -148,10 +148,14 @@ const App = struct {
         _ = c.gtk_stack_add_titled(@ptrCast(stack), redbean, "redbean", "Redbean shell");
 
         const appearance = makePage("Appearance", "DINX stays dark while preserving the active theme family's semantic accent and surfaces.");
+        appendAction(appearance, "Apply dark session theme", "Persist and apply the dark GTK and Qt session theme", &onDarkThemeClicked, self);
+        appendAction(appearance, "Apply light session theme", "Persist and apply the light GTK and Qt session theme", &onLightThemeClicked, self);
+        appendAction(appearance, "Choose wallpaper", "Choose an image and apply it through the PCManFM desktop manager", &onWallpaperClicked, self);
+        appendAction(appearance, "Show desktop icons", "Start the PCManFM desktop manager and persist desktop icons enabled", &onDesktopIconsOnClicked, self);
+        appendAction(appearance, "Hide desktop icons", "Stop the PCManFM desktop manager and persist desktop icons disabled", &onDesktopIconsOffClicked, self);
         appendAction(appearance, "Qt appearance", "Open Qt6ct with the DINX palette", &onQtClicked, self);
         appendAction(appearance, "Open Morghulis", "Open the active desktop shell", &onMorghulisClicked, self);
         appendAction(appearance, "Refresh session theme", "Reapply the saved DINX appearance to GTK and Qt", &onThemeRefreshClicked, self);
-        _ = c.gtk_stack_add_titled(@ptrCast(stack), appearance, "appearance", "Appearance");
 
         const compositor = makePage("Compositor & windows", "River owns the compositor; KWM owns tiling and KWIM owns input. Changes stay in the user's config.");
         appendAction(compositor, "Edit KWM config", "Open the persistent KWM configuration", &onKwmConfigClicked, self);
@@ -208,10 +212,19 @@ const App = struct {
         const system = makePage("System tools", "Common desktop utilities are one click away; privileged changes stay inside their native authorization flows.");
         appendAction(system, "System monitor", "Open Mission Center for CPU, memory, disk, network and GPU usage", &onMissionCenterClicked, self);
         appendAction(system, "File manager", "Open the DINX PCManFM desktop and file manager", &onFileManagerClicked, self);
+        appendAction(system, "PCManFM desktop preferences", "Open PCManFM's desktop and wallpaper preferences", &onPcmanfmPreferencesClicked, self);
         appendAction(system, "Disks & mounts", "Open Pori for removable media and mount management", &onPoriClicked, self);
         appendAction(system, "Partition editor", "Open GParted for explicit disk partitioning", &onGpartedClicked, self);
         appendAction(system, "Archive manager", "Open File Roller for archive operations", &onFileRollerClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), system, "system", "System tools");
+
+        const tools = makePage("DINX tools", "Native terminal, editor and shell integration without hidden command strings.");
+        appendAction(tools, "Open Deetty", "Open the DINX terminal emulator", &onDeettyClicked, self);
+        appendAction(tools, "Open Dintor", "Open the DINX text editor", &onDintorClicked, self);
+        appendAction(tools, "Edit Redbean settings", "Open the persisted Redbean mode and pin configuration", &onRedbeanSettingsClicked, self);
+        appendAction(tools, "Edit KWM config", "Open the persistent KWM configuration", &onKwmConfigClicked, self);
+        appendAction(tools, "Refresh DINX Dock", "Reload dock launchers after Redbean pin changes", &onDockRefreshClicked, self);
+        _ = c.gtk_stack_add_titled(@ptrCast(stack), tools, "tools", "DINX tools");
 
         const session = makePage("Session", "Read-only diagnostics and safe session actions for the running River/KWM desktop.");
         if (!self.live_session) {
@@ -785,12 +798,77 @@ fn onRedbeanSettingsClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) voi
     asApp(data).launch(&.{ "deetty", "-e", "dintor", ".config/dinx/redbean.json" });
 }
 
+fn onDeettyClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"deetty"});
+}
+
+fn onDintorClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"dintor"});
+}
+
+fn onDockRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "pkill", "-HUP", "dinx-dock" });
+}
+
 fn onMorghulisClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"morghulis"});
 }
 
+fn onDarkThemeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-set-theme", "dark"});
+}
+
+fn onLightThemeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-set-theme", "light"});
+}
+
+fn onWallpaperClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    const app = asApp(data);
+    const dialog = c.gtk_file_dialog_new() orelse {
+        app.setStatusError("Unable to open wallpaper chooser");
+        return;
+    };
+    c.gtk_file_dialog_set_title(dialog, "Choose DINX wallpaper");
+    c.gtk_file_dialog_set_accept_label(dialog, "Apply");
+    c.gtk_file_dialog_open(dialog, @ptrCast(app.window), null, @ptrCast(&onWallpaperSelected), app);
+}
+
+fn onWallpaperSelected(source: *c.GObject, result: *c.GAsyncResult, data: ?*anyopaque) callconv(.c) void {
+    const app = asApp(data);
+    var error_value: ?*c.GError = null;
+    const dialog: *c.GtkFileDialog = @ptrCast(source);
+    const file = c.gtk_file_dialog_open_finish(dialog, result, &error_value);
+    if (file) |selected| {
+        defer c.g_object_unref(@ptrCast(selected));
+        if (c.g_file_get_path(selected)) |path| {
+            defer c.g_free(path);
+            app.launch(&.{ "pcmanfm", "-w", std.mem.span(path), "--wallpaper-mode=crop" });
+        } else {
+            app.setStatusError("Selected wallpaper has no local path");
+        }
+    } else if (error_value) |error_ptr| {
+        if (c.g_error_matches(error_ptr, c.g_io_error_quark(), c.G_IO_ERROR_CANCELLED) == 0) {
+            app.setStatusError(std.mem.span(error_ptr.message));
+        }
+        c.g_error_free(error_ptr);
+    }
+    c.g_object_unref(@ptrCast(dialog));
+}
+
+fn onDesktopIconsOnClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-pcmanfm-desktop", "on"});
+}
+
+fn onDesktopIconsOffClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{"/usr/local/libexec/dinx-pcmanfm-desktop", "off"});
+}
+
 fn onThemeRefreshClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"/usr/local/libexec/dinx-sync-session-theme"});
+}
+
+fn onPcmanfmPreferencesClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "pcmanfm", "--desktop-pref" });
 }
 
 fn onKwmConfigClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

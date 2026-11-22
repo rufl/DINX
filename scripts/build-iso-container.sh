@@ -467,6 +467,22 @@ trap finish EXIT
                 qt6-5compat qt6-declarative
               build_package haruna
               if [[ "$package_repository_only" != true ]]; then
+              blender_stage_dir=$(scripts/lib/stage-blender.sh)
+              blender_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
+              blender_full_package=$(awk -F= '$1 == "full_package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
+              cp -- "$blender_stage_dir/$blender_package" "$blender_stage_dir/$blender_full_package" "$package_repo/"
+              GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_package"
+              GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_full_package"
+              pacman_install_local "$package_repo/$blender_package"
+              eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
+              eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+              eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+              rm -f "$package_repo"/eurooffice-*.pkg.tar.zst "$package_repo"/eurooffice-*.pkg.tar.zst.sig
+              cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
+              GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
+              export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
+              printf 'dinx-build-timing phase=published-lean-packages blender=%s eurooffice=%s\n' \
+                "$blender_package" "$eurooffice_package"
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst

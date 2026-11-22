@@ -12,18 +12,24 @@ iso_check="$root/scripts/check-iso-content.sh"
 builder="$root/scripts/build-iso-container.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
 mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
+pin="$root/distro/office/eurooffice.pin"
+stage="$root/scripts/lib/stage-eurooffice.sh"
 
 fail() {
   printf 'eurooffice_contract: FAIL: %s\n' "$1" >&2
   exit 1
 }
 
-for path in "$profile" "$groups" "$pkg" "$source_env" "$launcher" "$desktop" "$iso_check" "$builder" "$workflow" "$mimeapps"; do
+for path in "$profile" "$groups" "$pkg" "$source_env" "$launcher" "$desktop" "$iso_check" "$builder" "$workflow" "$mimeapps" "$pin" "$stage"; do
   [[ -r "$path" ]] || fail "missing file: ${path#$root/}"
 done
 source "$source_env"
 [[ "$EUROOFFICE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha$ ]] || fail 'invalid EuroOffice version'
 [[ "$EUROOFFICE_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'invalid EuroOffice checksum'
+[[ -x "$stage" ]] || fail 'EuroOffice published-package staging helper is missing'
+grep -Fqx 'tag=eurooffice/v9.3.8-dinx5' "$pin" || fail 'EuroOffice release pin is not current'
+grep -Fqx 'package=eurooffice-9.3.8-5-x86_64.pkg.tar.zst' "$pin" || fail 'EuroOffice pin is not the lean package'
+grep -Fq 'scripts/lib/stage-eurooffice.sh' "$builder" || fail 'ISO builder does not stage published EuroOffice'
 if grep -Fqx '    - eurooffice' "$profile"; then
   fail 'optional EuroOffice remains selected in the base rootfs profile'
 fi

@@ -20,6 +20,10 @@ pori_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/pori
 haruna_override="$local_apps/org.kde.haruna.desktop"
 qt6ct_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
 
+blender_pin="$root/distro/graphics/blender/blender.pin"
+blender_stage="$root/scripts/lib/stage-blender.sh"
+iso_builder="$root/scripts/build-iso-container.sh"
+
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
   exit 1
@@ -49,6 +53,10 @@ grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher do
 for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak krita inkscape godot pixelorama paintfe blender patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
+[[ -x "$blender_stage" ]] || fail 'Blender published-package staging helper is missing'
+grep -Fqx 'tag=blender/v5.2.3-dinx1' "$blender_pin" || fail 'Blender release pin is not current'
+grep -Fqx 'package=blender-17.5.2.3-3-x86_64.pkg.tar.zst' "$blender_pin" || fail 'Blender pin is not the lean package'
+grep -Fq 'scripts/lib/stage-blender.sh' "$iso_builder" || fail 'ISO builder does not stage published Blender packages'
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
   if grep -Fqx "    - $package" "$profile"; then
     fail "$package remains explicitly selected in the DINX profile"

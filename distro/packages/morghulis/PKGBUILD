@@ -30,6 +30,7 @@ prepare() {
   cd "$srcdir/morghulis-$pkgver"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-power.patch"
   # Make libgtop optional (removed from Artix repos in 2026)
+  sed -i "s/dependency('libgtop-2.0')/dependency('libgtop-2.0', required: false)/" src/meson.build
   # Drop the GTop dependency (libgtop removed from Artix repos in 2026); report
   # uptime from /proc/uptime instead so morghulis builds without libgtop.
   patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-no-libgtop.patch"

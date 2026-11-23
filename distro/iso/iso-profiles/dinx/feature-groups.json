@@ -164,7 +164,6 @@
       "external": true,
       "packages": [
         "cups-dinit",
-        "eurooffice",
         "ntfs-3g",
         "wizp",
         "zls"

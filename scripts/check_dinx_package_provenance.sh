@@ -268,7 +268,6 @@ for required in \
   'build_package dinx-noto-latin' \
   'build_package dinx-plymouth-theme' \
   'build_package patchy' \
-  'build_package eurooffice' \
   'build_package pixelorama' \
   'build_package audionaut' \
   'build_package paintfe' \

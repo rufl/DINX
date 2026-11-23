@@ -454,7 +454,9 @@ trap finish EXIT
               [[ -n "$firewalld_boot_package" ]]
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
-              build_package eurooffice
+              # EuroOffice is disabled on this branch: its source pin uses a
+              # pre-release version string that makepkg rejects, and the branch
+              # contract keeps it outside the ISO payload.
               build_package patchy
               build_package pixelorama
               build_package paintfe
@@ -474,16 +476,9 @@ trap finish EXIT
               GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_package"
               GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_full_package"
               pacman_install_local "$package_repo/$blender_package"
-              eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
-              eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
-              eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
-              rm -f "$package_repo"/eurooffice-*.pkg.tar.zst "$package_repo"/eurooffice-*.pkg.tar.zst.sig
-              cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
-              GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
-              export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
-              printf 'dinx-build-timing phase=published-lean-packages blender=%s eurooffice=%s\n' \
-                "$blender_package" "$eurooffice_package"
-              repository_seed_started=$SECONDS
+              eurooffice_stage_dir=
+              eurooffice_package=
+              eurooffice_squashfs=
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
               rm -f "$package_repo/dinx.db" "$package_repo/dinx.db.sig"

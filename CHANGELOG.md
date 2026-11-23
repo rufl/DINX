@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fix three P0 build regressions on feat/next. Redbean now compiles against Zig 0.17 (`bufPrintZ` removal, `@ptrCast` tightening on nullable Astal C strings and callback widgets); the Plymouth theme `cache-inputs` manifest resolves `dinx-logo.png` from the repository source root so package cache-key generation no longer aborts before the build; and the EuroOffice source package is disabled for now — its pinned upstream version `0.17.48-alpha` contains a hyphen that makepkg rejects in `pkgver`, so `check_eurooffice.sh` collapses to a disabled-contract marker and the ISO builder skips both the source build and the staged lean-package publish.
 - Polish DINXPanel with integrated Deetty/Dintor launchers, Redbean and KWM editors, fixed DINX Dock refresh, persisted light/dark session theme controls, PCManFM wallpaper selection and persistent desktop-icon visibility. Added the DINX tools page and kept all actions fixed-argv.
 - Add Mission Center 1.2.0 as the GTK4 resource/process monitor, remove Qps and Dome from the ISO payload, and keep Pori/PCManFM as the storage/file-management stack. EuroOffice remains disabled.
 - Disable the Transit audio workstation and enable the pinned Audionaut multitrack audio editor in the DINX package profile and ISO pipeline.

@@ -108,12 +108,44 @@ def latest_tag(
     try:
         release = get_json(endpoint, token if provider == "github" else "")
     except urllib.error.HTTPError as error:
+        if provider == "github" and error.code == 404:
+            return latest_github_tag(entry, token, get_json)
         fail(f"{entry['name']}: upstream release lookup returned HTTP {error.code}: {endpoint}")
     tag = release.get("tag_name")
     if not isinstance(tag, str) or not tag:
         fail(f"{entry['name']}: upstream response has no tag_name")
     return tag
 
+def latest_github_tag(
+    entry: dict,
+    token: str,
+    get_json: Callable[[str, str], dict],
+) -> str:
+    """Fallback for GitHub repos that publish tags but no releases.
+
+    ARKye03/morghulis has no GitHub releases (the /releases/latest endpoint
+    returns 404), so fall back to the tags API and pick the newest tag.
+    """
+    repository = entry["repository"]
+    endpoint = f"https://api.github.com/repos/{repository}/tags"
+    try:
+        response = get_json(endpoint, token)
+    except urllib.error.HTTPError as error:
+        fail(f"{entry['name']}: upstream tag lookup returned HTTP {error.code}: {endpoint}")
+    if not isinstance(response, list) or not response:
+        fail(f"{entry['name']}: upstream tag response has no tags: {endpoint}")
+    tags: list[str] = []
+    for item in response:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name")
+        if isinstance(name, str) and name:
+            tags.append(name)
+    if not tags:
+        fail(f"{entry['name']}: upstream tag response has no tag names: {endpoint}")
+    tag = max(tags, key=lambda value: version_tuple(source_version(value, entry.get("tag_prefix", ""))))
+    source_version(tag, entry.get("tag_prefix", ""))
+    return tag
 
 def digest_url(url: str, algorithm: str) -> str:
     if algorithm not in ("sha256", "blake2b"):

@@ -169,6 +169,17 @@ DINX applies the appearance saved by its first-run wizard, `dinx-first-run`, whi
 
 The agreety login surface and the initial desktop use solid backgrounds without wallpaper images or a DINX logo; Calamares retains the full wordmark on its product logo/welcome surface. The reduced D-and-ray symbol remains canonical artwork at `design/brand/dinx-ray-mark.svg` and is used by Calamares as its product icon. GRUB uses the separate gradient boot-mark PNG. Papirus is the only explicitly selected desktop/app-launcher icon theme; Qogir, Breeze style and cursor packages are excluded, while the Breeze icon package remains for Calamares's KIconThemes dependency. Upstream application icons remain unchanged, and Adwaita assets remain available for GTK compatibility.
 The Morghulis NavBar is the DINX status surface; kwm is built `-Dbar=false`, so KWM's own bar is not the status surface anymore. KWM reads only `~/.config/kwm/config.zon`, and `dinx-river-session` seeds that file from the packaged `/etc/xdg/kwm/config.zon` when it is absent, so later user edits survive every reboot. The first-run wizard stores the saved shell theme selection in `~/.config/dinx/appearance.json`, and its `dock` value decides whether `dinx-dock` starts: `none` leaves the launcher bar stopped, while a missing file defaults to `left`.
+
+The DINX overlay ships a system-wide `/etc/xdg/kwm/config.zon` that defaults every
+window to floating: `default_layout = .float` plus a global window rule
+`.{ .app_id = .{ .str = "", .match_null = true }, .floating = true }`, so all
+windows float, stack and can be dragged around like the retired Aqueous/Pearl
+stacking desktop. `Mod4-f` toggles a window between floating and the tile layout,
+`Mod4-Ctrl-f` switches the active layout, `Mod4-t` switches to tile, and
+`Mod4`+left-drag moves / `Mod4`+right-drag resizes floating windows; `Mod4-Ctrl`+h/j/k/l
+nudges a floating window toward a screen edge. `dinx-river-session` seeds
+`~/.config/kwm/config.zon` from this file only when the user config is absent, so
+user edits survive every reboot.
 The ASCII D-ray at `/usr/share/dinx/branding/dinx-ray-mark.txt` is density-mapped from DINX's source SVG and works as a plain-text logo:
 ```sh
 fastfetch --logo-type file --logo /usr/share/dinx/branding/dinx-ray-mark.txt

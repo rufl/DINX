@@ -178,6 +178,17 @@ A DINX aplica a aparência salva pelo seu assistente de primeira execução, o `
 
 O agreety e a área de trabalho inicial usam fundos sólidos, sem imagem de wallpaper ou logo DINX; o Calamares mantém o wordmark completo no logo do produto e na tela de boas-vindas. O símbolo reduzido D com raio continua como arte-fonte em `design/brand/dinx-ray-mark.svg` e é usado pelo Calamares como ícone do produto. O GRUB usa o PNG separado do boot-mark em gradiente. Papirus é o único tema de ícones selecionado explicitamente para a área de trabalho e os lançadores; Qogir, o estilo Breeze e os cursores Breeze são excluídos. `breeze-icons` permanece somente como dependência transitiva de Calamares → KParts → KIO → KIconThemes, não como tema escolhido para a área de trabalho. Os ícones próprios dos aplicativos permanecem inalterados, e os recursos Adwaita continuam disponíveis para compatibilidade GTK.
 A NavBar do Morghulis é a superfície de status da DINX; o kwm é compilado com `-Dbar=false`, então a barra do próprio KWM não é mais a superfície de status. O KWM lê somente `~/.config/kwm/config.zon`, e o `dinx-river-session` semeia esse arquivo a partir do `/etc/xdg/kwm/config.zon` empacotado quando ele não existe, para que edições do usuário sobrevivam a todos os reboots. O assistente de primeira execução guarda a seleção de tema de shell em `~/.config/dinx/appearance.json`, e o campo `dock` decide se o `dinx-dock` inicia: `none` deixa a barra de lançadores desligada, enquanto um arquivo ausente usa `left` por default.
+O overlay da DINX distribui um `/etc/xdg/kwm/config.zon` que deixa todas as janelas
+flutuando por padrão: `default_layout = .float` mais a regra global
+`.{ .app_id = .{ .str = "", .match_null = true }, .floating = true }`, então todas as
+janelas flutuam, empilham e podem ser arrastadas como a área de trabalho
+Aqueous/Pearl retirada. `Mod4-f` alterna uma janela entre flutuante e o layout tile,
+`Mod4-Ctrl-f` muda para o layout flutuante, `Mod4-t` volta ao tile, e
+`Mod4`+arrastar-esquerda move / `Mod4`+arrastar-direita redimensiona janelas
+flutuantes; `Mod4-Ctrl`+h/j/k/l desloca uma janela flutuante em direção a uma borda de
+tela. O `dinx-river-session` semeia `~/.config/kwm/config.zon` a partir desse arquivo
+apenas quando a configuração do usuário está ausente, para que edições do usuário
+sobrevivam a todos os reboots.
 O D-ray em ASCII em `/usr/share/dinx/branding/dinx-ray-mark.txt` é gerado por densidade a partir do SVG original da DINX e funciona como logo em texto puro:
 ```sh
 fastfetch --logo-type file --logo /usr/share/dinx/branding/dinx-ray-mark.txt

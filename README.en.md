@@ -54,17 +54,17 @@ DINX is an Artix distribution for a small, legible and controllable desktop sess
 - **River + KWM** as the only user session, started directly over dinit; **agreety** under greetd is the login UI, and kwim manages the input devices;
 - **DinitUI** and **DINXPanel** (system control center) for service, hardware, driver and kernel profiles;
 - **Calamares** for experimental installation, **GParted** for separate partition editing and **Pori** for persistent disks and mounts through dinit;
-- **Phyto** as the default file manager and **File Roller** for archives;
+- **PCManFM** (Artix package) as the default file manager and **File Roller** for archives;
 - **Firefox** (Artix package) as the browser and default HTML/HTTP/HTTPS handler;
 - **EuroOffice** as the office and PDF suite (documents, spreadsheets, presentations; default `application/pdf` and OOXML handler), consumed from the `office` branch's lean `eurooffice/v*` releases;
-- **PaintFE** (Rust raster editor), **Krita**, **Inkscape**, **Godot**, **Pixelorama**, **Patchy** and **Blockbench** for creation; **Transit** as the digital audio workstation; **Zenkai** as the application launcher;
+- **PaintFE** (Rust raster editor), **Krita**, **Inkscape**, **Godot**, **Pixelorama**, **Patchy** and **Blender** (3D suite) for creation; **Audionaut** (multitrack audio studio) for advanced audio;
 - **Haruna** (video) and **Gapless** (music) with GStreamer codecs; **Swayimg** as the image viewer;
 - **wdisplays + Shikane** for configuring Wayland displays and reapplying the layout across sessions;
 - the kernel **ntfs3** module for NTFS read/write support in the live ISO and installed system;
 - **Mesa/RADV and VM graphics:** qualification on default VGA and Virtio-VGA in QEMU; direct VirtualBox boot still needs qualification. See the [install guide](docs/install.md);
 - **DINX Gaming** keeps its manual launcher hidden; the gaming stack (Gamescope, Steam, GameMode, MangoHud, 32-bit) is opt-in after installation.
 
-Upstream binary apps (PaintFE, Transit, Zenkai, Patchy, Blockbench) are **repacked as pre-extracted `/opt/<package>/` trees** at build time (`scripts/lib/repack-appimage.sh`): ELF stripped where safe, locales trimmed to en/pt, and launchers exec `AppRun` directly — no FUSE and no per-launch tmpfs extraction. The final SquashFS uses **xz + x86 BCJ, 1 MiB blocks/dictionary (the builder's squashfs-tools maximum) and 4 compression threads** to keep the direct ISO below GitHub's 2 GiB per-asset limit.
+Upstream binary apps (**PaintFE, Patchy**) are **repacked as pre-extracted `/opt/<package>/` trees** at build time (`scripts/lib/repack-appimage.sh`): ELF stripped where safe, locales trimmed to en/pt, and launchers exec `AppRun` directly — no FUSE and no per-launch tmpfs extraction. The final SquashFS uses **xz + x86 BCJ, 1 MiB blocks/dictionary (the builder's squashfs-tools maximum) and 4 compression threads** to keep the direct ISO below GitHub's 2 GiB per-asset limit.
 
 `dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network.
 
@@ -80,6 +80,21 @@ BC-250 software is not installed in the generic ISO; its packages are in the sig
 | Base | Artix Linux x86_64 with dinit |
 | Next milestone | System Beta 0.1: planned, not released, and undated |
 | Gaming qualification | Separate P5 track; not complete |
+## Morghulis — session shell
+
+**Morghulis** is the DINX Wayland desktop shell for the River + KWM session. It is built on **Astal** with **GTK4/libadwaita** and compiles without **libgtop** (dropped from the Artix repos in 2026); uptime is read from `/proc/uptime` via a DINX patch.
+
+| Item | Status |
+|------|--------|
+| Pinned version | `0.14.0` (`MORGHULIS_VERSION` in `distro/packages/morghulis/source.env`) |
+| Source pin | `archive/refs/tags/v0.14.0.tar.gz` (tag archive, not the release asset; the published release asset has no `meson.build`) |
+| libgtop dependency | Made optional (`required: false`) and removed from runtime use |
+| ISO build | Passes P0 stage 60 (`dinx-build-timing package=morghulis exit_status=0`) |
+| Session role | Status bar (NavBar), runner, quick menu, OSD and power menu; KWM is built with `-Dbar=false` so its own bar is not used |
+| Bar anchor | Controlled by GSettings key `com.arkye.morghulis navbar-anchor`, written by the first-run wizard and reapplied on SIGHUP |
+| Theme fallback | `dinx-river-session` exports `DINX_COLOR_SCHEME=dark` and `DINTOR_THEME=prefer-dark` as recovery defaults |
+
+There is no package called "redbean" in the DINX tree; the session shell is **Morghulis** above.
 
 The [GitHub release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) is **2 GiB** (`2,147,483,648` bytes). ISOs above it use the split delivery (`.iso.part-*` + `.iso.parts.json`); the rolling direct-ISO alias only advances when a release qualifies with a single image below the limit. [Full criteria in the roadmap](docs/roadmap.md).
 

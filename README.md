@@ -53,18 +53,16 @@ DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e c
 - **Artix Linux + dinit** como base, sem trocar o init por systemd;
 - **River + KWM** como a única sessão do usuário, iniciada diretamente sobre dinit; o **agreety** pelo greetd é a interface de login, e o kwim gerencia os dispositivos de entrada;
 - **DinitUI** e **DINXPanel** (Central de Controle) para perfis de serviços, hardware, drivers e kernels;
-- **Calamares** para a instalação experimental, **GParted** para particionamento separado e **Pori** para discos e montagens persistentes via dinit;
-- **Phyto** como gerenciador de arquivos padrão e **File Roller** para arquivos compactados;
+- **PCManFM** (pacote Artix) como gerenciador de arquivos padrão e **File Roller** para arquivos compactados;
 - **Firefox** (pacote Artix) como navegador e handler padrão de HTML/HTTP/HTTPS;
 - **EuroOffice** como suíte de escritório e PDF (documentos, planilhas, apresentações; handler padrão de `application/pdf` e OOXML), consumido dos releases lean `eurooffice/v*` da branch `office`;
-- **PaintFE** (editor raster em Rust), **Krita**, **Inkscape**, **Godot**, **Pixelorama**, **Patchy** e **Blockbench** para criação; **Transit** como estação de áudio digital; **Zenkai** como lançador de aplicativos;
-- **Haruna** (vídeo) e **Gapless** (música) com codecs GStreamer; **Swayimg** como visualizador de imagens;
+- **PaintFE** (editor raster em Rust), **Krita**, **Inkscape**, **Godot**, **Pixelorama**, **Patchy** e **Blender** (suíte 3D) para criação; **Audionaut** (estúdio de áudio multitrack) para áudio avançado; **Haruna** (vídeo) e **Gapless** (música) com codecs GStreamer; **Swayimg** como visualizador de imagens;
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
 - **Mesa/RADV e gráficos em VM:** qualificação em VGA padrão e Virtio-VGA do QEMU; boot direto no VirtualBox ainda precisa de qualificação. Veja o [guia de instalação](docs/pt-BR/install.md);
 - **DINX Gaming** mantém o launcher manual oculto; o conjunto gaming (Gamescope, Steam, GameMode, MangoHud, 32 bits) é opcional após a instalação.
 
-Apps binários upstream (PaintFE, Transit, Zenkai, Patchy, Blockbench) são **reempacotados como árvores `/opt/<pacote>/` pré-extraídas** no build (`scripts/lib/repack-appimage.sh`): strip de ELF onde seguro, locales reduzidos a en/pt e launchers que executam `AppRun` diretamente — sem FUSE e sem extração em tmpfs a cada inicialização. O SquashFS final usa **xz + BCJ x86, blocos/dicionário de 1 MiB (máximo do squashfs-tools do builder) e 4 threads de compressão** para manter a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
+- Apps binários upstream (**PaintFE, Patchy**) são **reempacotados como árvores `/opt/<pacote>/` pré-extraídas** no build (`scripts/lib/repack-appimage.sh`): strip de ELF onde seguro, locales reduzidos a en/pt e launchers que executam `AppRun` diretamente — sem FUSE e sem extração em tmpfs a cada inicialização. O SquashFS final usa **xz + BCJ x86, blocos/dicionário de 1 MiB (máximo do squashfs-tools do builder) e 4 threads de compressão** para manter a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
 
@@ -83,6 +81,21 @@ O software BC-250 não é instalado na ISO genérica; os pacotes estão no repos
 
 O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **2 GiB** (`2.147.483.648` bytes). ISOs acima dele usam a entrega dividida (`.iso.part-*` + `.iso.parts.json`); o alias rolante de ISO direta só avança quando uma release qualifica com imagem única abaixo do limite. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
 
+## Morghulis — shell da sessão
+
+O **Morghulis** é o shell da área de trabalho Wayland da DINX para a sessão River + KWM. É construído sobre **Astal** com **GTK4/libadwaita** e compila sem **libgtop** (removido dos repositórios Artix em 2026); o uptime é lido de `/proc/uptime` por um patch da DINX.
+
+| Item | Estado |
+|------|--------|
+| Versão pina | `0.14.0` (`MORGHULIS_VERSION` em `distro/packages/morghulis/source.env`) |
+| Pin da fonte | `archive/refs/tags/v0.14.0.tar.gz` (arquivo de tag, não o asset de release; o asset publicado não tem `meson.build`) |
+| Dependência libgtop | Tornada opcional (`required: false`) e removida do uso em tempo de execução |
+| Construção ISO | Passa na etapa 60 do P0 (`dinx-build-timing package=morghulis exit_status=0`) |
+| Papel na sessão | Barra de status (NavBar), runner, menu rápido, OSD e menu de energia; o KWM é compilado com `-Dbar=false`, então sua própria barra não é usada |
+| Âncora da barra | Controlada pela chave GSettings `com.arkye.morghulis navbar-anchor`, gravada pelo assistente de primeira execução e recarregada via SIGHUP |
+| Recuperação de tema | `dinx-river-session` exporta `DINX_COLOR_SCHEME=dark` e `DINTOR_THEME=prefer-dark` como defaults de recuperação |
+
+Não há nenhum pacote chamado "redbean" na árvore DINX; o shell da sessão é o **Morghulis** acima.
 ## Instalação rápida
 
 1. Baixe a [ISO direta mais recente](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) e seu [arquivo SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).

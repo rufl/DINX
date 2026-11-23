@@ -39,7 +39,7 @@ prepare() {
   sed -i "/'SysInfoItem.vala',/d" src/Runner/Commands/meson.build
   # Remove SysInfoItem reference from Main.vala
   sed -i "/typeof(SysInfoItem).ensure();/d" src/Main.vala
-  sed -i 's/new SysInfo()/new Gtk.Box(Orientation.HORIZONTAL, 0)/' src/Runner/Runner.vala
+  sed -i 's/new SysInfo()/new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0)/' src/Runner/Runner.vala
 }
 
 build() {

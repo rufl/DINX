@@ -15,7 +15,7 @@ source_env="$startdir/source.env"
 :: "${APP_DETECTION_SOURCE_SHA256:?missing APP_DETECTION_SOURCE_SHA256}"
 : "${MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256:?missing MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256}"
 pkgver="$MISSION_CENTER_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='System monitor for CPU, memory, disk, network and GPU usage'
 arch=('x86_64')
 url="$MISSION_CENTER_REPOSITORY"
@@ -27,12 +27,14 @@ source=(
   "gng-$MISSION_CENTER_MAGPIE_COMMIT.tar.gz::$MISSION_CENTER_MAGPIE_SOURCE_URL"
   "graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL"
   "app-detection-$APP_DETECTION_COMMIT.tar.gz::$APP_DETECTION_SOURCE_URL"
+  "mission-center-dinx-dinit-services.patch"
 )
 sha256sums=(
   "$MISSION_CENTER_SOURCE_SHA256"
   "$MISSION_CENTER_MAGPIE_SOURCE_SHA256"
   "$MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256"
   "$APP_DETECTION_SOURCE_SHA256"
+  '5c4efa2b52b020c551f52211e54fdaf91f0e300c2851725e24311db5e00a12d7'
 )
 
 prepare() {
@@ -42,6 +44,10 @@ prepare() {
   mv "$srcdir/graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT" "$root/subprojects/graph-widget"
   mkdir -p "$root/subprojects/magpie/platform-linux/crates/app-rummage"
   mv "$srcdir/app-detection-$APP_DETECTION_COMMIT"/* "$root/subprojects/magpie/platform-linux/crates/app-rummage"/
+  # DINX patch: add Dinit init system backend to the magpie service cache so
+  # the Services tab lists and controls dinit services on Artix/DINX installs.
+  patch --fuzz=0 --forward --strip=2 -d "$root/subprojects/magpie" \
+    < "$srcdir/mission-center-dinx-dinit-services.patch"
 }
 
 build() {

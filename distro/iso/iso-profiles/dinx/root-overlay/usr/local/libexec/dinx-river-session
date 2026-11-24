@@ -25,6 +25,12 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORMTHEME=qt6ct
 # Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
+# Ask GTK4 apps to respect the compositor's SSD preference.  kwm requests SSD
+# for all windows via river-window-management-v1; without this variable libadwaita
+# apps ignore the compositor hint and draw their own CSD titlebar instead.
+# Note: some apps (Nautilus, GNOME apps) override this deliberately; they will
+# still use CSD.  Most apps (terminals, editors, browsers) will use SSD.
+export GTK_CSD=0
 
 # DINX theme defaults are intentionally dark; they may still be overridden by
 # the per-user appearance selection applied via dinx-sync-session-theme.

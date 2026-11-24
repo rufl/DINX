@@ -15,11 +15,47 @@
     // default_layout alone is sufficient.
     .default_layout = .float,
 
-    // key/pointer bindings (inherit upstream defaults)
+    // key/pointer bindings: DINX desktop conventions
     .bindings = .{
         .repeat_info = .{
             .rate = 50,
             .delay = 300,
+        },
+        .key = .{
+            // Alt+Tab  — cycle focus forward (window switcher)
+            .{
+                .keysym = "Tab",
+                .modifiers = .{ .mod1 = true },
+                .event = .{
+                    .click = .{
+                        .pressed = .{
+                            .focus_iter = .{ .direction = .forward },
+                        },
+                    },
+                },
+            },
+            // Alt+Shift+Tab — cycle focus backward
+            .{
+                .keysym = "Tab",
+                .modifiers = .{ .mod1 = true, .shift = true },
+                .event = .{
+                    .click = .{
+                        .pressed = .{
+                            .focus_iter = .{ .direction = .reverse },
+                        },
+                    },
+                },
+            },
+            // Alt+F4 — close focused window
+            .{
+                .keysym = "F4",
+                .modifiers = .{ .mod1 = true },
+                .event = .{
+                    .click = .{
+                        .pressed = .close,
+                    },
+                },
+            },
         },
     },
 
@@ -50,11 +86,14 @@
     },
     .default_window_decoration = .ssd,
     .border = .{
-        .width = 5,
+        // 1px neutral border: visible enough to show window edges without being
+        // intrusive. Rounded-corner apps clip their own corners; the border
+        // rectangle stays at 1px and does not follow the app-side radius.
+        .width = 1,
         .color = .{
-            .focus = 0xffc777ff,
-            .unfocus = 0x828bb8ff,
-            .swallowing = 0x0830e6ff,
+            .focus   = 0x888888ff,
+            .unfocus = 0x444444ff,
+            .swallowing = 0x666666ff,
         },
     },
 }

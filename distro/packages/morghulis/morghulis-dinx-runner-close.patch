@@ -1,0 +1,33 @@
+diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCmdButton.vala
+--- a/src/Runner/Commands/AppsCmdButton.vala
++++ b/src/Runner/Commands/AppsCmdButton.vala
+@@ -10,9 +10,19 @@
+     [GtkCallback]
+     public void clicked() {
+-        app_launch_handler();
++        launch_and_dismiss();
+     }
+ 
+     [GtkCallback]
+     public void activated() {
+-        app_launch_handler();
++        launch_and_dismiss();
++    }
++
++    private void launch_and_dismiss() {
++        // Hide the Runner immediately so it gets out of the way before the app
++        // window appears.  Do this before the launch call so the compositor can
++        // reclaim the layer surface before the new window maps.
++        Runner.instance.visible = false;
++        // Set a watch cursor on the Runner window surface to signal "busy" until
++        // the app draws its first frame and the cursor reverts automatically.
++        var display = Gdk.Display.get_default();
++        if (display != null) {
++            var cursor = new Gdk.Cursor.from_name("wait", null);
++            Gdk.Surface? surface = Runner.instance.get_surface();
++            if (surface != null) {
++                surface.set_cursor(cursor);
++            }
++        }
++        app_launch_handler();
+     }

@@ -2,6 +2,7 @@
   "schema": "dinx-upstream-package-updates/v1",
   "packages": [
     {
+<<<<<<< HEAD
       "name": "audionaut",
       "provider": "github",
       "repository": "kvoltmer/Audionaut",
@@ -36,6 +37,8 @@
       "url_template": "https://github.com/chimera-linux/turnstile/archive/refs/tags/v{version}.tar.gz"
     },
     {
+=======
+>>>>>>> main
       "name": "calamares",
       "provider": "codeberg",
       "repository": "Calamares/calamares",
@@ -61,6 +64,7 @@
       "url_template": "https://github.com/Seafoam-Labs/Pori/archive/refs/tags/{tag}.tar.gz"
     },
     {
+<<<<<<< HEAD
       "name": "mission-center",
       "provider": "gitlab",
       "repository": "mission-center-devs/mission-center",
@@ -119,6 +123,8 @@
       ]
     },
     {
+=======
+>>>>>>> main
       "name": "swayimg",
       "provider": "github",
       "repository": "artemsen/swayimg",
@@ -303,6 +309,7 @@
       ]
     },
     {
+<<<<<<< HEAD
       "name": "kwim",
       "provider": "github",
       "repository": "kewuaa/kwim",
@@ -327,10 +334,39 @@
       "checksum_key": "KWM_SOURCE_SHA256",
       "checksum": "sha256",
       "tag_prefix": "v",
+=======
+      "name": "kwm",
+      "provider": "github",
+      "repository": "kewuaa/kwm",
+      "source_file": "distro/packages/kwm/source.env",
+      "version_key": "KWM_VERSION",
+      "package_version_key": "KWM_VERSION",
+      "source_url_key": "KWM_SOURCE_URL",
+      "checksum_key": "KWM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+>>>>>>> main
       "url_template": "https://github.com/kewuaa/kwm/archive/refs/tags/{tag}.tar.gz",
       "bump_pkgrel_path": "distro/packages/kwm/PKGBUILD"
     },
     {
+<<<<<<< HEAD
+=======
+      "name": "kwim",
+      "provider": "github",
+      "repository": "kewuaa/kwim",
+      "source_file": "distro/packages/kwim/source.env",
+      "version_key": "KWIM_VERSION",
+      "package_version_key": "KWIM_VERSION",
+      "source_url_key": "KWIM_SOURCE_URL",
+      "checksum_key": "KWIM_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kewuaa/kwim/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/kwim/PKGBUILD"
+    },
+    {
+>>>>>>> main
       "name": "morghulis",
       "provider": "github",
       "repository": "ARKye03/morghulis",
@@ -343,6 +379,30 @@
       "tag_prefix": "v",
       "url_template": "https://github.com/ARKye03/morghulis/archive/refs/tags/{tag}.tar.gz",
       "bump_pkgrel_path": "distro/packages/morghulis/PKGBUILD"
+<<<<<<< HEAD
+=======
+    },
+    {
+      "name": "audionaut",
+      "provider": "github",
+      "repository": "kvoltmer/Audionaut",
+      "source_file": "distro/packages/audionaut/source.env",
+      "version_key": "AUDIONAUT_VERSION",
+      "package_version_key": "AUDIONAUT_VERSION",
+      "source_url_key": "AUDIONAUT_SOURCE_URL",
+      "checksum_key": "AUDIONAUT_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/kvoltmer/Audionaut/releases/download/v{version}/Audionaut-{version}-x86_64.AppImage",
+      "bump_pkgrel_path": "distro/packages/audionaut/PKGBUILD",
+      "additional_sources": [
+        {
+          "source_url_key": "AUDIONAUT_LICENSE_URL",
+          "checksum_key": "AUDIONAUT_LICENSE_SHA256",
+          "url_template": "https://raw.githubusercontent.com/kvoltmer/Audionaut/{tag}/LICENSE.md"
+        }
+      ]
+>>>>>>> main
     }
   ]
 }

@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="design/brand/dinx-linux-logo.svg" alt="DINX Linux" width="420">
+  <img src="design/brand/dinx-linux-logo.svg" alt="DINX Linux logo" width="420">
 </h1>
 
 <p align="center">
@@ -8,15 +8,15 @@
 </p>
 
 <p align="center">
-  <a href="README.md">Português (Brasil)</a> ·
-  <a href="README.en.md">English</a>
+  🌐 <strong>English</strong> ·
+  <a href="README.md"><strong>Leia em Português (Brasil)</strong></a> — the main page is in Portuguese; click to open it.
 </p>
 
 <p align="center">
   <a href="https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso"><img alt="Download latest alpha ISO" src="https://img.shields.io/badge/download-latest%20alpha%20ISO-ef3340?logo=linux&amp;logoColor=white"></a>
-  <a href="https://github.com/rufl/DINX/releases/tag/alpha-latest"><img alt="Latest alpha release" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
+  <a href="https://github.com/rufl/DINX/releases"><img alt="Latest alpha release" src="https://img.shields.io/github/v/release/rufl/DINX?include_prereleases&amp;sort=semver&amp;label=alpha&amp;color=38bdf8"></a>
   <a href="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml"><img alt="P0 validation status" src="https://github.com/rufl/DINX/actions/workflows/p0-iso.yml/badge.svg?branch=main"></a>
-  <img alt="Next milestone: planned system Beta 0.1" src="https://img.shields.io/badge/next%20milestone-System%20Beta%200.1-f59e0b">
+  <a href="docs/licensing.md"><img alt="REUSE 3.3 compliant" src="https://img.shields.io/badge/REUSE-3.3%20compliant-22c55e"></a>
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/github/license/rufl/DINX?color=22c55e"></a>
 </p>
 
@@ -26,7 +26,7 @@
 
 | If you want to… | Go to |
 |---|---|
-| Download the latest alpha ISO (Alpha 0.12) | [Direct ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Alpha 0.12 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12) · [Other releases](https://github.com/rufl/DINX/releases) |
+| Download the latest direct ISO (Alpha 0.16) | [Direct ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) · [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) · [Alpha 0.16 release](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.16) · [All releases](https://github.com/rufl/DINX/releases) |
 | Verify and install the ISO | [Installation guide](docs/install.md) |
 | See what CI actually proved | [P0 build status](docs/p0-build.md) |
 | Understand compatibility and limits | [Compatibility](docs/compatibility.md) · [Roadmap](docs/roadmap.md) |
@@ -34,54 +34,101 @@
 | Check licensing and REUSE coverage | [Licensing](docs/licensing.md) |
 | Read in Portuguese | [README em Português](README.md) |
 
+## Official branches
+
+| Branch | Role |
+|---|---|
+| [`main`](https://github.com/rufl/DINX/tree/main) | Linux distribution: ISO, packages, desktop, qualification and releases |
+| [`feat/bsd`](https://github.com/rufl/DINX/tree/feat/bsd) | DINX FreeBSD variant (no CEF/EuroOffice; office via native apps/browser) |
+| [`office`](https://github.com/rufl/DINX/tree/office) | EuroOffice pipeline: lean upstream repack, `eurooffice/v*` release publication |
+| [`themes`](https://github.com/rufl/DINX/tree/themes) | Theme ports (Skeuos/Orchis) to the DINX GTK theme format |
+| [`tools`](https://github.com/rufl/DINX/tree/tools) | Auxiliary build, qualification and launcher tooling |
+
+`main` consumes the lean EuroOffice releases published by the `office` branch (pin + SHA256 verification + rootfs/livefs merge); branches are not merged into each other without review.
+
 ## In brief
 
 DINX is an Artix distribution for a small, legible and controllable desktop session:
 
 - **Artix Linux + dinit** as the base, without replacing the init system with systemd;
+<<<<<<< HEAD
 - **River + KWM + Morghulis** as the base Wayland session, started directly over dinit; `greetd` uses `agreety` for login;
 - **DinitUI** and **DINXPanel** for service, hardware, driver and kernel profiles;
 - **Calamares** for experimental installation, **GParted** for separate partition editing and **Pori** for persistent disks and mounts through dinit;
 - **PCManFM** as the default file manager and desktop, with **File Roller** for opening, creating and extracting archives;
+=======
+- **River + KWM** as the only user session, started directly over dinit; **agreety** under greetd is the login UI, and kwim manages the input devices;
+- **DinitUI** and **DINXPanel** (system control center) for service, hardware, driver and kernel profiles;
+- **Calamares** for experimental installation, **GParted** for separate partition editing and **Pori** for persistent disks and mounts through dinit;
+- **PCManFM** (Artix package) as the default file manager and **File Roller** for archives;
+- **Firefox** (Artix package) as the browser and default HTML/HTTP/HTTPS handler;
+- **EuroOffice** as the office and PDF suite (documents, spreadsheets, presentations; default `application/pdf` and OOXML handler), consumed from the `office` branch's lean `eurooffice/v*` releases;
+- **PaintFE** (Rust raster editor), **Krita**, **Inkscape**, **Godot**, **Pixelorama**, **Patchy** and **Blender** (3D suite) for creation; **Audionaut** (multitrack audio studio) for advanced audio;
+- **Haruna** (video) and **Gapless** (music) with GStreamer codecs; **Swayimg** as the image viewer;
+>>>>>>> main
 - **wdisplays + Shikane** for configuring Wayland displays and reapplying the layout across sessions;
 - the kernel **ntfs3** module for NTFS read/write support in the live ISO and installed system;
-- **Mesa/RADV and VM graphics:** the builder includes `vmwgfx`/`vboxvideo` in the initramfs, and ISO inspection verifies both. Qualification tests the live session on default VGA and Virtio-VGA in QEMU. On this host, QEMU 11.1.2/KVM with `vmware-svga` stalls in early udev when `vmwgfx` loads, so that proxy was removed; direct VirtualBox boot still needs qualification. Accessible `virtio_gpu` retains GLES2. See the [graphics guide](docs/install.md).
-- **DINX Gaming** keeps its manual launcher hidden. The base ISO excludes Gamescope, Steam, GameMode, MangoHud, Steam device rules and 32-bit gaming libraries; users can opt into the gaming stack after installation. The base retains 64-bit RADV/Vulkan; see the [install guide](docs/install.md).
+- **Mesa/RADV and VM graphics:** qualification on default VGA and Virtio-VGA in QEMU; direct VirtualBox boot still needs qualification. See the [install guide](docs/install.md);
+- **DINX Gaming** keeps its manual launcher hidden; the gaming stack (Gamescope, Steam, GameMode, MangoHud, 32-bit) is opt-in after installation.
 
+<<<<<<< HEAD
 `dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network. Set `DINX_DOCTOR_QUERY_DINIT=1` only when you also want it to query the user dinit socket. The `scripts/check_dinx_doctor.sh` and `scripts/smoke_dinx_doctor.sh` contracts enforce this boundary.
+=======
+Upstream binary apps (**PaintFE, Patchy**) are **repacked as pre-extracted `/opt/<package>/` trees** at build time (`scripts/lib/repack-appimage.sh`): ELF stripped where safe, locales trimmed to en/pt, and launchers exec `AppRun` directly — no FUSE and no per-launch tmpfs extraction. The final SquashFS uses **xz + x86 BCJ, 1 MiB blocks/dictionary (the builder's squashfs-tools maximum) and 4 compression threads** to keep the direct ISO below GitHub's 2 GiB per-asset limit.
+>>>>>>> main
 
-BC-250 software is not installed in the generic ISO. Its packages are available in the signed DINX repository; install them only after confirming PCI ID `1002:13fe`.
+`dinx-doctor` produces a read-only report of the session, dinit, storage/display paths and DINX packages. It does not start services, mount devices, perform package transactions or access the network.
 
+<<<<<<< HEAD
 ## Seafoam and the sole session in the base ISO
 
 **Mission Center 1.2.0**, **Seafoam Settings**, **Audionaut** and **ZLS 0.16.0** are part of the base ISO and the signed DINX repository. Mission Center provides GTK4 resource/process monitoring without a systemd dependency; Seafoam Settings groups display, session and Mission Center entry points; Audionaut provides audio.
 
 **River**, **KWM**, **Morghulis** and **PCManFM** ship in the base ISO. `River + KWM + Morghulis (DINX)` is the live and installed graphical session; Morghulis first use saves the light/dark variant in `~/.config/morghulis/preferences.json`, synchronizes GTK/Qt and starts the PCManFM desktop. Login uses `agreety` through greetd, without systemd, systemctl or UWSM.
+=======
+BC-250 software is not installed in the generic ISO; its packages are in the signed DINX repository and should only be installed after confirming PCI ID `1002:13fe`.
+>>>>>>> main
 
 ## Current state
 
 | Item | Status |
 |---|---|
-| Published release | [DINX Alpha 0.12 (`v0.1.0-alpha.12`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), direct ISO of 1,836,830,720 bytes |
+| Direct ISO (rolling alias) | [`dinx-latest-x86_64.iso`](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) (Alpha 0.16), 2,133,706,752 bytes, with [SHA-512](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512) |
+| Latest release | [Alpha 0.16 (`v0.1.0-alpha.16`)](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.16): first ISO with **EuroOffice**, direct download below the 2 GiB limit |
+| Previous releases | [Alpha 0.14](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.14) and [Alpha 0.15](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.15) (split ISO parts, older roster) |
 | Base | Artix Linux x86_64 with dinit |
 | Next milestone | System Beta 0.1: planned, not released, and undated |
 | Gaming qualification | Separate P5 track; not complete |
-| Alpha 12 ISO validation | [P0 build, QEMU graphical boot and installation](https://github.com/rufl/DINX/actions/runs/41197618617) passed; [release published](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12) |
-| Alpha 12 commit | `56a814575e33bfae6215993972784f11b7dae215`; [release workflow](https://github.com/rufl/DINX/actions/runs/41197618617) passed |
+## Morghulis — session shell
 
-## Next milestone: System Beta 0.1
+**Morghulis** is the DINX Wayland desktop shell for the River + KWM session. It is built on **Astal** with **GTK4/libadwaita** and compiles without **libgtop** (dropped from the Artix repos in 2026); uptime is read from `/proc/uptime` via a DINX patch.
 
+<<<<<<< HEAD
 Beta 0.1 is planned, with no release date set. The goal is to qualify the River/KWM/Morghulis session on dinit and the installation, update and recovery paths on a declared physical hardware matrix. Release requires physical network, audio, GPU/display and suspend testing, plus installation and recovery on disposable disks, signed updates and documented limits.
 
 The [GitHub release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) is **under 2 GiB** (`2,147,483,648` bytes); DINX has no smaller 1.8-billion-byte target. Alpha 12 is published as a direct ISO of 1,836,830,720 bytes, below that limit. Future ISOs must stay below it to publish as a direct asset. P5 gaming remains separate: Beta 0.1 will not claim support without real DRM, Steam, controller and audio tests. The session uses River/KWM/Morghulis with dinit, without systemd or UWSM.
 
 
 Alpha 12 is published as a direct GitHub release asset below the 2 GiB per-asset limit. Verify its matching `.iso.sha512` file before writing it to a USB drive.
+=======
+| Item | Status |
+|------|--------|
+| Pinned version | `0.14.0` (`MORGHULIS_VERSION` in `distro/packages/morghulis/source.env`) |
+| Source pin | `archive/refs/tags/v0.14.0.tar.gz` (tag archive, not the release asset; the published release asset has no `meson.build`) |
+| libgtop dependency | Made optional (`required: false`) and removed from runtime use |
+| ISO build | Passes P0 stage 60 (`dinx-build-timing package=morghulis exit_status=0`) |
+| Session role | Status bar (NavBar), runner, quick menu, OSD and power menu; KWM is built with `-Dbar=false` so its own bar is not used |
+| Bar anchor | Controlled by GSettings key `com.arkye.morghulis navbar-anchor`, written by the first-run wizard and reapplied on SIGHUP |
+| Theme fallback | `dinx-river-session` exports `DINX_COLOR_SCHEME=dark` and `DINTOR_THEME=prefer-dark` as recovery defaults |
 
+There is no package called "redbean" in the DINX tree; the session shell is **Morghulis** above.
+>>>>>>> main
+
+The [GitHub release-asset limit](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) is **2 GiB** (`2,147,483,648` bytes). ISOs above it use the split delivery (`.iso.part-*` + `.iso.parts.json`); the rolling direct-ISO alias only advances when a release qualifies with a single image below the limit. [Full criteria in the roadmap](docs/roadmap.md).
 
 ## Quick install
 
-1. Download the [latest alpha ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) and its [SHA-512 file](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
+1. Download the [latest direct ISO](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso) and its [SHA-512 file](https://github.com/rufl/DINX/releases/download/alpha-latest/dinx-latest-x86_64.iso.sha512).
 2. In the same directory, verify the file:
 
    ```bash
@@ -89,9 +136,23 @@ Alpha 12 is published as a direct GitHub release asset below the 2 GiB per-asset
    ```
 
 3. Write the verified ISO to the whole USB device — not a partition — and boot in UEFI mode.
+<<<<<<< HEAD
 4. The published Alpha 12 image opens directly in `River + KWM + Morghulis (DINX)`; it does not request a username or password. Installed login and Calamares autologin remain disabled.
+=======
+4. The live image opens directly in `River + KWM (DINX)`; it does not request a username or password. Installed login and Calamares autologin remain disabled.
+>>>>>>> main
 
 Read the [installation guide](docs/install.md) before touching a disk. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
+
+## Automation
+
+Five independent, concurrency-controlled automations (details in [Automation](docs/automation.md)):
+
+- **Upstream prefetch** (`upstream-cache-prefetch.yml`, 04:17/16:17 UTC): verified delta cache of Artix packages;
+- **Source refresh** (`upstream-package-refresh.yml`, 03:17 UTC): checksum-pinned updates (SHA-256 64 hex / BLAKE2b 128 hex) opened as PRs;
+- **Dependency audit** (`security-scan.yml`, 01:17 UTC + PR/push): SPDX SBOM + Grype/Trivy/OSV;
+- **Nightly ISO** (`p0-iso.yml`, 02:17 UTC): build + P0 gates + QEMU boot + disposable installation;
+- **EuroOffice refresh** (`eurooffice-refresh.yml`, every 3 days): dispatches the `office` branch pipeline, verifies `SHA256SUMS`, commits the pin and dispatches P0.
 
 ## Evidence and limits
 
@@ -101,6 +162,14 @@ Read the [installation guide](docs/install.md) before touching a disk. Windows F
 | Calamares BIOS/UEFI/Btrfs partition contracts | Secure Boot |
 | Disposable BIOS/UEFI installation, dinit first boot and recovery TTY | Authenticated Steam, commercial game, controller and PipeWire audio |
 | Compact ISO, checksums, metadata, attestation and signed repository | Suspend/resume, GPU recovery and installed-ISO upgrade/rollback |
+
+## REUSE and licensing
+
+**This repository is compliant with the [REUSE Specification 3.3](https://reuse.software/).** `reuse lint` passes with no errors: every file carries SPDX copyright and license information (`REUSE.toml` + texts in `LICENSES/`). DINX-owned entries are Apache-2.0; upstream components keep their own licenses (MIT, GPL-3.0-only, OFL-1.1-no-RFN, among others) declared per file.
+
+- [Licensing and REUSE](docs/licensing.md)
+- [GitHub source](https://github.com/rufl/DINX) · [Issues](https://github.com/rufl/DINX/issues) · [Releases](https://github.com/rufl/DINX/releases)
+- [Validation workflow](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml)
 
 ## Documentation
 
@@ -116,12 +185,3 @@ Read the [installation guide](docs/install.md) before touching a disk. Windows F
 - [Package, security and ISO automation](docs/automation.md)
 - [Licensing and REUSE](docs/licensing.md)
 - [Changelog](CHANGELOG.md)
-
-## Code, contracts and licensing
-
-This repository keeps the ISO profile, packages, desktop integrations, qualification checks and release tooling together. DINX-owned entries are licensed under Apache-2.0. The versioned Deetty upstream archive is separate source material under MIT; the DINX package and applications are Deetty and Dintor. The coverage is declared in `REUSE.toml` and the license texts are in `LICENSES/`.
-
-- [GitHub source](https://github.com/rufl/DINX)
-- [Issues](https://github.com/rufl/DINX/issues)
-- [Releases](https://github.com/rufl/DINX/releases)
-- [Validation workflow](https://github.com/rufl/DINX/actions/workflows/p0-iso.yml)

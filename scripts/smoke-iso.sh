@@ -106,7 +106,7 @@ wait_for_plymouth_splash() {
   done
   fail "centered DINX Plymouth splash not observed within ${plymouth_wait_seconds}s: ${checker_output}"
 }
-wait_for_first_run_client() {
+wait_for_session_client() {
   local path="$1"
   local reserve_seconds=5
   local wait_deadline
@@ -118,16 +118,20 @@ wait_for_first_run_client() {
   wait_deadline=$((qemu_started + timeout_seconds - reserve_seconds))
   while ((SECONDS < wait_deadline)); do
     if capture_screen "$path"; then
-      if checker_output=$("$script_dir/check_dinx_qemu_session.sh" "$path" first-run 2>&1); then
+      if checker_output=$("$script_dir/check_dinx_qemu_session.sh" "$path" session 2>&1); then
         printf 'smoke-iso: %s\n' "$checker_output"
         return 0
       fi
     else
-      checker_output='QEMU monitor rejected first-run screendump'
+      checker_output='QEMU monitor rejected session screendump'
     fi
     sleep 2
   done
+<<<<<<< HEAD
   fail "Morghulis first-run screen did not appear before the QEMU timeout: ${checker_output}"
+=======
+  fail "River session did not reach a graphical-ready screen before the QEMU timeout: ${checker_output}"
+>>>>>>> main
 }
 
 
@@ -244,12 +248,12 @@ if [[ "$monitor_ready" == true ]]; then
 
   if [[ -n "$screenshot_path" ]]; then
     sleep "$screenshot_delay"
-    wait_for_first_run_client "$screenshot_path"
+    wait_for_session_client "$screenshot_path"
     dump_status=0
     session_dump_status=0
   else
     sleep "$screenshot_delay"
-    wait_for_first_run_client "$session_screenshot_path"
+    wait_for_session_client "$session_screenshot_path"
     session_dump_status=0
   fi
 
@@ -325,9 +329,13 @@ session_check_screenshot=$session_screenshot_path
 if [[ -n "$post_screenshot_path" && -n "$post_keys" ]]; then
   session_check_screenshot=$post_screenshot_path
 fi
-"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" first-run
+"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" session
 "$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot"
 
 
+<<<<<<< HEAD
 printf 'smoke-iso: River/KWM/Morghulis session reached a graphical-ready screen within %ss\n' "$timeout_seconds"
+=======
+printf 'smoke-iso: River/KWM session reached a graphical-ready screen within %ss\n' "$timeout_seconds"
+>>>>>>> main
 printf 'smoke-iso: serial log: %s\n' "$log_path"

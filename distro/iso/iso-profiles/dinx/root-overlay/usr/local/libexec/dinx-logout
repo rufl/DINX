@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+
+# Morghulis runs inside the River session wrapper. Terminating that wrapper lets
+# greetd reap the session and present agreety again; elogind's user termination
+# does not reliably reach this dinit-managed process tree.
+pid=${DINX_SESSION_COMPOSITOR_PID:-}
+case "$pid" in
+  ''|*[!0-9]*) pid= ;;
+esac
+if [ -n "$pid" ] && [ "$pid" != "$$" ] && kill -0 "$pid" 2>/dev/null; then
+  kill -TERM "$pid"
+  exit 0
+fi
+
+if command -v loginctl >/dev/null 2>&1; then
+  if [ -n "${XDG_SESSION_ID:-}" ]; then
+    loginctl terminate-session "$XDG_SESSION_ID" && exit 0
+  fi
+  if [ -n "${USER:-}" ]; then
+    loginctl terminate-user "$USER" && exit 0
+  fi
+fi
+
+printf '%s\n' 'dinx-logout: no managed session was found' >&2
+exit 1

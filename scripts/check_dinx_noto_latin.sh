@@ -67,9 +67,9 @@ fi
 jq -e '
   [.groups[].packages[]] | index("dinx-noto-latin") != null and index("noto-fonts") == null
 ' "$groups" >/dev/null || fail 'feature groups do not select only the DINX subset package'
-grep -Fq 'pacman_retry -S --needed --noconfirm python-fonttools' "$builder" \
+grep -Fq 'pacman_sync_install python-fonttools' "$builder" \
   || fail 'ISO builder does not install the font subsetting tool'
-fonttools_line=$(grep -nF 'pacman_retry -S --needed --noconfirm python-fonttools' "$builder" | cut -d: -f1)
+fonttools_line=$(grep -nF 'pacman_sync_install python-fonttools' "$builder" | cut -d: -f1)
 package_line=$(grep -nF 'build_package dinx-noto-latin' "$builder" | cut -d: -f1)
 (( fonttools_line < package_line )) || fail 'font subsetting tool is installed after package build'
 grep -Fq 'build_package dinx-noto-latin' "$builder" || fail 'ISO package repository does not build the subset package'

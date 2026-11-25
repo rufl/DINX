@@ -16,7 +16,11 @@ cat > "$tmp/bin/pacman" <<'EOF'
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
 if [ "$1" = -Q ]; then
   case "$2" in
+<<<<<<< HEAD
     dinit|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|mission-center|turnstile|river|kwm|morghulis|pcmanfm|audionaut) exit 0 ;;
+=======
+    dinit|pcmanfm|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|octopi|river|kwm|kwim|morghulis) exit 0 ;;
+>>>>>>> main
   esac
 fi
 exit 1
@@ -28,7 +32,11 @@ printf '%s\n' "$*" >> "$DINX_DOCTOR_DINIT_LOG"
 [ "$1" = --user ] && [ "$2" = list ]
 EOF
 
+<<<<<<< HEAD
 for command in dinitui dinxpanel river kwm morghulis redbean pcmanfm audionaut pori wdisplays shikane shikanectl udisksctl tuigreet; do
+=======
+for command in dinitui dinxpanel agreety river kwm kwim morghulis pcmanfm pori wdisplays shikane shikanectl udisksctl octopi; do
+>>>>>>> main
   : > "$tmp/bin/$command"
 done
 chmod +x "$tmp/bin/pacman" "$tmp/bin/dinitctl" "$tmp/bin"/*
@@ -47,8 +55,13 @@ for required in \
   'mode=read-only' \
   'session.default=river+kwm+morghulis' \
   'storage.ntfs3_write=kernel-driver' \
+<<<<<<< HEAD
   'package.mission-center=installed' \
   'package.turnstile=installed' \
+=======
+  'package.river=installed' \
+  'package.kwm=installed' \
+>>>>>>> main
   'package.transactions=not-run' \
   'network.access=not-run'; do
   grep -Fqx "$required" <<<"$report" || {

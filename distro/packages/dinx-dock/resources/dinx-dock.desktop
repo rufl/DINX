@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+[Desktop Entry]
+Type=Application
+Name=DINX Dock
+Name[pt_BR]=DINX Dock
+Comment=DINX layer-shell dock for the River desktop
+Comment[pt_BR]=Dock layer-shell do DINX para a área de trabalho River
+Exec=dinx-dock
+TryExec=dinx-dock
+Icon=org.dinx.Dock
+Terminal=false
+NoDisplay=true
+StartupNotify=false

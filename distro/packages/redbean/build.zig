@@ -13,7 +13,10 @@ pub fn build(b: *std.Build) void {
     });
     const c_include_paths = [_][]const u8{
         "/usr/include/gtk4-layer-shell",
+<<<<<<<< HEAD:distro/packages/redbean/build.zig
         "/usr/include/astal-apps",
+========
+>>>>>>>> main:distro/packages/dinx-dock/build.zig
         "/usr/include/gtk-4.0",
         "/usr/include/gio-unix-2.0",
         "/usr/include/pango-1.0",
@@ -41,6 +44,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
     });
     module.addImport("c", c_module);
+<<<<<<<< HEAD:distro/packages/redbean/build.zig
     const exe = b.addExecutable(.{ .name = "redbean", .root_module = module });
     exe.root_module.addIncludePath(.{ .cwd_relative = "/usr/include/astal" });
     exe.root_module.linkSystemLibrary("gtk4", .{});
@@ -53,6 +57,15 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
 
     const run_step = b.step("run", "Run the Redbean shell");
+========
+    const exe = b.addExecutable(.{ .name = "dinx-dock", .root_module = module });
+    exe.root_module.addIncludePath(.{ .cwd_relative = "/usr/include/gtk4-layer-shell" });
+    exe.root_module.linkSystemLibrary("gtk4", .{});
+    exe.root_module.linkSystemLibrary("gtk4-layer-shell", .{});
+    b.installArtifact(exe);
+
+    const run_step = b.step("run", "Run DINX Dock");
+>>>>>>>> main:distro/packages/dinx-dock/build.zig
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.addPassthruArgs();
     run_step.dependOn(&run_cmd.step);

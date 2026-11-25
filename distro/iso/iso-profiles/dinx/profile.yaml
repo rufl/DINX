@@ -34,8 +34,17 @@ rootfs:
     - mission-center
     - river
     - kwm
+<<<<<<< HEAD
     - morghulis
     - redbean
+=======
+    - kwim
+    - morghulis
+    - dinx-dock
+    - dinx-first-run
+    - greetd-agreety
+    - pcmanfm
+>>>>>>> main
     - e2fsprogs
     - efibootmgr
     - elogind
@@ -44,26 +53,35 @@ rootfs:
     - fish
     - file-roller
     - flatpak
-    - fwupd
     - fuse2
+    - galculator
     - gparted
     - pixelorama
     - paintfe
     - blender
     - godot
+    - blender
     - libva
+<<<<<<< HEAD
     - pcmanfm
     - pori
     - greetd
     - greetd-tuigreet
+=======
+    - pori
+    - greetd
+    - fwupd
+>>>>>>> main
     - linux-firmware-amdgpu
     - linux-firmware-intel
+    - linux-firmware-radeon
     - mesa
     - networkmanager
     - vulkan-radeon
     - vulkan-swrast
     - vulkan-tools
     - nano
+    - tinyxxd
     - deetty
     - ghostty-vt-runtime
     - qt6-wayland
@@ -72,11 +90,22 @@ rootfs:
     - wdisplays
     - krita
     - adw-gtk-theme
+    - dinx-gtk-themes
     - papirus-icon-theme
+<<<<<<< HEAD
     - dconf
     - gsettings-desktop-schemas
     - dinx-noto-latin
     - firefox
+=======
+    - firefox
+    - paintfe
+    - eurooffice
+    - inkscape
+    - dconf
+    - gsettings-desktop-schemas
+    - dinx-noto-latin
+>>>>>>> main
     - pipewire
     - pipewire-pulse
     - zenity
@@ -97,9 +126,9 @@ rootfs:
     - brightnessctl
     - dialog
     - fzf
-    - glances
     - libnewt
     - openssh
+    - sudo
     - patchy
     - procps-ng
     - sqlite
@@ -109,26 +138,22 @@ rootfs:
     - python-psutil
     - curl
     - git
-    - galculator
     - firewalld
     - firewall-config
-    - opensnitch
     - inxi
-    - inkscape
     - jq
     - less
     - nm-connection-editor
     - nvtop
+    - octopi
+    - pacman-contrib
     - paru
     - pciutils
     - pwvucontrol
     - rsync
-    - sane
-    - shelly
     - gapless
     - audionaut
     - swayimg
-    - topgrade
     - swayidle
     - swaylock
     - wlopm
@@ -152,7 +177,6 @@ rootfs:
       - artix-live-dinit
       - firewalld-dinit
       - dinx-firewalld-dinit
-      - opensnitch-dinit
 livefs:
   packages:
     - artix-grub-live
@@ -166,7 +190,6 @@ livefs:
       - elogind-dinit
       - firewalld-dinit
       - dinx-firewalld-dinit
-      - opensnitch-dinit
       - pipewire-dinit
       - pipewire-pulse-dinit
       - wireplumber-dinit

@@ -17,7 +17,7 @@ Do not use the ISO on a machine containing data that you cannot restore. The liv
 ## Requirements
 
 - x86_64 computer or virtual machine;
-- UEFI firmware is recommended;
+- UEFI firmware is recommended; legacy BIOS/MBR machines boot the same image through its hybrid MBR;
 - a USB drive of at least 4 GB; writing the image erases the whole drive;
 - at least 4 GB RAM recommended for hardware testing. The CI smoke test uses 2 GB, but that is not a supported hardware minimum;
 - a second device or existing system from which to download and verify the image;
@@ -147,18 +147,23 @@ Use a trusted image writer such as Rufus. Select the verified ISO and the correc
 
 1. Insert the USB.
 2. Reboot and open the one-time boot menu (`F12`, `F11`, `Esc` or the vendor-specific key).
-3. Select the UEFI entry for the USB.
+3. Select the UEFI entry for the USB, or the plain/legacy USB entry on BIOS-only machines (for example older notebooks such as the HP dm1 with an AMD E-350); the hybrid MBR boots the same GRUB menu.
 4. If the firmware refuses the image, disable Secure Boot for this test; the current alpha does not provide a signed Secure Boot path.
-5. The published Alpha 12 image starts directly in `Aqueous + Pearl (DINX)`; no live username or password prompt is required.
+5. The current main image starts directly in `River + KWM (DINX)`; no live username or password prompt is required. The published Alpha 12 predates this session stack and is not covered by this step.
 
-The live ISO opens the disposable `dinx` account directly in `Aqueous + Pearl (DINX)`. This is live-only; installed login and Calamares autologin remain disabled. Anyone who can boot the ISO already controls the live machine; never reuse the public `dinx` password elsewhere.
+The live ISO opens the disposable `dinx` account directly in `River + KWM (DINX)`. This is live-only; installed login and Calamares autologin remain disabled. Anyone who can boot the ISO already controls the live machine; never reuse the public `dinx` password elsewhere.
 
-Once the desktop appears, the tested graphical state is Aqueous/Pearl. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
-Pearl is the active shell. The static DINX theme is applied through the checked-in GTK/Qt bridges; Pearl Greeter reads `/etc/pearl/greeter.json`, uses the GTK DINX theme and forces the Aqueous/Pearl entry without X11 or UWSM.
+Once the desktop appears, the tested graphical state is River/KWM. Network, audio, GPU acceleration, suspend/resume and recovery TTY remain hardware-dependent validation areas.
+River is the active compositor and KWM the active window manager. The static DINX theme is applied through the checked-in GTK/Qt bridges; the installed greeter is agreety under greetd, running as the `greeter` account with `command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"`, with no greeter JSON file and without X11 or UWSM.
 
+<<<<<<< HEAD
 Aqueous draws the titlebar outside client content, with the frame border continuing around both. Double-click an empty titlebar area to toggle maximize/restore; restore returns the saved floating geometry, keeps the window focused and raises it above other windows. Set **Aqueous window corner radius** in Pearl Settings; Aqueous reads the saved value at the next session start. Vulkan-effects rendering applies rounded corners; the CPU compatibility compositor stays square.
 PCManFM is the default directory handler and file manager. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane inside River/KWM/Morghulis. `Mission Center` and `Seafoam Settings` are bundled in the signed base ISO; `zls` is available as an optional package for Zig projects.
 ZLS remains an optional package: when installed, completion and navigation use the matching `lib/std` tree through `/usr/lib/zls/zig-env`; a full Zig compiler is optional and is not part of the ISO payload.
+=======
+KWM tiles by default; users edit `~/.config/kwm/config.zon`, which `dinx-river-session` seeds from the packaged `/etc/xdg/kwm/config.zon` only when the file is absent, so their changes survive later boots. River and KWM negotiate `xdg-decoration`: server-side-decorated windows get the compositor's own decoration, and clients that keep their own decorations are not decorated twice. The fixed `:minimize,maximize,close` layout applies to client-side-decorated toolkits.
+PCManFM is the default directory handler and file manager, and it renders the `~/Desktop` icons through `pcmanfm --desktop`. File Roller provides graphical actions to open, create and extract archives. GParted edits partitions outside the installation flow. Pori is the storage surface for inspecting disks and creating persistent mount services; it uses UDisks2 for discovery and dinit for service lifecycle. The base ISO includes DINX's `dinx-wdisplays` wrapper for interactive Wayland output configuration; closing it saves the current layout as the `DINX wdisplays` profile and reloads Shikane, which starts inside the River/KWM session and reapplies matching profiles. Dintor is the bundled Zig editor. River and KWM are the only selectable session components.
+>>>>>>> main
 
 ### Optional BC-250 support
 
@@ -166,7 +171,7 @@ The Alpha 12 generic ISO excludes the BC250 Control Center and Cyan Skillfish go
 
 ```bash
 if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
-  sudo pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
+  pkexec pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
 else
   printf 'PCI 1002:13fe not detected; BC-250 packages were not installed.\n' >&2
   exit 1
@@ -185,17 +190,20 @@ ZLS/Zig 0.16 coupled pins remain manual. Merged package changes use a separate
 signed package-only workflow; they do not trigger P0 ISO assembly. The workflows
 are configured but are not yet confirmed green or published.
 
-Once `dinx-keyring` is available, install it and update through Shelly:
+Once `dinx-keyring` is available, install it and update through pacman and Octopi:
 
 ```bash
-sudo pacman -Syu --needed dinx-keyring
-shelly sync
+pkexec pacman -Syu --needed dinx-keyring
+checkupdates
+paru -Qu
 ```
 
-Then run `shelly sync`, review updates with `shelly list-updates all`, and apply
-them with `shelly upgrade all`; `sudo pacman -Syu` is the direct alternative.
-Shelly delegates package operations to pacman, which requires valid signatures
-for the `[dinx]` repository.
+`checkupdates` (from `pacman-contrib`) lists pending official-repository updates
+and `paru -Qu` lists the AUR side; both are read-only. Apply updates interactively
+in **Octopi**, launched from DINXPanel's `Package manager` button or from the dock,
+or run `pkexec pacman -Syu` in the terminal. Octopi has no command-line interface.
+DINX ships no sudo, so Octopi elevation goes through `pkexec` and polkit with
+`lxqt-policykit-agent`. pacman requires valid signatures for the `[dinx]` repository.
 
 For bootstrap when the rolling repository is published but `dinx-keyring` is
 not yet available, follow the manual public-key verification and repository
@@ -208,7 +216,7 @@ mirrorlist is editable for future mirrors.
 
 From the live desktop:
 
-1. Open the **Install DINX** desktop shortcut or choose **Install DINX** from the application launcher; the duplicate upstream Calamares entry is hidden.
+1. Open the **Install DINX** desktop shortcut or choose **Install DINX** from the application launcher; the duplicate upstream Calamares entry is hidden. On the live DINX desktop, the package-owned shortcut is executable and approved before the session starts, so first launch requires no separate “Allow launching” step.
 2. If neither shortcut is available, run `/usr/local/libexec/dinx-installer` from a terminal in the live desktop session; it preserves the Wayland/D-Bus session for polkit, checks prerequisites and displays authorization or startup errors.
 3. Read **Install choices / Opções de instalação** before choosing partitions.
 4. Choose the layout that matches your intent:
@@ -217,7 +225,7 @@ From the live desktop:
    - **Replace a partition** erases the selected partition. **Manual partitioning** is for advanced users; it requires `/` and, in UEFI, a FAT32 EFI partition mounted at `/boot/efi`.
 5. Swap is optional. The default is no swap; DINX installs and boots without a swap partition.
 6. Review the target disk, firmware mode, mount points and planned changes on the summary page before confirming.
-7. For advanced storage operations, open **Pori** from the Pearl launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
+7. For advanced storage operations, open **Pori** from the application launcher. It discovers block devices through UDisks2 and persists user-selected mounts as dinit services under `/etc/dinit.d`; use **GParted** to edit partitions outside Calamares, **File Roller** to work with archives, `dinx-wdisplays` for interactive output setup and automatic Shikane profile persistence.
 8. Keep the ISO/USB connected until the installer finishes. The first profile supports ext4 and btrfs; the installer copies its root filesystem offline.
 
 The current DINX root filesystem occupies about 7 GiB installed. For VirtualBox, use a virtual disk of at least 16 GiB and leave free storage on the host for the virtual disk file. A small target or a full host can make Calamares fail while copying the root filesystem; rsync exit code 11 means a file-I/O error, not one specific cause.
@@ -232,7 +240,7 @@ dinitctl status greetd
 dinitctl restart greetd
 ```
 
-Deetty is the sole terminal emulator in the live ISO and fresh installation. The live and installed sessions set `$TERMINAL` to `deetty`; Nano remains available as a recovery editor. Pearl Greeter is a greetd login surface, not a user-session configuration.
+Deetty is the sole terminal emulator in the live ISO and fresh installation. The live and installed sessions set `$TERMINAL` to `deetty`; Nano remains available as a recovery editor. agreety is the greetd login surface, not a user-session configuration.
 
 To record the system state without changing it, run:
 
@@ -249,12 +257,12 @@ The report uses the `dinx-doctor/v1` schema and marks unavailable capabilities a
 ### Supported by the current smoke evidence
 
 - x86_64 boot path in QEMU;
-- Pearl Greeter payload and greetd configuration;
-- graphical login into the Aqueous/Pearl session;
-- Pearl startup;
+- agreety login surface and greetd configuration;
+- graphical login into the River/KWM session;
+- River 0.5 startup through the DINX session supervisor, including required KWM startup and KWM-managed KWIM input;
 - presence of the expected dinit, network, PipeWire and portal payloads in the ISO;
 - Windows-style GPT side-by-side and manual-layout transaction smoke: existing FAT32 ESP/Microsoft boot files and NTFS partition remain intact while DINX root, fstab and GRUB data are added;
-- presence of the Calamares offline-install configuration, Pori, Phyto and the kernel `ntfs3` storage path;
+- presence of the Calamares offline-install configuration, Pori, PCManFM and the kernel `ntfs3` storage path;
 
 ### Not production-supported yet
 
@@ -275,11 +283,23 @@ installer path and remaining gates are tracked in the [architecture decision](ar
 
 Verify that the checksum passed, the image was written to the whole device, the firmware is in UEFI mode and the USB is visible in `lsblk`/`diskutil`. Try another port or drive.
 
+### The boot stalls with `No irq handler for vector`
+
+Old legacy-BIOS chipsets (AMD E-350 "Zacate" and similar pre-2012 notebooks, such as the HP dm1) can stop early at `do_IRQ: 1.55 No irq handler for vector`. The GRUB menu itself booted through the hybrid MBR; the kernel needs the legacy interrupt workaround. Reboot and choose `Start DINX Linux (compatibility)`, which adds `noapic irqpoll`. If a black screen follows, see below. The text-mode recovery TTY (`Ctrl+Alt+F2`/`F3`) remains available if the frame buffer still fails.
+
+### Black screen even after choosing `Start DINX Linux (compatibility)`
+
+When the screen stays black after `noapic irqpoll` fixes the interrupt stall, the GPU modeset or the Plymouth splash is the remaining suspect (common on pre-2012 integrated graphics such as the Radeon HD 6310 in the HP dm1). Boot order:
+
+1. `Start DINX Linux (verbose boot)` — prints the full kernel console instead of a splash, showing exactly where boot stops. Note the last lines.
+2. `Start DINX Linux (safe graphics)` — adds `nomodeset plymouth.enable=0` and runs the session in text mode, bypassing the modeset hang.
+3. If (2) works, keep it: after installing, set the same parameters permanently with `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash noapic irqpoll nomodeset plymouth.enable=0"` in `/etc/default/grub`, then `pkexec grub-mkconfig -o /boot/grub/grub.cfg`.
+
 ### The screen is blank
 
-Aqueous selects a graphics profile from each accessible DRM render node's sysfs driver, not DRM card order. QEMU `virtio_gpu`/virgl uses `aqueous-cpu` with wlroots GLES2 when its render node is readable and writable; GTK4 chooses its renderer automatically. The current source routes VirtualBox VMSVGA (`vmwgfx`), legacy `vboxvideo` and systems without an accessible render node through full Aqueous with `WLR_RENDERER=vulkan` and `GSK_RENDERER` unset, matching Devario's Vulkan-only wlroots renderer policy. `vulkan-swrast` is packaged for software Vulkan. QXL and other 2D adapters retain the CPU compatibility profile when a render node is present. P0/local tests default VGA and Virtio-VGA. QEMU 11.1.2/KVM's `vmware-svga` path stalls in early udev with `vmwgfx` loaded; this QEMU-specific failure is not evidence about real VirtualBox. Direct VBox and physical-machine checks remain outstanding.
+`dinx-graphics-profile` selects a graphics profile from each accessible DRM render node's own sysfs driver, not DRM card order, and `dinx-river-session` applies it through `dinx_apply_graphics_environment`. QEMU `virtio_gpu`/virgl selects `virtual-gl` (`WLR_RENDERER=gles2`) when its render node is readable and writable. VirtualBox VMSVGA (`vmwgfx`) and legacy `vboxvideo` select `cpu` (`WLR_RENDERER=pixman`) when an accessible render node identifies them, because VirtualBox's llvmpipe Vulkan device can fail DRM-device matching. Systems without an accessible render node, including QEMU default VGA with `bochs-drm`, select `cpu` (`WLR_RENDERER=pixman`); QXL and other 2D render nodes (`qxl`, `bochs`, `simpledrm`, `cirrus`) also select `cpu`. Any other driver keeps the `hardware` profile with no compositor override. `GSK_RENDERER` remains unset so GTK4 chooses its renderer automatically.
 
-The supplied VirtualBox 7.2.22/Windows 11 log reports VT-x unavailable and Hyper-V NEM “Snail execution mode”; this is a slower execution path, not a guest graphics result. It does not prove whether Pearl appeared or why the VM stopped, and lists an Alpha 12 ISO plus a VDI named Alpha 0.10 without a verified ISO checksum or confirmed boot source. Treat it as unqualified; repeat with a fresh VM, exact ISO SHA-512 and no stale VDI attached during live boot.
+The supplied VirtualBox 7.2.22/Windows 11 log reports VT-x unavailable and Hyper-V NEM “Snail execution mode”; this is a slower execution path, not a guest graphics result. It does not prove whether the desktop appeared or why the VM stopped, and lists an Alpha 12 ISO plus a VDI named Alpha 0.10 without a verified ISO checksum or confirmed boot source. Treat it as unqualified; repeat with a fresh VM, exact ISO SHA-512 and no stale VDI attached during live boot.
 
 
 ### Graphics, drivers and media
@@ -294,15 +314,18 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /path/to/dinx.iso
 ```
 
-For VirtualBox, qualify the exact SHA-512-verified rebuilt ISO in a fresh disposable VM. Use VMSVGA and test 3D acceleration disabled and enabled as separate cases. The current source uses full Aqueous with `WLR_RENDERER=vulkan` for `vmwgfx`/`vboxvideo` and no-render-node systems; this differs from Alpha 12's published ISO. Record firmware and VM settings, confirm live boot reaches Pearl and Aqueous, and save the VBox log and screen captures. Do not attach an older system VDI during the live-media test. For installer testing, use a new disposable virtual disk, eject the ISO after installation, then boot that disk and record the installed-session result. QEMU Virtio-VGA is a separate graphics smoke, not a VirtualBox pass. Hyper-V/NEM can make VirtualBox very slow; do not disable Memory Integrity or other host security protections to improve benchmark speed.
+For VirtualBox, qualify the exact SHA-512-verified rebuilt ISO in a fresh disposable VM. Use VMSVGA and test 3D acceleration disabled and enabled as separate cases. The current source selects the `vulkan` profile with `WLR_RENDERER=vulkan` for `vmwgfx`/`vboxvideo` and no-render-node systems; this differs from Alpha 12's published ISO. Record firmware and VM settings, confirm live boot reaches the River/KWM desktop, and save the VBox log and screen captures. Do not attach an older system VDI during the live-media test. For installer testing, use a new disposable virtual disk, eject the ISO after installation, then boot that disk and record the installed-session result. QEMU Virtio-VGA is a separate graphics smoke, not a VirtualBox pass. Hyper-V/NEM can make VirtualBox very slow; do not disable Memory Integrity or other host security protections to improve benchmark speed.
 
 For real hardware, use the device matrix and report procedure in [DINX hardware qualification](alpha7-qualification.md). Verify the exact ISO checksum and record machine role, firmware, GPU and each observed result; use a disposable external disk for installation tests. CI/QEMU and VirtualBox evidence do not substitute for the physical display, input, audio, networking, suspend/resume, brightness and GPU checks.
 
-DINX also ships SANE's `scanimage` backend for scanner access, `fwupdmgr`
+DINX also ships `fwupdmgr`
 for explicit firmware metadata and update discovery, Flatpak for user-selected
-application sources, and Impasto as the image editor. Impasto is a version-pinned
-upstream AppImage with bundled GTK and preserved license notices; it launches
-without FUSE. Swayimg remains the default image viewer.
+application sources, and PaintFE as the image editor, alongside Krita, Inkscape,
+Pixelorama and Patchy. PaintFE is a checksum-pinned upstream AppImage repacked
+into a pre-extracted `/opt/paintfe/` tree, so it needs no FUSE. Audionaut, the
+multitrack audio editor and recorder, ships as a single AppImage run with
+`--appimage-extract-and-run`, and Blender is the 3D creation suite. Swayimg
+remains the default image viewer.
 
 ### Optional gaming stack
 
@@ -318,7 +341,7 @@ The Alpha 12 generic ISO excludes Gamescope, Steam, GameMode, MangoHud, Steam de
 2. Install the optional gaming packages:
 
    ```bash
-   sudo pacman -Syu --needed \
+   pkexec pacman -Syu --needed \
      gamescope gamemode mangohud steam steam-devices \
      lib32-gamemode lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers
    ```
@@ -338,7 +361,7 @@ offline ISO payload.
 
 ### The live session does not open
 
-The expected path is direct autologin into `dinx`/`Aqueous + Pearl (DINX)`. If Pearl Greeter appears, it should already show only the forced `Aqueous + Pearl (DINX)` entry; capture the workflow commit and hardware details if the session does not start. Do not try random credentials.
+The expected path is direct autologin into `dinx`/`River + KWM (DINX)`. If the agreety login screen appears instead of the live autologin, it must offer only `River + KWM (DINX)`; capture the workflow commit and hardware details if the session does not start. Do not try random credentials.
 
 ### The checksum fails
 

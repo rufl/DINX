@@ -8,17 +8,39 @@ source_env="$startdir/source.env"
 : "${MORGHULIS_SOURCE_URL:?missing MORGHULIS_SOURCE_URL}"
 : "${MORGHULIS_SOURCE_SHA256:?missing MORGHULIS_SOURCE_SHA256}"
 pkgver="$MORGHULIS_VERSION"
-pkgrel=1
+pkgrel=3
 pkgdesc='Wayland GTK4 desktop shell for the DINX River/KWM session'
 arch=('x86_64')
 url="$MORGHULIS_REPOSITORY"
 license=('MIT')
 depends=('astal' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'libadwaita'
-         'gsound' 'json-glib' 'libgtop' 'libnm' 'libportal')
+         'gsound' 'json-glib' 'libnm' 'libportal')
 makedepends=('meson' 'ninja' 'vala' 'blueprint-compiler' 'dart-sass'
              'gobject-introspection' 'glib2-devel')
-source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL")
-sha256sums=("$MORGHULIS_SOURCE_SHA256")
+# Two shell features degrade instead of failing when their helper is absent:
+# ScreenRecord shells out to `wl-screenrec` and the NavBar tag scroller shells
+# out to `river-shifttags`. Neither is packaged by Artix, and both log a warning
+# and disable only that feature, so they stay optional rather than blocking the
+# session. Install them separately to enable screen recording and tag scrolling.
+optdepends=('wl-screenrec: screen recording from the shell'
+            'river-shifttags: scroll through river tags from the NavBar')
+source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL" "morghulis-dinx-power.patch" "morghulis-dinx-no-libgtop.patch")
+sha256sums=("$MORGHULIS_SOURCE_SHA256" '64fbc888d37fed708baa851c1de076c33236f545837e1a1e7eb3dd64ef06fb99' 'e33a274296c189be5d242ff49e89832f15c794e4ce9386a2e35fd48504515e76')
+prepare() {
+  cd "$srcdir/morghulis-$pkgver"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-power.patch"
+  # Make libgtop optional (removed from Artix repos in 2026)
+  sed -i "s/dependency('libgtop-2.0')/dependency('libgtop-2.0', required: false)/" src/meson.build
+  # Drop the GTop dependency (libgtop removed from Artix repos in 2026); report
+  # uptime from /proc/uptime instead so morghulis builds without libgtop.
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-no-libgtop.patch"
+  # Exclude SysInfoCmd and SysInfoItem from the build
+  sed -i "/'SysInfoCmd.vala',/d" src/Runner/Commands/meson.build
+  sed -i "/'SysInfoItem.vala',/d" src/Runner/Commands/meson.build
+  # Remove SysInfoItem reference from Main.vala
+  sed -i "/typeof(SysInfoItem).ensure();/d" src/Main.vala
+  sed -i 's/new SysInfo()/new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0)/' src/Runner/Runner.vala
+}
 
 build() {
   cd "$srcdir/morghulis-$pkgver"

@@ -1,3 +1,5 @@
+# P0 trigger: force workflow dispatch via path-match
+# P0 full build trigger: 2026-11-18-3
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -114,6 +116,26 @@ trap finish EXIT
                   "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
               export PATH="$zig_root:$PATH"
               printf "zig_version=%s\n" "$(zig version)"
+<<<<<<< HEAD
+=======
+              # Zig 0.16 is required by phyto, dome, kwm and kwim. The pin
+              # lives here rather than in a package's source.env because it is
+              # a builder toolchain, not a package source.
+              zig016_version=0.16.0
+              zig016_archive="zig-x86_64-linux-${zig016_version}.tar.xz"
+              zig016_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00
+              zig016_archive_path="$toolchain_cache/$zig016_archive"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-download.sh \
+                  "$zig016_archive_path" \
+                  "https://ziglang.org/download/${zig016_version}/${zig016_archive}" \
+                  "$zig016_sha256"
+              zig016_root="$toolchain_extraction_cache/zig-${zig016_version}-${zig016_sha256}"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-extract.sh \
+                  "$zig016_archive_path" "$zig016_sha256" \
+                  "$zig016_version" zig "$zig016_root"
+>>>>>>> main
               printf 'dinx-build-timing phase=toolchain-setup elapsed_seconds=%s exit_status=0\n' \
                 "$((SECONDS - toolchain_started))"
 
@@ -239,7 +261,11 @@ trap finish EXIT
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 local -a package_archives=()
                 case "$package_name" in
+<<<<<<< HEAD
                   dinitui|dinxpanel)
+=======
+                  dinitui|dinxpanel|dinx-dock|dinx-first-run)
+>>>>>>> main
                     # These packages build directly from checked-in source trees.
                     ;;
                   *)
@@ -253,7 +279,13 @@ trap finish EXIT
                 if [[ "$package_name" == cyan-skillfish-governor-smu ]]; then
                   extra_env+=(CARGO_BUILD_JOBS=1)
                 fi
+<<<<<<< HEAD
                 if [[ "$package_name" == pori ]]; then
+=======
+                if [[ "$package_name" == kwm || "$package_name" == kwim ]]; then
+                  extra_env+=("ZIG=$zig016_root/zig")
+                elif [[ "$package_name" == pori ]]; then
+>>>>>>> main
                   extra_env+=("ZIG=$zig_root/zig")
                 elif [[ "$package_name" == kwim || "$package_name" == kwm ]]; then
                   extra_env+=("ZIG=$kwm_zig_root/zig")
@@ -378,7 +410,7 @@ trap finish EXIT
               icon_png=/usr/share/icons/hicolor/128x128/apps/org.dinx.Dintor.png
               tar -xOf \
                 "/workspace/distro/packages/deetty/deetty-${DEETTY_VERSION}.tar.gz" \
-                "deetty-${DEETTY_VERSION}/resources/com.noctty.NoctEd.svg" \
+                "deetty-${DEETTY_VERSION}/resources/com.deetty.NoctEd.svg" \
                 > "$icon_svg"
               mkdir -p "$(dirname "$icon_png")"
               rsvg-convert -w 128 -h 128 -o "$icon_png" "$icon_svg"
@@ -398,12 +430,7 @@ trap finish EXIT
               build_package turnstile
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
-              build_package topgrade
               build_package paru
-              build_package shelly
-              pacman_install_local \
-                "$package_repo"/topgrade-*.pkg.tar.zst \
-                "$package_repo"/shelly-*.pkg.tar.zst
               build_package dinitui
               pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst
               DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh
@@ -421,6 +448,7 @@ trap finish EXIT
               pacman_install_local "$package_repo"/dinxpanel-*.pkg.tar.zst
               build_package shikane
               pacman_install_local "$package_repo"/shikane-*.pkg.tar.zst
+<<<<<<< HEAD
               pacman_retry -S --needed --noconfirm wdisplays qt6ct
               build_package kwim
               build_package kwm
@@ -430,10 +458,28 @@ trap finish EXIT
               pacman_retry -S --needed --noconfirm \
                 vala gobject-introspection glib2-devel dart-sass json-glib \
                 networkmanager wireplumber gsound libportal libgtop
+=======
+              pacman_sync_install wdisplays qt6ct
+              build_package kwm
+              build_package kwim
+              pacman_install_local \
+                "$package_repo"/kwm-*.pkg.tar.zst \
+                "$package_repo"/kwim-*.pkg.tar.zst
+              # Morghulis desktop shell chain. Each step is installed locally before the
+              # next builds, because astal-tray resolves appmenu-glib-translator and
+              # Morghulis resolves the astal libraries through pkg-config at build time.
+              # blueprint-compiler is not in the builder image manifest and makepkg runs
+              # --nodeps, so morghulis would fail at meson setup without it here.
+              pacman_sync_install \
+                vala gobject-introspection glib2-devel dart-sass json-glib \
+                networkmanager wireplumber gsound libportal \
+                blueprint-compiler
+>>>>>>> main
               build_package appmenu-glib-translator
               pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst
               build_package astal
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
+<<<<<<< HEAD
               build_package redbean
               pacman_install_local "$package_repo"/redbean-*.pkg.tar.zst
               build_package morghulis
@@ -442,18 +488,71 @@ trap finish EXIT
               pacman_install_local "$package_repo"/zls-*.pkg.tar.zst
               ZLS_BIN=/usr/bin/zls scripts/smoke_zls.sh
               pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good
+=======
+              build_package morghulis
+              pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
+              build_package mission-center
+              pacman_install_local "$package_repo"/mission-center-*.pkg.tar.zst
+              # Octopi is a Qt6/CMake package not available from Artix. Its build
+              # toolchain is fetched explicitly because makepkg runs --nodeps, so
+              # makedepends are not resolved from the PKGBUILD.
+              pacman_sync_install \
+                cmake ninja qt6-tools qt6-5compat qt6-multimedia qt6-svg \
+                qtermwidget pacman-contrib
+              build_package octopi
+              pacman_install_local "$package_repo"/octopi-*.pkg.tar.zst
+              # Blender packages are generated on the blender branch and pinned on main.
+              # Bootstrap builds keep the old source recipe until the first generated
+              # release has been published and pinned.
+              blender_stage_dir=$(scripts/lib/stage-blender.sh)
+              if [[ -n "$blender_stage_dir" ]]; then
+                blender_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
+                blender_full_package=$(awk -F= '$1 == "full_package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
+                cp -- "$blender_stage_dir/$blender_package" "$blender_stage_dir/$blender_full_package" "$package_repo/"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_package"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$blender_full_package"
+                pacman_install_local "$package_repo/$blender_package"
+                printf 'dinx-build-timing phase=blender-staged lean=%s full=%s\n' \
+                  "$blender_package" "$blender_full_package"
+              else
+                pacman_sync_install \
+                  alembic boost boost-libs bullet bzip2 ceres-solver cmake cython draco \
+                  eigen fftw fmt freetype2 fribidi gmp git harfbuzz hip-runtime-amd \
+                  libdecor libgl libharu libpng libtiff libwebp libxcursor \
+                  libxml2 libx11 libxi libxrandr llvm ninja manifold ncurses openal \
+                  opencolorio openexr openimageio openjpeg2 openpgl \
+                  openxr patch pkgconf potrace pugixml python python-numpy rubberband \
+                  sdl2 speexdsp tbb wayland wayland-protocols xxd zlib zstd
+                build_package blender
+                blender_package=$(basename -- "$(find "$package_repo" -maxdepth 1 -type f -name 'blender-*.pkg.tar.zst' -print -quit)")
+                blender_full_package=
+                pacman_install_local "$package_repo/$blender_package"
+                printf 'dinx-build-timing phase=blender-source-bootstrap package=%s\n' "$blender_package"
+              fi
+              # First-party desktop shell components: the layer-shell dock and the
+              # GTK4 first-run wizard. Both build from checked-in Zig sources with
+              # the builder's Zig 0.17 toolchain, so no upstream download happens.
+              build_package dinx-dock
+              build_package dinx-first-run
+              pacman_install_local \
+                "$package_repo"/dinx-dock-*.pkg.tar.zst \
+                "$package_repo"/dinx-first-run-*.pkg.tar.zst
+              build_package pori
+              pacman_sync_install python-fonttools vala gst-plugins-base gst-plugins-good
+>>>>>>> main
               build_package dinx-noto-latin
+              build_package dinx-gtk-themes
               build_package dinx-plymouth-theme
               build_package dinx-live-autologin
               build_package swayimg
               build_package gapless
               build_package dinx-keyring
-              build_package opensnitch-dinit
               build_package dinx-firewalld-dinit
               firewalld_boot_package=$(find "$package_repo" -maxdepth 1 -type f -name 'dinx-firewalld-dinit-*.pkg.tar.zst' -print -quit)
               [[ -n "$firewalld_boot_package" ]]
               firewalld_boot_package_manifest=$(bsdtar -tvf "$firewalld_boot_package")
               grep -Fq 'etc/dinit.d/boot.d/firewalld -> /etc/dinit.d/firewalld' <<<"$firewalld_boot_package_manifest"
+<<<<<<< HEAD
               # EuroOffice is disabled on this branch: its source pin uses a
               # pre-release version string that makepkg rejects, and the branch
               # contract keeps it outside the ISO payload.
@@ -461,14 +560,21 @@ trap finish EXIT
               build_package pixelorama
               build_package paintfe
               build_package audionaut
+=======
+              build_package patchy
+              build_package audionaut
+              build_package paintfe
+              build_package pixelorama
+>>>>>>> main
               # Build Haruna against its Artix runtime/build dependencies. Artix does not package it.
-              pacman_retry -S --needed --noconfirm \
+              pacman_sync_install \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \
                 kdeclarative kdsingleapplication kfilemetadata ki18n kio kirigami \
                 kitemmodels kservice kwindowsystem mpvqt qqc2-desktop-style \
                 qt6-5compat qt6-declarative
               build_package haruna
               if [[ "$package_repository_only" != true ]]; then
+<<<<<<< HEAD
               blender_stage_dir=$(scripts/lib/stage-blender.sh)
               blender_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
               blender_full_package=$(awk -F= '$1 == "full_package" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)
@@ -479,6 +585,18 @@ trap finish EXIT
               eurooffice_stage_dir=
               eurooffice_package=
               eurooffice_squashfs=
+=======
+              eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
+              if [[ -n "$eurooffice_stage_dir" ]]; then
+                eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+                eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+                cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
+                export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
+                printf 'dinx-build-timing phase=eurooffice-staged package=%s\n' "$eurooffice_package"
+              fi
+              repository_seed_started=$SECONDS
+>>>>>>> main
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst
               rm -f "$package_repo/dinx.db" "$package_repo/dinx.db.sig"
@@ -508,6 +626,7 @@ trap finish EXIT
                   print "NoExtract = usr/bin/systemd"
                   print "NoExtract = usr/bin/systemctl"
                   print "NoExtract = usr/share/wayland-sessions/plasma.desktop"
+                  print "NoExtract = usr/share/wayland-sessions/river.desktop"
                   print "NoExtract = usr/bin/uwsm"
                   print "NoExtract = etc/calamares-config-switcher.conf"
                   print "NoExtract = usr/bin/calamares-config-switcher"
@@ -516,6 +635,11 @@ trap finish EXIT
                   print "NoExtract = usr/share/calamares/modules/basestrap.conf"
                   print "NoExtract = usr/share/calamares/branding/artix/*"
                   print "NoExtract = usr/share/calamares/branding/artix-next/*"
+                  print "NoExtract = usr/share/doc/*"
+                  print "NoExtract = usr/share/info/*"
+                  print "NoExtract = usr/share/man/*"
+                  print "NoExtract = usr/lib/modules/*/build"
+                  print "NoExtract = usr/share/gtk-doc/*"
                   injected = 1
                   next
                 }
@@ -530,7 +654,12 @@ trap finish EXIT
               grep -Fqx 'NoExtract = usr/lib/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = etc/systemd/*' "$pacman_conf"
               grep -Fqx 'NoExtract = usr/share/uwsm/*' "$pacman_conf"
-              grep -Fqx 'NoExtract = usr/share/wayland-sessions/plasma.desktop' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/wayland-sessions/river.desktop' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/doc/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/info/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/man/*' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/lib/modules/*/build' "$pacman_conf"
+              grep -Fqx 'NoExtract = usr/share/gtk-doc/*' "$pacman_conf"
               for excluded_path in \
                 'NoExtract = etc/calamares-config-switcher.conf' \
                 'NoExtract = usr/bin/calamares-config-switcher' \
@@ -709,6 +838,16 @@ trap finish EXIT
                 printf "profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/profile.yaml | cut -d " " -f 1)"
                 printf "common_profile_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/common/common.yaml | cut -d " " -f 1)"
                 printf "feature_groups_sha256=%s\n" "$(sha256sum /workspace/distro/iso/iso-profiles/dinx/feature-groups.json | cut -d " " -f 1)"
+                if [[ -n "$blender_stage_dir" ]]; then
+                  printf "blender_tag=%s\n" "$(awk -F= '$1 == "tag" { print $2; exit }' /workspace/distro/graphics/blender/blender.pin)"
+                  printf "blender_package_sha256=%s\n" "$(sha256sum "$package_repo/$blender_package" | cut -d " " -f 1)"
+                  printf "blender_full_package_sha256=%s\n" "$(sha256sum "$package_repo/$blender_full_package" | cut -d " " -f 1)"
+                fi
+                if [[ -f /workspace/distro/office/eurooffice.pin ]]; then
+                  printf "eurooffice_tag=%s\n" "$(awk -F= '$1 == "tag" { print $2; exit }' /workspace/distro/office/eurooffice.pin)"
+                  printf "eurooffice_package_sha256=%s\n" "$(sha256sum "$package_repo/$eurooffice_package" | cut -d " " -f 1)"
+                  printf "eurooffice_squashfs_sha256=%s\n" "$(sha256sum "$DINX_EUROOFFICE_SQUASHFS" | cut -d " " -f 1)"
+                fi
                 printf "builder_sync_databases_sha256=%s\n" "$builder_sync_databases_sha256"
                 printf "compression_schema=dinx-squashfs/v1\n"
                 printf "compression_algorithm=xz\n"

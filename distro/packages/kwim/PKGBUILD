@@ -6,28 +6,59 @@ source_env="$startdir/source.env"
 . "$source_env"
 : "${KWIM_VERSION:?missing KWIM_VERSION}"
 : "${KWIM_REPOSITORY:?missing KWIM_REPOSITORY}"
+: "${KWIM_SOURCE_URL:?missing KWIM_SOURCE_URL}"
 : "${KWIM_SOURCE_SHA256:?missing KWIM_SOURCE_SHA256}"
+: "${KWIM_ZIG_VERSION:?missing KWIM_ZIG_VERSION}"
 pkgver="$KWIM_VERSION"
 pkgrel=1
-pkgdesc="Kewuaa's input manager for the River compositor"
+pkgdesc='River input-management helper configuring input devices independently of the window manager'
 arch=('x86_64')
 url="$KWIM_REPOSITORY"
 license=('GPL-3.0-only')
-depends=('libxkbcommon' 'river' 'wayland')
-makedepends=('wayland-protocols')
-# build.zig.zon pins mvzr, zig-wayland, zig-xkbcommon and zig-clap by content
-# hash, so Zig fetches and verifies them itself; no extra source entries are needed.
-source=("$pkgname-$pkgver.tar.gz::$KWIM_REPOSITORY/archive/refs/tags/v$pkgver.tar.gz")
+depends=('glibc' 'wayland' 'libxkbcommon')
+makedepends=('wayland-protocols' 'zig>=0.16')
+provides=('river-input-manager')
+source=("kwim-$pkgver.tar.gz::$KWIM_SOURCE_URL")
 sha256sums=("$KWIM_SOURCE_SHA256")
 
+# CI runners cannot resolve codeberg.org (DNS: NoAddressReturned), and kwim's
+# build.zig.zon fetches zig-wayland/zig-xkbcommon from there at build time.
+# The ifreund GitHub mirrors are byte-identical (zig content hash is
+# unchanged), so rewrite the host and keep the pinned .hash entries valid.
+prepare() {
+  cd "$srcdir/kwim-$pkgver"
+  sed -i 's#https://codeberg\.org/ifreund/#https://github.com/ifreund/#g' build.zig.zon
+}
+
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
+  cd "$srcdir/kwim-$pkgver"
+  local zig_bin="${ZIG:-zig}"
+  local zig_version="$("$zig_bin" version)"
+  [[ "$zig_version" == "$KWIM_ZIG_VERSION" ]] || {
+    printf 'kwim %s requires Zig %s, found %s\n' "$pkgver" "$KWIM_ZIG_VERSION" "$zig_version" >&2
+    return 1
+  }
   export ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$srcdir/zig-global-cache}"
-  "${ZIG:-zig}" build -Doptimize=ReleaseSafe -Dcpu=baseline
+  export ZIG_LOCAL_CACHE_DIR="${ZIG_LOCAL_CACHE_DIR:-$srcdir/zig-local-cache}"
+  "$zig_bin" build install \
+    --prefix "$srcdir/out" \
+    -Dcpu=baseline \
+    -Doptimize=ReleaseSafe
+}
+
+check() {
+  test -x "$srcdir/out/bin/kwim"
+  [[ "$("$srcdir/out/bin/kwim" --version)" == "$KWIM_VERSION" ]] \
+    || { printf 'kwim binary reports an unexpected version\n' >&2; return 1; }
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
-  install -Dm755 zig-out/bin/kwim "$pkgdir/usr/bin/kwim"
+  cd "$srcdir/kwim-$pkgver"
+  install -Dm755 "$srcdir/out/bin/kwim" "$pkgdir/usr/bin/kwim"
+  install -Dm644 "$srcdir/out/share/man/man1/kwim.1" "$pkgdir/usr/share/man/man1/kwim.1"
+  install -Dm644 "$srcdir/out/share/man/man5/kwim.5" "$pkgdir/usr/share/man/man5/kwim.5"
+  install -Dm644 "$srcdir/out/share/doc/kwim/config.zon" "$pkgdir/usr/share/doc/kwim/config.zon"
+  install -Dm644 "$srcdir/out/share/bash-completion/completions/kwim" \
+    "$pkgdir/usr/share/bash-completion/completions/kwim"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

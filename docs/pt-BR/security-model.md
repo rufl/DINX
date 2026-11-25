@@ -4,7 +4,11 @@
 
 A DINX é uma alpha pública. O modelo de segurança prioriza instalação segura, limites de confiança explícitos e capacidade de recuperação em vez de conveniência.
 
+<<<<<<< HEAD
 A imagem live abre automaticamente a conta descartável `dinx` na sessão River/KWM/Morghulis. Como quem consegue inicializar a ISO já controla a máquina live, um prompt de login adiciona atrito, mas não uma fronteira de segurança significativa. O login instalado/manual usa `agreety` pelo greetd e pela conta dedicada `greeter`; a sessão configurada usa River/KWM/Morghulis sem X11, UWSM ou systemd. A senha pública `dinx` fica apenas como fallback diagnóstico se uma inicialização manual da live precisar dela; o sistema instalado mantém sua política de login separada, criada pelo Calamares.
+=======
+A imagem live abre automaticamente a conta descartável `dinx` no `River + KWM (DINX)`. Como quem consegue inicializar a ISO já controla a máquina live, um prompt de login adiciona atrito, mas não uma fronteira de segurança significativa. O login instalado/manual usa o greeter agreety pelo greetd e pela conta dedicada `greeter`; a sessão configurada inicia River/KWM sobre dinit, sem X11, UWSM ou systemd. A senha pública `dinx` fica apenas como fallback diagnóstico se a tela de login do agreety aparecer após uma inicialização manual da live; o sistema instalado mantém sua política de login separada, criada pelo Calamares. A inicialização live pré-aprova um único launcher da área de trabalho: o arquivo regular `Install DINX.desktop`, pertencente ao pacote, em sua URI e SHA-256 exatos. Isso não vale para sessões instaladas; launchers modificados, symlinks e estado de aprovação corrompido falham de forma fechada.
+>>>>>>> main
 
 ## Hipóteses de ameaça
 

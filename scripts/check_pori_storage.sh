@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+profile="$repo_root/distro/iso/iso-profiles/dinx/profile.yaml"
+common="$repo_root/distro/iso/iso-profiles/common/common.yaml"
+groups="$repo_root/distro/iso/iso-profiles/dinx/feature-groups.json"
+mimeapps="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
+iso_check="$repo_root/scripts/check-iso-content.sh"
+workflow="$repo_root/.github/workflows/p0-iso.yml"
+builder="$repo_root/scripts/build-iso-container.sh"
+calamares_check="$repo_root/scripts/check_calamares_partitioning.sh"
+package_updates="$repo_root/.github/package-updates.json"
+pori_dir="$repo_root/distro/packages/pori"
+pcmanfm_override="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/pcmanfm.desktop"
+
+fail() {
+  printf 'pori_storage_contract: %s\n' "$*" >&2
+  exit 1
+}
+
+require_file() {
+  [[ -r "$1" ]] || fail "missing file: ${1#$repo_root/}"
+}
+
+for path in \
+  "$profile" "$common" "$groups" "$mimeapps" "$iso_check" "$workflow" "$builder" "$calamares_check" \
+  "$package_updates" "$pcmanfm_override" \
+  "$pori_dir/PKGBUILD" "$pori_dir/source.env" \
+  "$pori_dir/units-dinit.zig" "$pori_dir/privops-dinit.zig" \
+  "$pori_dir/watch-dinit.zig" "$pori_dir/pori-dinit.patch" \
+  "$pori_dir/pori-mount-service" \
+  "$repo_root/scripts/smoke_pori_zig.sh"; do
+  require_file "$path"
+done
+
+for package in file-roller gparted pcmanfm pori; do
+  grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
+  jq -e --arg package "$package" '.groups.desktop.packages | index($package) != null' "$groups" >/dev/null \
+    || fail "desktop feature group is missing $package"
+done
+jq -e '.groups.optional.packages | index("ntfs-3g") != null' "$groups" >/dev/null \
+  || fail 'optional feature group is missing ntfs-3g'
+grep -Fqx '  - linux' "$common" || fail 'common profile no longer installs the kernel ntfs3 driver'
+if grep -Fqx '    - ntfs-3g' "$profile"; then
+  fail 'ntfs-3g is still in the base ISO profile'
+fi
+
+grep -Fqx 'inode/directory=pcmanfm.desktop;' "$mimeapps" \
+  || fail 'pcmanfm is not the default directory handler'
+grep -Fqx 'Exec=pcmanfm %U' "$pcmanfm_override" || fail 'pcmanfm desktop override command is incorrect'
+grep -Fqx 'MimeType=inode/directory;' "$pcmanfm_override" \
+  || fail 'pcmanfm desktop override does not register inode/directory'
+
+for removed in gvfs gvfs-gphoto2 gvfs-mtp gvfs-smb partitionmanager thunar thunar-archive-plugin thunar-volman tumbler phyto; do
+  if grep -Fqx "    - $removed" "$profile"; then
+    fail "removed storage package remains in profile: $removed"
+  fi
+  if jq -e --arg package "$removed" 'any(.groups[].packages[]; . == $package)' "$groups" >/dev/null; then
+    fail "removed storage package remains in feature groups: $removed"
+  fi
+done
+
+# Phyto was retired from the DINX roster: no recipe, no update manifest entry, no
+# desktop override, no ISO payload requirement and no builder step may come back.
+for phyto_path in \
+  "$repo_root/distro/packages/phyto" \
+  "$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.aqueous.Phyto.desktop"; do
+  if [[ -e "$phyto_path" ]]; then
+    fail "retired Phyto artifact remains in the tree: ${phyto_path#$repo_root/}"
+  fi
+done
+if grep -Fq 'phyto' "$package_updates"; then
+  fail 'retired Phyto package remains in the upstream update manifest'
+fi
+if grep -Fq 'build_package phyto' "$builder"; then
+  fail 'ISO builder still builds the retired Phyto package'
+fi
+for retired_payload in \
+  '  usr/bin/phyto' \
+  '  usr/share/applications/org.aqueous.Phyto.desktop'; do
+  if grep -Fqx "$retired_payload" "$iso_check"; then
+    fail "ISO contract still requires the retired Phyto payload: $retired_payload"
+  fi
+done
+for required in \
+  '  usr/bin/pori' \
+  '  usr/local/libexec/pori-mount-service' \
+  '  usr/bin/file-roller' \
+  '  usr/bin/gparted' \
+  '  usr/bin/pcmanfm' \
+  '  usr/share/applications/com.pori.app.desktop' \
+  '  usr/share/applications/org.gnome.FileRoller.desktop' \
+  '  usr/share/applications/gparted.desktop'; do
+  grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
+done
+
+if grep -Eiq 'labwc|noctalia' "$profile" "$groups" "$mimeapps"; then
+  fail 'retired Labwc or Noctalia integration remains in the storage contract'
+fi
+
+for path in "$pori_dir/units-dinit.zig" "$pori_dir/privops-dinit.zig" "$pori_dir/watch-dinit.zig" "$pori_dir/PKGBUILD" "$pori_dir/pori-mount-service"; do
+  if grep -Eiq 'systemd|systemctl|/etc/systemd' "$path"; then
+    fail "Pori dinit implementation contains systemd references: ${path#$repo_root/}"
+  fi
+done
+for required in '/etc/dinit.d' 'dinitctl --system' 'type = process' 'pori-mount-service' 'restart = true' 'restart-delay = 5' 'restart-limit-count = 0' 'ntfs3'; do
+  grep -Fq -- "$required" "$pori_dir/privops-dinit.zig" || fail "Pori dinit implementation is missing: $required"
+done
+grep -Fq 'org.freedesktop.UDisks2' "$pori_dir/watch-dinit.zig" || fail 'Pori no longer watches UDisks2'
+grep -Fq 'Pori-What:' "$pori_dir/units-dinit.zig" || fail 'Pori mount metadata parser is missing'
+grep -Fq 'Pori-Where:' "$pori_dir/units-dinit.zig" || fail 'Pori mount target metadata parser is missing'
+grep -Fq 'dinit mount service' "$pori_dir/pori-dinit.patch" || fail 'Pori UI does not describe dinit mount services'
+
+source "$pori_dir/source.env"
+[[ "$PORI_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pori version: $PORI_VERSION"
+[[ "$PORI_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'Pori source checksum is invalid'
+grep -Fq 'pkgver="$PORI_VERSION"' "$pori_dir/PKGBUILD" \
+  || fail 'Pori package version is not wired to source.env'
+grep -Fq '"$PORI_SOURCE_SHA256"' "$pori_dir/PKGBUILD" \
+  || fail 'Pori package checksum is not wired to source.env'
+if grep -Fq 'pori-zig17.patch' "$pori_dir/PKGBUILD"; then
+  fail 'Pori still applies the obsolete pre-0.2.0 Zig compatibility patch'
+fi
+
+grep -Fq 'build_package pori' "$builder" || fail 'ISO builder does not build Pori'
+grep -Fq '"${ZIG:-zig}" build' "$pori_dir/PKGBUILD" || fail 'Pori package does not honor the selected Zig toolchain'
+grep -Fq 'zig_version=0.17.0' "$builder" || fail 'ISO builder does not pin Zig 0.17 for Pori'
+grep -Fq 'zig_sha256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026' "$builder" \
+  || fail 'ISO builder does not verify the Zig 0.17 archive'
+grep -Fq 'extra_env+=("ZIG=$zig_root/zig")' "$builder" \
+  || fail 'ISO builder does not pass Zig 0.17 to Pori'
+grep -Fq 'zig016_version=0.16.0' "$builder" \
+  || fail 'ISO builder does not pin the Zig 0.16 toolchain used by KWM and KWIM'
+grep -Fq 'zig016_sha256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00' "$builder" \
+  || fail 'ISO builder does not verify the Zig 0.16 archive'
+grep -Fq '"$package_name" == kwm || "$package_name" == kwim ]]; then' "$builder" \
+  || fail 'ISO builder does not select the Zig 0.16 toolchain for KWM and KWIM'
+grep -Fq 'extra_env+=("ZIG=$zig016_root/zig")' "$builder" \
+  || fail 'ISO builder does not pass the Zig 0.16 toolchain to its native packages'
+grep -Fq 'scripts/smoke_pori_zig.sh' "$workflow" || fail 'workflow does not run the Pori Zig source smoke'
+grep -Fq 'scripts/check_pori_storage.sh' "$workflow" || fail 'workflow does not run the Pori storage contract'
+grep -Fq 'ntfs3\.ko' "$iso_check" || fail 'ISO contract does not require the kernel ntfs3 module'
+grep -Fq '/usr/bin/ntfs-3g' "$iso_check" || fail 'ISO contract does not reject the optional ntfs-3g package'
+grep -Fq 'ntfs-3g' "$calamares_check" || fail 'Calamares contract does not document optional NTFS write support'
+
+printf 'pori_storage_contract pori=true pcmanfm=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false phyto=false ntfs3_live_rw=true ntfs3_legacy_optional=true pori_zig=0.17.0 kwm_zig=0.16.0\n'

@@ -4,7 +4,7 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 theme_sync="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
 seed_palette="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/colors/DINX.conf"
-for tool in dbus-run-session dconf jq; do
+for tool in dbus-run-session dconf; do
   command -v "$tool" >/dev/null 2>&1 || { printf 'smoke_dinx_theme_sync: missing tool: %s\n' "$tool" >&2; exit 1; }
 done
 [[ -x "$theme_sync" && -r "$seed_palette" ]] || {
@@ -17,6 +17,7 @@ cleanup() { rm -rf -- "$tmp"; }
 trap cleanup EXIT HUP INT TERM
 home="$tmp/home"
 config_home="$tmp/config"
+<<<<<<< HEAD
 state_home="$tmp/state"
 preferences="$config_home/morghulis/preferences.json"
 profile="$tmp/dconf-profile"
@@ -28,6 +29,14 @@ cp "$seed_palette" "$config_home/qt6ct/colors/DINX.conf"
 cat >"$preferences" <<'JSON'
 {"theme":{"variant":"dark"}}
 JSON
+=======
+profile="$tmp/dconf-profile"
+mkdir -p "$home" "$config_home/gtk-3.0" "$config_home/gtk-4.0" \
+  "$config_home/qt6ct/colors" "$config_home/dconf"
+printf 'user-db:user\n' >"$profile"
+cp "$seed_palette" "$config_home/qt6ct/colors/DINX.conf"
+[[ -z "$(find "$config_home" \( -name 'preferences.json' -o -name 'last-good.json' \) -print -quit)" ]]
+>>>>>>> main
 for gtk_version in 3.0 4.0; do
   cat >"$config_home/gtk-$gtk_version/settings.ini" <<'INI'
 [Settings]
@@ -49,24 +58,46 @@ style=Fusion
 general="Noto Sans,10"
 INI
 
-env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_STATE_HOME="$state_home" \
-  DCONF_PROFILE="$profile" dbus-run-session -- bash -c '
+# Appearance fixtures the inner session consumes from $tmp.
+cat >"$tmp/appearance-port.json" <<'JSON'
+{"version":1,"theme":"Jasper","variant":"light","corners":"square"}
+JSON
+cat >"$tmp/appearance-invalid.json" <<'JSON'
+{"version":1,"theme":"Bogus","variant":"neon","corners":"diagonal"}
+JSON
+
+env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
+  dbus-run-session -- bash -c '
     set -euo pipefail
     theme_sync=$1
     config_home=$2
+<<<<<<< HEAD
     preferences=$3
+=======
+    tmp=$3
+>>>>>>> main
     color_scheme_key=/org/gnome/desktop/interface/color-scheme
 
     ini_value() {
       awk -F= -v key="$2" '\''$1 == key { value = $2; found = 1 } END { if (found) print value }'\'' "$1"
     }
+<<<<<<< HEAD
     dconf write "$color_scheme_key" "'\''prefer-light'\''"
     "$theme_sync"
     jq -e '\''.theme.variant == "dark"'\'' "$preferences" >/dev/null
+=======
+    run_sync() {
+      "$theme_sync" >"$tmp/stdout" 2>"$tmp/stderr"
+    }
+
+    # No saved theme selection exists, yet the fixed dark appearance is applied.
+    run_sync
+    [[ $(dconf read "$color_scheme_key") == "'\''prefer-dark'\''" ]]
+>>>>>>> main
     for gtk_version in 3.0 4.0; do
       settings="$config_home/gtk-$gtk_version/settings.ini"
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 1 ]]
-      [[ $(ini_value "$settings" gtk-theme-name) == Adwaita ]]
+      [[ $(ini_value "$settings" gtk-theme-name) == DINX ]]
       [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
       grep -Fqx "preserve-this=yes" "$settings"
     done
@@ -75,14 +106,68 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_STATE_HOME="$state_home" \
     [[ $(ini_value "$qt_config" custom_palette) == true ]]
     [[ $(ini_value "$qt_config" icon_theme) == Papirus ]]
     [[ $(ini_value "$qt_config" style) == Fusion ]]
+<<<<<<< HEAD
     :
 
     jq '\''.theme = {variant:"light"}'\'' "$preferences" >"$preferences.tmp"
     mv -f "$preferences.tmp" "$preferences"
     "$theme_sync"
+=======
+    grep -Fqx '\''general="Noto Sans,10"'\'' "$qt_config"
+    grep -Fq "gtk_theme=DINX prefer_dark=1" "$tmp/stdout"
+    [[ -z "$(find "$config_home" -name "*.tmp.*" -print -quit)" ]]
+
+    # Idempotent: a second run changes nothing in the toolkit settings.
+    for settings_dir in gtk-3.0 gtk-4.0 qt6ct; do
+      cp -a "$config_home/$settings_dir" "$tmp/snapshot-$settings_dir"
+    done
+    run_sync
+    for settings_dir in gtk-3.0 gtk-4.0 qt6ct; do
+      diff -r "$tmp/snapshot-$settings_dir" "$config_home/$settings_dir"
+    done
+
+    # A user-managed symlink is never followed or replaced.
+    symlink_target="$tmp/user-gtk-settings.ini"
+    printf '"'"'[Settings]\n'"'"' >"$symlink_target"
+    printf '"'"'gtk-theme-name=UserChosen\n'"'"' >>"$symlink_target"
+    rm -f "$config_home/gtk-3.0/settings.ini"
+    ln -s "$symlink_target" "$config_home/gtk-3.0/settings.ini"
+    run_sync
+    [[ -L "$config_home/gtk-3.0/settings.ini" ]]
+    grep -Fq "gtk-theme-name=UserChosen" "$symlink_target"
+    grep -Fq "preserving user-managed symlink" "$tmp/stderr"
+    [[ $(ini_value "$config_home/gtk-4.0/settings.ini" gtk-theme-name) == DINX ]]
+
+    # A fresh account with no config tree is provisioned from scratch.
+    fresh_config="$tmp/fresh-config"
+    XDG_CONFIG_HOME="$fresh_config"
+    export XDG_CONFIG_HOME
+    run_sync
+    for gtk_version in 3.0 4.0; do
+      settings="$fresh_config/gtk-$gtk_version/settings.ini"
+      [[ $(ini_value "$settings" gtk-theme-name) == DINX ]]
+      [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 1 ]]
+    done
+    [[ $(ini_value "$fresh_config/qt6ct/qt6ct.conf" custom_palette) == true ]]
+
+    # A saved DINX appearance selection drives the ported theme families and
+    # their light/dark and rounded/square variants. The symlink-guard case above
+    # left gtk-3.0 as a user symlink, so remove it and let the synchronizer
+    # create a plain settings file again, keeping this block order-independent.
+    XDG_CONFIG_HOME="$config_home"
+    export XDG_CONFIG_HOME
+    for gtk_version in 3.0 4.0; do
+      rm -f -- "$config_home/gtk-$gtk_version/settings.ini"
+    done
+    mkdir -p "$config_home/dinx"
+    cp "$tmp/appearance-port.json" "$config_home/dinx/appearance.json"
+    run_sync
+>>>>>>> main
     for gtk_version in 3.0 4.0; do
       settings="$config_home/gtk-$gtk_version/settings.ini"
+      [[ $(ini_value "$settings" gtk-theme-name) == Jasper-Square-Light ]]
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 0 ]]
+<<<<<<< HEAD
       [[ $(ini_value "$settings" gtk-theme-name) == Adwaita ]]
       [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
     done
@@ -90,5 +175,25 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_STATE_HOME="$state_home" \
     [[ $(ini_value "$qt_config" icon_theme) == Papirus ]]
     [[ $(ini_value "$qt_config" style) == Fusion ]]
   ' smoke_dinx_theme_sync "$theme_sync" "$config_home" "$preferences"
+=======
+    done
+    [[ $(dconf read "$color_scheme_key") == "'\''prefer-light'\''" ]]
+    [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == false ]]
+    grep -Fq "family=Jasper variant=light corners=square gtk_theme=Jasper-Square-Light prefer_dark=0" "$tmp/stdout"
+>>>>>>> main
 
-printf 'dinx_theme_sync_smoke material_dark=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true light_transition=true gtk_theme_choice=true preserves_unrelated_settings=true\n'
+    # An unknown family, variant or corner value falls back to DINX dark.
+    cp "$tmp/appearance-invalid.json" "$config_home/dinx/appearance.json"
+    run_sync
+    [[ $(ini_value "$config_home/gtk-3.0/settings.ini" gtk-theme-name) == DINX ]]
+    [[ $(ini_value "$config_home/gtk-4.0/settings.ini" gtk-application-prefer-dark-theme) == 1 ]]
+    [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == true ]]
+    rm -f -- "$config_home/dinx/appearance.json"
+
+    # With no config directory at all the synchronizer still succeeds.
+    env -u HOME -u XDG_CONFIG_HOME "$theme_sync" >"$tmp/empty-stdout" 2>"$tmp/empty-stderr"
+    grep -Fq "no config directory" "$tmp/empty-stderr"
+    [[ ! -s "$tmp/empty-stdout" ]]
+  ' smoke_dinx_theme_sync "$theme_sync" "$config_home" "$tmp"
+
+printf 'dinx_theme_sync_smoke dark_default=true appearance_selection=true ported_family_variant=true light_variant=true invalid_falls_back=true dconf_scheme=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true idempotent=true symlink_guard=true fresh_home=true empty_home=true\n'

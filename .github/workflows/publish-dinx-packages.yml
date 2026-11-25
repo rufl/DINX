@@ -11,6 +11,7 @@ on:
       - ".github/workflows/publish-dinx-packages.yml"
       - ".github/workflows/upstream-package-refresh.yml"
       - "distro/packages/**"
+      - "distro/graphics/**"
       - "scripts/build-iso-container.sh"
       - "scripts/build-iso-docker.sh"
       - "scripts/cache-verified-download.sh"
@@ -81,9 +82,9 @@ jobs:
         id: cache-inputs
         run: |
           cache_input_hash=$(
-            git ls-files -z -- distro/packages scripts/build-iso-container.sh \
+            git ls-files -z -- distro/packages distro/graphics scripts/build-iso-container.sh \
               scripts/cache-verified-download.sh scripts/cache-verified-extract.sh \
-              scripts/lib/dinx-package-artifact-cache.sh scripts/iso-builder \
+              scripts/lib/dinx-package-artifact-cache.sh scripts/lib/stage-blender.sh scripts/iso-builder \
               | LC_ALL=C sort -z \
               | xargs -0 sha256sum \
               | sha256sum \

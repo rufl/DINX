@@ -106,7 +106,7 @@ fi
 snapshot_repo="$tmp_dir/source-snapshot"
 mkdir -p "$snapshot_repo/distro/iso" "$snapshot_repo/design/brand" \
   "$snapshot_repo/distro/packages/fixture/src"
-for package in dinitui dinxpanel seafoam-settings; do
+for package in dinitui dinxpanel dinx-dock; do
   mkdir -p "$snapshot_repo/distro/packages/$package/src"
   printf 'tracked package source\n' > "$snapshot_repo/distro/packages/$package/src/main.zig"
 done
@@ -118,13 +118,13 @@ printf 'base profile\n' > "$snapshot_repo/distro/iso/profile.yaml"
 git -C "$snapshot_repo" add -- .gitignore distro/iso/profile.yaml \
   distro/packages/dinitui/src/main.zig \
   distro/packages/dinxpanel/src/main.zig \
-  distro/packages/seafoam-settings/src/main.zig
+  distro/packages/dinx-dock/src/main.zig
 git -C "$snapshot_repo" commit --quiet -m 'source baseline'
 snapshot_base=$(git -C "$snapshot_repo" rev-parse HEAD)
 printf 'updated profile\n' > "$snapshot_repo/distro/iso/profile.yaml"
 printf 'DINX mark\n' > "$snapshot_repo/design/brand/mark.svg"
 printf 'generated before build\n' > "$snapshot_repo/distro/packages/fixture/src/source.tar.gz"
-for package in dinitui dinxpanel seafoam-settings; do
+for package in dinitui dinxpanel dinx-dock; do
   mkdir -p "$snapshot_repo/distro/packages/$package/src/stage/bin"
   printf 'generated before build\n' > "$snapshot_repo/distro/packages/$package/src/stage/bin/$package"
 done
@@ -132,7 +132,7 @@ dirty_snapshot_hash=$("$root/scripts/hash-dinx-source-tree.sh" "$snapshot_repo" 
 git -C "$snapshot_repo" add -- distro/iso/profile.yaml
 git -C "$snapshot_repo" commit --quiet -m 'commit source snapshot'
 printf 'generated after clean\n' > "$snapshot_repo/distro/packages/fixture/src/source.tar.gz"
-for package in dinitui dinxpanel seafoam-settings; do
+for package in dinitui dinxpanel dinx-dock; do
   printf 'generated after build\n' > "$snapshot_repo/distro/packages/$package/src/stage/bin/$package"
 done
 committed_snapshot_hash=$("$root/scripts/hash-dinx-source-tree.sh" "$snapshot_repo" "$snapshot_base")

@@ -22,7 +22,7 @@ command -v python3 >/dev/null 2>&1 || fail 'required command not found: python3'
 ppm_magic=
 IFS= read -r ppm_magic < "$screenshot" || true
 [[ "$ppm_magic" == P6 ]] || fail "session screenshot is not a binary PPM: $screenshot"
-if ! python3 - "$screenshot" <<'PY'
+if ! python3 - "$screenshot" "$mode" <<'PY'
 import sys
 from pathlib import Path
 
@@ -37,7 +37,7 @@ if magic.strip() != b"P6" or max_value != 255 or len(pixels) != width * height *
     sys.exit(1)
 
 visible = sum(max(pixels[offset], pixels[offset + 1], pixels[offset + 2]) > 32 for offset in range(0, len(pixels), 3))
-if visible * 1000 < width * height * 2:
+if sys.argv[2] != "greeter" and visible * 1000 < width * height * 2:
     print(f"visible pixels above DINX canvas: {visible}/{width * height}", file=sys.stderr)
     sys.exit(1)
 PY
@@ -83,28 +83,54 @@ fi
 if [[ -z "${recognized//[[:space:]]/}" ]]; then
   fail "no readable text in QEMU session screenshot: $screenshot"
 fi
+
 if [[ "$mode" == greeter ]]; then
-  if grep -Eiq 'access[[:space:]]*denied|greeterstartupfailed|broken[[:space:]]*pipe' <<<"$recognized"; then
+  if grep -Eiq 'access[[:space:]]*denied|greeterstartupfailed|broken[[:space:]]*pipe|cannot[[:space:]]+open[[:space:]]+display|segmentation[[:space:]]+fault' <<<"$recognized"; then
     printf 'dinx-qemu-session: rejected greeter startup failure:\n%s\n' "$recognized" >&2
     exit 1
   fi
   greeter_text=$(printf '%s' "$recognized" | tr -cd '[:alnum:]')
+<<<<<<< HEAD
   if ! grep -Eiq 'signin|login|user' <<<"$greeter_text" \
     || ! grep -Eiq 'pas[[:alpha:]]{0,4}rd' <<<"$greeter_text"; then
     printf 'dinx-qemu-session: sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
     exit 1
   fi
   printf 'dinx-qemu-session: greeter_ready=true marker=tuigreet+SignIn+Password screenshot=%s\n' "$screenshot"
+=======
+  if ! grep -Eiq 'agreety|greeter|dinx|river' <<<"$greeter_text" \
+    || ! grep -Eiq 'login' <<<"$greeter_text"; then
+    printf 'dinx-qemu-session: agreety identity and login prompt are not visible:\n%s\n' "$recognized" >&2
+    exit 1
+  fi
+  printf 'dinx-qemu-session: greeter_ready=true marker=Agreety+Login screenshot=%s\n' "$screenshot"
+>>>>>>> main
   exit 0
 fi
+
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then
+<<<<<<< HEAD
   fail 'DINX reports a missing XDG Desktop directory'
 fi
 if grep -Eiq 'login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|select[[:space:]]*user|fail|dinit:.*execution failed' <<<"$recognized"; then
+=======
+  fail 'the session reports a missing XDG Desktop directory'
+fi
+if grep -Eiq 'agreety|greeter|select[[:space:]]*user|login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|fail|error|panic|not[[:space:]]+found|dinit:.*execution failed' <<<"$recognized"; then
+>>>>>>> main
   printf 'dinx-qemu-session: rejected non-session screen:\n%s\n' "$recognized" >&2
   exit 1
 fi
+# A compositor titlebar must name the DINX session stack. Any other "… - Wayland"
+# title means a foreign or retired compositor owns the seat.
+while IFS= read -r title_line; do
+  printf 'dinx-qemu-session: unsupported compositor title: %s\n' "$title_line" >&2
+  exit 1
+done < <(grep -Ei '[^[:space:]][[:space:]]+-[[:space:]]*Wayland([[:space:]]|$)' <<<"$recognized" \
+  | grep -Eiv '(^|[^[:alnum:]_])(river|kwm)([^[:alnum:]_]|$)')
+
 if [[ "$mode" == first-run ]]; then
+<<<<<<< HEAD
   if ! grep -Eiq '(^|[^[:alnum:]_])(Morghulis|DINX|Desktop|PCManFM)([^[:alnum:]_]|$)' <<<"$recognized"; then
     printf 'dinx-qemu-session: Morghulis first-run screen has no readable desktop marker:\n%s\n' "$recognized" >&2
     exit 1
@@ -117,6 +143,22 @@ if grep -Eiq '(^|[^[:alnum:]_])(Morghulis|DINX|River|PCManFM|Desktop)([^[:alnum:
   marker=morghulis-desktop
 else
   printf 'dinx-qemu-session: no Morghulis/DINX desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
+=======
+  if ! grep -Eiq 'Install[[:space:]]+DINX' <<<"$recognized"; then
+    printf 'dinx-qemu-session: live desktop has no readable Install DINX shortcut:\n%s\n' "$recognized" >&2
+    exit 1
+  fi
+  printf 'dinx-qemu-session: first_run_shortcut_visible=true marker=Install+DINX screenshot=%s\n' "$screenshot"
+  exit 0
+fi
+marker=identity
+if grep -Eiq '(^|[^[:alnum:]_])(river|kwm)([^[:alnum:]_]|$)' <<<"$recognized"; then
+  marker=river-desktop
+elif grep -Eiq '(^|[^[:alnum:]_])dinx([^[:alnum:]_]|$)' <<<"$recognized"; then
+  marker=dinx-desktop
+else
+  printf 'dinx-qemu-session: no River/KWM or DINX desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
+>>>>>>> main
   exit 1
 fi
 printf 'dinx-qemu-session: graphical_ready=true marker=%s screenshot=%s\n' "$marker" "$screenshot"

@@ -6,12 +6,22 @@ profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 pkg="$root/distro/packages/mission-center/PKGBUILD"
 source_env="$root/distro/packages/mission-center/source.env"
+<<<<<<< HEAD
+=======
+wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/missioncenter-dinx"
+desktop_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/io.missioncenter.MissionCenter.desktop"
+>>>>>>> main
 builder="$root/scripts/build-iso-container.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
 iso_check="$root/scripts/check-iso-content.sh"
 fail() { printf 'mission_center_contract: %s\n' "$*" >&2; exit 1; }
 
+<<<<<<< HEAD
 for path in "$profile" "$groups" "$pkg" "$source_env" "$builder" "$workflow" "$iso_check"; do
+=======
+for path in "$profile" "$groups" "$pkg" "$source_env" "$builder" "$workflow" "$iso_check" \
+  "$wrapper" "$desktop_override"; do
+>>>>>>> main
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
 source "$source_env"
@@ -33,6 +43,15 @@ if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$pkg"
 fi
 grep -Fq 'build_package mission-center' "$builder" || fail 'ISO builder does not build Mission Center'
 grep -Fq 'mission-center-*.pkg.tar.zst' "$builder" || fail 'ISO builder does not install Mission Center before ISO assembly'
+<<<<<<< HEAD
+=======
+[[ -x "$wrapper" ]] || fail 'Mission Center dark wrapper is not executable'
+sh -n "$wrapper" || fail 'Mission Center dark wrapper has invalid shell syntax'
+grep -Fqx 'export ADW_DEBUG_COLOR_SCHEME=prefer-dark' "$wrapper" \
+  || fail 'Mission Center wrapper does not force the libadwaita dark scheme'
+grep -Fqx 'Exec=missioncenter-dinx' "$desktop_override" \
+  || fail 'Mission Center desktop override does not use the dark wrapper'
+>>>>>>> main
 grep -Fq 'scripts/check_mission_center.sh' "$workflow" || fail 'workflow does not run the Mission Center contract'
 for required in \
   '  usr/bin/missioncenter' \

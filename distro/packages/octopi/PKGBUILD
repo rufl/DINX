@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+pkgname=octopi
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${OCTOPI_REPOSITORY:?missing OCTOPI_REPOSITORY}"
+: "${OCTOPI_VERSION:?missing OCTOPI_VERSION}"
+: "${OCTOPI_SOURCE_URL:?missing OCTOPI_SOURCE_URL}"
+: "${OCTOPI_SOURCE_SHA256:?missing OCTOPI_SOURCE_SHA256}"
+: "${OCTOPI_ALPM_UTILS_REPOSITORY:?missing OCTOPI_ALPM_UTILS_REPOSITORY}"
+: "${OCTOPI_ALPM_UTILS_COMMIT:?missing OCTOPI_ALPM_UTILS_COMMIT}"
+: "${OCTOPI_ALPM_UTILS_SOURCE_SHA256:?missing OCTOPI_ALPM_UTILS_SOURCE_SHA256}"
+pkgver="$OCTOPI_VERSION"
+pkgrel=1
+pkgdesc='Powerful pacman/AUR front-end for DINX, elevated through polkit'
+arch=('x86_64')
+url="$OCTOPI_REPOSITORY"
+license=('GPL-2.0-or-later')
+depends=(
+  coreutils
+  glib2
+  glibc
+  libgcc
+  libstdc++
+  pacman
+  pacman-contrib
+  polkit
+  procps-ng
+  qt6-base
+  qt6-multimedia
+  qt6-svg
+  qtermwidget
+)
+makedepends=(
+  cmake
+  ninja
+  qt6-5compat
+  qt6-tools
+  vala
+)
+optdepends=(
+  'paru: AUR support (search, install, vote)'
+  'pkgfile: file-to-package ownership lookups'
+  'xdg-utils: opening files and directories from the package properties tab'
+)
+source=(
+  "octopi-${pkgver}.tar.gz::${OCTOPI_SOURCE_URL}"
+  "alpm_octopi_utils-${OCTOPI_ALPM_UTILS_COMMIT}.tar.gz::${OCTOPI_ALPM_UTILS_REPOSITORY}/archive/${OCTOPI_ALPM_UTILS_COMMIT}.tar.gz"
+  'octopi-pkexec.patch'
+)
+sha256sums=(
+  "$OCTOPI_SOURCE_SHA256"
+  "$OCTOPI_ALPM_UTILS_SOURCE_SHA256"
+  'e330daac060c7d85e4f3e81a177c60ee9de3adcbe9985afd04a84db7fdd544da'
+)
+
+prepare() {
+  cd "$srcdir/octopi-$pkgver"
+  # The upstream tarball ships read-only sources; patch needs write access.
+  chmod -R u+w .
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/octopi-pkexec.patch"
+
+  # The patch drops one obsolete source string, and octopi embeds the compiled
+  # catalogues straight out of the source tree via resources.qrc, so refresh the
+  # .qm files with the same lrelease step upstream's release-translations.sh runs.
+  local ts
+  for ts in resources/translations/*.ts; do
+    lrelease6 "$ts" -qm "${ts%.ts}.qm" >/dev/null
+  done
+}
+
+build() {
+  # Artix packages neither octopi nor its Vala ALPM helper library, so the helper
+  # is compiled from the pinned upstream tree and consumed from a staging prefix.
+  # -ffile-prefix-map keeps the build's $srcdir path out of the generated Vala
+  # sources' __FILE__ strings baked into libalpm_octopi_utils.so's .rodata.
+  cd "$srcdir/alpm_octopi_utils-$OCTOPI_ALPM_UTILS_COMMIT"
+  cmake -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_C_FLAGS="-ffile-prefix-map=$srcdir=/usr/src" \
+    -Wno-dev
+  cmake --build build
+  DESTDIR="$srcdir/alpm-staging" cmake --install build
+
+  cd "$srcdir/octopi-$pkgver"
+  cmake -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_C_FLAGS="-ffile-prefix-map=$srcdir=/usr/src" \
+    -DCMAKE_CXX_FLAGS="-ffile-prefix-map=$srcdir=/usr/src" \
+    -Dalpm_octopi_utils_DIR="$srcdir/alpm-staging/usr/lib/cmake/alpm_octopi_utils/" \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  cd "$srcdir/octopi-$pkgver"
+  DESTDIR="$pkgdir" cmake --install build
+
+  # The helper library is a private build artefact of this recipe: Artix has no
+  # alpm_octopi_utils package, so its SONAME ships inside octopi itself.
+  install -Dm644 "$srcdir/alpm-staging/usr/lib/libalpm_octopi_utils.so" \
+    "$pkgdir/usr/lib/libalpm_octopi_utils.so"
+
+  # Only the main application and its root helper are launched by DINX. The
+  # notifier is deliberately not installed: it needs a StatusNotifierItem tray
+  # host, and the river session (dinxpanel) provides none, so it would run as an
+  # invisible daemon. cachecleaner and repoeditor are installed because they are
+  # reachable from DINXPanel/octopi and elevate through the same pkexec path.
+  rm -f "$pkgdir/usr/bin/octopi-notifier" \
+        "$pkgdir/usr/share/applications/octopi-notifier.desktop"
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -16,13 +16,21 @@
 
 ```text
 DINX applications
+<<<<<<< HEAD
   Deetty · Dintor · DinitUI · DINXPanel · Seafoam Settings · Mission Center · ZLS (optional package)
+=======
+  Deetty · Dintor · DinitUI · DINXPanel · ZLS (base ISO)
+>>>>>>> main
 
 Shared integration contracts
   Dinx Theme · XDG paths · .desktop metadata · $TERMINAL · standard D-Bus adapters
 
 Desktop session
+<<<<<<< HEAD
   Wayland · River · KWM · Morghulis · PCManFM
+=======
+  Wayland · River · KWM · agreety under greetd
+>>>>>>> main
 
 Operating-system foundation
   Artix Linux · dinit · kernel · Mesa/Vulkan · PipeWire · D-Bus · portals · polkit
@@ -39,7 +47,11 @@ The first target is Artix Linux with dinit on x86_64. The base image must provid
 - graphical login with a recovery TTY;
 - networking, PipeWire, D-Bus, portals, polkit and accelerated graphics;
 - Pori manages disks and mounts through UDisks2, with persistent dinit services under `/etc/dinit.d`;
+<<<<<<< HEAD
 - PCManFM provides native file management and is the default directory handler and desktop; DINX includes File Roller for archive actions and GParted for standalone partition editing, while `wdisplays` and `shikane` cover Wayland display setup; Thunar, GVFS, Tumbler and KDE Partition Manager remain omitted;
+=======
+- PCManFM provides native file management, is the default directory handler and renders the `~/Desktop` icons through `pcmanfm --desktop`; DINX includes File Roller for archive actions and GParted for standalone partition editing, while `wdisplays` and `shikane` cover Wayland display setup; Thunar, GVFS, Tumbler and KDE Partition Manager remain omitted;
+>>>>>>> main
 - package manifests that identify every DINX-specific input;
 - a known-good snapshot that can be reproduced from a clean build environment.
 
@@ -75,21 +87,31 @@ DinitUI also owns explicit `normal`, `lite`, `gaming` and user-defined system-se
 
 ### DINXPanel
 
-DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its Firewall button opens the `firewall-config` GUI; `firewalld-dinit` enables the daemon at boot. Its read-only upgrade report uses Shelly and optional fwupd metadata; Topgrade preview uses `--dry-run --show-skipped`; explicit upgrades remain user-confirmed terminal workflows. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
+DINXPanel is the YaST-inspired control center. It owns the visible hardware and driver actions, groups fixed entry points for network, Bluetooth, display, audio, firewall, Dinit services, package upgrades and firmware, and exposes a fixed Artix kernel catalog (`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Its Firewall button opens the `firewall-config` GUI; `firewalld-dinit` enables the daemon at boot. Its read-only upgrade report uses `checkupdates` from `pacman-contrib` for the official repositories, `paru -Qu` for the AUR and optional fwupd metadata, its `Package manager` button opens Octopi, whose elevation runs through `pkexec` and polkit because DINX ships no sudo, and the PaintFE button launches that application without elevated privileges. Kernel actions install packages and headers only; they never remove the running kernel, require a reboot, and use the bootloader to select an already-installed alternative for rollback.
 
 Printing is an explicit post-install option rather than an ISO dependency:
 DINXPanel downloads the fixed `cups-dinit` package from the configured Artix
 repository, which pulls CUPS and provides the `cupsd` dinit service. The user
 enables or starts that service through DinitUI when printing is required.
 
+<<<<<<< HEAD
 The standalone Gamescope session is independent of the River/KWM/Morghulis session and does not install a shell plugin or systemd integration.
 
 ### Mission Center
 
 `Mission Center` is the base GTK4 resource and process monitor delivered in the signed DINX package repository and included in the ISO. Its package does not introduce a systemd dependency.
+=======
+The standalone Gamescope session is independent of the River/KWM session supervisor and does not install a shell plugin or systemd integration.
 
-### Seafoam Settings and ZLS
+### Display tools
 
+DINX display configuration goes through the `dinx-wdisplays` wrapper: it runs `wdisplays`, then `dinx-save-shikane-profile` exports the result as the named `DINX wdisplays` profile in `~/.config/shikane/config.toml`, and DINXPanel's `Display` button opens that same wrapper. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
+### River, KWM and the dinit session boundary
+>>>>>>> main
+
+The `River + KWM + Morghulis (DINX)` entry in `/usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop` is the only selectable and supported user session: `DesktopNames=river;kwm;morghulis` and `Exec=dbus-run-session /usr/local/libexec/dinx-river-session`. The profile roster installs `river` from the Artix repository plus the DINX packages `kwm`, which implements the required `river-window-management-v1` protocol and is built `-Dbar=false`, so KWM ships no bar of its own, `morghulis`, the DINX desktop shell whose NavBar is the status surface and which also provides the runner, quick menu, notifications, OSD and power menu, `kwim`, the DINX river input-management helper that configures input devices independently of the window manager, `dinx-dock`, the first-party GTK4 layer-shell launcher bar that honors the saved dock placement, `dinx-first-run`, the first-run appearance wizard, and `greetd-agreety`. `/usr/local/libexec/dinx-river-session` is the single wrapper for both live and greeter login: it normalizes the locale to `C.UTF-8` when the charmap is not UTF-8, exports the desktop and Wayland toolkit variables plus the DINX dark recovery defaults, reads the graphics profile from `/usr/local/libexec/dinx-graphics-profile`, validates `XDG_RUNTIME_DIR` by creating it mode 0700 and rejecting a directory owned by someone else, and takes a non-blocking `flock` on `$XDG_RUNTIME_DIR/dinx-river-session.lock` so a racing second compositor exits 0 instead of contending for the seat. It selects the libseat backend at runtime: `seatd` when `/run/seatd.sock` exists and the user is in the `seat` group, otherwise `logind`/elogind, which under dinit never marks the session active.
+
+<<<<<<< HEAD
 `Seafoam Settings` is a base native Zig/GTK4 launcher for DINX display/session surfaces: `dinx-wdisplays`, `dinx-save-shikane-profile`, Shikane, DinitUI, DINXPanel, Qt6ct and Mission Center. It uses fixed argument vectors and opens the documented River/KWM/Morghulis and Shikane configuration paths directly in Dintor. Deetty is the sole terminal emulator in the ISO; Nano remains a recovery editor.
 
 `zls` is the optional source-pinned official Zig Language Server 0.16.0 package. It carries the matching Zig 0.16.0 `lib/std` tree and a metadata-only `/usr/lib/zls/zig-env` shim; when installed, Dintor completion and navigation work without a full Zig compiler, systemd or a service. DINX native Zig packages are built with Zig 0.17.0. If the optional Artix `zig` package is installed later, the shim delegates compiler commands to it.
@@ -100,13 +122,30 @@ The live image starts River/KWM/Morghulis from the restartable `dinx-live-sessio
 Morghulis first use asks for the light/dark variant and saves it in `~/.config/morghulis/preferences.json`; the session synchronizer reapplies it to GTK/Qt at login. PCManFM owns the desktop and is the default `inode/directory` handler.
 
 Graphics policy keeps QEMU `virtio_gpu` on the reduced-effects GLES2 path and uses the safe fallback when no accessible render node exists. Direct VirtualBox validation remains separate qualification.
+=======
+Before the compositor starts, the wrapper runs `xdg-user-dirs-update`, so fresh live and installed accounts get the standard XDG directories, including `~/Desktop`, before the desktop appears. It then seeds `~/.config/qt6ct/qt6ct.conf` and the DINX qt6ct palette through `dinx-qt6ct-palette-seed` when they are missing, and copies the packaged `/etc/xdg/kwm/config.zon` to `~/.config/kwm/config.zon` only when that file is absent, so later user edits survive every boot. Finally it `exec`s `river -c /usr/local/libexec/dinx-river-init`.
+
+`/usr/local/libexec/dinx-river-init` is river's own configuration. River 0.5 ships no `riverctl` and does not start a window manager itself, so the init execs `dinx-session-supervisor river`; after Wayland and session D-Bus are ready, the supervisor starts KWM as the required `river-window-management-v1` implementation. KWM's default build starts KWIM for input management.
+
+The supervisor logs to `$XDG_STATE_HOME/dinx/session.log`, writes `starting`, `ready`, `failed` and `exited` to `$XDG_STATE_HOME/dinx/session.status`, waits for the Wayland socket and then the session D-Bus, runs the first-run appearance glue `/usr/local/libexec/dinx-desktop-first-run` before any shell component starts, and starts the required `kwm`, `shikane`, `lxqt-policykit-agent`, `/usr/local/libexec/dinx-idle` and `morghulis` helpers, along with the optional `dinx-dock` launcher bar. KWM provides `river-window-management-v1` and starts KWIM for `river-input-management-v1`. The supervisor starts `bc250-control-centerd` only when that separately installed signed package is present on a machine with PCI `1002:13fe`; the generic ISO does not include those packages. When a required helper dies, the supervisor records `failed`, terminates its children and the monitored compositor parent, so a broken helper ends the session instead of leaving a blank desktop; it also exits cleanly when the compositor ends first. The recipes install no systemd or `uwsm` units and no systemd library, and nothing in the session path references systemd, systemctl, uwsm or loginctl.
+
+The live image starts the wrapper from the restartable `dinx-live-session` dinit service instead of a display manager: the livefs shadows `/etc/dinit.d/greetd` with a scripted no-op unit so no display manager enters the live boot. `openvt` creates and activates dedicated VT 7, `runuser` enters the disposable `dinx` account, and `dbus-run-session` supplies the session bus. The live-only `dinx-live-autologin` package sets the `dinxlive` hostname, provisions `/run/dinx-session` mode 0700 for `dinx`, adds `dinx` to the `render` and `seat` groups and waits up to five seconds for `/run/seatd.sock`.
+
+Installed login uses greetd and agreety rather than a dedicated greeter host: `/etc/greetd/config.toml` sets `vt = 7` and `source_profile = false`, and its `[default_session]` runs `env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session` as the `greeter` account that greetd's own sysusers create, whose only state requirement is the tmpfiles directory `/var/cache/agreety`. agreety offers the single `River + KWM + Morghulis (DINX)` wayland-sessions entry, so there is no session fallback and no silent session switch. The installed `greetd` dinit unit runs `/usr/bin/greetd` with `smooth-recovery = true` and `restart-delay = 7`, logging to `/var/log/dinit/greetd.log`.
+
+Live and newly installed session accounts receive `render` group access: `dinx-live-autologin` appends `dinx` to the group during live boot preparation and Calamares' `users.conf` grants it to the installed user. The graphics helper binds to the driver behind each accessible DRM render node rather than to DRM card order, and `dinx-graphics-environment.sh` applies the resulting profile: QEMU `virtio_gpu`/virgl selects `virtual-gl` with `WLR_RENDERER=gles2`; VirtualBox VMSVGA (`vmwgfx`) and legacy `vboxvideo` select `cpu` with `WLR_RENDERER=pixman` because VirtualBox's llvmpipe Vulkan device cannot be matched to its DRM render node; no accessible render node, `qxl`, `bochs`, `simpledrm` and `cirrus` select `cpu` with `WLR_RENDERER=pixman`; and any other driver selects `hardware` with no override. `GSK_RENDERER` is a…
+>>>>>>> main
 
 `dinx-doctor` is the read-only evidence surface for the current session, dinit, storage, display and package paths. It does not start services, mount devices, modify Shikane, run package transactions or contact a network. `DINX_DOCTOR_QUERY_DINIT=1` opts into a read-only user-dinit list query.
 
 
 ### Session safety and payload budgets
 
+<<<<<<< HEAD
 The River/KWM/Morghulis session starts the fixed `dinx-idle` wrapper. In the live session, `swayidle` runs `wlopm` to power off displays after 600 seconds and before suspend, then powers them on after activity or resume. The live session does not expose a lock action; installed sessions retain the `swaylock` timeout and suspend lock path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
+=======
+The River/KWM session starts the fixed `dinx-idle` wrapper. In the live session, `swayidle` runs `wlopm` to power off displays after 600 seconds and before suspend, then powers them on after activity or resume. `dinx-lock` refuses to lock in the live session and the session wrapper writes a `Hidden=true` override for `dinx-lock.desktop` there, because a locked disposable seat is unrecoverable without a reboot. Installed sessions retain the `swayidle` to `dinx-lock` to `swaylock -f` timeout and suspend lock path. `brightnessctl` backs the standard hardware keys and fixed 5-percent DINXPanel controls. These actions are fixed argv paths with no user-provided command string.
+>>>>>>> main
 
 The profile has one combined Artix package payload because `buildiso` consumes one YAML profile. DinitUI separates Normal/Lite/Gaming service policy at runtime, while `scripts/check_dinx_budget.sh` prevents package/startup/binary growth. `scripts/measure_dinx_session.sh` is a runtime observation tool; it reports RSS/CPU only when a real session exists and does not substitute for hardware qualification.
 
@@ -128,7 +167,11 @@ Shared contracts are versioned independently from application internals:
 
 A contract must have a documented version and a compatibility test before applications rely on it.
 
+<<<<<<< HEAD
 The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry, Papirus as the default desktop icon theme and Adwaita icon bridging for DINX controls. Morghulis stores the saved appearance variant in `~/.config/morghulis/preferences.json`; the session synchronizer applies it to dconf, GTK 3/4 and Qt6ct while preserving unrelated toolkit settings. Morghulis, PCManFM, Calamares, Swayimg and GRUB use static bridges with the same tokens. `dinx-noto-latin` supplies Noto Sans styles and Noto Sans Mono from a generated Latin/Latin Extended subset; `scripts/check_morghulis_theme.sh` is the theme contract qualification.
+=======
+The DINX Theme v1 contract is a static palette at `/usr/share/dinx/theme/DINX.json` with semantic surface/text/primary/error roles, light/dark variants, a complete ANSI terminal palette, Noto Sans 10 for GUI-facing bridges, square control geometry, Papirus as the default desktop icon theme and Adwaita icon bridging for DINX controls; `DINX.json` remains the brand default. DINX ships a selectable appearance: the first-run wizard `dinx-first-run`, run through `/usr/local/libexec/dinx-desktop-first-run` by the supervisor before the shell and once per account behind the `~/.local/state/dinx/desktop-first-run-complete` marker, asks for language (pt-BR/en-US), location (America/Sao_Paulo or UTC), theme family (DINX, Skeuos, Orchis, Fluent or Jasper), dark or light variant, rounded or square corners, bar placement (top/bottom) and dock placement (left/right/bottom/none), writes `~/.config/dinx/appearance.json` and `~/.config/dinx/installer-preferences.json`, sets the Morghulis `navbar-anchor` GSettings key and reloads the dock over SIGHUP. `dinx-river-session` exports `DINX_COLOR_SCHEME=dark` and `DINTOR_THEME=prefer-dark` as recovery defaults plus `QT_QPA_PLATFORMTHEME=qt6ct`, sets `XDG_CURRENT_DESKTOP=river` exactly because Morghulis needs the literal string, no longer exports `GTK_APPLICATION_PREFER_DARK_THEME` or `ADW_DEBUG_COLOR_SCHEME`, and never forces `GTK_THEME`, so applications keep their own theme selection. Once a session bus exists, `dinx-sync-session-theme` reads `~/.config/dinx/appearance.json` and maps the selected family, variant and corner style onto the shipped `/usr/share/themes` names, the DINX default or, for example, `Jasper-Square-Light` for Jasper with a light variant and square corners: it writes that `gtk-theme-name` and `gtk-application-prefer-dark-theme` into the GTK 3/4 `settings.ini`, the matching `'prefer-dark'` or `'prefer-light'` value at `/org/gnome/desktop/interface/color-scheme` in dconf, and points Qt6ct at `$XDG_CONFIG_HOME/qt6ct/colors/DINX.conf` with `custom_palette=true` for dark or `custom_palette=false` for light, preserving unrelated toolkit settings and user-managed symlinks; a missing or invalid `appearance.json` falls back to the DINX dark default. The compiled system keyfile `/etc/dconf/db/local.d/99-dinx-dark` already reports `color-scheme='prefer-dark'`, so egui and libadwaita/GTK applications start dark before the session writes the user value. The agreety login surface runs before the user session and consumes only the static DINX GTK/Qt bridges; Calamares, Swayimg and GRUB use static bridges with the same tokens. `dinx-noto-latin` supplies Noto Sans styles and Noto Sans Mono from a generated Latin/Latin Extended subset; fixed-width fields, DinitUI/DINXPanel monospace log views and GRUB's `u_vga16 16` remain intentional platform boundaries. `scripts/check_dinx_theme.sh` is the contract qualification.
+>>>>>>> main
 
 ## Gaming session
 
@@ -136,14 +179,22 @@ Gaming is a hidden manual launcher, not a selectable user session. The base ISO 
 
 ## Storage and filesystem boundary
 
+<<<<<<< HEAD
 Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. PCManFM is the default file manager and `inode/directory` handler. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside River/KWM/Morghulis and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
+=======
+Pori is the only DINX storage UI. It uses UDisks2 to discover block devices, and its persistent mount lifecycle is dinit-native: Pori writes supervised `process` services under `/etc/dinit.d` that invoke `/usr/local/libexec/pori-mount-service`, retry missing devices, keep the mount alive while the source is present and unmount only mounts owned by that service. It controls them with `dinitctl --system`; no systemd mount units are generated. PCManFM is the only base file manager and the default `inode/directory` handler, and it renders the `~/Desktop` icons through `pcmanfm --desktop`. File Roller provides archive open/create/extract actions and GParted provides standalone partition editing. DINX's `dinx-wdisplays` wrapper provides interactive Wayland output configuration, serializes concurrent exports with `flock`, atomically replaces the named `DINX wdisplays` profile in `~/.config/shikane/config.toml` and reports a failed Shikane reload instead of hiding it. Shikane starts inside the River/KWM session and reapplies matching profiles when outputs change. The image omits competing file managers and volume monitors.
+>>>>>>> main
 
 The kernel `ntfs3` module supplies NTFS read/write support in both the live ISO and the installed system. Pori maps UDisks2's `ntfs` filesystem type to `ntfs3`. The legacy `ntfs-3g` package is not in the ISO or base install; it remains an optional post-install package for compatibility and repair tooling. Windows Fast Startup and hibernation must be disabled before mounting a shared NTFS volume.
 
 ## Installation path selected
 
 
+<<<<<<< HEAD
 The base image includes PCManFM as its default file manager and desktop, File Roller for archive actions, Pori as its dinit storage manager, GParted for standalone partition editing, `dinx-wdisplays` for interactive display configuration with persistent Shikane export, and the Shikane user daemon. The profile deliberately omits Thunar, GVFS, Tumbler and KDE Partition Manager rather than shipping competing file-manager, volume-monitor and partitioning stacks.
+=======
+The base image includes PCManFM as its default file manager, File Roller for archive actions, Pori as its dinit storage manager, GParted for standalone partition editing, `dinx-wdisplays` for interactive display configuration with persistent Shikane export, and the Shikane user daemon. The profile deliberately omits Thunar, GVFS, Tumbler and KDE Partition Manager rather than shipping competing file-manager, volume-monitor and partitioning stacks.
+>>>>>>> main
 
 The persistent installation path is **Calamares** in offline mode: it copies the ISO root filesystem, creates the user and filesystem table, enables the dinit services, installs GRUB and removes the live-only packages. The user can choose automatic or manual partitioning, with ext4 and btrfs available in the first profile. The profile preserves existing Windows ESP/NTFS layouts, enables a separate DINX EFI boot directory and keeps `os-prober` for Windows discovery. CI qualifies disposable BIOS/UEFI, Btrfs-existing-subvolume and Windows side-by-side/manual transaction smokes; the overall path remains experimental until destructive-device safeguards, physical hardware installation, installed-ISO upgrades and filesystem recovery are qualified.
 

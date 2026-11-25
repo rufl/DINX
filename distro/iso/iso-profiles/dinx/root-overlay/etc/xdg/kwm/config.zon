@@ -1,0 +1,60 @@
+.{
+    // environment variables
+    .env = .{
+    },
+
+    // working direction of processes spawned by kwm
+    .working_directory = .home,
+
+    // startup commands
+    .startup_cmds = .{
+    },
+
+    // All windows float by default (Aqueous/Pearl-style stacking desktop).
+    // .layout has no .float sub-struct (float takes no config params), so
+    // default_layout alone is sufficient.
+    .default_layout = .float,
+
+    // key/pointer bindings (inherit upstream defaults)
+    .bindings = .{
+        .repeat_info = .{
+            .rate = 50,
+            .delay = 300,
+        },
+    },
+
+    // window rules: global float rule catches every window (including those
+    // with a null app_id). default_layout = .float already floats everything;
+    // this rule makes it explicit and future-proof.
+    .window_rules = .{
+        .{ .app_id = .{ .str = \"\", .match_null = true }, .floating = true },
+    },
+
+    // output rules (empty - inherit upstream)
+    .output_rules = .{
+    },
+
+    // cursor warp and auto-swallow
+    .cursor_warp = .none,
+    .auto_swallow = true,
+    .remember_floating_geometry = false,
+    .disable_wrap_around_for_scroller = false,
+    .default_attach_mode = .{
+        .tile = .top,
+        .grid = .top,
+        .monocle = .top,
+        .deck = .stack_top,
+        .scroller = .below_focused,
+        .centered_master = .top,
+        .float = .top,
+    },
+    .default_window_decoration = .ssd,
+    .border = .{
+        .width = 5,
+        .color = .{
+            .focus = 0xffc777ff,
+            .unfocus = 0x828bb8ff,
+            .swallowing = 0x0830e6ff,
+        },
+    },
+}

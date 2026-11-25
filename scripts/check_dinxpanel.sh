@@ -25,7 +25,11 @@ for path in "$pkgbuild" "$frontend" "$optional_packages" "$kernels" "$desktop" "
 done
 
 grep -Fqx 'pkgname=dinxpanel' "$pkgbuild" || fail 'PKGBUILD package name is not dinxpanel'
+<<<<<<< HEAD
 grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit topgrade shelly brightnessctl swaylock wdisplays mission-center pcmanfm pori gparted file-roller networkmanager pipewire usbutils upower elogind)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+=======
+grep -Fq 'depends=(gtk4 libadwaita dinitui pacman deetty nano inxi nm-connection-editor blueman pwvucontrol qt6ct firewalld firewall-config firewalld-dinit octopi brightnessctl swaylock wdisplays)' "$pkgbuild" || fail 'runtime dependency contract is incomplete'
+>>>>>>> main
 grep -Fq 'zig_target_flags=(-Dcpu=baseline)' "$pkgbuild" \
   || fail 'DINXPanel build target must be generic x86_64 GNU/Linux'
 grep -Fq 'zig build "${zig_target_flags[@]}" -Doptimize=ReleaseSafe' "$pkgbuild" \
@@ -42,12 +46,16 @@ grep -Fq '    - dinxpanel' "$profile" || fail 'DINX profile does not install din
 [[ -x "$theme_helper" && -x "$desktop_helper" ]] || fail 'appearance helpers are missing or not executable'
 sh -n "$bluetooth_helper" "$theme_helper" "$desktop_helper" || fail 'DINX desktop helper has invalid shell syntax'
 grep -Fq 'build_package dinxpanel' "$builder" || fail 'ISO builder does not build dinxpanel'
+<<<<<<< HEAD
 pori_build_line=$(grep -nF 'build_package pori' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build pori'
 mission_center_build_line=$(grep -nF 'build_package mission-center' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build mission-center'
 panel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build dinxpanel'
 (( pori_build_line < panel_build_line && mission_center_build_line < panel_build_line )) \
   || fail 'ISO builder installs DINXPanel before its system-tool runtime dependencies'
 for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'PCManFM desktop preferences' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'Hardware qualification report' 'USB devices' 'Network diagnostics' 'Audio diagnostics' 'Power & battery status' 'Suspend' 'Restart' 'Power off' 'DINX tools' 'Open Deetty' 'Open Dintor' 'Refresh DINX Dock' 'Apply dark session theme' 'Apply light session theme' 'Choose wallpaper' 'Show desktop icons' 'Hide desktop icons'; do
+=======
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'PaintFE' 'Package manager' 'Install CUPS' 'Kernel installer' 'Brightness down' 'Brightness up' 'Lock screen'; do
+>>>>>>> main
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
 grep -Fq 'gtk_label_new("Control Panel")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
@@ -106,13 +114,18 @@ grep -Fq 'dinitui_command = command' "$frontend" || fail 'GPU command is not ret
 grep -Fq 'const argv = [_][]const u8{ "dinitui", task.dinitui_command }' "$frontend" || fail 'GPU workflow is not delegated through fixed dinitui argv'
 grep -Fq -- '--gpu-status' "$frontend" || fail 'GPU detection action is missing'
 grep -Fq -- '--install-gpu-drivers' "$frontend" || fail 'GPU installation action is missing'
-grep -Fq '"shelly", "sync"' "$frontend" || fail 'Shelly metadata refresh is missing'
-grep -Fq '"shelly", "list-updates", "all"' "$frontend" || fail 'Shelly update discovery is missing'
-grep -Fq '"shelly", "upgrade", "all"' "$frontend" || fail 'Shelly upgrade action is missing'
+# The upgrade report is read-only: checkupdates (pacman-contrib) covers the
+# official repositories and paru -Qu covers the AUR. Octopi is the interactive
+# package manager and has no CLI, so it is launched as an app, not queried here.
+grep -Fq '"checkupdates"' "$frontend" || fail 'official-repository update discovery is missing'
+grep -Fq '"paru", "-Qu"' "$frontend" || fail 'AUR update discovery is missing'
+if grep -Fq 'shelly' "$frontend"; then
+  fail 'DINXPanel still invokes the retired Shelly upgrade workflow'
+fi
 grep -Fq '"fwupdmgr", "refresh"' "$frontend" || fail 'fwupd metadata refresh is missing'
 grep -Fq '"fwupdmgr", "get-updates"' "$frontend" || fail 'firmware update discovery is missing'
-grep -Fq '"topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux"' "$frontend" || fail 'Topgrade preview is missing'
 for terminal_call in \
+<<<<<<< HEAD
   '"deetty", "-e", "topgrade", "--dry-run"' \
   '"deetty", "-e", "topgrade"' \
   '"deetty", "-e", "shelly", "upgrade", "all"' \
@@ -123,6 +136,11 @@ for terminal_call in \
   '"deetty", "-e", "wpctl", "status"' \
   '"deetty", "-e", "upower", "-d"' \
   '"deetty", "-e", "dinx-alpha7-hardware-report"'; do
+=======
+  '"paintfe"' \
+  '"octopi"' \
+  '"deetty", "-e", "inxi", "-GSC"'; do
+>>>>>>> main
   grep -Fq "$terminal_call" "$frontend" || fail "terminal action does not use Deetty with fixed argv: $terminal_call"
 done
 if grep -Eq '"(foot|ghostty)"' "$frontend"; then
@@ -132,7 +150,6 @@ grep -Fq 'optional_packages.install' "$frontend" || fail 'CUPS download is not w
 grep -Fq 'optional_package_install' "$frontend" || fail 'CUPS installation is not isolated in the asynchronous package task'
 grep -Fq 'pub const cups_user_install_argv' "$optional_packages" || fail 'CUPS non-root package argv is missing'
 grep -Fq 'pub const cups_install_argv' "$optional_packages" || fail 'CUPS pkexec package argv is missing'
-grep -Fq '"topgrade" });' "$frontend" || fail 'Topgrade action is missing'
 for kernel in linux linux-lts linux-zen linux-hardened; do
   grep -Fq ".id = \"$kernel\"" "$kernels" || fail "kernel catalog is missing $kernel"
 done

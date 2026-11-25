@@ -1,0 +1,28 @@
+--- a/lib/App/Application.vala	2026-11-22 23:23:42.534058143 +0000
++++ b/lib/App/Application.vala	2026-11-22 23:23:42.534210978 +0000
+@@ -1,5 +1,5 @@
+ public class Morghulis : Adw.Application {
+-    private GTop.Uptime _g_uptime;
++    private double _uptime_seconds;
+     private List<MorghulWindow> _windows;
+     private CssManager _css_manager;
+ 
+@@ -199,9 +199,15 @@
+     }
+ 
+     private void sync_uptime() {
+-        GTop.get_uptime(out _g_uptime);
+-        var uptime_hours = Math.floor(_g_uptime.uptime / 3600);
+-        var uptime_minutes = Math.floor((_g_uptime.uptime % 3600) / 60);
++        try {
++            string contents;
++            FileUtils.get_contents("/proc/uptime", out contents);
++            _uptime_seconds = double.parse(contents.strip().split(" ")[0]);
++        } catch (Error e) {
++            _uptime_seconds = 0;
++        }
++        var uptime_hours = Math.floor(_uptime_seconds / 3600);
++        var uptime_minutes = Math.floor((_uptime_seconds % 3600) / 60);
+ 
+         if (uptime_hours <= 0) {
+             uptime = @"Up for $uptime_minutes minutes";

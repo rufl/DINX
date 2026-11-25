@@ -27,14 +27,14 @@ metadata filename, machine role, firmware mode and GPU before marking a result
 as `pass`.
 
 1. Verify the ISO SHA-512 and build metadata, then boot the normal DINX session.
-2. After a Calamares install, confirm the first boot reaches Pearl Greeter and then the Aqueous/Pearl session; `dinitctl status greetd NetworkManager` must report the expected services.
+2. After a Calamares install, confirm the first boot reaches the agreety login screen and then the River/KWM session; `dinitctl status greetd NetworkManager` must report the expected services.
 3. Open **Display Settings**, arrange the outputs, close it, and confirm the
    `DINX wdisplays` profile exists in
    `~/.config/shikane/config.toml`; log out and back in to confirm it reapplies.
 4. On a disposable NTFS volume, mount it through Pori or UDisks2, create and
    remove a test file, unmount it, and mount it again. Do not use a Windows
    volume left hibernated or with Fast Startup enabled.
-5. Use Phyto to browse the mounted volume, File Roller to create and extract an
+5. Use PCManFM to browse the mounted volume, File Roller to create and extract an
    archive, and GParted only against a disposable disk.
 6. Verify `Ctrl+Alt+F2` or `Ctrl+Alt+F3` opens the recovery TTY, then return to
    the graphical session.
@@ -52,10 +52,10 @@ resulting report path for each target.
 
 ### Desktop
 
-- boot the live session and verify that it opens directly in Aqueous + Pearl; if the Pearl Greeter fallback appears, verify that it exposes only the forced `Aqueous + Pearl (DINX)` entry and record the path;
-- verify Wayland, Aqueous, Pearl, audio, network and GPU acceleration;
+- boot the live session and verify that it opens directly in River + KWM; if the agreety login screen appears instead, verify that it offers only the `River + KWM (DINX)` entry and record the path;
+- verify Wayland, River, KWM, audio, network and GPU acceleration;
 - if NVIDIA support is claimed, install `nvidia-open-dkms` with matching headers, reboot, and verify render-node, Vulkan and Gamescope output;
-- lock with `Super+L`;
+- lock through `dinx-lock`;
 - verify idle lock at 600 seconds;
 - suspend, resume, unlock and verify the session remains usable;
 - test physical brightness controls;

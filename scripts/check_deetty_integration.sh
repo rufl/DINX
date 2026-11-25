@@ -35,16 +35,26 @@ for path in "$launcher" "$btop_launcher" "$nvtop_launcher"; do
   [[ -x "$path" ]] || fail "terminal launcher is not executable: $path"
   sh -n "$path" || fail "terminal launcher has invalid shell syntax: $path"
 done
+grep -Fq 'export SHELL=/bin/fish' "$launcher" || fail 'Deetty wrapper does not force Fish'
+grep -Fq 'export NOCTTY_DESKTOP_SHELL=/bin/fish' "$launcher" || fail 'Deetty wrapper does not identify Fish to Deetty'
+grep -Fq -- '--dropdown' "$launcher" || fail 'Deetty wrapper lacks dropdown mode selection'
+grep -Fq -- '--windowed' "$launcher" || fail 'Deetty wrapper lacks windowed mode selection'
+grep -Fq -- '--zen-fullscreen' "$launcher" || fail 'Deetty wrapper lacks zen fullscreen selection'
 [[ $(grep -Fc 'exec /usr/bin/deetty --new-window --execute "$@"' "$launcher") -eq 2 ]] \
   || fail 'Deetty command launcher does not consistently request an independent window'
 grep -Fqx 'exec /usr/local/bin/deetty -e btop "$@"' "$btop_launcher" \
   || fail 'btop does not launch through the Deetty command wrapper'
 grep -Fqx 'exec /usr/local/bin/deetty -e nvtop "$@"' "$nvtop_launcher" \
   || fail 'nvtop does not launch through the Deetty command wrapper'
+<<<<<<< HEAD
 grep -Fqx '    - deetty' "$profile" || fail 'profile does not install Deetty'
 grep -Fqx '    - ghostty-vt-runtime' "$profile" || fail 'profile does not install the VT-only runtime'
 jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null and index("zls") == null' "$groups" >/dev/null \
   || fail 'desktop feature group must exclude optional ZLS'
+=======
+jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null' "$groups" >/dev/null \
+  || fail 'desktop feature group does not include Deetty or its VT runtime'
+>>>>>>> main
 if jq -e 'any(.groups[].packages[]; . == "foot" or . == "ghostty")' "$groups" >/dev/null; then
   fail 'feature groups include an alternative terminal application'
 fi
@@ -54,15 +64,26 @@ fi
 if [[ -e "$terminal_wrapper" || -e "$terminal_fallback" ]]; then
   fail 'retired terminal fallback wrapper or launcher remains'
 fi
-for package in dialog fzf glances less libnewt nano openssh procps-ng sqlite tmux; do
+# glances is deliberately absent: it is a build/qualification-only input (deetty's
+# makedepends and the P2 TUI qualification resolve it from the builder image, see
+# scripts/iso-builder/packages.txt), not a shipped ISO package.
+for package in dialog fzf less libnewt nano openssh procps-ng sqlite tmux; do
   grep -Fqx "    - $package" "$profile" || fail "profile does not install $package"
 done
+builder_packages="$repo_root/scripts/iso-builder/packages.txt"
+[[ -r "$builder_packages" ]] || fail "builder package manifest is missing: $builder_packages"
+grep -Fqx 'glances' "$builder_packages" \
+  || fail 'builder image does not provide glances for the Deetty TUI qualification'
+if grep -Fqx '    - glances' "$profile"; then
+  fail 'glances is a builder-only qualification input and must not ship in the ISO'
+fi
 if grep -Eq '^[[:space:]]+- (man-db|man-pages|texinfo)([[:space:]]|$)' "$profile"; then
   fail 'profile installs removed documentation packages'
 fi
 if jq -e 'any(.groups[].packages[]; . == "man-db" or . == "man-pages" or . == "texinfo")' "$groups" >/dev/null; then
   fail 'feature groups include removed documentation packages'
 fi
+<<<<<<< HEAD
 if grep -Fqx '    - zls' "$profile"; then
   fail 'profile installs optional ZLS'
 fi
@@ -71,6 +92,9 @@ jq -e '.groups.optional.packages | index("zls") != null' "$groups" >/dev/null \
 if grep -Eq '^[[:space:]]+- (clang|vim)([[:space:]]|$)' "$profile"; then
   fail 'profile installs build-only clang or Vim'
 fi
+=======
+grep -Fq 'set -gx TERMINAL deetty' "$fish_profile" || fail 'Fish TERMINAL default is missing'
+>>>>>>> main
 if jq -e 'any(.groups[].packages[]; . == "clang" or . == "vim")' "$groups" >/dev/null; then
   fail 'feature groups install build-only clang or Vim'
 fi
@@ -90,8 +114,6 @@ runtime_dependencies=$(awk -F= '$1 == "depends" { print; exit }' "$pkgbuild")
 build_dependencies=$(awk -F= '$1 == "makedepends" { print; exit }' "$pkgbuild")
 [[ "$build_dependencies" == *"'clang'"* ]] || fail 'clangd protocol qualification build dependency is missing'
 [[ "$build_dependencies" == *"'vim'"* ]] || fail 'Vim real-TUI qualification build dependency is missing'
-grep -Fq "optdepends=('zls: Zig language server for Dintor' 'clang: optional C/C++ language server via clangd')" "$pkgbuild" \
-  || fail 'optional Zig and C/C++ language server dependencies are not documented'
 grep -Fq "'git'" "$pkgbuild" || fail 'Git runtime dependency is missing'
 grep -Fq 'Git Status and Diff...' "$repo_root/distro/packages/deetty/qualification-compat.patch" || fail 'Dintor Git action is missing'
 grep -Fq 'DINTOR_THEME' "$repo_root/distro/packages/deetty/qualification-compat.patch" || fail 'Dintor color scheme contract is missing'
@@ -119,16 +141,22 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/com.noctty.NOCTTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
-tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocttyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
+# Upstream renamed its product files in commit 2b9aeb0 (com.noctty.* -> com.deetty.*,
+# nocttyhere.desktop -> deettyhere.desktop). The pinned source must carry the
+# renamed entries and must not regress to the retired noctty identities.
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/com.deetty.DEETTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
+tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/deettyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
 tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocted/styles/nocted-dark.xml' >/dev/null || fail 'pinned upstream Dintor source scheme is missing'
-upstream_dintor_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.noctty.NoctEd.desktop)
+if tar -tzf "$archive" | grep -Eq 'resources/(com\.noctty\.|nocttyhere)'; then
+  fail 'pinned upstream source still ships retired noctty identity files'
+fi
+upstream_dintor_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.deetty.NoctEd.desktop)
 grep -Fqx 'Exec=nocted %F' <<<"$upstream_dintor_desktop" || fail 'pinned upstream editor entry is missing'
-upstream_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.noctty.NOCTTY.desktop)
-grep -Fqx 'TryExec=noctty' <<<"$upstream_desktop" || fail 'pinned upstream terminal entry is missing'
-grep -Fqx 'Exec=noctty --open-uri %u' <<<"$upstream_desktop" || fail 'upstream terminal URI entry is missing'
+upstream_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.deetty.DEETTY.desktop)
+grep -Fqx 'TryExec=deetty' <<<"$upstream_desktop" || fail 'pinned upstream terminal entry is missing'
+grep -Fqx 'Exec=deetty --open-uri %u' <<<"$upstream_desktop" || fail 'upstream terminal URI entry is missing'
 grep -Fqx 'Categories=System;TerminalEmulator;' <<<"$upstream_desktop" || fail 'terminal desktop category is missing'
-service_menu=$(tar -xOf "$archive" deetty-0.1.0/resources/nocttyhere.desktop)
+service_menu=$(tar -xOf "$archive" deetty-0.1.0/resources/deettyhere.desktop)
 
 patched_source="$scratch/patched-source"
 mkdir -p "$patched_source"
@@ -170,24 +198,23 @@ grep -Fq './zig-out/bin/dintor --lsp-probe' "$lsp_smoke" || fail 'Dintor LSP smo
 if grep -Fq './zig-out/bin/nocted' "$lsp_smoke"; then
   fail 'Dintor LSP smoke still references the old executable'
 fi
-patched_desktop=$(<"$patched_source/resources/com.noctty.NOCTTY.desktop")
+patched_desktop=$(<"$patched_source/resources/com.deetty.DEETTY.desktop")
 grep -Fqx 'Name=Deetty' <<<"$patched_desktop" || fail 'Deetty desktop name is incorrect'
 grep -Fqx 'TryExec=deetty' <<<"$patched_desktop" || fail 'Deetty desktop command is incorrect'
 grep -Fqx 'Exec=deetty --open-uri %u' <<<"$patched_desktop" || fail 'Deetty URI handler is incorrect'
 grep -Fqx 'Icon=org.dinx.Deetty' <<<"$patched_desktop" || fail 'Deetty desktop icon identity is incorrect'
 grep -Fqx 'MimeType=x-scheme-handler/deetty;' <<<"$patched_desktop" || fail 'Deetty URI scheme declaration is incorrect'
-patched_editor_desktop=$(<"$patched_source/resources/com.noctty.NoctEd.desktop")
+patched_editor_desktop=$(<"$patched_source/resources/com.deetty.NoctEd.desktop")
 grep -Fqx 'Name=Editor' <<<"$patched_editor_desktop" || fail 'Dintor desktop name is incorrect'
 grep -Fqx 'Name[pt_BR]=Editor' <<<"$patched_editor_desktop" || fail 'Dintor Portuguese desktop name is incorrect'
 grep -Fqx 'Exec=dintor %F' <<<"$patched_editor_desktop" || fail 'Dintor file opening contract is missing'
 grep -Fqx 'Icon=org.dinx.Dintor' <<<"$patched_editor_desktop" || fail 'Dintor icon identity is incorrect'
-patched_service_menu=$(<"$patched_source/resources/nocttyhere.desktop")
+patched_service_menu=$(<"$patched_source/resources/deettyhere.desktop")
 grep -Fqx 'Exec=deetty --new-window --working-directory %f' <<<"$patched_service_menu" || fail 'Deetty service-menu command is incorrect'
-grep -Fq '<id>org.dinx.Deetty</id>' "$patched_source/resources/com.noctty.NOCTTY.metainfo.xml" || fail 'Deetty metainfo ID is incorrect'
-grep -Fq '<id>org.dinx.Dintor</id>' "$patched_source/resources/com.noctty.NoctEd.metainfo.xml" || fail 'Dintor metainfo ID is incorrect'
-grep -Fq '<binary>dintor</binary>' "$patched_source/resources/com.noctty.NoctEd.metainfo.xml" || fail 'Dintor metainfo binary is incorrect'
+grep -Fq '<id>org.dinx.Deetty</id>' "$patched_source/resources/com.deetty.DEETTY.metainfo.xml" || fail 'Deetty metainfo ID is incorrect'
+grep -Fq '<id>org.dinx.Dintor</id>' "$patched_source/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo ID is incorrect'
+grep -Fq '<binary>dintor</binary>' "$patched_source/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo binary is incorrect'
 grep -Fq 'style-scheme id="dintor-dark"' "$patched_source/resources/nocted/styles/nocted-dark.xml" || fail 'Dintor dark scheme identity is incorrect'
 grep -Fq 'style-scheme id="dintor-light"' "$patched_source/resources/nocted/styles/nocted-light.xml" || fail 'Dintor light scheme identity is incorrect'
 grep -Fq '"DINTOR_THEME"' "$patched_source/src/nocted/main.zig" || fail 'Dintor theme environment is missing'
-grep -Fq '"deetty://"' "$patched_source/src/workspace/Activation.zig" || fail 'Deetty workspace URI scheme is missing'
-printf 'deetty_dintor_integration terminal=deetty sole_terminal=true ghostty_runtime_only=true lsp=zig:zls clangd=optional vim=builder-only shell_defaults=true wm_spawn=true execute_argv=true file_open=true desktop_ids=true service_menu=true metainfo=true editor_styles=true uri_scheme=true patches_apply=true upstream_pin_preserved=true\n'
+printf 'deetty_dintor_integration terminal=deetty sole_terminal=true ghostty_runtime_only=true lsp=zig clangd=optional vim=builder-only shell_defaults=true wm_spawn=true execute_argv=true file_open=true desktop_ids=true service_menu=true metainfo=true editor_styles=true uri_scheme=true patches_apply=true upstream_pin_preserved=true\n'

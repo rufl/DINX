@@ -14,7 +14,11 @@ As tags `v0.1.0-alpha.12` e `alpha-latest` apontam para o mesmo commit-fonte, e 
 
 ## Objetivo do produto
 
+<<<<<<< HEAD
 A DINX busca ser um desktop Artix Linux amigável para iniciantes e pensado para iniciar pela sessão live: entrar direto em River/KWM/Morghulis sem pedir login na live; oferecer um conjunto focado de aplicativos cotidianos, incluindo PCManFM e Mission Center; e simplificar a instalação pelo Calamares, com opções guiada ou manual e swap opcional. O desenho permanece de sessão única e somente dinit: sem systemd ou UWSM. A distribuição é entregue em uma ISO x86_64 para download direto, abaixo do limite de 2 GiB por arquivo do GitHub.
+=======
+A DINX busca ser um desktop Artix Linux amigável para iniciantes e pensado para iniciar pela sessão live: entrar direto na sessão River/KWM sem pedir login na live; oferecer um desktop familiar cuja colocação de janelas o usuário pode configurar; incluir um conjunto focado de aplicativos cotidianos; e simplificar a instalação pelo Calamares, com opções de instalação guiada ou manual e swap opcional. O desenho permanece de sessão única e somente dinit: sem systemd ou UWSM. A distribuição é entregue em uma ISO x86_64 para download direto, abaixo do limite de 2 GiB por arquivo do GitHub.
+>>>>>>> main
 
 A Alpha 12 é um marco experimental, não uma afirmação geral de suporte a hardware. O CI verificou a sessão gráfica no QEMU e os caminhos de instalação/recuperação do workflow; a cobertura em máquinas físicas e o boot direto no VirtualBox VMSVGA continuam sem qualificação. O comportamento entre todos os toolkits também é um gate da Beta, não uma garantia universal.
 
@@ -27,11 +31,19 @@ A Alpha 12 é um marco experimental, não uma afirmação geral de suporte a har
 Implementação entregue:
 
 - o gate da fundação ISO/VM P0, o caminho de transações de pacotes assinados e o contrato de TTY de recuperação;
+<<<<<<< HEAD
 - a sessão River/KWM/Morghulis direta, `agreety` pelo greetd e o runtime somente dinit, sem systemd/UWSM;
 - os defaults Fish, o limite do payload base e os smokes de build limpo/VM;
 - A sessão live inicia River/KWM/Morghulis sem pedir credenciais; sistemas instalados usam `agreety` e não habilitam autologin. A sessão é iniciada e supervisionada diretamente pelo dinit, sem payload de systemd ou UWSM.
 - Novos perfis começam com dois workspaces e janelas flutuantes/stacking. O compositor fornece barras DINX, controles de minimizar/maximizar/fechar, arraste pela barra e encaixe nas bordas/cantos; a compatibilidade com todos os aplicativos GTK, Qt e XWayland ainda precisa ser qualificada.
 - Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Mission Center, Seafoam Settings e ZLS, além das ferramentas DINX de controle/diagnóstico.
+=======
+- a sessão River/KWM direta, o greeter agreety pelo greetd e o runtime somente dinit, sem systemd/UWSM;
+- os defaults Fish, o limite do payload base e os smokes de build limpo/VM;
+- A sessão live inicia River/KWM sem pedir credenciais; sistemas instalados usam o agreety e não habilitam autologin. River/KWM é a única sessão, iniciada e supervisionada diretamente pelo dinit, sem payload de systemd ou UWSM.
+- O supervisor inicia o KWM como implementação obrigatória de `river-window-management-v1` antes de qualquer janela ser mapeada, então sessões novas mosaicanam por padrão, e o `~/.config/kwm/config.zon` do usuário controla colocação e workspaces; o `dinx-river-session` semeia esse arquivo a partir do default empacotado somente quando ele não existe, preservando a configuração existente. A compatibilidade com todos os aplicativos GTK, Qt e XWayland ainda precisa ser qualificada.
+- Fish é o shell padrão e Deetty o único emulador de terminal. A lista base inclui Dintor, PCManFM, File Roller, GParted, Pori, Gapless, wdisplays/Shikane, Blender, Audionaut e ZLS, além das ferramentas DINX de controle/diagnóstico.
+>>>>>>> main
 - GTK 3/4 usa o tema escuro DINX por padrão; a identidade visual do sistema não substitui ícones de aplicativos nem da área de trabalho. Os sistemas live e instalado usam o `ntfs3` do kernel para leitura e escrita em NTFS, e as alterações de configuração dos monitores podem ser salvas em perfis do Shikane.
 - O Calamares oferece particionamento guiado e manual, mantém opções destrutivas desmarcadas e deixa swap opcional. O CI cobre transações do instalador, mas a instalação em discos físicos e alegações de preservação de dados ainda exigem qualificação em hardware.
 
@@ -68,8 +80,8 @@ Evidências de saída da P2:
 
 - o archive upstream Deetty exato é fixado por SHA-256, verificado e compilado no pacote DINX `deetty`;
 - o core nativo Zig qualifica criação/redimensionamento/saída de PTY, grade/título/paste de VT, saída da sessão de terminal, compatibilidade de protocolo/Unicode, ciclo de vida com contabilização do allocator e fairness em 30 panes com paste de 8 MiB;
-- a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite/Glances/Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
-- o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta do Aqueous/Pearl e runtime do pacote estão verificados;
+- a matriz ReleaseSafe qualifica tmux real, um shim determinístico de Zellij, Nano/Less/Dialog reais, top/watch/whiptail/fzf/SQLite, o monitor TUI somente do builder, Bash/man/SFTP local, Vim/btop reais e o `info` instalado ou seu fallback estilizado determinístico em superfícies mínimas/não-TTY;
+- o pacote está presente na ISO; contratos de `$TERMINAL`, defaults do shell, `.desktop`, diretório de trabalho, descoberta do River/KWM e runtime do pacote estão verificados;
 - a execução P0 final prova criação do pacote, geração da ISO, boot no QEMU, payload gráfico, instalação persistente, TTY de recuperação, atestação e upload do artefato.
 
 O código upstream fixado mantém nomes internos históricos de módulos e recursos. Eles aparecem somente onde os patches e fixtures de qualificação precisam referenciar essas entradas upstream exatas; os nomes e caminhos instalados são Deetty/Dintor.
@@ -131,7 +143,7 @@ Gate de release P3:
 **Entregue:**
 
 - launcher standalone `DINX Gaming` e entrada Wayland oculta continuam disponíveis; Gamescope, Steam, regras de dispositivos Steam e dependências Mesa/RADV/Vulkan de 32 bits ficam no grupo Artix opcional `gaming`, fora da ISO base;
-- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração do perfil com propagação de falhas ao redor do launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel inspirada no YaST, com atalhos fixos para painéis de controle, ações de upgrade Shelly/Topgrade, descoberta opcional de fwupd e instalador de kernels Artix sem remoção;
+- semântica segura dos serviços Normal/Lite/Gaming, entrada/restauração do perfil com propagação de falhas ao redor do launcher standalone, detecção/planos fixos de drivers GPU para hardware AMD, Intel e NVIDIA moderno e a DINXPanel (Central de Controle), com atalhos fixos para painéis de controle, relatório somente leitura de upgrades via `checkupdates`/`paru -Qu` com descoberta opcional de fwupd, botão de gerenciador de pacotes Octopi e botão de lançamento do PaintFE, e instalador de kernels Artix sem remoção;
 - fixture determinístico de argv/retorno do launcher e qualificação real headless de launch/exit de filho do Gamescope;
 - checks da ISO exigem launcher/entrada ocultos e rejeitam binários e metadata dos pacotes gaming opcionais no rootfs/livefs;
 - GameMode e MangoHud são membros opcionais do grupo; `dinx-gaming` suporta `DINX_GAMEMODE=auto|on|off` e `DINX_MANGOHUD=on|off` opcional sem remover o fallback normal do launcher.
@@ -157,7 +169,11 @@ Gate de release P3:
 - o metadata do build agora vincula o tamanho em bytes e o SHA-512 registrados da ISO ao artefato exato verificado pelo CI e pelo preflight do release com tag;
 - o metadata registra os maiores pacotes instalados para que regressões de tamanho tenham um diagnóstico acionável;
 - os guias de qualificação em inglês e português agora incluem uma checklist do sistema instalado para persistência de display, leitura/escrita NTFS, Pori, PCManFM, File Roller, GParted, TTY de recuperação e comportamento de hardware.
+<<<<<<< HEAD
 - entregue River/KWM/Morghulis como a única sessão do usuário por wrappers DINX diretos: o autologin live e o greetd instalado iniciam a sessão River, o init wrapper inicia os helpers da DINX e o Morghulis, e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
+=======
+- entregue o River com o gerenciador de janelas `kwm` e o gerenciador de entrada `kwim` da DINX como a única sessão do usuário por wrappers DINX diretos: o autologin live e o agreety iniciam o `dinx-river-session`, o `dinx-river-init` passa o controle ao `dinx-session-supervisor river`, e o supervisor inicia e monitora KWM junto aos helpers da sessão DINX com identidade direta de processo dinit; o KWM inicia o KWIM, e nenhuma unidade upstream de `uwsm` ou systemd de usuário, biblioteca systemd ou runtime systemd é instalada;
+>>>>>>> main
 
 **Gates de release restantes:**
 
@@ -177,8 +193,13 @@ Gate de release P3:
 - Publicar uma matriz de compatibilidade física com hardware exato e resultados testados de firmware, GPU/display, rede, áudio, Bluetooth e suspensão/retomada. Limitar as afirmações de suporte às máquinas testadas; qualificar BC-250 somente em hardware detectado e testado separadamente.
 - Testar instalação guiada e manual em discos físicos descartáveis, incluindo os caminhos UEFI/BIOS suportados, primeiro boot, TTY de recuperação e recuperação após instalação interrompida. Manter swap opcional; nunca exigir criação manual pelo usuário. Documentar limites de Windows/BitLocker/hibernação e não prometer preservação de dados além dos layouts testados.
 - Qualificar bootstrap do repositório assinado, verificação de assinaturas, atualizações do sistema instalado e recuperação de pacotes. Decidir se upgrades de ISO instalada e rollback do filesystem serão suportados; caso contrário, declarar que continuam indisponíveis e documentar o caminho de recuperação/reinstalação.
+<<<<<<< HEAD
 - Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. River/KWM/Morghulis continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
 - Verificar aplicativos GTK 3/4, Qt 6 e XWayland na sessão River/KWM/Morghulis: titlebar, arraste e comportamento das superfícies. Registrar exceções por aplicativo em vez de alegar comportamento uniforme sem evidência.
+=======
+- Validar os serviços base e a sessão nas máquinas declaradas: rede, D-Bus, portais, polkit, PipeWire, aceleração de GPU, persistência de displays, lock/idle e suspensão/retomada. River/KWM continua sendo a única sessão, supervisionada diretamente pelo dinit; sem systemd ou UWSM.
+- Verificar aplicativos GTK 3/4, Qt 6 e XWayland na sessão River/KWM: negociação de decorações, minimizar/maximizar/fechar, arrastar e sobreposição de barras próprias. Registrar exceções por aplicativo em vez de alegar comportamento uniforme sem evidência.
+>>>>>>> main
 - Passar pelos gates P0 existentes de build, QEMU, Calamares, BIOS/UEFI, recuperação, metadados e procedência. Manter a ISO direta abaixo do [limite de 2 GiB por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) (`2.147.483.648` bytes); a Alpha 12 mede 1.836.830.720 bytes. Os gráficos no QEMU passaram; o boot direto no VirtualBox VMSVGA ainda não foi qualificado.
 - Publicar guias correspondentes em inglês e português brasileiro para instalação, compatibilidade, problemas conhecidos e recuperação, com evidências de teste e casos explicitamente não suportados.
 

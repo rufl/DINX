@@ -25,12 +25,12 @@ for path in "$pkgbuild" "$backend" "$gpu" "$profiles" "$frontend" "$profile_conf
   "$readme" "$profile" "$workflow" "$qualification"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
-grep -Fq 'Firewalld and OpenSnitch stay enabled and outside built-in profile policy.' "$profile_conf" \
+grep -Fq 'Firewalld stays enabled and outside built-in profile policy.' "$profile_conf" \
   || fail 'DinitUI built-in profiles do not explicitly preserve firewall services'
-grep -Fq 'Firewalld and OpenSnitch are boot-enabled and remain outside built-in profile policy.' "$readme" \
+grep -Fq 'Firewalld is boot-enabled and remains outside built-in profile policy.' "$readme" \
   || fail 'DinitUI firewall profile boundary is not documented'
 if grep -Eq '(^|[[:space:]])(firewalld|opensnitchd)([[:space:]]|$)' "$profile_conf"; then
-  fail 'DinitUI built-in profiles must not toggle Firewalld or OpenSnitch'
+  fail 'DinitUI built-in profiles must not toggle Firewalld'
 fi
 
 grep -Fqx 'pkgname=dinitui' "$pkgbuild" || fail 'PKGBUILD package name is not dinitui'
@@ -45,7 +45,11 @@ grep -Fq 'Icon=org.dinx.DinitUI' "$desktop" || fail 'desktop launcher icon is mi
 grep -Fq '    - dinitui' "$profile" || fail 'DINX profile does not install dinitui'
 grep -Fq 'build_package dinitui' "$builder" || fail 'ISO builder does not build dinitui'
 grep -Fq 'pacman_install_local "$package_repo"/dinitui-*.pkg.tar.zst' "$builder" || fail 'builder does not install packaged DinitUI through the retry-safe helper'
+<<<<<<< HEAD
 grep -Fq 'dinitui|dinxpanel)' "$builder" || fail 'makepkg cleanup would remove checked-in Zig source trees'
+=======
+grep -Fq 'dinitui|dinxpanel|dinx-dock|dinx-first-run)' "$builder" || fail 'makepkg cleanup would remove checked-in Zig source trees'
+>>>>>>> main
 grep -Fq 'DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh' "$builder" || fail 'builder does not qualify the packaged DinitUI binary'
 grep -Fq 'std.process.run' "$backend" || fail 'DinitUI does not use argv-safe process execution'
 grep -Fq 'service-file discovery failed' "$frontend" || fail 'service-file discovery errors are not surfaced'
@@ -87,4 +91,4 @@ grep -Fq 'argv-safe' "$readme" || fail 'privilege/input boundary is not document
 grep -Fq 'Performance profiles' "$readme" || fail 'profile behavior is not documented'
 grep -Fq 'dinitui_dinit_runtime' "$qualification" || fail 'real Dinit qualification script is missing its result marker'
 grep -Fq 'dinitui_profile_failure' "$qualification" || fail 'profile failure qualification is missing'
-printf 'dinitui_contract package=true profile_entry=true workflow_build=true argv_safe=true pkexec_fallback=true dinit_actions=true performance_profiles=true errors_surface=true profile_report=true ui_labels=true gpu_drivers=true seafoam_integration=true systemd=false\n'
+printf 'dinitui_contract package=true profile_entry=true workflow_build=true argv_safe=true pkexec_fallback=true dinit_actions=true performance_profiles=true errors_surface=true profile_report=true ui_labels=true gpu_drivers=true systemd=false\n'

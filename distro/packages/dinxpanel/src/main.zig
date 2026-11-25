@@ -134,12 +134,21 @@ const App = struct {
         c.gtk_widget_set_hexpand(stack, 1);
         c.gtk_widget_set_vexpand(stack, 1);
 
+<<<<<<< HEAD
         const overview = makePage("Overview", "Quiet, fixed-argv controls for the DINX session.");
         appendAction(overview, "Open Redbean", "Open the Redbean shell surface", &onRedbeanClicked, self);
         appendAction(overview, "Display setup", "Open display layout and persist the DINX Shikane profile", &onDisplayClicked, self);
         appendAction(overview, "Network connections", "Manage NetworkManager connections", &onNetworkClicked, self);
         appendAction(overview, "Audio controls", "Open PipeWire volume controls", &onAudioClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), overview, "overview", "Overview");
+=======
+        appendSectionTitle(content, "Updates and firmware");
+        const updates = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 8) orelse return;
+        c.gtk_box_append(@ptrCast(updates), makeButton("Check upgrades", "Refresh package and firmware metadata, then show available upgrades without installing them", &onUpgradeCheckClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("PaintFE", "Open PaintFE raster image editor", &onPaintfeClicked, self));
+        c.gtk_box_append(@ptrCast(updates), makeButton("Package manager", "Open Octopi, the graphical pacman/AUR package manager", &onOctopiClicked, self));
+        c.gtk_box_append(@ptrCast(content), updates);
+>>>>>>> main
 
         const redbean = makePage("Redbean shell", "Launcher, workspace, notification and application actions live in the Redbean surface.");
         appendAction(redbean, "Open Redbean", "Open the Redbean shell surface", &onRedbeanClicked, self);
@@ -574,8 +583,12 @@ fn collectUpgradeReport(task: *AsyncTask) ![]u8 {
     var report: std.Io.Writer.Allocating = .init(allocator);
     errdefer report.deinit();
     const commands = [_]struct { argv: []const []const u8, label: []const u8, no_action_ok: bool }{
-        .{ .argv = &.{ "shelly", "sync" }, .label = "shelly sync", .no_action_ok = false },
-        .{ .argv = &.{ "shelly", "list-updates", "all" }, .label = "shelly list-updates all", .no_action_ok = false },
+        // checkupdates (pacman-contrib) refreshes a private sync db copy and
+        // prints pending official-repo upgrades; it exits 0 whether or not
+        // updates are pending. paru -Qu adds the AUR side. Both are read-only,
+        // so the report never installs anything.
+        .{ .argv = &.{ "checkupdates" }, .label = "checkupdates", .no_action_ok = false },
+        .{ .argv = &.{ "paru", "-Qu" }, .label = "paru -Qu", .no_action_ok = true },
         .{ .argv = &.{ "fwupdmgr", "refresh" }, .label = "fwupdmgr refresh", .no_action_ok = false },
         .{ .argv = &.{ "fwupdmgr", "get-updates" }, .label = "fwupdmgr get-updates", .no_action_ok = true },
     };
@@ -988,19 +1001,15 @@ fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).runUpgradeCheck();
 }
 
-fn onTopgradePreviewClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade", "--dry-run", "--show-skipped", "--no-self-update", "--no-tmux" });
+fn onPaintfeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "paintfe" });
 }
 
-fn onTopgradeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade" });
+fn onOctopiClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    asApp(data).launch(&.{ "octopi" });
 }
 fn onCupsInstallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).installCups();
-}
-
-fn onShellyClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "shelly", "upgrade", "all" });
 }
 
 fn onDisplayClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
@@ -1038,6 +1047,7 @@ fn applyTheme() void {
     c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
     const css =
+<<<<<<< HEAD
         ".dinx-shell { background-color: @window_bg_color; color: @window_fg_color; }\n" ++
         ".dinx-sidebar { background-color: @view_bg_color; border-right: 1px solid @borders; }\n" ++
         ".dinx-brand { color: @accent_color; font-size: 1.45rem; font-weight: 800; }\n" ++
@@ -1050,6 +1060,13 @@ fn applyTheme() void {
         ".dinx-page-subtitle { color: @dim_color; margin-bottom: 12px; }\n" ++
         "button.dinx-action { min-height: 40px; }\n" ++
         ".dinx-output { font-family: monospace; background-color: @card_bg_color; color: @view_fg_color; padding: 12px; }\n";
+=======
+        ".dinx-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" ++
+        "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" ++
+        "window.background { background-color: #0b0d12; }\n" ++
+        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n" ++
+        "label.heading { color: #8fb8ff; font-weight: 700; }\n";
+>>>>>>> main
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;
     c.gtk_style_context_add_provider_for_display(display, @ptrCast(provider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);

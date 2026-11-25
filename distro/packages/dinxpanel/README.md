@@ -43,9 +43,9 @@ pin changes can signal `dinx-dock` with the fixed `pkill -HUP dinx-dock` argv.
 
 ## Upgrade integration
 
-`Check upgrades` refreshes Shelly package metadata, lists available standard/AUR/Flatpak/AppImage updates, refreshes optional fwupd metadata and lists available firmware releases. It does not install anything. Missing optional tools are reported in the operation output instead of being silently ignored.
+`Check upgrades` refreshes the pacman database snapshot with `checkupdates` (from `pacman-contrib`), lists pending AUR updates with `paru -Qu`, refreshes optional fwupd metadata and lists available firmware releases. It does not install anything. Missing optional tools are reported in the operation output instead of being silently ignored.
 
-`Topgrade preview` opens `topgrade --dry-run --show-skipped --no-self-update --no-tmux`, so the user can review package, firmware and other configured upgrade steps without a self-update or nested tmux session. `Topgrade` runs the complete workflow. `Shelly upgrade` runs `shelly upgrade all` in a terminal with Shelly's own confirmation and policy boundaries.
+`PaintFE` launches the pinned raster image editor directly and `Package manager` opens Octopi, the graphical pacman/AUR frontend, for interactive package changes. Octopi has no command-line interface, so it is launched as an application rather than queried for the upgrade report; elevation inside Octopi goes through `pkexec` and the session's `lxqt-policykit-agent`, matching the installer and GParted launchers.
 
 Firmware discovery uses `fwupdmgr refresh` and `fwupdmgr get-updates`; a `fwupdmgr` exit code 2 means “no action” and is treated as a normal no-update result. `fwupd` is optional because firmware support depends on the platform and repository payload.
 
@@ -67,9 +67,10 @@ In installed sessions, `Brightness down`, `Brightness up` and `Lock screen` use 
 ```text
 dinitui --gpu-status
 dinitui --install-gpu-drivers
-shelly sync
-shelly list-updates all
-topgrade --dry-run --show-skipped --no-self-update --no-tmux
+checkupdates
+paru -Qu
+paintfe
+octopi
 fwupdmgr refresh
 fwupdmgr get-updates
 dinxpanel

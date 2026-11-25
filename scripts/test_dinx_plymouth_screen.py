@@ -53,7 +53,7 @@ class PlymouthScreenTests(unittest.TestCase):
         self.assertEqual(reason, "DINX logo is not centered like the Plymouth splash")
 
     def test_rejects_logo_smaller_than_theme_scale(self) -> None:
-        valid, reason = has_centered_dinx_logo(800, 600, _frame(mark_size=120))
+        valid, reason = has_centered_dinx_logo(800, 600, _frame(mark_size=100))
         self.assertFalse(valid)
         self.assertEqual(reason, "DINX logo is not rendered at the Plymouth splash scale")
 
@@ -80,7 +80,7 @@ class PlymouthScreenTests(unittest.TestCase):
         self.assertTrue(has_grub_menu("Start DINX Linux"))
         self.assertTrue(has_grub_menu("Boot to the Firmware/BIOS"))
         self.assertTrue(has_grub_menu("Advanced options"))
-        self.assertFalse(has_grub_menu("Pearl Greeter"))
+        self.assertFalse(has_grub_menu("agreety"))
 
     def test_cli_reports_invalid_ppm_without_crashing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

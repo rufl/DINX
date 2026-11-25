@@ -4,7 +4,14 @@ text/html=firefox.desktop;
 application/xhtml+xml=firefox.desktop;
 x-scheme-handler/http=firefox.desktop;
 x-scheme-handler/https=firefox.desktop;
+<<<<<<< HEAD
 application/pdf=firefox.desktop;
+=======
+application/pdf=eurooffice.desktop;
+application/vnd.openxmlformats-officedocument.wordprocessingml.document=eurooffice.desktop;
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet=eurooffice.desktop;
+application/vnd.openxmlformats-officedocument.presentationml.presentation=eurooffice.desktop;
+>>>>>>> main
 image/png=swayimg.desktop;
 image/jpeg=swayimg.desktop;
 image/gif=swayimg.desktop;

@@ -26,27 +26,33 @@ an optional DINX package for Zig and the ISO does not ship the `clang` package.
 
 ## Current validated snapshot
 
-The current tagged release is [v0.1.0-alpha.12](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.12), validated by [workflow 41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) on commit `56a814575e33bfae6215993972784f11b7dae215`. The direct ISO is 1,836,830,720 bytes with SHA-512 `ac1dbd237e484f8d61aab5438185218b13d9e23824ce671440ff67ed275ce7073b90dbcc14bc8d8f7008b2422d66e2756f1b3a88a0d5c21d8c7bbc67c9d60bf9`; signed package-repository snapshot `37dfe99d5e4003e217e786ef82c8ea29562693db2d44b996a9624a68f31c490d`. Alpha 12 predates the later VMware/Pixman source fix. The current shared qualifier tests default VGA and Virtio-VGA; QEMU 11.1.2/KVM's `vmware-svga` path stalls in early udev with `vmwgfx` loaded and is not a VirtualBox pass. Direct VirtualBox boot remains unqualified.
+The current tagged release is [v0.1.0-alpha.16](https://github.com/rufl/DINX/releases/tag/v0.1.0-alpha.16), validated by [workflow 43622209772](https://github.com/rufl/DINX/actions/runs/43622209772) on commit `81d2606e8711c6e7a3d5efaedff118df0f4fc7a7`. The direct ISO is 2,133,706,752 bytes with SHA-512 `0df5da98684cb41d8ec6408bfb6b0e81bf4711bddf3718d2b3b3fbfdae67d5e65477195c3fb85fbaf9ae93df64ece1492b2b1f8fd2a5ef1fde2032fd09fd4600`; signed package-repository snapshot `829cba983a866d39a422a4a56046b29456598b5ec1574b9205f8cce0555bf133`. Alpha 16 is the first ISO bundling EuroOffice (the lean ONLYOFFICE fork published by the `office` branch) and stays below the 2 GiB per-asset limit through xz/BCJ compression and build-time payload trims. The current shared qualifier tests default VGA and Virtio-VGA; QEMU 11.1.2/KVM's `vmware-svga` path stalls in early udev with `vmwgfx` loaded and is not a VirtualBox pass. Direct VirtualBox boot remains unqualified.
 
-Main P0 run [40894570770](https://github.com/rufl/DINX/actions/runs/40894570770) on commit `bf773500965c843e014e3bc3ef8fea685e14b91b` passed the full build, QEMU, graphical payload, Calamares and persistent BIOS/UEFI installation/recovery gates, plus metadata, attestation and artifact upload. It is an earlier post-Alpha-10 main validation; Alpha 12 was published later by tagged run [41197618617](https://github.com/rufl/DINX/actions/runs/41197618617) on commit `56a814575e33bfae6215993972784f11b7dae215`.
+Main P0 run [43618288202](https://github.com/rufl/DINX/actions/runs/43618288202) on commit `c4412214ed3f99a5eceba6fda80786d51e62eff5` passed the full build, QEMU, graphical payload, Calamares and persistent BIOS/UEFI installation/recovery gates, plus metadata, attestation and artifact upload with the EuroOffice-bearing ISO below the 2 GiB limit; Alpha 16 was published by tagged run [43622209772](https://github.com/rufl/DINX/actions/runs/43622209772) on commit `81d2606e8711c6e7a3d5efaedff118df0f4fc7a7`.
 
 The next system milestone is the planned, undated Beta 0.1 qualification. It is separate from P5 gaming; see the [roadmap](roadmap.md) for its hardware, installer, update and recovery gates.
 
 Alpha 9 and earlier candidate runs are historical; they are not the current release evidence. The release workflow rebuilds the tagged commit and publishes only after matching ISO metadata, signed-repository, checksum and provenance checks pass.
 
-The Alpha 9 artifact used the earlier deterministic compact-ISO path from
-`scripts/build-iso.sh`: xz-compressed SquashFS with x86 BCJ filtering, 1 MiB
-blocks and a 1 MiB dictionary. Alpha 10 uses 256 KiB blocks and a 256 KiB
-dictionary, keeping the direct ISO below GitHub's 2 GiB per-asset limit.
+The final SquashFS uses the deterministic compact-ISO path from
+`scripts/build-iso.sh`: xz compression with x86 BCJ filtering, 1 MiB blocks
+and dictionary (the builder's squashfs-tools maximum) and 4 compression threads, keeping the direct ISO below GitHub's 2 GiB
+per-asset limit.
 The source-owned common manifest keeps the documented AMDGPU firmware path while leaving generic firmware and `powertop` out of the final image; kernel headers remain available only to the ISO initramfs build and their source tree is excluded from final SquashFS.
 
-The current profile also ships official Zrythm v2.0.0-alpha.7 and ONLYOFFICE
-Desktop Editors 10.0.0 AppImages, together about 518 MB before SquashFS
-compression. Zrythm v2 is pre-release software and may crash or lose data.
-ONLYOFFICE's integrated application retains Forms and Diagram Viewer; DINX
-registers only document, spreadsheet, presentation and PDF file types. Images
-over GitHub's 2 GiB per-asset limit use the split release path; the rolling
-single-file alias advances only for a qualifying single-image release.
+The current profile ships PaintFE and the repacked binary app Patchy as
+pre-extracted `/opt/<package>/` trees (repack
+convention in `distro/iso/README.md`), Pixelorama from its checksum-pinned
+official Linux release, Audionaut as the multitrack audio editor and recorder,
+Blender as the 3D creation suite, and EuroOffice as the office/PDF suite.
+PaintFE and Patchy install a `/usr/bin/<package>` launcher that execs the
+tree's `AppRun`, while Audionaut installs a `/usr/bin/audionaut` launcher that
+runs its single bundled AppImage with `--appimage-extract-and-run` — no FUSE and no per-launch extraction. EuroOffice is the
+default `application/pdf` and OOXML handler, consumed from the office branch's
+lean `eurooffice/v*` releases with a SHA256-verified pacman package and live
+squashfs. Images over GitHub's 2 GiB per-asset limit use the split release
+path; the rolling single-file alias advances only for a qualifying
+single-image release.
 
 ## Published assets
 
@@ -127,8 +133,8 @@ printf '%s  %s\n' \
 gpg --show-keys --with-colons "$key" |
   awk -F: '$1 == "fpr" { print $10; exit }' |
   grep --fixed-strings --line-regexp 'D8F294B7367BD0DAF626E4DCD411E36494CB9CEB'
-sudo pacman-key --add "$key"
-sudo pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
+pkexec pacman-key --add "$key"
+pkexec pacman-key --lsign-key D8F294B7367BD0DAF626E4DCD411E36494CB9CEB
 ```
 
 Add the repository to `/etc/pacman.conf` after the Artix repositories:
@@ -148,12 +154,14 @@ Server = https://github.com/rufl/DINX/releases/download/dinx-packages-latest
 Refresh databases and install the keyring when it becomes available:
 
 ```bash
-sudo pacman -Syu --needed dinx-keyring
+pkexec pacman -Syu --needed dinx-keyring
 ```
 
-After setup, Shelly uses pacman and the `[dinx]` repository for package updates:
-run `shelly sync`, review with `shelly list-updates all`, then apply with
-`shelly upgrade all` (or `sudo pacman -Syu`). Required signatures make pacman
+After setup, use pacman and the `[dinx]` repository for package updates:
+discover pending updates read-only with `checkupdates` (from `pacman-contrib`) for
+the official repositories and `paru -Qu` for the AUR, then apply them interactively in
+Octopi, which has no command-line interface and elevates through `pkexec` and polkit
+because DINX ships no sudo. `pkexec pacman -Syu` is the direct alternative. Required signatures make pacman
 reject unsigned or untrusted repository packages.
 
 The currently documented tagged-release workflow may also attach signed
@@ -300,7 +308,7 @@ repository. Configure the production signing secrets before enabling that
 publication path; it publishes package changes independently of the ISO after
 reviewed source-pin changes are merged.
 
-The release operator must manually record one real Wayland session qualification: `Super+L`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
+The release operator must manually record one real Wayland session qualification: `dinx-lock`, the 600-second idle lock, lock-before-suspend, unlock after resume and hardware brightness up/down. A VM can qualify session ordering; physical hardware is required to claim display brightness and suspend support.
 
 Update run IDs, commits, artifact sizes/digests and release links in the English and Portuguese status documents only after the relevant workflow is green. The planned Beta 0.1 system release does not claim gaming support; P5 remains separate until real DRM output, Steam/game, controller/audio, greeter-return and physical suspend/GPU tests pass.
 The tagged release path now has a documented signed package update and package
@@ -315,7 +323,7 @@ hardware/session evidence without changing system state.
 
 ## Release limits
 
-- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if Pearl Greeter appears after a manual live start. It is never an authentication boundary and must not be reused.
+- The live image autologs into the disposable `dinx` account and keeps the public `dinx` password only as a diagnostic fallback if the agreety login screen appears after a manual live start. It is never an authentication boundary and must not be reused.
 - The image is still an experimental disk installer without an installed-ISO upgrade,
   filesystem rollback or signed Secure Boot path. CI qualifies the offline rootfs
   contract on disposable BIOS and UEFI disks and captures a recovery-TTY frame; it

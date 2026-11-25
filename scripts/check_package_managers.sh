@@ -9,32 +9,20 @@ fail() {
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_root"
 
+# paru is the AUR helper (CLI, used by DINXPanel's read-only upgrade report);
+# octopi is the interactive pacman/AUR front-end. Shelly was retired together
+# with the Seafoam-Labs Pearl monorepo and must not silently return.
 for path in \
-  distro/packages/topgrade/PKGBUILD \
-  distro/packages/topgrade/source.env \
   distro/packages/paru/PKGBUILD \
   distro/packages/paru/source.env \
   distro/packages/paru/paru.conf \
-  distro/packages/shelly/PKGBUILD \
-  distro/packages/shelly/source.env \
-  distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/topgrade.toml; do
+  distro/packages/octopi/PKGBUILD \
+  distro/packages/octopi/source.env; do
   [[ -f "$path" ]] || fail "missing package-management contract file: $path"
 done
 
-source distro/packages/topgrade/source.env
 source distro/packages/paru/source.env
-source distro/packages/shelly/source.env
-
-[[ "$TOPGRADE_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid topgrade version: $TOPGRADE_VERSION"
-[[ "$TOPGRADE_SOURCE_URL" == *"/download/v${TOPGRADE_VERSION}/topgrade-v${TOPGRADE_VERSION}-x86_64-unknown-linux-musl.tar.gz" ]] \
-  || fail 'topgrade release URL does not match the pinned version'
-[[ "$TOPGRADE_SOURCE_B2" =~ ^[0-9a-f]{128}$ ]] || fail 'topgrade release BLAKE2 checksum is invalid'
-grep -Fq '. "$source_env"' distro/packages/topgrade/PKGBUILD \
-  || fail 'topgrade PKGBUILD does not load source.env'
-grep -Fq 'pkgver="$TOPGRADE_VERSION"' distro/packages/topgrade/PKGBUILD \
-  || fail 'topgrade PKGBUILD version is not wired to source.env'
-grep -Fq '"$TOPGRADE_SOURCE_B2"' distro/packages/topgrade/PKGBUILD \
-  || fail 'topgrade PKGBUILD checksum is not wired to source.env'
+source distro/packages/octopi/source.env
 
 [[ "$PARU_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid paru version: $PARU_VERSION"
 [[ "$PARU_SOURCE_URL" == *"Morganamilo/paru/archive/"*"${PARU_VERSION}.tar.gz" ]] \
@@ -48,45 +36,46 @@ grep -Fq 'cargo update -p openssl --precise 0.10.78' distro/packages/paru/PKGBUI
 grep -Fq 'cargo update -p openssl-sys --precise 0.9.118' distro/packages/paru/PKGBUILD \
   || fail 'paru does not pin an openssl-sys release compatible with Artix OpenSSL 4.1'
 
-[[ "$SHELLY_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Shelly version: $SHELLY_VERSION"
-[[ "$SHELLY_SOURCE_URL" == *"Seafoam-Labs/Shelly-ALPM/releases/download/"*"/Shelly-ALPM-linux-x64.tar.gz" ]] \
-  || fail 'Shelly release source URL is malformed'
-grep -Fq 'pkgver="$SHELLY_VERSION"' distro/packages/shelly/PKGBUILD \
-  || fail 'Shelly PKGBUILD version is not wired to source.env'
-grep -Fq '"$SHELLY_SOURCE_SHA256"' distro/packages/shelly/PKGBUILD \
-  || fail 'Shelly release source checksum is not wired to source.env'
-aur_sources=(
-  'shellybuild.conf'
-  'com.shellyorg.shelly.desktop'
-  'com.shellyorg.shelly-notifications.desktop'
-  'shelly-flatpak-integrate'
-)
-shelly_pkgbuild=distro/packages/shelly/PKGBUILD
-shelly_aur_revision=f89d773125357baaa1d2fae715286ce9e00e2cb4
-grep -Fq "_aur_revision='${shelly_aur_revision}'" "$shelly_pkgbuild" || fail 'shelly AUR sources are not pinned to the verified revision'
-resolved_shelly_sources=$(bash -c 'startdir=$(dirname "$1"); source "$1"; printf "%s\n" "${source[@]}"' _ "$shelly_pkgbuild")
-for source_file in "${aur_sources[@]}"; do
-  grep -Fq "${source_file}?h=${shelly_aur_revision}" <<<"$resolved_shelly_sources" || fail "shelly source is not pinned to the verified AUR revision: $source_file"
-done
+[[ "$OCTOPI_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Octopi version: $OCTOPI_VERSION"
+[[ "$OCTOPI_SOURCE_URL" == *"aarnt/octopi/archive/refs/tags/v"*"${OCTOPI_VERSION}.tar.gz" ]] \
+  || fail 'Octopi source URL is not pinned to the tagged upstream archive'
+grep -Fq 'pkgver="$OCTOPI_VERSION"' distro/packages/octopi/PKGBUILD \
+  || fail 'Octopi PKGBUILD version is not wired to source.env'
+grep -Fq '"$OCTOPI_SOURCE_SHA256"' distro/packages/octopi/PKGBUILD \
+  || fail 'Octopi PKGBUILD checksum is not wired to source.env'
+# DINX ships sudo for general use, but Octopi must still elevate through pkexec/polkit like
+# the installer and GParted, never through qt-sudo's su/sudo/doas backends.
+octopi_patch=$(ls distro/packages/octopi/*.patch 2>/dev/null | head -1)
+[[ -n "$octopi_patch" ]] || fail 'Octopi has no pkexec elevation patch'
+grep -Fq 'pkexec' "$octopi_patch" \
+  || fail 'Octopi patch does not route elevation through pkexec'
+if grep -Eq '\b(qt-sudo|ctn_QTSUDO)\b' distro/packages/octopi/PKGBUILD; then
+  fail 'Octopi recipe still depends on qt-sudo instead of polkit'
+fi
+grep -Fq 'octopi-pkexec' distro/packages/octopi/PKGBUILD \
+  || fail 'Octopi PKGBUILD does not apply the pkexec elevation patch'
 
-for package in topgrade paru shelly; do
+for package in paru octopi; do
   if grep -Eiq '(^|[^[:alnum:]_])systemd([^[:alnum:]_]|$)' "distro/packages/$package/PKGBUILD"; then
     fail "$package PKGBUILD contains a systemd dependency or integration"
   fi
 done
 grep -Fq 'etc/paru.conf' distro/packages/paru/PKGBUILD || fail 'paru Artix pacman configuration is not packaged'
-grep -Fq 'pacman' distro/packages/shelly/PKGBUILD || fail 'shelly is not tied to the Artix pacman stack'
+grep -Fq 'pacman' distro/packages/octopi/PKGBUILD || fail 'octopi is not tied to the Artix pacman stack'
 grep -Fq 'pacman' distro/packages/paru/PKGBUILD || fail 'paru is not tied to the Artix pacman stack'
 grep -Fq 'Do not add Arch Linux repositories' distro/packages/paru/paru.conf || fail 'paru configuration does not enforce Artix repositories'
-grep -Fq 'arch_package_manager = "pacman"' distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/topgrade.toml || fail 'topgrade is not configured for Artix pacman'
 
-grep -Fq '    - topgrade' distro/iso/iso-profiles/dinx/profile.yaml || fail 'topgrade is missing from the DINX payload'
 grep -Fq '    - paru' distro/iso/iso-profiles/dinx/profile.yaml || fail 'paru is missing from the DINX payload'
-grep -Fq '    - shelly' distro/iso/iso-profiles/dinx/profile.yaml || fail 'shelly is missing from the DINX payload'
+grep -Fq '    - octopi' distro/iso/iso-profiles/dinx/profile.yaml || fail 'octopi is missing from the DINX payload'
+grep -Fq '    - pacman-contrib' distro/iso/iso-profiles/dinx/profile.yaml || fail 'pacman-contrib (checkupdates) is missing from the DINX payload'
+for retired in shelly seafoam-settings; do
+  if grep -Fqx "    - $retired" distro/iso/iso-profiles/dinx/profile.yaml; then
+    fail "retired package-manager component remains in the profile: $retired"
+  fi
+done
 
 builder=scripts/build-iso-container.sh
-grep -Fq 'build_package topgrade' "$builder" || fail 'ISO builder does not build topgrade'
 grep -Fq 'build_package paru' "$builder" || fail 'ISO builder does not build paru'
-grep -Fq 'build_package shelly' "$builder" || fail 'ISO builder does not build shelly'
-printf 'package_managers_contract topgrade=%s paru=%s shelly=%s artix_policy=true pinned_payload=true systemd_dependencies=false\n' \
-  "$TOPGRADE_VERSION" "$PARU_VERSION" "$SHELLY_VERSION"
+grep -Fq 'build_package octopi' "$builder" || fail 'ISO builder does not build octopi'
+printf 'package_managers_contract paru=%s octopi=%s elevation=pkexec artix_policy=true pinned_payload=true systemd_dependencies=false shelly_removed=true\n' \
+  "$PARU_VERSION" "$OCTOPI_VERSION"

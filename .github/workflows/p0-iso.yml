@@ -3,6 +3,7 @@ name: P0 ISO foundation
 on:
 # This workflow intentionally does not run on pull requests: the build uses a privileged container.
 # Add an isolated validation workflow before enabling any pull-request trigger.
+  # Full ISO qualification is scheduled or explicitly dispatched; package and static changes use focused contracts.
   schedule:
     - cron: "17 2 * * *"
   workflow_dispatch:
@@ -20,6 +21,7 @@ on:
         required: false
       DEETTY_SOURCE_READ_TOKEN:
         required: false
+<<<<<<< HEAD
   push:
     branches:
       - main
@@ -108,6 +110,8 @@ on:
       - "scripts/dinitui_dinit_qualification.sh"
       - "scripts/gaming_p5_qualification.sh"
       - "LICENSE"
+=======
+>>>>>>> main
 
 permissions:
   contents: read
@@ -133,9 +137,9 @@ jobs:
         id: cache-inputs
         run: |
           cache_input_hash=$(
-            git ls-files -z -- distro/packages scripts/build-iso-container.sh \
+            git ls-files -z -- distro/packages distro/graphics scripts/build-iso-container.sh \
               scripts/cache-verified-download.sh scripts/cache-verified-extract.sh \
-              scripts/lib/dinx-package-artifact-cache.sh scripts/iso-builder \
+              scripts/lib/dinx-package-artifact-cache.sh scripts/lib/stage-blender.sh scripts/iso-builder \
               | LC_ALL=C sort -z \
               | xargs -0 sha256sum \
               | sha256sum \
@@ -200,12 +204,15 @@ jobs:
         run: ./scripts/check_deetty_integration.sh
       - name: Verify VT-only runtime packaging and sole-terminal build order
         run: ./scripts/check_ghostty_vt_runtime.sh
+<<<<<<< HEAD
       - name: Verify Firefox defaults and managed browser policy
         run: ./scripts/check_firefox.sh
       - name: Verify EuroOffice lean office payload
         run: ./scripts/check_eurooffice.sh
       - name: Verify OpenSnitch Dinit service and live UI autostart
         run: ./scripts/check_opensnitch.sh
+=======
+>>>>>>> main
 
       - name: Verify pinned swayimg source and package contract
         run: ./scripts/check_swayimg.sh
@@ -213,6 +220,7 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
+<<<<<<< HEAD
       - name: Verify River, KWM, Morghulis and PCManFM session contract
         run: ./scripts/check_river_session.sh
       - name: Verify Transit removal and Audionaut package contract
@@ -221,6 +229,14 @@ jobs:
         run: ./scripts/check_turnstile.sh
       - name: Verify Mission Center source and package contract
         run: ./scripts/check_mission_center.sh
+=======
+      - name: Verify Mission Center package and ISO contract
+        run: ./scripts/check_mission_center.sh
+      - name: Verify Pori, PCManFM, dinit storage and NTFS contracts
+        run: ./scripts/check_pori_storage.sh
+      - name: Verify display tool package contract
+        run: ./scripts/check_display_tools.sh
+>>>>>>> main
 
       - name: Install pinned Zig for native session contracts
         env:
@@ -238,10 +254,20 @@ jobs:
           scripts/cache-verified-extract.sh \
             "$zig_archive_path" "$zig_sha256" "$zig_version" zig "$zig_root"
           echo "$zig_root" >> "$GITHUB_PATH"
+<<<<<<< HEAD
+=======
+      - name: Smoke-test the pinned Pori Zig source
+        run: ./scripts/smoke_pori_zig.sh
+>>>>>>> main
       - name: Verify wdisplays to Shikane persistence contract
         run: ./scripts/check_dinx_display_persistence.sh
       - name: Smoke-test wdisplays to Shikane persistence
         run: ./scripts/smoke_dinx_display_persistence.sh
+<<<<<<< HEAD
+=======
+      - name: Smoke-test the sole River/KWM session boundary
+        run: ./scripts/smoke_dinx_session_supervisor.sh
+>>>>>>> main
       - name: Smoke-test supervised Pori NTFS mount service
         run: ./scripts/smoke_pori_mount_service.sh
       - name: Verify WIZP package staging and desktop contract
@@ -250,6 +276,8 @@ jobs:
         run: scripts/check_dinx_package_provenance.sh
       - name: Smoke-test verified package-artifact cache
         run: ./scripts/smoke_package_artifact_cache.sh
+      - name: Smoke-test verified download cache
+        run: ./scripts/smoke_cache_verified_download.sh
       - name: Smoke-test verified toolchain extraction cache
         run: ./scripts/smoke_cache_verified_extract.sh
       - name: Verify DINX feature-group coverage
@@ -398,6 +426,15 @@ jobs:
           printf 'iso_dir=%s\n' "$iso_dir" >> "$GITHUB_OUTPUT"
           printf 'metadata_path=%s\n' "$metadata_path" >> "$GITHUB_OUTPUT"
           printf 'DINX_ISO=%s\n' "$iso_path" >> "$GITHUB_ENV"
+      - name: Verify built DINX package repository
+        run: scripts/check_dinx_package_repository.sh dist/packages
+      - name: Smoke-test signed DINX package updates
+        run: |
+          docker run --rm --privileged \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            dinx-iso-builder:ci \
+            scripts/smoke_dinx_update.sh dist/packages
       - name: Bundle signed package repository for artifact portability
         run: |
           set -euo pipefail
@@ -414,17 +451,30 @@ jobs:
           DINX_EXPECTED_COMMIT: ${{ github.sha }}
           DINX_QEMU_TIMEOUT: 120
           DINX_INSTALL_TIMEOUT: 180
+          DINX_MBR_TIMEOUT: 600
+          DINX_MBR_MENU_WAIT: 300
+          DINX_MBR_SESSION_WAIT: 180
         run: scripts/qualify-iso.sh "$DINX_ISO"
       - name: Extract final ISO filesystems for vulnerability scan
         run: |
           set -euo pipefail
           rm -rf dist/security-rootfs
-          mkdir -p dist/security-rootfs
-          rootfs_image=$(find dist/iso -type f -name rootfs.img -print -quit)
-          livefs_image=$(find dist/iso -type f -name livefs.img -print -quit)
-          test -n "$rootfs_image" && test -n "$livefs_image"
-          unsquashfs -no-xattrs -no-progress -d dist/security-rootfs/rootfs "$rootfs_image"
-          unsquashfs -no-xattrs -no-progress -d dist/security-rootfs/livefs "$livefs_image"
+          mkdir -p dist/security-rootfs/images
+          # The squashfs images live inside the ISO; check-iso-content.sh extracts
+          # them into a mktemp directory it removes on exit, so extract them again here.
+          for image in rootfs livefs; do
+            xorriso -osirrox on \
+              -indev "$DINX_ISO" \
+              -extract "/LiveOS/$image.img" "dist/security-rootfs/images/$image.img" \
+              >/dev/null
+            if [[ ! -s "dist/security-rootfs/images/$image.img" ]]; then
+              printf 'p0-iso: %s.img was not extracted from the ISO\n' "$image" >&2
+              exit 1
+            fi
+            unsquashfs -no-xattrs -no-progress \
+              -d "dist/security-rootfs/$image" "dist/security-rootfs/images/$image.img"
+          done
+          rm -rf dist/security-rootfs/images
       - name: Generate final filesystem SBOM
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
@@ -434,15 +484,11 @@ jobs:
           artifact-name: dinx-rootfs-sbom-${{ github.sha }}.spdx.json
           upload-artifact: false
           upload-release-assets: false
-      - name: Scan final filesystem SBOM
-        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
-        with:
-          sbom: dist/dinx-rootfs-sbom.spdx.json
-          fail-build: true
-          severity-cutoff: high
-          output-format: sarif
-          output-file: dist/dinx-rootfs-grype.sarif
-          cache-db: true
+          # Inventory only what pacman installed. The default directory cataloger
+          # set also fingerprints every executable and kernel module, which
+          # produced name-only CPE matches against unrelated ecosystems (GNU tar
+          # reported under npm tar advisories). See .github/syft-iso-filesystem.yaml.
+          config: .github/syft-iso-filesystem.yaml
 
       - name: Attest ISO, package repository and checksum provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -468,4 +514,3 @@ jobs:
             dist/dinx-package-repository.tar
             dist/dinx-build.log
             dist/dinx-rootfs-sbom.spdx.json
-            dist/dinx-rootfs-grype.sarif

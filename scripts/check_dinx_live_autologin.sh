@@ -56,12 +56,21 @@ livefs_packages=$(awk '
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
 
+<<<<<<< HEAD
 grep -Fq 'command = "tuigreet --sessions /usr/share/wayland-sessions --remember --time --cmd /usr/local/libexec/dinx-river-session"' "$root_greetd" \
   || fail 'installed greetd fallback does not expose the River session menu'
 grep -Fqx 'vt = 7' "$root_greetd" \
   || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
 grep -Fq 'user = "greeter"' "$root_greetd" \
   || fail 'installed greetd fallback user is not the standard greeter account'
+=======
+grep -Fq 'agreety --cmd /usr/local/libexec/dinx-river-session' "$root_greetd" \
+  || fail 'installed greetd fallback does not launch the river session through agreety'
+grep -Fqx 'vt = 7' "$root_greetd" \
+  || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
+grep -Fq 'user = "greeter"' "$root_greetd" \
+  || fail 'installed greetd fallback user is not the greetd-provided greeter account'
+>>>>>>> main
 ! grep -Fq '[initial_session]' "$root_greetd" \
   || fail 'installed greetd config must not enable autologin'
 grep -Fq 'displayAutologin: false' "$users_conf" \
@@ -78,6 +87,10 @@ grep -Fq 'usermod --append --groups render dinx' "$wrapper" \
   || fail 'live user is missing DRM render-node access'
 grep -Fq 'getent group render' "$wrapper" \
   || fail 'live autologin does not guard render-group enrollment'
+grep -Fq 'usermod --append --groups video dinx' "$wrapper" \
+  || fail 'live user is missing the video group required for backlight control'
+grep -Fq 'getent group video' "$wrapper" \
+  || fail 'live autologin does not guard video-group enrollment'
 grep -Fq "printf '%s\\n' 'dinxlive' > /etc/hostname" "$wrapper" \
   || fail 'live wrapper does not persist the dinxlive hostname'
 grep -Fq 'hostname dinxlive' "$wrapper" || fail 'live wrapper does not set the active dinxlive hostname'
@@ -95,8 +108,8 @@ grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live autologin must not be gated on pacman keyring setup'
 grep -Fqx 'waits-for = firewalld' "$service" \
   || fail 'live autologin does not wait for the Firewalld startup attempt'
-grep -Fq "depends=('dinit' 'seatd' 'firewalld-dinit')" "$pkgbuild" \
-  || fail 'live autologin dependencies must be dinit, seatd and firewalld-dinit only'
+grep -Fq "depends=('dinit' 'seatd' 'firewalld-dinit' 'kbd')" "$pkgbuild" \
+  || fail 'live autologin dependencies must include dinit, seatd, firewalld-dinit and openvt from kbd'
 grep -Fq "'firewalld-dinit'" "$pkgbuild" \
   || fail 'live autologin package does not declare its Firewalld service dependency'
 ! grep -Fqx 'depends-on = local.target artix-live' "$service" \
@@ -120,12 +133,18 @@ grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
 grep -Fqx 'depends-on = dinx-live-autologin' "$session_service" \
   || fail 'live session does not wait for live boot preparation'
+grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' "$session_launcher" \
+  || fail 'live session does not acquire and activate dedicated VT 7'
 grep -Fq 'runuser -u dinx' "$session_launcher" \
   || fail 'live session does not start as the dinx user'
 grep -Fq 'DINX_LIVE_SESSION=1' "$session_launcher" \
   || fail 'live session launcher does not mark the session as live'
 grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$session_launcher" \
+<<<<<<< HEAD
   || fail 'live session launcher does not start the River/KWM/Morghulis wrapper'
+=======
+  || fail 'live session launcher does not start the River/KWM session under a session bus'
+>>>>>>> main
 grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$session_launcher" \
   || fail 'live session launcher does not select the private runtime dir'
 grep -Fq 'boot.d/dinx-live-session' "$pkgbuild" \
@@ -174,10 +193,11 @@ grep -Fqx 'depends-on       = login.target' "$root_greetd_service" \
   || fail 'live-only autologin dependency leaked into the installed greetd service'
 [[ ! -e "$root_policy" ]] \
   || fail 'live-only Polkit authorization leaked into the installed rootfs overlay'
-grep -Fq 'subject.user === "dinx" && subject.local' "$live_policy" \
-  || fail 'live Polkit rule is not scoped to the local dinx user'
-! grep -Fq 'subject.active' "$live_policy" \
-  || fail 'live Polkit rule still requires an elogind-active session'
+grep -Fq 'subject.user === "dinx"' "$live_policy" \
+  || fail 'live Polkit rule is not scoped to the dinx live user'
+if grep -Eq 'subject\.(active|local)' "$live_policy"; then
+  fail 'live Polkit rule still requires elogind session state'
+fi
 grep -Fq 'return polkit.Result.YES;' "$live_policy" \
   || fail 'live Polkit rule does not authorize without credentials'
 if grep -Eq 'auth_(admin|self)' "$live_policy"; then
@@ -191,4 +211,4 @@ grep -Fq 'run: ./scripts/check_river_session.sh' "$workflow" \
 ! grep -Fq 'DINX_QEMU_POST_KEYS' "$workflow" \
   || fail 'Linux QEMU smoke still injects manual live credentials'
 
-printf 'dinx_live_autologin_contract live=true direct_session=true seatd=true private_runtime_dir=true greeter_installed_only=true keyring_independent=true render_group=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'
+printf 'dinx_live_autologin_contract live=true direct_session=true seatd=true private_runtime_dir=true greeter_installed_only=true keyring_independent=true render_group=true video_group=true live_root_overrides=true installed_rootfs_clean=true polkit_live_only=true dinit=true\n'

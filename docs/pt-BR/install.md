@@ -17,7 +17,7 @@ Não use a ISO em uma máquina com dados que não possam ser restaurados. A sess
 ## Requisitos
 
 - computador ou máquina virtual x86_64;
-- firmware UEFI recomendado;
+- firmware UEFI recomendado; máquinas BIOS/MBR legadas iniciam a mesma imagem pelo MBR híbrido;
 - pendrive de pelo menos 4 GB; a gravação apaga o dispositivo inteiro;
 - 4 GB de RAM recomendados para teste em hardware. O smoke test de CI usa 2 GB, mas isso não é um mínimo de hardware suportado;
 - um segundo dispositivo ou sistema existente para baixar e verificar a imagem;
@@ -145,18 +145,23 @@ Use um gravador confiável como o Rufus. Selecione a ISO verificada e o pendrive
 
 1. Insira o pendrive.
 2. Reinicie e abra o menu de boot (`F12`, `F11`, `Esc` ou a tecla específica do fabricante).
-3. Selecione a entrada UEFI do USB.
+3. Selecione a entrada UEFI do USB, ou a entrada USB simples/legada em máquinas só BIOS (por exemplo notebooks antigos como o HP dm1 com AMD E-350); o MBR híbrido abre o mesmo menu GRUB.
 4. Se o firmware recusar a imagem, desative Secure Boot para este teste; a alpha atual não fornece um caminho Secure Boot assinado.
-5. A imagem Alpha 12 publicada inicia diretamente em `Aqueous + Pearl (DINX)`; a live não solicita usuário nem senha.
+5. A imagem atual da main inicia diretamente em `River + KWM (DINX)`; a live não solicita usuário nem senha. A Alpha 12 publicada é anterior a esta pilha de sessão e não é coberta por este passo.
 
-A ISO live abre diretamente a conta descartável `dinx` em `Aqueous + Pearl (DINX)`. Isso vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
+A ISO live abre diretamente a conta descartável `dinx` em `River + KWM (DINX)`. Isso vale somente para a live; o login instalado e o autologin do Calamares continuam desativados. Quem consegue inicializar a ISO já controla a máquina live; nunca reutilize a senha pública `dinx` em outro lugar.
 
-Quando o desktop aparecer, o estado gráfico testado é Aqueous/Pearl. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
-Pearl é o shell ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o Pearl Greeter lê `/etc/pearl/greeter.json`, usa o tema GTK DINX e força a entrada Aqueous/Pearl sem X11 nem UWSM.
+Quando o desktop aparecer, o estado gráfico testado é River/KWM. Rede, áudio, aceleração de GPU, suspensão/retomada e TTY de recuperação continuam áreas dependentes de validação em hardware.
+O River é o compositor ativo e o KWM o gerenciador de janelas ativo. O tema estático DINX é aplicado pelas bridges GTK/Qt versionadas; o greeter instalado é o agreety sob o greetd, executado pela conta `greeter` com `command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"`, sem arquivo JSON de greeter e sem X11 nem UWSM.
 
+<<<<<<< HEAD
 O Aqueous desenha a barra de título fora do conteúdo do cliente, mantendo o contorno ao redor de ambos. Dê duplo clique em uma área vazia da barra de título para alternar maximizar/restaurar; restaurar recupera a geometria flutuante salva, mantém o foco e eleva a janela acima das outras. Configure **Aqueous window corner radius** no Pearl Settings; o Aqueous lê o valor salvo no início da próxima sessão. O renderizador com efeitos Vulkan aplica cantos arredondados; o compositor CPU de compatibilidade permanece quadrado.
 O PCManFM é o manipulador padrão de diretórios e o gerenciador de arquivos. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane em River/KWM/Morghulis. `Mission Center` e `Seafoam Settings` vêm na ISO base assinada; o `zls` está disponível como pacote opcional para projetos Zig.
 O ZLS permanece opcional: quando instalado, completion e navegação usam a árvore `lib/std` correspondente por meio de `/usr/lib/zls/zig-env`; um compilador Zig completo também é opcional e não faz parte do payload da ISO.
+=======
+O KWM organiza as janelas em mosaico por padrão; o usuário edita `~/.config/kwm/config.zon`, que o `dinx-river-session` semeia a partir do `/etc/xdg/kwm/config.zon` empacotado somente quando o arquivo não existe, para que suas alterações sobrevivam aos próximos boots. River e KWM negociam `xdg-decoration`: janelas decoradas pelo compositor recebem a decoração própria dele, e clientes que mantêm a própria decoração não são decorados duas vezes. O layout fixo `:minimize,maximize,close` se aplica aos toolkits com decoração do cliente.
+O PCManFM é o manipulador padrão de diretórios e o gerenciador de arquivos, e renderiza os ícones de `~/Desktop` via `pcmanfm --desktop`. O File Roller fornece ações gráficas para abrir, criar e extrair arquivos compactados. O GParted edita partições fora do fluxo de instalação. O Pori é a interface de armazenamento para inspecionar discos e criar serviços persistentes de montagem do usuário; usa UDisks2 para descoberta e dinit para o ciclo de vida dos serviços. A ISO base inclui o wrapper DINX `dinx-wdisplays` para configuração interativa de displays Wayland; ao fechar, ele salva o layout atual como o perfil `DINX wdisplays` e recarrega o Shikane, que inicia dentro da sessão River/KWM e reaplica perfis correspondentes. O Dintor é o editor Zig incluso. River e KWM são os únicos componentes de sessão selecionáveis.
+>>>>>>> main
 
 ### Suporte opcional à BC-250
 
@@ -164,7 +169,7 @@ A ISO genérica da Alpha 12 exclui o BC250 Control Center e o governor Cyan Skil
 
 ```bash
 if lspci -n -d 1002:13fe | grep -Fq '1002:13fe'; then
-  sudo pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
+  pkexec pacman -Syu --needed bc250-control-center cyan-skillfish-governor-smu-dinit
 else
   printf 'PCI 1002:13fe não detectado; os pacotes BC-250 não foram instalados.\n' >&2
   exit 1
@@ -185,17 +190,21 @@ pacotes integradas usam um workflow separado, assinado e sem montagem de ISO;
 elas não acionam a montagem P0. Os workflows estão configurados, mas ainda
 não foram confirmados verdes nem publicados.
 
-Quando `dinx-keyring` estiver disponível, instale-o e atualize pelo Shelly:
+Quando `dinx-keyring` estiver disponível, instale-o e atualize pelo pacman e pelo Octopi:
 
 ```bash
-sudo pacman -Syu --needed dinx-keyring
-shelly sync
+pkexec pacman -Syu --needed dinx-keyring
+checkupdates
+paru -Qu
 ```
 
-Depois execute `shelly sync`, confira com `shelly list-updates all` e aplique
-com `shelly upgrade all`; `sudo pacman -Syu` é a alternativa direta. O Shelly
-delegará as operações ao pacman, que exige assinaturas válidas para o
-repositório `[dinx]`.
+O `checkupdates` (do `pacman-contrib`) lista as atualizações pendentes dos
+repositórios oficiais e o `paru -Qu` lista o lado do AUR; ambos são somente
+leitura. Aplique as atualizações interativamente no **Octopi**, aberto pelo
+botão `Package manager` da DINXPanel ou pelo dock, ou execute
+`pkexec pacman -Syu` no terminal. O Octopi não tem interface de linha de
+comando. A DINX não envia sudo, então a elevação do Octopi usa `pkexec` e
+polkit com o `lxqt-policykit-agent`. O pacman exige assinaturas válidas para o repositório `[dinx]`.
 
 Para preparar o sistema quando o repositório móvel estiver publicado, mas
 `dinx-keyring` ainda não estiver disponível, siga a verificação manual da
@@ -209,7 +218,7 @@ arquivo de mirrors pode ser editado para adicionar mirrors futuramente.
 
 A partir do desktop live:
 
-1. Abra o atalho **Instalar DINX** na área de trabalho ou escolha **Instalar DINX** no launcher de aplicativos; a entrada duplicada upstream do Calamares fica oculta.
+1. Abra o atalho **Instalar DINX** na área de trabalho ou escolha **Instalar DINX** no launcher de aplicativos; a entrada duplicada upstream do Calamares fica oculta. No desktop DINX live, o atalho pertencente ao pacote já é executável e aprovado antes da sessão iniciar, sem exigir a ação separada “Permitir lançamento” no primeiro uso.
 2. Se nenhum dos atalhos estiver disponível, execute `/usr/local/libexec/dinx-installer` em um terminal da sessão desktop live; o helper preserva Wayland/D-Bus para o polkit, verifica os pré-requisitos e mostra erros de autorização ou inicialização.
 3. Leia **Opções de instalação / Install choices** antes de escolher as partições.
 4. Escolha o layout adequado à sua intenção:
@@ -218,7 +227,7 @@ A partir do desktop live:
    - **Substituir uma partição** apaga a partição selecionada. **Particionamento manual** é para usuários avançados; exige `/` e, em UEFI, uma partição EFI FAT32 montada em `/boot/efi`.
 5. Swap é opcional. O padrão é sem swap; a DINX instala e inicia sem uma partição de swap.
 6. Confira o disco-alvo, o modo do firmware, os pontos de montagem e as alterações previstas na página de resumo antes de confirmar.
-7. Para operações avançadas de armazenamento, abra o **Pori** pelo launcher do Pearl. Ele descobre dispositivos de bloco pelo UDisks2 e persiste as montagens escolhidas pelo usuário como serviços dinit em `/etc/dinit.d`; use o **GParted** para editar partições fora do Calamares, o **File Roller** para trabalhar com arquivos compactados, o `dinx-wdisplays` para configurar saídas interativamente e persistir automaticamente o perfil Shikane.
+7. Para operações avançadas de armazenamento, abra o **Pori** pelo launcher de aplicativos. Ele descobre dispositivos de bloco pelo UDisks2 e persiste as montagens escolhidas pelo usuário como serviços dinit em `/etc/dinit.d`; use o **GParted** para editar partições fora do Calamares, o **File Roller** para trabalhar com arquivos compactados, o `dinx-wdisplays` para configurar saídas interativamente e persistir automaticamente o perfil Shikane.
 8. Mantenha a ISO/USB conectado até o instalador terminar. O primeiro perfil suporta ext4 e btrfs; o instalador copia o root filesystem sem rede.
 
 O root filesystem DINX ocupa cerca de 7 GiB instalado. No VirtualBox, use um disco virtual de pelo menos 16 GiB e mantenha espaço livre no host para o arquivo do disco virtual. Um disco-alvo pequeno ou o armazenamento do host cheio pode fazer o Calamares falhar ao copiar o root filesystem; o código 11 do rsync indica erro de E/S de arquivo, não uma causa específica.
@@ -234,7 +243,7 @@ dinitctl status greetd
 dinitctl restart greetd
 ```
 
-Deetty é o único emulador de terminal da ISO live e da instalação nova. As sessões live e instalada definem `$TERMINAL` como `deetty`; Nano continua disponível como editor de recuperação. O Pearl Greeter é uma superfície de login do greetd, não uma configuração de sessão do usuário.
+Deetty é o único emulador de terminal da ISO live e da instalação nova. As sessões live e instalada definem `$TERMINAL` como `deetty`; Nano continua disponível como editor de recuperação. O agreety é a superfície de login do greetd, não uma configuração de sessão do usuário.
 
 Para registrar o estado sem alterar o sistema, execute:
 
@@ -251,12 +260,12 @@ O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `mi
 ### Comprovado pelo smoke test atual
 
 - caminho de boot x86_64 em QEMU;
-- payload do Pearl Greeter e configuração do greetd;
-- login gráfico na sessão Aqueous/Pearl;
-- inicialização do Pearl;
+- superfície de login agreety e configuração do greetd;
+- login gráfico na sessão River/KWM;
+- inicialização do River 0.5 pelo supervisor de sessão DINX, incluindo o KWM obrigatório e o KWIM gerenciado pelo KWM;
 - presença dos payloads esperados de dinit, rede, PipeWire e portais na ISO;
 - smoke transacional de layout GPT Windows side-by-side e manual: a ESP FAT32/caminho Microsoft e a partição NTFS existentes permanecem intactos enquanto a raiz DINX, o fstab e os dados GRUB são adicionados;
-- contrato de instalação do rootfs persistente em discos BIOS e UEFI descartáveis, primeiro boot dinit, Pori, Phyto, caminho de armazenamento `ntfs3` e captura da TTY de recuperação no CI.
+- contrato de instalação do rootfs persistente em discos BIOS e UEFI descartáveis, primeiro boot dinit, Pori, PCManFM, caminho de armazenamento `ntfs3` e captura da TTY de recuperação no CI.
 
 ### Ainda não suportado para produção
 
@@ -277,11 +286,23 @@ produção. O caminho selecionado e os gates restantes estão registrados na [de
 
 Confirme que o checksum passou, que a imagem foi gravada no dispositivo inteiro, que o firmware está em modo UEFI e que o USB aparece em `lsblk`/`diskutil`. Tente outra porta ou outro pendrive.
 
+### A inicialização trava com `No irq handler for vector`
+
+Chipsets BIOS legados antigos (AMD E-350 "Zacate" e notebooks semelhantes anteriores a 2012, como o HP dm1) podem parar no início em `do_IRQ: 1.55 No irq handler for vector`. O menu GRUB em si iniciou pelo MBR híbrido; o kernel precisa da correção de interrupção legado. Reinicie e escolha `Start DINX Linux (compatibility)`, que adiciona `noapic irqpoll`. Se a tela ficar preta depois disso, veja abaixo. O TTY de recuperação em modo texto (`Ctrl+Alt+F2`/`F3`) continua disponível se o frame buffer ainda falhar.
+
+### Tela preta mesmo escolhendo `Start DINX Linux (compatibility)`
+
+Quando a tela continua preta depois que `noapic irqpoll` resolve a travada de interrupção, o suspeito restante é o modeset da GPU ou o splash do Plymouth (comum em gráficos integrados anteriores a 2012, como a Radeon HD 6310 do HP dm1). Ordem de boot:
+
+1. `Start DINX Linux (verbose boot)` — imprime o console completo do kernel em vez do splash, mostrando exatamente onde o boot para. Anote as últimas linhas.
+2. `Start DINX Linux (safe graphics)` — adiciona `nomodeset plymouth.enable=0` e roda a sessão em modo texto, contornando a travada do modeset.
+3. Se (2) funcionar, mantenha: após instalar, fixe os mesmos parâmetros permanentemente com `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash noapic irqpoll nomodeset plymouth.enable=0"` em `/etc/default/grub`, depois `pkexec grub-mkconfig -o /boot/grub/grub.cfg`.
+
 ### A tela fica vazia
 
-A Aqueous escolhe o perfil gráfico pelo driver sysfs de cada render node DRM acessível, não pela ordem dos dispositivos DRM. QEMU `virtio_gpu`/virgl usa `aqueous-cpu` com GLES2 no wlroots quando seu render node é legível e gravável; o GTK4 escolhe seu renderer automaticamente. O código atual direciona VirtualBox VMSVGA (`vmwgfx`), `vboxvideo` legado e sistemas sem render node acessível ao Aqueous completo com `WLR_RENDERER=vulkan` e `GSK_RENDERER` sem override, seguindo a política wlroots Vulkan-only do Devario. `vulkan-swrast` fornece Vulkan por software. QXL e outros adaptadores 2D mantêm o perfil CPU de compatibilidade quando há render node. P0/local testa VGA padrão e Virtio-VGA. O caminho `vmware-svga` do QEMU 11.1.2/KVM trava no udev inicial com `vmwgfx` carregado; isso é específico da emulação QEMU e não prova falha no VirtualBox real. As verificações diretas no VBox e em hardware físico seguem pendentes.
+O `dinx-graphics-profile` escolhe o perfil gráfico pelo driver sysfs de cada render node DRM acessível, não pela ordem dos dispositivos DRM, e o `dinx-river-session` aplica esse perfil por meio de `dinx_apply_graphics_environment`. QEMU `virtio_gpu`/virgl seleciona `virtual-gl` (`WLR_RENDERER=gles2`) quando seu render node é legível e gravável. VirtualBox VMSVGA (`vmwgfx`) e `vboxvideo` legado selecionam `cpu` (`WLR_RENDERER=pixman`) quando um render node acessível os identifica, pois o dispositivo Vulkan llvmpipe do VirtualBox pode falhar ao associar o dispositivo DRM. Sistemas sem render node acessível, incluindo o VGA padrão do QEMU com `bochs-drm`, selecionam `cpu` (`WLR_RENDERER=pixman`); QXL e outros render nodes 2D (`qxl`, `bochs`, `simpledrm`, `cirrus`) também selecionam `cpu`. Qualquer outro driver mantém o perfil `hardware`, sem override do compositor. `GSK_RENDERER` fica sem valor para que o GTK4 selecione seu renderer automaticamente.
 
-O log fornecido do VirtualBox 7.2.22/Windows 11 informa VT-x indisponível e modo Hyper-V NEM “Snail execution mode”; isso indica uma via de execução mais lenta, não um resultado gráfico do guest. Ele não comprova se o Pearl apareceu nem por que a VM desligou, e lista uma ISO Alpha 12 e um VDI chamado Alpha 0.10 sem checksum verificado da ISO ou confirmação da origem do boot. Considere essa execução não qualificada; repita em uma VM nova, com SHA-512 exato da ISO e sem VDI antigo anexado durante o boot live.
+O log fornecido do VirtualBox 7.2.22/Windows 11 informa VT-x indisponível e modo Hyper-V NEM “Snail execution mode”; isso indica uma via de execução mais lenta, não um resultado gráfico do guest. Ele não comprova se o desktop apareceu nem por que a VM desligou, e lista uma ISO Alpha 12 e um VDI chamado Alpha 0.10 sem checksum verificado da ISO ou confirmação da origem do boot. Considere essa execução não qualificada; repita em uma VM nova, com SHA-512 exato da ISO e sem VDI antigo anexado durante o boot live.
 
 
 ### Gráficos, drivers e mídia
@@ -296,16 +317,19 @@ DINX_QEMU_VIDEO_DEVICE=virtio-vga-gl \
 scripts/smoke-iso.sh /caminho/para/dinx.iso
 ```
 
-No VirtualBox, qualifique a ISO reconstruída exata com SHA-512 verificado em uma VM descartável nova. Use VMSVGA e teste aceleração 3D desabilitada e habilitada como casos separados. O código atual usa o Aqueous completo com `WLR_RENDERER=vulkan` para `vmwgfx`/`vboxvideo` e sistemas sem render node; isso difere da ISO Alpha 12 publicada. Registre firmware e configurações da VM, confirme que o boot live chega ao Pearl e ao Aqueous e salve o log do VBox e capturas de tela. Não anexe um VDI de sistema antigo durante o teste de mídia live. Para testar o instalador, use um disco virtual descartável novo, ejete a ISO após a instalação, inicialize o disco e registre o resultado da sessão instalada. O smoke QEMU Virtio-VGA testa outro caminho gráfico, não aprova o VirtualBox. Hyper-V/NEM pode deixar o VirtualBox muito lento; não desative Memory Integrity nem outras proteções do host para melhorar desempenho.
+No VirtualBox, qualifique a ISO reconstruída exata com SHA-512 verificado em uma VM descartável nova. Use VMSVGA e teste aceleração 3D desabilitada e habilitada como casos separados. O código atual seleciona `vulkan` com `WLR_RENDERER=vulkan` quando um render node acessível identifica `vmwgfx`/`vboxvideo`; sem render node acessível, usa o perfil `cpu` com `WLR_RENDERER=pixman`. Registre firmware e configurações da VM, confirme que o boot live chega ao desktop River/KWM e salve o log do VBox e capturas de tela. Não anexe um VDI de sistema antigo durante o teste de mídia live. Para testar o instalador, use um disco virtual descartável novo, ejete a ISO após a instalação, inicialize o disco e registre o resultado da sessão instalada. O smoke QEMU Virtio-VGA testa outro caminho gráfico, não aprova o VirtualBox.
 
 Para hardware real, use a matriz de dispositivos e o procedimento de relatório em [qualificação de hardware DINX](alpha7-qualification.md). Verifique o checksum exato da ISO e registre função da máquina, firmware, GPU e cada resultado observado; use um disco externo descartável para testes de instalação. Evidências de CI/QEMU e VirtualBox não substituem as verificações físicas de display, entrada, áudio, rede, suspensão/retomada, brilho e GPU.
 
-A DINX também fornece o backend SANE `scanimage` para acesso a scanners,
+A DINX também fornece
 `fwupdmgr` para descoberta explícita de metadados e atualizações de firmware,
-Flatpak para fontes de aplicativos escolhidas pelo usuário e Impasto como editor
-de imagens. O Impasto é um AppImage upstream com versão e avisos de licença
-fixados, inclui GTK e inicia sem FUSE. O Swayimg continua sendo o visualizador
-padrão.
+Flatpak para fontes de aplicativos escolhidas pelo usuário e PaintFE como editor
+de imagens, junto com Krita, Inkscape, Pixelorama e Patchy. O PaintFE é um
+AppImage upstream com checksum fixado reempacotado como árvore pré-extraída em
+`/opt/paintfe/`, sem precisar de FUSE. O Audionaut, editor e gravador de áudio
+multifaixa, vem como um único AppImage executado com
+`--appimage-extract-and-run`, e o Blender é a suíte de criação 3D. O Swayimg
+continua sendo o visualizador padrão.
 
 ### Pacotes gaming opcionais
 
@@ -321,7 +345,7 @@ A ISO genérica da Alpha 12 exclui Gamescope, Steam, GameMode, MangoHud, regras 
 2. Instale os pacotes gaming opcionais:
 
    ```bash
-   sudo pacman -Syu --needed \
+   pkexec pacman -Syu --needed \
      gamescope gamemode mangohud steam steam-devices \
      lib32-gamemode lib32-mesa lib32-vulkan-radeon lib32-vulkan-mesa-layers
    ```
@@ -340,7 +364,7 @@ precisar imprimir. O CUPS fica intencionalmente fora da ISO offline.
 
 ### A sessão live não abre
 
-O caminho esperado é autologin direto em `dinx`/`Aqueous + Pearl (DINX)`. Se o Pearl Greeter aparecer, ele já deve mostrar somente a entrada forçada `Aqueous + Pearl (DINX)`; registre o commit do workflow e os detalhes do hardware se a sessão não iniciar. Não tente credenciais aleatórias.
+O caminho esperado é autologin direto em `dinx`/`River + KWM (DINX)`. Se a tela de login do agreety aparecer em vez do autologin da live, ela deve oferecer somente `River + KWM (DINX)`; registre o commit do workflow e os detalhes do hardware se a sessão não iniciar. Não tente credenciais aleatórias.
 
 ### O checksum falha
 

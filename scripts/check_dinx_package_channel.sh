@@ -102,4 +102,4 @@ for required in \
     || fail "reusable contract validation is missing: $required"
 done
 
-printf 'dinx_package_channel_contract upstream_refresh=reviewed_daily_pr package_only_build=true repository=github-release-assets signed=true keyring=profile_and_pacman_config shelly=pacman\n'
+printf 'dinx_package_channel_contract upstream_refresh=reviewed_daily_pr package_only_build=true repository=github-release-assets signed=true keyring=profile_and_pacman_config package_managers=paru+octopi\n'

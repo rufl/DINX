@@ -169,6 +169,7 @@ assert_vim_compat_aliases_removed() {
   done
 }
 pruned_packages=(
+  linux-headers
   breeze
   breeze-cursors
   plasma-integration

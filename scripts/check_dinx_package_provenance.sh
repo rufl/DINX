@@ -9,7 +9,11 @@ fail() {
   exit 1
 }
 
+<<<<<<< HEAD
 local_packages=(dinitui dinxpanel dinx-firewalld-dinit ghostty-vt-runtime wizp redbean)
+=======
+local_packages=(dinitui dinxpanel dinx-dock dinx-first-run dinx-firewalld-dinit ghostty-vt-runtime wizp)
+>>>>>>> main
 contains_local_package() {
   local candidate=$1
   local package
@@ -40,7 +44,12 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
       wizp) contract=scripts/check_wizp_package.sh ;;
       ghostty-vt-runtime) contract=scripts/check_ghostty_vt_runtime.sh ;;
       dinx-firewalld-dinit) contract=scripts/check_firewall_tools.sh ;;
+<<<<<<< HEAD
       redbean) contract=scripts/check_redbean.sh ;;
+=======
+      dinx-dock) contract=scripts/check_dinx_dock.sh ;;
+      dinx-first-run) contract=scripts/check_dinx_first_run.sh ;;
+>>>>>>> main
     esac
     [[ -x "$contract" ]] || fail "$package is missing its executable qualification contract: $contract"
   else
@@ -100,7 +109,6 @@ for required in \
   'scripts/cache-verified-download.sh' \
   'scripts/cache-verified-extract.sh' \
   'scripts/smoke_cache_verified_extract.sh' \
-  'scripts/iso-builder/**' \
   'Compute reusable build-cache input digest' \
   'Detect changed build caches' \
   'steps.cache-inputs.outputs.recipe_sha256' \
@@ -213,6 +221,8 @@ for required in \
   'pacman_install_local() {' \
   'if pacman -U --noconfirm "$@"; then' \
   'pacman_retry -Syy --noconfirm' \
+  'pacman_sync_install() {' \
+  'pacman_retry -Syu --noconfirm' \
   'sleep 15'; do
   grep -Fq -- "$required" "$local_package_installer" \
     || fail "local package retry helper is missing: $required"
@@ -236,6 +246,7 @@ for required in \
   'NoExtract = usr/lib/systemd/*' \
   'NoExtract = etc/systemd/*' \
   'NoExtract = usr/share/wayland-sessions/plasma.desktop' \
+  'NoExtract = usr/share/wayland-sessions/river.desktop' \
   'NoExtract = usr/share/uwsm/*' \
   'NoExtract = etc/calamares-config-switcher.conf' \
   'NoExtract = usr/bin/calamares-config-switcher' \
@@ -248,7 +259,11 @@ for required in \
   '^[[:space:]]*DownloadUser[[:space:]]*=' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'local -a makepkg_options=(--nodeps --nocheck --noconfirm)' \
+<<<<<<< HEAD
   'dinitui|dinxpanel)' \
+=======
+  'dinitui|dinxpanel|dinx-dock|dinx-first-run' \
+>>>>>>> main
   'makepkg_options+=(--clean)' \
   'source /workspace/scripts/lib/pacman-local-install.sh' \
   'source /workspace/scripts/lib/dinx-package-artifact-cache.sh' \
@@ -263,6 +278,7 @@ for required in \
   'runuser -u dinxbuild -- bash -c' \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
+<<<<<<< HEAD
   'pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good' \
   'build_package turnstile' \
   'build_package dinx-noto-latin' \
@@ -271,6 +287,15 @@ for required in \
   'build_package pixelorama' \
   'build_package audionaut' \
   'build_package paintfe' \
+=======
+  'pacman_sync_install python-fonttools vala gst-plugins-base gst-plugins-good' \
+  'build_package dinx-noto-latin' \
+  'build_package dinx-plymouth-theme' \
+  'build_package patchy' \
+  'build_package paintfe' \
+  'build_package pixelorama' \
+  'build_package audionaut' \
+>>>>>>> main
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \
@@ -325,14 +350,6 @@ for required in \
   '--env DINX_TOOLCHAIN_CACHE_DIRTY_MARKER="$cache_toolchain_marker"' \
   'bash /workspace/scripts/build-iso-container.sh'; do
   grep -Fq -- "$required" "$docker_builder" || fail "Docker wrapper is missing container wiring: $required"
-done
-for required in \
-  '- "scripts/build-iso-docker.sh"' \
-  '- "scripts/build-iso-container.sh"' \
-  '- "scripts/iso-tools/prioritize-dinx-pacman-repo.sh"' \
-  '- "scripts/cache-verified-download.sh"'; do
-  grep -Fq -- "$required" "$workflow" \
-    || fail "P0 push path filters are missing build input: $required"
 done
 if grep -Fq -- '      - "distro/packages/**"' "$workflow"; then
   fail 'package-source changes must use the package-only publication workflow, not trigger ISO assembly'

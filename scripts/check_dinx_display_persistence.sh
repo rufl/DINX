@@ -33,8 +33,13 @@ grep -Fq 'trap cleanup EXIT' "$saver" || fail 'saver cleanup is not guaranteed o
 grep -Fq "trap 'exit 143' HUP INT TERM" "$saver" || fail 'saver does not terminate cleanly on signals'
 grep -Fq 'awk -v generated="$export_file"' "$saver" || fail 'saver does not merge the generated profile'
 grep -Fq 'mv -f "$merged_file" "$config_path"' "$saver" || fail 'saver is not atomic'
+<<<<<<< HEAD
 grep -Fq 'start shikane' "$supervisor" \
   || fail 'River session does not own the display daemon'
+=======
+grep -Fq 'start_required shikane shikane' "$supervisor" \
+  || fail 'session supervisor does not own the display daemon'
+>>>>>>> main
 grep -Fq 'dinx-wdisplays' "$seed" || fail 'seed config does not document the DINX display path'
 grep -Fq 'timeout = 0' "$seed" || fail 'seed config is not valid Shikane TOML'
 grep -Fq 'Exec=dinx-wdisplays' "$desktop" || fail 'display desktop entry does not use the DINX wrapper'

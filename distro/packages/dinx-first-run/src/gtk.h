@@ -1,0 +1,4 @@
+// SPDX-FileCopyrightText: 2026 DINX Contributors
+// SPDX-License-Identifier: Apache-2.0
+#include <gtk/gtk.h>
+#include <adwaita.h>

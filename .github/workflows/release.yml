@@ -224,6 +224,7 @@ jobs:
           - SHA-512: \`${iso_name}.sha512\`
           - Linux QEMU boot, graphical payload, boot-menu and automated live-session captures passed in CI.
           - The persistent-install smoke copied the Calamares rootfs contract to disposable BIOS and UEFI disks, booted dinit and captured a recovery TTY frame.
+          - The hybrid MBR boot records (grub2 MBR, BIOS El Torito entry and appended EFI System partition) are gated statically, and the image boots from its MBR as a raw disk under SeaBIOS, where the \`Start DINX Linux (compatibility)\` entry reaches the desktop for legacy BIOS notebooks such as the AMD E-350 HP dm1.
           - GitHub artifact attestations cover the ISO or its parts, checksums, Windows package and release metadata. Verify with \`gh attestation verify <file> -R rufl/DINX\`.
           - \`${build_metadata_name}\` records the source commit, builder image, package snapshot and ISO digest.
           ## Signed DINX pacman repository
@@ -277,7 +278,11 @@ jobs:
           The installer contract is qualified in CI on disposable BIOS and UEFI disks, but physical hardware
           installation, installed-ISO upgrades, filesystem rollback and data preservation remain unsupported;
           verify the target device and read the installation guide before using either destructive tool.
+<<<<<<< HEAD
           The live session automatically opens the disposable `dinx` account in River/KWM/Morghulis; no username or password is requested. Installed/manual login uses `agreety` through greetd with the dedicated `greeter` account. The session ships no systemd/UWSM integration. Use the disposable password `dinx` only for diagnosis when starting the live session manually; never reuse it.
+=======
+          The live session automatically opens the disposable `dinx` account in the River + KWM Wayland session; no username or password is requested. Installed/manual login uses the `agreety` greeter through greetd; it launches the River + KWM session and ships no systemd/UWSM integration. If the live session exits, greetd returns to the greeter instead of switching sessions silently. Use the disposable password `dinx` only for diagnosis when starting the live session manually; never reuse it.
+>>>>>>> main
           EOF
       - name: Attest release provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4

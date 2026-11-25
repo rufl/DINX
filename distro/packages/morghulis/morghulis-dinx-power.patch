@@ -1,0 +1,15 @@
+diff --git a/src/PowerMenu/PowerMenu.vala b/src/PowerMenu/PowerMenu.vala
+--- a/src/PowerMenu/PowerMenu.vala
++++ b/src/PowerMenu/PowerMenu.vala
+@@ -80 +80 @@
+-                    Process.spawn_command_line_async("systemctl poweroff");
++                    Process.spawn_command_line_async("loginctl poweroff");
+@@ -88 +88 @@
+-                    Process.spawn_command_line_async("systemctl reboot");
++                    Process.spawn_command_line_async("loginctl reboot");
+@@ -96 +96 @@
+-                    Process.spawn_command_line_async("systemctl suspend");
++                    Process.spawn_command_line_async("loginctl suspend");
+@@ -104 +104 @@
+-                    Process.spawn_command_line_async(@"loginctl terminate-user $(Morghulis.user_name)");
++                    Process.spawn_command_line_async("/usr/local/libexec/dinx-logout");

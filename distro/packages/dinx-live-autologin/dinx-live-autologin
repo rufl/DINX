@@ -24,6 +24,17 @@ else
   printf '%s\n' 'dinx-live-autologin: render group or live user unavailable; session will use CPU graphics' >&2
 fi
 
+# Morghulis drives backlight through /sys/class/backlight, which udev restricts
+# to the `video` group (its 90-backlight.rules). Installed accounts get that
+# group from the Calamares users module; the disposable live account is
+# provisioned here instead, otherwise the shell's brightness OSD is dead in the
+# live session only.
+if getent group video >/dev/null 2>&1 && getent passwd dinx >/dev/null 2>&1; then
+  if ! usermod --append --groups video dinx; then
+    printf '%s\n' 'dinx-live-autologin: video access unavailable; backlight control will not work' >&2
+  fi
+fi
+
 if getent group seat >/dev/null 2>&1 && getent passwd dinx >/dev/null 2>&1; then
   if ! getent group seat | grep -Eq '(^|:|,)dinx(,|$)'; then
     group_tmp=$(mktemp /etc/group.dinx-seat.XXXXXX)

@@ -9,7 +9,7 @@ source_env="$startdir/source.env"
 : "${HARUNA_SOURCE_URL:?missing HARUNA_SOURCE_URL}"
 : "${HARUNA_SOURCE_SHA256:?missing HARUNA_SOURCE_SHA256}"
 pkgver="$HARUNA_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Video player built with Qt/QML on top of libmpv'
 arch=('x86_64')
 url='https://apps.kde.org/haruna/'

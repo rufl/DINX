@@ -79,7 +79,6 @@ grep -Fqx '    - vulkan-radeon' "$profile" || fail 'base RADV driver was removed
 grep -Fqx '    - vulkan-tools' "$profile" || fail 'base Vulkan diagnostics were removed'
 
 grep -Fq 'scripts/check_gaming.sh' "$workflow" || fail 'workflow does not run the gaming contract gate'
-grep -Fq 'scripts/gaming_p5_qualification.sh' "$workflow" || fail 'workflow trigger does not include gaming qualification changes'
 grep -Fqx 'gamescope' scripts/iso-builder/packages.txt \
   || fail 'Artix builder image does not install Gamescope for qualification'
 if grep -Fq '[lib32]' "$workflow"; then

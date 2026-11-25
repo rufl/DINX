@@ -1,6 +1,6 @@
 pkgname=ghostty-vt-runtime
-_ghostty_version=$(pacman -Q ghostty | awk '{ print $2 }')
-[[ -n "$_ghostty_version" ]] || { printf 'PKGBUILD: Ghostty is required to extract its VT runtime\n' >&2; exit 1; }
+_ghostty_version=$(pacman -Q libghostty-vt | awk '{ print $2 }')
+[[ -n "$_ghostty_version" ]] || { printf 'PKGBUILD: libghostty-vt is required to extract its VT runtime\n' >&2; exit 1; }
 epoch=0
 if [[ "$_ghostty_version" == *:* ]]; then
   epoch=${_ghostty_version%%:*}
@@ -14,7 +14,7 @@ arch=('x86_64')
 url='https://github.com/ghostty-org/ghostty'
 license=('MIT')
 depends=('bzip2' 'fontconfig' 'freetype2' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'harfbuzz' 'libadwaita' 'libglvnd' 'libpng' 'libx11' 'oniguruma' 'pixman' 'wayland' 'zlib')
-makedepends=('ghostty')
+makedepends=('libghostty-vt')
 provides=('libghostty-vt')
 conflicts=('ghostty')
 source=()
@@ -34,5 +34,5 @@ package() {
     return 1
   }
   cp -a /usr/include/ghostty "$pkgdir/usr/include/"
-  install -Dm644 /usr/share/licenses/ghostty/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 /usr/share/licenses/libghostty-vt/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

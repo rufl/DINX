@@ -51,17 +51,24 @@ prepare() {
   # Disable ring asm to avoid host/target linking mismatch in meson+cargo build
   # 1. Replace ring line in magpie Cargo.toml for ALL cargo invocations
   sed -i 's/^ring =.*/ring = { version = "0.17", default-features = false, features = ["std"] }/' "$root/subprojects/magpie/Cargo.toml"
-  # 2. Also add .cargo/config.toml in magpie for build scripts and any other cargo invocations
+  # 2. Add .cargo/config.toml in magpie for build scripts and any other cargo invocations
   mkdir -p "$root/subprojects/magpie/.cargo"
   cat > "$root/subprojects/magpie/.cargo/config.toml" <<'EOF'
 [target.x86_64-unknown-linux-gnu]
 ring = { default-features = false, features = ["std"] }
 EOF
-}
+  # 3. Also add at workspace root for meson's cargo invocations
+  mkdir -p "$root/.cargo"
+  cat > "$root/.cargo/config.toml" <<'EOF'
+[target.x86_64-unknown-linux-gnu]
+ring = { default-features = false, features = ["std"] }
+EOF
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"
   export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
+  # Disable ring asm features globally
+  export RUSTFLAGS="${RUSTFLAGS} -C target-feature=-aes,-avx2"
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false
   meson compile -C build
 }

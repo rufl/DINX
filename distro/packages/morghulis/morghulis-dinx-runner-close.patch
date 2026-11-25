@@ -1,7 +1,7 @@
 diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCmdButton.vala
 --- a/src/Runner/Commands/AppsCmdButton.vala
 +++ b/src/Runner/Commands/AppsCmdButton.vala
-@@ -10,9 +10,19 @@
+@@ -10,9 +10,26 @@
      [GtkCallback]
      public void clicked() {
 -        app_launch_handler();
@@ -12,7 +12,7 @@ diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCm
      public void activated() {
 -        app_launch_handler();
 +        launch_and_dismiss();
-+    }
+     }
 +
 +    private void launch_and_dismiss() {
 +        // Hide the Runner immediately so it gets out of the way before the app

@@ -49,12 +49,8 @@ prepare() {
   patch --fuzz=0 --forward --strip=1 -d "$root/subprojects/magpie" \
     < "$srcdir/mission-center-dinx-dinit-services.patch"
   # Disable ring asm to avoid host/target linking mismatch in meson+cargo build
-  # Append ring override to magpie Cargo.toml (last wins) for ALL cargo invocations
-  cat >> "$root/subprojects/magpie/Cargo.toml" <<'EOF'
-
-[dependencies]
-ring = { version = "0.17", default-features = false, features = ["std"] }
-EOF
+  # Replace ring line in magpie Cargo.toml [dependencies] section for ALL cargo invocations
+  sed -i '/^\[dependencies\]/,/^\[/ s/^ring = .*/ring = { version = "0.17", default-features = false, features = ["std"] }/' "$root/subprojects/magpie/Cargo.toml"
 }
 
 build() {

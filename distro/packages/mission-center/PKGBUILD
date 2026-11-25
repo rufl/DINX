@@ -49,17 +49,24 @@ prepare() {
   patch --fuzz=0 --forward --strip=1 -d "$root/subprojects/magpie" \
     < "$srcdir/mission-center-dinx-dinit-services.patch"
   # Disable ring asm to avoid host/target linking mismatch in meson+cargo build
-  sed -i '/^ring =/s/"[^"]*"/{ version = "0.17", default-features = false, features = ["std"] }/' \
-    "$root/subprojects/magpie/Cargo.toml"
+  mkdir -p "$root/.cargo"
+  cat > "$root/.cargo/config.toml" <<'EOF'
+[target.x86_64-unknown-linux-gnu]
+ring = { default-features = false, features = ["std"] }
+EOF
+  cat > "$root/subprojects/magpie/.cargo/config.toml" <<'EOF'
+[target.x86_64-unknown-linux-gnu]
+ring = { default-features = false, features = ["std"] }
+EOF
+  cat > "$root/subprojects/magpie/platform-linux/.cargo/config.toml" <<'EOF'
+[target.x86_64-unknown-linux-gnu]
+ring = { default-features = false, features = ["std"] }
+EOF
 }
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"
   export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
-  export RING_BUILD_ASM=0
-  export RING_USE_ASM=0
-  export PATH="/usr/bin:$PATH"
-  export NASM=/usr/bin/nasm
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false
   meson compile -C build
 }

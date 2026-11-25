@@ -16,7 +16,7 @@ diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCm
 +
 +    private void launch_and_dismiss() {
 +        // Hide the Runner immediately so it gets out of the way before the app
-+        // window appears.  Do this before the launch call so the compositor can
++        // window appears. Do this before the launch call so the compositor can
 +        // reclaim the layer surface before the new window maps.
 +        Runner.instance.visible = false;
 +        // Set a watch cursor on the Runner window surface to signal "busy" until
@@ -31,4 +31,3 @@ diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCm
 +        }
          app_launch_handler();
      }
- 

@@ -1,3 +1,8 @@
+:root {
+    --border: #7f8a9c;
+    --accent: #8fb8ff;
+}
+
 /* DINX static theme; the River/KWM session does not require a shell theme service. */
 * {
     font-family: Noto Sans;
@@ -20,7 +25,7 @@ headerbar windowtitle,
 .window-frame,
 window.popup,
 window.normal {
-    border: 1px solid #7f8a9c;
+    border: 1px solid var(--border);
 }
 headerbar,
 .titlebar,
@@ -50,7 +55,7 @@ radiobutton,
 switch {
     background-color: #11151d;
     color: #d7dde8;
-    border: 1px solid #222a38;
+    border: 1px solid var(--border);
 }
 
 button:hover,
@@ -63,14 +68,14 @@ row:hover {
 
 button.suggested-action,
 button.default {
-    background-color: #8fb8ff;
+    background-color: var(--accent);
     color: #0b0d12;
 }
 
 button:focus,
 entry:focus,
 textview:focus {
-    outline: 2px solid #8fb8ff;
+    outline: 2px solid var(--accent);
     outline-offset: 1px;
 }
 
@@ -82,7 +87,7 @@ selection,
 
 scale highlight,
 progressbar progress {
-    background-color: #8fb8ff;
+    background-color: var(--accent);
 }
 
 scrollbar trough {
@@ -90,5 +95,5 @@ scrollbar trough {
 }
 
 scrollbar slider {
-    background-color: #7f8a9c;
+    background-color: var(--border);
 }

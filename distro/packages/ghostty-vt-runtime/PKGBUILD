@@ -22,10 +22,9 @@ source=()
 package() {
   local library
   install -d -m755 "$pkgdir/usr/lib" "$pkgdir/usr/include"
-  for library in /usr/lib/libghostty-vt.so*; do
-    [[ -e "$library" || -L "$library" ]] || continue
+  while IFS= read -r -d '' library; do
     cp -a "$library" "$pkgdir/usr/lib/"
-  done
+  done < <(find /usr/lib -name 'libghostty-vt.so*' -print0 2>/dev/null)
   [[ -e "$pkgdir/usr/lib/libghostty-vt.so.0" ]] || {
     printf 'PKGBUILD: libghostty-vt.so.0 is missing from the installed Ghostty package\n' >&2
     return 1

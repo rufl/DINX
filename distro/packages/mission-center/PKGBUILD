@@ -63,6 +63,7 @@ EOF
 [target.x86_64-unknown-linux-gnu]
 ring = { default-features = false, features = ["std"] }
 EOF
+}
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"

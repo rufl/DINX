@@ -46,7 +46,7 @@ prepare() {
   mv "$srcdir/app-detection-$APP_DETECTION_COMMIT"/* "$root/subprojects/magpie/platform-linux/crates/app-rummage"/
   # DINX patch: add Dinit init system backend to the magpie service cache so
   # the Services tab lists and controls dinit services on Artix/DINX installs.
-  patch --fuzz=0 --forward --strip=2 -d "$root/subprojects/magpie" \
+  patch --fuzz=0 --forward --strip=1 -d "$root/subprojects/magpie" \
     < "$srcdir/mission-center-dinx-dinit-services.patch"
 }
 

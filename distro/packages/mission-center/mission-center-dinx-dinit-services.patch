@@ -1,5 +1,5 @@
---- subprojects/magpie/gng-19568ad9a2ec998b05f98b3b8f4766a6f22255db/platform-linux/src/services/mod.rs.orig	2026-11-24 18:00:54.094141467 +0000
-+++ subprojects/magpie/gng-19568ad9a2ec998b05f98b3b8f4766a6f22255db/platform-linux/src/services/mod.rs	2026-11-24 18:02:25.980192619 +0000
+--- a/platform-linux/src/services/mod.rs
++++ b/platform-linux/src/services/mod.rs
 @@ -23,6 +23,7 @@
  
  use magpie_platform::services::Service;

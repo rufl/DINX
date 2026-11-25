@@ -48,6 +48,9 @@ prepare() {
   # the Services tab lists and controls dinit services on Artix/DINX installs.
   patch --fuzz=0 --forward --strip=1 -d "$root/subprojects/magpie" \
     < "$srcdir/mission-center-dinx-dinit-services.patch"
+  # Disable ring asm to avoid host/target linking mismatch in meson+cargo build
+  sed -i '/^ring =/s/"[^"]*"/{ version = "0.17", default-features = false, features = ["std"] }/' \
+    "$root/subprojects/magpie/Cargo.toml"
 }
 
 build() {

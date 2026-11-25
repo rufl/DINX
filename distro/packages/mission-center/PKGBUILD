@@ -54,16 +54,14 @@ prepare() {
   # 2. Add .cargo/config.toml in magpie for build scripts and any other cargo invocations
   mkdir -p "$root/subprojects/magpie/.cargo"
   cat > "$root/subprojects/magpie/.cargo/config.toml" <<'EOF'
-[target.x86_64-unknown-linux-gnu.dependencies.ring]
-default-features = false
-features = ["std"]
+[target.x86_64-unknown-linux-gnu.dependencies]
+ring = { default-features = false, features = ["std"] }
 EOF
   # 3. Also add at workspace root for meson's cargo invocations
   mkdir -p "$root/.cargo"
   cat > "$root/.cargo/config.toml" <<'EOF'
-[target.x86_64-unknown-linux-gnu.dependencies.ring]
-default-features = false
-features = ["std"]
+[target.x86_64-unknown-linux-gnu.dependencies]
+ring = { default-features = false, features = ["std"] }
 EOF
 }
 

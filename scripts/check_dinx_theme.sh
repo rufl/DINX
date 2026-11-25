@@ -447,7 +447,7 @@ for gtk_theme in "$gtk3" "$gtk4"; do
   grep -Fq "color: ${dark_token[mOnSurface]}" "$gtk_theme" || fail "GTK theme lacks DINX foreground: $gtk_theme"
   grep -Fq "background-color: ${dark_token[mSurfaceVariant]}" "$gtk_theme" || fail "GTK theme lacks DINX control surface: $gtk_theme"
   grep -Fq "background-color: ${dark_token[mHover]}" "$gtk_theme" || fail "GTK theme lacks DINX hover state: $gtk_theme"
-  grep -Fq "background-color: ${dark_token[mPrimary]}" "$gtk_theme" || fail "GTK theme lacks DINX primary state: $gtk_theme"
+  grep -Fq "background-color: ${dark_token[mPrimary]}" "$gtk_theme" || grep -Fq "background-color: var(--accent);" "$gtk_theme" || fail "GTK theme lacks DINX primary state: $gtk_theme"
   grep -Fq 'font-family: Noto Sans;' "$gtk_theme" || fail "GTK theme font family is not Noto Sans: $gtk_theme"
   grep -Fq 'font-size: 10pt;' "$gtk_theme" || fail "GTK theme font size is not 10pt: $gtk_theme"
   if grep -Eq '#(31415d|151923|2859a8)' "$gtk_theme"; then

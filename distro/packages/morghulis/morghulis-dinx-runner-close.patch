@@ -32,4 +32,3 @@ diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCm
          app_launch_handler();
      }
  
-     public AppsCmdButton(AstalApps.Application app, bool is_uwsm_session) {

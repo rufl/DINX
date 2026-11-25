@@ -62,6 +62,7 @@ jq
 gtksourceview4
 vte3
 ghostty
+zig
 hicolor-icon-theme
 adwaita-icon-theme
 less

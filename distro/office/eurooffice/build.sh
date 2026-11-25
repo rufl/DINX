@@ -287,7 +287,7 @@ export QT_STYLE_OVERRIDE=Fusion
 
 config_home="${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}"
 settings_dir="$config_home/onlyoffice"
-settings_file="$settings_dir/DesktopEditorsSettings.conf"
+settings_file="$settings_dir/DesktopEditors.conf"
 if [ ! -e "$settings_file" ]; then
   mkdir -p "$settings_dir"
   cat > "$settings_file" <<'SETTINGS'

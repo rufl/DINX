@@ -9,7 +9,7 @@ license=('MIT')
 depends=('bzip2' 'fontconfig' 'freetype2' 'glib2' 'glibc' 'gtk4' 'gtk4-layer-shell' 'harfbuzz' 'libadwaita' 'libglvnd' 'libpng' 'libx11' 'oniguruma' 'pixman' 'wayland' 'zlib')
 makedepends=('zig>=0.17' 'cmake' 'ninja' 'gtk4' 'gtk4-layer-shell' 'libadwaita')
 source=("https://github.com/ghostty-org/ghostty/archive/refs/tags/v${_ghostty_version}.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('2e2a2516f9bea89a4991ad7c9401b77682eed366387a5b1d7c629472b5d11a43')
 provides=('libghostty-vt')
 conflicts=('ghostty')
 package() {

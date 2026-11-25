@@ -9,20 +9,20 @@ source_env="$startdir/source.env"
 : "${BLENDER_SOURCE_URL:?missing BLENDER_SOURCE_URL}"
 : "${BLENDER_SOURCE_SHA256:?missing BLENDER_SOURCE_SHA256}"
 pkgver="$BLENDER_VERSION"
-pkgrel=3
+pkgrel=4
 epoch=17
 options=(!lto)
 # Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
-# openvdb, opensubdiv, embree and openimagedenoise. Cycles OSL is disabled
-# because its runtime-only shader compiler pulls clang, clang-libs and llvm
-# into the base image.
-# Core workflows retained: modeling, rigging, texturing and animation, including
-# local Cycles rendering, image/video I/O, asset interchange and animation
-# modifiers. Optional heavyweight integrations stay in blender-full.
-# Omitted from this lean build: XR, USD, MaterialX, OpenVDB, OpenSubdiv, Embree,
-# OpenImageDenoise, oneAPI/SYCL, Cycles OSL, Grease Pencil, Jolt, KTX, NanoVDB,
-# QuadriFlow and Haru/PDF output.
-pkgdesc="Blender (lean build — modeling, rigging, texturing and animation)"
+# openvdb, opensubdiv, embree and openimagedenoise. shaderc stays as a
+# runtime dependency because the binary links libshaderc_shared.so.1 for Vulkan
+# GLSL compilation; nothing else on the foundation ISO provides that soname.
+# Cycles OSL is disabled because its runtime-only shader compiler pulls
+# clang, clang-libs and llvm into the base image.
+# Essentials kept: cycles, python, ffmpeg, bullet, openxr, alembic, draco,
+# jolt, opencolorio, openimageio, audaspace, freestyle, ik-solvers,
+# fluid/ocean/remesh modifiers, meshoptimizer, ktx, nanovdb, potrace,
+# pugixml, manifold, quadriflow and rubberband.
+pkgdesc="A fully integrated 3D graphics creation suite (lean build — 3D modeling + gamedev only)"
 arch=(x86_64)
 url="https://www.blender.org/"
 license=(GPL-3.0-or-later)
@@ -48,6 +48,7 @@ depends=(
   libdecor
   libepoxy
   libgl
+  libharu
   libjpeg-turbo
   libpng
   libsndfile
@@ -69,6 +70,7 @@ depends=(
   opengl-driver
   openimageio
   openjpeg2
+  openxr
   libspnav
   potrace
   pugixml
@@ -76,6 +78,7 @@ depends=(
   python-numpy
   rubberband
   sdl2
+  shaderc
   shared-mime-info
   speexdsp
   wayland
@@ -110,6 +113,7 @@ optdepends=(
 )
 source=("${pkgname}-${pkgver}.tar.xz::${BLENDER_SOURCE_URL}")
 sha256sums=("${BLENDER_SOURCE_SHA256}")
+
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
 
@@ -164,9 +168,9 @@ build() {
     -DWITH_OPENAL=ON \
     -DWITH_AUDASPACE=OFF \
     -DWITH_GMP=ON \
-    -DWITH_HARU=OFF \
+    -DWITH_HARU=ON \
     -DWITH_SDL=ON \
-    -DWITH_XR_OPENXR=OFF
+    -DWITH_XR_OPENXR=ON
 
   cmake --build build
 }

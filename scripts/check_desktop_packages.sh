@@ -237,7 +237,7 @@ if grep -Eq '^[[:space:]]*(intel-oneapi|usd|materialx|openvdb|opensubdiv|embree|
   fail 'Blender package still carries Artix bloat dependencies'
 fi
 blender_runtime_deps=$(sed -n '/^depends=(/,/^)/p' "$blender_recipe")
-for required_dep in libepoxy libxfixes libxkbcommon libxrender libxxf86vm opencolorio openexr; do
+for required_dep in libepoxy libxfixes libxkbcommon libxrender libxxf86vm opencolorio openexr shaderc; do
   grep -Eq "^[[:space:]]*$required_dep([[:space:]]|$)" <<<"$blender_runtime_deps" \
     || fail "Blender runtime dependency is missing: $required_dep"
 done

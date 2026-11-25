@@ -1,7 +1,6 @@
-tag=blender-staging/v5.2.3-dinx1
-version=5.2.3
+tag=blender/v5.3.0-dinx1
+version=5.3.0
 pkgrel=1
-package=blender-17.5.2.3-3-x86_64.pkg.tar.zst
-full_package=blender-17.5.2.3-3-x86_64.pkg.tar.zst
-mode=lean-only-staging
+package=blender-17.5.3.0-3-x86_64.pkg.tar.zst
+full_package=blender-full-5.3.0-1-x86_64.pkg.tar.zst
 sha256sums=SHA256SUMS

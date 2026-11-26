@@ -14,6 +14,10 @@ xorriso_wrapper="$iso_tools_dir/xorriso"
 
 [[ -r "$build_script" ]] || fail "missing ISO build wrapper: $build_script"
 [[ -x "$xorriso_wrapper" ]] || fail "missing executable ISO identity wrapper: $xorriso_wrapper"
+grep -Fq -- 'iso_label_replacements' "$build_script" \
+  || fail 'ISO build does not rewrite the Artix kernel label source'
+grep -Fq -- 'DINX_$(date +%Y%m)' "$build_script" \
+  || fail 'ISO build does not select the DINX kernel/volume label'
 grep -Fq -- '-p dinx' "$build_script" \
   || fail 'ISO build does not select the DINX profile'
 

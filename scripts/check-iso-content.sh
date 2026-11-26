@@ -1015,6 +1015,11 @@ grep -Fq 'source /boot/grub/kernels.cfg' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO GRUB does not load its live boot choices'
 grep -Fq 'set kopts="quiet splash"' "$tmp_dir/iso-grub.cfg" \
   || fail 'DINX ISO boot menu does not enable Plymouth and silent boot'
+grep -Eq 'label=DINX_[0-9]{6}([[:space:]]|$)' "$tmp_dir/iso-grub-kernels.cfg" \
+  || fail 'DINX ISO GRUB kernel parameters do not use the DINX volume label'
+if grep -Eq 'label=ARTIX_[0-9]{6}([[:space:]]|$)' "$tmp_dir/iso-grub-kernels.cfg"; then
+  fail 'DINX ISO GRUB kernel parameters retain the stale Artix volume label'
+fi
 [[ $(grep -Fc 'menuentry ' "$tmp_dir/iso-grub-kernels.cfg") -eq 4 ]] \
   || fail 'DINX ISO GRUB does not contain exactly the default, compatibility, safe-graphics and verbose live boot choices'
 grep -Fq 'menuentry "Start DINX Linux"' "$tmp_dir/iso-grub-kernels.cfg" \

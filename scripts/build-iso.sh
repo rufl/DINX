@@ -108,10 +108,20 @@ private_initcpio_helper="$private_artools_data/$artools_lib_relative/iso/initcpi
 private_buildiso="$private_buildiso_dir/buildiso"
 awk -v libdir="$private_artools_data/$artools_lib_relative" \
   -v datadir="$private_artools_data" '
+  /^[[:space:]]*iso_label[[:space:]]*=/ {
+    if ($0 !~ /ARTIX_/) exit 2
+    print "iso_label=\"DINX_$(date +%Y%m)\""
+    iso_label_replacements++
+    next
+  }
   /^LIBDIR=/ { print "LIBDIR='\''" libdir "'\''"; next }
   /^DATADIR=/ { print "DATADIR='\''" datadir "'\''"; next }
   { print }
-' "$buildiso_path" > "$private_buildiso"
+  END {
+    if (iso_label_replacements != 1) exit 1
+  }
+' "$buildiso_path" > "$private_buildiso" \
+  || fail "unsupported Artix ISO label or build directory layout: $buildiso_path"
 chmod +x "$private_buildiso"
 
 DINX_INITRAMFS_PATCHER="$repo_root/scripts/patch-artix-initcpio.sh" \

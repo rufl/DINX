@@ -9,9 +9,11 @@ source_env="$startdir/source.env"
 : "${BLENDER_SOURCE_URL:?missing BLENDER_SOURCE_URL}"
 : "${BLENDER_SOURCE_SHA256:?missing BLENDER_SOURCE_SHA256}"
 pkgver="$BLENDER_VERSION"
-pkgrel=3
+pkgrel=4
 epoch=17
 options=(!lto)
+# Blender links libshaderc_shared.so.1 for Vulkan GLSL compilation; keep
+# shaderc in the lean runtime instead of relying on blender-full.
 # Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
 # openvdb, opensubdiv, embree and openimagedenoise. Cycles OSL is disabled
 # because its runtime-only shader compiler pulls clang, clang-libs and llvm
@@ -75,7 +77,7 @@ depends=(
   python
   python-numpy
   rubberband
-  sdl2
+  shaderc
   shared-mime-info
   speexdsp
   wayland

@@ -86,7 +86,7 @@
                 "kmod",
                 "krita",
                 "less",
-                "libnewt",
+                "libdecor",
                 "lxqt-policykit",
                 "zenity",
                 "fuse2",

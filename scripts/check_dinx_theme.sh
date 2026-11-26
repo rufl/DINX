@@ -15,6 +15,7 @@ live_grub_logo="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/g
 live_grub_cfg="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/grub.cfg"
 live_grub_kernels="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/kernels.cfg"
 live_grub_variable="$repo_root/distro/iso/iso-profiles/dinx/live-overlay/usr/share/grub/cfg/variable.cfg"
+plymouth_script="$repo_root/distro/packages/dinx-plymouth-theme/dinx.script"
 calamares="$overlay/etc/calamares/branding/dinx/stylesheet.qss"
 calamares_notes="$overlay/etc/calamares/branding/dinx/notesqml.qml"
 calamares_branding="$overlay/etc/calamares/branding/dinx/branding.desc"
@@ -47,6 +48,7 @@ theme_sync="$overlay/usr/local/libexec/dinx-sync-session-theme"
 gtk_themes_pkgbuild="$repo_root/distro/packages/dinx-gtk-themes/PKGBUILD"
 patchy_launcher="$repo_root/distro/packages/patchy/patchy"
 patchy_force_darkest="$repo_root/distro/packages/patchy/patchy-force-darkest"
+godot_settings="$overlay/etc/skel/.config/godot/editor_settings-4.tres"
 swayimg="$overlay/etc/skel/.config/swayimg/init.lua"
 haruna_wrapper="$overlay/usr/local/bin/haruna"
 fail() {
@@ -61,7 +63,7 @@ for path in "$profile" "$feature_groups" "$palette" "$profile_shell" \
   "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$dconf_dark" \
   "$session_wrapper" "$gtk_themes_pkgbuild" "$qt_palette_seed" "$theme_sync" \
-  "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper"; do
+  "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper" "$plymouth_script" "$godot_settings"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 for path in "$live_grub" "$live_grub_defaults" "$live_grub_logo" \
@@ -373,6 +375,10 @@ grep -Fq 'swayimg.text.font = "Noto Sans"' "$swayimg" || fail 'Swayimg font cont
 grep -Fq 'swayimg.text.size = 10' "$swayimg" || fail 'Swayimg text size does not match Noto Sans 10'
 
 # --- boot and installer branding ---------------------------------------------
+grep -Fq 'item_font = "unicode 20"' "$grub" || fail 'GRUB menu font is not the readable Unicode font'
+grep -Fq 'left = 37%' "$grub" || fail 'GRUB menu is not placed on the right of the logo'
+grep -Fq 'left = 5%' "$grub" || fail 'GRUB logo is not placed on the left'
+grep -Fq 'indicator.sprite.SetOpacity' "$plymouth_script" || fail 'Plymouth splash has no boot animation'
 grep -Fq 'file = "logo.png"' "$grub" || fail 'GRUB theme does not display the DINX logo asset'
 grep -Fq 'GRUB_DISTRIBUTOR="DINX"' "$grub_defaults" || fail 'GRUB menu distributor is not DINX'
 grep -Fq 'GRUB_THEME="/usr/share/grub/themes/artix/theme.txt"' "$grub_defaults" || fail 'GRUB does not activate the DINX theme'

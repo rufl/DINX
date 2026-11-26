@@ -63,7 +63,7 @@
     // with a null app_id). default_layout = .float already floats everything;
     // this rule makes it explicit and future-proof.
     .window_rules = .{
-        .{ .app_id = .{ .str = \"\", .match_null = true }, .floating = true },
+        .{ .app_id = .{ .str = \"\", .match_null = true }, .floating = true, .decoration = .csd },
     },
 
     // output rules (empty - inherit upstream)
@@ -84,7 +84,7 @@
         .centered_master = .top,
         .float = .top,
     },
-    .default_window_decoration = .ssd,
+    .default_window_decoration = .csd,
     .border = .{
         // 1px neutral border: visible enough to show window edges without being
         // intrusive. Rounded-corner apps clip their own corners; the border

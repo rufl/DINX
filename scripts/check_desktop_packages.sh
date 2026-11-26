@@ -15,6 +15,8 @@ local_apps="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/appl
 calamares_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/calamares.desktop"
 dinx_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/dinx-installer.desktop"
 desktop_installer="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/Desktop/Install DINX.desktop"
+godot_settings="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/godot/editor_settings-4.tres"
+godot_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/godot"
 desktop_approval="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-approve-desktop-launcher"
 display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/network.cycles.wdisplays.desktop"
 live_policy="$root/distro/iso/iso-profiles/dinx/live-overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
@@ -25,6 +27,14 @@ fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
   exit 1
 }
+[[ -r "$godot_settings" ]] || fail 'Godot editor settings are missing'
+grep -Fq 'interface/editor/display_scale = 2' "$godot_settings" \
+  || fail 'Godot editor display scale is not fixed at 100%'
+grep -Fq 'interface/editor/custom_display_scale = 1.0' "$godot_settings" \
+  || fail 'Godot editor custom display scale is not 100%'
+[[ -x "$godot_launcher" ]] || fail 'Godot launcher wrapper is missing or not executable'
+grep -Fq -- '--display-driver wayland' "$godot_launcher" \
+  || fail 'Godot launcher does not select the decorated Wayland path'
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
@@ -33,7 +43,7 @@ grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher do
 for package in firewalld firewall-config file-roller fwupd galculator gapless gparted haruna flatpak paintfe krita inkscape godot pixelorama patchy pori shikane udisks2 udisks2-btrfs wdisplays firefox eurooffice papirus-icon-theme tuxmanager; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-for package in pcmanfm blender audionaut octopi pacman-contrib; do
+for package in pcmanfm blender audionaut octopi pacman-contrib libdecor; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
   jq -e --arg package "$package" '.groups.desktop.packages | index($package) != null' "$feature_groups" >/dev/null \
     || fail "desktop feature group is missing $package"

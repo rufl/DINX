@@ -270,6 +270,12 @@ grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$river_session" \
   || fail 'River session does not force the Qt6ct platform theme'
 grep -Fq 'export MOZ_GTK_TITLEBAR_DECORATION=system' "$river_session" \
   || fail 'River session does not force Gecko browsers to use the system/compositor titlebar'
+grep -Fq 'export GTK_CSD=1' "$river_session" \
+  || fail 'River session disables GTK client-side decorations'
+grep -Fq 'export GTK_DECORATION_LAYOUT=:minimize,maximize,close' "$river_session" \
+  || fail 'River session does not define themed GTK window buttons'
+grep -Fq '.default_window_decoration = .csd' "$overlay/etc/xdg/kwm/config.zon" \
+  || fail 'KWM is not configured to keep client-side decorations visible'
 if grep -Fq 'riverctl' "$river_init"; then
   fail 'River 0.5 rejects any riverctl string in its init file, including comments'
 fi

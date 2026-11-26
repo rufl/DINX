@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+# Godot's native Wayland path uses libdecor for the themed client titlebar.
+# Keep the upstream binary and all user arguments intact.
+exec /usr/bin/godot --display-driver wayland "$@"

@@ -25,15 +25,11 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORMTHEME=qt6ct
 # Gecko browsers select client decorations before consulting GTK_CSD.
 export MOZ_GTK_TITLEBAR_DECORATION=system
-# Ask GTK4 apps to respect the compositor's SSD preference.  kwm requests SSD
-# for all windows via river-window-management-v1; without this variable libadwaita
-# apps ignore the compositor hint and draw their own CSD titlebar instead.
-# Note: some apps (Nautilus, GNOME apps) override this deliberately; they will
-# still use CSD.  Most apps (terminals, editors, browsers) will use SSD.
-export GTK_CSD=0
-# Keep a consistent fallback layout for clients that deliberately draw their own
-# titlebar instead of accepting the compositor's SSD decoration.
-export GTK_DECORATION_LAYOUT=close,minimize,maximize:
+# Ask GTK applications to draw their own themed titlebars. KWM 0.3 provides
+# borders through river-window-management but does not render titlebar buttons;
+# forcing SSD therefore produces undecorated windows.
+export GTK_CSD=1
+export GTK_DECORATION_LAYOUT=:minimize,maximize,close
 
 # DINX theme defaults are intentionally dark; they may still be overridden by
 # the per-user appearance selection applied via dinx-sync-session-theme.

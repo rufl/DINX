@@ -1,0 +1,7 @@
+[gd_resource type="EditorSettings" format=3]
+
+[resource]
+interface/editor/display_scale = 2
+interface/editor/custom_display_scale = 1.0
+interface/editor/main_font_size = 14
+interface/editor/code_font_size = 14

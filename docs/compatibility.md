@@ -40,7 +40,7 @@ User scope uses `dinitctl --user`. System scope uses `dinitctl --system` and ret
 
 ## River/KWM session contract
 
-River and KWM negotiate `xdg-decoration` with each XDG client: windows that accept server-side decorations receive the compositor's own DINX-styled frame, while clients that keep client-side decorations are never decorated twice. `GTK_CSD=0` disables GTK's default CSD, not application-owned custom headerbars. `dinx-river-session` exports `MOZ_GTK_TITLEBAR_DECORATION=system` because Gecko clients such as Firefox select client decorations before checking `GTK_CSD`, and the shipped GTK defaults carry `gtk-decoration-layout=:minimize,maximize,close`.
+River and KWM keep the client-decoration path deterministic: KWM forces CSD because its `river-window-management` border is not a titlebar, and GTK, Qt and Godot/libdecor render their own themed titlebars and buttons. `GTK_CSD=1` enables GTK's client-side decorations, while `MOZ_GTK_TITLEBAR_DECORATION=system` keeps Gecko browsers on the same themed client-decoration path. The shipped GTK defaults carry `gtk-decoration-layout=:minimize,maximize,close`; KWM supplies the neutral 1px outline without drawing a second titlebar.
 
 There is no compositor corner radius and no border-color synchronisation, so appearance comes from the GTK theme the first-run wizard selected, DINX dark by default. kwim owns input-device configuration separately from the window manager, so keyboard layouts and touchpad settings live in kwim's configuration rather than in a shell settings application.
 

@@ -52,6 +52,7 @@ rootfs:
     - gparted
     - pixelorama
     - godot
+    - libdecor
     - blender
     - libva
     - pori

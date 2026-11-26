@@ -16,7 +16,7 @@ cat > "$tmp/bin/pacman" <<'EOF'
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
 if [ "$1" = -Q ]; then
   case "$2" in
-    dinit|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|mission-center|turnstile|river|kwm|morghulis|pcmanfm|audionaut) exit 0 ;;
+    dinit|pori|wdisplays|shikane|file-roller|gparted|dinitui|dinxpanel|mission-center|turnstile|river|kwm|morghulis|pcmanfm) exit 0 ;;
   esac
 fi
 exit 1
@@ -28,7 +28,7 @@ printf '%s\n' "$*" >> "$DINX_DOCTOR_DINIT_LOG"
 [ "$1" = --user ] && [ "$2" = list ]
 EOF
 
-for command in dinitui dinxpanel river kwm morghulis redbean pcmanfm audionaut pori wdisplays shikane shikanectl udisksctl tuigreet; do
+for command in dinitui dinxpanel river kwm morghulis redbean pcmanfm pori wdisplays shikane shikanectl udisksctl tuigreet; do
   : > "$tmp/bin/$command"
 done
 chmod +x "$tmp/bin/pacman" "$tmp/bin/dinitctl" "$tmp/bin"/*
@@ -46,9 +46,7 @@ for required in \
   'schema=dinx-doctor/v1' \
   'mode=read-only' \
   'session.default=river+kwm+morghulis' \
-  'storage.ntfs3_write=kernel-driver' \
-  'package.mission-center=installed' \
-  'package.turnstile=installed' \
+  'package.pcmanfm=installed' \
   'package.transactions=not-run' \
   'network.access=not-run'; do
   grep -Fqx "$required" <<<"$report" || {

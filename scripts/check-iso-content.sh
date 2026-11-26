@@ -378,14 +378,6 @@ required_paths=(
   usr/lib/firefox/firefox
   usr/lib/firefox/distribution/policies.json
   usr/share/applications/firefox.desktop
-  usr/bin/opensnitchd
-  usr/bin/opensnitch-ui
-  etc/opensnitchd/default-config.json
-  usr/share/applications/opensnitch_ui.desktop
-  etc/dinit.d/opensnitchd
-  etc/dinit.d/boot.d/opensnitchd
-  etc/xdg/autostart/opensnitch-ui.desktop
-  usr/share/icons/hicolor/scalable/apps/opensnitch-ui.svg
   usr/share/applications/org.kde.haruna.desktop
   usr/share/licenses/haruna/LICENSE
   usr/share/applications/com.github.neithern.g4music.desktop
@@ -563,28 +555,11 @@ for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impa
     fail "retired office/graphics package metadata remains in rootfs: $retired_app"
   fi
 done
-source "$script_dir/../distro/packages/patchy/source.env"
-patchy_pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' "$script_dir/../distro/packages/patchy/PKGBUILD")
-[[ "$patchy_pkgrel" =~ ^[1-9][0-9]*$ ]] || fail 'DINX Patchy pkgrel is invalid'
-patchy_package_version="$PATCHY_VERSION-$patchy_pkgrel"
-patchy_db_dir="var/lib/pacman/local/patchy-$patchy_package_version"
-iso_manifest_contains_path "$patchy_db_dir/desc" <<<"$manifest" \
-  || fail "Pinned Patchy package is missing from the ISO rootfs: $patchy_package_version"
-patchy_db_version=$(unsquashfs -no-xattrs -no-progress -cat \
-  "$tmp_dir/rootfs.img" "$patchy_db_dir/desc" \
-  | awk 'previous == "%VERSION%" { print; exit } { previous = $0 }')
-[[ "$patchy_db_version" == "$patchy_package_version" ]] \
-  || fail "Patchy package version mismatch: $patchy_db_version"
-patchy_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/patchy)
-grep -Fq '/usr/lib/patchy/patchy-force-darkest' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not force its internal Darkest theme'
-grep -Fq 'exec /opt/patchy/AppRun' <<<"$patchy_launcher" \
-  || fail 'Patchy launcher does not exec its pre-extracted /opt tree'
-patchy_force_darkest=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/lib/patchy/patchy-force-darkest)
-grep -Fq 'customThemeId=bundled:darkest.patchytheme' <<<"$patchy_force_darkest" \
-  || fail 'Patchy package does not force its Darkest theme'
-grep -Fq 'refusing unsafe settings path' <<<"$patchy_force_darkest" \
-  || fail 'Patchy Darkest-theme helper does not reject unsafe settings paths'
+for disabled_creative_package in pixelorama paintfe blender godot krita inkscape patchy audionaut; do
+  if grep -Eq "/var/lib/pacman/local/${disabled_creative_package}-[^/]*/" <<<"$manifest"; then
+    fail "disabled NEXT creative package metadata remains in rootfs: $disabled_creative_package"
+  fi
+done
 grep -Eq '/var/lib/pacman/local/papirus-icon-theme-[^/]*/' <<<"$manifest" \
   || fail 'Papirus icon theme package metadata is missing from the ISO rootfs'
 for package in kparts kio kiconthemes breeze-icons; do
@@ -1127,7 +1102,7 @@ for firewall_package in firewalld firewall-config firewalld-dinit dinx-firewalld
   grep -Eq "/var/lib/pacman/local/${firewall_package}-[^/]*/" <<<"$manifest" \
     || fail "Firewalld package is missing from installed rootfs: $firewall_package"
 done
-for required_package in firefox opensnitch opensnitch-dinit; do
+for required_package in firefox; do
   grep -Eq "/var/lib/pacman/local/${required_package}-[^/]*/" <<<"$manifest" \
     || fail "required package metadata is missing from installed rootfs: $required_package"
 done
@@ -1494,12 +1469,10 @@ done <<'EOF'
 usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/share/applications/firefox.desktop|Firefox|Firefox|firefox %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
-usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
+usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
-usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
-usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 usr/local/share/applications/nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 usr/local/share/applications/com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol

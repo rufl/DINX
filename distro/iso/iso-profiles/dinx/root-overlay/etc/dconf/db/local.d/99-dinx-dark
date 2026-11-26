@@ -8,10 +8,9 @@
 # the session starts. Until then gsettings falls back to the schema default
 # `color-scheme='default'`, which freedesktop consumers treat as "no preference":
 #
-#   - the egui applications (WordCraft, GridCraft, DeckCraft, PdfCraft, PaintFE)
-#     default their interface theme to `System`, and their `desktop_theme`
-#     helper explicitly falls back to LIGHT when the portal reports no
-#     preference, so they open in light mode on a fresh session;
+#   - optional egui applications default their interface theme to `System`, and
+#     their desktop-theme helper explicitly falls back to LIGHT when the portal
+#     reports no preference, so they open in light mode on a fresh session;
 #   - libadwaita and GTK applications resolve their dark variant the same way.
 #
 # Only the color-scheme key is seeded: the GTK/Qt theme, icon theme and the

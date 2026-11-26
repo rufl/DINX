@@ -18,10 +18,15 @@ display_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/appl
 live_policy="$root/distro/iso/iso-profiles/dinx/live-overlay/etc/polkit-1/rules.d/00-dinx-live-passwordless.rules"
 haruna_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/haruna"
 haruna_scheme="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/color-schemes/DINXDark.colors"
+gapless_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/g4music"
+gapless_alias="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/gapless"
+pori_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/pori"
+haruna_override="$local_apps/org.kde.haruna.desktop"
+qt6ct_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/skel/.config/qt6ct/qt6ct.conf"
+pcmanfm_override="$local_apps/pcmanfm.desktop"
+libexec_dir="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec"
+retired_overrides=(vlc.desktop onlyoffice.desktop org.onlyoffice.desktop org.aqueous.Phyto.desktop)
 
-blender_pin="$root/distro/graphics/blender/blender.pin"
-blender_stage="$root/scripts/lib/stage-blender.sh"
-iso_builder="$root/scripts/build-iso-container.sh"
 
 fail() {
   printf 'desktop_packages_contract: FAIL: %s\n' "$1" >&2
@@ -29,33 +34,22 @@ fail() {
 }
 [[ -x "$bluetooth_helper" ]] || fail 'DINX Bluetooth launcher is missing or not executable'
 sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syntax'
-for wrapper in "$gapless_wrapper" "$gapless_alias" "$pori_wrapper" \
-  "$root/distro/packages/patchy/patchy"; do
-  [[ -x "$wrapper" ]] || fail "dark-mode wrapper is missing or not executable: $wrapper"
-  sh -n "$wrapper" || fail "dark-mode wrapper has invalid shell syntax: $wrapper"
-  grep -Fqx 'export GTK_THEME=DINX' "$wrapper" || fail "DINX GTK theme is missing from $wrapper"
-  grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$wrapper" || fail "GTK dark preference is missing from $wrapper"
-done
-for wrapper in "$gapless_wrapper" "$gapless_alias" "$pori_wrapper" \
-  "$root/distro/packages/patchy/patchy"; do
-  grep -Fqx 'export ADW_DEBUG_COLOR_SCHEME=prefer-dark' "$wrapper" \
-    || fail "libadwaita dark preference is missing from $wrapper"
-done
 grep -Fqx 'exec /usr/bin/g4music "$@"' "$gapless_wrapper" || fail 'Gapless wrapper can recurse instead of launching the packaged binary'
 grep -Fqx 'exec /usr/bin/g4music "$@"' "$gapless_alias" || fail 'Gapless alias can recurse instead of launching the packaged binary'
-grep -Fqx 'Exec=env QT_QPA_PLATFORMTHEME=qt6ct haruna %U' "$haruna_override" || fail 'Haruna does not use the DINX Qt theme'
+grep -Fqx 'Exec=haruna %U' "$haruna_override" || fail 'Haruna does not use its DINX launcher'
 grep -Fqx 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt6ct_config" || fail 'Qt6ct does not select the DINX dark palette'
 grep -Fqx 'custom_palette=true' "$qt6ct_config" || fail 'Qt6ct DINX dark palette is disabled'
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak krita inkscape godot pixelorama paintfe blender patchy pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays papirus-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-[[ -x "$blender_stage" ]] || fail 'Blender published-package staging helper is missing'
-grep -Fqx 'tag=blender/v5.2.3-dinx1' "$blender_pin" || fail 'Blender release pin is not current'
-grep -Fqx 'package=blender-17.5.2.3-3-x86_64.pkg.tar.zst' "$blender_pin" || fail 'Blender pin is not the lean package'
-grep -Fq 'scripts/lib/stage-blender.sh' "$iso_builder" || fail 'ISO builder does not stage published Blender packages'
+for disabled_package in pixelorama paintfe blender godot krita inkscape patchy audionaut; do
+  if grep -Fqx "    - $disabled_package" "$profile" || grep -Fq "\"$disabled_package\"" "$feature_groups"; then
+    fail "$disabled_package is disabled for the NEXT ISO but remains selected"
+  fi
+done
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
   if grep -Fqx "    - $package" "$profile"; then
     fail "$package remains explicitly selected in the DINX profile"
@@ -113,7 +107,6 @@ done
 for mime in text/html application/xhtml+xml x-scheme-handler/http x-scheme-handler/https; do
   grep -Fqx "$mime=firefox.desktop;" "$mimeapps" || fail "Firefox is not the default handler for $mime"
 done
-grep -Fqx 'application/pdf=eurooffice.desktop;' "$mimeapps" || fail 'EuroOffice is not the default PDF handler'
 grep -Fqx 'inode/directory=pcmanfm.desktop;' "$mimeapps" || fail 'pcmanfm is not the default directory handler'
 if grep -Fq 'org.aqueous.Phyto.desktop' "$mimeapps"; then
   fail 'MIME defaults retain the retired Phyto directory handler'
@@ -139,90 +132,7 @@ fi
 if [[ -e "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.kde.kolourpaint.desktop" ]]; then
   fail 'retired KolourPaint desktop override remains in the ISO overlay'
 fi
-for package in patchy; do
-  launcher="$root/distro/packages/$package/$package.desktop"
-  [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
-  grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
-  grep -Fqx 'Name=Patchy' "$launcher" || fail 'Patchy desktop launcher name is missing'
-  grep -Fqx 'Name[pt_BR]=Patchy' "$launcher" || fail 'Patchy Portuguese desktop launcher name is missing'
-  grep -Fqx 'TryExec=patchy' "$launcher" || fail 'Patchy desktop launcher prerequisite is incorrect'
-  grep -Fq '!strip' "$root/distro/packages/patchy/PKGBUILD" || fail 'Patchy AppImage package must disable binary stripping'
-  if grep -Eq '^(Hidden|NoDisplay)=true$' "$launcher"; then
-    fail 'Patchy desktop launcher is hidden'
-  fi
-  grep -Fq "build_package $package" "$root/scripts/build-iso-container.sh" || fail "ISO builder does not build $package"
-done
-pixelorama_source="$root/distro/packages/pixelorama/source.env"
-pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"
-pixelorama_launcher="$root/distro/packages/pixelorama/pixelorama"
-pixelorama_desktop="$root/distro/packages/pixelorama/pixelorama.desktop"
-source "$pixelorama_source"
-[[ "$PIXELORAMA_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pixelorama version: $PIXELORAMA_VERSION"
-[[ "$PIXELORAMA_SOURCE_URL" == "https://github.com/Orama-Interactive/Pixelorama/releases/download/v${PIXELORAMA_VERSION}/Pixelorama-Linux-64bit.tar.gz" ]] \
-  || fail 'Pixelorama source URL does not match its pinned release'
-for checksum in "$PIXELORAMA_SOURCE_SHA256" "$PIXELORAMA_LICENSE_SHA256" "$PIXELORAMA_ICON_SHA256" "$PIXELORAMA_MIME_SHA256"; do
-  [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || fail 'Pixelorama source checksum is invalid'
-done
-grep -Fq 'pkgver="$PIXELORAMA_VERSION"' "$pixelorama_recipe" || fail 'Pixelorama package version is not wired to source.env'
-for pin in PIXELORAMA_SOURCE_SHA256 PIXELORAMA_LICENSE_SHA256 PIXELORAMA_ICON_SHA256 PIXELORAMA_MIME_SHA256; do
-  grep -Fq "\"\$$pin\"" "$pixelorama_recipe" || fail "Pixelorama package does not verify $pin"
-done
-grep -Fq '!strip' "$pixelorama_recipe" || fail 'Pixelorama release binary must not be stripped'
-grep -Fq '${PIXELORAMA_SOURCE_URL}' "$pixelorama_recipe" || fail 'Pixelorama source URL is not wired to source.env'
-[[ -x "$pixelorama_launcher" ]] || fail 'Pixelorama launcher is missing or not executable'
-bash -n "$pixelorama_launcher" || fail 'Pixelorama launcher has invalid shell syntax'
-grep -Fqx 'exec /opt/pixelorama/Pixelorama.x86_64 "$@"' "$pixelorama_launcher" || fail 'Pixelorama launcher does not pass arguments to the packaged binary'
-grep -Fqx 'Name=Pixelorama' "$pixelorama_desktop" || fail 'Pixelorama desktop name is missing'
-grep -Fqx 'Name[pt_BR]=Pixelorama' "$pixelorama_desktop" || fail 'Pixelorama Portuguese desktop name is missing'
-grep -Fqx 'Exec=pixelorama %u' "$pixelorama_desktop" || fail 'Pixelorama desktop command is incorrect'
-grep -Fqx 'TryExec=pixelorama' "$pixelorama_desktop" || fail 'Pixelorama desktop prerequisite is incorrect'
-if grep -Eq '^(Hidden|NoDisplay)=true$' "$pixelorama_desktop"; then
-  fail 'Pixelorama desktop entry is hidden'
-fi
-grep -Fq 'build_package pixelorama' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Pixelorama'
 
-
-grep -Fqx 'Exec=patchy %F' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy launcher does not preserve file arguments'
-grep -Fqx 'Comment[pt_BR]=Editor de imagens com foco em PSD' "$root/distro/packages/patchy/patchy.desktop" || fail 'Patchy Portuguese description is missing'
-grep -Fqx 'exec /opt/patchy/PatchyLinux.AppImage --appimage-extract-and-run "$@"' "$root/distro/packages/patchy/patchy" || fail 'Patchy launcher does not use the no-FUSE AppImage runtime'
-
-# Blender is generated on the blender branch and consumed from a verified pin.
-blender_dir="$root/distro/packages/blender"
-blender_recipe="$blender_dir/PKGBUILD"
-blender_source="$blender_dir/source.env"
-blender_pin="$root/distro/graphics/blender/blender.pin"
-for blender_file in "$blender_recipe" "$blender_source" "$blender_pin" \
-  "$root/scripts/lib/stage-blender.sh"; do
-  [[ -r "$blender_file" ]] || fail "Blender contract file is missing: ${blender_file#$root/}"
-done
-grep -Fq 'scripts/lib/stage-blender.sh' "$root/scripts/build-iso-container.sh" \
-  || fail 'ISO builder does not stage generated Blender packages'
-grep -Fq 'pacman_install_local "$package_repo/$blender_package"' "$root/scripts/build-iso-container.sh" \
-  || fail 'ISO builder does not install the pinned lean Blender package'
-blender_all_deps=$(sed -n '/^depends=(/,/^)/p; /^makedepends=(/,/^)/p' "$blender_recipe")
-if grep -Eq '^[[:space:]]*(intel-oneapi|usd|materialx|openvdb|opensubdiv|embree|openimagedenoise)([[:space:]]|$)' <<<"$blender_all_deps"; then
-  fail 'Blender package still carries Artix bloat dependencies'
-fi
-blender_runtime_deps=$(sed -n '/^depends=(/,/^)/p' "$blender_recipe")
-for required_dep in libepoxy libxfixes libxkbcommon libxrender libxxf86vm opencolorio openexr; do
-  grep -Eq "^[[:space:]]*$required_dep([[:space:]]|$)" <<<"$blender_runtime_deps" \
-    || fail "Blender runtime dependency is missing: $required_dep"
-done
-if grep -Eq '^[[:space:]]*(openshadinglanguage|clang|clang-libs|llvm)([[:space:]]|$)' <<<"$blender_runtime_deps"; then
-  fail 'Blender runtime still pulls the Cycles OSL compiler toolchain'
-fi
-grep -Eq '^[[:space:]]*-DWITH_CYCLES_OSL=OFF' "$blender_recipe" \
-  || fail 'Blender does not disable Cycles Open Shading Language support'
-grep -Eq '^[[:space:]]*-DWITH_CYCLES_DEVICE_ONEAPI=OFF' "$blender_recipe" \
-  || fail 'Blender does not disable Intel oneAPI (SYCL) device support'
-grep -Eq '^tag=blender/v[0-9]+(\.[0-9]+)+-dinx[1-9][0-9]*$' "$blender_pin" \
-  || fail 'Blender pin tag is invalid'
-grep -Eq '^package=blender-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
-  || fail 'Blender lean package pin is invalid'
-grep -Eq '^full_package=blender-full-[0-9]+(\.[0-9]+)+-[0-9]+-x86_64\.pkg\.tar\.zst$' "$blender_pin" \
-  || fail 'Blender full package pin is invalid'
-grep -Fq 'packed_tag=$(gh api' "$root/distro/graphics/blender/detect-release.sh" \
-  || fail 'Blender detector does not compare published package releases'
 
 if grep -RqF 'shelly' "$root/distro/packages/dinxpanel/src/main.zig" "$root/distro/packages/dinx-dock/src/main.zig"; then
   fail 'the retired Shelly package manager still backs DINXPanel or the DINX dock'
@@ -272,12 +182,11 @@ while IFS='|' read -r desktop_id english portuguese command; do
   grep -Fqx "Exec=$command" "$desktop" || fail "$desktop_id launch command is incorrect"
 done <<'EOF'
 pcmanfm.desktop|File Manager|Gerenciador de Arquivos|pcmanfm %U
-com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 galculator.desktop|Calculator|Calculadora|galculator
-gparted.desktop|Partition Editor|Particionador|/usr/bin/gparted %f
+gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
 swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
-org.kde.haruna.desktop|Media Player|Tocador de Mídia|env QT_QPA_PLATFORMTHEME=qt6ct haruna %U
+com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
+org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager
 nm-connection-editor.desktop|Network Connections|Ajustes de Rede|nm-connection-editor
 com.saivert.pwvucontrol.desktop|Audio Control|Ajustes de Áudio|pwvucontrol
@@ -334,7 +243,7 @@ artix_launcher="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applic
 if grep -Fqx 'Hidden=true' "$dinx_installer" || grep -Fqx 'NoDisplay=true' "$dinx_installer"; then
   fail 'DINX installer shortcut is hidden'
 fi
-for override in pcmanfm.desktop com.shellyorg.shelly.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
+for override in pcmanfm.desktop galculator.desktop gparted.desktop swayimg.desktop com.github.neithern.g4music.desktop org.kde.haruna.desktop blueman-manager.desktop nm-connection-editor.desktop com.saivert.pwvucontrol.desktop; do
   grep -Fqx "  usr/local/share/applications/$override" "$iso_check" || fail "ISO payload is missing the launcher override: $override"
 done
 for mime in application/zip application/x-7z-compressed application/vnd.rar application/x-rar application/x-tar application/gzip application/x-gzip application/x-bzip2 application/x-xz application/zstd; do
@@ -382,4 +291,4 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true pixelorama=true kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=firefox graphics_apps=krita+inkscape+godot+pixelorama+paintfe+blender+patchy office=optional-channel impasto=false onlyoffice=false zrythm=false seafoam=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true creative_apps=disabled kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=firefox graphics_apps=disabled office=optional-channel impasto=false onlyoffice=false zrythm=false seafoam=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'

@@ -19,7 +19,7 @@ for path in "$profile" "$groups" "$pkg" "$source_env" "$builder" "$workflow" "$i
 done
 source "$source_env"
 [[ "$MISSION_CENTER_VERSION" == 1.2.0 ]] || fail 'Mission Center version changed without a reviewed pin'
-for checksum in "$MISSION_CENTER_SOURCE_SHA256" "$MISSION_CENTER_MAGPIE_SOURCE_SHA256" "$MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256"; do
+for checksum in "$MISSION_CENTER_SOURCE_SHA256" "$MISSION_CENTER_MAGPIE_SOURCE_SHA256" "$MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256" "$APP_DETECTION_SOURCE_SHA256"; do
   [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || fail 'Mission Center source checksum is invalid'
 done
 for package in mission-center; do
@@ -31,6 +31,13 @@ grep -Fq 'source.env' "$pkg" || fail 'package does not load source.env'
 grep -Fq 'mission-center-v$pkgver.tar.gz::$MISSION_CENTER_SOURCE_URL' "$pkg" || fail 'upstream Mission Center archive is not pinned'
 grep -Fq 'gng-$MISSION_CENTER_MAGPIE_COMMIT.tar.gz::$MISSION_CENTER_MAGPIE_SOURCE_URL' "$pkg" || fail 'Magpie submodule archive is not pinned'
 grep -Fq 'graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL' "$pkg" || fail 'graph-widget submodule archive is not pinned'
+grep -Fq 'app-detection-$APP_DETECTION_COMMIT.tar.gz::$APP_DETECTION_SOURCE_URL' "$pkg" || fail 'app-detection source archive is not pinned'
+grep -Fq 'mission-center-dinx-dinit-services.patch' "$pkg" || fail 'Dinit service patch is not included'
+grep -Fq 'patch --fuzz=0 --forward --strip=1' "$pkg" || fail 'Dinit service patch is not applied deterministically'
+grep -Fq "'perl'" "$pkg" || fail 'Magpie ring assembly build dependency Perl is missing'
+if grep -Eq '(\.cargo/config\.toml|target\.[^]]+\.dependencies|RING_(BUILD|USE)_ASM|ring[[:space:]]*=)' "$pkg"; then
+  fail 'Mission Center recipe contains an invalid or obsolete ring Cargo override'
+fi
 if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$pkg"; then
   fail 'Mission Center package recipe introduces systemd or uwsm'
 fi
@@ -50,4 +57,4 @@ for required in \
   '  usr/share/licenses/mission-center/COPYING'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
-printf 'mission_center_contract version=%s source_pins=3 systemd=false upstream=gitlab base=true\n' "$MISSION_CENTER_VERSION"
+printf 'mission_center_contract version=%s source_pins=4 systemd=false dinit=true upstream=gitlab base=true\n' "$MISSION_CENTER_VERSION"

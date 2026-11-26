@@ -99,57 +99,69 @@ private_artools_data="$private_buildiso_dir/data"
 mkdir "$private_artools_data"
 cp -a -- "$artools_data_dir/." "$private_artools_data/"
 
-
-private_initcpio_helper="$private_artools_data/$artools_lib_relative/iso/initcpio.sh"
-"$repo_root/scripts/patch-artix-initcpio.sh" --patch-artix-helper "$private_initcpio_helper"
-
-private_buildiso="$private_buildiso_dir/buildiso"
+private_iso_label_files=()
+mapfile -t private_iso_label_files < <(
+  while IFS= read -r candidate; do
+    if grep -Eq '^[[:space:]]*iso_label[[:space:]]*=' "$candidate"; then
+      printf '%s\n' "$candidate"
+    fi
+  done < <(grep -RIl -- 'ARTIX_' "$private_artools_data" 2>/dev/null || true)
+)
+[[ ${#private_iso_label_files[@]} -eq 1 ]] \
+  || fail "unsupported Artix ISO label implementation under $private_artools_data"
+private_iso_label_file=${private_iso_label_files[0]}
+private_iso_label_tmp="$private_iso_label_file.tmp"
 awk '
-  /^LIBDIR=/ {
-    print "LIBDIR=\"${DINX_PRIVATE_LIBDIR:?}\""
-    libdir_replacements++
-    next
-  }
-  /^DATADIR=/ {
-    print "DATADIR=\"${DINX_PRIVATE_DATADIR:?}\""
-    datadir_replacements++
+  /^[[:space:]]*iso_label[[:space:]]*=.*ARTIX_/ {
+    print "iso_label=\"DINX_$(date +%Y%m)\""
+    replacements++
     next
   }
   { print }
   END {
-    if (libdir_replacements != 1 || datadir_replacements != 1) exit 1
+    if (replacements != 1) exit 1
   }
-' "$buildiso_path" > "$private_buildiso" \
-  || fail "unsupported Artix buildiso directory layout: $buildiso_path"
-chmod --reference="$buildiso_path" "$private_buildiso"
-private_iso_filename_tmp="$private_buildiso.tmp"
+' "$private_iso_label_file" > "$private_iso_label_tmp" \
+  || fail "failed to patch Artix ISO volume label: $private_iso_label_file"
+mv -- "$private_iso_label_tmp" "$private_iso_label_file"
+grep -Eq '^[[:space:]]*iso_label="DINX_\$\(date \+%Y%m\)"$' "$private_iso_label_file" \
+  || fail "DINX ISO volume label was not installed: $private_iso_label_file"
+
+private_iso_filename_files=()
+mapfile -t private_iso_filename_files < <(
+  grep -RIl -- 'gen_iso_fn' "$private_artools_data" 2>/dev/null || true
+)
+[[ ${#private_iso_filename_files[@]} -eq 1 ]] \
+  || fail "unsupported Artix ISO filename implementation under $private_artools_data"
+private_iso_filename_file=${private_iso_filename_files[0]}
+private_iso_filename_tmp="$private_iso_filename_file.tmp"
 awk '
-  /^[[:space:]]*clean_first=true[[:space:]]*$/ {
-    print "iso_label=\"DINX_$(date +%Y%m)\""
-    label_replacements++
-  }
-  /^[[:space:]]*load_user_info[[:space:]]*$/ {
-    print "gen_iso_fn() {"
+  /^[[:space:]]*gen_iso_fn[[:space:]]*\(\)[[:space:]]*\{/ {
+    print "gen_iso_fn(){"
     print "    local vars=(\"dinx\" \"${initsys}\" \"${iso_version}\" \"${target_arch}\") name"
     print "    for n in \"${vars[@]}\"; do"
     print "        name=${name:-}${name:+-}${n}"
     print "    done"
     print "    printf \"%s\\\\n\" \"$name\""
     print "}"
-    print ""
-    filename_replacements++
+    in_function=1
+    replacements++
+    next
+  }
+  in_function {
+    if ($0 ~ /^[[:space:]]*}[[:space:]]*$/) in_function=0
+    next
   }
   { print }
   END {
-    if (label_replacements != 1 || filename_replacements != 1) exit 1
+    if (replacements != 1 || in_function) exit 1
   }
-' "$private_buildiso" > "$private_iso_filename_tmp" \
-  || fail "unsupported Artix ISO identity implementation: $private_buildiso"
-mv -- "$private_iso_filename_tmp" "$private_buildiso"
-grep -Fq 'iso_label="DINX_$(date +%Y%m)"' "$private_buildiso" \
-  || fail "failed to set DINX ISO volume label: $private_buildiso"
-grep -Fq 'local vars=("dinx" "${initsys}" "${iso_version}" "${target_arch}") name' "$private_buildiso" \
-  || fail "failed to set DINX ISO filename prefix: $private_buildiso"
+' "$private_iso_filename_file" > "$private_iso_filename_tmp" \
+  || fail "failed to patch Artix ISO filename: $private_iso_filename_file"
+mv -- "$private_iso_filename_tmp" "$private_iso_filename_file"
+grep -Fq 'local vars=("dinx" "${initsys}" "${iso_version}" "${target_arch}") name' \
+  "$private_iso_filename_file" \
+  || fail "DINX ISO filename prefix was not installed: $private_iso_filename_file"
 
 DINX_INITRAMFS_PATCHER="$repo_root/scripts/patch-artix-initcpio.sh" \
 DINX_PRIVATE_LIBDIR="$private_artools_data/$artools_lib_relative" \

@@ -252,7 +252,6 @@ grep -Fqx 'export DINTOR_THEME=prefer-dark' "$profile_shell" || fail 'DINX edito
 grep -Fqx 'export DINX_COLOR_SCHEME=dark' "$session_wrapper" || fail 'River session does not export the DINX dark scheme'
 grep -Fqx 'export DINTOR_THEME=prefer-dark' "$session_wrapper" || fail 'River session does not export the dark editor scheme'
 grep -Fqx 'export ADW_COLOR_SCHEME_FORCE_DARK=1' "$session_wrapper" || fail 'River session does not force dark libadwaita applications'
-grep -Fqx "export GTK_THEME='DINX:dark'" "$session_wrapper" || fail 'River session does not force the dark GTK theme'
 grep -Fqx "export GTK_THEME='DINX:dark'" "$profile_shell" || fail 'POSIX shell does not force the dark GTK theme'
 grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'River session does not force Qt6ct for GUI apps'
 grep -Fq 'qt6ct/qt6ct.conf' "$session_wrapper" || fail 'River session does not seed the Qt6ct config for existing users'

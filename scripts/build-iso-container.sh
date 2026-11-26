@@ -492,6 +492,10 @@ trap finish EXIT
                 kdeclarative kdsingleapplication kfilemetadata ki18n kio kirigami \
                 kitemmodels kservice kwindowsystem mpvqt qqc2-desktop-style \
                 qt6-5compat qt6-declarative
+              # Custom packages referenced directly by the ISO profile.
+              build_package dinx-keyring
+              build_package dinx-gtk-themes
+              build_package gapless
               build_package haruna
               if [[ "$package_repository_only" != true ]]; then
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \

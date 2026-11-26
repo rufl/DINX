@@ -39,20 +39,61 @@ const Language = enum {
     zh_tw,
 };
 const Location = enum {
-    united_states,
-    brazil,
-    france,
-    germany,
-    netherlands,
-    denmark,
-    portugal,
-    spain,
-    italy,
-    united_kingdom,
-    ukraine,
-    japan,
-    china,
-    taiwan,
+    us_new_york,
+    us_chicago,
+    us_denver,
+    us_los_angeles,
+    us_anchorage,
+    us_honolulu,
+    brazil_sao_paulo,
+    brazil_manaus,
+    brazil_rio_branco,
+    brazil_noronha,
+    france_paris,
+    germany_berlin,
+    netherlands_amsterdam,
+    denmark_copenhagen,
+    portugal_lisbon,
+    portugal_madeira,
+    portugal_azores,
+    spain_madrid,
+    spain_canary,
+    italy_rome,
+    united_kingdom_london,
+    ukraine_kyiv,
+    japan_tokyo,
+    china_shanghai,
+    china_urumqi,
+    taiwan_taipei,
+};
+
+const location_timezones = [_][]const u8{
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Anchorage",
+    "Pacific/Honolulu",
+    "America/Sao_Paulo",
+    "America/Manaus",
+    "America/Rio_Branco",
+    "America/Noronha",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Europe/Amsterdam",
+    "Europe/Copenhagen",
+    "Europe/Lisbon",
+    "Atlantic/Madeira",
+    "Atlantic/Azores",
+    "Europe/Madrid",
+    "Atlantic/Canary",
+    "Europe/Rome",
+    "Europe/London",
+    "Europe/Kyiv",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Asia/Urumqi",
+    "Asia/Taipei",
 };
 const Theme = enum { dinx, skeuos, orchis, fluent, jasper };
 const Variant = enum { dark, light };
@@ -62,7 +103,7 @@ const Dock = enum { none, left, right, bottom };
 
 const Selections = struct {
     language: Language = .pt_br,
-    location: Location = .brazil,
+    location: Location = .brazil_sao_paulo,
     theme: Theme = .dinx,
     variant: Variant = .dark,
     corners: Corners = .rounded,
@@ -108,22 +149,7 @@ const Selections = struct {
     }
 
     fn timezone(self: Selections) []const u8 {
-        return switch (self.location) {
-            .united_states => "America/New_York",
-            .brazil => "America/Sao_Paulo",
-            .france => "Europe/Paris",
-            .germany => "Europe/Berlin",
-            .netherlands => "Europe/Amsterdam",
-            .denmark => "Europe/Copenhagen",
-            .portugal => "Europe/Lisbon",
-            .spain => "Europe/Madrid",
-            .italy => "Europe/Rome",
-            .united_kingdom => "Europe/London",
-            .ukraine => "Europe/Kyiv",
-            .japan => "Asia/Tokyo",
-            .china => "Asia/Shanghai",
-            .taiwan => "Asia/Taipei",
-        };
+        return location_timezones[@intFromEnum(self.location)];
     }
 
     fn keyboard(self: Selections) []const u8 {
@@ -237,20 +263,9 @@ fn parseLanguage(value: []const u8) ?Language {
 }
 
 fn parseLocation(value: []const u8) ?Location {
-    if (std.mem.eql(u8, value, "America/New_York")) return .united_states;
-    if (std.mem.eql(u8, value, "America/Sao_Paulo")) return .brazil;
-    if (std.mem.eql(u8, value, "Europe/Paris")) return .france;
-    if (std.mem.eql(u8, value, "Europe/Berlin")) return .germany;
-    if (std.mem.eql(u8, value, "Europe/Amsterdam")) return .netherlands;
-    if (std.mem.eql(u8, value, "Europe/Copenhagen")) return .denmark;
-    if (std.mem.eql(u8, value, "Europe/Lisbon")) return .portugal;
-    if (std.mem.eql(u8, value, "Europe/Madrid")) return .spain;
-    if (std.mem.eql(u8, value, "Europe/Rome")) return .italy;
-    if (std.mem.eql(u8, value, "Europe/London")) return .united_kingdom;
-    if (std.mem.eql(u8, value, "Europe/Kyiv")) return .ukraine;
-    if (std.mem.eql(u8, value, "Asia/Tokyo")) return .japan;
-    if (std.mem.eql(u8, value, "Asia/Shanghai")) return .china;
-    if (std.mem.eql(u8, value, "Asia/Taipei")) return .taiwan;
+    for (location_timezones, 0..) |timezone, index| {
+        if (std.mem.eql(u8, value, timezone)) return @enumFromInt(index);
+    }
     return null;
 }
 
@@ -491,23 +506,9 @@ fn languageFromIndex(index: c.guint) Language {
 }
 
 fn locationFromIndex(index: c.guint) Location {
-    return switch (index) {
-        0 => .united_states,
-        1 => .brazil,
-        2 => .france,
-        3 => .germany,
-        4 => .netherlands,
-        5 => .denmark,
-        6 => .portugal,
-        7 => .spain,
-        8 => .italy,
-        9 => .united_kingdom,
-        10 => .ukraine,
-        11 => .japan,
-        12 => .china,
-        13 => .taiwan,
-        else => .brazil,
-    };
+    const numeric: usize = @intCast(index);
+    if (numeric < location_timezones.len) return @enumFromInt(numeric);
+    return .brazil_sao_paulo;
 }
 
 fn languageIndex(language: Language) c.guint {
@@ -744,18 +745,30 @@ const language_strings = [_:null]?[*:0]const u8{
 
 const location_strings = [_:null]?[*:0]const u8{
     "United States — New York (America/New_York)",
+    "United States — Chicago (America/Chicago)",
+    "United States — Denver (America/Denver)",
+    "United States — Los Angeles (America/Los_Angeles)",
+    "United States — Anchorage (America/Anchorage)",
+    "United States — Honolulu (Pacific/Honolulu)",
     "Brasil — São Paulo (America/Sao_Paulo)",
+    "Brasil — Manaus (America/Manaus)",
+    "Brasil — Rio Branco (America/Rio_Branco)",
+    "Brasil — Fernando de Noronha (America/Noronha)",
     "France — Paris (Europe/Paris)",
     "Deutschland — Berlin (Europe/Berlin)",
     "Nederland — Amsterdam (Europe/Amsterdam)",
     "Danmark — Copenhagen (Europe/Copenhagen)",
     "Portugal — Lisboa (Europe/Lisbon)",
+    "Portugal — Madeira (Atlantic/Madeira)",
+    "Portugal — Açores (Atlantic/Azores)",
     "España — Madrid (Europe/Madrid)",
+    "España — Canarias (Atlantic/Canary)",
     "Italia — Roma (Europe/Rome)",
     "United Kingdom — London (Europe/London)",
     "Україна — Kyiv (Europe/Kyiv)",
     "日本 — Tokyo (Asia/Tokyo)",
     "中国 — Shanghai (Asia/Shanghai)",
+    "中国 — Ürümqi (Asia/Urumqi)",
     "台灣 — Taipei (Asia/Taipei)",
     null,
 };

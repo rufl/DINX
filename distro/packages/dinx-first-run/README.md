@@ -66,6 +66,14 @@ The supported language values and generated locales are:
 
 The location is independently selectable, so users can combine a supported
 language with another supported timezone.
+The location menu exposes these IANA timezones, grouped by supported country:
+
+- United States: `America/New_York`, `America/Chicago`, `America/Denver`, `America/Los_Angeles`, `America/Anchorage`, `Pacific/Honolulu`
+- Brazil: `America/Sao_Paulo`, `America/Manaus`, `America/Rio_Branco`, `America/Noronha`
+- France: `Europe/Paris`; Germany: `Europe/Berlin`; Netherlands: `Europe/Amsterdam`; Denmark: `Europe/Copenhagen`
+- Portugal: `Europe/Lisbon`, `Atlantic/Madeira`, `Atlantic/Azores`
+- Spain: `Europe/Madrid`, `Atlantic/Canary`; Italy: `Europe/Rome`; United Kingdom: `Europe/London`; Ukraine: `Europe/Kyiv`
+- Japan: `Asia/Tokyo`; China: `Asia/Shanghai`, `Asia/Urumqi`; Taiwan: `Asia/Taipei`
 
 ## Building
 

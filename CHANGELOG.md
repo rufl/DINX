@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Expand first-run language, locale, keyboard and timezone coverage to every EuroOffice lean UI locale: en-US, pt-BR, fr, de, nl, da, pt-PT, es, it, en-GB, uk, ja, zh-CN and zh-TW. Preserve the matching glibc locale sources through final ISO trimming.
+- Add city/timezone choices for every supported EuroOffice country, including multiple zones for the United States, Brazil, Portugal, Spain and China.
 - Make Blender's lean package install its GUI runtime libraries explicitly and bump it to pkgrel 3; missing transitive OpenGL/codec/color-management dependencies could leave the Blender launcher unusable on a fresh DINX image. Initialize EuroOffice's actual `DesktopEditors.conf` dark-theme file instead of the unused `DesktopEditorsSettings.conf`, and apply the DINX dark defaults before launching the first-run wizard so the wizard itself is dark.
 - Harden MAIN desktop launchers: EuroOffice and TuxManager force DINX dark-theme paths, Blender bypasses damaged user startup files, and PaintFE remains launchable when HOME is unset or its settings path is symlinked.
 - Protect the MAIN EuroOffice dark-theme guarantee when the ISO stages the pinned GitHub artifact instead of rebuilding the office package; the ISO overlay now wraps the staged launcher and the payload gate validates that wrapper.

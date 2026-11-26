@@ -51,7 +51,7 @@ done
 for locale in en_US.UTF-8 pt_BR.UTF-8 fr_FR.UTF-8 de_DE.UTF-8 nl_NL.UTF-8 da_DK.UTF-8 pt_PT.UTF-8 es_ES.UTF-8 it_IT.UTF-8 en_GB.UTF-8 uk_UA.UTF-8 ja_JP.UTF-8 zh_CN.UTF-8 zh_TW.UTF-8; do
   grep -Fq "$locale" "$frontend" || fail "first-run does not generate locale: $locale"
 done
-for location in America/New_York America/Sao_Paulo Europe/Paris Europe/Berlin Europe/Amsterdam Europe/Copenhagen Europe/Lisbon Europe/Madrid Europe/Rome Europe/London Europe/Kyiv Asia/Tokyo Asia/Shanghai Asia/Taipei; do
+for location in America/New_York America/Chicago America/Denver America/Los_Angeles America/Anchorage Pacific/Honolulu America/Sao_Paulo America/Manaus America/Rio_Branco America/Noronha Europe/Paris Europe/Berlin Europe/Amsterdam Europe/Copenhagen Europe/Lisbon Atlantic/Madeira Atlantic/Azores Europe/Madrid Atlantic/Canary Europe/Rome Europe/London Europe/Kyiv Asia/Tokyo Asia/Shanghai Asia/Urumqi Asia/Taipei; do
   grep -Fq "$location" "$frontend" || fail "first-run does not offer location: $location"
 done
 grep -Fq 'c.adw_window_title_new("DINX", "Configuração inicial / Initial setup")' "$frontend" \

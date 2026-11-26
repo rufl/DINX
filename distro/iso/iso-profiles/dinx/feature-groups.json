@@ -35,6 +35,7 @@
         "linux-firmware-intel",
         "mesa",
         "networkmanager",
+        "pipewire",
         "pipewire-pulse",
         "polkit",
         "sane",

@@ -14,7 +14,7 @@ grep -Fq 'DINX_$(date +%Y%m)' "$build_script" \
   || fail 'DINX ISO volume label override is missing'
 grep -Fq 'local vars=("dinx" "${initsys}" "${iso_version}" "${target_arch}") name' "$build_script" \
   || fail 'DINX ISO filename prefix override is missing'
-grep -Fq 'AT_USERCONFDIR}/artools.conf' "$build_script" \
+grep -Fq 'clean_first=true' "$build_script" \
   || fail 'wrapper no longer anchors the ISO identity after Artix configuration loading'
 grep -Fq 'label_replacements++' "$build_script" \
   || fail 'wrapper does not inject the DINX ISO volume label'

@@ -124,13 +124,11 @@ awk '
 chmod --reference="$buildiso_path" "$private_buildiso"
 private_iso_filename_tmp="$private_buildiso.tmp"
 awk '
-  $0 == "load_config \"${AT_USERCONFDIR}/artools.conf\" || load_config \"${SYSCONFDIR}/artools.conf\"" {
-    print
+  /^[[:space:]]*clean_first=true[[:space:]]*$/ {
     print "iso_label=\"DINX_$(date +%Y%m)\""
     label_replacements++
-    next
   }
-  $0 == "load_user_info" {
+  /^[[:space:]]*load_user_info[[:space:]]*$/ {
     print "gen_iso_fn() {"
     print "    local vars=(\"dinx\" \"${initsys}\" \"${iso_version}\" \"${target_arch}\") name"
     print "    for n in \"${vars[@]}\"; do"

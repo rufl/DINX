@@ -1,0 +1,106 @@
+--- a/src/extract_gpuinfo_metax.c
++++ b/src/extract_gpuinfo_metax.c
+@@ -365,14 +365,18 @@
+       if (deviceInfoRet == MXSML_SUCCESS) {
+         gpu_infos[*count].device = deviceInfo;
+         gpu_infos[*count].base.vendor = &gpu_vendor_metax;
+-        strncpy(gpu_infos[*count].base.pdev, deviceInfo.bdfId, PDEV_LEN);
++        size_t pdev_len = strnlen(deviceInfo.bdfId, PDEV_LEN - 1);
++        memcpy(gpu_infos[*count].base.pdev, deviceInfo.bdfId, pdev_len);
++        gpu_infos[*count].base.pdev[pdev_len] = '\0';
+         list_add_tail(&gpu_infos[*count].base.list, devices);
+         *count += 1;
+       }
+     } else {
+       gpu_infos[*count].device = deviceInfo;
+       gpu_infos[*count].base.vendor = &gpu_vendor_metax;
+-      strncpy(gpu_infos[*count].base.pdev, deviceInfo.bdfId, PDEV_LEN);
++      size_t pdev_len = strnlen(deviceInfo.bdfId, PDEV_LEN - 1);
++      memcpy(gpu_infos[*count].base.pdev, deviceInfo.bdfId, pdev_len);
++      gpu_infos[*count].base.pdev[pdev_len] = '\0';
+       list_add_tail(&gpu_infos[*count].base.list, devices);
+       *count += 1;
+     }
+--- a/src/extract_gpuinfo_tenstorrent.c
++++ b/src/extract_gpuinfo_tenstorrent.c
+@@ -78,7 +78,13 @@
+   struct dirent *entry;
+   while ((entry = readdir(dir)) != NULL) {
+     if (strncmp(entry->d_name, "hwmon", 5) == 0 && entry->d_name[5] != '\0') {
+-      snprintf(hwmon_path, size, "%s/%s", hwmon_dir, entry->d_name);
++      size_t dir_len = strlen(hwmon_dir);
++      size_t name_len = strlen(entry->d_name);
++      if (dir_len + 1 + name_len >= size)
++        continue;
++      memcpy(hwmon_path, hwmon_dir, dir_len);
++      hwmon_path[dir_len] = '/';
++      memcpy(hwmon_path + dir_len + 1, entry->d_name, name_len + 1);
+       closedir(dir);
+       return true;
+     }
+@@ -158,8 +164,10 @@
+     char resolved[PATH_MAX];
+     if (!realpath(device_link, resolved))
+       continue;
+-    strncpy(dev->pci_device_path, resolved, sizeof(dev->pci_device_path) - 1);
+-    dev->pci_device_path[sizeof(dev->pci_device_path) - 1] = '\0';
++    size_t resolved_len = strnlen(resolved, sizeof(resolved));
++    if (resolved_len >= sizeof(dev->pci_device_path))
++      continue;
++    memcpy(dev->pci_device_path, resolved, resolved_len + 1);
+ 
+     dev->hwmon_path[0] = '\0';
+     find_hwmon_path(dev->pci_device_path, dev->hwmon_path, sizeof(dev->hwmon_path));
+--- a/src/extract_gpuinfo_amdgpu.c
++++ b/src/extract_gpuinfo_amdgpu.c
+@@ -671,7 +671,12 @@
+ // Returns NULL if the node is unreadable, the property is absent, or the target is unknown.
+ static const char *gpuinfo_amdgpu_kfd_architecture(const char *node_path) {
+   char properties_path[PATH_MAX];
+-  snprintf(properties_path, sizeof(properties_path), "%s/properties", node_path);
++  static const char suffix[] = "/properties";
++  size_t node_len = strnlen(node_path, sizeof(properties_path));
++  if (node_len > sizeof(properties_path) - sizeof(suffix))
++    return NULL;
++  memcpy(properties_path, node_path, node_len);
++  memcpy(properties_path + node_len, suffix, sizeof(suffix));
+ 
+   FILE *properties = fopen(properties_path, "r");
+   if (!properties)
+--- a/src/extract_gpuinfo_intel.c
++++ b/src/extract_gpuinfo_intel.c
+@@ -203,7 +203,9 @@
+   const char *pdev_val;
+   int retval = nvtop_device_get_property_value(thisGPU->driver_device, "PCI_SLOT_NAME", &pdev_val);
+   assert(retval >= 0 && pdev_val != NULL && "Could not retrieve device PCI slot name");
+-  strncpy(thisGPU->base.pdev, pdev_val, PDEV_LEN);
++  size_t pdev_len = strnlen(pdev_val, PDEV_LEN - 1);
++  memcpy(thisGPU->base.pdev, pdev_val, pdev_len);
++  thisGPU->base.pdev[pdev_len] = '\0';
+   list_add_tail(&thisGPU->base.list, devices);
+   // Register a fdinfo callback for this GPU
+   processinfo_register_fdinfo_callback(parse_drm_fdinfo_intel, &thisGPU->base);
+--- a/src/extract_gpuinfo_panfrost.c
++++ b/src/extract_gpuinfo_panfrost.c
+@@ -274,8 +274,10 @@
+   static_info->encode_decode_shared = true;
+   RESET_ALL(static_info->valid);
+ 
+-  uint64_t gpuid;
+-  if (gpuinfo_panfrost_query_param(gpu_info->fd, DRM_PANFROST_PARAM_GPU_PROD_ID, &gpuid) == 0) {
++  uint64_t gpuid = 0;
++  bool gpuid_valid =
++      gpuinfo_panfrost_query_param(gpu_info->fd, DRM_PANFROST_PARAM_GPU_PROD_ID, &gpuid) == 0;
++  if (gpuid_valid) {
+     const char* name = panfrost_parse_marketing_name(gpuid);
+     if (name) {
+       strncpy(static_info->device_name, name, sizeof(static_info->device_name));
+@@ -294,7 +296,7 @@
+   if (gpuinfo_panfrost_query_param(gpu_info->fd, DRM_PANFROST_PARAM_L2_FEATURES, &l2_cache_features) == 0)
+     SET_GPUINFO_STATIC(static_info, l2cache_size, l2_cache_features & (0xFF << 16));
+ 
+-  if (GPUINFO_STATIC_FIELD_VALID(static_info, n_shared_cores)) {
++  if (GPUINFO_STATIC_FIELD_VALID(static_info, n_shared_cores) && gpuid_valid) {
+     uint64_t core_features, thread_features;
+     if (gpuinfo_panfrost_query_param(gpu_info->fd, DRM_PANFROST_PARAM_CORE_FEATURES, &core_features) != 0)
+       return;

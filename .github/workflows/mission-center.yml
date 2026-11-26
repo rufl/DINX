@@ -1,0 +1,55 @@
+name: Mission Center lean package
+
+# GitHub schedule events run only from the default branch. Keep this workflow
+# on the feature branch for review; the schedule becomes active when merged to
+# the default branch. workflow_dispatch works from this branch immediately.
+
+on:
+  schedule:
+    - cron: "37 7 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinx-mission-center
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Mission Center lean package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout DINX
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build package in pinned Artix
+        run: |
+          set -euo pipefail
+          mkdir -p dist/mission-center
+          docker run --rm --privileged \
+            -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
+            bash -euxo pipefail -c '
+              pacman -Sy --noconfirm --needed \
+                base-devel blueprint-compiler cargo cmake curl desktop-file-utils \
+                dconf dmidecode gettext gdk-pixbuf2 glib2 gtk4 libadwaita \
+                libdrm libudev mesa meson ninja perl pkgconf python udisks2 git
+              useradd -m builder
+              chown -R builder:builder /workspace
+              su builder -c "cd /workspace/distro/packages/mission-center && makepkg --cleanbuild --noconfirm --nodeps"
+            '
+          find distro/packages/mission-center -maxdepth 1 -type f -name 'mission-center-*.pkg.tar.zst' -exec cp -- {} dist/mission-center/ \;
+          sha256sum dist/mission-center/*.pkg.tar.zst | tee dist/mission-center/SHA256SUMS
+
+      - name: Upload lean package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mission-center-lean-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: dist/mission-center/

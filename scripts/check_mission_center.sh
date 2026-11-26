@@ -11,9 +11,10 @@ desktop_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/shar
 builder="$root/scripts/build-iso-container.sh"
 workflow="$root/.github/workflows/p0-iso.yml"
 iso_check="$root/scripts/check-iso-content.sh"
+package_workflow="$root/.github/workflows/mission-center.yml"
 fail() { printf 'mission_center_contract: %s\n' "$*" >&2; exit 1; }
 
-for path in "$profile" "$groups" "$pkg" "$source_env" "$builder" "$workflow" "$iso_check" \
+for path in "$profile" "$groups" "$pkg" "$source_env" "$builder" "$workflow" "$package_workflow" "$iso_check" \
   "$wrapper" "$desktop_override"; do
   [[ -r "$path" ]] || fail "missing ${path#$root/}"
 done
@@ -33,6 +34,7 @@ grep -Fq 'gng-$MISSION_CENTER_MAGPIE_COMMIT.tar.gz::$MISSION_CENTER_MAGPIE_SOURC
 grep -Fq 'graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL' "$pkg" || fail 'graph-widget submodule archive is not pinned'
 grep -Fq 'app-detection-$APP_DETECTION_COMMIT.tar.gz::$APP_DETECTION_SOURCE_URL' "$pkg" || fail 'app-detection source archive is not pinned'
 grep -Fq 'mission-center-dinx-dinit-services.patch' "$pkg" || fail 'Dinit service patch is not included'
+grep -Fq 'mission-center-nvtop-warnings.patch' "$pkg" || fail 'nvtop warning patch is not included'
 grep -Fq 'patch --fuzz=0 --forward --strip=1' "$pkg" || fail 'Dinit service patch is not applied deterministically'
 grep -Fq "'perl'" "$pkg" || fail 'Magpie ring assembly build dependency Perl is missing'
 if grep -Eq '(\.cargo/config\.toml|target\.[^]]+\.dependencies|RING_(BUILD|USE)_ASM|ring[[:space:]]*=)' "$pkg"; then
@@ -50,6 +52,9 @@ grep -Fqx 'export ADW_DEBUG_COLOR_SCHEME=prefer-dark' "$wrapper" \
 grep -Fqx 'Exec=missioncenter-dinx' "$desktop_override" \
   || fail 'Mission Center desktop override does not use the dark wrapper'
 grep -Fq 'scripts/check_mission_center.sh' "$workflow" || fail 'workflow does not run the Mission Center contract'
+grep -Fq 'cron: "37 7 */3 * *"' "$package_workflow" || fail 'Mission Center package workflow is not scheduled every three days'
+grep -Fq 'makepkg --cleanbuild' "$package_workflow" || fail 'Mission Center package workflow does not build the PKGBUILD'
+grep -Fq 'actions/upload-artifact@' "$package_workflow" || fail 'Mission Center package workflow does not retain its artifact'
 for required in \
   '  usr/bin/missioncenter' \
   '  usr/share/applications/io.missioncenter.MissionCenter.desktop' \
@@ -57,4 +62,4 @@ for required in \
   '  usr/share/licenses/mission-center/COPYING'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
-printf 'mission_center_contract version=%s source_pins=4 systemd=false dinit=true upstream=gitlab base=true\n' "$MISSION_CENTER_VERSION"
+printf 'mission_center_contract version=%s source_pins=4 systemd=false dinit=true nvtop_warnings=false scheduled=true upstream=gitlab base=true\n' "$MISSION_CENTER_VERSION"

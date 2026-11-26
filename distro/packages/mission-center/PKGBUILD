@@ -28,6 +28,7 @@ source=(
   "graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL"
   "app-detection-$APP_DETECTION_COMMIT.tar.gz::$APP_DETECTION_SOURCE_URL"
   "mission-center-dinx-dinit-services.patch"
+  "mission-center-nvtop-warnings.patch"
 )
 sha256sums=(
   "$MISSION_CENTER_SOURCE_SHA256"
@@ -35,6 +36,7 @@ sha256sums=(
   "$MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256"
   "$APP_DETECTION_SOURCE_SHA256"
   'ecd0b38708d410331c0391380caf8baad401981f9a1a008446d5436171c7af6d'
+  'c9e36ceeb3142a61e5952df3f2f351bbfbc654c58f9478c0cba32f458fc2f8eb'
 )
 
 prepare() {
@@ -48,6 +50,13 @@ prepare() {
   # the Services tab lists and controls dinit services on Artix/DINX installs.
   patch --fuzz=0 --forward --strip=1 -d "$root/subprojects/magpie" \
     < "$srcdir/mission-center-dinx-dinit-services.patch"
+  local nvtop_root="$root/subprojects/magpie/platform-linux/3rdparty/nvtop"
+  sed -i \
+    -e 's#^\([[:space:]]*"patches/nvtop-intel-unref-bridge-device.patch"\)$#\1,#' \
+    -e '/"patches\/nvtop-intel-unref-bridge-device.patch",$/a\    "patches/mission-center-nvtop-warnings.patch"' \
+    "$nvtop_root/nvtop.json"
+  install -Dm644 "$srcdir/mission-center-nvtop-warnings.patch" \
+    "$nvtop_root/patches/mission-center-nvtop-warnings.patch"
 }
 
 build() {

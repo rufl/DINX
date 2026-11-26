@@ -808,7 +808,7 @@ grep -Fq 'NoDisplay=true' <<<"$gaming_session" || fail 'DINX gaming session rema
 river_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop)
 grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$river_session" \
   || fail 'DINX River session command is incorrect'
-grep -Fq 'DesktopNames=Morghulis' <<<"$river_session" || fail 'DINX session desktop identity is not Morghulis'
+grep -Eq '^DesktopNames=.*(^|;)Morghulis(;|$)' <<<"$river_session" || fail 'DINX session desktop identity is not Morghulis'
 redbean_session=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/wayland-sessions/dinx-river-kwm-redbean.desktop)
 grep -Fq 'Exec=/usr/local/libexec/dinx-redbean-session' <<<"$redbean_session" \
   || fail 'Redbean session does not select the Redbean wrapper'

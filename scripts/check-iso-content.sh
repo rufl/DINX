@@ -865,9 +865,17 @@ while IFS= read -r session_path; do
       ;;
     *) fail "unsupported user session remains: $session_path" ;;
   esac
-  session_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "${session_path#/}")
-  grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$session_config" \
-    || fail "River session command is incorrect: $session_path"
+session_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "${session_path#/}")
+case "$session_path" in
+  /usr/share/wayland-sessions/dinx-river-kwm-morghulis.desktop)
+    grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' <<<"$session_config" \
+      || fail "River session command is incorrect: $session_path"
+    ;;
+  /usr/share/wayland-sessions/dinx-river-kwm-redbean.desktop)
+    grep -Fq 'Exec=/usr/local/libexec/dinx-redbean-session' <<<"$session_config" \
+      || fail "Redbean session command is incorrect: $session_path"
+    ;;
+esac
 done <<<"$session_entries"
 if grep -Eq '^(Hidden|NoDisplay)=true$' <<<"$river_kwm_session"; then
   fail 'the DINX River/KWM session is hidden from the greeter session list'

@@ -28,6 +28,7 @@ fail() {
 for path in "$profile" "$root_greetd" "$users_conf" "$wrapper" "$service" "$root_ro" "$root_rw" "$pkgbuild" "$workflow" \
   "$live_overlay/etc/default/grub" "$live_overlay/etc/hostname" "$live_policy" "$live_greetd" \
   "$live_overlay/etc/dinit.d/seatd" \
+  "$live_overlay/etc/dinit.d/dinx-plymouth-quit" \
   "$root_greetd_service"; do
   [[ -r "$path" ]] || fail "missing $path"
 done
@@ -115,6 +116,13 @@ grep -Fqx 'type = scripted' "$live_greetd" \
   || fail 'live greetd shadow is not a scripted no-op service'
 grep -Fqx 'command = /bin/true' "$live_greetd" \
   || fail 'live greetd shadow does not disable the display manager'
+live_plymouth_quit="$live_overlay/etc/dinit.d/dinx-plymouth-quit"
+grep -Fqx 'type = scripted' "$live_plymouth_quit" \
+  || fail 'live Plymouth handoff is not a scripted service'
+grep -Fqx 'command = /usr/local/libexec/dinx-plymouth-quit' "$live_plymouth_quit" \
+  || fail 'live Plymouth handoff command is incorrect'
+! grep -Fq 'depends-on = greetd' "$live_plymouth_quit" \
+  || fail 'live Plymouth handoff must not wait on the exiting greetd shadow'
 session_service="$package_dir/dinx-live-session.service"
 session_launcher="$package_dir/dinx-live-session"
 [[ -r "$session_service" && -r "$session_launcher" ]] || fail 'live session service or launcher is missing'

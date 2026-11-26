@@ -176,6 +176,13 @@ grep -Fqx 'type = scripted' <<<"$live_greetd_service" \
   || fail 'live greetd shadow is not a scripted no-op service'
 grep -Fqx 'command = /bin/true' <<<"$live_greetd_service" \
   || fail 'live greetd shadow does not disable the display manager'
+live_plymouth_quit_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-plymouth-quit)
+grep -Fqx 'type = scripted' <<<"$live_plymouth_quit_service" \
+  || fail 'live Plymouth handoff is not scripted'
+grep -Fqx 'command = /usr/local/libexec/dinx-plymouth-quit' <<<"$live_plymouth_quit_service" \
+  || fail 'live Plymouth handoff command is incorrect'
+! grep -Fq 'depends-on = greetd' <<<"$live_plymouth_quit_service" \
+  || fail 'live Plymouth handoff must not wait for the exiting greetd shadow'
 live_session_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-session)
 grep -Fqx 'type = process' <<<"$live_session_service" \
   || fail 'live session service is not a process service'

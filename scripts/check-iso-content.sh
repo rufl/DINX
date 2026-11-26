@@ -549,7 +549,7 @@ for package in haruna firefox; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
-for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto blockbench transit zenkai shelly qps glances sane seafoam-settings phyto dome; do
+for retired_app in wordcraft gridcraft deckcraft pdfcraft onlyoffice zrythm impasto blockbench transit zenkai shelly qps glances seafoam-settings phyto dome; do
   if grep -Eq "/var/lib/pacman/local/${retired_app}-[^/]*/" <<<"$manifest"; then
     fail "retired office/graphics package metadata remains in rootfs: $retired_app"
   fi

@@ -1,0 +1,201 @@
+diff --git a/package/src/bun/webGPU.ts b/package/src/bun/webGPU.ts
+index c3aafb5..e75269d 100644
+--- a/package/src/bun/webGPU.ts
++++ b/package/src/bun/webGPU.ts
+@@ -1,5 +1,5 @@
+ import { existsSync } from "fs";
+-import { join, dirname } from "path";
++import { dirname, join } from "path";
+ import { dlopen, suffix, FFIType } from "bun:ffi";
+ 
+ // NOTE: WGPUStringView is passed by value in the C API. Bun FFI does not support
+diff --git a/package/src/native/linux/nativeWrapper.cpp b/package/src/native/linux/nativeWrapper.cpp
+index c3765d7..e8c92b9 100644
+--- a/package/src/native/linux/nativeWrapper.cpp
++++ b/package/src/native/linux/nativeWrapper.cpp
+@@ -113,6 +113,7 @@ using electrobun::OperationGuard;
+ #include "../shared/permissions_cef.h"
+ #include "../shared/partition_context.h"
+ #include "include/cef_download_handler.h"
++#include "include/cef_version.h"
+ #include "include/wrapper/cef_helpers.h"
+ 
+ // CEF dynamic loader for weak linking
+@@ -1291,7 +1292,9 @@ public:
+                 printf("CEF: Opening DevTools...\n");
+                 {
+                     CefWindowInfo devToolsInfo;
++#if CEF_VERSION_MAJOR >= 147
+                     devToolsInfo.runtime_style = CEF_RUNTIME_STYLE_CHROME;
++#endif
+                     browser->GetHost()->ShowDevTools(devToolsInfo, this, CefBrowserSettings(), CefPoint());
+                 }
+                 return true;
+@@ -1320,7 +1323,9 @@ public:
+             printf("CEF: F12 pressed - opening DevTools\n");
+             {
+                 CefWindowInfo devToolsInfo;
++#if CEF_VERSION_MAJOR >= 147
+                 devToolsInfo.runtime_style = CEF_RUNTIME_STYLE_CHROME;
++#endif
+                 browser->GetHost()->ShowDevTools(devToolsInfo, this, CefBrowserSettings(), CefPoint());
+             }
+             return true; // Consume the event
+@@ -1331,7 +1336,9 @@ public:
+     // CefLifeSpanHandler methods
+     bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                       CefRefPtr<CefFrame> frame,
++#if CEF_VERSION_MAJOR >= 147
+                       int popup_id,
++#endif
+                       const CefString& target_url,
+                       const CefString& target_frame_name,
+                       CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+@@ -1839,8 +1846,10 @@ public:
+                             const CefString& title,
+                             const CefString& default_file_path,
+                             const std::vector<CefString>& accept_filters,
++#if CEF_VERSION_MAJOR >= 147
+                             const std::vector<CefString>& accept_extensions,
+                             const std::vector<CefString>& accept_descriptions,
++#endif
+                             CefRefPtr<CefFileDialogCallback> callback) override {
+         
+         printf("CEF Linux: File dialog requested - mode: %d\n", static_cast<int>(mode));
+@@ -1957,7 +1966,11 @@ public:
+     }
+ 
+     // CefDownloadHandler methods
++#if CEF_VERSION_MAJOR >= 147
+     bool OnBeforeDownload(CefRefPtr<CefBrowser> browser,
++#else
++    void OnBeforeDownload(CefRefPtr<CefBrowser> browser,
++#endif
+                           CefRefPtr<CefDownloadItem> download_item,
+                           const CefString& suggested_name,
+                           CefRefPtr<CefBeforeDownloadCallback> callback) override {
+@@ -2015,7 +2028,9 @@ public:
+             callback->Continue("", false);
+         }
+ 
++#if CEF_VERSION_MAJOR >= 147
+         return true;  // We handled it
++#endif
+     }
+ 
+     void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
+@@ -4152,7 +4167,9 @@ public:
+         CefWindowInfo window_info;
+         // Linux embedding is more reliable with Chrome style when using an
+         // external X11 parent. Alloy is still used automatically for OSR.
++#if CEF_VERSION_MAJOR >= 147
+         window_info.runtime_style = CEF_RUNTIME_STYLE_CHROME;
++#endif
+         
+         // For child windows, position should be relative to parent (0,0 for fullscreen)
+         CefRect cef_rect((int)x, (int)y, (int)width, (int)height);
+@@ -4866,7 +4883,9 @@ public:
+         CefRefPtr<CefBrowserHost> host = browser->GetHost();
+         if (host) {
+             CefWindowInfo devToolsInfo;
++#if CEF_VERSION_MAJOR >= 147
+             devToolsInfo.runtime_style = CEF_RUNTIME_STYLE_CHROME;
++#endif
+             host->ShowDevTools(devToolsInfo, nullptr, CefBrowserSettings(), CefPoint());
+         }
+     }
+@@ -4889,7 +4908,9 @@ public:
+                 host->CloseDevTools();
+             } else {
+                 CefWindowInfo devToolsInfo;
++#if CEF_VERSION_MAJOR >= 147
+                 devToolsInfo.runtime_style = CEF_RUNTIME_STYLE_CHROME;
++#endif
+                 host->ShowDevTools(devToolsInfo, nullptr, CefBrowserSettings(), CefPoint());
+             }
+         }
+diff --git a/package/src/native/shared/partition_context.h b/package/src/native/shared/partition_context.h
+index 1de2601..c6bc49b 100644
+--- a/package/src/native/shared/partition_context.h
++++ b/package/src/native/shared/partition_context.h
+@@ -32,6 +32,7 @@
+ #include <map>
+ #include <mutex>
+ #include <cstdio>
++#include "include/cef_request_context_handler.h"
+ 
+ namespace electrobun {
+ 
+diff --git a/package/src/native/shared/permissions_cef.h b/package/src/native/shared/permissions_cef.h
+index 3ac521b..c1455df 100644
+--- a/package/src/native/shared/permissions_cef.h
++++ b/package/src/native/shared/permissions_cef.h
+@@ -10,6 +10,7 @@
+ // include/internal/cef_types.h transitively).
+ 
+ #include <string>
++#include "include/cef_version.h"
+ #include <cstdint>
+ #include <cstdio>
+ 
+@@ -28,28 +29,39 @@ inline std::string describeCefPermissions(uint32_t mask) {
+     if (mask & CEF_PERMISSION_TYPE_AR_SESSION) add("AR session");
+     if (mask & CEF_PERMISSION_TYPE_CAMERA_PAN_TILT_ZOOM) add("Camera pan/tilt/zoom");
+     if (mask & CEF_PERMISSION_TYPE_CAMERA_STREAM) add("Camera");
++#if CEF_VERSION_MAJOR >= 147
+     if (mask & CEF_PERMISSION_TYPE_CAPTURED_SURFACE_CONTROL) add("Captured surface control");
++#endif
+     if (mask & CEF_PERMISSION_TYPE_CLIPBOARD) add("Clipboard");
++#if CEF_VERSION_MAJOR >= 147
+     if (mask & CEF_PERMISSION_TYPE_TOP_LEVEL_STORAGE_ACCESS) add("Top-level storage access");
++#endif
+     if (mask & CEF_PERMISSION_TYPE_DISK_QUOTA) add("Disk quota");
+     if (mask & CEF_PERMISSION_TYPE_LOCAL_FONTS) add("Local fonts");
+     if (mask & CEF_PERMISSION_TYPE_GEOLOCATION) add("Location");
++#if CEF_VERSION_MAJOR >= 147
+     if (mask & CEF_PERMISSION_TYPE_HAND_TRACKING) add("Hand tracking");
+     if (mask & CEF_PERMISSION_TYPE_IDENTITY_PROVIDER) add("Identity provider");
++#endif
+     if (mask & CEF_PERMISSION_TYPE_IDLE_DETECTION) add("Idle detection");
+     if (mask & CEF_PERMISSION_TYPE_MIC_STREAM) add("Microphone");
+     if (mask & CEF_PERMISSION_TYPE_MIDI_SYSEX) add("MIDI system-exclusive");
+     if (mask & CEF_PERMISSION_TYPE_MULTIPLE_DOWNLOADS) add("Multiple downloads");
+     if (mask & CEF_PERMISSION_TYPE_NOTIFICATIONS) add("Notifications");
++#if CEF_VERSION_MAJOR >= 147
+     if (mask & CEF_PERMISSION_TYPE_KEYBOARD_LOCK) add("Keyboard lock");
+     if (mask & CEF_PERMISSION_TYPE_POINTER_LOCK) add("Pointer lock");
++#endif
+     if (mask & CEF_PERMISSION_TYPE_PROTECTED_MEDIA_IDENTIFIER) add("Protected media identifier");
+     if (mask & CEF_PERMISSION_TYPE_REGISTER_PROTOCOL_HANDLER) add("Register protocol handler");
+     if (mask & CEF_PERMISSION_TYPE_STORAGE_ACCESS) add("Storage access");
+     if (mask & CEF_PERMISSION_TYPE_VR_SESSION) add("VR session");
++#if CEF_VERSION_MAJOR >= 147
+     if (mask & CEF_PERMISSION_TYPE_WEB_APP_INSTALLATION) add("Web app installation");
+-    if (mask & CEF_PERMISSION_TYPE_WINDOW_MANAGEMENT) add("Window management");
+     if (mask & CEF_PERMISSION_TYPE_FILE_SYSTEM_ACCESS) add("File system access");
++#endif
++    if (mask & CEF_PERMISSION_TYPE_WINDOW_MANAGEMENT) add("Window management");
++#ifdef CEF_API_ADDED
+ #if CEF_API_ADDED(13600)
+     if (mask & CEF_PERMISSION_TYPE_LOCAL_NETWORK_ACCESS) add("Local network access");
+ #endif
+@@ -59,6 +71,7 @@ inline std::string describeCefPermissions(uint32_t mask) {
+ #endif
+ #if CEF_API_ADDED(14700)
+     if (mask & CEF_PERMISSION_TYPE_SENSORS) add("Sensors");
++#endif
+ #endif
+ 
+     if (out.empty()) {
+diff --git a/package/src/shared/cef-version.ts b/package/src/shared/cef-version.ts
+index 845e6dd..09e46e2 100644
+--- a/package/src/shared/cef-version.ts
++++ b/package/src/shared/cef-version.ts
+@@ -1,5 +1,5 @@
+ // Default CEF version shipped with this Electrobun release.
+ // All platforms use the same version. Update this single pair when bumping CEF.
+-export const CEF_VERSION = `147.0.10+gd58e84d`;
+-export const CHROMIUM_VERSION = `147.0.7727.118`;
++export const CEF_VERSION = `109.1.18+gf1c41e4`;
++export const CHROMIUM_VERSION = `109.0.5414.120`;
+ export const DEFAULT_CEF_VERSION_STRING = `${CEF_VERSION}+chromium-${CHROMIUM_VERSION}`;

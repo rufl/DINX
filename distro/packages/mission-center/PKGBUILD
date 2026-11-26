@@ -10,13 +10,10 @@ source_env="$startdir/source.env"
 : "${MISSION_CENTER_MAGPIE_SOURCE_URL:?missing MISSION_CENTER_MAGPIE_SOURCE_URL}"
 : "${MISSION_CENTER_MAGPIE_SOURCE_SHA256:?missing MISSION_CENTER_MAGPIE_SOURCE_SHA256}"
 : "${MISSION_CENTER_GRAPH_WIDGET_COMMIT:?missing MISSION_CENTER_GRAPH_WIDGET_COMMIT}"
-<<<<<<< HEAD
 : "${MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL:?missing MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL}"
-=======
-:: "${APP_DETECTION_COMMIT:?missing APP_DETECTION_COMMIT}"
-:: "${APP_DETECTION_SOURCE_URL:?missing APP_DETECTION_SOURCE_URL}"
-:: "${APP_DETECTION_SOURCE_SHA256:?missing APP_DETECTION_SOURCE_SHA256}"
->>>>>>> main
+: "${APP_DETECTION_COMMIT:?missing APP_DETECTION_COMMIT}"
+: "${APP_DETECTION_SOURCE_URL:?missing APP_DETECTION_SOURCE_URL}"
+: "${APP_DETECTION_SOURCE_SHA256:?missing APP_DETECTION_SOURCE_SHA256}"
 : "${MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256:?missing MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256}"
 pkgver="$MISSION_CENTER_VERSION"
 pkgrel=1
@@ -25,28 +22,18 @@ arch=('x86_64')
 url="$MISSION_CENTER_REPOSITORY"
 license=('GPL-3.0-or-later')
 depends=('dconf' 'dmidecode' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk4' 'libadwaita' 'libdrm' 'libudev' 'mesa' 'udisks2')
-<<<<<<< HEAD
-makedepends=('blueprint-compiler' 'cargo' 'cmake' 'meson' 'ninja')
-=======
 makedepends=('blueprint-compiler' 'cargo' 'cmake' 'meson' 'nasm' 'ninja')
->>>>>>> main
 source=(
   "mission-center-v$pkgver.tar.gz::$MISSION_CENTER_SOURCE_URL"
   "gng-$MISSION_CENTER_MAGPIE_COMMIT.tar.gz::$MISSION_CENTER_MAGPIE_SOURCE_URL"
   "graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENTER_GRAPH_WIDGET_SOURCE_URL"
-<<<<<<< HEAD
-=======
   "app-detection-$APP_DETECTION_COMMIT.tar.gz::$APP_DETECTION_SOURCE_URL"
->>>>>>> main
 )
 sha256sums=(
   "$MISSION_CENTER_SOURCE_SHA256"
   "$MISSION_CENTER_MAGPIE_SOURCE_SHA256"
   "$MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256"
-<<<<<<< HEAD
-=======
   "$APP_DETECTION_SOURCE_SHA256"
->>>>>>> main
 )
 
 prepare() {
@@ -54,11 +41,8 @@ prepare() {
   rm -rf "$root/subprojects/magpie" "$root/subprojects/graph-widget"
   mv "$srcdir/gng-$MISSION_CENTER_MAGPIE_COMMIT" "$root/subprojects/magpie"
   mv "$srcdir/graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT" "$root/subprojects/graph-widget"
-<<<<<<< HEAD
-=======
   mkdir -p "$root/subprojects/magpie/platform-linux/crates/app-rummage"
   mv "$srcdir/app-detection-$APP_DETECTION_COMMIT"/* "$root/subprojects/magpie/platform-linux/crates/app-rummage"/
->>>>>>> main
 }
 
 build() {

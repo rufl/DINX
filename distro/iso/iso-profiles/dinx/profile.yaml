@@ -51,10 +51,6 @@ rootfs:
     - fuse2
     - galculator
     - gparted
-    - pixelorama
-    - paintfe
-    - blender
-    - godot
     - libva
     - pori
     - greetd
@@ -76,7 +72,6 @@ rootfs:
     - qt6ct
     - shikane
     - wdisplays
-    - krita
     - adw-gtk-theme
     - dinx-gtk-themes
     - papirus-icon-theme
@@ -84,7 +79,6 @@ rootfs:
     - gsettings-desktop-schemas
     - dinx-noto-latin
     - firefox
-    - inkscape
     - pipewire
     - pipewire-pulse
     - zenity
@@ -108,7 +102,6 @@ rootfs:
     - libnewt
     - openssh
     - sudo
-    - patchy
     - procps-ng
     - sqlite
     - tmux
@@ -131,7 +124,6 @@ rootfs:
     - pwvucontrol
     - rsync
     - gapless
-    - audionaut
     - swayimg
     - swayidle
     - swaylock

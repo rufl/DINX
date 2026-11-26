@@ -9,11 +9,7 @@ fail() {
   exit 1
 }
 
-<<<<<<< HEAD
-local_packages=(dinitui dinxpanel dinx-firewalld-dinit ghostty-vt-runtime wizp redbean)
-=======
 local_packages=(dinitui dinxpanel dinx-dock dinx-first-run dinx-firewalld-dinit ghostty-vt-runtime wizp)
->>>>>>> main
 contains_local_package() {
   local candidate=$1
   local package
@@ -44,12 +40,8 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
       wizp) contract=scripts/check_wizp_package.sh ;;
       ghostty-vt-runtime) contract=scripts/check_ghostty_vt_runtime.sh ;;
       dinx-firewalld-dinit) contract=scripts/check_firewall_tools.sh ;;
-<<<<<<< HEAD
-      redbean) contract=scripts/check_redbean.sh ;;
-=======
       dinx-dock) contract=scripts/check_dinx_dock.sh ;;
       dinx-first-run) contract=scripts/check_dinx_first_run.sh ;;
->>>>>>> main
     esac
     [[ -x "$contract" ]] || fail "$package is missing its executable qualification contract: $contract"
   else
@@ -259,11 +251,7 @@ for required in \
   '^[[:space:]]*DownloadUser[[:space:]]*=' \
   'printf "snapshot=%s\n" "$package_repository_snapshot"' \
   'local -a makepkg_options=(--nodeps --nocheck --noconfirm)' \
-<<<<<<< HEAD
-  'dinitui|dinxpanel)' \
-=======
   'dinitui|dinxpanel|dinx-dock|dinx-first-run' \
->>>>>>> main
   'makepkg_options+=(--clean)' \
   'source /workspace/scripts/lib/pacman-local-install.sh' \
   'source /workspace/scripts/lib/dinx-package-artifact-cache.sh' \
@@ -278,24 +266,9 @@ for required in \
   'runuser -u dinxbuild -- bash -c' \
   'makepkg_options+=(--cleanbuild)' \
   'makepkg "${makepkg_options[@]}"' \
-<<<<<<< HEAD
-  'pacman_retry -S --needed --noconfirm python-fonttools vala gst-plugins-base gst-plugins-good' \
-  'build_package turnstile' \
-  'build_package dinx-noto-latin' \
-  'build_package dinx-plymouth-theme' \
-  'build_package patchy' \
-  'build_package pixelorama' \
-  'build_package audionaut' \
-  'build_package paintfe' \
-=======
   'pacman_sync_install python-fonttools vala gst-plugins-base gst-plugins-good' \
   'build_package dinx-noto-latin' \
   'build_package dinx-plymouth-theme' \
-  'build_package patchy' \
-  'build_package paintfe' \
-  'build_package pixelorama' \
-  'build_package audionaut' \
->>>>>>> main
   '--sign --key' \
   'dinx_invalidate_pacman_package_cache "$package_repo" /var/cache/pacman/pkg' \
   'pacman-key --init' \

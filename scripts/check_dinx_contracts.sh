@@ -9,25 +9,15 @@ source_checks=(
 )
 checks=(
   check_ghostty_vt_runtime.sh
-<<<<<<< HEAD
   check_firefox.sh
   check_eurooffice.sh
   check_opensnitch.sh
   check_swayimg.sh
   check_package_managers.sh
-  check_desktop_packages.sh
-  check_audionaut.sh
   check_river_session.sh
   check_morghulis_theme.sh
   check_mission_center.sh
   check_turnstile.sh
-=======
-  check_swayimg.sh
-  check_package_managers.sh
-  check_desktop_packages.sh
-  check_pori_storage.sh
-  check_display_tools.sh
->>>>>>> main
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh

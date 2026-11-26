@@ -57,16 +57,6 @@ print_value session.desktop "${XDG_CURRENT_DESKTOP:-unknown}"
 print_value session.session_desktop "${XDG_SESSION_DESKTOP:-unknown}"
 print_value session.wayland_display "${WAYLAND_DISPLAY:-unknown}"
 print_value session.default river+kwm+morghulis
-<<<<<<< HEAD
-print_value session.selectable river+kwm+morghulis,river+kwm+redbean
-print_value session.greeter_host tuigreet
-command_state session.command.greeter tuigreet
-command_state session.command.river river
-command_state session.command.kwm kwm
-command_state session.command.morghulis morghulis
-command_state session.command.redbean redbean
-command_state session.command.pcmanfm pcmanfm
-=======
 print_value session.selectable river+kwm+morghulis-only
 print_value session.greeter_host agreety
 command_state session.command.greeter agreety
@@ -77,7 +67,6 @@ command_state session.command.river river
 command_state session.command.kwm kwm
 command_state session.command.kwim kwim
 command_state session.command.morghulis morghulis
->>>>>>> main
 
 if [ "${DINX_DOCTOR_QUERY_DINIT:-0}" = 1 ]; then
   if command -v dinitctl >/dev/null 2>&1 && dinitctl --user list >/dev/null 2>&1; then
@@ -120,14 +109,8 @@ fi
 print_value display.actions not-run
 
 for package in \
-<<<<<<< HEAD
-  dinit pori wdisplays shikane file-roller gparted \
-  dinitui dinxpanel mission-center turnstile \
-  river kwm morghulis pcmanfm audionaut; do
-=======
   dinit pcmanfm pori wdisplays shikane file-roller gparted \
   dinitui dinxpanel octopi river kwm kwim morghulis; do
->>>>>>> main
   package_state "$package"
 done
 

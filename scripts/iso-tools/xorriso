@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+real_xorriso=${DINX_REAL_XORRISO:-}
+[[ -x "$real_xorriso" ]] || {
+  printf 'dinx-xorriso: missing real xorriso: %s\n' "$real_xorriso" >&2
+  exit 127
+}
+
+args=("$@")
+is_mkisofs=false
+for ((i = 0; i < ${#args[@]} - 1; i++)); do
+  if [[ ${args[i]} == '-as' && ${args[i + 1]} == 'mkisofs' ]]; then
+    is_mkisofs=true
+    break
+  fi
+done
+
+if [[ $is_mkisofs == true ]]; then
+  iso_label="DINX_$(date +%Y%m)"
+  for ((i = 0; i < ${#args[@]} - 1; i++)); do
+    case ${args[i]} in
+      -volid)
+        args[i + 1]=$iso_label
+        ;;
+      -o)
+        output=${args[i + 1]}
+        output_dir=$(dirname -- "$output")
+        output_name=$(basename -- "$output")
+        case $output_name in
+          artix-dinx-*.iso)
+            args[i + 1]="$output_dir/dinx-${output_name#artix-dinx-}"
+            ;;
+        esac
+        ;;
+    esac
+  done
+fi
+
+exec "$real_xorriso" "${args[@]}"

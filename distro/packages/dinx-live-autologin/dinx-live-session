@@ -8,6 +8,8 @@ set -eu
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
+/usr/local/libexec/dinx-live-autologin
+/usr/local/libexec/dinx-plymouth-quit || true
 exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx -- env \
   HOME=/home/dinx \
   USER=dinx \

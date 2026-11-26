@@ -10,7 +10,6 @@ live-session:
     - NetworkManager
     - greetd
     - bluetoothd
-    - dinx-live-autologin
     - dinx-live-session
   user-services:
     - dbus

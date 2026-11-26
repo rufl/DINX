@@ -34,6 +34,8 @@ grep -Fq 'graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT.tar.gz::$MISSION_CENT
 if grep -Eiq '(^|[^[:alnum:]_])(systemd|systemctl|uwsm)([^[:alnum:]_]|$)' "$pkg"; then
   fail 'Mission Center package recipe introduces systemd or uwsm'
 fi
+grep -Fq 'cargo update --manifest-path "$root/Cargo.toml" -p ring --precise 0.17.15' "$pkg" \
+  || fail 'Mission Center does not refresh the ring 0.17.15 assembly fix'
 grep -Fq 'build_package mission-center' "$builder" || fail 'ISO builder does not build Mission Center'
 grep -Fq 'mission-center-*.pkg.tar.zst' "$builder" || fail 'ISO builder does not install Mission Center before ISO assembly'
 [[ -x "$wrapper" ]] || fail 'Mission Center dark wrapper is not executable'

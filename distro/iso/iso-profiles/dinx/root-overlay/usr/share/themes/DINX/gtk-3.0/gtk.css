@@ -1,7 +1,4 @@
-:root {
-    --border: #7f8a9c;
-    --accent: #8fb8ff;
-}
+/* GTK3 does not support GTK4-style CSS custom properties. */
 
 /* DINX static theme; the River/KWM session does not require a shell theme service. */
 * {
@@ -25,7 +22,7 @@ headerbar windowtitle,
 .window-frame,
 window.popup,
 window.normal {
-    border: 1px solid var(--border);
+    border: 1px solid #7f8a9c;
     border-radius: 10px;
 }
 headerbar,
@@ -56,7 +53,7 @@ radiobutton,
 switch {
     background-color: #11151d;
     color: #d7dde8;
-    border: 1px solid var(--border);
+    border: 1px solid #7f8a9c;
 }
 
 button:hover,
@@ -69,14 +66,14 @@ row:hover {
 
 button.suggested-action,
 button.default {
-    background-color: var(--accent);
+    background-color: #8fb8ff;
     color: #0b0d12;
 }
 
 button:focus,
 entry:focus,
 textview:focus {
-    outline: 2px solid var(--accent);
+    outline: 2px solid #8fb8ff;
     outline-offset: 1px;
 }
 
@@ -88,7 +85,7 @@ selection,
 
 scale highlight,
 progressbar progress {
-    background-color: var(--accent);
+    background-color: #8fb8ff;
 }
 
 scrollbar trough {
@@ -96,5 +93,5 @@ scrollbar trough {
 }
 
 scrollbar slider {
-    background-color: var(--border);
+    background-color: #7f8a9c;
 }

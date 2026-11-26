@@ -32,6 +32,7 @@ checks=(
   check_install_lifecycle.sh
   check_calamares_partitioning.sh
   check_artix_initcpio_patch.sh
+  check_dinx_iso_identity.sh
   check_dinx_compression.sh
   check_dinx_budget.sh
   check_gaming.sh

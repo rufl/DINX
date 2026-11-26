@@ -165,6 +165,8 @@ jobs:
         run: ./scripts/smoke_cache_verified_extract.sh
       - name: Verify DINX feature-group coverage
         run: scripts/check_dinx_feature_groups.sh
+      - name: Verify DINX ISO identity
+        run: scripts/check_dinx_iso_identity.sh
       - name: Verify Cyan Skillfish and BC-250 support contract
         run: ./scripts/check_cyan_skillfish.sh
       - name: Verify BC250 Control Center package and session contract

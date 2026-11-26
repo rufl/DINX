@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Mission Center
+Name[pt_BR]=Central de Controle
+Comment=Monitor system resources
+Exec=missioncenter-dinx
+Icon=io.missioncenter.MissionCenter
+Terminal=false
+Type=Application
+Categories=GTK;GNOME;System;Monitor;
+StartupNotify=true
+StartupWMClass=io.missioncenter.MissionCenter

@@ -30,7 +30,7 @@ rootfs:
     - dinxpanel
     - dinx-keyring
     - dinx-plymouth-theme
-    - tuxmanager
+    - mission-center
     - river
     - kwm
     - kwim

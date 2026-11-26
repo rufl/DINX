@@ -342,11 +342,10 @@ required_paths=(
   usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
   usr/bin/pcmanfm
-  usr/bin/tux-manager
-  usr/local/bin/tux-manager
-  usr/share/icons/hicolor/scalable/apps/tux_manager_icon.svg
-  usr/share/applications/io.github.benapetr.TuxManager.desktop
-  usr/share/metainfo/io.github.benapetr.TuxManager.metainfo.xml
+  usr/bin/missioncenter
+  usr/share/applications/io.missioncenter.MissionCenter.desktop
+  usr/share/metainfo/io.missioncenter.MissionCenter.metainfo.xml
+  usr/share/licenses/mission-center/COPYING
   usr/bin/octopi
   usr/lib/octopi/octphelper
   usr/share/applications/pcmanfm.desktop
@@ -1639,17 +1638,10 @@ grep -Fq 'Name[pt_BR]=Central de Controle' <<<"$dinxpanel_desktop" || fail 'DINX
 file_roller_override=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/share/applications/org.gnome.FileRoller.desktop)
 grep -Fq 'Name[pt_BR]=Descompactador' <<<"$file_roller_override" || fail 'File Roller Portuguese desktop name is missing'
 grep -Fq 'Name=Archive Manager' <<<"$file_roller_override" || fail 'File Roller English desktop name is missing'
-tuxmanager_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/io.github.benapetr.TuxManager.desktop)
-grep -Fq 'Exec=tux-manager' <<<"$tuxmanager_desktop" || fail 'TuxManager desktop launcher is missing'
-grep -Fq 'Name=Tux Manager' <<<"$tuxmanager_desktop" || fail 'TuxManager desktop name is missing'
-grep -Fq 'Icon=tux_manager_icon' <<<"$tuxmanager_desktop" || fail 'TuxManager desktop icon contract is missing'
-tuxmanager_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/tux-manager)
-grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$tuxmanager_launcher" \
-  || fail 'TuxManager launcher does not force qt6ct'
-grep -Fq 'export QT_STYLE_OVERRIDE=fusion' <<<"$tuxmanager_launcher" \
-  || fail 'TuxManager launcher does not force the Fusion style'
-grep -Fq 'exec /usr/bin/tux-manager "$@"' <<<"$tuxmanager_launcher" \
-  || fail 'TuxManager launcher does not exec the packaged binary'
+mission_center_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/io.missioncenter.MissionCenter.desktop)
+grep -Fq 'Exec=missioncenter' <<<"$mission_center_desktop" || fail 'Mission Center desktop launcher is missing'
+grep -Fq 'Name=Mission Center' <<<"$mission_center_desktop" || fail 'Mission Center desktop name is missing'
+grep -Fq 'Icon=io.missioncenter.MissionCenter' <<<"$mission_center_desktop" || fail 'Mission Center desktop icon contract is missing'
 blender_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/blender)
 grep -Fq 'exec /usr/bin/blender --factory-startup "$@"' <<<"$blender_launcher" \
   || fail 'Blender launcher does not bypass a broken user startup.blend'

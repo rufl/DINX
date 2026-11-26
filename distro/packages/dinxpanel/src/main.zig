@@ -244,8 +244,6 @@ const App = struct {
         const services = makePage("Services & updates", "Review first, then choose the explicit action. Missing optional tools stay visible in the output.");
         appendAction(services, "Dinit services", "Open DinitUI service and profile manager", &onServicesClicked, self);
         appendAction(services, "Check upgrades", "Refresh package and firmware metadata without installing", &onUpgradeCheckClicked, self);
-        appendAction(services, "Topgrade preview", "Review the complete update plan", &onTopgradePreviewClicked, self);
-        appendAction(services, "Topgrade", "Run the complete update workflow", &onTopgradeClicked, self);
         appendAction(services, "Install CUPS", "Install optional printing support", &onCupsInstallClicked, self);
         _ = c.gtk_stack_add_titled(@ptrCast(stack), services, "services", "Services & updates");
 
@@ -972,14 +970,6 @@ fn onQtClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 
 fn onServicesClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"dinitui"});
-}
-
-fn onTopgradePreviewClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade", "--dry-run" });
-}
-
-fn onTopgradeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{ "deetty", "-e", "topgrade" });
 }
 
 fn onFirewallClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {

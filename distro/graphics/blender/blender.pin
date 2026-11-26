@@ -1,6 +1,6 @@
-tag=blender/v5.3.0-dinx1
+tag=blender/v5.3.0-dinx2
 version=5.3.0
-pkgrel=1
-package=blender-17.5.3.0-3-x86_64.pkg.tar.zst
-full_package=blender-full-5.3.0-1-x86_64.pkg.tar.zst
+pkgrel=2
+package=blender-17.5.3.0-4-x86_64.pkg.tar.zst
+full_package=blender-full-5.3.0-2-x86_64.pkg.tar.zst
 sha256sums=SHA256SUMS

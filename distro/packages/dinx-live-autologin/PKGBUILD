@@ -1,6 +1,6 @@
 pkgname=dinx-live-autologin
 pkgver=0.1.0
-pkgrel=27
+pkgrel=28
 pkgdesc='DINX live-session autologin, direct session startup and overlay boot dinit configuration'
 arch=('any')
 url='https://github.com/rufl/DINX'
@@ -21,9 +21,4 @@ package() {
   install -Dm644 "$srcdir/root-ro" "$pkgdir/etc/dinit.d/root-ro"
   install -Dm644 "$srcdir/early-root-rw.target" \
     "$pkgdir/etc/dinit.d/early-root-rw.target"
-  install -d "$pkgdir/etc/dinit.d/boot.d"
-  ln -s ../dinx-live-autologin \
-    "$pkgdir/etc/dinit.d/boot.d/dinx-live-autologin"
-  ln -s ../dinx-live-session \
-    "$pkgdir/etc/dinit.d/boot.d/dinx-live-session"
 }

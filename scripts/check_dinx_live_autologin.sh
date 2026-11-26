@@ -47,7 +47,7 @@ grep -Fq '  autologin: true' "$profile" || fail 'live-session autologin is not e
 grep -Fq '  hostname: dinxlive' "$profile" || fail 'live-session profile hostname is not dinxlive'
 grep -Fqx 'dinxlive' "$live_overlay/etc/hostname" \
   || fail 'live overlay hostname file is not dinxlive'
-for live_service in dinx-live-autologin dinx-live-session dinx-plymouth-quit; do
+for live_service in dinx-live-autologin dinx-live-session; do
   grep -Fq "    - $live_service" "$profile" \
     || fail "live session profile does not enable $live_service"
 done
@@ -140,8 +140,8 @@ grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$session_laun
   || fail 'live session launcher does not start the River/KWM session under a session bus'
 grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$session_launcher" \
   || fail 'live session launcher does not select the private runtime dir'
-grep -Fq 'boot.d/dinx-live-session' "$pkgbuild" \
-  || fail 'live session service is not linked into dinit boot'
+! grep -Fq 'boot.d/dinx-live-session' "$pkgbuild" \
+  || fail 'live session boot link must be created by the live profile'
 grep -Fqx 'type = process' "$live_overlay/etc/dinit.d/seatd" \
   || fail 'live seatd service is not a process service'
 grep -Fqx 'command = /usr/bin/seatd -g seat' "$live_overlay/etc/dinit.d/seatd" \
@@ -156,8 +156,8 @@ grep -Fq 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' "$w
   || fail 'live autologin package must not replace greetd-dinit service files'
 ! grep -Fq 'pkgdir/etc/dinit.d/greetd' "$pkgbuild" \
   || fail 'live autologin package must not own greetd-dinit service files'
-grep -Fq 'boot.d/dinx-live-autologin' "$pkgbuild" \
-  || fail 'live autologin service is not linked into dinit boot'
+! grep -Fq 'boot.d/dinx-live-autologin' "$pkgbuild" \
+  || fail 'live autologin boot link must be created by the live profile'
 
 grep -Fq "'root-ro' 'early-root-rw.target'" "$pkgbuild" \
   || fail 'live root remount overrides are not package sources'

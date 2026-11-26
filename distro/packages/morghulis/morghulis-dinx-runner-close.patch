@@ -1,7 +1,7 @@
 diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCmdButton.vala
 --- a/src/Runner/Commands/AppsCmdButton.vala
 +++ b/src/Runner/Commands/AppsCmdButton.vala
-@@ -9,11 +9,29 @@
+@@ -9,12 +9,33 @@
  
      [GtkCallback]
      public void clicked() {
@@ -11,23 +11,37 @@ diff --git a/src/Runner/Commands/AppsCmdButton.vala b/src/Runner/Commands/AppsCm
  
      [GtkCallback]
      public void activated() {
+-        app_launch_handler();
 +        launch_and_dismiss();
 +    }
 +
 +    private void launch_and_dismiss() {
-+        // Hide the Runner immediately so it gets out of the way before the app
-+        // window appears. Do this before the launch call so the compositor can
-+        // reclaim the layer surface before the new window maps.
-+        Runner.instance.visible = false;
-+        // Set a watch cursor on the Runner window surface to signal "busy" until
-+        // the app draws its first frame and the cursor reverts automatically.
++        // Launch immediately, keep the selected row highlighted while the
++        // compositor maps the new window, then dismiss the Runner.
++        add_css_class("launching");
 +        var display = Gdk.Display.get_default();
++        Gdk.Surface? surface = null;
 +        if (display != null) {
 +            var cursor = new Gdk.Cursor.from_name("wait", null);
-+            Gdk.Surface? surface = Runner.instance.get_surface();
++            surface = Runner.instance.get_surface();
 +            if (surface != null) {
 +                surface.set_cursor(cursor);
 +            }
 +        }
-         app_launch_handler();
++        app_launch_handler();
++        Timeout.add(180, () => {
++            remove_css_class("launching");
++            Runner.instance.visible = false;
++            return Source.REMOVE;
++        });
      }
+ 
+     public AppsCmdButton(AstalApps.Application app, bool is_uwsm_session) {
+diff --git a/data/scss/main.scss b/data/scss/main.scss
+--- a/data/scss/main.scss
++++ b/data/scss/main.scss
+@@ -18,0 +19,4 @@
++row.launching {
++    background-color: color-mix(in srgb, adw.$accent_bg_color 25%, transparent);
++}
++

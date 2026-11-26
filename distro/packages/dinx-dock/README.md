@@ -28,23 +28,34 @@ so placement changes apply without restarting the session.
 
 ## Favorites
 
-The button list is fixed and compiled in. Each button resolves a desktop entry
-id with `g_desktop_app_info_new` and launches the resolved `GAppInfo` directly,
-with no arguments and no shell:
+The default button list is compiled in, but the list can be managed without
+editing JSON:
 
-| Button   | Desktop entry             |
-| -------- | ------------------------- |
-| Terminal | `org.dinx.Deetty.desktop` |
-| Files    | `pcmanfm.desktop`         |
-| Browser  | `firefox.desktop`         |
-| Editor   | `org.dinx.Dintor.desktop` |
-| Packages | `octopi.desktop`          |
-| Dashboard | `dinxpanel.desktop`      |
+```sh
+dinx-dockctl list
+dinx-dockctl add org.dinx.Dintor.desktop
+dinx-dockctl remove octopi.desktop
+```
 
-An entry that is absent or hidden resolves to nothing and its button is
-skipped: the dock never fails because an application is not installed. The
-icon comes from the entry's `Icon=` key and the tooltip from its localized
-`Name=`, so both follow the installed desktop entry and the session locale.
+The helper validates desktop-entry ids, preserves the other appearance
+settings, writes `appearance.json` atomically, and signals the running dock.
+The optional `favorites` array has the same effect when managed directly:
+
+```json
+{"version": 1, "dock": "left", "favorites": ["firefox.desktop", "pcmanfm.desktop"]}
+```
+
+Each button resolves its desktop entry with `g_desktop_app_info_new` and
+launches the resulting `GAppInfo` directly, with no shell. Missing or hidden
+entries are skipped. The icon comes from `Icon=` and the tooltip from the
+localized `Name=`.
+
+## Settings and running state
+
+Use `dinx-dockctl set-edge left|right|bottom|none` to change placement. The
+dock reloads this setting on SIGHUP and keeps the rest of `appearance.json`
+unchanged. A running application gets an accent strip and a `Running: ...`
+tooltip; the state refreshes every five seconds.
 
 The installer has no dock button on purpose: `pcmanfm --desktop` renders
 `~/Desktop`, where the session seeds an approved `Install DINX.desktop` for the

@@ -24,8 +24,8 @@ makedepends=('meson' 'ninja' 'vala' 'blueprint-compiler' 'dart-sass'
 # session. Install them separately to enable screen recording and tag scrolling.
 optdepends=('wl-screenrec: screen recording from the shell'
             'river-shifttags: scroll through river tags from the NavBar')
-source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL" "morghulis-dinx-power.patch" "morghulis-dinx-no-libgtop.patch" "morghulis-dinx-runner-close.patch")
-sha256sums=("$MORGHULIS_SOURCE_SHA256" '837d2530bc5b29c737947c9147ff0a881f51586d201c9beaffb29c85c78dd05f' 'e33a274296c189be5d242ff49e89832f15c794e4ce9386a2e35fd48504515e76' '370bb69ef7ee77cd44818b10aece640d4683c2b0eff3a3f62e70254366cbceb8')
+source=("morghulis-$pkgver.tar.gz::$MORGHULIS_SOURCE_URL" "morghulis-dinx-power.patch" "morghulis-dinx-no-libgtop.patch" "morghulis-dinx-runner-close.patch" "morghulis-dinx-settings-no-dragon.patch")
+sha256sums=("$MORGHULIS_SOURCE_SHA256" '837d2530bc5b29c737947c9147ff0a881f51586d201c9beaffb29c85c78dd05f' 'e33a274296c189be5d242ff49e89832f15c794e4ce9386a2e35fd48504515e76' '370bb69ef7ee77cd44818b10aece640d4683c2b0eff3a3f62e70254366cbceb8' '3c296444967b67291b54784c66c99fdf5820d4fb617f8a2fea64187e247062bc')
 prepare() {
   cd "$srcdir/morghulis-$pkgver"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-power.patch"
@@ -35,6 +35,7 @@ prepare() {
   # uptime from /proc/uptime instead so morghulis builds without libgtop.
   patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-no-libgtop.patch"
   patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-runner-close.patch"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-settings-no-dragon.patch"
   # Exclude SysInfoCmd and SysInfoItem from the build
   sed -i "/'SysInfoCmd.vala',/d" src/Runner/Commands/meson.build
   sed -i "/'SysInfoItem.vala',/d" src/Runner/Commands/meson.build

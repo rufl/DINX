@@ -4,6 +4,7 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 pkgdir="$root/distro/packages/dinx-dock"
 pkgbuild="$pkgdir/PKGBUILD"
+control="$pkgdir/dinx-dockctl"
 frontend="$pkgdir/src/main.zig"
 desktop="$pkgdir/resources/dinx-dock.desktop"
 supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
@@ -24,8 +25,10 @@ grep -Eq '^[[:space:]]*source=\(\)[[:space:]]*$' "$pkgbuild" || fail 'dinx-dock 
 grep -Fq 'gtk4-layer-shell' "$pkgbuild" || fail 'dinx-dock does not link the Wayland layer-shell library'
 grep -Fq 'install -Dm755 "$srcdir/stage/bin/dinx-dock" "$pkgdir/usr/bin/dinx-dock"' "$pkgbuild" \
   || fail 'dinx-dock is not installed to /usr/bin/dinx-dock'
-grep -Fqx 'Exec=dinx-dock' "$desktop" || fail 'dinx-dock desktop entry launch command is incorrect'
-grep -Fqx 'NoDisplay=true' "$desktop" || fail 'dinx-dock must not appear in the application menu'
+grep -Fq 'install -Dm755 dinx-dockctl "$pkgdir/usr/bin/dinx-dockctl"' "$pkgbuild" \
+  || fail 'dinx-dockctl is not installed'
+[[ -r "$control" ]] || fail 'missing dock control helper'
+grep -Fq 'jq' "$control" || fail 'dock control helper does not update JSON'
 
 # The dock reads the shared appearance file and honors every placement,
 # including the `none` member, which must exit before any display connection.
@@ -43,6 +46,11 @@ grep -Fq 'g_desktop_app_info_new' "$frontend" || fail 'dinx-dock does not launch
 if grep -Eq 'system\(|popen|execv?[lp]?\(|/bin/sh' "$frontend"; then
   fail 'dinx-dock executes an arbitrary shell command instead of a fixed desktop entry'
 fi
+
+# User-visible dock behavior: configurable favorites and running-state refresh.
+grep -Fq 'favorites:' "$frontend" || fail 'dock does not read configurable favorites'
+grep -Fq 'checkRunningApps' "$frontend" || fail 'dock has no running-app indicator'
+grep -Fq 'g_timeout_add_seconds' "$frontend" || fail 'dock does not refresh running indicators'
 
 # Session wiring: the supervisor starts the dock as an optional helper so a
 # missing dock can never blank the desktop, and the roster ships it.

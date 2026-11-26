@@ -26,6 +26,7 @@ headerbar windowtitle,
 window.popup,
 window.normal {
     border: 1px solid var(--border);
+    border-radius: 10px;
 }
 headerbar,
 .titlebar,

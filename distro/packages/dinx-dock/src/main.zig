@@ -22,6 +22,7 @@ const default_edge: Edge = .left;
 
 const css =
     \\button.dinx-dock-button { border-radius: 10px; padding: 6px; }
+    \\button.dinx-dock-button.running { background-color: color-mix(in srgb, currentColor 20%, transparent); box-shadow: inset 0 -3px 0 currentColor; }
     \\
 ;
 
@@ -63,23 +64,18 @@ const Edge = enum {
 const Config = struct {
     version: ?i64 = null,
     dock: ?[]const u8 = null,
+    favorites: ?[]const []const u8 = null,
 };
 
-/// The favorites are a fixed list: every button launches one resolved
-/// `GDesktopAppInfo` with no arguments and no shell, so nothing read from
-/// appearance.json can influence what is executed. `fallback_icon` only
-/// covers entries whose Icon= key is missing.
-///
-/// The installer is deliberately absent: `pcmanfm --desktop` renders
-/// `~/Desktop`, where dinx-river-session seeds an approved `Install DINX.desktop`
-/// for the live user and removes it on installed systems, so a dock button
-/// would duplicate that affordance.
+/// The compiled list is the safe default. `appearance.json` may replace it
+/// with validated desktop-entry ids, preserving the rest of the first-run
+/// configuration.
 const Favorite = struct {
-    desktop_id: [*:0]const u8,
+    desktop_id: [:0]const u8,
     fallback_icon: [*:0]const u8,
 };
 
-const favorites = [_]Favorite{
+const default_favorites = [_]Favorite{
     .{ .desktop_id = "org.dinx.Deetty.desktop", .fallback_icon = "utilities-terminal" },
     .{ .desktop_id = "pcmanfm.desktop", .fallback_icon = "system-file-manager" },
     .{ .desktop_id = "firefox.desktop", .fallback_icon = "web-browser" },
@@ -88,12 +84,19 @@ const favorites = [_]Favorite{
     .{ .desktop_id = "dinxpanel.desktop", .fallback_icon = "org.dinx.DinxPanel" },
 };
 
+const max_favorites = 16;
+
 const Slot = struct {
     favorite: usize,
     info: ?*c.GAppInfo = null,
+    running: bool = false,
 };
 
-var slots: [favorites.len]Slot = undefined;
+var active_favorites: [max_favorites]Favorite = undefined;
+var active_favorite_count: usize = 0;
+var owned_favorite_ids: [max_favorites][:0]u8 = undefined;
+var owned_favorite_id_count: usize = 0;
+var slots: [max_favorites]Slot = undefined;
 var slot_count: usize = 0;
 var session_io: std.Io = undefined;
 /// Absolute path of appearance.json, kept for the SIGHUP handler.
@@ -129,6 +132,60 @@ fn captureAppearancePath(environ: *const std.process.Environ.Map, arena: std.mem
     appearance_path = std.fmt.allocPrint(arena, "{s}/dinx/appearance.json", .{home}) catch "";
 }
 
+fn readConfig() ?Config {
+    if (appearance_path.len == 0) return null;
+    const text = std.Io.Dir.cwd().readFileAlloc(session_io, appearance_path, allocator, .limited(config_limit)) catch return null;
+    defer allocator.free(text);
+    return std.json.parseFromSliceLeaky(
+        Config,
+        allocator,
+        text,
+        .{ .ignore_unknown_fields = true, .duplicate_field_behavior = .use_last },
+    ) catch null;
+}
+
+fn validDesktopId(id: []const u8) bool {
+    if (id.len < ".desktop".len or id.len > 127 or !std.mem.endsWith(u8, id, ".desktop")) return false;
+    for (id) |char| {
+        if (!std.ascii.isAlphanumeric(char) and char != '.' and char != '_' and char != '-') return false;
+    }
+    return true;
+}
+
+fn clearLoadedFavorites() void {
+    for (owned_favorite_ids[0..owned_favorite_id_count]) |id| allocator.free(id);
+    owned_favorite_id_count = 0;
+    active_favorite_count = 0;
+}
+
+fn appendFavorite(id: []const u8, fallback_icon: [*:0]const u8) void {
+    if (active_favorite_count >= active_favorites.len or !validDesktopId(id)) return;
+    for (active_favorites[0..active_favorite_count]) |favorite| {
+        if (std.mem.eql(u8, favorite.desktop_id, id)) return;
+    }
+    const owned = allocator.dupeSentinel(u8, id, 0) catch return;
+    owned_favorite_ids[owned_favorite_id_count] = owned;
+    owned_favorite_id_count += 1;
+    active_favorites[active_favorite_count] = .{ .desktop_id = owned, .fallback_icon = fallback_icon };
+    active_favorite_count += 1;
+}
+
+fn loadFavorites() void {
+    clearLoadedFavorites();
+    if (readConfig()) |config| {
+        if (config.favorites) |configured| {
+            for (configured) |id| appendFavorite(id, "application-x-executable");
+        }
+    }
+    if (active_favorite_count == 0) {
+        for (default_favorites) |favorite| {
+            active_favorites[active_favorite_count] = favorite;
+            active_favorite_count += 1;
+        }
+    }
+}
+
+
 /// Reads `$XDG_CONFIG_HOME/dinx/appearance.json`.
 /// The dock is a core shell component, so a missing, unreadable or malformed
 /// state file falls back to the default placement instead of removing it: a
@@ -137,16 +194,8 @@ fn captureAppearancePath(environ: *const std.process.Environ.Map, arena: std.mem
 /// the answer the first-run wizard records when the owner chooses no dock,
 /// keeps the window unmapped.
 fn readEdge() Edge {
-    if (appearance_path.len == 0) return default_edge;
-    const text = std.Io.Dir.cwd().readFileAlloc(session_io, appearance_path, allocator, .limited(config_limit)) catch return default_edge;
-    defer allocator.free(text);
-    const parsed = std.json.parseFromSliceLeaky(
-        Config,
-        allocator,
-        text,
-        .{ .ignore_unknown_fields = true, .duplicate_field_behavior = .use_last },
-    ) catch return default_edge;
-    return Edge.parse(parsed.dock);
+    const config = readConfig() orelse return default_edge;
+    return Edge.parse(config.dock);
 }
 
 /// Advisory `flock` on `$XDG_RUNTIME_DIR/dinx-dock.lock`. A lock file the dock
@@ -174,8 +223,8 @@ fn otherInstanceHoldsLock(environ: *const std.process.Environ.Map, arena: std.me
 /// button is simply left out: the dock never fails because an app is absent.
 fn resolveFavorites() void {
     slot_count = 0;
-    for (favorites, 0..) |favorite, index| {
-        const app_info = c.g_desktop_app_info_new(favorite.desktop_id) orelse continue;
+    for (active_favorites[0..active_favorite_count], 0..) |favorite, index| {
+        const app_info = c.g_desktop_app_info_new(favorite.desktop_id.ptr) orelse continue;
         slots[slot_count] = .{ .favorite = index, .info = @ptrCast(app_info) };
         slot_count += 1;
     }
@@ -187,13 +236,15 @@ fn releaseFavorites() void {
         slot.* = .{ .favorite = 0 };
     }
     slot_count = 0;
+    clearLoadedFavorites();
 }
 
 fn makeButton(slot: *Slot) ?*c.GtkWidget {
-    const favorite = favorites[slot.favorite];
+    const favorite = active_favorites[slot.favorite];
     const info = slot.info orelse return null;
     const button = c.gtk_button_new() orelse return null;
     c.gtk_widget_add_css_class(button, css_class);
+    if (slot.running) c.gtk_widget_add_css_class(button, "running");
 
     const image = if (c.g_app_info_get_icon(info)) |icon|
         c.gtk_image_new_from_gicon(icon) orelse c.gtk_image_new_from_icon_name(favorite.fallback_icon)
@@ -203,8 +254,17 @@ fn makeButton(slot: *Slot) ?*c.GtkWidget {
 
     // The tooltip is the entry Name resolved by GIO in the current locale,
     // exactly as a desktop menu would show it.
-    const tooltip = c.g_app_info_get_display_name(info) orelse favorite.desktop_id;
+    const tooltip = c.g_app_info_get_display_name(info) orelse favorite.desktop_id.ptr;
     c.gtk_widget_set_tooltip_text(button, tooltip);
+    if (slot.running) {
+        const running_tooltip = std.fmt.allocPrintSentinel(
+            allocator,
+            "Running: {s}",
+            .{std.mem.span(tooltip)},
+            0,
+        ) catch null;
+        if (running_tooltip) |text| c.gtk_widget_set_tooltip_text(button, text.ptr);
+    }
 
     connect(button, "clicked", &onFavoriteClicked, slot);
     return button;
@@ -218,6 +278,52 @@ fn applyStyle() void {
     c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
     const display = c.gdk_display_get_default() orelse return;
     c.gtk_style_context_add_provider_for_display(display, @ptrCast(provider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+}
+
+/// Desktop entries do not expose a portable running-state API. Check the
+/// resolved executable name without a shell and refresh only when a state
+/// changes, so the dock remains stable while an app is open.
+fn checkRunningApps() void {
+    var changed = false;
+    for (slots[0..slot_count]) |*slot| {
+        const info = slot.info orelse continue;
+        const executable = c.g_app_info_get_executable(info) orelse continue;
+        const executable_path = std.mem.span(@as([*:0]const u8, @ptrCast(executable)));
+        const executable_name = std.fs.path.basename(executable_path);
+        var child = std.process.spawn(session_io, .{
+            .argv = &.{ "pgrep", "-x", executable_name },
+            .stdin = .ignore,
+            .stdout = .ignore,
+            .stderr = .ignore,
+        }) catch {
+            if (slot.running) {
+                slot.running = false;
+                changed = true;
+            }
+            continue;
+        };
+        const status = child.wait(session_io) catch {
+            if (slot.running) {
+                slot.running = false;
+                changed = true;
+            }
+            continue;
+        };
+        const running = status.success();
+        if (running != slot.running) {
+            slot.running = running;
+            changed = true;
+        }
+    }
+    if (changed and dock_window != null) {
+        destroyDock();
+        buildDock();
+    }
+}
+
+fn onTimeout(_: ?*anyopaque) callconv(.c) c.gboolean {
+    checkRunningApps();
+    return 1;
 }
 
 fn buildDock() void {
@@ -283,26 +389,28 @@ fn onFavoriteClicked(_: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     const slot: *Slot = @ptrCast(@alignCast(data orelse return));
     const info = slot.info orelse return;
     var error_: ?*c.GError = null;
-    if (c.g_app_info_launch(info, null, null, &error_) != 0) return;
-    const detail = if (error_) |e| std.mem.span(@as([*:0]const u8, @ptrCast(e.message))) else "launch failed";
-    log.warn("cannot launch {s}: {s}", .{ std.mem.span(favorites[slot.favorite].desktop_id), detail });
+    if (c.g_app_info_launch(info, null, null, &error_) == 0) {
+        const detail = if (error_) |e| std.mem.span(@as([*:0]const u8, @ptrCast(e.message))) else "launch failed";
+        log.warn("cannot launch {s}: {s}", .{ active_favorites[slot.favorite].desktop_id, detail });
+    }
     if (error_) |e| c.g_error_free(e);
 }
 
-/// The first-run wizard and the theme synchronizer signal the dock instead of
-/// restarting the session, so placement changes apply on the fly.
+/// The first-run wizard and the dock-control helper signal the dock instead of
+/// restarting the session, so placement and favorite changes apply on the fly.
 fn onHangup(_: ?*anyopaque) callconv(.c) c.gboolean {
     const next = readEdge();
-    if (next == current_edge and dock_window != null) return 1;
-    current_edge = next;
     destroyDock();
+    releaseFavorites();
+    current_edge = next;
     if (next == .none) {
         log.info("dock disabled; exiting", .{});
         quitLoop();
         return 0;
     }
-    releaseFavorites();
+    loadFavorites();
     resolveFavorites();
+    checkRunningApps();
     buildDock();
     if (dock_window == null) quitLoop();
     return 1;
@@ -334,7 +442,9 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
 
+    loadFavorites();
     resolveFavorites();
+    checkRunningApps();
     applyStyle();
     buildDock();
     if (dock_window == null) {
@@ -343,6 +453,7 @@ pub fn main(init: std.process.Init) !void {
     }
 
     _ = c.g_unix_signal_add(sighup, &onHangup, null);
+    _ = c.g_timeout_add_seconds(5, &onTimeout, null);
 
     const loop = c.g_main_loop_new(null, 0) orelse return error.MainLoopUnavailable;
     main_loop = loop;

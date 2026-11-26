@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 DINX Contributors
 # SPDX-License-Identifier: Apache-2.0
 pkgname=dinx-dock
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc='DINX layer-shell dock for the River desktop'
 arch=(x86_64)
@@ -12,7 +12,7 @@ license=(Apache-2.0)
 # what makes the favorite buttons more than letters. Consumers: the session
 # supervisor starts dinx-dock after Morghulis, dinx-first-run writes the
 # placement it reads and signals it with SIGHUP.
-depends=(gtk4 gtk4-layer-shell hicolor-icon-theme)
+depends=(gtk4 gtk4-layer-shell hicolor-icon-theme jq)
 makedepends=('zig>=0.17')
 source=()
 sha256sums=()
@@ -27,6 +27,7 @@ build() {
 package() {
   cd "$startdir"
   install -Dm755 "$srcdir/stage/bin/dinx-dock" "$pkgdir/usr/bin/dinx-dock"
+  install -Dm755 dinx-dockctl "$pkgdir/usr/bin/dinx-dockctl"
   install -Dm644 resources/dinx-dock.desktop "$pkgdir/usr/share/applications/dinx-dock.desktop"
   install -Dm644 README.md "$pkgdir/usr/share/doc/dinx-dock/README.md"
   install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/dinx-dock/LICENSE"

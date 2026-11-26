@@ -31,6 +31,9 @@ export MOZ_GTK_TITLEBAR_DECORATION=system
 # Note: some apps (Nautilus, GNOME apps) override this deliberately; they will
 # still use CSD.  Most apps (terminals, editors, browsers) will use SSD.
 export GTK_CSD=0
+# Keep a consistent fallback layout for clients that deliberately draw their own
+# titlebar instead of accepting the compositor's SSD decoration.
+export GTK_DECORATION_LAYOUT=close,minimize,maximize:
 
 # DINX theme defaults are intentionally dark; they may still be overridden by
 # the per-user appearance selection applied via dinx-sync-session-theme.

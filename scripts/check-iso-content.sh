@@ -450,7 +450,6 @@ required_paths=(
   usr/share/applications/org.gnome.FileRoller.desktop
   usr/local/share/applications/org.gnome.FileRoller.desktop
   usr/local/share/applications/pcmanfm.desktop
-  usr/local/share/applications/com.shellyorg.shelly.desktop
   usr/local/share/applications/galculator.desktop
   usr/local/share/applications/gparted.desktop
   usr/local/share/applications/swayimg.desktop
@@ -1466,7 +1465,6 @@ while IFS='|' read -r path english portuguese command; do
   launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"
 done <<'EOF'
-usr/local/share/applications/com.shellyorg.shelly.desktop|Software & Updates|Aplicações e Updates|/usr/bin/shelly-ui %u
 usr/share/applications/firefox.desktop|Firefox|Firefox|firefox %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f

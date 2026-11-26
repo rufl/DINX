@@ -181,8 +181,8 @@ grep -Fqx 'type = scripted' <<<"$live_plymouth_quit_service" \
   || fail 'live Plymouth handoff is not scripted'
 grep -Fqx 'command = /usr/local/libexec/dinx-plymouth-quit' <<<"$live_plymouth_quit_service" \
   || fail 'live Plymouth handoff command is incorrect'
-! grep -Fq 'depends-on = greetd' <<<"$live_plymouth_quit_service" \
-  || fail 'live Plymouth handoff must not wait for the exiting greetd shadow'
+grep -Fqx 'depends-ms = dinx-live-session' <<<"$live_plymouth_quit_service" \
+  || fail 'live Plymouth handoff does not wait for the River session milestone'
 live_session_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/dinx-live-session)
 grep -Fqx 'type = process' <<<"$live_session_service" \
   || fail 'live session service is not a process service'
@@ -190,8 +190,6 @@ grep -Fqx 'command = /usr/local/libexec/dinx-live-session' <<<"$live_session_ser
   || fail 'live session service command is incorrect'
 grep -Fqx 'depends-ms = dinx-live-autologin' <<<"$live_session_service" \
   || fail 'live session service does not use a milestone for live boot preparation'
-grep -Fqx 'depends-ms = dinx-plymouth-quit' <<<"$live_session_service" \
-  || fail 'live session service does not use a milestone for the Plymouth handoff'
 grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
   || fail 'live session service does not depend on seatd'
 ! grep -Fqx 'waits-for = firewalld' <<<"$live_session_service" \

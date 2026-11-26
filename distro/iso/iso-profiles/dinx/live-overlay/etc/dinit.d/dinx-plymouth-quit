@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
 type = scripted
 command = /usr/local/libexec/dinx-plymouth-quit
-restart = false
+depends-ms = dinx-live-session

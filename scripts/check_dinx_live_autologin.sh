@@ -131,8 +131,8 @@ grep -Fqx 'type = scripted' "$live_plymouth_quit" \
   || fail 'live Plymouth handoff is not a scripted service'
 grep -Fqx 'command = /usr/local/libexec/dinx-plymouth-quit' "$live_plymouth_quit" \
   || fail 'live Plymouth handoff command is incorrect'
-! grep -Fq 'depends-on = greetd' "$live_plymouth_quit" \
-  || fail 'live Plymouth handoff must not wait on the exiting greetd shadow'
+grep -Fqx 'depends-ms = dinx-live-session' "$live_plymouth_quit" \
+  || fail 'live Plymouth handoff does not wait for the River session milestone'
 session_service="$package_dir/dinx-live-session.service"
 session_launcher="$package_dir/dinx-live-session"
 [[ -r "$session_service" && -r "$session_launcher" ]] || fail 'live session service or launcher is missing'
@@ -146,8 +146,6 @@ grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
 grep -Fqx 'depends-ms = dinx-live-autologin' "$session_service" \
   || fail 'live session does not use a milestone for live boot preparation'
-grep -Fqx 'depends-ms = dinx-plymouth-quit' "$session_service" \
-  || fail 'live session does not use a milestone for the Plymouth handoff'
 ! grep -Fq '/usr/local/libexec/dinx-live-autologin' "$session_launcher" \
   || fail 'live preparation must not be called from the River launcher'
 ! grep -Fq '/usr/local/libexec/dinx-plymouth-quit' "$session_launcher" \

@@ -6,4 +6,3 @@ restart-delay = 5
 depends-on = local.target
 depends-on = seatd
 depends-ms = dinx-live-autologin
-depends-ms = dinx-plymouth-quit

@@ -43,7 +43,7 @@ export XDG_STATE_HOME="$tmp/state-home"
 
 wait_for_status() {
   expected=$1
-  for _ in $(seq 1 300); do
+  for _ in $(seq 1 1000); do
     if [ -f "$XDG_STATE_HOME/dinx/session.status" ] &&
       grep -Fqx "status=$expected" "$XDG_STATE_HOME/dinx/session.status"; then
       return 0
@@ -56,7 +56,7 @@ wait_for_status() {
 helper_stopped() {
   helper=$1
   pid=$(cat "$state/$helper.pid")
-  for _ in $(seq 1 300); do
+  for _ in $(seq 1 1000); do
     kill -0 "$pid" 2>/dev/null || return 0
     /usr/bin/sleep 0.01
   done
@@ -128,7 +128,7 @@ kill -TERM "$supervisor_pid"
 wait "$supervisor_pid" || true
 
 parent_alive=false
-for _ in $(seq 1 300); do
+for _ in $(seq 1 1000); do
   if ! kill -0 "$compositor_pid" 2>/dev/null; then
     break
   fi

@@ -16,7 +16,7 @@ source_env="$startdir/source.env"
 : "${APP_DETECTION_SOURCE_SHA256:?missing APP_DETECTION_SOURCE_SHA256}"
 : "${MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256:?missing MISSION_CENTER_GRAPH_WIDGET_SOURCE_SHA256}"
 pkgver="$MISSION_CENTER_VERSION"
-pkgrel=2
+pkgrel=3
 pkgdesc='System monitor for CPU, memory, disk, network and GPU usage'
 arch=('x86_64')
 url="$MISSION_CENTER_REPOSITORY"
@@ -43,12 +43,16 @@ prepare() {
   mv "$srcdir/graph-widget-$MISSION_CENTER_GRAPH_WIDGET_COMMIT" "$root/subprojects/graph-widget"
   mkdir -p "$root/subprojects/magpie/platform-linux/crates/app-rummage"
   mv "$srcdir/app-detection-$APP_DETECTION_COMMIT"/* "$root/subprojects/magpie/platform-linux/crates/app-rummage"/
-  cargo update --manifest-path "$root/subprojects/magpie/Cargo.toml" -p ring --precise 0.17.15
 }
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"
   export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
+  CFLAGS="${CFLAGS//-flto=auto/}"
+  CFLAGS="${CFLAGS//-flto/}"
+  CXXFLAGS="${CXXFLAGS//-flto=auto/}"
+  CXXFLAGS="${CXXFLAGS//-flto/}"
+  export CFLAGS CXXFLAGS
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false
   meson compile -C build
 }

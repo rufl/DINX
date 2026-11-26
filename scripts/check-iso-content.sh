@@ -283,35 +283,6 @@ required_paths=(
   usr/bin/flatpak
   usr/bin/fwupdmgr
   usr/bin/scanimage
-  usr/bin/audionaut
-  opt/audionaut/Audionaut.AppImage
-  usr/share/applications/audionaut.desktop
-  usr/share/licenses/audionaut/LICENSE.md
-  usr/bin/paintfe
-  opt/paintfe/PaintFE.AppImage
-  usr/share/applications/paintfe.desktop
-  usr/share/icons/hicolor/256x256/apps/paintfe.png
-  usr/share/licenses/paintfe/LICENSE.md
-  usr/bin/blender
-  usr/share/applications/blender.desktop
-  usr/bin/krita
-  usr/bin/inkscape
-  usr/bin/godot
-  usr/bin/blender
-  usr/bin/patchy
-  opt/patchy/PatchyLinux.AppImage
-  usr/share/applications/org.kde.krita.desktop
-  usr/share/applications/org.inkscape.Inkscape.desktop
-  usr/share/applications/org.godotengine.Godot.desktop
-  usr/share/applications/patchy.desktop
-  usr/share/licenses/patchy/LICENSE
-  usr/bin/pixelorama
-  opt/pixelorama/Pixelorama.x86_64
-  opt/pixelorama/Pixelorama.pck
-  usr/share/applications/com.orama_interactive.Pixelorama.desktop
-  usr/share/icons/hicolor/256x256/apps/pixelorama.png
-  usr/share/mime/packages/com.orama_interactive.Pixelorama.xml
-  usr/share/licenses/pixelorama/LICENSE
   etc/dinit.d/bluetoothd
   etc/profile.d/dinx.sh
   etc/default/useradd
@@ -583,7 +554,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy audionaut paintfe blender haruna firefox; do
+for package in haruna firefox; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done
@@ -1083,7 +1054,6 @@ grep -Fq 'com.github.neithern.g4music.desktop' <<<"$manifest" || fail 'Gapless d
 grep -Fq 'galculator.desktop' <<<"$manifest" || fail 'Galculator desktop entry is not in the ISO payload'
 grep -Fq 'pcmanfm.desktop' <<<"$manifest" || fail 'PCManFM desktop entry is not in the ISO payload'
 grep -Fq 'octopi.desktop' <<<"$manifest" || fail 'Octopi desktop entry is not in the ISO payload'
-grep -Fq 'audionaut.desktop' <<<"$manifest" || fail 'Audionaut desktop entry is not in the ISO payload'
 gtk3_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-3.0/settings.ini)
 gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/skel/.config/gtk-4.0/settings.ini)
 

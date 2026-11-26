@@ -456,6 +456,8 @@ trap finish EXIT
               pacman_install_local "$package_repo"/appmenu-glib-translator-*.pkg.tar.zst
               build_package astal
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
+              build_package redbean
+              pacman_install_local "$package_repo"/redbean-*.pkg.tar.zst
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
               build_package mission-center

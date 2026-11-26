@@ -36,6 +36,7 @@ rootfs:
     - kwm
     - kwim
     - morghulis
+    - redbean
     - dinx-dock
     - dinx-first-run
     - greetd-agreety

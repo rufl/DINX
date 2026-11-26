@@ -78,6 +78,7 @@ for live_path in \
   etc/dinit.d/dinx-live-autologin \
   etc/dinit.d/dinx-keyring-populate \
   etc/dinit.d/boot.d/greetd \
+  etc/dinit.d/boot.d/dinx-live-autologin \
   etc/dinit.d/boot.d/dinx-live-session \
   etc/dinit.d/root-ro \
   etc/dinit.d/early-root-rw.target \
@@ -187,15 +188,19 @@ grep -Fqx 'type = process' <<<"$live_session_service" \
   || fail 'live session service is not a process service'
 grep -Fqx 'command = /usr/local/libexec/dinx-live-session' <<<"$live_session_service" \
   || fail 'live session service command is incorrect'
+grep -Fqx 'depends-ms = dinx-live-autologin' <<<"$live_session_service" \
+  || fail 'live session service does not use a milestone for live boot preparation'
+grep -Fqx 'depends-ms = dinx-plymouth-quit' <<<"$live_session_service" \
+  || fail 'live session service does not use a milestone for the Plymouth handoff'
 grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
   || fail 'live session service does not depend on seatd'
 ! grep -Fqx 'waits-for = firewalld' <<<"$live_session_service" \
   || fail 'live session service must not block the desktop on Firewalld startup'
 live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" usr/local/libexec/dinx-live-session)
-grep -Fq '/usr/local/libexec/dinx-live-autologin' <<<"$live_session_launcher" \
-  || fail 'live session launcher does not run live boot preparation'
-grep -Fq '/usr/local/libexec/dinx-plymouth-quit || true' <<<"$live_session_launcher" \
-  || fail 'live session launcher does not hand off from Plymouth'
+! grep -Fq '/usr/local/libexec/dinx-live-autologin' <<<"$live_session_launcher" \
+  || fail 'live preparation must not be called from the River launcher'
+! grep -Fq '/usr/local/libexec/dinx-plymouth-quit' <<<"$live_session_launcher" \
+  || fail 'Plymouth handoff must not be called from the River launcher'
 grep -Fq '/usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' <<<"$live_session_launcher" \
   || fail 'live session launcher does not acquire dedicated VT 7'
 grep -Fqx 'restart = true' <<<"$live_session_service" \
@@ -1719,6 +1724,7 @@ livefs_required_paths=(
   etc/hostname
   etc/dinit.d/boot.d/NetworkManager
   etc/dinit.d/boot.d/artix-live
+  etc/dinit.d/boot.d/dinx-live-autologin
   etc/dinit.d/boot.d/dinx-live-session
   etc/dinit.d/dinx-live-session
   etc/dinit.d/boot.d/greetd

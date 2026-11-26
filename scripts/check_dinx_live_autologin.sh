@@ -48,8 +48,10 @@ grep -Fq '  autologin: true' "$profile" || fail 'live-session autologin is not e
 grep -Fq '  hostname: dinxlive' "$profile" || fail 'live-session profile hostname is not dinxlive'
 grep -Fqx 'dinxlive' "$live_overlay/etc/hostname" \
   || fail 'live overlay hostname file is not dinxlive'
-grep -Fq '    - dinx-live-session' "$profile" \
-  || fail 'live session profile does not enable dinx-live-session'
+for live_service in dinx-live-autologin dinx-live-session; do
+  grep -Fq "    - $live_service" "$profile" \
+    || fail "live session profile does not enable $live_service"
+done
 livefs_packages=$(awk '
   /^livefs:/{in_live=1; next}
   in_live && /^  packages:/{in_packages=1; next}
@@ -58,6 +60,16 @@ livefs_packages=$(awk '
 ' "$profile")
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
+rootfs_packages=$(awk '
+  /^rootfs:/{in_root=1; next}
+  in_root && /^  packages:/{in_packages=1; next}
+  in_packages && /^  packages-init:/{exit}
+  in_packages{print}
+' "$profile")
+! grep -Fqx '    - dinx-live-autologin' <<<"$rootfs_packages" \
+  || fail 'live autologin package leaked into installed rootfs packages'
+! grep -Fqx '    - dinx-live-session' <<<"$rootfs_packages" \
+  || fail 'live session package leaked into installed rootfs packages'
 
 grep -Fq 'agreety --cmd /usr/local/libexec/dinx-river-session' "$root_greetd" \
   || fail 'installed greetd fallback does not launch the river session through agreety'
@@ -132,10 +144,14 @@ grep -Fqx 'command = /usr/local/libexec/dinx-live-session' "$session_service" \
   || fail 'live session service command is incorrect'
 grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
-grep -Fq '/usr/local/libexec/dinx-live-autologin' "$session_launcher" \
-  || fail 'live session launcher does not run live boot preparation'
-grep -Fq '/usr/local/libexec/dinx-plymouth-quit || true' "$session_launcher" \
-  || fail 'live session launcher does not hand off from Plymouth'
+grep -Fqx 'depends-ms = dinx-live-autologin' "$session_service" \
+  || fail 'live session does not use a milestone for live boot preparation'
+grep -Fqx 'depends-ms = dinx-plymouth-quit' "$session_service" \
+  || fail 'live session does not use a milestone for the Plymouth handoff'
+! grep -Fq '/usr/local/libexec/dinx-live-autologin' "$session_launcher" \
+  || fail 'live preparation must not be called from the River launcher'
+! grep -Fq '/usr/local/libexec/dinx-plymouth-quit' "$session_launcher" \
+  || fail 'Plymouth handoff must not be called from the River launcher'
 grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' "$session_launcher" \
   || fail 'live session does not acquire and activate dedicated VT 7'
 grep -Fq 'runuser -u dinx' "$session_launcher" \

@@ -753,6 +753,7 @@ fn appendNavigationRow(parent: *c.GtkWidget, name: [*:0]const u8, label: [*:0]co
     c.gtk_widget_set_margin_top(text, 8);
     c.gtk_widget_set_margin_bottom(text, 8);
     c.gtk_list_box_row_set_child(@ptrCast(row), text);
+    c.gtk_list_box_append(@ptrCast(parent), row);
 }
 
 fn makeButton(label: [*:0]const u8, tooltip: [*:0]const u8, callback: anytype, app: *App) *c.GtkWidget {

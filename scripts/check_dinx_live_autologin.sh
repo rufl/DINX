@@ -134,7 +134,7 @@ grep -Fqx 'command = /usr/local/libexec/dinx-live-session' "$session_service" \
   || fail 'live session service command is incorrect'
 grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
-grep -Fqx 'depends-on = dinx-plymouth-quit' "$session_service" \
+grep -Fqx 'waits-for = dinx-plymouth-quit' "$session_service" \
   || fail 'live session does not wait for the Plymouth handoff'
 grep -Fqx 'depends-on = dinx-live-autologin' "$session_service" \
   || fail 'live session does not wait for live boot preparation'

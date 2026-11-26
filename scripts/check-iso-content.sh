@@ -192,7 +192,7 @@ grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_session_service" \
   || fail 'live session service does not wait for live boot preparation'
 grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
   || fail 'live session service does not depend on seatd'
-grep -Fqx 'depends-on = dinx-plymouth-quit' <<<"$live_session_service" \
+grep -Fqx 'waits-for = dinx-plymouth-quit' <<<"$live_session_service" \
   || fail 'live session service does not wait for the Plymouth handoff'
 ! grep -Fqx 'waits-for = firewalld' <<<"$live_session_service" \
   || fail 'live session service must not block the desktop on Firewalld startup'

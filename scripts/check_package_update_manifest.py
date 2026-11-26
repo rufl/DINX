@@ -14,24 +14,8 @@ MANIFEST = ROOT / ".github/package-updates.json"
 # or to an upstream that publishes no release tags / sits outside the polled hosts:
 # astal (Aylur/astal has zero git tags; frozen to the revision Morghulis pins in its
 # flake.lock) and appmenu-glib-translator (gitlab.com; the refresher's gitlab provider
-<<<<<<< HEAD
 # targets gitlab.gnome.org only).
-MANUAL_SOURCE_PINS = {"appmenu-glib-translator", "astal", "deetty", "zls"}
-=======
-# targets gitlab.gnome.org only). octopi carries a 117-hunk DINX patch that rewrites its
-# qt-sudo elevation to pkexec/polkit (DINX ships no sudo) and a second source pinned to a
-# tagless alpm_octopi_utils commit; an automated version bump would orphan both, so it is
-# bumped deliberately like deetty, regenerating the patch in the same change.
-MANUAL_SOURCE_PINS = {
-    "appmenu-glib-translator",
-    "astal",
-    "blender",
-    "deetty",
-    "dinx-gtk-themes",
-    "octopi",
-    "mission-center",
-}
->>>>>>> main
+MANUAL_SOURCE_PINS = {"appmenu-glib-translator", "astal", "blender", "deetty", "dinx-gtk-themes", "octopi", "zls"}
 
 
 def fail(message: str) -> None:

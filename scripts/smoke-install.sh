@@ -241,17 +241,10 @@ printf 'smoke-install: root UUID=%s\n' "$root_uuid"
 printf 'smoke-install: checking installed runtime payload before boot\n'
 mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
-<<<<<<< HEAD
 chroot "$target_dir" /usr/bin/pacman -Q dinit turnstile dinitui dinxpanel mission-center \
   >/dev/null 2>&1 || fail 'installed core packages are missing'
 printf 'smoke-install: checking installed runtime libraries\n'
 for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/missioncenter; do
-=======
-chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel morghulis dinx-dock dinx-first-run octopi pcmanfm \
-  >/dev/null 2>&1 || fail 'installed core packages are missing'
-printf 'smoke-install: checking installed runtime libraries\n'
-for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/morghulis /usr/bin/dinx-dock /usr/bin/dinx-first-run /usr/bin/octopi; do
->>>>>>> main
   [[ -x "$target_dir$binary" ]] || fail "installed binary is missing: ${binary##*/}"
   ldd_output=$(chroot "$target_dir" /usr/bin/ldd "$binary" 2>&1) \
     || fail "installed library check failed: ${binary##*/}"
@@ -463,11 +456,7 @@ if [[ "$monitor_ready" == true ]]; then
   done
   if [[ "$greeter_ready" != true ]]; then
     [[ -s "$serial_log" ]] && cat "$serial_log" >&2 || true
-<<<<<<< HEAD
     fail "installed tuigreet did not start before the QEMU timeout: ${greeter_output}"
-=======
-    fail "installed greeter did not start before the QEMU timeout: ${greeter_output}"
->>>>>>> main
   fi
   [[ -s "$screen_path" ]] || fail "installed greeter screenshot was not created: $screen_path"
   printf 'sendkey ctrl-alt-f2\n' \

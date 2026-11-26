@@ -14,11 +14,7 @@ depends=('bubblewrap' 'ghostty-vt-runtime' 'gtk3' 'libepoxy' 'gtk-layer-shell' '
 makedepends=('ghostty-vt-runtime' 'vte3' 'zig>=0.17' 'btop' 'clang' 'dialog' 'fzf' 'git' 'glances' 'less' 'libnewt' 'librsvg' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim' 'xorg-server-xvfb')
 provides=('dintor' 'terminal-emulator')
 source=("deetty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
-<<<<<<< HEAD
-sha256sums=("$DEETTY_SOURCE_SHA256" 'b051a7b9956d05935d089592b89bddb94b77c20c75e4f346f027ed4189fbd8f6' '4550fd87e57f8b2f754e481be0b7de04bd1aefbde4676ea519e299ab58011100' 'eb9ee8d9227d2857d25d59602b86abf54adb150cdeca2ddb8a64cfaea81ef233')
-=======
-sha256sums=("$DEETTY_SOURCE_SHA256" '1bad5c8965181ed66a09c0739ef52777d0f1f51b8d79b2bfe8da672111e6775a' '69da6befb0e4f1e36f1a015318a27581c8c1f9d33fe6949f72f06ce6242ee2ab' '902add70714cf40f580be12b6ad61d1f4871ec26a3228a480524b16f26de2430')
->>>>>>> main
+sha256sums=("$DEETTY_SOURCE_SHA256" '1bad5c8965181ed66a09c0739ef52777d0f1f51b8d79b2bfe8da672111e6775a' '23d78e0b88684c36ae748a4e19ec8db002cb1a109f7f36f0131b3461937ab593' '902add70714cf40f580be12b6ad61d1f4871ec26a3228a480524b16f26de2430')
 
 prepare() {
   cd "$srcdir/deetty-$pkgver"

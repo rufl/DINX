@@ -4,11 +4,7 @@
 
 DINX is a public alpha. The security model prioritizes safe installation, explicit trust boundaries and recoverability over convenience.
 
-<<<<<<< HEAD
 The live image automatically opens the disposable `dinx` account in the River/KWM/Morghulis session. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. Installed/manual login uses `agreety` through greetd and the dedicated `greeter` account; the configured session uses River/KWM/Morghulis without X11, UWSM or systemd. The public `dinx` password remains only as a diagnostic fallback if a manual live start needs it; the installed system keeps its separate Calamares-created login policy.
-=======
-The live image automatically opens the disposable `dinx` account in `River + KWM (DINX)`. Because anyone who can boot the ISO already controls the live machine, a login prompt adds friction but no meaningful security boundary. Installed/manual login uses agreety through greetd and the dedicated `greeter` account; the configured session starts River/KWM under dinit without X11, UWSM or systemd. The public `dinx` password remains only as a diagnostic fallback if the agreety login screen appears after a manual live start; the installed system keeps its separate Calamares-created login policy. Live startup preapproves one desktop launcher: the regular, package-owned `Install DINX.desktop` file at its exact URI and SHA-256 digest. This does not apply to installed sessions; modified launchers, symlinks and corrupt approval state fail closed.
->>>>>>> main
 
 ## Threat assumptions
 

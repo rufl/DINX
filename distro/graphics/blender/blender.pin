@@ -1,10 +1,6 @@
 tag=blender/v5.2.3-dinx1
 version=5.2.3
 pkgrel=1
-<<<<<<< HEAD
-package=blender-17.5.2.3-3-x86_64.pkg.tar.zst
-=======
 package=blender-5.2.3-3-x86_64.pkg.tar.zst
->>>>>>> main
 full_package=blender-full-5.2.3-1-x86_64.pkg.tar.zst
 sha256sums=SHA256SUMS

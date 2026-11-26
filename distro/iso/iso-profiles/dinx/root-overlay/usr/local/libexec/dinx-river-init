@@ -1,7 +1,6 @@
 #!/bin/sh
 set -eu
 
-<<<<<<< HEAD
 state_home=${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}
 mkdir -p "$state_home/dinx"
 log_path="$state_home/dinx/river-session.log"
@@ -62,13 +61,3 @@ while :; do
   done
   sleep 1
 done
-=======
-# Desktop identity belongs to dinx-river-session: Morghulis enables its river
-# modules only when XDG_CURRENT_DESKTOP is exactly `river`, so re-exporting a
-# composite value here would blank the shell's bar.
-
-# River 0.5 is non-monolithic. The supervisor starts KWM as the required
-# river-window-management-v1 implementation; KWM then starts KWIM for
-# river-input-management-v1.
-exec /usr/local/libexec/dinx-session-supervisor river
->>>>>>> main

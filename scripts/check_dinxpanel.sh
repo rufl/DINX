@@ -47,7 +47,7 @@ mission_center_build_line=$(grep -nF 'build_package mission-center' "$builder" |
 panel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | head -n1 | cut -d: -f1) || fail 'ISO builder does not build dinxpanel'
 (( pori_build_line < panel_build_line && mission_center_build_line < panel_build_line )) \
   || fail 'ISO builder installs DINXPanel before its system-tool runtime dependencies'
-for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Shelly upgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'PCManFM desktop preferences' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'Hardware qualification report' 'USB devices' 'Network diagnostics' 'Audio diagnostics' 'Power & battery status' 'Suspend' 'Restart' 'Power off' 'DINX tools' 'Open Deetty' 'Open Dintor' 'Refresh DINX Dock' 'Apply dark session theme' 'Apply light session theme' 'Choose wallpaper' 'Show desktop icons' 'Hide desktop icons'; do
+for button in 'GPU drivers' 'Install GPU plan' 'Network' 'Bluetooth' 'Dinit services' 'Firewall' 'Display' 'Check upgrades' 'Topgrade preview' 'Topgrade' 'Install CUPS' 'Install kernel' 'Brightness down' 'Brightness up' 'Lock screen' 'System monitor' 'File manager' 'PCManFM desktop preferences' 'Disks & mounts' 'Partition editor' 'Archive manager' 'Session diagnostics' 'Hardware qualification report' 'USB devices' 'Network diagnostics' 'Audio diagnostics' 'Power & battery status' 'Suspend' 'Restart' 'Power off' 'DINX tools' 'Open Deetty' 'Open Dintor' 'Refresh DINX Dock' 'Apply dark session theme' 'Apply light session theme' 'Choose wallpaper' 'Show desktop icons' 'Hide desktop icons'; do
   grep -Fq "$button" "$frontend" || fail "DINXPanel button is missing: $button"
 done
 grep -Fq 'gtk_label_new("Control Panel")' "$frontend" || fail 'DINXPanel cleaned heading is missing'
@@ -119,7 +119,6 @@ grep -Fq '"fwupdmgr", "get-updates"' "$frontend" || fail 'firmware update discov
 for terminal_call in \
   '"deetty", "-e", "topgrade", "--dry-run"' \
   '"deetty", "-e", "topgrade"' \
-  '"deetty", "-e", "shelly", "upgrade", "all"' \
   '"deetty", "-e", "inxi", "-GSC"' \
   '"deetty", "-e", "dinx-doctor"' \
   '"deetty", "-e", "lsusb"' \

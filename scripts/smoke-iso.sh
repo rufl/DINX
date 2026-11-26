@@ -127,11 +127,7 @@ wait_for_session_client() {
     fi
     sleep 2
   done
-<<<<<<< HEAD
   fail "Morghulis first-run screen did not appear before the QEMU timeout: ${checker_output}"
-=======
-  fail "River session did not reach a graphical-ready screen before the QEMU timeout: ${checker_output}"
->>>>>>> main
 }
 
 
@@ -333,9 +329,5 @@ fi
 "$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot"
 
 
-<<<<<<< HEAD
 printf 'smoke-iso: River/KWM/Morghulis session reached a graphical-ready screen within %ss\n' "$timeout_seconds"
-=======
-printf 'smoke-iso: River/KWM session reached a graphical-ready screen within %ss\n' "$timeout_seconds"
->>>>>>> main
 printf 'smoke-iso: serial log: %s\n' "$log_path"

@@ -46,15 +46,10 @@ grep -Fqx 'exec /usr/local/bin/deetty -e btop "$@"' "$btop_launcher" \
   || fail 'btop does not launch through the Deetty command wrapper'
 grep -Fqx 'exec /usr/local/bin/deetty -e nvtop "$@"' "$nvtop_launcher" \
   || fail 'nvtop does not launch through the Deetty command wrapper'
-<<<<<<< HEAD
 grep -Fqx '    - deetty' "$profile" || fail 'profile does not install Deetty'
 grep -Fqx '    - ghostty-vt-runtime' "$profile" || fail 'profile does not install the VT-only runtime'
 jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null and index("zls") == null' "$groups" >/dev/null \
   || fail 'desktop feature group must exclude optional ZLS'
-=======
-jq -e '.groups.desktop.packages | index("deetty") != null and index("ghostty-vt-runtime") != null' "$groups" >/dev/null \
-  || fail 'desktop feature group does not include Deetty or its VT runtime'
->>>>>>> main
 if jq -e 'any(.groups[].packages[]; . == "foot" or . == "ghostty")' "$groups" >/dev/null; then
   fail 'feature groups include an alternative terminal application'
 fi
@@ -83,7 +78,6 @@ fi
 if jq -e 'any(.groups[].packages[]; . == "man-db" or . == "man-pages" or . == "texinfo")' "$groups" >/dev/null; then
   fail 'feature groups include removed documentation packages'
 fi
-<<<<<<< HEAD
 if grep -Fqx '    - zls' "$profile"; then
   fail 'profile installs optional ZLS'
 fi
@@ -92,9 +86,7 @@ jq -e '.groups.optional.packages | index("zls") != null' "$groups" >/dev/null \
 if grep -Eq '^[[:space:]]+- (clang|vim)([[:space:]]|$)' "$profile"; then
   fail 'profile installs build-only clang or Vim'
 fi
-=======
 grep -Fq 'set -gx TERMINAL deetty' "$fish_profile" || fail 'Fish TERMINAL default is missing'
->>>>>>> main
 if jq -e 'any(.groups[].packages[]; . == "clang" or . == "vim")' "$groups" >/dev/null; then
   fail 'feature groups install build-only clang or Vim'
 fi

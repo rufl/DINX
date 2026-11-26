@@ -1,12 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-<<<<<<< HEAD
 # The live boot starts the River/KWM/Morghulis session through the dedicated
 # autologin service. This unit shadows the inherited greetd service in the
 # livefs overlay so the display manager stays installed-only in the live path.
-=======
-# Live boot starts the River/KWM session directly under dinit; greetd
-# stays installed-only. This unit shadows the real greetd service in the
-# livefs overlay so nothing pulls the display manager into the live boot.
->>>>>>> main
 type = scripted
 command = /bin/true

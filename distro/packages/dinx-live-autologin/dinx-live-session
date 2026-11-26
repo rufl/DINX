@@ -2,16 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 set -eu
 
-<<<<<<< HEAD
 # Launch the live River/KWM/Morghulis session as the live user. runuser
 # performs the session setup; River takes the seat from seatd and owns VT
 # handling. There is no display manager in the live path: the dedicated
 # autologin service starts the session directly.
-=======
-# Launch the live River/KWM session as the live user on dedicated VT 7.
-# openvt creates and activates the controlling terminal River needs; runuser
-# performs the PAM session setup. greetd stays installed-only.
->>>>>>> main
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 

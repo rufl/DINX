@@ -51,41 +51,24 @@ A `main` consome os releases lean do EuroOffice publicados pela branch `office` 
 DINX é uma distribuição Artix para uma sessão gráfica pequena, legível e controlável:
 
 - **Artix Linux + dinit** como base, sem trocar o init por systemd;
-<<<<<<< HEAD
 - **River + KWM + Morghulis** como sessão Wayland da base, iniciada diretamente sobre dinit; `greetd` usa `agreety` para login;
 - **DinitUI** e **DINXPanel** para perfis de serviços, hardware, drivers e kernels;
 - **Calamares** para a instalação experimental, **GParted** para particionamento separado e **Pori** para discos e montagens persistentes via dinit;
 - **PCManFM** como gerenciador de arquivos e desktop padrão, com **File Roller** para abrir, criar e extrair arquivos compactados;
-=======
-- **River + KWM** como a única sessão do usuário, iniciada diretamente sobre dinit; o **agreety** pelo greetd é a interface de login, e o kwim gerencia os dispositivos de entrada;
-- **DinitUI** e **DINXPanel** (Central de Controle) para perfis de serviços, hardware, drivers e kernels;
-- **PCManFM** (pacote Artix) como gerenciador de arquivos padrão e **File Roller** para arquivos compactados;
-- **Firefox** (pacote Artix) como navegador e handler padrão de HTML/HTTP/HTTPS;
-- **EuroOffice** como suíte de escritório e PDF (documentos, planilhas, apresentações; handler padrão de `application/pdf` e OOXML), consumido dos releases lean `eurooffice/v*` da branch `office`;
-- **PaintFE** (editor raster em Rust), **Krita**, **Inkscape**, **Godot**, **Pixelorama**, **Patchy** e **Blender** (suíte 3D) para criação; **Audionaut** (estúdio de áudio multitrack) para áudio avançado; **Haruna** (vídeo) e **Gapless** (música) com codecs GStreamer; **Swayimg** como visualizador de imagens;
->>>>>>> main
 - **wdisplays + Shikane** para configurar displays Wayland e reaplicar o layout entre sessões;
 - o módulo de kernel **ntfs3** para leitura e escrita NTFS na ISO live e no sistema instalado;
 - **Mesa/RADV e gráficos em VM:** qualificação em VGA padrão e Virtio-VGA do QEMU; boot direto no VirtualBox ainda precisa de qualificação. Veja o [guia de instalação](docs/pt-BR/install.md);
 - **DINX Gaming** mantém o launcher manual oculto; o conjunto gaming (Gamescope, Steam, GameMode, MangoHud, 32 bits) é opcional após a instalação.
 
-<<<<<<< HEAD
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Defina `DINX_DOCTOR_QUERY_DINIT=1` somente quando também quiser consultar o socket do dinit do usuário. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede. Os contratos `scripts/check_dinx_doctor.sh` e `scripts/smoke_dinx_doctor.sh` verificam esse limite.
-=======
-- Apps binários upstream (**PaintFE, Patchy**) são **reempacotados como árvores `/opt/<pacote>/` pré-extraídas** no build (`scripts/lib/repack-appimage.sh`): strip de ELF onde seguro, locales reduzidos a en/pt e launchers que executam `AppRun` diretamente — sem FUSE e sem extração em tmpfs a cada inicialização. O SquashFS final usa **xz + BCJ x86, blocos/dicionário de 1 MiB (máximo do squashfs-tools do builder) e 4 threads de compressão** para manter a ISO direta abaixo do limite de 2 GiB por asset do GitHub.
->>>>>>> main
 
 `dinx-doctor` produz um relatório somente leitura da sessão, do dinit, dos caminhos de armazenamento/display e dos pacotes DINX. Ele não inicia serviços, monta dispositivos, executa transações de pacotes nem acessa a rede.
 
-<<<<<<< HEAD
 ## Seafoam e a sessão única na ISO base
 
 **Mission Center 1.2.0**, **Seafoam Settings**, **Audionaut** e **ZLS 0.16.0** fazem parte da ISO base e do repositório DINX assinado. O Mission Center fornece monitoramento GTK4 de recursos/processos sem dependência de systemd; o Seafoam Settings agrupa pontos de entrada de display, sessão e Mission Center; Audionaut fornece áudio.
 
 **River**, **KWM**, **Morghulis** e **PCManFM** vêm na ISO base. `River + KWM + Morghulis (DINX)` é a sessão gráfica da live e do sistema; o primeiro uso do Morghulis salva a variante clara/escura em `~/.config/morghulis/preferences.json`, sincroniza GTK/Qt e inicia o desktop PCManFM. O login usa `agreety` via greetd, sem systemd, systemctl ou UWSM.
-=======
-O software BC-250 não é instalado na ISO genérica; os pacotes estão no repositório DINX assinado e só devem ser instalados após confirmar o PCI `1002:13fe`.
->>>>>>> main
 
 ## Estado atual
 
@@ -100,15 +83,9 @@ O software BC-250 não é instalado na ISO genérica; os pacotes estão no repos
 
 O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **2 GiB** (`2.147.483.648` bytes). ISOs acima dele usam a entrega dividida (`.iso.part-*` + `.iso.parts.json`); o alias rolante de ISO direta só avança quando uma release qualifica com imagem única abaixo do limite. [Critérios completos no roadmap](docs/pt-BR/roadmap.md).
 
-<<<<<<< HEAD
 A Beta 0.1 está planejada, ainda sem data de lançamento. O objetivo é qualificar a sessão River/KWM/Morghulis sobre dinit e os caminhos de instalação, atualização e recuperação em uma matriz declarada de hardware físico. A publicação dependerá de testes de rede, áudio, GPU/display e suspensão, além de instalação e recuperação em discos de teste, atualização assinada e documentação dos limites.
 
 O [limite por arquivo de release do GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) é **menor que 2 GiB** (`2.147.483.648` bytes); a DINX não tem uma meta menor de 1,8 bilhão de bytes. A Alpha 12 é publicada como ISO direta de 1.836.830.720 bytes, abaixo do limite. A ISO futura precisa continuar abaixo dele para ser publicada como arquivo direto. O P5 gaming segue separado: a Beta 0.1 não alegará suporte sem testes reais de DRM, Steam, controle e áudio. A sessão usa River/KWM/Morghulis com dinit, sem systemd ou UWSM.
-=======
-## Morghulis — shell da sessão
-
-O **Morghulis** é o shell da área de trabalho Wayland da DINX para a sessão River + KWM. É construído sobre **Astal** com **GTK4/libadwaita** e compila sem **libgtop** (removido dos repositórios Artix em 2026); o uptime é lido de `/proc/uptime` por um patch da DINX.
->>>>>>> main
 
 | Item | Estado |
 |------|--------|
@@ -131,11 +108,7 @@ Não há nenhum pacote chamado "redbean" na árvore DINX; o shell da sessão é 
    ```
 
 3. Grave a ISO verificada no dispositivo USB inteiro — não em uma partição — e inicialize em UEFI.
-<<<<<<< HEAD
 4. A imagem Alpha 12 publicada abre diretamente em `River + KWM + Morghulis (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
-=======
-4. A imagem live abre diretamente em `River + KWM (DINX)`; ela não solicita usuário ou senha. O login instalado e o autologin do Calamares continuam desativados.
->>>>>>> main
 
 Leia o [guia de instalação](docs/pt-BR/install.md) antes de tocar em qualquer disco. Windows Fast Startup e hibernação devem estar desativados antes de montar um volume NTFS compartilhado.
 

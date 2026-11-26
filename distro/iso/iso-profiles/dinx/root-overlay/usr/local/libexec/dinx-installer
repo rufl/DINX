@@ -23,21 +23,13 @@ runtime_dir=${XDG_RUNTIME_DIR:-}
 wayland_display=${WAYLAND_DISPLAY:-}
 dbus_address=${DBUS_SESSION_BUS_ADDRESS:-}
 [ -n "$runtime_dir" ] && [ -d "$runtime_dir" ] \
-<<<<<<< HEAD
     || fail 'The River/KWM/Morghulis Wayland session has no valid XDG_RUNTIME_DIR. Log into the live desktop and retry.'
-=======
-    || fail 'The River Wayland session has no valid XDG_RUNTIME_DIR. Log into the live desktop and retry.'
->>>>>>> main
 command -v pgrep >/dev/null 2>&1 || fail 'pgrep is unavailable, so the live polkit authorization agent cannot be checked.'
 if ! pgrep -u "$(id -u)" -f '[l]xqt-policykit-agent' >/dev/null 2>&1; then
     fail 'The lxqt-policykit-agent is not running in this session. Wait for the desktop to finish starting, then retry.'
 fi
 [ -n "$wayland_display" ] \
-<<<<<<< HEAD
     || fail 'WAYLAND_DISPLAY is missing. Launch Install DINX from the River/KWM/Morghulis desktop session.'
-=======
-    || fail 'WAYLAND_DISPLAY is missing. Launch Install DINX from the River desktop session.'
->>>>>>> main
 case "$wayland_display" in
     /*) socket=$wayland_display ;;
     *) socket=$runtime_dir/$wayland_display ;;

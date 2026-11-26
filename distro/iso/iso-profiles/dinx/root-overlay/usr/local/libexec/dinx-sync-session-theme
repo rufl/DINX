@@ -1,7 +1,6 @@
 #!/bin/sh
 set -eu
 
-<<<<<<< HEAD
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
 preferences="$config_home/morghulis/preferences.json"
 if ! command -v jq >/dev/null 2>&1 || [ ! -r "$preferences" ]; then
@@ -17,96 +16,6 @@ if [ -z "$theme_variant" ]; then
   }
 fi
 gtk_theme=Adwaita
-=======
-# DINX appearance is per-user state: $XDG_CONFIG_HOME/dinx/appearance.json,
-# written by the first-run wizard (dinx-first-run) and editable afterwards.
-# This helper maps that selection onto every toolkit: the GTK 3/4 user
-# settings.ini files, the dconf color-scheme that libadwaita/GTK4 apps read
-# (Morghulis binds the very same key), and the qt6ct palette. Missing or
-# unreadable state falls back to the DINX dark default so recovery paths and
-# fresh accounts stay deterministic.
-if [ -n "${XDG_CONFIG_HOME:-}" ]; then
-  config_home=$XDG_CONFIG_HOME
-elif [ -n "${HOME:-}" ]; then
-  config_home="$HOME/.config"
-else
-  printf '%s\n' 'dinx-sync-session-theme: no config directory is available; leaving toolkit settings unchanged' >&2
-  exit 0
-fi
-
-appearance=$config_home/dinx/appearance.json
-theme_family=DINX
-theme_variant=dark
-theme_corners=rounded
-if command -v jq >/dev/null 2>&1 && [ -r "$appearance" ]; then
-  parsed_theme=$(jq -er '.theme | select(. == "DINX" or . == "Skeuos" or . == "Orchis" or . == "Fluent" or . == "Jasper")' "$appearance" 2>/dev/null) || parsed_theme=
-  parsed_corners=$(jq -er '.corners | select(. == "rounded" or . == "square")' "$appearance" 2>/dev/null) || parsed_corners=
-  parsed_variant=$(jq -er '.variant | select(. == "dark" or . == "light")' "$appearance" 2>/dev/null) || parsed_variant=
-  if [ -n "$parsed_theme" ]; then
-    theme_family=$parsed_theme
-  fi
-  if [ -n "$parsed_corners" ]; then
-    theme_corners=$parsed_corners
-  fi
-  if [ -n "$parsed_variant" ]; then
-    theme_variant=$parsed_variant
-  fi
-fi
-
-variant_suffix=Dark
-gtk_prefer_dark=1
-dconf_value="'prefer-dark'"
-if [ "$theme_variant" = light ]; then
-  variant_suffix=Light
-  gtk_prefer_dark=0
-  dconf_value="'prefer-light'"
-fi
-if [ "$theme_corners" = square ]; then
-  square=1
-else
-  square=0
-fi
-
-# DINX is the built-in root-overlay theme and has no rounded/square packaging
-# split. The four ported families resolve to exact /usr/share/themes directory
-# names shipped by dinx-gtk-themes; note Skeuos appends its corner suffix after
-# the variant while the other three brands place it before.
-case $theme_family in
-  Skeuos)
-    if [ "$square" = 1 ]; then
-      gtk_theme=Skeuos-Blue-$variant_suffix-Square
-    else
-      gtk_theme=Skeuos-Blue-$variant_suffix
-    fi
-    ;;
-  Orchis)
-    if [ "$square" = 1 ]; then
-      gtk_theme=Orchis-Square-$variant_suffix
-    else
-      gtk_theme=Orchis-$variant_suffix
-    fi
-    ;;
-  Fluent)
-    if [ "$square" = 1 ]; then
-      gtk_theme=Fluent-Square-$variant_suffix
-    else
-      gtk_theme=Fluent-$variant_suffix
-    fi
-    ;;
-  Jasper)
-    if [ "$square" = 1 ]; then
-      gtk_theme=Jasper-Square-$variant_suffix
-    else
-      gtk_theme=Jasper-$variant_suffix
-    fi
-    ;;
-  *)
-    gtk_theme=DINX
-    ;;
-esac
-
-qt_palette=$config_home/qt6ct/colors/DINX.conf
->>>>>>> main
 
 set_ini_value() {
   ini_file=$1

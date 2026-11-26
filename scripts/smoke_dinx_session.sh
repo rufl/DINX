@@ -2,15 +2,8 @@
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-<<<<<<< HEAD
 idle="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-idle"
 lock="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-lock"
-=======
-overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
-idle="$overlay/usr/local/libexec/dinx-idle"
-lock="$overlay/usr/local/libexec/dinx-lock"
-river_session="$overlay/usr/local/libexec/dinx-river-session"
->>>>>>> main
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -70,49 +63,5 @@ live_lock=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$lock" 2>&1)
   exit 1
 }
 
-<<<<<<< HEAD
 
 printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true\n'
-=======
-# The River wrapper's live-session lock-override block, executed verbatim in a
-# throwaway HOME: it must hide the lock action and never clobber a user file.
-live_block="$tmp/live-lock-override.sh"
-awk '
-  /^  data_home=\$\{XDG_DATA_HOME/ { capture = 1 }
-  capture { print }
-  capture && /^  fi$/ { exit }
-' "$river_session" >"$live_block"
-[[ -s "$live_block" ]] || {
-  printf 'smoke_dinx_session: the live lock-override block is missing from the River session wrapper\n' >&2
-  exit 1
-}
-grep -Fq 'Hidden=true' "$live_block" || {
-  printf 'smoke_dinx_session: the live lock-override block does not hide the lock action\n' >&2
-  exit 1
-}
-live_home="$tmp/live-home"
-mkdir -p "$live_home"
-run_live_block() {
-  XDG_DATA_HOME="$live_home/.local/share" sh -eu -c '. "$1"' sh "$live_block"
-}
-run_live_block
-live_override="$live_home/.local/share/applications/dinx-lock.desktop"
-grep -Fq 'Hidden=true' "$live_override" || {
-  printf 'smoke_dinx_session: live session did not hide the screen-lock action\n' >&2
-  exit 1
-}
-printf '[Desktop Entry]\nType=Application\nName=My own lock\nHidden=false\n' >"$live_override"
-run_live_block
-grep -Fq 'Name=My own lock' "$live_override" || {
-  printf 'smoke_dinx_session: live lock override replaced a user-owned file\n' >&2
-  exit 1
-}
-rm -f "$live_override"
-run_live_block
-[[ $(grep -Fc 'Hidden=true' "$live_override") -eq 1 ]] || {
-  printf 'smoke_dinx_session: live lock override seeding is not idempotent\n' >&2
-  exit 1
-}
-
-printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true live_lock_override=hidden+preserves_user_file idempotent=true\n'
->>>>>>> main

@@ -56,21 +56,12 @@ livefs_packages=$(awk '
 grep -Fqx '    - dinx-live-autologin' <<<"$livefs_packages" \
   || fail 'live-only autologin package is not in livefs packages'
 
-<<<<<<< HEAD
 grep -Fq 'command = "tuigreet --sessions /usr/share/wayland-sessions --remember --time --cmd /usr/local/libexec/dinx-river-session"' "$root_greetd" \
   || fail 'installed greetd fallback does not expose the River session menu'
 grep -Fqx 'vt = 7' "$root_greetd" \
   || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
 grep -Fq 'user = "greeter"' "$root_greetd" \
   || fail 'installed greetd fallback user is not the standard greeter account'
-=======
-grep -Fq 'agreety --cmd /usr/local/libexec/dinx-river-session' "$root_greetd" \
-  || fail 'installed greetd fallback does not launch the river session through agreety'
-grep -Fqx 'vt = 7' "$root_greetd" \
-  || fail 'installed greetd must use its dedicated VT, separate from tty1 getty'
-grep -Fq 'user = "greeter"' "$root_greetd" \
-  || fail 'installed greetd fallback user is not the greetd-provided greeter account'
->>>>>>> main
 ! grep -Fq '[initial_session]' "$root_greetd" \
   || fail 'installed greetd config must not enable autologin'
 grep -Fq 'displayAutologin: false' "$users_conf" \
@@ -140,11 +131,7 @@ grep -Fq 'runuser -u dinx' "$session_launcher" \
 grep -Fq 'DINX_LIVE_SESSION=1' "$session_launcher" \
   || fail 'live session launcher does not mark the session as live'
 grep -Fq 'dbus-run-session /usr/local/libexec/dinx-river-session' "$session_launcher" \
-<<<<<<< HEAD
   || fail 'live session launcher does not start the River/KWM/Morghulis wrapper'
-=======
-  || fail 'live session launcher does not start the River/KWM session under a session bus'
->>>>>>> main
 grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' "$session_launcher" \
   || fail 'live session launcher does not select the private runtime dir'
 grep -Fq 'boot.d/dinx-live-session' "$pkgbuild" \

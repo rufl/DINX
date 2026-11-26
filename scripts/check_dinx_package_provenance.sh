@@ -9,7 +9,7 @@ fail() {
   exit 1
 }
 
-local_packages=(dinitui dinxpanel dinx-dock dinx-first-run dinx-firewalld-dinit ghostty-vt-runtime wizp)
+local_packages=(dinitui dinxpanel dinx-dock dinx-first-run dinx-firewalld-dinit ghostty-vt-runtime redbean wizp)
 contains_local_package() {
   local candidate=$1
   local package
@@ -42,6 +42,7 @@ for pkgbUILD in distro/packages/*/PKGBUILD; do
       dinx-firewalld-dinit) contract=scripts/check_firewall_tools.sh ;;
       dinx-dock) contract=scripts/check_dinx_dock.sh ;;
       dinx-first-run) contract=scripts/check_dinx_first_run.sh ;;
+      redbean) contract=scripts/check_redbean.sh ;;
     esac
     [[ -x "$contract" ]] || fail "$package is missing its executable qualification contract: $contract"
   else

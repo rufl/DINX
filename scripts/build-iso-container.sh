@@ -417,6 +417,12 @@ trap finish EXIT
                 exit 1
               }
               build_package turnstile
+              build_package dinx-plymouth-theme
+              pacman_install_local "$package_repo"/dinx-plymouth-theme-*.pkg.tar.zst
+              build_package dinx-live-autologin
+              pacman_install_local "$package_repo"/dinx-live-autologin-*.pkg.tar.zst
+              build_package dinx-firewalld-dinit
+              pacman_install_local "$package_repo"/dinx-firewalld-dinit-*.pkg.tar.zst
               build_package deetty
               pacman_install_local "$package_repo"/deetty-*.pkg.tar.zst
               build_package paru
@@ -474,8 +480,11 @@ trap finish EXIT
               pacman_install_local \
                 "$package_repo"/dinx-dock-*.pkg.tar.zst \
                 "$package_repo"/dinx-first-run-*.pkg.tar.zst
-              build_package pori
               pacman_sync_install python-fonttools vala gst-plugins-base gst-plugins-good
+              build_package dinx-noto-latin
+              pacman_install_local "$package_repo"/dinx-noto-latin-*.pkg.tar.zst
+              build_package swayimg
+              pacman_install_local "$package_repo"/swayimg-*.pkg.tar.zst
               # Build Haruna against its Artix runtime/build dependencies.
               pacman_sync_install \
                 extra-cmake-modules ffmpeg kcolorscheme kconfig kcoreaddons kcrash \

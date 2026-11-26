@@ -70,19 +70,12 @@
 +Name=Deetty
  GenericName=Terminal Workspace
 -Comment=Native terminal workspace for Plasma and Noctalia Wayland
-<<<<<<< HEAD
--TryExec=noctty
--Exec=noctty --open-uri %u
--Icon=com.noctty.NOCTTY
+-TryExec=deetty
+-Exec=deetty --open-uri %u
+-Icon=com.deetty.DEETTY
 +Comment=Native terminal workspace for DINX
 +TryExec=deetty
 +Exec=deetty --open-uri %u
-=======
-+Comment=Native terminal workspace for DINX River and KWM
- TryExec=deetty
- Exec=deetty --open-uri %u
--Icon=com.deetty.DEETTY
->>>>>>> main
 +Icon=org.dinx.Deetty
  Terminal=false
  Categories=System;TerminalEmulator;
@@ -182,28 +175,6 @@
 --- a/resources/deettyhere.desktop
 +++ b/resources/deettyhere.desktop
 @@ -1,14 +1,14 @@
-<<<<<<< HEAD
- <?xml version="1.0" encoding="UTF-8"?>
- <component type="desktop-application">
--  <id>com.noctty.NOCTTY</id>
--  <name>NOCTTY</name>
--  <summary>Native terminal workspace for Plasma and Noctalia Wayland</summary>
-+  <id>org.dinx.Deetty</id>
-+  <name>Deetty</name>
-+  <summary>Native terminal workspace for DINX</summary>
-   <metadata_license>CC0-1.0</metadata_license>
-   <project_license>MIT</project_license>
-   <description>
--    <p>A native Zig terminal workspace targeting KDE Plasma, Noctalia Shell, Wayland, and X11, with validated local workspace links and GUI-managed recent workspaces.</p>
-+    <p>A native terminal workspace for DINX, with validated local workspace links and GUI-managed recent workspaces.</p>
-   </description>
--  <launchable type="desktop-id">com.noctty.NOCTTY.desktop</launchable>
-+  <launchable type="desktop-id">org.dinx.Deetty.desktop</launchable>
-   <categories>
-     <category>System</category>
-     <category>TerminalEmulator</category>
-
-=======
  [Desktop Entry]
  Type=Service
 -Name=DEETTY Service Menu
@@ -223,7 +194,6 @@
 +Name=Open Deetty Here
 +Icon=org.dinx.Deetty
  Exec=deetty --new-window --working-directory %f
->>>>>>> main
 --- a/resources/nocted/styles/nocted-dark.xml
 +++ b/resources/nocted/styles/nocted-dark.xml
 @@ -1,7 +1,7 @@

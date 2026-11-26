@@ -24,11 +24,7 @@ Se o reporte privado estiver indisponível, contate o proprietário pelo perfil 
 
 ## Limites específicos da alpha
 
-<<<<<<< HEAD
 - A imagem live abre automaticamente a conta descartável `dinx` na sessão River/KWM/Morghulis pelo greetd/agreety; o login instalado/manual usa o mesmo caminho do greetd. A superfície de login não é uma fronteira de autenticação da imagem live: o acesso físico ao boot já dá controle da máquina. A senha pública `dinx` fica apenas como fallback diagnóstico se a sessão live for iniciada manualmente. Nunca reutilize a senha em outro lugar.
-=======
-- A imagem live abre automaticamente a conta descartável `dinx` no `River + KWM (DINX)`; o login instalado/manual usa o greeter agreety pelo greetd e pela conta dedicada `greeter`. O agreety não é uma fronteira de autenticação da imagem live: o acesso físico ao boot já dá controle da máquina. A senha pública `dinx` fica apenas como fallback diagnóstico se a sessão live for iniciada manualmente. Nunca reutilize a senha em outro lugar.
->>>>>>> main
 - Verifique o checksum da ISO antes de gravar mídia removível ou inicializá-la.
 - Não coloque credenciais de produção, dados pessoais ou chaves privadas na sessão live.
 - Um boot bem-sucedido não prova segurança de produção, segurança de persistência ou segurança de atualizações.

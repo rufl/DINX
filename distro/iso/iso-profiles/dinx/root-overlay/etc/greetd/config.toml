@@ -5,9 +5,5 @@ vt = 7
 source_profile = false
 
 [default_session]
-<<<<<<< HEAD
 command = "tuigreet --sessions /usr/share/wayland-sessions --remember --time --cmd /usr/local/libexec/dinx-river-session"
-=======
-command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"
->>>>>>> main
 user = "greeter"

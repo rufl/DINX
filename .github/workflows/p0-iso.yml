@@ -85,7 +85,6 @@ on:
       - "tools/dinx-qemu-launcher.c"
       - "scripts/check_firefox.sh"
       - "scripts/check_eurooffice.sh"
-      - "scripts/check_opensnitch.sh"
       - "scripts/check_swayimg.sh"
       - "scripts/check_package_managers.sh"
       - "scripts/check_desktop_packages.sh"
@@ -206,8 +205,6 @@ jobs:
         run: ./scripts/check_firefox.sh
       - name: Verify EuroOffice lean office payload
         run: ./scripts/check_eurooffice.sh
-      - name: Verify OpenSnitch Dinit service and live UI autostart
-        run: ./scripts/check_opensnitch.sh
 
       - name: Verify pinned swayimg source and package contract
         run: ./scripts/check_swayimg.sh

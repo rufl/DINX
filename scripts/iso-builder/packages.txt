@@ -40,12 +40,6 @@ polkit
 extra-cmake-modules
 qt6-base
 scdoc
-<<<<<<< HEAD
-=======
-sassc
-vulkan-headers
-vulkan-icd-loader
->>>>>>> main
 gtk4-layer-shell
 hunspell
 jq

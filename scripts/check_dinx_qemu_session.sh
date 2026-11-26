@@ -90,34 +90,19 @@ if [[ "$mode" == greeter ]]; then
     exit 1
   fi
   greeter_text=$(printf '%s' "$recognized" | tr -cd '[:alnum:]')
-<<<<<<< HEAD
   if ! grep -Eiq 'signin|login|user' <<<"$greeter_text" \
     || ! grep -Eiq 'pas[[:alpha:]]{0,4}rd' <<<"$greeter_text"; then
     printf 'dinx-qemu-session: sign-in and password controls are not visible:\n%s\n' "$recognized" >&2
     exit 1
   fi
   printf 'dinx-qemu-session: greeter_ready=true marker=tuigreet+SignIn+Password screenshot=%s\n' "$screenshot"
-=======
-  if ! grep -Eiq 'agreety|greeter|dinx|river' <<<"$greeter_text" \
-    || ! grep -Eiq 'login' <<<"$greeter_text"; then
-    printf 'dinx-qemu-session: agreety identity and login prompt are not visible:\n%s\n' "$recognized" >&2
-    exit 1
-  fi
-  printf 'dinx-qemu-session: greeter_ready=true marker=Agreety+Login screenshot=%s\n' "$screenshot"
->>>>>>> main
   exit 0
 fi
 
 if grep -Eiq 'no[[:space:]]+desktop folder is configured|XDG_DESKTOP_DIR' <<<"$recognized"; then
-<<<<<<< HEAD
   fail 'DINX reports a missing XDG Desktop directory'
 fi
 if grep -Eiq 'login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|select[[:space:]]*user|fail|dinit:.*execution failed' <<<"$recognized"; then
-=======
-  fail 'the session reports a missing XDG Desktop directory'
-fi
-if grep -Eiq 'agreety|greeter|select[[:space:]]*user|login[[:space:]]*:|tty[[:space:]]*[[:digit:]]+|password|sign[[:space:]]*in|fail|error|panic|not[[:space:]]+found|dinit:.*execution failed' <<<"$recognized"; then
->>>>>>> main
   printf 'dinx-qemu-session: rejected non-session screen:\n%s\n' "$recognized" >&2
   exit 1
 fi
@@ -130,7 +115,6 @@ done < <(grep -Ei '[^[:space:]][[:space:]]+-[[:space:]]*Wayland([[:space:]]|$)' 
   | grep -Eiv '(^|[^[:alnum:]_])(river|kwm)([^[:alnum:]_]|$)')
 
 if [[ "$mode" == first-run ]]; then
-<<<<<<< HEAD
   if ! grep -Eiq '(^|[^[:alnum:]_])(Morghulis|DINX|Desktop|PCManFM)([^[:alnum:]_]|$)' <<<"$recognized"; then
     printf 'dinx-qemu-session: Morghulis first-run screen has no readable desktop marker:\n%s\n' "$recognized" >&2
     exit 1
@@ -143,22 +127,6 @@ if grep -Eiq '(^|[^[:alnum:]_])(Morghulis|DINX|River|PCManFM|Desktop)([^[:alnum:
   marker=morghulis-desktop
 else
   printf 'dinx-qemu-session: no Morghulis/DINX desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
-=======
-  if ! grep -Eiq 'Install[[:space:]]+DINX' <<<"$recognized"; then
-    printf 'dinx-qemu-session: live desktop has no readable Install DINX shortcut:\n%s\n' "$recognized" >&2
-    exit 1
-  fi
-  printf 'dinx-qemu-session: first_run_shortcut_visible=true marker=Install+DINX screenshot=%s\n' "$screenshot"
-  exit 0
-fi
-marker=identity
-if grep -Eiq '(^|[^[:alnum:]_])(river|kwm)([^[:alnum:]_]|$)' <<<"$recognized"; then
-  marker=river-desktop
-elif grep -Eiq '(^|[^[:alnum:]_])dinx([^[:alnum:]_]|$)' <<<"$recognized"; then
-  marker=dinx-desktop
-else
-  printf 'dinx-qemu-session: no River/KWM or DINX desktop marker in QEMU screen:\n%s\n' "$recognized" >&2
->>>>>>> main
   exit 1
 fi
 printf 'dinx-qemu-session: graphical_ready=true marker=%s screenshot=%s\n' "$marker" "$screenshot"

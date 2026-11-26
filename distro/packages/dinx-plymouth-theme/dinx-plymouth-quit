@@ -5,3 +5,12 @@ set -eu
 if /usr/bin/plymouth --ping; then
   exec /usr/bin/plymouth quit
 fi
+
+attempt=0
+while [ "$attempt" -lt 100 ]; do
+  attempt=$((attempt + 1))
+  sleep 0.1
+  if /usr/bin/plymouth --ping; then
+    exec /usr/bin/plymouth quit
+  fi
+done

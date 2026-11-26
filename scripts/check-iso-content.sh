@@ -166,10 +166,10 @@ grep -Fqx 'depends-on = artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service does not depend on artix-live'
 ! grep -Fqx 'depends-on = pacman-init' <<<"$live_autologin_service" \
   || fail 'live greeter setup must not depend on keyring population'
-grep -Fqx 'waits-for = firewalld' <<<"$live_autologin_service" \
-  || fail 'live autologin does not wait for the Firewalld startup attempt'
 ! grep -Fqx 'depends-on = local.target artix-live' <<<"$live_autologin_service" \
   || fail 'livefs autologin service combines dependencies into one unresolved service name'
+! grep -Fqx 'waits-for = firewalld' <<<"$live_autologin_service" \
+  || fail 'live autologin must not block the desktop on Firewalld startup'
 live_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/livefs.img" etc/dinit.d/greetd)
 grep -Fqx 'type = scripted' <<<"$live_greetd_service" \
   || fail 'live greetd shadow is not a scripted no-op service'
@@ -184,6 +184,8 @@ grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_session_service" \
   || fail 'live session service does not wait for live boot preparation'
 grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
   || fail 'live session service does not depend on seatd'
+! grep -Fqx 'waits-for = firewalld' <<<"$live_session_service" \
+  || fail 'live session service must not block the desktop on Firewalld startup'
 grep -Fqx 'restart = true' <<<"$live_session_service" \
   || fail 'live session service does not restart after an unexpected exit'
 root_greetd_service=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/dinit.d/greetd)

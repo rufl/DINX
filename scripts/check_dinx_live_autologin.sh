@@ -97,8 +97,8 @@ grep -Fqx 'depends-on = artix-live' "$service" \
   || fail 'live hostname service does not depend on artix-live'
 ! grep -Fqx 'depends-on = pacman-init' "$service" \
   || fail 'live autologin must not be gated on pacman keyring setup'
-grep -Fqx 'waits-for = firewalld' "$service" \
-  || fail 'live autologin does not wait for the Firewalld startup attempt'
+! grep -Fqx 'waits-for = firewalld' "$service" \
+  || fail 'live autologin must not block the desktop on Firewalld startup'
 grep -Fq "depends=('dinit' 'seatd' 'firewalld-dinit' 'kbd')" "$pkgbuild" \
   || fail 'live autologin dependencies must include dinit, seatd, firewalld-dinit and openvt from kbd'
 grep -Fq "'firewalld-dinit'" "$pkgbuild" \

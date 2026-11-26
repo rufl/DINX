@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+# A damaged user startup.blend must not prevent the shipped Blender from
+# opening. User preferences remain available; only startup.blend is bypassed.
+exec /usr/bin/blender --factory-startup "$@"

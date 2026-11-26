@@ -141,6 +141,29 @@ for package in patchy paintfe; do
   fi
   grep -Fq "build_package $package" "$root/scripts/build-iso-container.sh" || fail "ISO builder does not build $package"
 done
+paintfe_launcher="$root/distro/packages/paintfe/paintfe"
+[[ -x "$paintfe_launcher" ]] || fail 'PaintFE launcher is missing or not executable'
+sh -n "$paintfe_launcher" || fail 'PaintFE launcher has invalid shell syntax'
+grep -Fqx 'exec /opt/paintfe/AppRun "$@"' "$paintfe_launcher" \
+  || fail 'PaintFE launcher does not exec the pre-extracted AppRun tree'
+grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$paintfe_launcher" \
+  || fail 'PaintFE launcher does not request the dark GTK theme'
+
+tuxmanager_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/tux-manager"
+blender_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/blender"
+for wrapper in "$tuxmanager_wrapper" "$blender_wrapper"; do
+  [[ -x "$wrapper" ]] || fail "DINX wrapper is missing or not executable: ${wrapper#$root/}"
+  sh -n "$wrapper" || fail "DINX wrapper has invalid shell syntax: ${wrapper#$root/}"
+done
+grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$tuxmanager_wrapper" \
+  || fail 'TuxManager wrapper does not use qt6ct'
+grep -Fqx 'export QT_STYLE_OVERRIDE=fusion' "$tuxmanager_wrapper" \
+  || fail 'TuxManager wrapper does not force the Fusion dark-capable style'
+grep -Fqx 'exec /usr/bin/tux-manager "$@"' "$tuxmanager_wrapper" \
+  || fail 'TuxManager wrapper does not exec the packaged binary'
+grep -Fqx 'exec /usr/bin/blender --factory-startup "$@"' "$blender_wrapper" \
+  || fail 'Blender wrapper does not bypass a broken user startup.blend'
+
 pixelorama_source="$root/distro/packages/pixelorama/source.env"
 pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"
 pixelorama_launcher="$root/distro/packages/pixelorama/pixelorama"
@@ -283,6 +306,14 @@ for artix_only in pcmanfm pacman-contrib; do
 done
 grep -Fq 'DesktopEditors.conf' "$root/distro/office/eurooffice/build.sh" \
   || fail 'EuroOffice launcher does not initialize the DesktopEditors settings file'
+grep -Fq 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$root/distro/office/eurooffice/build.sh" \
+  || fail 'EuroOffice launcher does not force the dark GTK theme'
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' "$root/distro/office/eurooffice/build.sh" \
+  || fail 'EuroOffice launcher does not use qt6ct'
+grep -Fq 'theme=dark' "$root/distro/office/eurooffice/build.sh" \
+  || fail 'EuroOffice launcher does not persist the dark Office theme'
+grep -Fq -- '--theme=dark' "$root/distro/office/eurooffice/build.sh" \
+  || fail 'EuroOffice launcher does not pass the dark theme to DesktopEditors'
 printf 'desktop_packages_contract pcmanfm=true blender=true audionaut=true octopi=true pacman-contrib=true directory_handler=pcmanfm.desktop retired_appimage=false\n'
 
 

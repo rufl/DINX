@@ -293,6 +293,7 @@ required_paths=(
   usr/bin/inkscape
   usr/bin/godot
   usr/bin/blender
+  usr/local/bin/blender
   usr/bin/patchy
   usr/lib/patchy/patchy-force-darkest
   opt/patchy/AppRun
@@ -341,6 +342,7 @@ required_paths=(
   usr/share/dinx/theme/DINX.json
   usr/bin/pcmanfm
   usr/bin/tux-manager
+  usr/local/bin/tux-manager
   usr/share/icons/hicolor/scalable/apps/tux_manager_icon.svg
   usr/share/applications/io.github.benapetr.TuxManager.desktop
   usr/share/metainfo/io.github.benapetr.TuxManager.metainfo.xml
@@ -1339,6 +1341,16 @@ for appimage_launcher in paintfe patchy; do
   grep -Fq "exec /opt/$appimage_launcher/AppRun" <<<"$launcher_script" \
     || fail "$appimage_launcher launcher does not exec its pre-extracted /opt tree"
 done
+paintfe_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/paintfe)
+grep -Fq 'export GTK_APPLICATION_PREFER_DARK_THEME=1' <<<"$paintfe_launcher" \
+  || fail 'PaintFE launcher does not request the dark GTK theme'
+eurooffice_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/eurooffice)
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$eurooffice_launcher" \
+  || fail 'EuroOffice launcher does not use qt6ct'
+grep -Fq 'theme=dark' <<<"$eurooffice_launcher" \
+  || fail 'EuroOffice launcher does not persist the dark Office theme'
+grep -Fq -- '--theme=dark' <<<"$eurooffice_launcher" \
+  || fail 'EuroOffice launcher does not pass the dark theme to DesktopEditors'
 audionaut_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/audionaut)
 grep -Fq 'exec /opt/audionaut/Audionaut.AppImage --appimage-extract-and-run' <<<"$audionaut_launcher" \
   || fail 'Audionaut launcher does not exec its bundled AppImage'
@@ -1628,6 +1640,16 @@ tuxmanager_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.im
 grep -Fq 'Exec=tux-manager' <<<"$tuxmanager_desktop" || fail 'TuxManager desktop launcher is missing'
 grep -Fq 'Name=Tux Manager' <<<"$tuxmanager_desktop" || fail 'TuxManager desktop name is missing'
 grep -Fq 'Icon=tux_manager_icon' <<<"$tuxmanager_desktop" || fail 'TuxManager desktop icon contract is missing'
+tuxmanager_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/tux-manager)
+grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$tuxmanager_launcher" \
+  || fail 'TuxManager launcher does not force qt6ct'
+grep -Fq 'export QT_STYLE_OVERRIDE=fusion' <<<"$tuxmanager_launcher" \
+  || fail 'TuxManager launcher does not force the Fusion style'
+grep -Fq 'exec /usr/bin/tux-manager "$@"' <<<"$tuxmanager_launcher" \
+  || fail 'TuxManager launcher does not exec the packaged binary'
+blender_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/blender)
+grep -Fq 'exec /usr/bin/blender --factory-startup "$@"' <<<"$blender_launcher" \
+  || fail 'Blender launcher does not bypass a broken user startup.blend'
 while IFS='|' read -r path english portuguese command; do
   launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"

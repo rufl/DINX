@@ -28,9 +28,16 @@ grep -Fq 'tuxmanager-*.pkg.tar.zst' "$builder" || fail 'ISO builder does not ins
 grep -Fq 'scripts/check_tuxmanager.sh' "$workflow" || fail 'workflow does not run the TuxManager contract'
 for required in \
   '  usr/bin/tux-manager' \
+  '  usr/local/bin/tux-manager' \
   '  usr/share/icons/hicolor/scalable/apps/tux_manager_icon.svg' \
   '  usr/share/applications/io.github.benapetr.TuxManager.desktop' \
   '  usr/share/metainfo/io.github.benapetr.TuxManager.metainfo.xml'; do
   grep -Fqx "$required" "$iso_check" || fail "ISO contract is missing: $required"
 done
+wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/tux-manager"
+[[ -x "$wrapper" ]] || fail 'DINX TuxManager dark wrapper is missing'
+grep -Fqx 'exec /usr/bin/tux-manager "$@"' "$wrapper" \
+  || fail 'DINX TuxManager wrapper does not exec the packaged binary'
+grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$wrapper" \
+  || fail 'DINX TuxManager wrapper does not force qt6ct'
 printf 'tuxmanager_contract version=%s source_sha256=true upstream=github base=true\n' "$TUXMANAGER_VERSION"

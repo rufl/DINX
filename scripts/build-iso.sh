@@ -99,25 +99,6 @@ private_artools_data="$private_buildiso_dir/data"
 mkdir "$private_artools_data"
 cp -a -- "$artools_data_dir/." "$private_artools_data/"
 
-private_iso_util="$private_artools_data/$artools_lib_relative/util.sh"
-[[ -r "$private_iso_util" ]] \
-  || fail "missing Artix ISO utility script: $private_iso_util"
-private_iso_util_tmp="$private_iso_util.tmp"
-awk '
-  $0 == "    iso_label=\"ARTIX_$(date +%Y%m)\"" {
-    print "    iso_label=\"DINX_$(date +%Y%m)\""
-    replacements++
-    next
-  }
-  { print }
-  END {
-    if (replacements != 1) exit 1
-  }
-' "$private_iso_util" > "$private_iso_util_tmp" \
-  || fail "unsupported Artix ISO label implementation: $private_iso_util"
-mv -- "$private_iso_util_tmp" "$private_iso_util"
-grep -Fqx '    iso_label="DINX_$(date +%Y%m)"' "$private_iso_util" \
-  || fail "failed to set DINX ISO volume label: $private_iso_util"
 
 private_initcpio_helper="$private_artools_data/$artools_lib_relative/iso/initcpio.sh"
 "$repo_root/scripts/patch-artix-initcpio.sh" --patch-artix-helper "$private_initcpio_helper"
@@ -143,6 +124,12 @@ awk '
 chmod --reference="$buildiso_path" "$private_buildiso"
 private_iso_filename_tmp="$private_buildiso.tmp"
 awk '
+  $0 == "load_config \"${AT_USERCONFDIR}/artools.conf\" || load_config \"${SYSCONFDIR}/artools.conf\"" {
+    print
+    print "iso_label=\"DINX_$(date +%Y%m)\""
+    label_replacements++
+    next
+  }
   $0 == "load_user_info" {
     print "gen_iso_fn() {"
     print "    local vars=(\"dinx\" \"${initsys}\" \"${iso_version}\" \"${target_arch}\") name"
@@ -152,15 +139,17 @@ awk '
     print "    printf \"%s\\\\n\" \"$name\""
     print "}"
     print ""
-    replacements++
+    filename_replacements++
   }
   { print }
   END {
-    if (replacements != 1) exit 1
+    if (label_replacements != 1 || filename_replacements != 1) exit 1
   }
 ' "$private_buildiso" > "$private_iso_filename_tmp" \
-  || fail "unsupported Artix ISO filename implementation: $private_buildiso"
+  || fail "unsupported Artix ISO identity implementation: $private_buildiso"
 mv -- "$private_iso_filename_tmp" "$private_buildiso"
+grep -Fq 'iso_label="DINX_$(date +%Y%m)"' "$private_buildiso" \
+  || fail "failed to set DINX ISO volume label: $private_buildiso"
 grep -Fq 'local vars=("dinx" "${initsys}" "${iso_version}" "${target_arch}") name' "$private_buildiso" \
   || fail "failed to set DINX ISO filename prefix: $private_buildiso"
 

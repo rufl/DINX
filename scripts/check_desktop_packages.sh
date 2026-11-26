@@ -151,7 +151,8 @@ grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$paintfe_launcher" \
 
 tuxmanager_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/tux-manager"
 blender_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/blender"
-for wrapper in "$tuxmanager_wrapper" "$blender_wrapper"; do
+eurooffice_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/eurooffice"
+for wrapper in "$tuxmanager_wrapper" "$blender_wrapper" "$eurooffice_wrapper"; do
   [[ -x "$wrapper" ]] || fail "DINX wrapper is missing or not executable: ${wrapper#$root/}"
   sh -n "$wrapper" || fail "DINX wrapper has invalid shell syntax: ${wrapper#$root/}"
 done
@@ -163,6 +164,12 @@ grep -Fqx 'exec /usr/bin/tux-manager "$@"' "$tuxmanager_wrapper" \
   || fail 'TuxManager wrapper does not exec the packaged binary'
 grep -Fqx 'exec /usr/bin/blender --factory-startup "$@"' "$blender_wrapper" \
   || fail 'Blender wrapper does not bypass a broken user startup.blend'
+grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$eurooffice_wrapper" \
+  || fail 'EuroOffice overlay wrapper does not request the dark GTK theme'
+grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$eurooffice_wrapper" \
+  || fail 'EuroOffice overlay wrapper does not use qt6ct'
+grep -Fqx 'exec /usr/bin/eurooffice --theme=dark "$@"' "$eurooffice_wrapper" \
+  || fail 'EuroOffice overlay wrapper does not pass the dark theme to the staged binary'
 
 pixelorama_source="$root/distro/packages/pixelorama/source.env"
 pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"

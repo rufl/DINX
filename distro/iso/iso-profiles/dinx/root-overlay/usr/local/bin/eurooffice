@@ -1,0 +1,70 @@
+#!/bin/sh
+set -eu
+
+# MAIN consumes the pinned EuroOffice package from GitHub; keep its launcher
+# dark even when that artifact predates the current office build script.
+export GTK_THEME=DINX
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_STYLE_OVERRIDE=Fusion
+
+config_home="${XDG_CONFIG_HOME:-}"
+if [ -z "$config_home" ] && [ -n "${HOME:-}" ]; then
+  config_home="$HOME/.config"
+fi
+if [ -n "$config_home" ]; then
+  settings_dir="$config_home/onlyoffice"
+  settings_file="$settings_dir/DesktopEditors.conf"
+  mkdir -p -- "$settings_dir"
+  if [ -L "$settings_file" ]; then
+    printf 'eurooffice: refusing symlinked settings file: %s\n' "$settings_file" >&2
+    exit 1
+  elif [ ! -e "$settings_file" ]; then
+    cat > "$settings_file" <<'SETTINGS'
+[General]
+theme=dark
+SETTINGS
+  elif [ ! -f "$settings_file" ]; then
+    printf 'eurooffice: settings path is not a regular file: %s\n' "$settings_file" >&2
+    exit 1
+  else
+    settings_tmp="${settings_file}.dinx.$$"
+    awk '
+      function finish_general() {
+        if (in_general && !theme_written) {
+          print "theme=dark"
+          theme_written=1
+        }
+      }
+      BEGIN { in_general=0; seen_general=0; theme_written=0 }
+      /^\[/ {
+        finish_general()
+        in_general=($0 == "[General]")
+        if (in_general) seen_general=1
+        print
+        next
+      }
+      {
+        if (in_general && $0 ~ /^theme=/) {
+          if (!theme_written) {
+            print "theme=dark"
+            theme_written=1
+          }
+          next
+        }
+        print
+      }
+      END {
+        finish_general()
+        if (!seen_general) {
+          print ""
+          print "[General]"
+          print "theme=dark"
+        }
+      }
+    ' "$settings_file" > "$settings_tmp"
+    mv -- "$settings_tmp" "$settings_file"
+  fi
+fi
+
+exec /usr/bin/eurooffice --theme=dark "$@"

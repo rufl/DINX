@@ -287,6 +287,7 @@ required_paths=(
   usr/share/applications/audionaut.desktop
   usr/share/licenses/audionaut/LICENSE.md
   usr/bin/eurooffice
+  usr/local/bin/eurooffice
   opt/eurooffice/DesktopEditors
   usr/share/applications/eurooffice.desktop
   usr/bin/krita
@@ -1344,13 +1345,15 @@ done
 paintfe_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/paintfe)
 grep -Fq 'export GTK_APPLICATION_PREFER_DARK_THEME=1' <<<"$paintfe_launcher" \
   || fail 'PaintFE launcher does not request the dark GTK theme'
-eurooffice_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/eurooffice)
+eurooffice_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/eurooffice)
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$eurooffice_launcher" \
   || fail 'EuroOffice launcher does not use qt6ct'
 grep -Fq 'theme=dark' <<<"$eurooffice_launcher" \
   || fail 'EuroOffice launcher does not persist the dark Office theme'
 grep -Fq -- '--theme=dark' <<<"$eurooffice_launcher" \
   || fail 'EuroOffice launcher does not pass the dark theme to DesktopEditors'
+grep -Fq 'exec /usr/bin/eurooffice --theme=dark "$@"' <<<"$eurooffice_launcher" \
+  || fail 'EuroOffice overlay launcher does not exec the staged binary'
 audionaut_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/bin/audionaut)
 grep -Fq 'exec /opt/audionaut/Audionaut.AppImage --appimage-extract-and-run' <<<"$audionaut_launcher" \
   || fail 'Audionaut launcher does not exec its bundled AppImage'

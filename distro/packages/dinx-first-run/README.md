@@ -45,13 +45,27 @@ dinx-first-run --dry-run   # print the resolved appearance JSON, write nothing, 
 dinx-first-run --version   # print 0.1.0
 ```
 
-## Preset schema
+The supported language values and generated locales are:
 
-The preset uses the appearance keys with the fixed vocabulary
-(`pt-BR`/`en-US`, `America/Sao_Paulo`/`UTC`, `DINX`/`Skeuos`/`Orchis`/`Fluent`/`Jasper`,
-`dark`/`light`, `rounded`/`square`, `top`/`bottom`, `none`/`left`/`right`/`bottom`).
-Unrecognized values keep the DINX defaults, so a preset can never inject an
-environment, gsettings or dconf value verbatim.
+| Language | Locale | Keyboard | Default location |
+| --- | --- | --- | --- |
+| `en-US` | `en_US.UTF-8` | `us` | `America/New_York` |
+| `pt-BR` | `pt_BR.UTF-8` | `br` | `America/Sao_Paulo` |
+| `fr` | `fr_FR.UTF-8` | `fr` | `Europe/Paris` |
+| `de` | `de_DE.UTF-8` | `de` | `Europe/Berlin` |
+| `nl` | `nl_NL.UTF-8` | `nl` | `Europe/Amsterdam` |
+| `da` | `da_DK.UTF-8` | `dk` | `Europe/Copenhagen` |
+| `pt-PT` | `pt_PT.UTF-8` | `pt` | `Europe/Lisbon` |
+| `es` | `es_ES.UTF-8` | `es` | `Europe/Madrid` |
+| `it` | `it_IT.UTF-8` | `it` | `Europe/Rome` |
+| `en-GB` | `en_GB.UTF-8` | `gb` | `Europe/London` |
+| `uk` | `uk_UA.UTF-8` | `ua` | `Europe/Kyiv` |
+| `ja` | `ja_JP.UTF-8` | `jp` | `Asia/Tokyo` |
+| `zh-CN` | `zh_CN.UTF-8` | `cn` | `Asia/Shanghai` |
+| `zh-TW` | `zh_TW.UTF-8` | `tw` | `Asia/Taipei` |
+
+The location is independently selectable, so users can combine a supported
+language with another supported timezone.
 
 ## Building
 

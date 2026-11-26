@@ -302,17 +302,21 @@ strip_python_bytecode() {
   printf '%s\n' 'dinx-final-squashfs: removed Python bytecode and idle/test/tkinter payloads'
 }
 
-# glibc i18n data follows the same en/pt locale policy as the apps.
+# Keep every locale selected by the EuroOffice lean package and the matching
+# language/keyboard choices exposed by dinx-first-run.
 trim_i18n_locales() {
   local root=$1
   [[ "$root" != / && -d "$root/usr/share/i18n/locales" ]] || return 0
   find "$root/usr/share/i18n/locales" -maxdepth 1 -type f \
-    ! -name 'en_US*' ! -name 'en_GB*' ! -name 'pt_BR*' ! -name 'pt_PT*' -delete
+    ! -name 'en_US*' ! -name 'pt_BR*' ! -name 'fr_FR*' ! -name 'de_DE*' \
+    ! -name 'nl_NL*' ! -name 'da_DK*' ! -name 'pt_PT*' ! -name 'es_ES*' \
+    ! -name 'it_IT*' ! -name 'en_GB*' ! -name 'uk_UA*' ! -name 'ja_JP*' \
+    ! -name 'zh_CN*' ! -name 'zh_TW*' -delete
   if [[ -d "$root/usr/share/i18n/charmaps" ]]; then
     find "$root/usr/share/i18n/charmaps" -maxdepth 1 -type f \
       ! -name 'UTF-8*' ! -name 'ISO-8859-1*' -delete
   fi
-  printf '%s\n' 'dinx-final-squashfs: trimmed glibc i18n locales/charmaps to en/pt + UTF-8/ISO-8859-1'
+  printf '%s\n' 'dinx-final-squashfs: trimmed glibc i18n locales to EuroOffice language coverage + UTF-8/ISO-8859-1'
 }
 
 # Only Papirus (and breeze for Calamares KIconThemes) is selected; the extra

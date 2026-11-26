@@ -66,9 +66,9 @@ printf 'build-only pkg-config record\n' > "$fixture_root/usr/lib/pkgconfig/demo.
 printf 'build-only vala binding\n' > "$fixture_root/usr/share/vala/demo.vapi"
 printf 'build-only aclocal macro\n' > "$fixture_root/usr/share/aclocal/demo.m4"
 printf 'bytecode\n' > "$fixture_root/usr/lib/python3.14/__pycache__/demo.pyc"
-printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/en_US"
-printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/pt_BR"
-printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/de_DE"
+for locale in en_US pt_BR fr_FR de_DE nl_NL da_DK pt_PT es_ES it_IT en_GB uk_UA ja_JP zh_CN zh_TW ru_RU; do
+  printf 'locale\n' > "$fixture_root/usr/share/i18n/locales/$locale"
+done
 printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz"
 printf 'charmap\n' > "$fixture_root/usr/share/i18n/charmaps/IBM437.gz"
 printf 'static\n' > "$fixture_root/usr/lib/libdemo.a"
@@ -92,12 +92,14 @@ done
 [[ ! -e "$fixture_root/usr/lib/python3.14/__pycache__" \
    && ! -e "$fixture_root/usr/lib/python3.14/idlelib" ]] \
   || fail 'Python bytecode/idle payloads remain in the final filesystem'
-[[ -f "$fixture_root/usr/share/i18n/locales/en_US" \
-   && -f "$fixture_root/usr/share/i18n/locales/pt_BR" \
-   && ! -e "$fixture_root/usr/share/i18n/locales/de_DE" \
+for locale in en_US pt_BR fr_FR de_DE nl_NL da_DK pt_PT es_ES it_IT en_GB uk_UA ja_JP zh_CN zh_TW; do
+  [[ -f "$fixture_root/usr/share/i18n/locales/$locale" ]] \
+    || fail "EuroOffice locale was removed: $locale"
+done
+[[ ! -e "$fixture_root/usr/share/i18n/locales/ru_RU" \
    && -f "$fixture_root/usr/share/i18n/charmaps/UTF-8.gz" \
    && ! -e "$fixture_root/usr/share/i18n/charmaps/IBM437.gz" ]] \
-  || fail 'glibc i18n trim did not keep en/pt locales and UTF-8 charmaps'
+  || fail 'glibc i18n trim did not keep EuroOffice locales and UTF-8 charmaps'
 [[ ! -e "$fixture_root/usr/share/icons/Papirus-Dark" \
    && -d "$fixture_root/usr/share/icons/Papirus" ]] \
   || fail 'unused icon variants remain or the selected Papirus theme was removed'

@@ -45,6 +45,15 @@ done
 for family in DINX Skeuos Orchis Fluent Jasper; do
   grep -Fq "$family" "$frontend" || fail "first-run does not offer the $family theme family"
 done
+for language in 'en-US' 'pt-BR' '"fr"' '"de"' '"nl"' '"da"' 'pt-PT' '"es"' '"it"' 'en-GB' '"uk"' '"ja"' 'zh-CN' 'zh-TW'; do
+  grep -Fq "$language" "$frontend" || fail "first-run does not support EuroOffice language: $language"
+done
+for locale in en_US.UTF-8 pt_BR.UTF-8 fr_FR.UTF-8 de_DE.UTF-8 nl_NL.UTF-8 da_DK.UTF-8 pt_PT.UTF-8 es_ES.UTF-8 it_IT.UTF-8 en_GB.UTF-8 uk_UA.UTF-8 ja_JP.UTF-8 zh_CN.UTF-8 zh_TW.UTF-8; do
+  grep -Fq "$locale" "$frontend" || fail "first-run does not generate locale: $locale"
+done
+for location in America/New_York America/Sao_Paulo Europe/Paris Europe/Berlin Europe/Amsterdam Europe/Copenhagen Europe/Lisbon Europe/Madrid Europe/Rome Europe/London Europe/Kyiv Asia/Tokyo Asia/Shanghai Asia/Taipei; do
+  grep -Fq "$location" "$frontend" || fail "first-run does not offer location: $location"
+done
 grep -Fq 'c.adw_window_title_new("DINX", "Configuração inicial / Initial setup")' "$frontend" \
   || fail 'first-run header does not expose DINX setup identity'
 grep -Fq 'c.adw_toolbar_view_set_content(@ptrCast(toolbar), stack_widget);' "$frontend" \

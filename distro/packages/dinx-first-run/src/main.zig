@@ -22,8 +22,38 @@ const shell_css =
     \\.dock { padding: 4px; } window.dinx-shell { font-family: "Noto Sans"; }
 ;
 
-const Language = enum { pt_br, en_us };
-const Location = enum { sao_paulo, utc };
+const Language = enum {
+    en_us,
+    pt_br,
+    fr,
+    de,
+    nl,
+    da,
+    pt_pt,
+    es,
+    it,
+    en_gb,
+    uk,
+    ja,
+    zh_cn,
+    zh_tw,
+};
+const Location = enum {
+    united_states,
+    brazil,
+    france,
+    germany,
+    netherlands,
+    denmark,
+    portugal,
+    spain,
+    italy,
+    united_kingdom,
+    ukraine,
+    japan,
+    china,
+    taiwan,
+};
 const Theme = enum { dinx, skeuos, orchis, fluent, jasper };
 const Variant = enum { dark, light };
 const Corners = enum { rounded, square };
@@ -32,7 +62,7 @@ const Dock = enum { none, left, right, bottom };
 
 const Selections = struct {
     language: Language = .pt_br,
-    location: Location = .sao_paulo,
+    location: Location = .brazil,
     theme: Theme = .dinx,
     variant: Variant = .dark,
     corners: Corners = .rounded,
@@ -41,29 +71,77 @@ const Selections = struct {
 
     fn languageCode(self: Selections) []const u8 {
         return switch (self.language) {
-            .pt_br => "pt-BR",
             .en_us => "en-US",
+            .pt_br => "pt-BR",
+            .fr => "fr",
+            .de => "de",
+            .nl => "nl",
+            .da => "da",
+            .pt_pt => "pt-PT",
+            .es => "es",
+            .it => "it",
+            .en_gb => "en-GB",
+            .uk => "uk",
+            .ja => "ja",
+            .zh_cn => "zh-CN",
+            .zh_tw => "zh-TW",
         };
     }
 
     fn locale(self: Selections) []const u8 {
         return switch (self.language) {
-            .pt_br => "pt_BR.UTF-8",
             .en_us => "en_US.UTF-8",
+            .pt_br => "pt_BR.UTF-8",
+            .fr => "fr_FR.UTF-8",
+            .de => "de_DE.UTF-8",
+            .nl => "nl_NL.UTF-8",
+            .da => "da_DK.UTF-8",
+            .pt_pt => "pt_PT.UTF-8",
+            .es => "es_ES.UTF-8",
+            .it => "it_IT.UTF-8",
+            .en_gb => "en_GB.UTF-8",
+            .uk => "uk_UA.UTF-8",
+            .ja => "ja_JP.UTF-8",
+            .zh_cn => "zh_CN.UTF-8",
+            .zh_tw => "zh_TW.UTF-8",
         };
     }
 
     fn timezone(self: Selections) []const u8 {
         return switch (self.location) {
-            .sao_paulo => "America/Sao_Paulo",
-            .utc => "UTC",
+            .united_states => "America/New_York",
+            .brazil => "America/Sao_Paulo",
+            .france => "Europe/Paris",
+            .germany => "Europe/Berlin",
+            .netherlands => "Europe/Amsterdam",
+            .denmark => "Europe/Copenhagen",
+            .portugal => "Europe/Lisbon",
+            .spain => "Europe/Madrid",
+            .italy => "Europe/Rome",
+            .united_kingdom => "Europe/London",
+            .ukraine => "Europe/Kyiv",
+            .japan => "Asia/Tokyo",
+            .china => "Asia/Shanghai",
+            .taiwan => "Asia/Taipei",
         };
     }
 
     fn keyboard(self: Selections) []const u8 {
         return switch (self.language) {
-            .pt_br => "br",
             .en_us => "us",
+            .pt_br => "br",
+            .fr => "fr",
+            .de => "de",
+            .nl => "nl",
+            .da => "dk",
+            .pt_pt => "pt",
+            .es => "es",
+            .it => "it",
+            .en_gb => "gb",
+            .uk => "ua",
+            .ja => "jp",
+            .zh_cn => "cn",
+            .zh_tw => "tw",
         };
     }
 
@@ -141,14 +219,38 @@ const Selections = struct {
 // hand-edited file fails to match keeps the DINX default, so no preset string
 // can reach an environment, gsettings or dconf value verbatim.
 fn parseLanguage(value: []const u8) ?Language {
-    if (std.mem.eql(u8, value, "pt-BR")) return .pt_br;
     if (std.mem.eql(u8, value, "en-US")) return .en_us;
+    if (std.mem.eql(u8, value, "pt-BR")) return .pt_br;
+    if (std.mem.eql(u8, value, "fr")) return .fr;
+    if (std.mem.eql(u8, value, "de")) return .de;
+    if (std.mem.eql(u8, value, "nl")) return .nl;
+    if (std.mem.eql(u8, value, "da")) return .da;
+    if (std.mem.eql(u8, value, "pt-PT")) return .pt_pt;
+    if (std.mem.eql(u8, value, "es")) return .es;
+    if (std.mem.eql(u8, value, "it")) return .it;
+    if (std.mem.eql(u8, value, "en-GB")) return .en_gb;
+    if (std.mem.eql(u8, value, "uk")) return .uk;
+    if (std.mem.eql(u8, value, "ja")) return .ja;
+    if (std.mem.eql(u8, value, "zh-CN")) return .zh_cn;
+    if (std.mem.eql(u8, value, "zh-TW")) return .zh_tw;
     return null;
 }
 
 fn parseLocation(value: []const u8) ?Location {
-    if (std.mem.eql(u8, value, "America/Sao_Paulo")) return .sao_paulo;
-    if (std.mem.eql(u8, value, "UTC")) return .utc;
+    if (std.mem.eql(u8, value, "America/New_York")) return .united_states;
+    if (std.mem.eql(u8, value, "America/Sao_Paulo")) return .brazil;
+    if (std.mem.eql(u8, value, "Europe/Paris")) return .france;
+    if (std.mem.eql(u8, value, "Europe/Berlin")) return .germany;
+    if (std.mem.eql(u8, value, "Europe/Amsterdam")) return .netherlands;
+    if (std.mem.eql(u8, value, "Europe/Copenhagen")) return .denmark;
+    if (std.mem.eql(u8, value, "Europe/Lisbon")) return .portugal;
+    if (std.mem.eql(u8, value, "Europe/Madrid")) return .spain;
+    if (std.mem.eql(u8, value, "Europe/Rome")) return .italy;
+    if (std.mem.eql(u8, value, "Europe/London")) return .united_kingdom;
+    if (std.mem.eql(u8, value, "Europe/Kyiv")) return .ukraine;
+    if (std.mem.eql(u8, value, "Asia/Tokyo")) return .japan;
+    if (std.mem.eql(u8, value, "Asia/Shanghai")) return .china;
+    if (std.mem.eql(u8, value, "Asia/Taipei")) return .taiwan;
     return null;
 }
 
@@ -367,6 +469,54 @@ fn reloadDock() void {
     spawnIgnored(&.{ "/usr/bin/pkill", "-HUP", "dinx-dock" }, false);
 }
 
+
+fn languageFromIndex(index: c.guint) Language {
+    return switch (index) {
+        0 => .en_us,
+        1 => .pt_br,
+        2 => .fr,
+        3 => .de,
+        4 => .nl,
+        5 => .da,
+        6 => .pt_pt,
+        7 => .es,
+        8 => .it,
+        9 => .en_gb,
+        10 => .uk,
+        11 => .ja,
+        12 => .zh_cn,
+        13 => .zh_tw,
+        else => .pt_br,
+    };
+}
+
+fn locationFromIndex(index: c.guint) Location {
+    return switch (index) {
+        0 => .united_states,
+        1 => .brazil,
+        2 => .france,
+        3 => .germany,
+        4 => .netherlands,
+        5 => .denmark,
+        6 => .portugal,
+        7 => .spain,
+        8 => .italy,
+        9 => .united_kingdom,
+        10 => .ukraine,
+        11 => .japan,
+        12 => .china,
+        13 => .taiwan,
+        else => .brazil,
+    };
+}
+
+fn languageIndex(language: Language) c.guint {
+    return @intCast(@intFromEnum(language));
+}
+
+fn locationIndex(location: Location) c.guint {
+    return @intCast(@intFromEnum(location));
+}
 const App = struct {
     application: *c.AdwApplication,
     io: std.Io,
@@ -390,10 +540,10 @@ const App = struct {
     /// Reads the live widget state into the selection record.
     fn collect(self: *App) void {
         if (self.language_dropdown) |dropdown| {
-            self.selections.language = if (c.gtk_drop_down_get_selected(dropdown) == 1) .en_us else .pt_br;
+            self.selections.language = languageFromIndex(c.gtk_drop_down_get_selected(dropdown));
         }
         if (self.location_dropdown) |dropdown| {
-            self.selections.location = if (c.gtk_drop_down_get_selected(dropdown) == 1) .utc else .sao_paulo;
+            self.selections.location = locationFromIndex(c.gtk_drop_down_get_selected(dropdown));
         }
         if (self.theme_dropdown) |dropdown| {
             self.selections.theme = switch (c.gtk_drop_down_get_selected(dropdown)) {
@@ -534,14 +684,14 @@ const App = struct {
         const language_page = self.makePage("language", "Idioma / Language") orelse return;
         self.addLabel(language_page, "Idioma do sistema / System language");
         self.language_dropdown = self.addDropdown(language_page, &language_strings);
-        if (self.language_dropdown) |dropdown| c.gtk_drop_down_set_selected(dropdown, 0);
+        if (self.language_dropdown) |dropdown| c.gtk_drop_down_set_selected(dropdown, languageIndex(self.selections.language));
         self.addButton(language_page, "Continuar / Continue", &onLanguageContinue);
 
         // P2 location.
         const location_page = self.makePage("location", "Localização / Location") orelse return;
         self.addLabel(location_page, "Fuso horário / Time zone");
         self.location_dropdown = self.addDropdown(location_page, &location_strings);
-        if (self.location_dropdown) |dropdown| c.gtk_drop_down_set_selected(dropdown, 0);
+        if (self.location_dropdown) |dropdown| c.gtk_drop_down_set_selected(dropdown, locationIndex(self.selections.location));
         self.addButton(location_page, "Continuar / Continue", &onLocationContinue);
 
         // P3 appearance.
@@ -575,14 +725,38 @@ const App = struct {
 };
 
 const language_strings = [_:null]?[*:0]const u8{
-    "Português (Brasil)",
     "English (United States)",
+    "Português (Brasil)",
+    "Français (France)",
+    "Deutsch (Deutschland)",
+    "Nederlands (Nederland)",
+    "Dansk (Danmark)",
+    "Português (Portugal)",
+    "Español (España)",
+    "Italiano (Italia)",
+    "English (United Kingdom)",
+    "Українська (Україна)",
+    "日本語 (日本)",
+    "简体中文 (中国)",
+    "繁體中文 (台灣)",
     null,
 };
 
 const location_strings = [_:null]?[*:0]const u8{
+    "United States — New York (America/New_York)",
     "Brasil — São Paulo (America/Sao_Paulo)",
-    "United States — UTC",
+    "France — Paris (Europe/Paris)",
+    "Deutschland — Berlin (Europe/Berlin)",
+    "Nederland — Amsterdam (Europe/Amsterdam)",
+    "Danmark — Copenhagen (Europe/Copenhagen)",
+    "Portugal — Lisboa (Europe/Lisbon)",
+    "España — Madrid (Europe/Madrid)",
+    "Italia — Roma (Europe/Rome)",
+    "United Kingdom — London (Europe/London)",
+    "Україна — Kyiv (Europe/Kyiv)",
+    "日本 — Tokyo (Asia/Tokyo)",
+    "中国 — Shanghai (Asia/Shanghai)",
+    "台灣 — Taipei (Asia/Taipei)",
     null,
 };
 

@@ -12,7 +12,7 @@ source_env="$startdir/source.env"
 : "${PAINTFE_ICON_URL:?missing PAINTFE_ICON_URL}"
 : "${PAINTFE_ICON_SHA256:?missing PAINTFE_ICON_SHA256}"
 pkgver="${PAINTFE_VERSION}"
-pkgrel=5
+pkgrel=6
 pkgdesc="Fast, lightweight raster image editor built in Rust"
 arch=('x86_64')
 url='https://github.com/kylejckson/PaintFE'

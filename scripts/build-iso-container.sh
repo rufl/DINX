@@ -386,7 +386,7 @@ trap finish EXIT
               package_cache_recipe_sha256=$(
                 { declare -f package_cache_as_build_user; declare -f build_package; } | sha256sum
               )
-              package_cache_recipe_sha256=${package_cache_recipe_sha256%% *}
+              repository_seed_started=$SECONDS
               build_package ghostty-vt-runtime
               ghostty_vt_package=$(find "$package_repo" -maxdepth 1 -type f -name 'ghostty-vt-runtime-*.pkg.tar.zst' -print -quit)
               [[ -n "$ghostty_vt_package" ]]

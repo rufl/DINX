@@ -233,7 +233,7 @@ trap finish EXIT
                 local package_output="/tmp/dinx-package-output/$package_name"
                 local package_source_cache="$makepkg_source_cache/$package_name"
                 local package_makepkg_conf="/tmp/dinx-makepkg-$package_name.conf"
-                local status archive archive_name installed_packages_sha256 cache_key
+                local status archive archive_name installed_packages_sha256 cache_key force_source_build
                 local -a extra_env=(
                   "CARGO_HOME=/var/cache/dinx/cargo"
                   "CARGO_TARGET_DIR=/var/cache/dinx/cargo-target/$package_name"
@@ -249,6 +249,10 @@ trap finish EXIT
                     makepkg_options+=(--clean)
                     ;;
                 esac
+                force_source_build=${DINX_FORCE_REBUILD:-false}
+                if [[ "$package_name" == dinx-live-autologin ]]; then
+                  force_source_build=true
+                fi
                 if [[ "$package_name" == deetty ]]; then
                   extra_env+=(GLYCIN_DISABLE_SANDBOX=i-know-the-risks)
                   makepkg_options+=(--cleanbuild)
@@ -281,7 +285,7 @@ trap finish EXIT
                     return "$status"
                   fi
                 fi
-                if [[ "${DINX_FORCE_REBUILD:-false}" != true ]]; then
+                if [[ "$force_source_build" != true ]]; then
                   local -a precompiled_candidates=()
                   local all_candidates_found=true
                   local candidate_archive expected_path
@@ -486,6 +490,15 @@ trap finish EXIT
               build_package dinx-gtk-themes
               build_package dinx-plymouth-theme
               build_package dinx-live-autologin
+              live_autologin_package=$(find "$package_repo" -maxdepth 1 -type f \
+                -name 'dinx-live-autologin-*.pkg.tar.zst' -print -quit)
+              [[ -n "$live_autologin_package" ]]
+              live_autologin_service=$(bsdtar -xOf "$live_autologin_package" \
+                etc/dinit.d/dinx-live-autologin)
+              live_session_service=$(bsdtar -xOf "$live_autologin_package" \
+                etc/dinit.d/dinx-live-session)
+              ! grep -Fq 'waits-for = firewalld' <<<"$live_autologin_service"
+              ! grep -Fq 'waits-for = firewalld' <<<"$live_session_service"
               build_package swayimg
               build_package gapless
               build_package dinx-keyring

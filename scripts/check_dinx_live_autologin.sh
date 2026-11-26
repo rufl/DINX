@@ -47,6 +47,10 @@ grep -Fq '  autologin: true' "$profile" || fail 'live-session autologin is not e
 grep -Fq '  hostname: dinxlive' "$profile" || fail 'live-session profile hostname is not dinxlive'
 grep -Fqx 'dinxlive' "$live_overlay/etc/hostname" \
   || fail 'live overlay hostname file is not dinxlive'
+for live_service in dinx-live-autologin dinx-live-session dinx-plymouth-quit; do
+  grep -Fq "    - $live_service" "$profile" \
+    || fail "live session profile does not enable $live_service"
+done
 livefs_packages=$(awk '
   /^livefs:/{in_live=1; next}
   in_live && /^  packages:/{in_packages=1; next}
@@ -122,6 +126,8 @@ grep -Fqx 'command = /usr/local/libexec/dinx-live-session' "$session_service" \
   || fail 'live session service command is incorrect'
 grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
+grep -Fqx 'depends-on = dinx-plymouth-quit' "$session_service" \
+  || fail 'live session does not wait for the Plymouth handoff'
 grep -Fqx 'depends-on = dinx-live-autologin' "$session_service" \
   || fail 'live session does not wait for live boot preparation'
 grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' "$session_launcher" \

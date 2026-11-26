@@ -79,6 +79,8 @@ for live_path in \
   etc/dinit.d/dinx-keyring-populate \
   etc/dinit.d/boot.d/greetd \
   etc/dinit.d/boot.d/dinx-live-autologin \
+  etc/dinit.d/boot.d/dinx-live-session \
+  etc/dinit.d/boot.d/dinx-plymouth-quit \
   etc/dinit.d/root-ro \
   etc/dinit.d/early-root-rw.target \
   usr/local/libexec/dinx-live-autologin \
@@ -184,6 +186,8 @@ grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_session_service" \
   || fail 'live session service does not wait for live boot preparation'
 grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
   || fail 'live session service does not depend on seatd'
+grep -Fqx 'depends-on = dinx-plymouth-quit' <<<"$live_session_service" \
+  || fail 'live session service does not wait for the Plymouth handoff'
 ! grep -Fqx 'waits-for = firewalld' <<<"$live_session_service" \
   || fail 'live session service must not block the desktop on Firewalld startup'
 grep -Fqx 'restart = true' <<<"$live_session_service" \

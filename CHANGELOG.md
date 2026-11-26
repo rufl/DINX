@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Prevent live graphical boot from waiting on Firewalld startup; the firewall service now starts independently of the direct River/KWM session.
+- Make the live River/KWM session and Plymouth handoff explicit dinit services in the live profile; the session now waits for the bounded Plymouth quit service before starting the compositor.
 - Expand first-run language, locale, keyboard and timezone coverage to every EuroOffice lean UI locale: en-US, pt-BR, fr, de, nl, da, pt-PT, es, it, en-GB, uk, ja, zh-CN and zh-TW. Preserve the matching glibc locale sources through final ISO trimming.
 - Add city/timezone choices for every supported EuroOffice country, including multiple zones for the United States, Brazil, Portugal, Spain and China.
 - Restore themed client-side decorations for every app: KWM now requests CSD, GTK draws titlebars and buttons, and Godot gets libdecor plus a 100% editor settings seed.

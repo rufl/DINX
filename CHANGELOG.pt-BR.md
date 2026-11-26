@@ -2,6 +2,7 @@
 
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 - Evitar que o boot gráfico live fique aguardando a inicialização do Firewalld; o firewall agora inicia de forma independente da sessão direta River/KWM.
+- Tornar explícitos no perfil live os serviços dinit da sessão River/KWM e da transição do Plymouth; a sessão agora aguarda o serviço limitado de encerramento do Plymouth antes de iniciar o compositor.
 - Expandir a cobertura de idioma, locale, teclado e fuso horário do first-run para todos os idiomas da interface lean do EuroOffice: en-US, pt-BR, fr, de, nl, da, pt-PT, es, it, en-GB, uk, ja, zh-CN e zh-TW; preservar os sources de locale glibc correspondentes durante o trimming final da ISO.
 - Adicionar opções de cidade/fuso para todos os países EuroOffice suportados, incluindo múltiplos fusos nos Estados Unidos, Brasil, Portugal, Espanha e China.
 - Restaurar decorações temáticas do lado do cliente para todos os aplicativos: o KWM agora solicita CSD, o GTK desenha titlebars e botões, e o Godot recebe libdecor mais um seed de configurações do editor em 100%.

@@ -10,6 +10,9 @@ live-session:
     - NetworkManager
     - greetd
     - bluetoothd
+    - dinx-live-autologin
+    - dinx-live-session
+    - dinx-plymouth-quit
   user-services:
     - dbus
     - pipewire

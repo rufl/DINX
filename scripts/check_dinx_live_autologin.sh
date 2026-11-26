@@ -136,7 +136,7 @@ grep -Fqx 'depends-on = seatd' "$session_service" \
   || fail 'live session does not wait for the seatd seat manager'
 grep -Fqx 'waits-for = dinx-plymouth-quit' "$session_service" \
   || fail 'live session does not wait for the Plymouth handoff'
-grep -Fqx 'depends-on = dinx-live-autologin' "$session_service" \
+grep -Fqx 'waits-for = dinx-live-autologin' "$session_service" \
   || fail 'live session does not wait for live boot preparation'
 grep -Fq 'exec /usr/bin/openvt -c 7 -s -f -e -- runuser -u dinx' "$session_launcher" \
   || fail 'live session does not acquire and activate dedicated VT 7'

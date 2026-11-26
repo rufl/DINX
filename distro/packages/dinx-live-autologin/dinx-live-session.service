@@ -4,6 +4,6 @@ command = /usr/local/libexec/dinx-live-session
 restart = true
 restart-delay = 5
 depends-on = local.target
-depends-on = dinx-live-autologin
+waits-for = dinx-live-autologin
 depends-on = seatd
 waits-for = dinx-plymouth-quit

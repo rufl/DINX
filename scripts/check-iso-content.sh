@@ -188,7 +188,7 @@ grep -Fqx 'type = process' <<<"$live_session_service" \
   || fail 'live session service is not a process service'
 grep -Fqx 'command = /usr/local/libexec/dinx-live-session' <<<"$live_session_service" \
   || fail 'live session service command is incorrect'
-grep -Fqx 'depends-on = dinx-live-autologin' <<<"$live_session_service" \
+grep -Fqx 'waits-for = dinx-live-autologin' <<<"$live_session_service" \
   || fail 'live session service does not wait for live boot preparation'
 grep -Fqx 'depends-on = seatd' <<<"$live_session_service" \
   || fail 'live session service does not depend on seatd'

@@ -30,7 +30,7 @@ sh -n "$bluetooth_helper" || fail 'DINX Bluetooth launcher has invalid shell syn
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller fwupd galculator gapless gparted haruna flatpak paintfe krita inkscape godot pixelorama patchy pori shikane udisks2 udisks2-btrfs wdisplays firefox eurooffice papirus-icon-theme; do
+for package in firewalld firewall-config file-roller fwupd galculator gapless gparted haruna flatpak paintfe krita inkscape godot pixelorama patchy pori shikane udisks2 udisks2-btrfs wdisplays firefox eurooffice papirus-icon-theme tuxmanager; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for package in pcmanfm blender audionaut octopi pacman-contrib; do

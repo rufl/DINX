@@ -1,7 +1,0 @@
-#!/bin/sh
-set -eu
-
-# Mission Center is libadwaita-based but does not consistently inherit the
-# session's dark preference. Scope the libadwaita override to this launcher.
-export ADW_DEBUG_COLOR_SCHEME=prefer-dark
-exec /usr/bin/missioncenter "$@"

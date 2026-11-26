@@ -120,8 +120,8 @@ jobs:
         run: ./scripts/check_package_managers.sh
       - name: Verify scanner, firmware, Flatpak and image-editor payload
         run: ./scripts/check_desktop_packages.sh
-      - name: Verify Mission Center package and ISO contract
-        run: ./scripts/check_mission_center.sh
+      - name: Verify TuxManager package and ISO contract
+        run: ./scripts/check_tuxmanager.sh
       - name: Verify Pori, PCManFM, dinit storage and NTFS contracts
         run: ./scripts/check_pori_storage.sh
       - name: Verify display tool package contract

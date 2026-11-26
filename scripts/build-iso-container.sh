@@ -435,16 +435,15 @@ trap finish EXIT
               pacman_install_local "$package_repo"/astal-*.pkg.tar.zst
               build_package morghulis
               pacman_install_local "$package_repo"/morghulis-*.pkg.tar.zst
-              build_package mission-center
-              pacman_install_local "$package_repo"/mission-center-*.pkg.tar.zst
-              # Octopi is a Qt6/CMake package not available from Artix. Its build
-              # toolchain is fetched explicitly because makepkg runs --nodeps, so
-              # makedepends are not resolved from the PKGBUILD.
+              # Octopi and TuxManager use the Qt6 toolchain, which is fetched
+              # explicitly because makepkg runs --nodeps.
               pacman_sync_install \
                 cmake ninja qt6-tools qt6-5compat qt6-multimedia qt6-svg \
                 qtermwidget pacman-contrib
               build_package octopi
               pacman_install_local "$package_repo"/octopi-*.pkg.tar.zst
+              build_package tuxmanager
+              pacman_install_local "$package_repo"/tuxmanager-*.pkg.tar.zst
               # Blender packages are generated on the blender branch and pinned on main.
               # Bootstrap builds keep the old source recipe until the first generated
               # release has been published and pinned.

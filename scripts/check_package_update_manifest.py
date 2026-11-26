@@ -25,7 +25,6 @@ MANUAL_SOURCE_PINS = {
     "deetty",
     "dinx-gtk-themes",
     "octopi",
-    "mission-center",
 }
 
 

@@ -1,0 +1,31 @@
+pkgname=tuxmanager
+source_env="$startdir/source.env"
+[[ -r "$source_env" ]] || { printf 'PKGBUILD: missing %s\n' "$source_env" >&2; exit 1; }
+. "$source_env"
+: "${TUXMANAGER_VERSION:?missing TUXMANAGER_VERSION}"
+: "${TUXMANAGER_SOURCE_URL:?missing TUXMANAGER_SOURCE_URL}"
+: "${TUXMANAGER_SOURCE_SHA256:?missing TUXMANAGER_SOURCE_SHA256}"
+pkgver="$TUXMANAGER_VERSION"
+pkgrel=1
+pkgdesc='A Linux Task Manager alternative built with Qt6'
+arch=('x86_64')
+url='https://github.com/benapetr/TuxManager'
+license=('GPL-3.0-or-later')
+depends=('glibc' 'hicolor-icon-theme' 'libgcc' 'libstdc++' 'qt6-base')
+makedepends=('qt6-tools')
+source=("$pkgname-$pkgver.tar.gz::$TUXMANAGER_SOURCE_URL")
+sha256sums=("$TUXMANAGER_SOURCE_SHA256")
+
+build() {
+  cd "$srcdir/TuxManager-$pkgver"
+  qmake6 src/TuxManager.pro
+  make
+}
+
+package() {
+  cd "$srcdir/TuxManager-$pkgver"
+  install -Dm755 tux-manager -t "$pkgdir/usr/bin/"
+  install -Dm644 src/tux_manager_icon.svg -t "$pkgdir/usr/share/icons/hicolor/scalable/apps/"
+  install -Dm644 packaging/data/io.github.benapetr.TuxManager.desktop -t "$pkgdir/usr/share/applications/"
+  install -Dm644 packaging/data/io.github.benapetr.TuxManager.metainfo.xml -t "$pkgdir/usr/share/metainfo/"
+}

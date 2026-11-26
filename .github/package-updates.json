@@ -253,6 +253,20 @@
       "bump_pkgrel_path": "distro/packages/morghulis/PKGBUILD"
     },
     {
+      "name": "tuxmanager",
+      "provider": "github",
+      "repository": "benapetr/TuxManager",
+      "source_file": "distro/packages/tuxmanager/source.env",
+      "version_key": "TUXMANAGER_VERSION",
+      "package_version_key": "TUXMANAGER_VERSION",
+      "source_url_key": "TUXMANAGER_SOURCE_URL",
+      "checksum_key": "TUXMANAGER_SOURCE_SHA256",
+      "checksum": "sha256",
+      "tag_prefix": "v",
+      "url_template": "https://github.com/benapetr/TuxManager/archive/refs/tags/{tag}.tar.gz",
+      "bump_pkgrel_path": "distro/packages/tuxmanager/PKGBUILD"
+    },
+    {
       "name": "audionaut",
       "provider": "github",
       "repository": "kvoltmer/Audionaut",

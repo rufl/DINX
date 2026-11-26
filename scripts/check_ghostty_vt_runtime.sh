@@ -19,12 +19,12 @@ for path in "$pkgbuild" "$profile" "$groups" "$workflow" "$builder" "$builder_pa
 done
 
 grep -Fqx 'pkgname=ghostty-vt-runtime' "$pkgbuild" || fail 'package name is not ghostty-vt-runtime'
-grep -Fqx 'source=()' "$pkgbuild" || fail 'runtime package must be staged from the installed build dependency'
-grep -Fq "makedepends=('ghostty')" "$pkgbuild" || fail 'full Ghostty is not declared as a build-only extraction dependency'
+grep -Fq 'source=("https://github.com/ghostty-org/ghostty/archive/refs/tags/v${_ghostty_version}.tar.gz")' "$pkgbuild" || fail 'runtime package must build from the pinned Ghostty source'
+grep -Fq "makedepends=('zig>=0.17'" "$pkgbuild" || fail 'Zig is not declared as the Ghostty VT build dependency'
 grep -Fq "conflicts=('ghostty')" "$pkgbuild" || fail 'runtime package does not prevent coexistence with the full terminal'
+grep -Fq 'zig build -Doptimize=ReleaseSafe -Demit-lib-vt' "$pkgbuild" || fail 'VT runtime is not built from the Ghostty source'
 grep -Fq 'cp -a "$library" "$pkgdir/usr/lib/"' "$pkgbuild" || fail 'VT shared library is not staged into the runtime package'
-grep -Fq 'cp -a /usr/include/ghostty "$pkgdir/usr/include/"' "$pkgbuild" || fail 'VT headers are not staged into the runtime package'
-grep -Fq 'usr/share/licenses/ghostty/LICENSE' "$pkgbuild" || fail 'upstream license is not staged'
+grep -Fq 'cp -a zig-out/include/ghostty "$pkgdir/usr/include/"' "$pkgbuild" || fail 'VT headers are not staged into the runtime package'
 if grep -Eq 'install[^#]*(/usr/bin/ghostty|/usr/share/applications/.*[Gg]hostty)|cp[^#]*(/usr/bin/ghostty|/usr/share/applications/.*[Gg]hostty)' "$pkgbuild"; then
   fail 'runtime package recipe stages a Ghostty application or desktop launcher'
 fi
@@ -59,7 +59,9 @@ dinxpanel_build_line=$(grep -nF 'build_package dinxpanel' "$builder" | cut -d: -
   && install_runtime_line < deetty_build_line && deetty_build_line < dinxpanel_build_line )) \
   || fail 'Ghostty runtime must replace the full app before Deetty and dependent desktop packages are built'
 grep -Fqx 'ghostty' "$builder_packages" \
-  || fail 'builder image manifest does not install Ghostty as the build-only extraction source'
+  || fail 'builder image manifest does not install Ghostty source metadata'
+grep -Fqx 'zig' "$builder_packages" \
+  || fail 'builder image manifest does not install Zig for Ghostty VT compilation'
 
 if [[ $# -gt 1 ]]; then
   fail 'usage: check_ghostty_vt_runtime.sh [PACKAGE]'

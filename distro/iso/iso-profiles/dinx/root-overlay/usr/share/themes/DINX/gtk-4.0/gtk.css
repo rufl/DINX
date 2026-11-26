@@ -69,7 +69,7 @@ row:hover {
 
 button.suggested-action,
 button.default {
-    background-color: var(--accent);
+    background-color: #8fb8ff;
     color: #0b0d12;
 }
 
@@ -88,7 +88,7 @@ selection,
 
 scale highlight,
 progressbar progress {
-    background-color: var(--accent);
+    background-color: #8fb8ff;
 }
 
 scrollbar trough {

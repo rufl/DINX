@@ -101,9 +101,23 @@ for package in "${packages[@]}"; do
   verify_signature "$package"
 done
 
-: > "$ownership_file"
+# Mutually exclusive replacement packages (for example Blender lean/full) may
+# intentionally share paths; only undeclared ownership collisions are invalid.
+declare -A package_names=()
+declare -A package_conflicts=()
 for package in "${packages[@]}"; do
-  package_name=$(basename "$package")
+  package_file=$(basename "$package")
+  package_name=$(bsdtar -xOf "$package" .PKGINFO \
+    | awk -F' = ' '$1 == "pkgname" { print $2; exit }')
+  [[ -n "$package_name" ]] || fail "package metadata has no pkgname: $package_file"
+  package_names["$package_file"]=$package_name
+  while IFS= read -r conflict; do
+    [[ -n "$conflict" ]] || continue
+    package_conflicts["$package_name|${conflict%%[<=>]*}"]=1
+  done < <(
+    bsdtar -xOf "$package" .PKGINFO \
+      | awk -F' = ' '$1 == "conflict" { print $2 }'
+  )
   while IFS= read -r path; do
     path=${path#./}
     case "$path" in
@@ -111,20 +125,34 @@ for package in "${packages[@]}"; do
         continue
         ;;
     esac
-    printf '%s\t%s\n' "$path" "$package_name" >> "$ownership_file"
+    printf '%s\t%s\n' "$path" "$package_file" >> "$ownership_file"
   done < <(bsdtar -tf "$package")
 done
 
-duplicates=$(LC_ALL=C sort -t $'\t' -k1,1 -k2,2 "$ownership_file" \
-  | awk -F '\t' '
-      $1 == previous_path && $2 != previous_package {
-        print previous_path ": " previous_package ", " $2
-      }
-      { previous_path = $1; previous_package = $2 }
-    ')
-[[ -z "$duplicates" ]] || {
-  printf '%s\n' "$duplicates" >&2
-  fail 'package archives contain duplicate non-directory paths'
+unresolved_duplicates=
+duplicates=$(
+  LC_ALL=C sort -t $'\t' -k1,1 -k2,2 "$ownership_file" \
+    | awk -F '\t' '
+        $1 == previous_path && $2 != previous_package {
+          print $1 "\t" previous_package "\t" $2
+        }
+        { previous_path = $1; previous_package = $2 }
+      '
+)
+if [[ -n "$duplicates" ]]; then
+  while IFS=$'\t' read -r path first_package second_package; do
+    first_name=${package_names["$first_package"]-}
+    second_name=${package_names["$second_package"]-}
+    if [[ -n ${package_conflicts["$first_name|$second_name"]-} \
+       || -n ${package_conflicts["$second_name|$first_name"]-} ]]; then
+      continue
+    fi
+    unresolved_duplicates+="${path}: ${first_package}, ${second_package}"$'\n'
+  done <<< "$duplicates"
+fi
+[[ -z "$unresolved_duplicates" ]] || {
+  printf '%s' "$unresolved_duplicates" >&2
+  fail 'package archives contain duplicate non-directory paths without package conflicts'
 }
 
 rootfs=${DINX_PACKAGE_ROOTFS:-}
@@ -141,6 +169,7 @@ else
   ownership_state=archive_verified
 fi
 
-printf 'package_repository_contract schema=dinx-package-repository/v1 channel=%s publication=%s packages=%s signed=true conflicts=false snapshot=%s database_sha256=%s key_sha256=%s ownership=%s\n' \
+printf 'package_repository_contract schema=dinx-package-repository/v1 channel=%s publication=%s packages=%s conflicts=false snapshot=%s database_sha256=%s key_sha256=%s ownership=%s\n' \
   "$(read_value channel)" "$(read_value publication)" "$actual_count" "$package_snapshot" \
   "$actual_database_sha256" "$actual_key_sha256" "$ownership_state"
+

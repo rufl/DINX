@@ -80,7 +80,6 @@ for live_path in \
   etc/dinit.d/boot.d/greetd \
   etc/dinit.d/boot.d/dinx-live-autologin \
   etc/dinit.d/boot.d/dinx-live-session \
-  etc/dinit.d/boot.d/dinx-plymouth-quit \
   etc/dinit.d/root-ro \
   etc/dinit.d/early-root-rw.target \
   usr/local/libexec/dinx-live-autologin \

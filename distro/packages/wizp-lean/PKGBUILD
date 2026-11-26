@@ -1,0 +1,102 @@
+pkgname=wizp-lean
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='WIZP editor using DINX EuroOffice CEF 109 shared runtime'
+arch=(x86_64)
+url='https://github.com/rufl/DINX'
+license=(MIT)
+depends=(eurooffice=9.3.8-5 glibc libx11 libxcb libxkbcommon mesa)
+optdepends=('git: SCM integration' 'clang: clangd language server' 'xdg-utils: opening external links')
+provides=(wizp)
+conflicts=(wizp)
+makedepends=(jq)
+source=()
+sha256sums=()
+
+: "${WIZP_PACKAGE_DIR:?Set WIZP_PACKAGE_DIR to the output of build.sh}"
+
+prepare() {
+  package_root=$(realpath -- "$WIZP_PACKAGE_DIR")
+  [[ -x "$package_root/bin/launcher" && -x "$package_root/bin/bun" ]] || {
+    printf 'wizp-lean: missing Electrobun launcher or Bun runtime\n' >&2
+    return 1
+  }
+  [[ -f "$package_root/Resources/main.js" && -f "$package_root/Resources/app/frontend-dist/index.html" ]] || {
+    printf 'wizp-lean: missing main bundle or frontend\n' >&2
+    return 1
+  }
+  [[ -f "$package_root/Resources/wizp-lean-cef.json" ]] || {
+    printf 'wizp-lean: missing CEF provenance manifest\n' >&2
+    return 1
+  }
+  jq -e --arg patch_sha '34741e983a5ab7031dcec2aedb1d22a31e20b4177360c98d698cca540aafe0d1' \
+    '.schema == "dinx-wizp-lean-cef/v1" and
+     .electrobun.version == "1.18.1" and
+     .electrobun.source_commit == "4eba723c85b97559e1d9e13439d9a92ede0832e8" and
+     .electrobun.patch_sha256 == $patch_sha and
+     .cef.version == "109.1.18+gf1c41e4" and
+     .cef.chromium == "109.0.5414.120" and
+     .cef.libcef_sha256 == "b86edf848d4c18c70d76eba7bcce766d2f5d735ac56effeb11fcf4ee47771689" and
+     .eurooffice_pkgver == "9.3.8-5"' \
+    "$package_root/Resources/wizp-lean-cef.json" >/dev/null || {
+    printf 'wizp-lean: CEF provenance does not match the pinned runtime contract\n' >&2
+    return 1
+  }
+  for file in libcef.so libEGL.so libGLESv2.so libvk_swiftshader.so libvulkan.so.1; do
+    [[ -f "$package_root/bin/cef/$file" ]] || {
+      printf 'wizp-lean: missing CEF library: %s\n' "$file" >&2
+      return 1
+    }
+  done
+  for file in icudtl.dat resources.pak v8_context_snapshot.bin snapshot_blob.bin \
+    chrome_100_percent.pak chrome_200_percent.pak vk_swiftshader_icd.json; do
+    [[ -f "$package_root/bin/$file" ]] || {
+      printf 'wizp-lean: missing CEF resource: %s\n' "$file" >&2
+      return 1
+    }
+  done
+  [[ -d "$package_root/bin/locales" ]] || {
+    printf 'wizp-lean: missing CEF locales\n' >&2
+    return 1
+  }
+  installed_bytes=$(du -sb -- "$package_root" | awk '{print $1}')
+  max_bytes=${WIZP_LEAN_MAX_INSTALLED_BYTES:-900000000}
+  (( installed_bytes <= max_bytes )) || {
+    printf 'wizp-lean: installed package budget exceeded: %s > %s bytes\n' "$installed_bytes" "$max_bytes" >&2
+    return 1
+  }
+}
+
+build() { :; }
+
+package() {
+  package_root=$(realpath -- "$WIZP_PACKAGE_DIR")
+  install -d "$pkgdir/opt/wizp"
+  cp -a "$package_root"/. "$pkgdir/opt/wizp/"
+
+  for file in libcef.so libEGL.so libGLESv2.so libvk_swiftshader.so libvulkan.so.1; do
+    rm -f -- "$pkgdir/opt/wizp/bin/cef/$file"
+    ln -s "/opt/eurooffice/$file" "$pkgdir/opt/wizp/bin/cef/$file"
+  done
+  for file in icudtl.dat resources.pak v8_context_snapshot.bin snapshot_blob.bin \
+    chrome_100_percent.pak chrome_200_percent.pak; do
+    rm -f -- "$pkgdir/opt/wizp/bin/$file"
+    ln -s "/opt/eurooffice/$file" "$pkgdir/opt/wizp/bin/$file"
+  done
+  rm -f -- "$pkgdir/opt/wizp/bin/cef/vk_swiftshader_icd.json"
+  ln -s /opt/eurooffice/vk_swiftshader_icd.json "$pkgdir/opt/wizp/bin/cef/vk_swiftshader_icd.json"
+  rm -rf -- "$pkgdir/opt/wizp/bin/locales"
+  ln -s /opt/eurooffice/locales "$pkgdir/opt/wizp/bin/locales"
+
+  install -d "$pkgdir/usr/bin"
+  cat > "$pkgdir/usr/bin/wizp" <<'EOF'
+#!/bin/sh
+exec /opt/wizp/bin/launcher "$@"
+EOF
+  chmod 0755 "$pkgdir/usr/bin/wizp"
+  install -Dm644 "$startdir/../wizp/resources/wizp.desktop" "$pkgdir/usr/share/applications/wizp.desktop"
+  install -Dm644 "$startdir/../wizp/resources/dev.wizp.WIZP.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.wizp.WIZP.svg"
+  install -Dm644 "$startdir/README.md" "$pkgdir/usr/share/doc/wizp-lean/README.md"
+  install -Dm644 "$startdir/../../../LICENSE" "$pkgdir/usr/share/licenses/wizp-lean/LICENSE"
+}

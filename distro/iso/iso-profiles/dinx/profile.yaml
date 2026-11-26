@@ -55,9 +55,7 @@ rootfs:
     - paintfe
     - blender
     - godot
-    - blender
     - libva
-    - pcmanfm
     - pori
     - greetd
     - greetd-tuigreet

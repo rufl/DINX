@@ -28,7 +28,7 @@ for path in \
   "$package_updates" "$pcmanfm_override" \
   "$pori_dir/PKGBUILD" "$pori_dir/source.env" \
   "$pori_dir/units-dinit.zig" "$pori_dir/privops-dinit.zig" \
-  "$pori_dir/watch-dinit.zig" "$pori_dir/pori-dinit.patch" \
+  "$pori_dir/pori-dinit.patch" "$pori_dir/pori-memory.patch" \
   "$pori_dir/pori-mount-service" \
   "$repo_root/scripts/smoke_pori_zig.sh"; do
   require_file "$path"
@@ -107,10 +107,10 @@ done
 for required in '/etc/dinit.d' 'dinitctl --system' 'type = process' 'pori-mount-service' 'restart = true' 'restart-delay = 5' 'restart-limit-count = 0' 'ntfs3'; do
   grep -Fq -- "$required" "$pori_dir/privops-dinit.zig" || fail "Pori dinit implementation is missing: $required"
 done
-grep -Fq 'org.freedesktop.UDisks2' "$pori_dir/watch-dinit.zig" || fail 'Pori no longer watches UDisks2'
-grep -Fq 'Pori-What:' "$pori_dir/units-dinit.zig" || fail 'Pori mount metadata parser is missing'
-grep -Fq 'Pori-Where:' "$pori_dir/units-dinit.zig" || fail 'Pori mount target metadata parser is missing'
-grep -Fq 'dinit mount service' "$pori_dir/pori-dinit.patch" || fail 'Pori UI does not describe dinit mount services'
+grep -Fq 'std.heap.ArenaAllocator' "$pori_dir/pori-memory.patch" \
+  || fail 'Pori dialog allocation lifetime patch is missing'
+grep -Fq 'arena.deinit();' "$pori_dir/pori-memory.patch" \
+  || fail 'Pori dialog allocation lifetime patch does not release its arena'
 
 source "$pori_dir/source.env"
 [[ "$PORI_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pori version: $PORI_VERSION"

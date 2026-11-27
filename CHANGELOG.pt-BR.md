@@ -2,6 +2,7 @@
 
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
 - Corrigir sete regressões do desktop da ISO: validar o D-Bus da sessão live do Calamares antes de ler preferências, direcionar as entradas desktop do PaintFE/Blender/EuroOffice para os wrappers DINX, preparar o perfil do PCManFM com ícones e menu contextual próprio, remover a borda quadrada do KWM ao redor de janelas GTK arredondadas e forçar o wizard first-run a iniciar no ambiente escuro da DINX.
+- Atualizar Deetty/Dintor para o ref `986790fb4af78da31f0212a37706a9689b2f9a03` com rebuild em `pkgrel=12`, e abrir terminais Morghulis sem argumentos como janelas independentes focadas.
 - Atualizar o pin verificado do AppImage do Patchy para a versão upstream v1.43 (SHA-256 `aea18453339be1d4553ee2a93be59c6e0f2de18147b3e9c6a0f1049246336da1`); o Audionaut continua atual na v1.8.0.
 - Fazer o desktop River/KWM se comportar como um desktop convencional empilhado de Windows/macOS: toda janela gerenciada inicia flutuante, a geometria é preservada e o auto-swallow de terminais é desativado.
 - Tornar explícitos no perfil live os serviços dinit da sessão River/KWM e da transição do Plymouth; a sessão agora aguarda o serviço limitado de encerramento do Plymouth antes de iniciar o compositor.

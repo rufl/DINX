@@ -24,10 +24,12 @@ case "${1:-}" in
     exec /usr/bin/deetty --new-window --execute "$@"
     ;;
   *)
-    if [ $# -eq 0 ]; then
-        exec /usr/bin/deetty
-    else
-        exec /usr/bin/deetty --new-window --execute "$@"
-    fi
+  # Morghulis launches `$TERMINAL` without arguments; use a toplevel window so
+  # KWM/VirtualBox can grant keyboard focus reliably instead of a dropdown layer.
+  if [ $# -eq 0 ]; then
+      exec /usr/bin/deetty --new-window
+  else
+      exec /usr/bin/deetty --new-window --execute "$@"
+  fi
     ;;
 esac

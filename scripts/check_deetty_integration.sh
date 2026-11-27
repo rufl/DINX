@@ -40,8 +40,8 @@ grep -Fq 'export NOCTTY_DESKTOP_SHELL=/bin/fish' "$launcher" || fail 'Deetty wra
 grep -Fq -- '--dropdown' "$launcher" || fail 'Deetty wrapper lacks dropdown mode selection'
 grep -Fq -- '--windowed' "$launcher" || fail 'Deetty wrapper lacks windowed mode selection'
 grep -Fq -- '--zen-fullscreen' "$launcher" || fail 'Deetty wrapper lacks zen fullscreen selection'
-[[ $(grep -Fc 'exec /usr/bin/deetty --new-window --execute "$@"' "$launcher") -eq 2 ]] \
-  || fail 'Deetty command launcher does not consistently request an independent window'
+[[ $(grep -Fc 'exec /usr/bin/deetty --new-window' "$launcher") -ge 3 ]] \
+  || fail 'Deetty command launcher does not consistently request focused independent windows'
 grep -Fqx 'exec /usr/local/bin/deetty -e btop "$@"' "$btop_launcher" \
   || fail 'btop does not launch through the Deetty command wrapper'
 grep -Fqx 'exec /usr/local/bin/deetty -e nvtop "$@"' "$nvtop_launcher" \

@@ -61,7 +61,7 @@ prepare() {
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"
-  export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
+  export RUSTFLAGS="${RUSTFLAGS:-} -C link-arg=-Wl,--no-as-needed"
 
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false
   meson compile -C build

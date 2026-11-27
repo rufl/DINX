@@ -112,6 +112,7 @@ while IFS= read -r desktop_file; do
   while IFS= read -r key; do
     command_path=${key#*=}
     command_path=${command_path#dbus-run-session }
+    command_path=${command_path%% *}
     case "$command_path" in
       /usr/*|/etc/*) [[ -e "$overlay$command_path" ]] \
         || fail "dangling session command in ${desktop_file#$root/}: $command_path" ;;

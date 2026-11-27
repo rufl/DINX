@@ -166,6 +166,7 @@ grep -Fqx 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$paintfe_launcher" \
 
 tuxmanager_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/tux-manager"
 blender_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/blender"
+blender_desktop_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/applications/blender.desktop"
 eurooffice_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/eurooffice"
 for wrapper in "$tuxmanager_wrapper" "$blender_wrapper" "$eurooffice_wrapper"; do
   [[ -x "$wrapper" ]] || fail "DINX wrapper is missing or not executable: ${wrapper#$root/}"
@@ -191,6 +192,10 @@ grep -Fq 'Exec=/usr/local/bin/blender %f' "$blender_package" "$blender_desktop_b
   || fail 'Blender package desktop entry does not use the DINX wrapper'
 grep -Fq 'TryExec=/usr/local/bin/blender' "$blender_package" "$blender_desktop_build" \
   || fail 'Blender package desktop TryExec does not use the DINX wrapper'
+grep -Fqx 'Exec=/usr/local/bin/blender %f' "$blender_desktop_override" \
+  || fail 'Blender ISO overlay desktop entry does not use the DINX wrapper'
+grep -Fqx 'TryExec=/usr/local/bin/blender' "$blender_desktop_override" \
+  || fail 'Blender ISO overlay desktop TryExec does not use the DINX wrapper'
 eurooffice_desktop="$root/distro/office/eurooffice/assets/eurooffice.desktop"
 grep -Fqx 'Exec=/usr/local/bin/eurooffice %U' "$eurooffice_desktop" \
   || fail 'EuroOffice desktop entry does not use the dark-theme wrapper'

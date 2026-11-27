@@ -225,6 +225,7 @@ require_empty_output "$package_output_host"
 [[ ! -e "$package_bundle_host" ]] \
   || fail "package bundle already exists; choose a fresh build directory: $package_bundle_host"
 
+source_tree_sha256=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$commit")
 source_env="$repo_root/distro/packages/deetty/source.env"
 version=$(awk -F= '$1 == "DEETTY_VERSION" { print $2; exit }' "$source_env")
 [[ -n "$version" ]] || fail 'Deetty source version is missing'
@@ -257,7 +258,6 @@ case ${DINX_SKIP_CONTRACTS:-false} in
   *) fail 'DINX_SKIP_CONTRACTS must be true/false or 1/0' ;;
 esac
 
-source_tree_sha256=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$commit")
 require_persistent=${DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING:-false}
 [[ "$require_persistent" == true || "$require_persistent" == false ]] \
   || fail 'DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING must be true or false'

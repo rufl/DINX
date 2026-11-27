@@ -35,9 +35,12 @@ pub const Profile = struct {
     }
 
     fn init(allocator: std.mem.Allocator, name: []const u8) !Profile {
+        const name_copy = try allocator.dupe(u8, name);
+        errdefer allocator.free(name_copy);
+        const description_copy = try allocator.dupe(u8, name);
         return .{
-            .name = try allocator.dupe(u8, name),
-            .description = try allocator.dupe(u8, name),
+            .name = name_copy,
+            .description = description_copy,
             .enable = .empty,
             .disable = .empty,
         };
@@ -69,7 +72,9 @@ pub const Profile = struct {
         for (list.items) |item| {
             if (std.mem.eql(u8, item, service)) return;
         }
-        try list.append(allocator, try allocator.dupe(u8, service));
+        const copy = try allocator.dupe(u8, service);
+        errdefer allocator.free(copy);
+        try list.append(allocator, copy);
     }
 };
 
@@ -92,15 +97,29 @@ pub const Store = struct {
     gaming_previous_path: []u8,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, home: []const u8) !Store {
+        var paths: struct {
+            config: ?[]u8 = null,
+            state: ?[]u8 = null,
+            gaming_previous: ?[]u8 = null,
+        } = .{};
+        errdefer {
+            if (paths.config) |path| allocator.free(path);
+            if (paths.state) |path| allocator.free(path);
+            if (paths.gaming_previous) |path| allocator.free(path);
+        }
+        paths.config = try configPath(allocator, home);
+        paths.state = try statePath(allocator, home);
+        paths.gaming_previous = try gamingPreviousPath(allocator, home);
         var store = Store{
             .allocator = allocator,
             .io = io,
             .home = home,
             .profiles = .empty,
-            .config_path = try configPath(allocator, home),
-            .state_path = try statePath(allocator, home),
-            .gaming_previous_path = try gamingPreviousPath(allocator, home),
+            .config_path = paths.config.?,
+            .state_path = paths.state.?,
+            .gaming_previous_path = paths.gaming_previous.?,
         };
+        paths = .{};
         errdefer store.deinit();
         try store.loadBuiltins();
         try store.loadFile("/etc/dinx/dinitui/profiles.conf");
@@ -150,7 +169,11 @@ pub const Store = struct {
                     self.profiles.items[index].deinit(self.allocator);
                     _ = self.profiles.orderedRemove(index);
                 }
-                try self.profiles.append(self.allocator, try Profile.init(self.allocator, name));
+                var profile = try Profile.init(self.allocator, name);
+                self.profiles.append(self.allocator, profile) catch |err| {
+                    profile.deinit(self.allocator);
+                    return err;
+                };
                 current = self.profiles.items.len - 1;
                 continue;
             }

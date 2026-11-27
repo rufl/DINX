@@ -50,7 +50,7 @@ grep -Fq 'DINITUI_BIN=/usr/bin/dinitui scripts/dinitui_dinit_qualification.sh' "
 grep -Fq 'std.process.run' "$backend" || fail 'DinitUI does not use argv-safe process execution'
 grep -Fq 'service-file discovery failed' "$frontend" || fail 'service-file discovery errors are not surfaced'
 grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" || fail 'DinitUI does not force the DINX dark color scheme'
-grep -Fq 'window.background { background-color: #0b0d12; }' "$frontend" || fail 'DinitUI dark window background is missing'
+grep -Fq 'defer c.g_object_unref(@ptrCast(provider));' "$frontend" || fail 'DinitUI CSS provider is not released on every exit path'
 grep -Fq 'gtk_button_new_with_label("Refresh")' "$frontend" || fail 'refresh control lacks a visible accessible label'
 grep -Fq 'Filter services' "$frontend" || fail 'service search lacks an input cue'
 grep -Fq -- '--profile-status' "$frontend" || fail 'profile status CLI is missing'
@@ -65,6 +65,9 @@ for package in mesa vulkan-radeon vulkan-intel nvidia-open-dkms nvidia-utils-din
   grep -Fq "\"$package\"" "$gpu" || fail "GPU plan is missing $package"
 done
 grep -Fq 'profiles.conf' "$frontend" "$profiles" "$pkgbuild" || fail 'profile persistence contract is missing'
+grep -Fq 'errdefer allocator.free(name_copy);' "$profiles" || fail 'profile name allocation has no failure cleanup'
+grep -Fq 'errdefer allocator.free(copy);' "$profiles" || fail 'profile service allocation has no failure cleanup'
+grep -Fq 'var paths: struct' "$profiles" || fail 'profile path initialization has no staged cleanup'
 for action in start stop restart reload enable disable wake release unpin unload trigger untrigger is-started is-failed add-dep rm-dep setenv unsetenv catlog signal shutdown; do
   grep -Fq "\"$action\"" "$backend" || fail "Dinit action is missing: $action"
 done

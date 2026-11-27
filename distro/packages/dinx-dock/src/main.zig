@@ -144,11 +144,11 @@ fn captureAppearancePath(environ: *const std.process.Environ.Map, arena: std.mem
     appearance_path = std.fmt.allocPrint(arena, "{s}/dinx/appearance.json", .{home}) catch "";
 }
 
-fn readConfig() ?Config {
+fn readConfig() ?std.json.Parsed(Config) {
     if (appearance_path.len == 0) return null;
     const text = std.Io.Dir.cwd().readFileAlloc(session_io, appearance_path, allocator, .limited(config_limit)) catch return null;
     defer allocator.free(text);
-    return std.json.parseFromSliceLeaky(
+    return std.json.parseFromSlice(
         Config,
         allocator,
         text,
@@ -184,8 +184,9 @@ fn appendFavorite(id: []const u8, fallback_icon: [*:0]const u8) void {
 
 fn loadFavorites() void {
     clearLoadedFavorites();
-    if (readConfig()) |config| {
-        if (config.favorites) |configured| {
+    if (readConfig()) |parsed| {
+        defer parsed.deinit();
+        if (parsed.value.favorites) |configured| {
             for (configured) |id| appendFavorite(id, "application-x-executable");
         }
     }
@@ -206,8 +207,11 @@ fn loadFavorites() void {
 /// the answer the first-run wizard records when the owner chooses no dock,
 /// keeps the window unmapped.
 fn readEdge() Edge {
-    const config = readConfig() orelse return default_edge;
-    return Edge.parse(config.dock);
+    if (readConfig()) |parsed| {
+        defer parsed.deinit();
+        return Edge.parse(parsed.value.dock);
+    }
+    return default_edge;
 }
 
 /// Advisory `flock` on `$XDG_RUNTIME_DIR/dinx-dock.lock`. A lock file the dock

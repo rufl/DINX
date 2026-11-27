@@ -86,6 +86,7 @@ grep -Fq 'kernel operations install packages and headers but never remove' "$rea
 grep -Fq 'rollback' "$readme" || fail 'kernel rollback policy is undocumented'
 grep -Fq 'Firmware discovery uses' "$readme" || fail 'firmware update policy is undocumented'
 grep -Fq 'g_spawn_async' "$frontend" || fail 'panel launch path is not argv-based'
+grep -Fq 'defer c.g_object_unref(@ptrCast(provider));' "$frontend" || fail 'panel CSS provider is not released on every exit path'
 grep -Fq 'std.Thread.spawn' "$frontend" || fail 'blocking panel operations are not moved off the GTK thread'
 grep -Fq 'g_idle_add' "$frontend" || fail 'panel worker results are not marshalled to the GTK thread'
 grep -Fq 'active_tasks' "$frontend" || fail 'panel task lifetime guard is missing'

@@ -784,6 +784,7 @@ fn applyTheme() void {
     const manager = c.adw_style_manager_get_default();
     c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
     const provider = c.gtk_css_provider_new() orelse return;
+    defer c.g_object_unref(@ptrCast(provider));
     const css =
         ".dinit-output { font-family: monospace; background: #0b0d12; color: #d7dde8; }\n" ++
         "window, headerbar, toolbarview, scrolledwindow { background-color: #0b0d12; color: #d7dde8; border: none; }\n" ++
@@ -802,7 +803,6 @@ fn applyTheme() void {
         @ptrCast(provider),
         c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
-    c.g_object_unref(@ptrCast(provider));
 }
 
 fn runCli(args: []const []const u8, io: std.Io, home: []const u8) !bool {

@@ -49,11 +49,14 @@ grep -Fq 'running' "$frontend" || fail 'dinx-dock has no visual activity marker'
 if grep -Eq 'system\(|popen|execv?[lp]?\(|/bin/sh' "$frontend"; then
   fail 'dinx-dock executes an arbitrary shell command instead of a fixed desktop entry'
 fi
-
 # User-visible dock behavior: configurable favorites and running-state refresh.
 grep -Fq 'favorites:' "$frontend" || fail 'dock does not read configurable favorites'
 grep -Fq 'checkRunningApps' "$frontend" || fail 'dock has no running-app indicator'
 grep -Fq 'g_timeout_add_seconds' "$frontend" || fail 'dock does not refresh running indicators'
+if grep -Eq 'pgrep|std\.process\.Child|parseFromSliceLeaky' "$frontend"; then
+  fail 'dinx-dock must not poll process state or leak parsed config on reload'
+fi
+grep -Fq 'std.json.parseFromSlice(' "$frontend" || fail 'dinx-dock config reload must use deinit-able JSON parsing'
 
 # Session wiring: the supervisor starts the dock as an optional helper so a
 # missing dock can never blank the desktop, and the roster ships it.

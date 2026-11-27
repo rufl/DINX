@@ -41,7 +41,7 @@ if [ -n "${HOME:-}" ]; then
   if [ -n "$desktop_dir" ] && [ -r "$installer_seed" ] && [ ! -e "$installer_desktop" ]; then
     installer_tmp="$desktop_dir/.Install DINX.desktop.$$"
     install -Dm755 "$installer_seed" "$installer_tmp"
-    mv -n "$installer_tmp" "$installer_desktop"
+    mv -n -- "$installer_tmp" "$installer_desktop"
     rm -f "$installer_tmp"
   fi
   config_home=${XDG_CONFIG_HOME:-$HOME/.config}

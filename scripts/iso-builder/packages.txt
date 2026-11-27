@@ -94,6 +94,7 @@ seatd
 shared-mime-info
 sqlite
 texinfo
+unzip
 tmux
 util-linux
 wayland

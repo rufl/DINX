@@ -10,13 +10,13 @@ glue="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-des
 theme_sync="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-sync-session-theme"
 supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
-
+kwm_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/kwm/config.zon"
 fail() {
   printf 'dinx_first_run_contract: %s\n' "$*" >&2
   exit 1
 }
 
-for path in "$pkgbuild" "$frontend" "$desktop" "$glue" "$theme_sync" "$supervisor" "$profile"; do
+for path in "$pkgbuild" "$frontend" "$desktop" "$glue" "$theme_sync" "$supervisor" "$profile" "$kwm_config"; do
   [[ -r "$path" ]] || fail "missing input: $path"
 done
 
@@ -39,6 +39,16 @@ grep -Fq 'dinx-dock' "$frontend" || fail 'first-run does not reload the dock aft
 for placement in '"left"' '"right"' '"bottom"' '"none"'; do
   grep -Fq "$placement" "$frontend" || fail "first-run does not offer the dock placement: $placement"
 done
+# The interactive wizard must not flash the light Adwaita default before the
+# user's appearance choice is committed.
+grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" \
+  || fail 'first-run does not force the dark libadwaita scheme at startup'
+grep -Fq 'border: 1px solid #3a4352' "$frontend" \
+  || fail 'first-run window does not use the neutral one-pixel border'
+grep -Fq '    .width = 1,' "$kwm_config" \
+  || fail 'KWM window border is not one pixel'
+grep -Fq '0x3a4352ff' "$kwm_config" \
+  || fail 'KWM focused border is not the neutral DINX border'
 for variant in 'prefer-dark' 'prefer-light'; do
   grep -Fq "$variant" "$frontend" || fail "first-run does not offer the $variant color scheme"
 done

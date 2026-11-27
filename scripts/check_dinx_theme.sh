@@ -45,6 +45,7 @@ system_gtk4="$overlay/etc/xdg/gtk-4.0/settings.ini"
 dconf_dark="$overlay/etc/dconf/db/local.d/99-dinx-dark"
 session_wrapper="$overlay/usr/local/libexec/dinx-river-session"
 theme_sync="$overlay/usr/local/libexec/dinx-sync-session-theme"
+kwm_config="$overlay/etc/xdg/kwm/config.zon"
 gtk_themes_pkgbuild="$repo_root/distro/packages/dinx-gtk-themes/PKGBUILD"
 patchy_launcher="$repo_root/distro/packages/patchy/patchy"
 patchy_force_darkest="$repo_root/distro/packages/patchy/patchy-force-darkest"
@@ -459,6 +460,14 @@ for gtk_theme in "$gtk3" "$gtk4"; do
     fail "GTK theme contains an out-of-contract color: $gtk_theme"
   fi
 done
+grep -Fq 'border: 1px solid #3a4352' "$gtk3" \
+  || fail 'GTK3 window border is not the neutral one-pixel DINX border'
+grep -Fq -- '--border: #3a4352' "$gtk4" \
+  || fail 'GTK4 border token is not the neutral DINX border'
+grep -Fq 'border: 1px solid var(--border)' "$gtk4" \
+  || fail 'GTK4 controls do not use the one-pixel border token'
+grep -Fq '    .width = 1,' "$kwm_config" \
+  || fail 'KWM window border is not one pixel'
 grep -Fq "background: ${dark_token[mSurface]}" "$calamares" || fail 'Calamares surface does not use DINX background'
 grep -Fq "background: ${dark_token[mSurfaceVariant]}" "$calamares" || fail 'Calamares control surface does not use DINX panel'
 grep -Fq "background: ${dark_token[mHover]}" "$calamares" || fail 'Calamares hover state does not use DINX hover'

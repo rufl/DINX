@@ -91,9 +91,9 @@
         // rectangle stays at 1px and does not follow the app-side radius.
         .width = 1,
         .color = .{
-            .focus   = 0x888888ff,
-            .unfocus = 0x444444ff,
-            .swallowing = 0x666666ff,
+            .focus   = 0x3a4352ff,
+            .unfocus = 0x222a38ff,
+            .swallowing = 0x2f3743ff,
         },
     },
 }

@@ -484,6 +484,21 @@ fn reloadDock() void {
     spawnIgnored(&.{ "/usr/bin/pkill", "-HUP", "dinx-dock" }, false);
 }
 
+fn applyFirstRunTheme() void {
+    const manager = c.adw_style_manager_get_default();
+    c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
+    const provider = c.gtk_css_provider_new() orelse return;
+    const css =
+        "window, window.background, .background { background-color: #0b0d12; color: #d7dde8; border: 1px solid #3a4352; border-radius: 12px; }\n" ++
+        "headerbar, .titlebar { background-color: #11151d; color: #d7dde8; border-bottom: 1px solid #222a38; box-shadow: none; }\n" ++
+        "button, checkbutton, dropdown, entry { border: 1px solid #3a4352; }\n" ++
+        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n";
+    c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
+    const display = c.gdk_display_get_default() orelse return;
+    c.gtk_style_context_add_provider_for_display(display, @ptrCast(provider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    c.g_object_unref(@ptrCast(provider));
+}
+
 
 fn languageFromIndex(index: c.guint) Language {
     return switch (index) {
@@ -655,6 +670,7 @@ const App = struct {
     }
 
     fn buildWindow(self: *App) void {
+        applyFirstRunTheme();
         if (self.window_ready) return;
         self.window_ready = true;
 

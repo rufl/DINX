@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Fix seven ISO desktop regressions: validate the live Calamares session D-Bus before preference handling, route PaintFE/Blender/EuroOffice desktop entries through their DINX wrappers, seed PCManFM's desktop profile with icons and its own context menu, remove KWM's square compositor border around rounded GTK windows, and force the first-run wizard to start with the DINX dark toolkit environment.
+- Refresh the verified Patchy AppImage pin to upstream v1.43 (SHA-256 `aea18453339be1d4553ee2a93be59c6e0f2de18147b3e9c6a0f1049246336da1`); Audionaut remains current at v1.8.0.
 - Make the River/KWM desktop behave like a conventional Windows/macOS stacking desktop: every managed window starts floating, floating geometry is remembered, and terminal auto-swallow is disabled.
 - Make the live River/KWM session and Plymouth handoff explicit dinit services in the live profile; the session now waits for the bounded Plymouth quit service before starting the compositor.
 - Expand first-run language, locale, keyboard and timezone coverage to every EuroOffice lean UI locale: en-US, pt-BR, fr, de, nl, da, pt-PT, es, it, en-GB, uk, ja, zh-CN and zh-TW. Preserve the matching glibc locale sources through final ISO trimming.

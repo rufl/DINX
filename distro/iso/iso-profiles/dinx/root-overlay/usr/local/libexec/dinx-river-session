@@ -44,6 +44,9 @@ if [ -n "${HOME:-}" ]; then
     mv -n -- "$installer_tmp" "$installer_desktop"
     rm -f "$installer_tmp"
   fi
+  if [ "${DINX_LIVE_SESSION:-}" = "1" ]; then
+    /usr/local/libexec/dinx-approve-desktop-launcher "$installer_desktop" "$installer_seed"
+  fi
   config_home=${XDG_CONFIG_HOME:-$HOME/.config}
   if [ ! -e "$config_home/qt6ct/qt6ct.conf" ] && [ -r /etc/skel/.config/qt6ct/qt6ct.conf ]; then
     install -Dm644 /etc/skel/.config/qt6ct/qt6ct.conf "$config_home/qt6ct/qt6ct.conf"

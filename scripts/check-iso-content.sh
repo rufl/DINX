@@ -1473,7 +1473,7 @@ while IFS='|' read -r path english portuguese command; do
   launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"
 done <<'EOF'
-usr/share/applications/firefox.desktop|Firefox|Firefox|firefox %u
+usr/share/applications/firefox.desktop|Firefox|Firefox|/usr/lib/firefox/firefox %u
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F

@@ -196,6 +196,7 @@ qemu_started=$SECONDS
 timeout --kill-after=10s "${timeout_seconds}s" \
   qemu-system-x86_64 \
   "${accel[@]}" \
+  -cpu max \
   -m "$memory_mb" \
   -cdrom "$iso_path" \
   -boot order=d \

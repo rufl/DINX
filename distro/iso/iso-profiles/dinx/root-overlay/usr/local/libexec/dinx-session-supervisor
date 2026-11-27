@@ -183,7 +183,12 @@ while :; do
     for entry in $child_names; do
         name=${entry%%=*}
         pid=${entry#*=}
-        process_alive "$pid" || fail_session "helper-$name-exited"
+        if ! process_alive "$pid"; then
+            child_status=0
+            wait "$pid" 2>/dev/null || child_status=$?
+            log "helper=$name exited status=$child_status"
+            fail_session "helper-$name-exited"
+        fi
     done
     sleep 1
 done

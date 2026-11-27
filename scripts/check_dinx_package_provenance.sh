@@ -170,7 +170,7 @@ builder_packages=scripts/iso-builder/packages.txt
 [[ -r "$builder_packages" ]] || fail 'reusable Artix builder package manifest is missing'
 awk '
   NF == 0 { next }
-  $0 !~ /^[a-z0-9][a-z0-9+_-]*$/ || seen[$0]++ { exit 1 }
+  $0 !~ /^[a-z0-9][a-z0-9+_.-]*$/ || seen[$0]++ { exit 1 }
   { count++ }
   END { if (count == 0) exit 1 }
 ' "$builder_packages" || fail 'builder package manifest has invalid or duplicate entries'

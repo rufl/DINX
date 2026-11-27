@@ -100,6 +100,7 @@ tmux
 util-linux
 wayland
 wayland-protocols
+webkit2gtk-4.1
 vim
 xcb-util-errors
 xcb-util-renderutil

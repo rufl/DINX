@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${PATCHY_LICENSE_URL:?missing PATCHY_LICENSE_URL}"
 : "${PATCHY_LICENSE_SHA256:?missing PATCHY_LICENSE_SHA256}"
 pkgver="$PATCHY_VERSION"
-pkgrel=3
+pkgrel=4
 pkgdesc='PSD-focused image editor with Photoshop-familiar workflows'
 arch=('x86_64')
 url='https://github.com/SethRobinson/Patchy'

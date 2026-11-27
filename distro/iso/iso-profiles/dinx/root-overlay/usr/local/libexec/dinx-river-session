@@ -18,6 +18,12 @@ export XDG_SESSION_TYPE=wayland
 export TERMINAL="${TERMINAL:-deetty}"
 export QT_QPA_PLATFORM='wayland;xcb'
 export GDK_BACKEND='wayland,x11'
+# GTK4's default GL/Vulkan renderer duplicates large surfaces in system and
+# GPU memory for the shell and dock. Cairo keeps the shell bounded on the
+# memory-constrained DINX target; users can opt back into another renderer.
+export GSK_RENDERER="${GSK_RENDERER:-cairo}"
+# Keep glibc from reserving one large malloc arena per shell thread.
+export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
 export SDL_VIDEODRIVER='wayland,x11'
 export CLUTTER_BACKEND=wayland
 export MOZ_ENABLE_WAYLAND=1

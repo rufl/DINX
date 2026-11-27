@@ -14,4 +14,21 @@ case "$desktop_dir" in
   *) desktop_dir=${HOME:-/tmp}/Desktop; mkdir -p -- "$desktop_dir" ;;
 esac
 
+# PCManFM keeps desktop settings per profile. Seed the profile once so the
+# main River session always owns the desktop surface, icons and WM context
+# menu, while preserving any user changes made later.
+config_home=${XDG_CONFIG_HOME:-${HOME:-/tmp}/.config}
+profile_dir="$config_home/pcmanfm/dinx"
+mkdir -p -- "$profile_dir"
+if [ ! -e "$profile_dir/desktop-items-0.conf" ]; then
+  umask 077
+  cat >"$profile_dir/desktop-items-0.conf" <<'EOF'
+[*]
+show_desktop=1
+show_wm_menu=1
+sort_by=name
+sort_type=ascending
+EOF
+fi
+
 exec pcmanfm --desktop --profile=dinx

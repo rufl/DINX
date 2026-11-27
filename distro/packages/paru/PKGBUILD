@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PARU_SOURCE_URL:?missing PARU_SOURCE_URL}"
 : "${PARU_SOURCE_SHA256:?missing PARU_SOURCE_SHA256}"
 pkgver="$PARU_VERSION"
-pkgrel=3
+pkgrel=4
 pkgdesc='Feature packed Artix ALPM/AUR helper'
 arch=('x86_64')
 url='https://github.com/Morganamilo/paru'

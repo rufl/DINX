@@ -14,15 +14,22 @@ const shell_namespace = "dinx-dock";
 const css_class = "dinx-dock-button";
 const lock_name = "dinx-dock.lock";
 const config_limit: usize = 64 * 1024;
-const edge_margin: c_int = 4;
-const box_spacing: c_int = 6;
+const max_favorites: usize = 16;
+const default_icon_size: c_int = 32;
+const default_edge_margin: c_int = 8;
+const default_box_spacing: c_int = 8;
 const sighup: c_int = 1;
 /// Fallback when appearance.json is absent, unreadable or malformed.
 const default_edge: Edge = .left;
 
 const css =
-    \\button.dinx-dock-button { border-radius: 10px; padding: 6px; }
-    \\button.dinx-dock-button.running { background-color: color-mix(in srgb, currentColor 20%, transparent); box-shadow: inset 0 -3px 0 currentColor; }
+    \\window.dinx-dock { background: transparent; }
+    \\box.dinx-dock-box { background: alpha(@window_bg_color, 0.94); border: 1px solid alpha(@borders, 0.8); border-radius: 16px; padding: 8px; box-shadow: 0 6px 24px alpha(black, 0.35); }
+    \\button.dinx-dock-button { min-width: 44px; min-height: 44px; border-radius: 12px; padding: 6px; transition: 150ms ease; }
+    \\button.dinx-dock-button:hover { background: alpha(@accent_bg_color, 0.24); }
+    \\button.dinx-dock-button:active { background: alpha(@accent_bg_color, 0.4); }
+    \\button.dinx-dock-button.running { box-shadow: inset 0 -3px 0 @accent_bg_color; }
+    \\button.dinx-dock-button.running image { -gtk-icon-shadow: 0 0 8px alpha(@accent_bg_color, 0.75); }
     \\
 ;
 
@@ -98,7 +105,12 @@ var owned_favorite_ids: [max_favorites][:0]u8 = undefined;
 var owned_favorite_id_count: usize = 0;
 var slots: [max_favorites]Slot = undefined;
 var slot_count: usize = 0;
+var icon_size: c_int = default_icon_size;
+var edge_margin: c_int = default_edge_margin;
+var box_spacing: c_int = default_box_spacing;
+var show_activity: bool = true;
 var session_io: std.Io = undefined;
+
 /// Absolute path of appearance.json, kept for the SIGHUP handler.
 var appearance_path: []const u8 = "";
 var main_loop: ?*c.GMainLoop = null;
@@ -332,6 +344,7 @@ fn buildDock() void {
     c.gtk_window_set_title(@ptrCast(window), app_name);
 
     const box = c.gtk_box_new(current_edge.orientation(), box_spacing) orelse return;
+    c.gtk_widget_add_css_class(box, "dinx-dock-box");
     c.gtk_widget_set_halign(box, c.GTK_ALIGN_CENTER);
     c.gtk_widget_set_valign(box, c.GTK_ALIGN_CENTER);
     for (slots[0..slot_count]) |*slot| {
@@ -399,6 +412,7 @@ fn onFavoriteClicked(_: ?*c.GtkButton, data: ?*anyopaque) callconv(.c) void {
 /// The first-run wizard and the dock-control helper signal the dock instead of
 /// restarting the session, so placement and favorite changes apply on the fly.
 fn onHangup(_: ?*anyopaque) callconv(.c) c.gboolean {
+    loadConfig();
     const next = readEdge();
     destroyDock();
     releaseFavorites();
@@ -428,8 +442,8 @@ pub fn main(init: std.process.Init) !void {
     // The placement answer is read before GTK opens a display: "no dock" must
     // exit with status 0 even where no compositor exists at all.
     captureAppearancePath(environ, arena);
+    loadConfig();
     current_edge = readEdge();
-    if (current_edge == .none) return;
 
     c.g_set_prgname(app_id);
     c.g_set_application_name(app_name);

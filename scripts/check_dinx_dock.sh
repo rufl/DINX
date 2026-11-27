@@ -42,7 +42,10 @@ grep -Fq '.none' "$frontend" || fail 'dinx-dock has no way to disable the dock'
 grep -Fq 'gtk_layer_set_anchor' "$frontend" || fail 'dinx-dock does not anchor to the layer shell'
 grep -Fq 'gtk_layer_auto_exclusive_zone_enable' "$frontend" \
   || fail 'dinx-dock does not reserve exclusive screen space'
-grep -Fq 'g_desktop_app_info_new' "$frontend" || fail 'dinx-dock does not launch fixed desktop entries'
+grep -Fq 'favorites' "$frontend" || fail 'dinx-dock does not expose user-configurable favorites'
+grep -Fq 'show_activity' "$frontend" || fail 'dinx-dock does not expose activity indicator settings'
+grep -Fq 'dinx-dock-box' "$frontend" || fail 'dinx-dock has no styled surface container'
+grep -Fq 'running' "$frontend" || fail 'dinx-dock has no visual activity marker'
 if grep -Eq 'system\(|popen|execv?[lp]?\(|/bin/sh' "$frontend"; then
   fail 'dinx-dock executes an arbitrary shell command instead of a fixed desktop entry'
 fi

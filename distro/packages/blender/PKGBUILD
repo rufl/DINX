@@ -12,6 +12,8 @@ pkgver="$BLENDER_VERSION"
 pkgrel=4
 epoch=17
 options=(!lto)
+# Blender links libshaderc_shared.so.1 for Vulkan GLSL compilation; keep
+# shaderc in the lean runtime instead of relying on blender-full.
 # Stripped ~1.8 GB of hard deps from Artix: intel-oneapi*, usd, materialx,
 # openvdb, opensubdiv, embree and openimagedenoise. shaderc stays as a
 # runtime dependency because the binary links libshaderc_shared.so.1 for Vulkan

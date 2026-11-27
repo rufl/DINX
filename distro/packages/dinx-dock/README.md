@@ -26,7 +26,7 @@ an explicit `"none"` disables it.
 with `pkill -HUP dinx-dock`; SIGHUP re-reads the file and rebuilds the strip,
 so placement changes apply without restarting the session.
 
-## Favorites
+## Shortcuts and settings
 
 The default button list is compiled in, but the list can be managed without
 editing JSON:
@@ -57,10 +57,15 @@ dock reloads this setting on SIGHUP and keeps the rest of `appearance.json`
 unchanged. A running application gets an accent strip and a `Running: ...`
 tooltip; the state refreshes every five seconds.
 
-The installer has no dock button on purpose: `pcmanfm --desktop` renders
-`~/Desktop`, where the session seeds an approved `Install DINX.desktop` for the
-live user and removes it on installed systems, so a pinned button would
-duplicate that affordance.
+`show_activity` adds a high-contrast accent underline and icon glow after a
+successful launch, making apps started from the dock visible at a glance.
+This is a session activity marker, not a compositor task-list: River/KWM does
+not expose a stable public window-list API to this small GTK component yet.
+The marker persists until the dock reloads or restarts.
+
+The dock uses a translucent themed surface, 44px minimum hit targets, hover
+feedback, and keyboard-focusable GTK buttons. Placement remains `left`,
+`right`, `bottom` or `none`.
 
 ## Appearance and identity
 

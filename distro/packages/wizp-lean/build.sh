@@ -44,7 +44,9 @@ mkdir -p -- "$output_root"
 workdir=${WIZP_LEAN_WORKDIR:-}
 created_workdir=0
 if [[ -z "$workdir" ]]; then
-  workdir=$(mktemp -d "${XDG_CACHE_HOME:-$HOME/.cache}/wizp-lean-build.XXXXXX")
+  cache_root=${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}
+  mkdir -p -- "$cache_root"
+  workdir=$(mktemp -d "$cache_root/wizp-lean-build.XXXXXX")
   created_workdir=1
 else
   workdir=$(realpath -m -- "$workdir")

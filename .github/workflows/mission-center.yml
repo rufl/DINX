@@ -32,24 +32,24 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build package in pinned Artix
+      - name: Stage precompiled Mission Center package
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p dist/mission-center
-          docker run --rm --privileged \
-            -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
-            artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507 \
-            bash -euxo pipefail -c '
-              pacman -Sy --noconfirm --needed \
-                base-devel blueprint-compiler cargo cmake curl desktop-file-utils \
-                dconf dmidecode gettext gdk-pixbuf2 glib2 gtk4 libadwaita \
-                libdrm libudev mesa meson ninja perl pkgconf python udisks2 git
-              useradd -m builder
-              chown -R builder:builder /workspace
-              su builder -c "cd /workspace/distro/packages/mission-center && makepkg --cleanbuild --noconfirm --nodeps"
-            '
-          find distro/packages/mission-center -maxdepth 1 -type f -name 'mission-center-*.pkg.tar.zst' -exec cp -- {} dist/mission-center/ \;
-          sha256sum dist/mission-center/*.pkg.tar.zst | tee dist/mission-center/SHA256SUMS
+          gh release download dinx-packages-latest \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 'mission-center-*.pkg.tar.zst' \
+            --dir dist/mission-center \
+            --clobber
+          mapfile -t packages < <(find dist/mission-center -maxdepth 1 -type f -name 'mission-center-*.pkg.tar.zst' -print)
+          [[ "${#packages[@]}" -eq 1 ]] || { printf 'Expected exactly one precompiled Mission Center package\n' >&2; exit 1; }
+          pkgver=$(awk -F= '$1 == "pkgver" { print $2; exit }' distro/packages/mission-center/PKGBUILD)
+          pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' distro/packages/mission-center/PKGBUILD)
+          target="dist/mission-center/mission-center-${pkgver}-${pkgrel}-x86_64.pkg.tar.zst"
+          mv -- "${packages[0]}" "$target"
+          sha256sum "$target" | tee dist/mission-center/SHA256SUMS
 
       - name: Upload lean package
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

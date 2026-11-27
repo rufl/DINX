@@ -2,7 +2,6 @@ artools-iso
 iso-profiles
 mkinitcpio
 base-devel
-bun
 bubblewrap
 btop
 curl

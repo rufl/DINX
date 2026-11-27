@@ -133,8 +133,27 @@ trap finish EXIT
                 scripts/cache-verified-extract.sh \
                   "$zig016_archive_path" "$zig016_sha256" \
                   "$zig016_version" zig "$zig016_root"
-              printf 'dinx-build-timing phase=toolchain-setup elapsed_seconds=%s exit_status=0\n' \
-                "$((SECONDS - toolchain_started))"
+              bun_version=1.4.5
+              bun_archive="bun-linux-x64-${bun_version}.zip"
+              bun_sha256=94559b3b528995a49452f9f2404cec74f2efd7d06e0a000a8cd214b02c3666eb
+              bun_archive_path="$toolchain_cache/$bun_archive"
+              DINX_CACHE_DIRTY_MARKER="$toolchain_dirty_marker" \
+                scripts/cache-verified-download.sh \
+                  "$bun_archive_path" \
+                  "https://github.com/oven-sh/bun/releases/download/bun-v${bun_version}/bun-linux-x64.zip" \
+                  "$bun_sha256"
+              bun_root="$toolchain_extraction_cache/bun-${bun_version}-${bun_sha256}"
+              if [[ ! -x "$bun_root/bun" ]] \
+                || [[ "$("$bun_root/bun" --version 2>/dev/null)" != "$bun_version" ]]; then
+                rm -rf -- "$bun_root"
+                bun_extract_root=$(mktemp -d "$toolchain_extraction_cache/.bun.XXXXXXXX")
+                bsdtar -xf "$bun_archive_path" -C "$bun_extract_root"
+                install -d -- "$bun_root"
+                install -m 0755 "$bun_extract_root/bun-linux-x64/bun" "$bun_root/bun"
+                rm -rf -- "$bun_extract_root"
+              fi
+              export PATH="$bun_root:$PATH"
+              printf "bun_version=%s\n" "$(bun --version)"
 
               # Run before makepkg --clean removes source trees used by the static theme contract.
               scripts/check_dinx_theme.sh

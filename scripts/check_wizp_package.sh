@@ -52,8 +52,10 @@ grep -Fq 'build_package wizp-lean' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not build wizp-lean'
 grep -Fq 'DINX_EUROOFFICE_SQUASHFS' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not provide the shared EuroOffice runtime'
-grep -Fqx 'bun' "$root/scripts/iso-builder/packages.txt" \
-  || fail 'Artix builder omits Bun for the WIZP build'
+grep -Fq 'bun_version=1.4.5' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not pin the Bun toolchain'
+grep -Fq 'bun_sha256=94559b3b528995a49452f9f2404cec74f2efd7d06e0a000a8cd214b02c3666eb' \
+  "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not verify the Bun archive'
 grep -Fq '    - wizp-lean' "$root/distro/iso/iso-profiles/dinx/profile.yaml" \
   || fail 'DINX profile does not select wizp-lean'
 grep -Fq '"wizp-lean"' "$root/distro/iso/iso-profiles/dinx/feature-groups.json" \

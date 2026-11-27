@@ -78,8 +78,14 @@ awk '
   /^build_context=/ { print "build_context=github-actions"; next }
   { print }
 ' "$metadata" > "$github_metadata"
-github_verified=$(GITHUB_SHA="$zero_sha" "$root/scripts/check_build_metadata.sh" "$github_metadata")
+github_verified=$(DINX_EXPECTED_SOURCE_TREE_SHA256="$source_tree_sha" GITHUB_SHA="$zero_sha" \
+  "$root/scripts/check_build_metadata.sh" "$github_metadata")
 grep -Fq "source_checksums=true" <<<"$github_verified"
+if DINX_EXPECTED_SOURCE_TREE_SHA256="$zero_sha" GITHUB_SHA="$zero_sha" \
+  "$root/scripts/check_build_metadata.sh" "$github_metadata" >/dev/null 2>&1; then
+  printf 'smoke_build_metadata: mismatched pre-build source snapshot unexpectedly passed\n' >&2
+  exit 1
+fi
 if GITHUB_SHA="$zero_sha" awk '
   !/^source_tree_sha256=/ { print }
 ' "$github_metadata" > "$tmp_dir/missing-source-metadata.txt" \
@@ -115,7 +121,8 @@ git -C "$snapshot_repo" config user.name 'DINX metadata smoke'
 git -C "$snapshot_repo" config user.email 'dinx-metadata-smoke@example.invalid'
 cp "$root/.gitignore" "$snapshot_repo/.gitignore"
 printf 'base profile\n' > "$snapshot_repo/distro/iso/profile.yaml"
-git -C "$snapshot_repo" add -- .gitignore distro/iso/profile.yaml \
+git -C "$snapshot_repo" add -- .gitignore distro/iso/profile.yaml
+git -C "$snapshot_repo" add -f -- \
   distro/packages/dinitui/src/main.zig \
   distro/packages/dinxpanel/src/main.zig \
   distro/packages/dinx-dock/src/main.zig

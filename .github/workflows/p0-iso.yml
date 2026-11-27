@@ -343,6 +343,11 @@ jobs:
           cp -- "${packages[0]}" dist/.cache/dinx/pacman/pkg/
           printf 'Using precompiled Mission Center package: %s (run %s)\n' \
             "$(basename -- "${packages[0]}")" "$run_id"
+      - name: Snapshot source-tree provenance before build
+        run: |
+          source_tree_sha=$(scripts/hash-dinx-source-tree.sh "$GITHUB_WORKSPACE" "$GITHUB_SHA")
+          [[ "$source_tree_sha" =~ ^[0-9a-f]{64}$ ]]
+          printf 'DINX_EXPECTED_SOURCE_TREE_SHA256=%s\n' "$source_tree_sha" >> "$GITHUB_ENV"
       - name: Build with Artix artools
         id: iso-build
         env:

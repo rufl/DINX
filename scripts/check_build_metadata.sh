@@ -114,9 +114,15 @@ case "$build_context" in
   *) fail "unsupported build context: $build_context" ;;
 esac
 require_value source_tree_sha256 '^[0-9a-f]{64}$'
-actual_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$metadata_commit")
-[[ "$(read_value source_tree_sha256)" == "$actual_source_tree_sha" ]] \
-  || fail 'metadata source-tree checksum does not match the current source'
+expected_source_tree_sha=${DINX_EXPECTED_SOURCE_TREE_SHA256:-}
+if [[ -n "$expected_source_tree_sha" ]]; then
+  [[ "$expected_source_tree_sha" =~ ^[0-9a-f]{64}$ ]] \
+    || fail "expected source-tree checksum is invalid: $expected_source_tree_sha"
+else
+  expected_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$metadata_commit")
+fi
+[[ "$(read_value source_tree_sha256)" == "$expected_source_tree_sha" ]] \
+  || fail 'metadata source-tree checksum does not match the pre-build source snapshot'
 
 printf 'build_metadata_contract schema=dinx-build-metadata/v1 commit=%s iso=%s packages=true repository_inputs=true signed_package_repository=true source_checksums=true iso_binding=%s\n' \
   "$(read_value commit)" "$(read_value iso_name)" "$iso_binding"

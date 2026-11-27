@@ -38,7 +38,6 @@
         "pipewire",
         "pipewire-pulse",
         "polkit",
-        "sane",
         "seatd",
         "sudo",
         "tinyxxd",
@@ -126,6 +125,7 @@
         "wl-clipboard",
         "wdisplays",
         "wlopm",
+        "ntfs-3g",
         "udisks2",
         "udisks2-btrfs"
       ]
@@ -162,7 +162,6 @@
       "external": true,
       "packages": [
         "cups-dinit",
-        "ntfs-3g",
         "wizp",
         "zls"
       ]

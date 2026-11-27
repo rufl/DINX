@@ -282,7 +282,6 @@ required_paths=(
   usr/share/wayland-sessions/dinx-gaming.desktop
   usr/bin/flatpak
   usr/bin/fwupdmgr
-  usr/bin/scanimage
   etc/dinit.d/bluetoothd
   etc/profile.d/dinx.sh
   etc/default/useradd
@@ -540,6 +539,15 @@ for retired_roster_package in aqueous pearl dinx-pearl-themes matugen; do
     fail "retired Aqueous/Pearl package remains in the ISO profile roster: $retired_roster_package"
   fi
 done
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  if grep -Eq '/var/lib/pacman/local/sane-[^/]*/' <<<"$image_manifest"; then
+    fail 'disabled NEXT SANE package metadata remains in the ISO'
+  fi
+  if grep -Eq '(^|[[:space:]])usr/bin/scanimage([[:space:]]|$)' <<<"$image_manifest"; then
+    fail 'disabled NEXT SANE scanimage payload remains in the ISO'
+  fi
+done
+
 for image_manifest in "$manifest" "$livefs_manifest"; do
   if grep -Eq '/var/lib/pacman/local/noto-fonts-[0-9][^/]*/' <<<"$image_manifest"; then
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
@@ -1371,9 +1379,7 @@ fi
 grep -Fq '/usr/bin/os-prober' <<<"$manifest" || fail 'os-prober is missing from the ISO payload'
 grep -Fq '/usr/bin/mount' <<<"$manifest" || fail 'util-linux mount is missing from the ISO payload'
 grep -Fq '/usr/bin/flock' <<<"$manifest" || fail 'util-linux flock is missing from the ISO payload'
-if grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest"; then
-  fail 'optional ntfs-3g write package is present in the live ISO'
-fi
+grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest" || fail 'NTFS-3G read/write support is missing from the ISO payload'
 grep -Eq '/usr/lib/modules/[^/]+/kernel/fs/ntfs3/ntfs3\.ko' <<<"$manifest" || fail 'kernel ntfs3 read/write support is missing from the ISO payload'
 grep -Eq '/usr/lib/modules/[^/]+/kernel/drivers/gpu/drm/virtio/virtio-gpu\.ko(\.(zst|xz|gz))?$' <<<"$manifest" || fail 'QEMU virtio-gpu DRM module is missing from the ISO payload'
 grep -Eq '/usr/lib/modules/[^/]+/kernel/drivers/gpu/drm/vmwgfx/vmwgfx\.ko(\.(zst|xz|gz))?$' <<<"$manifest" || fail 'VirtualBox VMSVGA vmwgfx module is missing from the ISO payload'

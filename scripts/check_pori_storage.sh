@@ -39,12 +39,10 @@ for package in file-roller gparted pcmanfm pori; do
   jq -e --arg package "$package" '.groups.desktop.packages | index($package) != null' "$groups" >/dev/null \
     || fail "desktop feature group is missing $package"
 done
-jq -e '.groups.optional.packages | index("ntfs-3g") != null' "$groups" >/dev/null \
-  || fail 'optional feature group is missing ntfs-3g'
+jq -e '.groups.desktop.packages | index("ntfs-3g") != null' "$groups" >/dev/null \
+  || fail 'desktop feature group is missing ntfs-3g'
 grep -Fqx '  - linux' "$common" || fail 'common profile no longer installs the kernel ntfs3 driver'
-if grep -Fqx '    - ntfs-3g' "$profile"; then
-  fail 'ntfs-3g is still in the base ISO profile'
-fi
+grep -Fqx '    - ntfs-3g' "$profile" || fail 'ntfs-3g is not installed in the base ISO profile'
 
 grep -Fqx 'inode/directory=pcmanfm.desktop;' "$mimeapps" \
   || fail 'pcmanfm is not the default directory handler'
@@ -141,7 +139,7 @@ grep -Fq 'extra_env+=("ZIG=$zig016_root/zig")' "$builder" \
 grep -Fq 'scripts/smoke_pori_zig.sh' "$workflow" || fail 'workflow does not run the Pori Zig source smoke'
 grep -Fq 'scripts/check_pori_storage.sh' "$workflow" || fail 'workflow does not run the Pori storage contract'
 grep -Fq 'ntfs3\.ko' "$iso_check" || fail 'ISO contract does not require the kernel ntfs3 module'
-grep -Fq '/usr/bin/ntfs-3g' "$iso_check" || fail 'ISO contract does not reject the optional ntfs-3g package'
-grep -Fq 'ntfs-3g' "$calamares_check" || fail 'Calamares contract does not document optional NTFS write support'
+grep -Fq '/usr/bin/ntfs-3g' "$iso_check" || fail 'ISO contract does not require the ntfs-3g package'
+grep -Fq 'ntfs-3g' "$calamares_check" || fail 'Calamares contract does not verify NTFS-3G availability'
 
-printf 'pori_storage_contract pori=true pcmanfm=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false phyto=false ntfs3_live_rw=true ntfs3_legacy_optional=true pori_zig=0.17.0 kwm_zig=0.16.0\n'
+printf 'pori_storage_contract pori=true pcmanfm=true dinit=true udisks2_backend=true archive_tool=file-roller partition_editor=gparted old_storage_stack=false phyto=false ntfs3_live_rw=true ntfs3_legacy_available=true pori_zig=0.17.0 kwm_zig=0.16.0\n'

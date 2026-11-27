@@ -43,10 +43,10 @@ grep -Fqx 'custom_palette=true' "$qt6ct_config" || fail 'Qt6ct DINX dark palette
 grep -Fqx 'Name=Display Settings' "$display_launcher" || fail 'Display launcher English name is incorrect'
 grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher does not use the persistence wrapper'
 
-for package in firewalld firewall-config file-roller galculator gapless gparted haruna sane fwupd flatpak pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays papirus-icon-theme; do
+for package in firewalld firewall-config file-roller galculator gapless gparted haruna fwupd flatpak pcmanfm pori shikane udisks2 udisks2-btrfs wdisplays papirus-icon-theme; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-for disabled_package in pixelorama paintfe blender godot krita inkscape patchy audionaut; do
+for disabled_package in pixelorama paintfe blender godot krita inkscape patchy audionaut sane; do
   if grep -Fqx "    - $disabled_package" "$profile" || grep -Fqx "$disabled_package" <<<"$iso_packages"; then
     fail "$disabled_package is disabled for the NEXT ISO but remains selected"
   fi
@@ -254,7 +254,6 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fq "$mime;" "$file_roller_override" || fail "localized File Roller launcher does not claim $mime"
 done
 
-grep -Fqx '  usr/bin/scanimage' "$iso_check" || fail 'ISO payload is missing scanimage'
 grep -Fqx '  usr/bin/fwupdmgr' "$iso_check" || fail 'ISO payload is missing fwupdmgr'
 grep -Fqx '  usr/bin/flatpak' "$iso_check" || fail 'ISO payload is missing flatpak'
 grep -Fqx '  usr/bin/pcmanfm' "$iso_check" || fail 'ISO payload is missing PCManFM'
@@ -292,4 +291,4 @@ for mime in application/zip application/x-7z-compressed application/vnd.rar appl
   grep -Fqx "$mime=org.gnome.FileRoller.desktop;" "$mimeapps" || fail "File Roller is not the default archive handler for $mime"
 done
 
-printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=true fwupd=true flatpak=true creative_apps=disabled kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=firefox graphics_apps=disabled office=optional-channel impasto=false onlyoffice=false zrythm=false seafoam=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'
+printf 'desktop_packages_contract calculator=galculator gapless=true codecs=gstreamer-base+good strawberry=false bilingual_launchers=true artix_alias_absent=true calamares_package_launcher_masked=true dinx_installer_visible=true installer_prerequisites_declared=true firewall=firewalld+firewall-config process_manager=localized no_traffic_monitor=true sane=false fwupd=true flatpak=true creative_apps=disabled kolourpaint=false icon_theme=papirus qogir=false breeze=false zathura=false libmupdf=false pdf_handler=firefox graphics_apps=disabled office=optional-channel impasto=false onlyoffice=false zrythm=false seafoam=false pori=true pcmanfm=true archive_tool=file-roller partition_editor=gparted display_tools=wdisplays+shikane directory_handler=pcmanfm\n'

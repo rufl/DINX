@@ -63,11 +63,9 @@ require_text 'installHybridGRUB: false' "$bootloader_conf"
 require_text 'GRUB_DISABLE_OS_PROBER=false' "$grub_windows_conf"
 require_text '    - os-prober' "$profile_yaml"
 require_text '  - linux' "$common_profile"
-jq -e '.groups.optional.packages | index("ntfs-3g") != null' "$feature_groups" >/dev/null \
-  || fail 'optional NTFS write package is missing from the feature manifest'
-if grep -Fqx '    - ntfs-3g' "$profile_yaml"; then
-  fail 'optional ntfs-3g write package is present in the base ISO profile'
-fi
+jq -e '.groups.desktop.packages | index("ntfs-3g") != null' "$feature_groups" >/dev/null \
+  || fail 'NTFS-3G read/write package is missing from the desktop feature group'
+require_text '    - ntfs-3g' "$profile_yaml"
 require_text 'Smoke-test Windows side-by-side and manual partition transactions' "$workflow"
 require_text 'scripts/smoke_calamares_windows.sh' "$workflow"
 require_text 'scripts/smoke_calamares_startup.sh' "$builder"
@@ -141,4 +139,4 @@ fi
 require_text 'source: "/run/artix/bootmnt/LiveOS/rootfs.img"' "$unpackfs_conf"
 require_text 'sourcefs: "squashfs"' "$unpackfs_conf"
 
-printf 'calamares_partition_contract=guided_choices=true no_swap_default=true safe_partition_default=true layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true ntfs3_base_rw=true ntfs3_legacy_optional=true startup_smoke=true\n'
+printf 'calamares_partition_contract=guided_choices=true no_swap_default=true safe_partition_default=true layout=true order=true efi_guard=true btrfs_existing_subvolumes=true windows_existing_esp=true manual_partitioning=true offline_packages=true ntfs3_base_rw=true ntfs3_legacy_available=true startup_smoke=true\n'

@@ -1436,7 +1436,7 @@ grep -Fq 'Name[pt_BR]=Instalar DINX' <<<"$installer_seed" || fail 'live-user des
 grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' <<<"$installer_seed" || fail 'live-user desktop shortcut does not use the DINX launcher'
 live_session_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-session)
 grep -Fq 'xdg-user-dir DESKTOP' <<<"$live_session_launcher" || fail 'live session does not resolve the user desktop directory'
-grep -Fq 'installer_seed=/etc/skel/Desktop/Install' <<<"$live_session_launcher" || fail 'live session does not seed its pre-existing user from /etc/skel'
+grep -Fq 'installer_seed="/etc/skel/Desktop/Install DINX.desktop"' <<<"$live_session_launcher" || fail 'live session does not seed its pre-existing user from /etc/skel'
 grep -Fq 'mv -n -- "$installer_tmp" "$installer_desktop"' <<<"$live_session_launcher" || fail 'live installer shortcut seeding is not atomic and non-overwriting'
 grep -Fq '/usr/local/libexec/dinx-approve-desktop-launcher' <<<"$live_session_launcher" || fail 'live session does not preapprove the trusted installer shortcut for the desktop'
 grep -Fq 'DINX_LIVE_SESSION:-' <<<"$live_session_launcher" || fail 'automatic desktop launcher approval is not restricted to the live session'

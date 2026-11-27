@@ -212,7 +212,7 @@ grep -Fqx 'Name[pt_BR]=Instalar DINX' "$desktop_installer" || fail 'desktop shor
 grep -Fqx 'Exec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut does not use the session-aware launcher'
 grep -Fqx 'TryExec=/usr/local/libexec/dinx-installer' "$desktop_installer" || fail 'desktop shortcut launcher prerequisite is incorrect'
 grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session" || fail 'live session does not resolve the provisioned desktop directory'
-grep -Fq 'installer_seed=/etc/skel/Desktop/Install\ DINX.desktop' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session" || fail 'live session does not seed the installer shortcut from /etc/skel'
+grep -Fq 'installer_seed="/etc/skel/Desktop/Install DINX.desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session" || fail 'live session does not seed the installer shortcut from /etc/skel'
 installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
 [[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
 sh -n "$installer_helper" || fail 'DINX installer helper has invalid shell syntax'

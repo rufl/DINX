@@ -25,6 +25,7 @@ options=(!lto)
 # fluid/ocean/remesh modifiers, meshoptimizer, ktx, nanovdb, potrace,
 # pugixml, manifold, quadriflow and rubberband.
 pkgdesc="A fully integrated 3D graphics creation suite (lean build — 3D modeling + gamedev only)"
+18: @ours
 arch=(x86_64)
 url="https://www.blender.org/"
 license=(GPL-3.0-or-later)
@@ -50,7 +51,6 @@ depends=(
   libdecor
   libepoxy
   libgl
-  libharu
   libjpeg-turbo
   libpng
   libsndfile
@@ -72,7 +72,6 @@ depends=(
   opengl-driver
   openimageio
   openjpeg2
-  openxr
   libspnav
   potrace
   pugixml
@@ -115,7 +114,6 @@ optdepends=(
 )
 source=("${pkgname}-${pkgver}.tar.xz::${BLENDER_SOURCE_URL}")
 sha256sums=("${BLENDER_SOURCE_SHA256}")
-
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
 
@@ -170,9 +168,9 @@ build() {
     -DWITH_OPENAL=ON \
     -DWITH_AUDASPACE=OFF \
     -DWITH_GMP=ON \
-    -DWITH_HARU=ON \
+    -DWITH_HARU=OFF \
     -DWITH_SDL=ON \
-    -DWITH_XR_OPENXR=ON
+    -DWITH_XR_OPENXR=OFF
 
   cmake --build build
 }

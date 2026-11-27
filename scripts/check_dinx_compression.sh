@@ -55,6 +55,7 @@ mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
   "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus" \
   "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" \
   "$fixture_root/usr/bin"
+printf 'build-only GTK render tool\n' > "$fixture_root/usr/bin/gtk4-rendernode-tool"
 printf 'build-only extractor\n' > "$fixture_root/usr/bin/xgettext"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
@@ -108,8 +109,9 @@ done
 [[ ! -e "$fixture_root/usr/lib/libdemo.a" \
    && ! -e "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" ]] \
   || fail 'static archives or Python build configuration remain in the final filesystem'
-[[ ! -e "$fixture_root/usr/bin/xgettext" ]] \
-  || fail 'build-only gettext extractor remains in the final filesystem'
+[[ ! -e "$fixture_root/usr/bin/xgettext" \
+   && ! -e "$fixture_root/usr/bin/gtk4-rendernode-tool" ]] \
+  || fail 'build-only gettext/GTK tools remain in the final filesystem'
 
 # The system dconf default must be compiled for freedesktop consumers to see it:
 # the egui Craft apps and libadwaita/GTK apps fall back to light when the portal

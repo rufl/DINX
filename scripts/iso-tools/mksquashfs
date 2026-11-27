@@ -138,7 +138,7 @@ strip_build_metadata() {
       printf 'dinx-final-squashfs: removed build-only metadata path=%s\n' "$rel"
     fi
   done
-  for rel in usr/bin/xgettext; do
+  for rel in usr/bin/xgettext usr/bin/gtk4-rendernode-tool; do
     if [[ -e "$root/$rel" ]]; then
       rm -f -- "$root/$rel"
       printf 'dinx-final-squashfs: removed build-only binary path=%s\n' "$rel"

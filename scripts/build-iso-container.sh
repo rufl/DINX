@@ -262,8 +262,9 @@ trap finish EXIT
                 local -a makepkg_options=(--nodeps --nocheck --noconfirm)
                 local -a package_archives=()
                 case "$package_name" in
-                  dinitui|dinxpanel|dinx-dock|dinx-first-run)
-                    # These packages build directly from checked-in source trees.
+                  dinitui|dinxpanel|dinx-dock|dinx-first-run|redbean)
+                    # These packages build directly from checked-in source trees;
+                    # makepkg --clean would delete tracked Redbean sources.
                     ;;
                   *)
                     makepkg_options+=(--clean)

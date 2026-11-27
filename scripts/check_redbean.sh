@@ -54,6 +54,8 @@ grep -Fq 'build_package redbean' "$container_builder" \
   || fail 'container builder does not compile Redbean'
 grep -Fq 'pacman_install_local "$package_repo"/redbean-*.pkg.tar.zst' "$container_builder" \
   || fail 'container builder does not install Redbean'
+grep -Fq 'dinitui|dinxpanel|dinx-dock|dinx-first-run|redbean)' "$container_builder" \
+  || fail 'Redbean checked-in sources would be deleted by makepkg --clean'
 if grep -Fq 'DINX_BUILD_REDBEAN' "$docker_builder" "$container_builder"; then
   fail 'Redbean must be unconditional in the NEXT ISO builder'
 fi

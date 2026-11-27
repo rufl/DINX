@@ -176,7 +176,7 @@ while (( SECONDS < session_deadline )); do
   monitor_send "screendump $session_frame"
   [[ -s "$session_frame" ]] || continue
   session_text=$(ocr_frame "$session_frame")
-  if grep -Eiq '(^|[^[:alnum:]_])(River|KWM|Morghulis|DINX)([^[:alnum:]_]|$)' <<<"$session_text" \
+  if grep -Eiq '(^|[^[:alnum:]_])(River|KWM|Morghulis|DINX|Idioma|Language)([^[:alnum:]_]|$)' <<<"$session_text" \
     && ! grep -Eiq 'login[[:space:]]*:|tty[[:space:]]*[0-9]|password' <<<"$session_text"; then
     ready=true
     break

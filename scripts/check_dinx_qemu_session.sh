@@ -115,11 +115,14 @@ done < <(grep -Ei '[^[:space:]][[:space:]]+-[[:space:]]*Wayland([[:space:]]|$)' 
   | grep -Eiv '(^|[^[:alnum:]_])(river|kwm)([^[:alnum:]_]|$)')
 
 if [[ "$mode" == first-run ]]; then
-  if ! grep -Eiq 'Install[[:space:]]+DINX' <<<"$recognized"; then
-    printf 'dinx-qemu-session: live desktop has no readable Install DINX shortcut:\n%s\n' "$recognized" >&2
+  if grep -Eiq 'Install[[:space:]]+DINX' <<<"$recognized"; then
+    printf 'dinx-qemu-session: first_run_shortcut_visible=true marker=Install+DINX screenshot=%s\n' "$screenshot"
+  elif grep -Eiq 'Idioma|Language|System[[:space:]]+language' <<<"$recognized"; then
+    printf 'dinx-qemu-session: first_run_wizard_visible=true marker=Language screenshot=%s\n' "$screenshot"
+  else
+    printf 'dinx-qemu-session: first-run surface has no installer shortcut or language wizard marker:\n%s\n' "$recognized" >&2
     exit 1
   fi
-  printf 'dinx-qemu-session: first_run_shortcut_visible=true marker=Install+DINX screenshot=%s\n' "$screenshot"
   exit 0
 fi
 marker=identity

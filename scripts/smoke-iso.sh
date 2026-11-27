@@ -19,7 +19,11 @@ post_keys=${DINX_QEMU_POST_KEYS:-}
 qemu_display=${DINX_QEMU_DISPLAY:-none}
 ocr_language=${DINX_QEMU_OCR_LANG:-eng}
 qemu_video_device=${DINX_QEMU_VIDEO_DEVICE:-}
-
+session_mode=${DINX_QEMU_SESSION_MODE:-session}
+case "$session_mode" in
+  session|first-run) ;;
+  *) fail 'DINX_QEMU_SESSION_MODE must be session or first-run' ;;
+esac
 fail() {
   printf 'smoke-iso: %s\n' "$*" >&2
   exit 1
@@ -118,7 +122,7 @@ wait_for_session_client() {
   wait_deadline=$((qemu_started + timeout_seconds - reserve_seconds))
   while ((SECONDS < wait_deadline)); do
     if capture_screen "$path"; then
-      if checker_output=$("$script_dir/check_dinx_qemu_session.sh" "$path" session 2>&1); then
+      if checker_output=$("$script_dir/check_dinx_qemu_session.sh" "$path" "$session_mode" 2>&1); then
         printf 'smoke-iso: %s\n' "$checker_output"
         return 0
       fi
@@ -323,11 +327,13 @@ if [[ -n "$post_screenshot_path" ]]; then
   validate_screenshot "$post_screenshot_path" 'post'
 fi
 session_check_screenshot=$session_screenshot_path
+session_check_mode=$session_mode
 if [[ -n "$post_screenshot_path" && -n "$post_keys" ]]; then
   session_check_screenshot=$post_screenshot_path
+  session_check_mode=session
 fi
-"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" session
-"$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot"
+"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" "$session_mode"
+"$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot" "$session_check_mode"
 
 
 printf 'smoke-iso: River/KWM session reached a graphical-ready screen within %ss\n' "$timeout_seconds"

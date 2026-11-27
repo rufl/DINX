@@ -422,8 +422,8 @@ grep -Fq '/etc/skel/.config/dinx/installer-preferences.json' "$installer" \
   || fail 'installer does not preserve live preferences in the installed skeleton'
 
 # QEMU screen gates stay wired into the live and installed smokes.
-grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" session' "$iso_smoke" \
-  || fail 'QEMU live smoke does not check the running desktop screen'
+grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" "$session_mode"' "$iso_smoke" \
+  || fail 'QEMU live smoke does not check the configured graphical session surface'
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter' "$install_smoke" \
   || fail 'installed QEMU smoke does not check the agreety greeter screen'
 
@@ -520,6 +520,8 @@ env "${ocr_env[@]}" DINX_TEST_OCR=$'DINX Linux dinx-install-smoke tty7\ndinx-ins
   "$qemu_session_checker" "$sparse_greeter_screen" greeter >/dev/null
 env "${ocr_env[@]}" DINX_TEST_OCR='Install DINX' \
   "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
+env "${ocr_env[@]}" DINX_TEST_OCR=$'Idioma / Language\nSystem language' \
+  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
 if env "${ocr_env[@]}" DINX_TEST_OCR=$'agreety\nPassword\nSign in' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null; then
   fail 'the session screen check accepted a greeter login screen'
@@ -534,13 +536,13 @@ if env "${ocr_env[@]}" DINX_TEST_OCR='Wayfire - Wayland' \
 fi
 if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$qemu_screen" first-run >/dev/null; then
-  fail 'the first-run screen check passed without the installer shortcut'
+  fail 'the first-run screen check passed without an installer or wizard marker'
 fi
 if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$fixture/missing.ppm" session >/dev/null 2>&1; then
   fail 'the session screen check accepted a missing screenshot'
 fi
-printf 'qemu_screen_smoke river_title=true dinx_marker=true agreety_login=true sparse_text_greeter=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
+printf 'qemu_screen_smoke river_title=true dinx_marker=true agreety_login=true sparse_text_greeter=true first_run_shortcut=true first_run_wizard=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
 
 bash "$root/scripts/smoke_dinx_session.sh"
 bash "$root/scripts/smoke_dinx_session_supervisor.sh"

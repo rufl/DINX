@@ -324,14 +324,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          run_id=$(gh run list \
-            --repo "$GITHUB_REPOSITORY" \
-            --workflow mission-center.yml \
-            --branch feat/taskmgr/mission \
-            --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId // empty')
+          run_id=$(gh api \
+            --paginate \
+            "repos/$GITHUB_REPOSITORY/actions/runs?branch=feat%2Ftaskmgr%2Fmission&per_page=100" \
+            --jq '.workflow_runs[] | select(.name == "Mission Center lean package" and .conclusion == "success") | .id' \
+            | head -n1)
           [[ "$run_id" =~ ^[0-9]+$ ]] \
             || { printf 'No successful Mission Center task-branch run found\n' >&2; exit 1; }
           artifact_dir="$RUNNER_TEMP/mission-center-artifact"

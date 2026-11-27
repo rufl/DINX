@@ -112,3 +112,4 @@ xorg-server-xvfb
 xz
 zlib
 rust
+rsync

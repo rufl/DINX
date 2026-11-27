@@ -1,0 +1,55 @@
+#!/bin/sh
+set -eu
+
+case "${1:-}" in
+    dark|light)
+        variant=$1
+        ;;
+    *)
+        printf 'Usage: %s {dark|light}\n' "${0##*/}" >&2
+        exit 2
+        ;;
+esac
+
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+    config_home=$XDG_CONFIG_HOME
+elif [ -n "${HOME:-}" ]; then
+    config_home="$HOME/.config"
+else
+    printf '%s\n' 'dinx-set-theme: no config directory is available' >&2
+    exit 1
+fi
+
+appearance_dir=$config_home/dinx
+appearance=$appearance_dir/appearance.json
+if [ -L "$appearance" ] || { [ -e "$appearance" ] && [ ! -f "$appearance" ]; }; then
+    printf 'dinx-set-theme: appearance state is not a regular file: %s\n' "$appearance" >&2
+    exit 1
+fi
+
+command -v jq >/dev/null 2>&1 || {
+    printf '%s\n' 'dinx-set-theme: jq is required' >&2
+    exit 1
+}
+
+mkdir -p "$appearance_dir"
+tmp=$appearance.tmp.$$
+trap 'rm -f -- "$tmp"' EXIT HUP INT TERM
+
+if [ -f "$appearance" ]; then
+    jq -e 'type == "object"' "$appearance" >/dev/null 2>&1 || {
+        printf 'dinx-set-theme: invalid appearance state: %s\n' "$appearance" >&2
+        exit 1
+    }
+    jq --arg variant "$variant" '.variant = $variant' "$appearance" >"$tmp"
+    mode=$(stat -c '%a' -- "$appearance" 2>/dev/null || printf '600')
+else
+    printf '{"version":1,"theme":"DINX","variant":"%s","corners":"rounded"}\n' "$variant" >"$tmp"
+    mode=600
+fi
+
+chmod "$mode" "$tmp"
+mv -f -- "$tmp" "$appearance"
+trap - EXIT HUP INT TERM
+
+exec /usr/local/libexec/dinx-sync-session-theme

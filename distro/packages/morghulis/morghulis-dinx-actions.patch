@@ -1,0 +1,48 @@
+diff --git a/src/PowerMenu/PowerMenu.vala b/src/PowerMenu/PowerMenu.vala
+--- a/src/PowerMenu/PowerMenu.vala
++++ b/src/PowerMenu/PowerMenu.vala
+@@ -148,6 +148,6 @@ public class PowerMenu : MorghulWindow {
+         debug("Set Lock");
+         try {
+-            Process.spawn_command_line_async("loginctl lock-session");
++            Process.spawn_command_line_async("/usr/local/libexec/dinx-lock");
+         } catch (SpawnError e) {
+             warning("Failed to lock: %s", e.message);
+         }
+diff --git a/src/QuickMenu/PowerBox.vala b/src/QuickMenu/PowerBox.vala
+--- a/src/QuickMenu/PowerBox.vala
++++ b/src/QuickMenu/PowerBox.vala
+@@ -126,7 +126,7 @@ public class PowerBox : Gtk.Box {
+     [GtkCallback]
+     public void lock() {
+         try {
+-            Process.spawn_command_line_async("loginctl lock-session");
++            Process.spawn_command_line_async("/usr/local/libexec/dinx-lock");
+         } catch (SpawnError e) {
+             warning("Failed to lock: %s", e.message);
+         }
+diff --git a/src/QuickMenu/Settings.vala b/src/QuickMenu/Settings.vala
+--- a/src/QuickMenu/Settings.vala
++++ b/src/QuickMenu/Settings.vala
+@@ -170,12 +170,18 @@
+ 
+     [GtkCallback]
+     private async void color_scheme_clicked() {
++        string variant;
+         if (color_scheme == "default" || color_scheme == "prefer-light") {
+-            color_scheme = "prefer-dark";
++            variant = "dark";
+         } else {
+-            color_scheme = "prefer-light";
++            variant = "light";
+         }
+-        _gsettings.set_string("color-scheme", color_scheme);
++        color_scheme = variant == "dark" ? "prefer-dark" : "prefer-light";
++        try {
++            Process.spawn_command_line_async("/usr/local/libexec/dinx-set-theme " + variant);
++        } catch (SpawnError e) {
++            warning("Failed to change DINX theme: %s", e.message);
++        }
+     }
+ 
+     [GtkCallback]

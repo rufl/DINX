@@ -17,6 +17,7 @@ desktop_installer="$overlay/etc/skel/Desktop/Install DINX.desktop"
 graphics_helper="$overlay/usr/local/libexec/dinx-graphics-profile"
 graphics_environment="$overlay/usr/local/libexec/dinx-graphics-environment.sh"
 theme_sync="$overlay/usr/local/libexec/dinx-sync-session-theme"
+theme_set="$overlay/usr/local/libexec/dinx-set-theme"
 installer="$overlay/usr/local/libexec/dinx-installer"
 session_dir="$overlay/usr/share/wayland-sessions"
 river_entry="$session_dir/dinx-river-kwm-morghulis.desktop"
@@ -28,6 +29,9 @@ desktop_surface="$overlay/usr/local/libexec/dinx-pcmanfm-desktop"
 live_package="$root/distro/packages/dinx-live-autologin"
 kwm_pkgbuild="$root/distro/packages/kwm/PKGBUILD"
 kwim_pkgbuild="$root/distro/packages/kwim/PKGBUILD"
+morghulis_pkgbuild="$root/distro/packages/morghulis/PKGBUILD"
+morghulis_actions="$root/distro/packages/morghulis/morghulis-dinx-actions.patch"
+morghulis_river_tags="$root/distro/packages/morghulis/morghulis-dinx-river-tags.patch"
 kwm_env="$root/distro/packages/kwm/source.env"
 kwim_env="$root/distro/packages/kwim/source.env"
 builder="$root/scripts/build-iso-container.sh"
@@ -56,13 +60,14 @@ fail() {
 for path in \
   "$profile" "$greetd_config" "$tmpfiles" "$kwm_config" \
   "$river_session" "$river_init" "$supervisor" "$logout" \
-  "$desktop_approval" "$palette_seed" "$desktop_installer" "$theme_sync" "$installer" \
+  "$desktop_approval" "$palette_seed" "$desktop_installer" "$theme_sync" "$theme_set" "$installer" \
   "$river_entry" "$gaming_session" "$lock" "$idle" "$desktop" "$desktop_surface" \
   "$shell_profile" "$fish_config" "$useradd_defaults" "$users_conf" \
   "$graphics_helper" "$graphics_environment" \
   "$kwm_pkgbuild" "$root/distro/packages/kwm/source.env" \
   "$kwim_pkgbuild" "$root/distro/packages/kwim/source.env" \
-  "$live_package/dinx-live-session" \
+  "$morghulis_pkgbuild" "$morghulis_actions" \
+  "$morghulis_river_tags" \
   "$gtk3_system" "$gtk3_skel" "$gtk4_system" "$gtk4_skel" \
   "$qemu_session_checker" "$iso_smoke" "$install_smoke"; do
   [[ -r "$path" ]] || fail "missing $path"
@@ -97,8 +102,7 @@ if grep -Eq '^    - [a-z0-9._-]*(aq|pea)[a-z0-9._-]*$' "$profile"; then
 fi
 while IFS= read -r helper_path; do
   case "${helper_path##*/}" in
-    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-logout|dinx-pcmanfm-desktop|dinx-desktop-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
-    *) fail "unexpected session component: ${helper_path#$root/}" ;;
+    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-logout|dinx-pcmanfm-desktop|dinx-desktop-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-set-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
   esac
 done < <(find "$overlay/usr/local/libexec" -maxdepth 1 -type f)
 
@@ -131,12 +135,34 @@ python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), 
 [[ -x "$palette_seed" ]] || fail 'Qt6ct palette seed helper is not executable'
 sh -n "$palette_seed" || fail 'Qt6ct palette seed helper has invalid shell syntax'
 [[ -x "$theme_sync" ]] || fail 'GTK/Qt session theme synchronizer is not executable'
+[[ -x "$theme_set" ]] || fail 'DINX theme action helper is not executable'
+sh -n "$theme_set" || fail 'DINX theme action helper has invalid shell syntax'
 sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
 sh -n "$idle" || fail 'idle wrapper has invalid shell syntax'
 sh -n "$lock" || fail 'lock wrapper has invalid shell syntax'
+grep -Fq 'exec /usr/local/libexec/dinx-sync-session-theme' "$theme_set" \
+  || fail 'DINX theme action does not synchronize all toolkits'
+grep -Fq 'jq --arg variant "$variant"' "$theme_set" \
+  || fail 'DINX theme action does not persist the selected variant'
 [[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
+grep -Fq '"morghulis-dinx-actions.patch"' "$morghulis_pkgbuild" \
+  || fail 'Morghulis package does not include the DINX action patch'
+grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-actions.patch"' "$morghulis_pkgbuild" \
+  || fail 'Morghulis package does not apply the DINX action patch'
+grep -Fq '/usr/local/libexec/dinx-set-theme' "$morghulis_actions" \
+  || fail 'Morghulis theme action is not wired to the DINX helper'
+grep -Fq '/usr/local/libexec/dinx-lock' "$morghulis_actions" \
+  || fail 'Morghulis lock actions are not wired to the DINX helper'
+grep -Fq '"morghulis-dinx-river-tags.patch"' "$morghulis_pkgbuild" \
+  || fail 'Morghulis package does not include the River tag patch'
+grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/morghulis-dinx-river-tags.patch"' "$morghulis_pkgbuild" \
+  || fail 'Morghulis package does not apply the River tag patch'
+grep -Fq 'private void select_output()' "$morghulis_river_tags" \
+  || fail 'Morghulis River tags do not handle delayed output readiness'
+grep -Fq "astal_river_dep = dependency('astal-river-0.1')" "$morghulis_river_tags" \
+  || fail 'Morghulis build may silently omit the River tag backend'
 
 # Roster: the River stack and the greetd/agreety greeter are shipped; the
 # retired compositors, session launchers and palette generator are not.

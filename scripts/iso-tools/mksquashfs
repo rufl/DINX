@@ -155,6 +155,7 @@ prune_excluded_packages() {
     dhcpcd
     dhcpcd-dinit
     ex-vi-compat
+    glib2-docs
     vim
     vim-runtime
     man-db

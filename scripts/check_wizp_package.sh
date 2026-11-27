@@ -54,6 +54,13 @@ grep -Fq 'build_package wizp-lean' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not retain the reversible wizp-lean build path'
 grep -Fq 'DINX_EUROOFFICE_SQUASHFS' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not provide the shared EuroOffice runtime'
+builder="$root/scripts/build-iso-container.sh"
+eurooffice_stage_line=$(grep -nF 'eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)' "$builder" | cut -d: -f1)
+wizp_guard_line=$(grep -nF 'if [[ "${DINX_ENABLE_WIZP_LEAN:-false}" == true ]]; then' "$builder" | cut -d: -f1)
+[[ "$eurooffice_stage_line" =~ ^[0-9]+$ && "$wizp_guard_line" =~ ^[0-9]+$ ]] \
+  || fail 'ISO builder does not stage EuroOffice before the optional WIZP package guard'
+(( eurooffice_stage_line < wizp_guard_line )) \
+  || fail 'ISO builder incorrectly makes EuroOffice staging conditional on WIZP'
 grep -Fq 'bun_version=1.4.5' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not pin the Bun toolchain'
 grep -Fq 'bun_sha256=94559b3b528995a49452f9f2404cec74f2efd7d06e0a000a8cd214b02c3666eb' \

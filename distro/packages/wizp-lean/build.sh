@@ -156,6 +156,7 @@ if [[ -n "${WIZP_SOURCE_COMMIT:-}" && "$source_commit" != "$WIZP_SOURCE_COMMIT" 
   printf 'wizp-lean: source checkout does not match pinned commit: %s\n' "$source_commit" >&2
   exit 1
 fi
+cat > "$package_root/Resources/wizp-lean-cef.json" <<EOF
 {
   "schema": "dinx-wizp-lean-cef/v1",
   "wizp_source_commit": "$source_commit",

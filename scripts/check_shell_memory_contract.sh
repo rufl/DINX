@@ -9,7 +9,7 @@ supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/di
 river_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session"
 kwm="$root/distro/packages/kwm/PKGBUILD"
 kwim="$root/distro/packages/kwim/PKGBUILD"
-morghulis="$root/distro/packages/morghulis/morghulis-no-libgtop.patch"
+morghulis="$root/distro/packages/morghulis/morghulis-dinx-no-libgtop.patch"
 fail() {
   printf 'shell_memory_contract: %s\n' "$*" >&2
   exit 1

@@ -57,13 +57,15 @@ prepare() {
     "$nvtop_root/nvtop.json"
   install -Dm644 "$srcdir/mission-center-nvtop-warnings.patch" \
     "$nvtop_root/patches/mission-center-nvtop-warnings.patch"
+  sed -i \
+    -e '/^name = "ring"$/,/^checksum = / s/^version = "0\.17\.14"$/version = "0.17.13"/' \
+    -e '/^name = "ring"$/,/^checksum = / s/^checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"$/checksum = "70ac5d832aa16abd7d1def883a8545280c20a60f523a370aa3a9617c2b8550ee"/' \
+    "$root/subprojects/magpie/Cargo.lock"
 }
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"
-  export RING_BUILD_USE_ASM=0
-  export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-arg=-Wl,--no-as-needed"
-
+  export CARGO_HOME="${CARGO_HOME:-$srcdir/cargo-home}"
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false
   meson compile -C build
 }

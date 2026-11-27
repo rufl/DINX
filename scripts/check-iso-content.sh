@@ -530,7 +530,7 @@ grep -Eq '/var/lib/pacman/local/dinx-gtk-themes-[^/]*/' <<<"$manifest" \
   || fail 'DINX GTK themes package metadata is missing from the installed rootfs'
 iso_profile_roster="$script_dir/../distro/iso/iso-profiles/dinx/profile.yaml"
 [[ -r "$iso_profile_roster" ]] || fail 'DINX ISO profile roster is not readable'
-for roster_package in river kwm kwim greetd-agreety greetd; do
+for roster_package in river kwm kwim greetd-tuigreet greetd; do
   grep -Eq "^[[:space:]]+- ${roster_package}([[:space:]]|$)" "$iso_profile_roster" \
     || fail "the River/KWM session roster entry is missing from the ISO profile: $roster_package"
 done

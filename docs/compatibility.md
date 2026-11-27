@@ -49,7 +49,7 @@ Seafoam Settings exposes fixed entry points for wdisplays, the profile saver, Sh
 River is the compositor, KWM provides the window-management policy, Morghulis provides the desktop surface, and PCManFM provides the file manager/desktop. `dinx-river-session` prepares the Wayland runtime and executes the River session; `dinx-river-init` supervises KWM, Morghulis, PCManFM, Shikane, PolicyKit and idle helpers under dinit. The optional BC-250 control-center daemon starts only when its separately installed signed package is present.
 
 - River/KWM/Morghulis is the base user session.
-- The live ISO uses the direct `dinx-live-autologin` path; installed systems use manual greetd login through `agreety`.
+- The live ISO uses the direct `dinx-live-autologin` path; installed systems use manual greetd login through `tuigreet`, with Morghulis as the default River/KWM shell and Redbean as a secondary selectable shell.
 - The Morghulis first-run helper saves the theme choice and the synchronizer reapplies it at login.
 - Required-helper failure terminates the session instead of leaving a blank desktop.
 - The session uses seatd/libseat and requires no systemd, systemctl, uwsm or user units.
@@ -69,7 +69,7 @@ DINX Gaming is a hidden manual launcher, not a selectable user session. The ISO 
 | Optional desktop app launch | Gapless inherits the active Wayland session; firewall-config opens the Firewalld manager; Bluetooth Manager explains missing daemon/controller instead of failing silently (VirtualBox needs USB Bluetooth passthrough) |
 | Launch arguments | file, line and working-directory behavior is deterministic |
 | Theme contract | static DINX palette, system-wide GTK 3/4 dark defaults, session GTK dark selection, Qt6ct DINX palette, and GTK 3/4 fallback titlebar controls are configured |
-| Greeter/installer/boot | agreety, Calamares and GRUB expose DINX surface, text, selection and focus states |
+| Greeter/installer/boot | tuigreet, Calamares and GRUB expose DINX surface, text, selection and focus states |
 | Floorp default | Floorp handles HTML/XHTML/HTTP/HTTPS by default |
 | Storage and files | Pori dinit persistence, PCManFM directory handling, File Roller archives and GParted partition editing are present |
 | Desktop layout | River/KWM/Morghulis owns the base user session and PCManFM owns the desktop; fresh outputs preserve the declared session configuration |

@@ -12,7 +12,7 @@ Os pontos de entrada são:
 - `scripts/build-iso.sh` — wrapper de build com suporte a root;
 - `scripts/prepare_first_party_apps.sh` — gerador determinístico do archive do commit fixado do upstream Deetty que fornece Deetty/Dintor;
 - `scripts/check_first_party_apps.sh` — verificação do contrato do código, pacote e perfil first-party;
-- `scripts/check_build_metadata.sh` — valida a procedência do builder, snapshots de pacotes, hashes da configuração pacman do builder, checksums das fontes e o digest emitido da ISO; quando recebe o caminho da ISO, recalcula o tamanho em bytes e o SHA-512 contra o artefato baixado;
+- `scripts/check_build_metadata.sh` — valida a procedência do builder, snapshots de pacotes, hashes da configuração pacman do builder, checksums das fontes e o digest emitido da ISO; no CI os metadados são vinculados a snapshots prévios do source tree completo e a um digest separado das mudanças rastreadas, permitindo artefatos gerados não rastreados sem ocultar alterações em arquivos rastreados;
 - `scripts/check_dinx_package_repository.sh` — verifica metadados do snapshot do repositório, assinaturas dos pacotes/banco, fingerprint da chave e caminhos duplicados nos archives;
 - `scripts/smoke_dinx_update.sh` — transação real assinada de instalação/atualização/downgrade pacman contra raízes descartáveis;
 - `scripts/check_dinx_release_preflight.sh` — preflight do canal stable, da chave persistente e dos assets do release GitHub;
@@ -30,12 +30,13 @@ Os pontos de entrada são:
 - `scripts/dintor_p3_qualification.sh` — matriz P3 determinística para core/índice/workers/estado/tarefas do Dintor, fixture de protocolo `clangd` real somente no builder, smoke GTK/X11 nativo claro/escuro e status/diff do Git;
 - `scripts/smoke-iso.sh` — probe de boot em QEMU;
 - `scripts/smoke-install.sh` — smoke de instalação persistente e TTY de recuperação em disco descartável;
+- `scripts/check-installed-grub.sh` e `scripts/test_installed_grub.py` — validam as entradas Linux geradas no teste de instalação contra o kernel e UUID do disco alvo, rejeitam entradas do runner sem gerar ISO e cobrem o isolamento de `/run` do alvo;
 - `scripts/dinitui_dinit_qualification.sh` — daemon Dinit temporário real, ciclo de vida do serviço e smoke GTK;
 - `scripts/smoke_calamares_startup.sh` — smoke limitado de inicialização do Calamares contra a configuração enviada;
 - `.github/workflows/p0-iso.yml` — build remoto em container Artix;
 - `.github/workflows/release.yml` — publicação de pré-release por tag e montagem do pacote Windows para QEMU;
 - `distro/packages/deetty/PKGBUILD` — pacote Zig nativo que instala Deetty e Dintor;
-- `distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml` — configuração versionada do greetd; o greetd inicia o agreety, que lança `/usr/local/libexec/dinx-river-session` diretamente, sem systemd nem UWSM;
+- `distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml` — configuração versionada do greetd; o greetd inicia o tuigreet, que seleciona a sessão River, sem systemd nem UWSM;
 - `distro/packages/dinitui/PKGBUILD` — frontend dinit nativo em Zig 0.17 com GTK4/libadwaita;
 - `distro/packages/dinxpanel/PKGBUILD` — centro de controle inspirado no YaST, nativo em Zig 0.17 com GTK4/libadwaita;
 - `distro/iso/iso-profiles/dinx/profile.yaml` — perfil de pacotes e serviços da fundação.

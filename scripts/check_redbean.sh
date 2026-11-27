@@ -15,6 +15,7 @@ groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
 greetd_config="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml"
 river_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session"
 river_init="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-init"
+supervisor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor"
 redbean_wrapper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-redbean-session"
 redbean_session="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/share/wayland-sessions/dinx-river-kwm-redbean.desktop"
 container_builder="$root/scripts/build-iso-container.sh"
@@ -27,7 +28,7 @@ fail() {
 }
 
 for path in "$pkgbuild" "$build_zig" "$header" "$frontend" "$readme" "$uninstall_helper" \
-  "$design_doc" "$profile" "$groups" "$greetd_config" "$river_session" "$river_init" \
+  "$design_doc" "$profile" "$groups" "$greetd_config" "$river_session" "$river_init" "$supervisor" \
   "$redbean_wrapper" "$redbean_session" "$container_builder" "$docker_builder" "$smoke_script"; do
   [[ -r "$path" ]] || fail "missing input: ${path#$root/}"
 done
@@ -78,12 +79,19 @@ grep -Fq 'redbean_river_move_tag' "$header" || fail 'workspace controls are miss
 grep -Fq 'redbean_audio_change' "$header" || fail 'audio controls are missing'
 grep -Fq 'redbean_notifications_each' "$header" || fail 'notification tray is missing'
 grep -Fq 'redbean_spawn_fixed_args("/usr/lib/redbean/uninstall"' "$frontend" || fail 'application uninstall action is missing'
-grep -Fq 'config.def.zon' "$river_session" || fail 'KWM default config is not seeded'
-grep -Fq 'install -Dm644 /usr/share/doc/kwm/config.def.zon' "$river_session" || fail 'KWM config seed is not installed'
+grep -Fq '[ ! -e "$config_home/kwm/config.zon" ]' "$river_session" \
+  || fail 'KWM config seed does not preserve existing user configuration'
+grep -Fq 'install -Dm644 /etc/xdg/kwm/config.zon "$config_home/kwm/config.zon"' "$river_session" \
+  || fail 'KWM config seed is not installed from the packaged XDG default'
 grep -Fq 'export DINX_SHELL=redbean' "$redbean_wrapper" || fail 'Redbean wrapper does not select the shell'
-grep -Fq 'shell=${DINX_SHELL:-morghulis}' "$river_init" || fail 'River init has no shell selector'
-grep -Fq 'start redbean' "$river_init" || fail 'River init does not start Redbean'
-grep -Fq 'start morghulis' "$river_init" || fail 'River init lost the Morghulis default'
+grep -Fqx 'exec /usr/local/libexec/dinx-session-supervisor river' "$river_init" \
+  || fail 'River init does not delegate session startup to the supervisor'
+grep -Fqx 'shell=${DINX_SHELL:-morghulis}' "$supervisor" \
+  || fail 'session supervisor lost the Morghulis default shell selector'
+grep -Fq 'morghulis|redbean) ;;' "$supervisor" \
+  || fail 'session supervisor does not support both selectable shells'
+grep -Fqx 'start_required shell "$shell"' "$supervisor" \
+  || fail 'session supervisor does not start and monitor the selected shell'
 
 grep -Fq '@window_bg_color' "$frontend" || fail 'redbean does not use semantic GTK theme colors'
 grep -Fq 'g_desktop_app_info_new' "$header" || fail 'desktop-entry launch path is missing'
@@ -111,12 +119,6 @@ grep -Fq 'Name=River + KWM + Redbean (DINX)' "$redbean_session" \
   || fail 'Redbean session is not visible in the greeter'
 grep -Fqx 'Exec=/usr/local/libexec/dinx-redbean-session' "$redbean_session" \
   || fail 'Redbean session wrapper is incorrect'
-grep -Fq 'export DINX_SHELL=redbean' "$redbean_wrapper" \
-  || fail 'Redbean session does not select the Redbean shell'
-grep -Fq 'shell=${DINX_SHELL:-morghulis}' "$river_init" \
-  || fail 'River init has no shell selector'
-grep -Fq 'start redbean' "$river_init" || fail 'River init does not start Redbean'
-grep -Fq 'start morghulis' "$river_init" || fail 'River init lost the Morghulis default'
 grep -Fq 'DINX_BUILD_REDBEAN' "$docker_builder" && fail 'Redbean must no longer be opt-in in the ISO builder'
 grep -Fq 'if [[ "$redbean_build" == true ]]' "$container_builder" && fail 'Redbean build remains conditional'
 grep -Fq 'NEXT' "$design_doc" || fail 'Redbean session boundary is not documented'

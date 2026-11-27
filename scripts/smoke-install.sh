@@ -24,7 +24,7 @@ esac
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail 'DINX_INSTALL_MEMORY must be a positive integer'
 [[ "$disk_size" =~ ^[1-9][0-9]*[KMGTP]$ ]] || fail 'DINX_INSTALL_DISK_SIZE must be an integer with K, M, G, T or P suffix'
 
-for command in xorriso rsync losetup sfdisk mkfs.ext4 blkid mount umount chroot grub-install grub-mkconfig qemu-system-x86_64 socat timeout truncate tesseract; do
+for command in xorriso rsync losetup sfdisk mkfs.ext4 blkid mount umount chroot qemu-system-x86_64 socat timeout truncate tesseract e2fsck; do
   command -v "$command" >/dev/null 2>&1 || fail "required command not found: $command"
 done
 if [[ "$firmware_mode" == uefi ]]; then
@@ -175,8 +175,8 @@ mounted_proc=true
 mount --rbind /sys "$target_dir/sys"
 mount --make-rslave "$target_dir/sys"
 mounted_sys=true
-mount --rbind /run "$target_dir/run"
-mount --make-rslave "$target_dir/run"
+# Do not expose host service sockets, saved GRUB state or runtime mounts to the target.
+mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs "$target_dir/run"
 mounted_run=true
 
 printf 'smoke-install: applying Calamares package removal contract\n'
@@ -258,7 +258,7 @@ if chroot "$target_dir" /usr/bin/pacman -Q wizp >/dev/null 2>&1 \
 fi
 
 printf '\nMODULES=(virtio virtio_pci virtio_blk ata_generic ata_piix ext4)\n' >> "$target_dir/etc/mkinitcpio.conf"
-printf '\nGRUB_CMDLINE_LINUX="console=tty0 console=ttyS0"\nGRUB_TIMEOUT=1\nGRUB_TIMEOUT_STYLE=hidden\n' >> "$target_dir/etc/default/grub"
+printf '\nGRUB_CMDLINE_LINUX="console=tty0 console=ttyS0"\nGRUB_DEFAULT=0\nGRUB_SAVEDEFAULT=false\nGRUB_DISABLE_OS_PROBER=true\nGRUB_TIMEOUT=1\nGRUB_TIMEOUT_STYLE=hidden\n' >> "$target_dir/etc/default/grub"
 printf 'smoke-install: generating the installed initramfs\n'
 chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 
@@ -295,20 +295,9 @@ EOF
     -o /boot/efi/EFI/BOOT/BOOTX64.EFI \
     part_gpt fat ext2 normal configfile linux
 fi
-if [[ "$firmware_mode" == bios ]] && ! grep -Eq '^[[:space:]]*linux[[:space:]]' "$target_dir/boot/grub/grub.cfg"; then
-  printf 'smoke-install: generated GRUB config has no Linux entry; writing deterministic smoke entry\n'
-  cat > "$target_dir/boot/grub/grub.cfg" <<EOF
-set timeout_style=hidden
-set timeout=1
-insmod part_msdos
-insmod ext2
-search --no-floppy --fs-uuid --set=root $root_uuid
-menuentry 'DINX installed smoke' {
-    linux /boot/vmlinuz-linux root=UUID=$root_uuid rw console=tty0 console=ttyS0 loglevel=3
-    initrd /boot/intel-ucode.img /boot/amd-ucode.img /boot/initramfs-linux.img
-}
-EOF
-fi
+# A missing target entry is a real installation failure, not a reason to replace
+# the generated configuration with a fixture that hides broken GRUB scripts.
+"$script_dir/check-installed-grub.sh" "$target_dir/boot/grub/grub.cfg" "$root_uuid"
 if [[ "$firmware_mode" == bios ]]; then
   cat > "$target_dir/tmp/dinx-grub-early.cfg" <<EOF
 search.fs_uuid $root_uuid root

@@ -12,7 +12,7 @@ The entry points are:
 - `scripts/build-iso.sh` — root-aware build wrapper;
 - `scripts/prepare_first_party_apps.sh` — deterministic archive generator for the pinned upstream source that supplies Deetty and Dintor;
 - `scripts/check_first_party_apps.sh` — first-party source, package and profile contract check;
-- `scripts/check_build_metadata.sh` — validates builder provenance, package snapshots, builder pacman-configuration hashes, source checksums and the emitted ISO digest, and can recompute the ISO byte count and SHA-512 against the downloaded artifact;
+- `scripts/check_build_metadata.sh` — validates builder provenance, package snapshots, builder pacman-configuration hashes, source checksums and the emitted ISO digest; CI binds metadata to a prebuild full-tree snapshot plus a separate tracked-diff digest, allowing generated untracked build artifacts without masking tracked-source changes;
 - `scripts/check_dinx_package_repository.sh` — verifies repository snapshot metadata, package/database signatures, key fingerprint and duplicate archive paths;
 - `scripts/smoke_dinx_update.sh` — real signed pacman install/update/downgrade transaction against disposable roots;
 - `scripts/check_dinx_release_preflight.sh` — stable-channel, persistent-key and GitHub release-asset preflight;
@@ -29,13 +29,14 @@ The entry points are:
 - `scripts/dintor_p3_qualification.sh` — deterministic P3 matrix for Dintor core/index/workers/state/tasks, a builder-only real `clangd` protocol fixture, native GTK/X11 dark/light smoke and Git status/diff;
 - `scripts/smoke-iso.sh` — QEMU boot probe;
 - `scripts/smoke-install.sh` — disposable-disk persistent-install and recovery-TTY smoke;
+- `scripts/check-installed-grub.sh` and `scripts/test_installed_grub.py` — validate that generated installation-test Linux entries use the target kernel and root UUID, rejecting runner boot entries without generating an ISO. The disposable target uses a private `/run`, disables os-prober and selects entry zero; a missing target entry fails instead of being replaced by a synthetic BIOS configuration.
 - `scripts/dinitui_dinit_qualification.sh` — real temporary Dinit daemon, service lifecycle and GTK smoke;
 - `scripts/smoke_calamares_startup.sh` — bounded Calamares startup smoke against the shipped configuration;
 - `.github/workflows/p0-iso.yml` — remote build in an Artix container;
 - `.github/workflows/release.yml` — tagged pre-release publication and Windows QEMU package assembly;
 - `distro/packages/deetty/PKGBUILD` — native Zig package that installs Deetty and Dintor;
 - `distro/packages/deetty/qualification-compat.patch` — packaging patch that wires the pinned source's PTY qualification target to its existing compatibility module and adds the Dintor P3 Git/theme/package contract;
-- `distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml` — checked-in greetd configuration; greetd launches agreety, which starts `/usr/local/libexec/dinx-river-session` directly without systemd or UWSM;
+- `distro/iso/iso-profiles/dinx/root-overlay/etc/greetd/config.toml` — checked-in greetd configuration; greetd launches tuigreet, which starts `/usr/local/libexec/dinx-river-session` directly without systemd or UWSM;
 - `distro/packages/wizp/PKGBUILD` — package boundary for the exact self-contained WIZP Linux directory; it requires `WIZP_PACKAGE_DIR` instead of rebuilding an unpinned source tree.
 - `distro/iso/iso-profiles/dinx/feature-groups.json` — foundation, desktop, gaming, hardware and optional package-group metadata; optional groups are outside the base ISO.
 

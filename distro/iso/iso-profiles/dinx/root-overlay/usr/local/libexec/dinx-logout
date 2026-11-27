@@ -2,7 +2,7 @@
 set -eu
 
 # Morghulis runs inside the River session wrapper. Terminating that wrapper lets
-# greetd reap the session and present agreety again; elogind's user termination
+# greetd reap the session and present tuigreet again; elogind's user termination
 # does not reliably reach this dinit-managed process tree.
 pid=${DINX_SESSION_COMPOSITOR_PID:-}
 case "$pid" in

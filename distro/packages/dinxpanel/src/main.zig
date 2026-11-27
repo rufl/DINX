@@ -979,10 +979,6 @@ fn onUpgradeCheckClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).runUpgradeCheck();
 }
 
-fn onPaintfeClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
-    asApp(data).launch(&.{"paintfe"});
-}
-
 fn onOctopiClicked(_: *c.GtkButton, data: ?*anyopaque) callconv(.c) void {
     asApp(data).launch(&.{"octopi"});
 }

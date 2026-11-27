@@ -4,6 +4,7 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 feature_groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
+iso_packages=$(jq -er '[.groups[] | select(.iso == true) | .packages[]] | .[]' "$feature_groups")
 recipe="$root/distro/packages/audionaut/PKGBUILD"
 source_file="$root/distro/packages/audionaut/source.env"
 launcher="$root/distro/packages/audionaut/audionaut"
@@ -22,17 +23,18 @@ source "$source_file"
 for checksum in "$AUDIONAUT_SOURCE_SHA256" "$AUDIONAUT_LICENSE_SHA256"; do
   [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || fail 'Audionaut checksum is invalid'
 done
-grep -Fqx '    - audionaut' "$profile" || fail 'profile is missing audionaut'
-grep -Fqx '        "audionaut",' "$feature_groups" || fail 'desktop feature group is missing audionaut'
-if grep -Eq '^[[:space:]-]*transit([",]|$)' "$profile" || grep -Fq '"transit"' "$feature_groups"; then
+# Keep validating the optional package recipe without making it an ISO input.
+if grep -Fqx '    - audionaut' "$profile" \
+  || grep -Fqx audionaut <<<"$iso_packages"; then
+  fail 'Audionaut is disabled for the NEXT ISO but remains selected'
+fi
+if grep -Eq '^[[:space:]-]*transit([",]|$)' "$profile" || grep -Fqx transit <<<"$iso_packages"; then
   fail 'Transit remains selected in the DINX profile'
 fi
 grep -Fq 'pkgver="$AUDIONAUT_VERSION"' "$recipe" || fail 'Audionaut package version is not wired to source.env'
 grep -Fq '${AUDIONAUT_SOURCE_URL}' "$recipe" || fail 'Audionaut source URL is not wired to source.env'
 grep -Fq '"$AUDIONAUT_SOURCE_SHA256"' "$recipe" || fail 'Audionaut source checksum is not wired to source.env'
 grep -Fq '"$AUDIONAUT_LICENSE_SHA256"' "$recipe" || fail 'Audionaut license checksum is not wired to source.env'
-grep -Fq 'build_package audionaut' "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not build Audionaut'
-grep -Fq "'build_package audionaut'" "$root/scripts/check_dinx_package_provenance.sh" || fail 'package provenance contract omits Audionaut'
 [[ -x "$launcher" ]] || fail 'Audionaut launcher is missing or not executable'
 sh -n "$launcher" || fail 'Audionaut launcher has invalid shell syntax'
 grep -Fqx 'exec /opt/audionaut/Audionaut.AppImage --appimage-extract-and-run "$@"' "$launcher" \
@@ -50,6 +52,8 @@ for path in \
   '  opt/audionaut/Audionaut.AppImage' \
   '  usr/share/applications/audionaut.desktop' \
   '  usr/share/licenses/audionaut/LICENSE.md'; do
-  grep -Fqx "$path" "$iso_check" || fail "ISO payload is missing Audionaut path: ${path#  }"
+  if grep -Fqx "$path" "$iso_check"; then
+    fail "disabled NEXT Audionaut path remains mandatory in the ISO payload: ${path#  }"
+  fi
 done
-printf 'audionaut_contract: PASS version=%s transit=false\n' "$AUDIONAUT_VERSION"
+printf 'audionaut_contract: PASS version=%s iso=false optional_recipe=true transit=false\n' "$AUDIONAUT_VERSION"

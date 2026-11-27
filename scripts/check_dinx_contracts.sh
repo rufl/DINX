@@ -14,13 +14,14 @@ checks=(
   check_swayimg.sh
   check_package_managers.sh
   check_river_session.sh
+  check_desktop_packages.sh
+  check_dinx_session.sh
   check_morghulis_theme.sh
   check_mission_center.sh
   check_turnstile.sh
   check_dinx_display_persistence.sh
   check_wizp_package.sh
   check_dinx_package_channel.sh
-  check_mission_center.sh
   check_dinx_noto_latin.sh
   check_dinx_package_provenance.sh
   check_cyan_skillfish.sh
@@ -76,6 +77,7 @@ fi
 
 for smoke in \
   smoke_dinx_pacman_repo_priority.sh \
+  smoke_build_metadata.sh \
   smoke_dinx_display_persistence.sh \
   smoke_dinx_qt_palette.sh \
   smoke_pori_mount_service.sh \
@@ -96,5 +98,9 @@ printf 'dinx_contracts: run=test_initramfs_manifest.py\n'
 PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_initramfs_manifest.py"
 printf 'dinx_contracts: run=test_dinx_plymouth_screen.py\n'
 PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_dinx_plymouth_screen.py"
+printf 'dinx_contracts: run=test_installed_grub.py\n'
+PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_installed_grub.py"
+printf 'dinx_contracts: run=test_iso_qualification_host.py\n'
+PYTHONDONTWRITEBYTECODE=1 python3 "$root/scripts/test_iso_qualification_host.py"
 printf 'dinx_contracts: all_static_and_fixture_checks_passed=true\n'
 

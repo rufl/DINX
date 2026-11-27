@@ -49,7 +49,7 @@ O Seafoam Settings expõe entradas fixas para wdisplays, salvador de perfil, Shi
 River é o compositor, KWM fornece a política de janelas, Morghulis fornece a superfície do desktop e PCManFM fornece o gerenciador de arquivos/desktop. `dinx-river-session` prepara o runtime Wayland e executa a sessão River; `dinx-river-init` supervisiona KWM, Morghulis, PCManFM, Shikane, PolicyKit e idle sob dinit. O daemon opcional de controle BC-250 inicia somente quando seu pacote assinado separado está instalado.
 
 - River/KWM/Morghulis é a sessão base do usuário.
-- A ISO live usa o caminho direto `dinx-live-autologin`; sistemas instalados usam login manual via `agreety`.
+- A ISO live usa o caminho direto `dinx-live-autologin`; sistemas instalados usam login manual via `tuigreet`, com Morghulis como shell padrão do River/KWM e Redbean como shell secundário selecionável.
 - O helper first-run do Morghulis salva o tema e o sincronizador reaplica a escolha no login.
 - Falhas de helpers obrigatórios encerram a sessão em vez de deixar um desktop vazio.
 - A sessão usa seatd/libseat e não exige systemd, systemctl, uwsm ou unidades de usuário.
@@ -69,7 +69,7 @@ DINX Gaming é um launcher manual oculto, não uma sessão de usuário selecion�
 | Inicialização de apps opcionais | Gapless herda a sessão Wayland ativa; firewall-config abre o gerenciador Firewalld; o Gerenciador Bluetooth explica a ausência do daemon/controlador (VirtualBox precisa de passthrough USB Bluetooth) |
 | Argumentos de inicialização | comportamento de arquivo, linha e diretório é determinístico |
 | Contrato de tema | paleta DINX estática, defaults escuros GTK 3/4 no sistema, seleção GTK escura na sessão, paleta DINX do Qt6ct e controles de fallback na barra de título GTK 3/4 estão configurados |
-| Greeter/instalador/boot | agreety, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
+| Greeter/instalador/boot | tuigreet, Calamares e GRUB expõem estados DINX de superfície, texto, seleção e foco |
 | Floorp padrão | O Floorp trata HTML/XHTML/HTTP/HTTPS por padrão |
 | Armazenamento e arquivos | persistência dinit do Pori, diretórios no PCManFM, arquivos compactados no File Roller e edição no GParted estão presentes |
 | Layout do desktop | River/KWM/Morghulis é a sessão base e PCManFM é o desktop; a configuração declarada da sessão é preservada |

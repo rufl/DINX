@@ -4,6 +4,7 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 feature_groups="$root/distro/iso/iso-profiles/dinx/feature-groups.json"
+iso_packages=$(jq -er '[.groups[] | select(.iso == true) | .packages[]] | .[]' "$feature_groups")
 iso_check="$root/scripts/check-iso-content.sh"
 mimeapps="$root/distro/iso/iso-profiles/dinx/root-overlay/etc/xdg/mimeapps.list"
 file_roller_override="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/share/applications/org.gnome.FileRoller.desktop"
@@ -46,7 +47,7 @@ for package in firewalld firewall-config file-roller galculator gapless gparted 
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
 for disabled_package in pixelorama paintfe blender godot krita inkscape patchy audionaut; do
-  if grep -Fqx "    - $disabled_package" "$profile" || grep -Fq "\"$disabled_package\"" "$feature_groups"; then
+  if grep -Fqx "    - $disabled_package" "$profile" || grep -Fqx "$disabled_package" <<<"$iso_packages"; then
     fail "$disabled_package is disabled for the NEXT ISO but remains selected"
   fi
 done
@@ -54,7 +55,7 @@ for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-s
   if grep -Fqx "    - $package" "$profile"; then
     fail "$package remains explicitly selected in the DINX profile"
   fi
-  if grep -Fq "\"$package\"" "$feature_groups"; then
+  if grep -Fqx "$package" <<<"$iso_packages"; then
     fail "$package remains in an ISO feature group"
   fi
 done
@@ -62,7 +63,7 @@ done
 # out of both the profile and the ISO feature groups so a future edit cannot
 # silently reintroduce a recipe-less or Pearl/office-coupled app.
 for retired in vlc vlc-cli zrythm impasto onlyoffice seafoam-settings floorp transit zenkai blockbench; do
-  if grep -Fqx "    - $retired" "$profile" || grep -Fq "\"$retired\"" "$feature_groups"; then
+  if grep -Fqx "    - $retired" "$profile" || grep -Fqx "$retired" <<<"$iso_packages"; then
     fail "$retired remains explicitly selected for the DINX ISO"
   fi
 done
@@ -120,7 +121,7 @@ if grep -Eq '^(Hidden|NoDisplay)=true$' "$pcmanfm_override"; then
 fi
 grep -Fq 'start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
   || fail 'the DINX session supervisor does not start the PCManFM desktop wrapper'
-if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
+if grep -Eq '(floorp|onlyoffice)\.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi
 if grep -Fq 'vlc.desktop' "$mimeapps"; then

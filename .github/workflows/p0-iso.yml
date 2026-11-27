@@ -56,6 +56,7 @@ on:
       - "scripts/smoke_dinx_update.sh"
       - "scripts/check_dinx_feature_groups.sh"
       - "scripts/check_build_metadata.sh"
+      - "scripts/hash-dinx-source-tree.sh"
       - "scripts/smoke_build_metadata.sh"
       - "scripts/check-iso-host.sh"
       - "scripts/check_morghulis_theme.sh"
@@ -68,6 +69,10 @@ on:
       - "scripts/smoke-iso.sh"
       - "scripts/check_dinx_qemu_session.sh"
       - "scripts/check_dinx_contracts.sh"
+      - "scripts/check_dinx_session.sh"
+      - "scripts/check-installed-grub.sh"
+      - "scripts/test_installed_grub.py"
+      - "scripts/test_iso_qualification_host.py"
       - "scripts/check_dinx_plymouth_screen.py"
       - "scripts/test_dinx_plymouth_screen.py"
       - "scripts/smoke-install.sh"
@@ -109,9 +114,11 @@ on:
       - "scripts/dinitui_dinit_qualification.sh"
       - "scripts/gaming_p5_qualification.sh"
       - "LICENSE"
+      - ".github/syft-iso-filesystem.yaml"
 
 permissions:
   actions: read
+  contents: read
   id-token: write
   attestations: write
 
@@ -205,6 +212,15 @@ jobs:
         run: ./scripts/check_firefox.sh
       - name: Verify EuroOffice lean office payload
         run: ./scripts/check_eurooffice.sh
+      - name: Verify desktop payload and session OCR contracts
+        run: |
+          ./scripts/check_desktop_packages.sh
+          ./scripts/check_dinx_session.sh
+      - name: Smoke-test build provenance, host prerequisites and installed GRUB validation
+        run: |
+          ./scripts/smoke_build_metadata.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/test_installed_grub.py
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/test_iso_qualification_host.py
 
       - name: Verify pinned swayimg source and package contract
         run: ./scripts/check_swayimg.sh
@@ -324,17 +340,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          run_id=$(gh api \
+          runs=$(gh api \
             --paginate \
-            "repos/$GITHUB_REPOSITORY/actions/runs?branch=feat%2Ftaskmgr%2Fmission&per_page=100" \
-            --jq '.workflow_runs[] | select(.name == "Mission Center lean package" and .conclusion == "success") | .id' \
-            | head -n1)
+            "repos/$GITHUB_REPOSITORY/actions/workflows/mission-center.yml/runs?branch=feat%2Ftaskmgr%2Fmission&status=success&per_page=100" \
+            --jq '.workflow_runs[] | [.id, .head_sha] | @tsv')
+          run_id=
+          artifact_name=
+          while IFS=$'\t' read -r candidate_id candidate_sha; do
+            [[ "$candidate_id" =~ ^[0-9]+$ && "$candidate_sha" =~ ^[0-9a-f]{40}$ ]] || continue
+            candidate_artifact="mission-center-lean-$candidate_sha"
+            artifact_ids=$(gh api --paginate \
+              "repos/$GITHUB_REPOSITORY/actions/runs/$candidate_id/artifacts?per_page=100" \
+              --jq ".artifacts[] | select(.name == \"$candidate_artifact\" and .expired == false) | .id")
+            [[ "$artifact_ids" =~ ^[0-9]+$ ]] || continue
+            run_id=$candidate_id
+            artifact_name=$candidate_artifact
+            break
+          done <<< "$runs"
           [[ "$run_id" =~ ^[0-9]+$ ]] \
-            || { printf 'No successful Mission Center task-branch run found\n' >&2; exit 1; }
+            || { printf 'No successful Mission Center task-branch run with an available lean-package artifact found\n' >&2; exit 1; }
           artifact_dir="$RUNNER_TEMP/mission-center-artifact"
           mkdir -p "$artifact_dir" dist/.cache/dinx/pacman/pkg
           gh run download "$run_id" \
             --repo "$GITHUB_REPOSITORY" \
+            --name "$artifact_name" \
             --dir "$artifact_dir"
           mapfile -t packages < <(find "$artifact_dir" -type f -name 'mission-center-*.pkg.tar.zst' -print)
           [[ "${#packages[@]}" -eq 1 ]] \
@@ -347,6 +376,9 @@ jobs:
         run: |
           source_tree_sha=$(scripts/hash-dinx-source-tree.sh "$GITHUB_WORKSPACE" "$GITHUB_SHA")
           [[ "$source_tree_sha" =~ ^[0-9a-f]{64}$ ]]
+          tracked_source_sha=$(git diff --binary "$GITHUB_SHA" -- | sha256sum | cut -d ' ' -f 1)
+          [[ "$tracked_source_sha" =~ ^[0-9a-f]{64}$ ]]
+          printf 'DINX_EXPECTED_TRACKED_SOURCE_SHA256=%s\n' "$tracked_source_sha" >> "$GITHUB_ENV"
           printf 'DINX_EXPECTED_SOURCE_TREE_SHA256=%s\n' "$source_tree_sha" >> "$GITHUB_ENV"
       - name: Build with Artix artools
         id: iso-build
@@ -492,7 +524,7 @@ jobs:
           # reported under npm tar advisories). See .github/syft-iso-filesystem.yaml.
           config: .github/syft-iso-filesystem.yaml
 
-      - name: Attest ISO, package repository and checksum provenance
+      - name: Attest ISO, package repository, checksum and SBOM provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: |
@@ -500,6 +532,7 @@ jobs:
             ${{ steps.artifact.outputs.iso_path }}.sha512
             ${{ steps.artifact.outputs.metadata_path }}
             dist/dinx-package-repository.tar
+            dist/dinx-rootfs-sbom.spdx.json
       - name: Upload P0 qualification diagnostics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -511,8 +544,8 @@ jobs:
             ${{ steps.artifact.outputs.iso_path }}
             ${{ steps.artifact.outputs.iso_path }}.sha512
             ${{ steps.artifact.outputs.metadata_path }}
-            dist/iso/dinx/*.qemu.log
-            dist/iso/dinx/*.ppm
+            ${{ steps.artifact.outputs.iso_dir }}/*.qemu.log
+            ${{ steps.artifact.outputs.iso_dir }}/*.ppm
             dist/dinx-package-repository.tar
             dist/dinx-build.log
             dist/dinx-rootfs-sbom.spdx.json

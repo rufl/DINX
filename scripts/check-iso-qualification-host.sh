@@ -70,10 +70,12 @@ fi
 for command in blkid chroot grub-install grub-mkconfig losetup mkfs.ext4 mount mkfs.fat qemu-system-x86_64 sfdisk socat tesseract timeout truncate umount unsquashfs xorriso; do
   require_command "$command"
 done
+loop_probe=(losetup --find)
 if [[ $EUID -ne 0 ]]; then
   require_command sudo
+  loop_probe=(sudo losetup --find)
 fi
-if [[ ! -e /dev/loop-control ]] || ! (losetup --find >/dev/null 2>&1); then
+if [[ ! -e /dev/loop-control ]] || ! "${loop_probe[@]}" >/dev/null 2>&1; then
   fail 'loop-device support is unavailable; provide /dev/loop-control and a usable loop device before building packages'
 fi
 

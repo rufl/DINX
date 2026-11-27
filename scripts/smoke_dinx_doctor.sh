@@ -46,6 +46,8 @@ for required in \
   'schema=dinx-doctor/v1' \
   'mode=read-only' \
   'session.default=river+kwm+morghulis' \
+  'session.greeter_host=tuigreet' \
+  'session.command.greeter=present' \
   'package.pcmanfm=installed' \
   'package.transactions=not-run' \
   'network.access=not-run'; do

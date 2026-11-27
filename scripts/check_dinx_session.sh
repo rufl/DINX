@@ -18,6 +18,8 @@ theme_sync="$overlay/usr/local/libexec/dinx-sync-session-theme"
 installer="$overlay/usr/local/libexec/dinx-installer"
 session_dir="$overlay/usr/share/wayland-sessions"
 river_entry="$session_dir/dinx-river-kwm-morghulis.desktop"
+redbean_entry="$session_dir/dinx-river-kwm-redbean.desktop"
+redbean_wrapper="$overlay/usr/local/libexec/dinx-redbean-session"
 gaming_session="$session_dir/dinx-gaming.desktop"
 lock="$overlay/usr/local/libexec/dinx-lock"
 idle="$overlay/usr/local/libexec/dinx-idle"
@@ -55,7 +57,7 @@ for path in \
   "$profile" "$greetd_config" "$tmpfiles" \
   "$river_session" "$river_init" "$supervisor" "$logout" \
   "$desktop_approval" "$palette_seed" "$desktop_installer" "$theme_sync" "$installer" \
-  "$river_entry" "$gaming_session" "$lock" "$idle" "$desktop" "$desktop_surface" \
+  "$river_entry" "$redbean_entry" "$redbean_wrapper" "$gaming_session" "$lock" "$idle" "$desktop" "$desktop_surface" \
   "$shell_profile" "$fish_config" "$useradd_defaults" "$users_conf" \
   "$graphics_helper" "$graphics_environment" \
   "$kwm_pkgbuild" "$root/distro/packages/kwm/source.env" \
@@ -66,12 +68,12 @@ for path in \
   [[ -r "$path" ]] || fail "missing $path"
 done
 
-# The installed session set is closed: only the River/KWM entry and the hidden
-# gaming launcher may be selectable by the greeter.
+# The installed session set is closed: only the Morghulis and Redbean River/KWM
+# entries and the hidden gaming launcher may be selectable by the greeter.
 for session_path in "$session_dir"/*.desktop; do
   [[ -e "$session_path" ]] || continue
   case "${session_path##*/}" in
-    dinx-river-kwm-morghulis.desktop|dinx-gaming.desktop) ;;
+    dinx-river-kwm-morghulis.desktop|dinx-river-kwm-redbean.desktop|dinx-gaming.desktop) ;;
     *) fail "unsupported user session entry remains: ${session_path#$root/}" ;;
   esac
 done
@@ -95,7 +97,7 @@ if grep -Eq '^    - [a-z0-9._-]*(aq|pea)[a-z0-9._-]*$' "$profile"; then
 fi
 while IFS= read -r helper_path; do
   case "${helper_path##*/}" in
-    dinx-river-session|dinx-river-init|dinx-session-supervisor|dinx-logout|dinx-pcmanfm-desktop|dinx-desktop-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
+    dinx-river-session|dinx-redbean-session|dinx-river-init|dinx-session-supervisor|dinx-logout|dinx-pcmanfm-desktop|dinx-desktop-first-run|dinx-morghulis-first-run|dinx-approve-desktop-launcher|dinx-qt6ct-palette-seed|dinx-sync-session-theme|dinx-set-theme|dinx-graphics-profile|dinx-graphics-environment.sh|dinx-idle|dinx-lock|dinx-installer|dinx-gaming|dinx-bluetooth-manager|dinx-gparted) ;;
     *) fail "unexpected session component: ${helper_path#$root/}" ;;
   esac
 done < <(find "$overlay/usr/local/libexec" -maxdepth 1 -type f)
@@ -115,6 +117,8 @@ done < <(find "$session_dir" "$overlay/usr/share/applications" -name '*.desktop'
 
 [[ -x "$river_session" ]] || fail 'River session wrapper is not executable'
 sh -n "$river_session" || fail 'River session wrapper has invalid shell syntax'
+[[ -x "$redbean_wrapper" ]] || fail 'Redbean session wrapper is not executable'
+sh -n "$redbean_wrapper" || fail 'Redbean session wrapper has invalid shell syntax'
 [[ -x "$river_init" ]] || fail 'River session init is not executable'
 sh -n "$river_init" || fail 'River session init has invalid shell syntax'
 [[ -x "$supervisor" ]] || fail 'session supervisor is not executable'
@@ -136,10 +140,10 @@ sh -n "$idle" || fail 'idle wrapper has invalid shell syntax'
 sh -n "$lock" || fail 'lock wrapper has invalid shell syntax'
 [[ -x "$graphics_helper" ]] || fail 'graphics-profile helper is not executable'
 
-# Roster: the River stack and the greetd/agreety greeter are shipped; the
+# Roster: the River stack and the greetd/tuigreet greeter are shipped; the
 # retired compositors, session launchers and palette generator are not.
 for package in \
-  river kwm kwim greetd greetd-agreety seatd elogind dinit shikane \
+  river kwm kwim greetd greetd-tuigreet seatd elogind dinit shikane \
   brightnessctl swayidle swaylock wlopm fish vulkan-swrast dconf \
   gsettings-desktop-schemas xorg-xwayland qt6ct qt6-wayland lxqt-policykit; do
   grep -Fq "    - $package" "$profile" || fail "profile is missing $package"
@@ -199,12 +203,12 @@ grep -Fq 'SHELL=/bin/fish' "$useradd_defaults" || fail 'new-user shell default i
 grep -Fq 'shell: /bin/fish' "$users_conf" || fail 'Calamares user shell is not Fish'
 grep -Fq '    - render' "$users_conf" || fail 'Calamares users are missing render-node access'
 
-# Installed greetd hands the seat to agreety, which launches the River wrapper.
+# Installed greetd hands the seat to tuigreet, which selects the River wrapper.
 grep -Fq '[general]' "$greetd_config" || fail 'greetd general section is missing'
 grep -Fq 'source_profile = false' "$greetd_config" \
   || fail 'greetd must not source the greeter account profile'
-grep -Fq 'command = "env XDG_CACHE_HOME=/var/cache/agreety agreety --cmd /usr/local/libexec/dinx-river-session"' "$greetd_config" \
-  || fail 'greetd does not launch the River session through agreety'
+grep -Fq 'command = "tuigreet --sessions /usr/share/wayland-sessions --remember --time --cmd /usr/local/libexec/dinx-river-session"' "$greetd_config" \
+  || fail 'greetd does not launch the selectable River sessions through tuigreet'
 grep -Fq 'user = "greeter"' "$greetd_config" \
   || fail 'greetd does not use the greetd-provided greeter account'
 if grep -Fq '[initial_session]' "$greetd_config"; then
@@ -213,8 +217,6 @@ fi
 if grep -Eiq 'systemd|systemctl' "$greetd_config"; then
   fail 'greetd config contains a systemd integration'
 fi
-grep -Fq 'd /var/cache/agreety 0700 greeter greeter -' "$tmpfiles" \
-  || fail 'agreety private cache directory is not provisioned by tmpfiles'
 
 # The session wrapper owns desktop identity, seat backend probing, the graphics
 # profile, single-instance locking and the live-session shortcuts. The identity
@@ -333,8 +335,10 @@ grep -Fq 'start_optional bc250 bc250-control-centerd' "$supervisor" \
 grep -Fq 'set_status ready' "$supervisor" || fail 'session supervisor has no ready status boundary'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
 grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
-grep -Fq 'start_required shell morghulis' "$supervisor" \
-  || fail 'session supervisor does not start the Morghulis desktop shell'
+grep -Fqx 'shell=${DINX_SHELL:-morghulis}' "$supervisor" \
+  || fail 'session supervisor does not default to the Morghulis desktop shell'
+grep -Fqx 'start_required shell "$shell"' "$supervisor" \
+  || fail 'session supervisor does not start the selected desktop shell'
 if grep -Eq 'start_(required|optional|background)[[:space:]]+[[:alnum:]_-]+[[:space:]]+river([[:space:]]|$)' "$supervisor"; then
   fail 'session supervisor starts a second compositor'
 fi
@@ -345,7 +349,7 @@ grep -Fq 'Exec=dbus-run-session /usr/local/libexec/dinx-river-session' "$river_e
   || fail 'River session command is incorrect'
 grep -Fq 'TryExec=/usr/local/libexec/dinx-river-session' "$river_entry" \
   || fail 'River session TryExec is missing'
-grep -Fq 'DesktopNames=river;kwm;morghulis' "$river_entry" || fail 'River session desktop names are missing'
+grep -Fqx 'DesktopNames=River;KWM;Morghulis' "$river_entry" || fail 'River session desktop names are missing'
 if grep -Eiq 'systemd|systemctl|uwsm' "$river_entry"; then
   fail 'River session entry contains a systemd or UWSM integration'
 fi
@@ -374,7 +378,7 @@ grep -Fq '/etc/skel/.config/dinx/installer-preferences.json' "$installer" \
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" session' "$iso_smoke" \
   || fail 'QEMU live smoke does not check the running desktop screen'
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter' "$install_smoke" \
-  || fail 'installed QEMU smoke does not check the agreety greeter screen'
+  || fail 'installed QEMU smoke does not check the tuigreet greeter screen'
 
 bash -n "$qemu_session_checker" || fail 'QEMU session checker has invalid shell syntax'
 
@@ -451,8 +455,22 @@ env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null
 env "${ocr_env[@]}" DINX_TEST_OCR='DINX desktop' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null
-env "${ocr_env[@]}" DINX_TEST_OCR=$'DINX Linux dinx-install-smoke tty7\ndinx-install-smoke login:' \
+# Recorded installed-boot OCR: tuigreet initially displays only Username.
+env "${ocr_env[@]}" DINX_TEST_OCR=$'Fri, 2? Nov 2026 - 10:41\nUsername:\nReset (J Change command 9) Choose session (BM Power (] Background Gl) vusr/local/1ibexec/dinx-river-session' \
   "$qemu_session_checker" "$qemu_screen" greeter >/dev/null
+env "${ocr_env[@]}" DINX_TEST_OCR=$'Password:\nChange command\nChoose session' \
+  "$qemu_session_checker" "$qemu_screen" greeter >/dev/null
+for rejected_greeter in \
+  $'DINX Linux dinx-install-smoke tty7\ndinx-install-smoke login:' \
+  $'DINX Linux tty7\nlogin: dinx\nPassword:' \
+  $'Username:' \
+  $'Change command\nChoose session' \
+  $'agreety\nPassword\nSign in'; do
+  if env "${ocr_env[@]}" DINX_TEST_OCR="$rejected_greeter" \
+    "$qemu_session_checker" "$qemu_screen" greeter >/dev/null 2>&1; then
+    fail 'the greeter screen check accepted a screen without tuigreet authentication and session controls'
+  fi
+done
 sparse_greeter_screen="$fixture/sparse-greeter.ppm"
 python3 - "$sparse_greeter_screen" <<'PY'
 import sys
@@ -465,15 +483,19 @@ for pixel in range(1470):
     pixels[offset:offset + 3] = b"\xff\xff\xff"
 Path(sys.argv[1]).write_bytes(f"P6\n{width} {height}\n255\n".encode() + pixels)
 PY
-env "${ocr_env[@]}" DINX_TEST_OCR=$'DINX Linux dinx-install-smoke tty7\ndinx-install-smoke login:' \
+env "${ocr_env[@]}" DINX_TEST_OCR=$'Username:\nChange command\nChoose session' \
   "$qemu_session_checker" "$sparse_greeter_screen" greeter >/dev/null
 env "${ocr_env[@]}" DINX_TEST_OCR='Install DINX' \
   "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
-if env "${ocr_env[@]}" DINX_TEST_OCR=$'agreety\nPassword\nSign in' \
+if env "${ocr_env[@]}" DINX_TEST_OCR=$'tuigreet\nPassword\nSign in\nChoose session' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null; then
   fail 'the session screen check accepted a greeter login screen'
 fi
-if env "${ocr_env[@]}" DINX_TEST_OCR=$'River + KWM (DINX) - Wayland\nPassword\nSign in\nAccessDenied' \
+if env "${ocr_env[@]}" DINX_TEST_OCR=$'Username:\nChange command\nChoose session\n/usr/local/libexec/dinx-river-session' \
+  "$qemu_session_checker" "$qemu_screen" session >/dev/null; then
+  fail 'the session screen check accepted the initial tuigreet username screen'
+fi
+if env "${ocr_env[@]}" DINX_TEST_OCR=$'Username:\nChange command\nChoose session\nAccessDenied' \
   "$qemu_session_checker" "$qemu_screen" greeter >/dev/null; then
   fail 'the greeter screen check accepted a startup failure'
 fi
@@ -481,25 +503,29 @@ if env "${ocr_env[@]}" DINX_TEST_OCR='Wayfire - Wayland' \
   "$qemu_session_checker" "$qemu_screen" session >/dev/null; then
   fail 'the session screen check accepted a foreign compositor title'
 fi
-if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
-  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null; then
-  fail 'the first-run screen check passed without the installer shortcut'
-fi
+env "${ocr_env[@]}" DINX_TEST_OCR='Instalar DINX' \
+  "$qemu_session_checker" "$qemu_screen" first-run >/dev/null
+for rejected_first_run in 'River + KWM (DINX) - Wayland' Morghulis 'DINX desktop' PCManFM; do
+  if env "${ocr_env[@]}" DINX_TEST_OCR="$rejected_first_run" \
+    "$qemu_session_checker" "$qemu_screen" first-run >/dev/null; then
+    fail 'the first-run screen check passed without the installer shortcut'
+  fi
+done
 if env "${ocr_env[@]}" DINX_TEST_OCR='River + KWM (DINX) - Wayland' \
   "$qemu_session_checker" "$fixture/missing.ppm" session >/dev/null 2>&1; then
   fail 'the session screen check accepted a missing screenshot'
 fi
-printf 'qemu_screen_smoke river_title=true dinx_marker=true agreety_login=true sparse_text_greeter=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
+printf 'qemu_screen_smoke river_title=true dinx_marker=true tuigreet_username=true tuigreet_password=true raw_getty_rejected=true sparse_text_greeter=true greeter_startup_error_rejected=true foreign_compositor_rejected=true login_screen_rejected=true missing_screenshot_rejected=true\n'
 
 bash "$root/scripts/smoke_dinx_session.sh"
 bash "$root/scripts/smoke_dinx_session_supervisor.sh"
 
-# The River/agreety session boundary must be documented in every language.
+# The River/tuigreet session boundary must be documented in every language.
 for doc in "$architecture" "$compatibility" "$pt_architecture" "$pt_compatibility"; do
   grep -Eiq '(^|[^[:alnum:]])river([^[:alnum:]]|$)|(^|[^[:alnum:]])kwm([^[:alnum:]]|$)' "$doc" \
     || fail "River session boundary is undocumented: ${doc#$root/}"
-  grep -Fiq 'agreety' "$doc" || fail "agreety greeter boundary is undocumented: ${doc#$root/}"
+  grep -Fiq 'tuigreet' "$doc" || fail "tuigreet greeter boundary is undocumented: ${doc#$root/}"
   grep -Fq 'dinit' "$doc" || fail "dinit boundary is undocumented: ${doc#$root/}"
 done
 
-printf 'dinx_session_contract session=river_kwm_morghulis=true shell=morghulis greeter=agreety=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+dinx-dock+dinx-first-run+greetd-agreety=true profiled_defaults=river=true tmpfiles=agreety_cache=true supervisor=river required_helpers=kwm+shikane+policykit+idle+morghulis optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'
+printf 'dinx_session_contract session=river_kwm_morghulis=true shell_default=morghulis shell_selectable=morghulis+redbean greeter=tuigreet=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+redbean+dinx-dock+dinx-first-run+greetd-tuigreet=true profiled_defaults=river=true supervisor=river required_helpers=kwm+shikane+policykit+idle+selected-shell optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'

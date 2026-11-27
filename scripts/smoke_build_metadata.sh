@@ -19,6 +19,7 @@ compression_wrapper_sha=$(sha256sum "$root/scripts/iso-tools/mksquashfs" | cut -
 
 fixture_commit=$(git -C "$root" rev-parse HEAD)
 source_tree_sha=$("$root/scripts/hash-dinx-source-tree.sh" "$root" "$fixture_commit")
+tracked_source_sha=$(git -C "$root" diff --binary "$fixture_commit" -- | sha256sum | cut -d ' ' -f 1)
 zero_sha=0000000000000000000000000000000000000000
 cat >"$metadata" <<EOF
 schema=dinx-build-metadata/v1
@@ -78,12 +79,20 @@ awk '
   /^build_context=/ { print "build_context=github-actions"; next }
   { print }
 ' "$metadata" > "$github_metadata"
-github_verified=$(DINX_EXPECTED_SOURCE_TREE_SHA256="$source_tree_sha" GITHUB_SHA="$zero_sha" \
+github_verified=$(DINX_EXPECTED_SOURCE_TREE_SHA256="$source_tree_sha" \
+  DINX_EXPECTED_TRACKED_SOURCE_SHA256="$tracked_source_sha" GITHUB_SHA="$zero_sha" \
   "$root/scripts/check_build_metadata.sh" "$github_metadata")
 grep -Fq "source_checksums=true" <<<"$github_verified"
-if DINX_EXPECTED_SOURCE_TREE_SHA256="$zero_sha" GITHUB_SHA="$zero_sha" \
+if DINX_EXPECTED_SOURCE_TREE_SHA256="$zero_sha" \
+  DINX_EXPECTED_TRACKED_SOURCE_SHA256="$tracked_source_sha" GITHUB_SHA="$zero_sha" \
   "$root/scripts/check_build_metadata.sh" "$github_metadata" >/dev/null 2>&1; then
   printf 'smoke_build_metadata: mismatched pre-build source snapshot unexpectedly passed\n' >&2
+  exit 1
+fi
+if DINX_EXPECTED_SOURCE_TREE_SHA256="$source_tree_sha" \
+  DINX_EXPECTED_TRACKED_SOURCE_SHA256= GITHUB_SHA="$zero_sha" \
+  "$root/scripts/check_build_metadata.sh" "$github_metadata" >/dev/null 2>&1; then
+  printf 'smoke_build_metadata: pre-build snapshot without tracked-source binding unexpectedly passed\n' >&2
   exit 1
 fi
 if GITHUB_SHA="$zero_sha" awk '
@@ -154,5 +163,51 @@ changed_snapshot_hash=$("$root/scripts/hash-dinx-source-tree.sh" "$snapshot_repo
   exit 1
 }
 
+# Exercise validation in an isolated checkout, including a tracked change that
+# is not one of the individually checksummed profile/configuration inputs.
+validation_repo="$tmp_dir/metadata-validation"
+validation_paths=(
+  scripts/check_build_metadata.sh
+  scripts/hash-dinx-source-tree.sh
+  scripts/iso-tools/mksquashfs
+  distro/iso/iso-profiles/dinx/profile.yaml
+  distro/iso/iso-profiles/common/common.yaml
+  distro/iso/iso-profiles/dinx/feature-groups.json
+  distro/packages/deetty/source.env
+)
+mkdir -p "$validation_repo"
+for path in "${validation_paths[@]}"; do
+  mkdir -p "$validation_repo/$(dirname -- "$path")"
+  cp -- "$root/$path" "$validation_repo/$path"
+done
+git init --quiet --initial-branch=main "$validation_repo"
+git -C "$validation_repo" config user.name 'DINX metadata smoke'
+git -C "$validation_repo" config user.email 'dinx-metadata-smoke@example.invalid'
+git -C "$validation_repo" add -- .
+git -C "$validation_repo" commit --quiet -m 'metadata validation baseline'
+validation_commit=$(git -C "$validation_repo" rev-parse HEAD)
+validation_source_sha=$("$validation_repo/scripts/hash-dinx-source-tree.sh" "$validation_repo" "$validation_commit")
+validation_tracked_sha=$(git -C "$validation_repo" diff --binary "$validation_commit" -- | sha256sum | cut -d ' ' -f 1)
+validation_metadata="$tmp_dir/validation-metadata.txt"
+awk -v commit="$validation_commit" -v source_sha="$validation_source_sha" '
+  /^commit=/ { print "commit=" commit; next }
+  /^source_tree_sha256=/ { print "source_tree_sha256=" source_sha; next }
+  { print }
+' "$github_metadata" > "$validation_metadata"
+validation_env=(
+  "GITHUB_SHA=$zero_sha"
+  "DINX_EXPECTED_COMMIT=$validation_commit"
+  "DINX_EXPECTED_SOURCE_TREE_SHA256=$validation_source_sha"
+  "DINX_EXPECTED_TRACKED_SOURCE_SHA256=$validation_tracked_sha"
+)
+env "${validation_env[@]}" "$validation_repo/scripts/check_build_metadata.sh" "$validation_metadata" >/dev/null
+printf 'generated build diagnostic\n' > "$validation_repo/build-diagnostic.txt"
+env "${validation_env[@]}" "$validation_repo/scripts/check_build_metadata.sh" "$validation_metadata" >/dev/null
+printf '\n# tracked source corruption\n' >> "$validation_repo/scripts/hash-dinx-source-tree.sh"
+if env "${validation_env[@]}" "$validation_repo/scripts/check_build_metadata.sh" "$validation_metadata" >/dev/null 2>&1; then
+  printf 'smoke_build_metadata: pre-build snapshot hid tracked source corruption\n' >&2
+  exit 1
+fi
 
-printf 'build_metadata_smoke binding=true local_source=true source_mismatch_rejected=true iso_mismatch_rejected=true expected_commit_snapshot=true source_baseline_stable=true generated_caches_and_zig_staging_ignored=true untracked_sources_bound=true\n'
+
+printf 'build_metadata_smoke binding=true local_source=true source_mismatch_rejected=true iso_mismatch_rejected=true expected_commit_snapshot=true tracked_corruption_rejected=true generated_untracked_outputs_allowed=true source_baseline_stable=true generated_caches_and_zig_staging_ignored=true untracked_sources_bound=true\n'

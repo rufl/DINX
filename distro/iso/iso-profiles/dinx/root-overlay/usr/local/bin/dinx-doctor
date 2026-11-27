@@ -58,8 +58,8 @@ print_value session.session_desktop "${XDG_SESSION_DESKTOP:-unknown}"
 print_value session.wayland_display "${WAYLAND_DISPLAY:-unknown}"
 print_value session.default river+kwm+morghulis
 print_value session.selectable river+kwm+morghulis-only
-print_value session.greeter_host agreety
-command_state session.command.greeter agreety
+print_value session.greeter_host tuigreet
+command_state session.command.greeter tuigreet
 command_state session.command.dinitctl dinitctl
 command_state session.command.dinitui dinitui
 command_state session.command.dinxpanel dinxpanel

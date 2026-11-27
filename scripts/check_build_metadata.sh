@@ -118,6 +118,14 @@ expected_source_tree_sha=${DINX_EXPECTED_SOURCE_TREE_SHA256:-}
 if [[ -n "$expected_source_tree_sha" ]]; then
   [[ "$expected_source_tree_sha" =~ ^[0-9a-f]{64}$ ]] \
     || fail "expected source-tree checksum is invalid: $expected_source_tree_sha"
+  # The full snapshot tolerates newly generated untracked build files, but it
+  # must never suppress detection of modifications to tracked build inputs.
+  expected_tracked_source_sha=${DINX_EXPECTED_TRACKED_SOURCE_SHA256:-}
+  [[ "$expected_tracked_source_sha" =~ ^[0-9a-f]{64}$ ]] \
+    || fail 'a pre-build source snapshot requires a valid tracked-source checksum'
+  actual_tracked_source_sha=$(git -C "$repo_root" diff --binary "$metadata_commit" -- | sha256sum | cut -d ' ' -f 1)
+  [[ "$actual_tracked_source_sha" == "$expected_tracked_source_sha" ]] \
+    || fail 'tracked source changed after the pre-build source snapshot'
 else
   expected_source_tree_sha=$("$repo_root/scripts/hash-dinx-source-tree.sh" "$repo_root" "$metadata_commit")
 fi

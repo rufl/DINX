@@ -45,7 +45,7 @@ jobs:
             --clobber
           mapfile -t packages < <(find dist/mission-center -maxdepth 1 -type f -name 'mission-center-*.pkg.tar.zst' -print)
           [[ "${#packages[@]}" -eq 1 ]] || { printf 'Expected exactly one precompiled Mission Center package\n' >&2; exit 1; }
-          pkgver=$(awk -F= '$1 == "pkgver" { print $2; exit }' distro/packages/mission-center/PKGBUILD)
+          pkgver=$(awk -F= '$1 == "MISSION_CENTER_VERSION" { print $2; exit }' distro/packages/mission-center/source.env)
           pkgrel=$(awk -F= '$1 == "pkgrel" { print $2; exit }' distro/packages/mission-center/PKGBUILD)
           target="dist/mission-center/mission-center-${pkgver}-${pkgrel}-x86_64.pkg.tar.zst"
           mv -- "${packages[0]}" "$target"

@@ -5,7 +5,7 @@ source_env="$startdir/source.env"
 : "${DEETTY_VERSION:?missing DEETTY_VERSION}"
 : "${DEETTY_SOURCE_SHA256:?missing DEETTY_SOURCE_SHA256}"
 pkgver="$DEETTY_VERSION"
-pkgrel=11
+pkgrel=12
 pkgdesc='Native Zig terminal workspace and Dintor editor for DINX'
 arch=('x86_64')
 url='https://github.com/rufl/DEETTY'

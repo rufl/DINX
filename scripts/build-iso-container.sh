@@ -576,18 +576,20 @@ trap finish EXIT
                 kitemmodels kservice kwindowsystem mpvqt qqc2-desktop-style \
                 qt6-5compat qt6-declarative
               build_package haruna
-              eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
-              [[ -n "$eurooffice_stage_dir" ]] || {
-                printf 'build-iso-container: EuroOffice staging is required for wizp-lean\n' >&2
-                exit 1
-              }
-              eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
-              eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
-              cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
-              GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
-              export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
-              printf 'dinx-build-timing phase=eurooffice-staged package=%s\n' "$eurooffice_package"
-              build_package wizp-lean
+              if [[ "${DINX_ENABLE_WIZP_LEAN:-false}" == true ]]; then
+                eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
+                [[ -n "$eurooffice_stage_dir" ]] || {
+                  printf 'build-iso-container: EuroOffice staging is required for wizp-lean\n' >&2
+                  exit 1
+                }
+                eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+                eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+                cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
+                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
+                export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
+                printf 'dinx-build-timing phase=eurooffice-staged package=%s\n' "$eurooffice_package"
+                build_package wizp-lean
+              fi
               if [[ "$package_repository_only" != true ]]; then
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \

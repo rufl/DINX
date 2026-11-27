@@ -104,7 +104,6 @@
                 "openssh",
                 "audionaut",
                 "eurooffice",
-                "wizp-lean",
                 "tuxmanager",
                 "os-prober",
                 "octopi",
@@ -170,7 +169,8 @@
             "packages": [
                 "cups-dinit",
                 "ntfs-3g",
-                "wizp"
+                "wizp",
+                "wizp-lean"
             ]
         }
     },

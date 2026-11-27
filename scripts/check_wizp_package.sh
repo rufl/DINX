@@ -48,18 +48,21 @@ grep -Fq 'source "$startdir/source.env"' "$lean_pkgdir/PKGBUILD" \
   || fail 'lean PKGBUILD does not load its source pin'
 grep -Fq 'prepare_wizp_lean' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not prepare the pinned WIZP source'
+grep -Fq 'DINX_ENABLE_WIZP_LEAN' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not gate the disabled WIZP ISO package'
 grep -Fq 'build_package wizp-lean' "$root/scripts/build-iso-container.sh" \
-  || fail 'ISO builder does not build wizp-lean'
+  || fail 'ISO builder does not retain the reversible wizp-lean build path'
 grep -Fq 'DINX_EUROOFFICE_SQUASHFS' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not provide the shared EuroOffice runtime'
 grep -Fq 'bun_version=1.4.5' "$root/scripts/build-iso-container.sh" \
   || fail 'ISO builder does not pin the Bun toolchain'
 grep -Fq 'bun_sha256=94559b3b528995a49452f9f2404cec74f2efd7d06e0a000a8cd214b02c3666eb' \
   "$root/scripts/build-iso-container.sh" || fail 'ISO builder does not verify the Bun archive'
-grep -Fq '    - wizp-lean' "$root/distro/iso/iso-profiles/dinx/profile.yaml" \
-  || fail 'DINX profile does not select wizp-lean'
+if grep -Fqx '    - wizp-lean' "$root/distro/iso/iso-profiles/dinx/profile.yaml"; then
+  fail 'DINX profile still selects wizp-lean'
+fi
 grep -Fq '"wizp-lean"' "$root/distro/iso/iso-profiles/dinx/feature-groups.json" \
-  || fail 'wizp-lean is not assigned to a feature group'
+  || fail 'wizp-lean is not retained in the feature-group manifest'
 grep -Fqx 'pkgname=wizp-lean' "$lean_pkgdir/PKGBUILD" || fail 'lean PKGBUILD package name is not wizp-lean'
 grep -Fq 'eurooffice=9.3.8-5' "$lean_pkgdir/PKGBUILD" || fail 'lean package does not pin EuroOffice runtime'
 grep -Fq 'conflicts=(wizp)' "$lean_pkgdir/PKGBUILD" || fail 'lean package can coexist with bundled wizp'

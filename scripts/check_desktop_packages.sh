@@ -43,11 +43,15 @@ grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher do
 for package in firewalld firewall-config file-roller fwupd galculator gapless gparted haruna flatpak paintfe krita inkscape godot pixelorama patchy pori shikane udisks2 udisks2-btrfs wdisplays firefox eurooffice papirus-icon-theme tuxmanager; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-for package in pcmanfm blender audionaut octopi pacman-contrib libdecor wizp-lean; do
+for package in pcmanfm blender audionaut octopi pacman-contrib libdecor; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
   jq -e --arg package "$package" '.groups.desktop.packages | index($package) != null' "$feature_groups" >/dev/null \
     || fail "desktop feature group is missing $package"
 done
+if grep -Fqx '    - wizp-lean' "$profile" \
+  || jq -e '.groups.desktop.packages | index("wizp-lean") != null' "$feature_groups" >/dev/null; then
+  fail 'wizp-lean remains selected by the ISO desktop feature group'
+fi
 for package in qogir-icon-theme breeze-icons breeze breeze-cursors qqc2-breeze-style plasma-integration plasma-workspace xdg-desktop-portal-kde zathura zathura-pdf-mupdf libmupdf; do
   if grep -Fqx "    - $package" "$profile"; then
     fail "$package remains explicitly selected in the DINX profile"

@@ -1561,6 +1561,12 @@ fi
 grep -Fq '/usr/bin/os-prober' <<<"$manifest" || fail 'os-prober is missing from the ISO payload'
 grep -Fq '/usr/bin/mount' <<<"$manifest" || fail 'util-linux mount is missing from the ISO payload'
 grep -Fq '/usr/bin/flock' <<<"$manifest" || fail 'util-linux flock is missing from the ISO payload'
+for image_manifest in "$manifest" "$livefs_manifest"; do
+  if forbidden_matches=$(grep -E '/var/lib/pacman/local/(wizp|wizp-lean)-[^/]*/' <<<"$image_manifest"); then
+    printf '%s\n' "$forbidden_matches" >&2
+    fail 'WIZP package metadata is present in the ISO payload'
+  fi
+done
 if grep -Fq '/usr/bin/ntfs-3g' <<<"$manifest"; then
   fail 'optional ntfs-3g write package is present in the live ISO'
 fi

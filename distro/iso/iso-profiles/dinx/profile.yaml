@@ -83,7 +83,6 @@ rootfs:
     - firefox
     - paintfe
     - eurooffice
-    - wizp-lean
     - inkscape
     - dconf
     - gsettings-desktop-schemas

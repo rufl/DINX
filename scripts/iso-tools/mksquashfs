@@ -138,6 +138,12 @@ strip_build_metadata() {
       printf 'dinx-final-squashfs: removed build-only metadata path=%s\n' "$rel"
     fi
   done
+  for rel in usr/bin/xgettext; do
+    if [[ -e "$root/$rel" ]]; then
+      rm -f -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed build-only binary path=%s\n' "$rel"
+    fi
+  done
 }
 
 prune_excluded_packages() {
@@ -155,8 +161,6 @@ prune_excluded_packages() {
     dhcpcd
     dhcpcd-dinit
     ex-vi-compat
-    gettext
-    glib2-docs
     vim
     vim-runtime
     man-db

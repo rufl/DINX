@@ -53,7 +53,9 @@ mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
   "$fixture_root/usr/lib/python3.14/__pycache__" "$fixture_root/usr/lib/python3.14/idlelib" \
   "$fixture_root/usr/share/i18n/locales" "$fixture_root/usr/share/i18n/charmaps" \
   "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus" \
-  "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu"
+  "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" \
+  "$fixture_root/usr/bin"
+printf 'build-only extractor\n' > "$fixture_root/usr/bin/xgettext"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
 printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
@@ -106,6 +108,8 @@ done
 [[ ! -e "$fixture_root/usr/lib/libdemo.a" \
    && ! -e "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" ]] \
   || fail 'static archives or Python build configuration remain in the final filesystem'
+[[ ! -e "$fixture_root/usr/bin/xgettext" ]] \
+  || fail 'build-only gettext extractor remains in the final filesystem'
 
 # The system dconf default must be compiled for freedesktop consumers to see it:
 # the egui Craft apps and libadwaita/GTK apps fall back to light when the portal

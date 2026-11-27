@@ -82,6 +82,7 @@ mesa
 meson
 nano
 ninja
+nodejs
 openssh
 pango
 pcre2

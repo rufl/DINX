@@ -61,6 +61,7 @@ prepare() {
 
 build() {
   cd "$srcdir/mission-center-v$pkgver"
+  export RING_BUILD_USE_ASM=0
   export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-arg=-Wl,--no-as-needed"
 
   meson setup build --prefix=/usr --buildtype=release -Db_lto=false

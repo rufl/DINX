@@ -330,7 +330,6 @@ session_check_screenshot=$session_screenshot_path
 session_check_mode=$session_mode
 if [[ -n "$post_screenshot_path" && -n "$post_keys" ]]; then
   session_check_screenshot=$post_screenshot_path
-  session_check_mode=session
 fi
 "$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" "$session_mode"
 "$script_dir/check_dinx_qemu_session.sh" "$session_check_screenshot" "$session_check_mode"

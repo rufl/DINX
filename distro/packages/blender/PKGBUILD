@@ -25,7 +25,6 @@ options=(!lto)
 # fluid/ocean/remesh modifiers, meshoptimizer, ktx, nanovdb, potrace,
 # pugixml, manifold, quadriflow and rubberband.
 pkgdesc="A fully integrated 3D graphics creation suite (lean build — 3D modeling + gamedev only)"
-18: @ours
 arch=(x86_64)
 url="https://www.blender.org/"
 license=(GPL-3.0-or-later)

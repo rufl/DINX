@@ -28,6 +28,7 @@ make_helper kwm "$fakebin"
 make_helper shikane "$fakebin"
 make_helper lxqt-policykit-agent "$fakebin"
 make_helper morghulis "$fakebin"
+make_helper dinx-pcmanfm-desktop "$libexec"
 make_helper dinx-idle "$libexec"
 cat >"$libexec/dinx-desktop-first-run" <<EOF
 #!/bin/sh

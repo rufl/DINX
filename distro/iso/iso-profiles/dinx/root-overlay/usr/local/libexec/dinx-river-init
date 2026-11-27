@@ -1,63 +1,11 @@
 #!/bin/sh
 set -eu
 
-state_home=${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}
-mkdir -p "$state_home/dinx"
-log_path="$state_home/dinx/river-session.log"
-exec >>"$log_path" 2>&1
+# Desktop identity belongs to dinx-river-session: Morghulis enables its river
+# modules only when XDG_CURRENT_DESKTOP is exactly `river`, so re-exporting a
+# composite value here would blank the shell's bar.
 
-pids=''
-cleanup() {
-  for pid in $pids; do kill -TERM "$pid" 2>/dev/null || true; done
-}
-trap cleanup EXIT
-trap 'exit 143' HUP INT TERM
-
-start() {
-  "$@" &
-  pids="$pids $!"
-}
-
-start_background() {
-  "$@" &
-}
-
-start_optional() {
-  command -v "$1" >/dev/null 2>&1 || return 0
-  start "$@"
-}
-
-command -v kwm >/dev/null 2>&1 || exit 127
-shell=${DINX_SHELL:-morghulis}
-case "$shell" in
-  morghulis) command -v morghulis >/dev/null 2>&1 || exit 127 ;;
-  redbean) command -v redbean >/dev/null 2>&1 || exit 127 ;;
-  *) printf 'dinx-river-init: unsupported shell: %s\n' "$shell" >&2; exit 64 ;;
-esac
-command -v pcmanfm >/dev/null 2>&1 || exit 127
-command -v shikane >/dev/null 2>&1 || exit 127
-command -v lxqt-policykit-agent >/dev/null 2>&1 || exit 127
-
-if [ "$shell" = morghulis ]; then
-  start_background /usr/local/libexec/dinx-morghulis-first-run
-fi
-start kwm
-if [ "$shell" = morghulis ]; then
-  start morghulis
-else
-  start redbean
-fi
-if /usr/local/libexec/dinx-pcmanfm-desktop --enabled; then
-  start pcmanfm --desktop
-fi
-start shikane
-start lxqt-policykit-agent
-start /usr/local/libexec/dinx-idle
-start_optional bc250-control-centerd
-
-while :; do
-  for pid in $pids; do
-    kill -0 "$pid" 2>/dev/null || exit 1
-  done
-  sleep 1
-done
+# River 0.5 is non-monolithic. The supervisor starts KWM as the required
+# river-window-management-v1 implementation; KWM then starts KWIM for
+# river-input-management-v1.
+exec /usr/local/libexec/dinx-session-supervisor river

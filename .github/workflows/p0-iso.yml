@@ -339,6 +339,7 @@ jobs:
           mapfile -t packages < <(find "$artifact_dir" -type f -name 'mission-center-*.pkg.tar.zst' -print)
           [[ "${#packages[@]}" -eq 1 ]] \
             || { printf 'Expected exactly one Mission Center package, found %s\n' "${#packages[@]}" >&2; exit 1; }
+          find dist/.cache/dinx/pacman/pkg -maxdepth 1 -type f -name 'mission-center-*.pkg.tar.zst' -delete
           cp -- "${packages[0]}" dist/.cache/dinx/pacman/pkg/
           printf 'Using precompiled Mission Center package: %s (run %s)\n' \
             "$(basename -- "${packages[0]}")" "$run_id"

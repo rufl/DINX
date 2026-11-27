@@ -37,7 +37,7 @@ diff --git a/src/NavBar/RiverTags.vala b/src/NavBar/RiverTags.vala
 +        }
 +
 +        if (_output == null) {
-+            var outputs = _river.get_outputs();
++            unowned var outputs = _river.get_outputs();
 +            if (outputs != null) {
 +                foreach (var output in outputs) {
 +                    _output = output;

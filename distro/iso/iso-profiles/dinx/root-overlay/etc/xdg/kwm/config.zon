@@ -10,9 +10,8 @@
     .startup_cmds = .{
     },
 
-    // All windows float by default (Aqueous/Pearl-style stacking desktop).
-    // .layout has no .float sub-struct (float takes no config params), so
-    // default_layout alone is sufficient.
+    // Windows/macOS-style desktop: every managed client is placed in the
+    // floating layout and stacked by focus order instead of being tiled.
     .default_layout = .float,
 
     // key/pointer bindings: DINX desktop conventions
@@ -59,11 +58,10 @@
         },
     },
 
-    // window rules: global float rule catches every window (including those
-    // with a null app_id). default_layout = .float already floats everything;
-    // this rule makes it explicit and future-proof.
+    // No app_id filter: this rule applies to every managed client, including
+    // GTK, Qt, XWayland and clients that report a non-null app_id.
     .window_rules = .{
-        .{ .app_id = .{ .str = \"\", .match_null = true }, .floating = true, .decoration = .csd },
+        .{ .floating = true, .decoration = .csd },
     },
 
     // output rules (empty - inherit upstream)
@@ -72,8 +70,8 @@
 
     // cursor warp and auto-swallow
     .cursor_warp = .none,
-    .auto_swallow = true,
-    .remember_floating_geometry = false,
+    .auto_swallow = false,
+    .remember_floating_geometry = true,
     .disable_wrap_around_for_scroller = false,
     .default_attach_mode = .{
         .tile = .top,

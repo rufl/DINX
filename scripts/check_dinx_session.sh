@@ -5,6 +5,7 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 overlay="$root/distro/iso/iso-profiles/dinx/root-overlay"
 profile="$root/distro/iso/iso-profiles/dinx/profile.yaml"
 greetd_config="$overlay/etc/greetd/config.toml"
+kwm_config="$overlay/etc/xdg/kwm/config.zon"
 tmpfiles="$overlay/etc/tmpfiles.d/dinx-dinit.conf"
 river_session="$overlay/usr/local/libexec/dinx-river-session"
 river_init="$overlay/usr/local/libexec/dinx-river-init"
@@ -53,7 +54,7 @@ fail() {
 }
 
 for path in \
-  "$profile" "$greetd_config" "$tmpfiles" \
+  "$profile" "$greetd_config" "$tmpfiles" "$kwm_config" \
   "$river_session" "$river_init" "$supervisor" "$logout" \
   "$desktop_approval" "$palette_seed" "$desktop_installer" "$theme_sync" "$installer" \
   "$river_entry" "$gaming_session" "$lock" "$idle" "$desktop" "$desktop_surface" \
@@ -274,8 +275,16 @@ grep -Fq 'export GTK_CSD=1' "$river_session" \
   || fail 'River session disables GTK client-side decorations'
 grep -Fq 'export GTK_DECORATION_LAYOUT=:minimize,maximize,close' "$river_session" \
   || fail 'River session does not define themed GTK window buttons'
-grep -Fq '.default_window_decoration = .csd' "$overlay/etc/xdg/kwm/config.zon" \
+grep -Fq '.default_window_decoration = .csd' "$kwm_config" \
   || fail 'KWM is not configured to keep client-side decorations visible'
+grep -Fq '.default_layout = .float' "$kwm_config" \
+  || fail 'KWM default layout is not floating'
+grep -Fq '.{ .floating = true, .decoration = .csd }' "$kwm_config" \
+  || fail 'KWM does not force every window into the floating stack'
+grep -Fq '.auto_swallow = false' "$kwm_config" \
+  || fail 'KWM auto-swallow would replace stacking behavior'
+grep -Fq '.remember_floating_geometry = true' "$kwm_config" \
+  || fail 'KWM does not preserve floating window geometry'
 if grep -Fq 'riverctl' "$river_init"; then
   fail 'River 0.5 rejects any riverctl string in its init file, including comments'
 fi

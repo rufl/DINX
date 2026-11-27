@@ -1,12 +1,17 @@
 name: Mission Center lean package
 
-# GitHub schedule events run only from the default branch. Keep this workflow
-# on the feature branch for review; the schedule becomes active when merged to
-# the default branch. workflow_dispatch works from this branch immediately.
+# Run on task-branch changes so NEXT can consume a published artifact without
+# compiling Mission Center in the ISO workflow.
 
 on:
   schedule:
     - cron: "37 7 */3 * *"
+  push:
+    branches:
+      - feat/taskmgr/mission
+    paths:
+      - ".github/workflows/mission-center.yml"
+      - "distro/packages/mission-center/**"
   workflow_dispatch:
 
 permissions:

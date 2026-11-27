@@ -127,6 +127,12 @@ set_status starting
 wait_for_wayland || fail_session wayland-not-ready
 wait_for_dbus || fail_session dbus-not-ready
 
+shell=${DINX_SHELL:-morghulis}
+case "$shell" in
+    morghulis|redbean) ;;
+    *) fail_session "unsupported-shell-$shell" ;;
+esac
+
 # River 0.5 does not ship riverctl or start a window manager itself. KWM is
 # the required river-window-management-v1 implementation and starts KWIM.
 start_required wm kwm
@@ -150,9 +156,11 @@ if [ -r "$session_env" ]; then
     # shellcheck disable=SC1090
     . "$session_env"
 fi
-# Morghulis is the DINX bar: force its selected anchor before construction so
-# the first-run result is applied even when the wizard could not reach dconf.
-if command -v gsettings >/dev/null 2>&1 \
+# Morghulis is the default DINX bar: force its selected anchor before
+# construction so the first-run result is applied even when the wizard could
+# not reach dconf. Redbean uses the shared appearance file directly.
+if [ "$shell" = morghulis ] \
+    && command -v gsettings >/dev/null 2>&1 \
     && gsettings writable com.arkye.morghulis navbar-anchor >/dev/null 2>&1; then
     bar_anchor=bottom
     appearance=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}/dinx/appearance.json
@@ -162,7 +170,7 @@ if command -v gsettings >/dev/null 2>&1 \
     gsettings set com.arkye.morghulis navbar-anchor "$bar_anchor" >/dev/null 2>&1 \
         || log "bar anchor update failed: $bar_anchor"
 fi
-start_required shell morghulis
+start_required shell "$shell"
 start_optional dock dinx-dock
 start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"
 start_optional bc250 bc250-control-centerd

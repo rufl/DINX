@@ -13,7 +13,7 @@ for path in \
   distro/packages/bc250-control-center/PKGBUILD \
   distro/packages/bc250-control-center/source.env \
   distro/iso/iso-profiles/dinx/profile.yaml \
-  distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-init; do
+  distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor; do
   [[ -f "$path" ]] || fail "missing contract file: $path"
 done
 
@@ -61,7 +61,7 @@ for package in bc250-control-center cyan-skillfish-governor-smu cyan-skillfish-g
   grep -Fq "build_package $package" scripts/build-iso-container.sh \
     || fail "ISO builder does not build the optional signed package: $package"
 done
-grep -Fq 'start_optional bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-init \
+grep -Fq 'start_optional bc250 bc250-control-centerd' distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor \
   || fail 'River session does not supervise the optional BC-250 daemon'
 
 printf 'bc250_control_center_contract version=%s python=>=3.12 pyqt6=true iso=false signed_repository=true hardware_gate=pci-1002:13fe systemd=false source_sha256=%s\n' \

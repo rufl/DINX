@@ -819,16 +819,17 @@ grep -Fq 'export DINX_SHELL=redbean' <<<"$redbean_wrapper" \
   || fail 'Redbean wrapper does not select the Redbean shell'
 river_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-session)
 river_init=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-river-init)
+river_supervisor=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-session-supervisor)
 grep -Fq 'exec river -c /usr/local/libexec/dinx-river-init' <<<"$river_launcher" || fail 'DINX River wrapper does not start River'
 grep -Fq 'dinx_apply_graphics_environment "$graphics_profile"' <<<"$river_launcher" \
   || fail 'DINX River wrapper does not apply the selected renderer policy'
-grep -Fq 'start kwm' <<<"$river_init" || fail 'DINX River init does not start KWM'
-grep -Fq 'start morghulis' <<<"$river_init" || fail 'DINX River init does not start Morghulis'
-grep -Fq 'start redbean' <<<"$river_init" || fail 'DINX River init does not start Redbean'
-grep -Fq 'shell=${DINX_SHELL:-morghulis}' <<<"$river_init" || fail 'DINX River init has no shell selector'
-grep -Fq 'start pcmanfm --desktop' <<<"$river_init" || fail 'DINX River init does not start PCManFM desktop mode'
-grep -Fq 'start shikane' <<<"$river_init" || fail 'DINX River init does not start Shikane'
-grep -Fq 'start /usr/local/libexec/dinx-idle' <<<"$river_init" || fail 'DINX River init does not start the idle manager'
+grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' <<<"$river_init" || fail 'DINX River init does not hand off to the session supervisor'
+grep -Fq 'start_required wm kwm' <<<"$river_supervisor" || fail 'DINX session supervisor does not start KWM'
+grep -Fq 'start_required shell "$shell"' <<<"$river_supervisor" || fail 'DINX session supervisor does not start the selected shell'
+grep -Fq 'shell=${DINX_SHELL:-morghulis}' <<<"$river_supervisor" || fail 'DINX session supervisor has no shell selector'
+grep -Fq 'start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"' <<<"$river_supervisor" || fail 'DINX session supervisor does not start PCManFM desktop mode'
+grep -Fq 'start_required shikane shikane' <<<"$river_supervisor" || fail 'DINX session supervisor does not start Shikane'
+grep -Fq 'start_required idle "$libexec_dir/dinx-idle"' <<<"$river_supervisor" || fail 'DINX session supervisor does not start the idle manager'
 graphics_environment=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-graphics-environment.sh)
 grep -Fq 'export WLR_RENDERER=gles2' <<<"$graphics_environment" || fail 'DINX QEMU renderer policy is not set to GLES2'
 grep -Fq 'export WLR_RENDERER=vulkan' <<<"$graphics_environment" || fail 'DINX VirtualBox/default renderer policy is not set to Vulkan'
@@ -845,7 +846,7 @@ grep -Fq 'custom_palette' <<<"$theme_sync" || fail 'Qt6ct dark/light palette sel
 first_run=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/libexec/dinx-morghulis-first-run)
 grep -Fq 'morghulis-first-run-complete' <<<"$first_run" || fail 'Morghulis first-run marker is missing'
 grep -Fq 'DINX_THEME_VARIANT=$variant' <<<"$first_run" || fail 'Morghulis first-run does not apply its theme choice'
-if grep -Eiq 'systemd|systemctl|uwsm|loginctl' <<<"$river_session$river_launcher$river_init$theme_sync$first_run"; then
+if grep -Eiq 'systemd|systemctl|uwsm|loginctl' <<<"$river_session$river_launcher$river_init$river_supervisor$theme_sync$first_run"; then
   fail 'DINX River/Morghulis session contains a forbidden systemd or uwsm integration'
 fi
 

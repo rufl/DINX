@@ -73,6 +73,6 @@ build() {
 
 package() {
   cd "$srcdir/mission-center-v$pkgver"
-  DESTDIR="$pkgdir" meson install -C build
+  DESTDIR="$pkgdir" meson install -C build --no-rebuild
   install -Dm644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
 }

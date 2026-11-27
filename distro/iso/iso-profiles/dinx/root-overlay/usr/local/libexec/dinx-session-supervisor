@@ -29,6 +29,20 @@ set_status() {
     mv -f "$tmp" "$status_path"
 }
 
+stop_child() {
+    pid=$1
+    kill -TERM "$pid" 2>/dev/null || true
+    attempt=0
+    while [ "$attempt" -lt 20 ] && process_alive "$pid"; do
+        attempt=$((attempt + 1))
+        sleep 0.1
+    done
+    if process_alive "$pid"; then
+        kill -KILL "$pid" 2>/dev/null || true
+    fi
+    wait "$pid" 2>/dev/null || true
+}
+
 stop_parent() {
     if [ -n "$parent_pid" ] && [ "$parent_pid" != "$$" ]; then
         kill -TERM "$parent_pid" 2>/dev/null || true
@@ -37,7 +51,7 @@ stop_parent() {
 
 cleanup() {
     for pid in $child_pids; do
-        kill -TERM "$pid" 2>/dev/null || true
+        stop_child "$pid"
     done
     stop_parent
 }

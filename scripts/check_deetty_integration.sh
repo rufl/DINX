@@ -19,13 +19,10 @@ archive="$repo_root/distro/packages/deetty/deetty-0.1.0.tar.gz"
 launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/deetty"
 btop_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/btop"
 nvtop_launcher="$repo_root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/nvtop"
-exec_patch="$repo_root/distro/packages/deetty/deetty-terminal-exec.patch"
-identity_patch="$repo_root/distro/packages/deetty/product-identity.patch"
-qualification_patch="$repo_root/distro/packages/deetty/qualification-compat.patch"
 
 for path in "$profile" "$groups" "$fish_profile" "$shell_profile" "$session_launcher" \
   "$launcher" "$btop_launcher" "$nvtop_launcher" \
-  "$source_env" "$pkgbuild" "$archive" "$exec_patch" "$identity_patch" "$qualification_patch"; do
+  "$source_env" "$pkgbuild" "$archive"; do
   [[ -r "$path" ]] || fail "missing file: $path"
 done
 [[ $(stat -c '%a' "$archive") == 644 ]] \
@@ -97,20 +94,6 @@ build_dependencies=$(awk -F= '$1 == "makedepends" { print; exit }' "$pkgbuild")
 [[ "$build_dependencies" == *"'clang'"* ]] || fail 'clangd protocol qualification build dependency is missing'
 [[ "$build_dependencies" == *"'vim'"* ]] || fail 'Vim real-TUI qualification build dependency is missing'
 grep -Fq "'git'" "$pkgbuild" || fail 'Git runtime dependency is missing'
-grep -Fq 'Git Status and Diff...' "$repo_root/distro/packages/deetty/qualification-compat.patch" || fail 'Dintor Git action is missing'
-grep -Fq 'DINTOR_THEME' "$repo_root/distro/packages/deetty/qualification-compat.patch" || fail 'Dintor color scheme contract is missing'
-grep -Fq 'deetty-terminal-exec.patch' "$pkgbuild" || fail 'Deetty execute-argv patch is not part of the package'
-grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal-exec.patch"' "$pkgbuild" \
-  || fail 'Deetty execute-argv patch is not applied without fuzz'
-exec_patch_sha=$(sha256sum "$exec_patch" | cut -d ' ' -f 1)
-grep -Fq "'$exec_patch_sha'" "$pkgbuild" || fail 'Deetty execute-argv patch checksum is not pinned'
-identity_patch_sha=$(sha256sum "$identity_patch" | cut -d ' ' -f 1)
-grep -Fq "'$identity_patch_sha'" "$pkgbuild" || fail 'Deetty product identity patch checksum is not pinned'
-grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/qualification-compat.patch"' "$pkgbuild" \
-  || fail 'Deetty qualification patch is not applied without fuzz'
-qualification_patch_sha=$(sha256sum "$qualification_patch" | cut -d ' ' -f 1)
-grep -Fq "'$qualification_patch_sha'" "$pkgbuild" \
-  || fail 'Deetty qualification patch checksum is not pinned'
 
 shell_output=$(env -i HOME=/tmp PATH="$PATH" bash -c '. "$1"; printf "TERMINAL=%s EDITOR=%s VISUAL=%s XDG_CURRENT_DESKTOP=%s\n" "$TERMINAL" "$EDITOR" "$VISUAL" "$XDG_CURRENT_DESKTOP"' bash "$shell_profile")
 printf '%s\n' "$shell_output"
@@ -124,8 +107,8 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 # Upstream renamed its product files in commit 2b9aeb0 (com.noctty.* -> com.deetty.*,
-# nocttyhere.desktop -> deettyhere.desktop). The pinned source must carry the
-# renamed entries and must not regress to the retired noctty identities.
+# nocttyhere.desktop -> deettyhere.desktop). The pinned source now exposes the
+# Dintor editor executable through the retained NoctEd desktop filename.
 tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/com.deetty.DEETTY.desktop' >/dev/null || fail 'pinned upstream terminal desktop entry is missing'
 tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/deettyhere.desktop' >/dev/null || fail 'pinned upstream service menu is missing'
 tar -tzf "$archive" | grep -Fx 'deetty-0.1.0/resources/nocted/styles/nocted-dark.xml' >/dev/null || fail 'pinned upstream Dintor source scheme is missing'
@@ -133,70 +116,69 @@ if tar -tzf "$archive" | grep -Eq 'resources/(com\.noctty\.|nocttyhere)'; then
   fail 'pinned upstream source still ships retired noctty identity files'
 fi
 upstream_dintor_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.deetty.NoctEd.desktop)
-grep -Fqx 'Exec=nocted %F' <<<"$upstream_dintor_desktop" || fail 'pinned upstream editor entry is missing'
+grep -Fqx 'Exec=dintor %F' <<<"$upstream_dintor_desktop" || fail 'pinned upstream Dintor editor entry is missing'
 upstream_desktop=$(tar -xOf "$archive" deetty-0.1.0/resources/com.deetty.DEETTY.desktop)
 grep -Fqx 'TryExec=deetty' <<<"$upstream_desktop" || fail 'pinned upstream terminal entry is missing'
 grep -Fqx 'Exec=deetty --open-uri %u' <<<"$upstream_desktop" || fail 'upstream terminal URI entry is missing'
 grep -Fqx 'Categories=System;TerminalEmulator;' <<<"$upstream_desktop" || fail 'terminal desktop category is missing'
 service_menu=$(tar -xOf "$archive" deetty-0.1.0/resources/deettyhere.desktop)
 
-patched_source="$scratch/patched-source"
-mkdir -p "$patched_source"
-tar -xzf "$archive" -C "$patched_source" --strip-components=1
-patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$identity_patch"
-patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$repo_root/distro/packages/deetty/qualification-compat.patch"
-patch --fuzz=0 --forward --strip=1 --directory="$patched_source" < "$exec_patch"
-grep -Fq 'LC_ALL=C.UTF-8' "$patched_source/src/terminal/RealTuiQualification.zig" \
+source_tree="$scratch/source-tree"
+mkdir -p "$source_tree"
+tar -xzf "$archive" -C "$source_tree" --strip-components=1
+grep -Fq 'LC_ALL=C.UTF-8' "$source_tree/src/terminal/RealTuiQualification.zig" \
   || fail 'Deetty real-TUI environment does not override ASCII locales'
 grep -Fq 'LC_ALL=C LANG=C TERM=xterm-256color' "$repo_root/scripts/deetty_p2_qualification.sh" \
   || fail 'Deetty real-TUI qualification does not exercise an ASCII parent locale'
-grep -Fq 'DEETTY_DEDICATED_DISPLAY' "$patched_source/scripts/nocted_native_smoke.sh" \
-  || fail 'Deetty isolated-display environment name was not patched'
-grep -Fq 'DEETTY_ISOLATED_DISPLAY' "$patched_source/scripts/require_isolated_display.sh" \
-  || fail 'Deetty display boundary environment name was not patched'
+grep -Fq 'DEETTY_DEDICATED_DISPLAY' "$source_tree/scripts/nocted_native_smoke.sh" \
+  || fail 'Deetty isolated-display environment name is missing'
+grep -Fq 'DEETTY_ISOLATED_DISPLAY' "$source_tree/scripts/require_isolated_display.sh" \
+  || fail 'Deetty display boundary environment name is missing'
 if grep -Eq 'NOCTTY_(DEDICATED|ISOLATED)_DISPLAY' \
-  "$patched_source/scripts/nocted_native_smoke.sh" "$patched_source/scripts/require_isolated_display.sh"; then
+  "$source_tree/scripts/nocted_native_smoke.sh" "$source_tree/scripts/require_isolated_display.sh"; then
   fail 'Deetty display scripts still use legacy NOCTTY environment names'
 fi
 grep -Fq 'DEETTY_DEDICATED_DISPLAY=1' "$repo_root/scripts/dintor_p3_qualification.sh" \
   || fail 'Dintor qualification does not use the Deetty display contract'
 grep -Fq 'DEETTY_ISOLATED_DISPLAY=x11' "$repo_root/scripts/dintor_p3_qualification.sh" \
   || fail 'Dintor qualification does not use the Deetty display isolation contract'
-grep -Fq 'std.mem.eql(u8, cmd, "--execute")' "$patched_source/src/main.zig" || fail 'Deetty -e/--execute option is missing'
-grep -Fq 'quoteCommandArguments(args[2..]' "$patched_source/src/main.zig" || fail 'Deetty does not preserve command argv safely'
-grep -Fq 'terminal execute argv are safely quoted and bounded' "$patched_source/src/terminal/LaunchProfile.zig" || fail 'Deetty execute argv boundary test is missing'
-grep -Fq '.name = "deetty"' "$patched_source/build.zig" || fail 'Deetty executable identity was not patched'
-grep -Fq '.name = "dintor"' "$patched_source/build.zig" || fail 'Dintor executable identity was not patched'
-grep -Fq 'share/applications/org.dinx.Deetty.desktop' "$patched_source/build.zig" || fail 'Deetty desktop output path is missing'
-grep -Fq 'share/applications/org.dinx.Dintor.desktop' "$patched_source/build.zig" || fail 'Dintor desktop output path is missing'
-grep -Fq 'share/kio/servicemenus/deettyhere.desktop' "$patched_source/build.zig" || fail 'Deetty service-menu output path is missing'
-task_smoke="$patched_source/scripts/nocted_task_smoke.sh"
-grep -Fq './zig-out/bin/dintor' "$task_smoke" || fail 'Dintor task smoke uses the old executable path'
+grep -Fq 'Git Status and Diff...' "$source_tree/src/nocted/main.zig" || fail 'Dintor Git action is missing'
+grep -Fq 'DINTOR_THEME' "$source_tree/src/nocted/main.zig" || fail 'Dintor color scheme contract is missing'
+grep -Fq 'std.mem.eql(u8, cmd, "--execute")' "$source_tree/src/main.zig" || fail 'Deetty -e/--execute option is missing'
+grep -Fq 'quoteCommandArguments(args[2..]' "$source_tree/src/main.zig" || fail 'Deetty does not preserve command argv safely'
+grep -Fq 'terminal execute argv are safely quoted and bounded' "$source_tree/src/terminal/LaunchProfile.zig" || fail 'Deetty execute argv boundary test is missing'
+grep -Fq '.name = "deetty"' "$source_tree/build.zig" || fail 'Deetty executable identity is missing'
+grep -Fq '.name = "dintor"' "$source_tree/build.zig" || fail 'Dintor executable identity is missing'
+grep -Fq 'share/applications/org.dinx.Deetty.desktop' "$source_tree/build.zig" || fail 'Deetty desktop output path is missing'
+grep -Fq 'share/applications/org.dinx.Dintor.desktop' "$source_tree/build.zig" || fail 'Dintor desktop output path is missing'
+grep -Fq 'share/kio/servicemenus/deettyhere.desktop' "$source_tree/build.zig" || fail 'Deetty service-menu output path is missing'
+task_smoke="$source_tree/scripts/nocted_task_smoke.sh"
+grep -Fq './zig-out/bin/dintor' "$task_smoke" || fail 'Dintor task smoke uses the old executable'
 if grep -Fq './zig-out/bin/nocted' "$task_smoke"; then
   fail 'Dintor task smoke still references the old executable'
 fi
-lsp_smoke="$patched_source/scripts/nocted_lsp_smoke.sh"
+lsp_smoke="$source_tree/scripts/nocted_lsp_smoke.sh"
 grep -Fq './zig-out/bin/dintor --lsp-probe' "$lsp_smoke" || fail 'Dintor LSP smoke uses the old executable path'
 if grep -Fq './zig-out/bin/nocted' "$lsp_smoke"; then
   fail 'Dintor LSP smoke still references the old executable'
 fi
-patched_desktop=$(<"$patched_source/resources/com.deetty.DEETTY.desktop")
-grep -Fqx 'Name=Deetty' <<<"$patched_desktop" || fail 'Deetty desktop name is incorrect'
-grep -Fqx 'TryExec=deetty' <<<"$patched_desktop" || fail 'Deetty desktop command is incorrect'
-grep -Fqx 'Exec=deetty --open-uri %u' <<<"$patched_desktop" || fail 'Deetty URI handler is incorrect'
-grep -Fqx 'Icon=org.dinx.Deetty' <<<"$patched_desktop" || fail 'Deetty desktop icon identity is incorrect'
-grep -Fqx 'MimeType=x-scheme-handler/deetty;' <<<"$patched_desktop" || fail 'Deetty URI scheme declaration is incorrect'
-patched_editor_desktop=$(<"$patched_source/resources/com.deetty.NoctEd.desktop")
-grep -Fqx 'Name=Editor' <<<"$patched_editor_desktop" || fail 'Dintor desktop name is incorrect'
-grep -Fqx 'Name[pt_BR]=Editor' <<<"$patched_editor_desktop" || fail 'Dintor Portuguese desktop name is incorrect'
-grep -Fqx 'Exec=dintor %F' <<<"$patched_editor_desktop" || fail 'Dintor file opening contract is missing'
-grep -Fqx 'Icon=org.dinx.Dintor' <<<"$patched_editor_desktop" || fail 'Dintor icon identity is incorrect'
-patched_service_menu=$(<"$patched_source/resources/deettyhere.desktop")
-grep -Fqx 'Exec=deetty --new-window --working-directory %f' <<<"$patched_service_menu" || fail 'Deetty service-menu command is incorrect'
-grep -Fq '<id>org.dinx.Deetty</id>' "$patched_source/resources/com.deetty.DEETTY.metainfo.xml" || fail 'Deetty metainfo ID is incorrect'
-grep -Fq '<id>org.dinx.Dintor</id>' "$patched_source/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo ID is incorrect'
-grep -Fq '<binary>dintor</binary>' "$patched_source/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo binary is incorrect'
-grep -Fq 'style-scheme id="dintor-dark"' "$patched_source/resources/nocted/styles/nocted-dark.xml" || fail 'Dintor dark scheme identity is incorrect'
-grep -Fq 'style-scheme id="dintor-light"' "$patched_source/resources/nocted/styles/nocted-light.xml" || fail 'Dintor light scheme identity is incorrect'
-grep -Fq '"DINTOR_THEME"' "$patched_source/src/nocted/main.zig" || fail 'Dintor theme environment is missing'
-printf 'deetty_dintor_integration terminal=deetty sole_terminal=true ghostty_runtime_only=true lsp=zig clangd=optional vim=builder-only shell_defaults=true wm_spawn=true execute_argv=true file_open=true desktop_ids=true service_menu=true metainfo=true editor_styles=true uri_scheme=true patches_apply=true upstream_pin_preserved=true\n'
+source_desktop=$(<"$source_tree/resources/com.deetty.DEETTY.desktop")
+grep -Fqx 'Name=Deetty' <<<"$source_desktop" || fail 'Deetty desktop name is incorrect'
+grep -Fqx 'TryExec=deetty' <<<"$source_desktop" || fail 'Deetty desktop command is incorrect'
+grep -Fqx 'Exec=deetty --open-uri %u' <<<"$source_desktop" || fail 'Deetty URI handler is incorrect'
+grep -Fqx 'Icon=org.dinx.Deetty' <<<"$source_desktop" || fail 'Deetty desktop icon identity is incorrect'
+grep -Fqx 'MimeType=x-scheme-handler/deetty;' <<<"$source_desktop" || fail 'Deetty URI scheme declaration is incorrect'
+editor_desktop=$(<"$source_tree/resources/com.deetty.NoctEd.desktop")
+grep -Fqx 'Name=Editor' <<<"$editor_desktop" || fail 'Dintor desktop name is incorrect'
+grep -Fqx 'Name[pt_BR]=Editor' <<<"$editor_desktop" || fail 'Dintor Portuguese desktop name is incorrect'
+grep -Fqx 'Exec=dintor %F' <<<"$editor_desktop" || fail 'Dintor file opening contract is missing'
+grep -Fqx 'Icon=org.dinx.Dintor' <<<"$editor_desktop" || fail 'Dintor icon identity is incorrect'
+service_menu=$(<"$source_tree/resources/deettyhere.desktop")
+grep -Fqx 'Exec=deetty --new-window --working-directory %f' <<<"$service_menu" || fail 'Deetty service-menu command is incorrect'
+grep -Fq '<id>org.dinx.Deetty</id>' "$source_tree/resources/com.deetty.DEETTY.metainfo.xml" || fail 'Deetty metainfo ID is incorrect'
+grep -Fq '<id>org.dinx.Dintor</id>' "$source_tree/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo ID is incorrect'
+grep -Fq '<binary>dintor</binary>' "$source_tree/resources/com.deetty.NoctEd.metainfo.xml" || fail 'Dintor metainfo binary is incorrect'
+grep -Fq 'style-scheme id="dintor-dark"' "$source_tree/resources/nocted/styles/nocted-dark.xml" || fail 'Dintor dark scheme identity is incorrect'
+grep -Fq 'style-scheme id="dintor-light"' "$source_tree/resources/nocted/styles/nocted-light.xml" || fail 'Dintor light scheme identity is incorrect'
+grep -Fq '"DINTOR_THEME"' "$source_tree/src/nocted/main.zig" || fail 'Dintor theme environment is missing'
+printf 'deetty_dintor_integration terminal=deetty sole_terminal=true ghostty_runtime_only=true lsp=zig clangd=optional vim=builder-only shell_defaults=true wm_spawn=true execute_argv=true file_open=true desktop_ids=true service_menu=true metainfo=true editor_styles=true upstream_contract=true upstream_pin_preserved=true\n'

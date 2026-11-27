@@ -13,17 +13,8 @@ license=('MIT' 'Unicode-3.0' 'Unicode-DFS-2016' 'ICU')
 depends=('bubblewrap' 'ghostty-vt-runtime' 'gtk3' 'libepoxy' 'gtk-layer-shell' 'gtksourceview4' 'glib2' 'cairo' 'pango' 'gdk-pixbuf2' 'dbus' 'git' 'zlib')
 makedepends=('ghostty-vt-runtime' 'vte3' 'zig>=0.17' 'btop' 'clang' 'dialog' 'fzf' 'git' 'glances' 'less' 'libnewt' 'librsvg' 'man-db' 'nano' 'openssh' 'procps-ng' 'sqlite' 'texinfo' 'tmux' 'vim' 'xorg-server-xvfb')
 provides=('dintor' 'terminal-emulator')
-source=("deetty-$pkgver.tar.gz" "qualification-compat.patch" "product-identity.patch" "deetty-terminal-exec.patch")
-sha256sums=("$DEETTY_SOURCE_SHA256" '1bad5c8965181ed66a09c0739ef52777d0f1f51b8d79b2bfe8da672111e6775a' '69da6befb0e4f1e36f1a015318a27581c8c1f9d33fe6949f72f06ce6242ee2ab' '902add70714cf40f580be12b6ad61d1f4871ec26a3228a480524b16f26de2430')
-
-prepare() {
-  cd "$srcdir/deetty-$pkgver"
-  # The upstream tarball's read-only modes prevent patch from creating replacement files.
-  chmod -R u+w .
-  patch --fuzz=0 --forward --strip=1 < "$srcdir/product-identity.patch"
-  patch --fuzz=0 --forward --strip=1 < "$srcdir/qualification-compat.patch"
-  patch --fuzz=0 --forward --strip=1 < "$srcdir/deetty-terminal-exec.patch"
-}
+source=("deetty-$pkgver.tar.gz")
+sha256sums=("$DEETTY_SOURCE_SHA256")
 
 build() {
   cd "$srcdir/deetty-$pkgver"

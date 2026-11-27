@@ -83,7 +83,7 @@ grep -Fq 'GSK_RENDERER="${GSK_RENDERER:-cairo}"' "$river_session" \
 # record instead of retaining a library-owned monitor object.
 grep -Fq '+        try {' "$morghulis" \
   || fail 'Morghulis procfs uptime fallback is missing'
-grep -Fq '+            if (!FileUtils.get_contents("/proc/uptime"' "$morghulis" \
+grep -Fq '+            FileUtils.get_contents("/proc/uptime"' "$morghulis" \
   || fail 'Morghulis procfs uptime fallback is missing'
 if grep -Eq '^\+.*GTop\.Uptime' "$morghulis"; then
   fail 'Morghulis still retains the removed libgtop uptime object'

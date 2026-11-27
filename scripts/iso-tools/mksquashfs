@@ -276,16 +276,27 @@ compile_glib_schemas() {
 
 merge_eurooffice() {
   local root=$1
+  local desktop="$root/usr/share/applications/eurooffice.desktop"
+  local desktop_backup=''
   [[ -n "${DINX_EUROOFFICE_SQUASHFS:-}" && -s "${DINX_EUROOFFICE_SQUASHFS}" ]] || return 0
   [[ "$root" != / && -d "$root" ]] || return 0
   command -v unsquashfs >/dev/null 2>&1 || {
     printf 'dinx-final-squashfs: unsquashfs unavailable; cannot merge EuroOffice\n' >&2
     return 1
   }
-  unsquashfs -f -d "$root" "$DINX_EUROOFFICE_SQUASHFS" >/dev/null || {
+  if [[ -f "$desktop" ]]; then
+    desktop_backup=$(mktemp)
+    cp -- "$desktop" "$desktop_backup"
+  fi
+  if ! unsquashfs -f -d "$root" "$DINX_EUROOFFICE_SQUASHFS" >/dev/null; then
+    [[ -z "$desktop_backup" ]] || rm -f -- "$desktop_backup"
     printf 'dinx-final-squashfs: failed to merge EuroOffice tree into %s\n' "$root" >&2
     return 1
-  }
+  fi
+  if [[ -n "$desktop_backup" ]]; then
+    cp -- "$desktop_backup" "$desktop"
+    rm -f -- "$desktop_backup"
+  fi
   printf 'dinx-final-squashfs: merged EuroOffice lean tree root=%s\n' "$root"
 }
 

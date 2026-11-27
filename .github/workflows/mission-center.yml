@@ -48,6 +48,7 @@ jobs:
               chown -R builder:builder /workspace
               su builder -c "cd /workspace/distro/packages/mission-center && makepkg --cleanbuild --noconfirm --nodeps"
             '
+          sudo chown -R "$(id -u):$(id -g)" dist/mission-center distro/packages/mission-center
           find distro/packages/mission-center -maxdepth 1 -type f -name 'mission-center-*.pkg.tar.zst' -exec cp -- {} dist/mission-center/ \;
           sha256sum dist/mission-center/*.pkg.tar.zst | tee dist/mission-center/SHA256SUMS
 

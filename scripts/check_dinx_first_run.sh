@@ -45,8 +45,8 @@ grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" \
   || fail 'first-run does not force the dark libadwaita scheme at startup'
 grep -Fq 'border: 1px solid #3a4352' "$frontend" \
   || fail 'first-run window does not use the neutral one-pixel border'
-grep -Fq '    .width = 1,' "$kwm_config" \
-  || fail 'KWM window border is not one pixel'
+grep -Fq '    .width = 0,' "$kwm_config" \
+  || fail 'KWM window border must be disabled so GTK rounded borders are not wrapped by a square compositor border'
 grep -Fq '0x3a4352ff' "$kwm_config" \
   || fail 'KWM focused border is not the neutral DINX border'
 for variant in 'prefer-dark' 'prefer-light'; do
@@ -76,8 +76,10 @@ grep -Fq 'c.adw_application_window_set_content(window, toolbar);' "$frontend" \
 sh -n "$glue" || fail 'first-run glue has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_COMMAND' "$glue" || fail 'first-run glue does not allow overriding the wizard command'
 grep -Fq 'dinx-sync-session-theme' "$glue" || fail 'first-run glue does not run the theme synchronizer'
-if ! awk '/run_wizard[[:space:]]*$/{wizard=NR} /dinx-sync-session-theme/{if (!sync) sync=NR} END { exit !(sync && wizard && sync < wizard) }' "$glue"; then
-  fail 'first-run glue does not apply the dark default before launching the wizard'
+if ! grep -Fq "GTK_THEME='DINX:dark'" "$glue" \
+  || ! grep -Fq 'GTK_APPLICATION_PREFER_DARK_THEME=1' "$glue" \
+  || ! grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK=1' "$glue"; then
+  fail 'first-run glue does not force the dark toolkit environment before launching the wizard'
 fi
 grep -Fq 'dinx-session.env' "$glue" || fail 'first-run glue does not publish the locale to session children'
 grep -Fq 'dinx-desktop-first-run' "$supervisor" || fail 'the supervisor does not run the first-run glue'

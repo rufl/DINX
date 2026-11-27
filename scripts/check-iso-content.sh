@@ -312,6 +312,7 @@ required_paths=(
   usr/bin/godot
   usr/bin/blender
   usr/local/bin/blender
+  usr/share/applications/blender.desktop
   usr/bin/patchy
   usr/lib/patchy/patchy-force-darkest
   opt/patchy/AppRun
@@ -1681,6 +1682,11 @@ grep -Fq 'exec /usr/bin/tux-manager "$@"' <<<"$tuxmanager_launcher" \
 blender_launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/local/bin/blender)
 grep -Fq 'exec /usr/bin/blender --factory-startup "$@"' <<<"$blender_launcher" \
   || fail 'Blender launcher does not bypass a broken user startup.blend'
+blender_desktop=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/applications/blender.desktop)
+grep -Fqx 'Exec=/usr/local/bin/blender %f' <<<"$blender_desktop" \
+  || fail 'Blender desktop launcher does not use the DINX wrapper'
+grep -Fqx 'TryExec=/usr/local/bin/blender' <<<"$blender_desktop" \
+  || fail 'Blender desktop launcher TryExec does not use the DINX wrapper'
 while IFS='|' read -r path english portuguese command; do
   launcher=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" "$path")
   assert_desktop_entry "$path" "$launcher" "$english" "$portuguese" "Exec=$command"
@@ -1689,8 +1695,8 @@ usr/local/share/applications/pcmanfm.desktop|File Manager|Gerenciador de Arquivo
 usr/share/applications/audionaut.desktop|Audionaut|Audionaut|audionaut %F
 usr/local/share/applications/galculator.desktop|Calculator|Calculadora|galculator
 usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr/local/libexec/dinx-gparted %f
-usr/share/applications/paintfe.desktop|PaintFE|PaintFE|paintfe %F
-usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U
+usr/share/applications/paintfe.desktop|PaintFE|PaintFE|/usr/bin/paintfe %F
+usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|/usr/local/bin/eurooffice %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
 usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U

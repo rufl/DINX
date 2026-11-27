@@ -466,8 +466,8 @@ grep -Fq -- '--border: #3a4352' "$gtk4" \
   || fail 'GTK4 border token is not the neutral DINX border'
 grep -Fq 'border: 1px solid var(--border)' "$gtk4" \
   || fail 'GTK4 controls do not use the one-pixel border token'
-grep -Fq '    .width = 1,' "$kwm_config" \
-  || fail 'KWM window border is not one pixel'
+grep -Fq '    .width = 0,' "$kwm_config" \
+  || fail 'KWM compositor border must be disabled for rounded GTK client borders'
 grep -Fq "background: ${dark_token[mSurface]}" "$calamares" || fail 'Calamares surface does not use DINX background'
 grep -Fq "background: ${dark_token[mSurfaceVariant]}" "$calamares" || fail 'Calamares control surface does not use DINX panel'
 grep -Fq "background: ${dark_token[mHover]}" "$calamares" || fail 'Calamares hover state does not use DINX hover'

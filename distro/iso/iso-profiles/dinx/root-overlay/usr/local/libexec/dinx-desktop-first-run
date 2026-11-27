@@ -22,6 +22,9 @@ run_wizard() {
     if ! [ -x "$wizard" ]; then
         return 0
     fi
+    GTK_THEME='DINX:dark' \
+    GTK_APPLICATION_PREFER_DARK_THEME=1 \
+    ADW_COLOR_SCHEME_FORCE_DARK=1 \
     "$wizard" >/dev/null 2>&1 || true
     marker_dir=${marker%/*}
     if ! mkdir -p "$marker_dir"; then

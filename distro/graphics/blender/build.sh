@@ -6,7 +6,7 @@ set -euo pipefail
 repo_root=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)
 outdir=${BLENDER_OUTDIR:-$repo_root/dist/graphics/blender}
 version=${BLENDER_VERSION:?BLENDER_VERSION is required}
-pkgrel=${BLENDER_PKREL:-1}
+pkgrel=${BLENDER_PKREL:-2}
 source_url=${BLENDER_SOURCE_URL:-https://download.blender.org/source/blender-${version}.tar.xz}
 source_sha=${BLENDER_SOURCE_SHA256:-}
 full_url=${BLENDER_FULL_URL:-https://download.blender.org/release/Blender${version%.*}/blender-${version}-linux-x64.tar.xz}
@@ -110,7 +110,8 @@ package() {
 [Desktop Entry]
 Name=Blender (Full)
 Comment=Full-featured 3D creation suite
-Exec=blender %f
+Exec=/usr/local/bin/blender %f
+TryExec=/usr/local/bin/blender
 Icon=blender
 Terminal=false
 Type=Application

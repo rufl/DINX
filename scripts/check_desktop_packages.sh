@@ -140,13 +140,14 @@ for package in patchy paintfe; do
   [[ -r "$launcher" ]] || fail "$package desktop launcher is missing"
   grep -Fqx '[Desktop Entry]' "$launcher" || fail "$package desktop launcher has no entry header"
   case "$package" in
-    patchy) expected_name=Patchy ;;
-    paintfe) expected_name=PaintFE ;;
+    patchy) expected_name=Patchy; expected_tryexec=patchy ;;
+    paintfe) expected_name=PaintFE; expected_tryexec=/usr/bin/paintfe ;;
   esac
   grep -Fqx "Name=$expected_name" "$launcher" || fail "$package desktop launcher name is missing"
   grep -Fqx "Name[pt_BR]=$expected_name" "$launcher" || fail "$package Portuguese desktop launcher name is missing"
-  grep -Fqx "TryExec=$package" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
+  grep -Fqx "TryExec=$expected_tryexec" "$launcher" || fail "$package desktop launcher prerequisite is incorrect"
   if [[ "$package" == paintfe ]]; then
+    grep -Eq '^Exec=/usr/bin/paintfe %F$' "$launcher" || fail "$package desktop launcher does not use its absolute wrapper path"
     grep -Eq '^MimeType=[^;]+;' "$launcher" || fail "$package desktop launcher registers no MIME types"
   fi
   grep -Fq '!strip' "$root/distro/packages/$package/PKGBUILD" || fail "$package AppImage package must disable binary stripping"
@@ -184,6 +185,17 @@ grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$eurooffice_wrapper" \
   || fail 'EuroOffice overlay wrapper does not use qt6ct'
 grep -Fqx 'exec /usr/bin/eurooffice --theme=dark "$@"' "$eurooffice_wrapper" \
   || fail 'EuroOffice overlay wrapper does not pass the dark theme to the staged binary'
+blender_package="$root/distro/packages/blender/PKGBUILD"
+blender_desktop_build="$root/distro/graphics/blender/build.sh"
+grep -Fq 'Exec=/usr/local/bin/blender %f' "$blender_package" "$blender_desktop_build" \
+  || fail 'Blender package desktop entry does not use the DINX wrapper'
+grep -Fq 'TryExec=/usr/local/bin/blender' "$blender_package" "$blender_desktop_build" \
+  || fail 'Blender package desktop TryExec does not use the DINX wrapper'
+eurooffice_desktop="$root/distro/office/eurooffice/assets/eurooffice.desktop"
+grep -Fqx 'Exec=/usr/local/bin/eurooffice %U' "$eurooffice_desktop" \
+  || fail 'EuroOffice desktop entry does not use the dark-theme wrapper'
+grep -Fqx 'TryExec=/usr/local/bin/eurooffice' "$eurooffice_desktop" \
+  || fail 'EuroOffice desktop TryExec does not use the dark-theme wrapper'
 
 pixelorama_source="$root/distro/packages/pixelorama/source.env"
 pixelorama_recipe="$root/distro/packages/pixelorama/PKGBUILD"

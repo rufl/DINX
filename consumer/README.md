@@ -64,7 +64,7 @@ squashfs=eurooffice-9.3.8-x86_64.squashfs
 - `scripts/check-iso-content.sh`: add `eurooffice` to the required desktop
   apps; expected paths `opt/eurooffice/DesktopEditors`, `usr/bin/eurooffice`,
   `usr/share/applications/eurooffice.desktop`; desktop-exec row
-  `usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|eurooffice %U`;
+  `usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|/usr/local/bin/eurooffice %U`;
   MIME defaults for docx/xlsx/pptx/pdf → `eurooffice.desktop`. The retired
   `onlyoffice` metadata check stays (different pkgname).
 - `scripts/check_desktop_packages.sh`: replace the PdfCraft PDF-default

@@ -17,7 +17,7 @@
 # Environment:
 #   EUROFFICE_VERSION      upstream version without leading v (default: latest release)
 #   EUROFFICE_DEB          optional path to an already-downloaded deb
-#   EUROFFICE_PKREL        DINX pkgrel (default 1)
+#   EUROFFICE_PKREL        DINX pkgrel (default 2)
 #   EUROFFICE_OUTDIR       artifact directory (default dist/office/eurooffice)
 #   EUROFFICE_WORKDIR      scratch directory (default: mktemp)
 #   EUROFFICE_KEEP_DICTS   dictionaries to keep (default: DINX en/pt + selected European/Ukrainian languages)
@@ -28,7 +28,7 @@ set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 upstream_repo=${EUROFFICE_UPSTREAM_REPO:-Euro-Office/DesktopEditors}
-pkgrel=${EUROFFICE_PKREL:-1}
+pkgrel=${EUROFFICE_PKREL:-2}
 outdir=${EUROFFICE_OUTDIR:-dist/office/eurooffice}
 keep_dicts=${EUROFFICE_KEEP_DICTS:-en_US pt_BR fr_FR de_DE nl_NL da_DK pt_PT es_ES it_IT en_GB uk_UA}
 keep_locales=${EUROFFICE_KEEP_LOCALES:-en-US pt-BR fr de nl da pt-PT es it en-GB uk ja zh-CN zh-TW}

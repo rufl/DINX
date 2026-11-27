@@ -83,11 +83,10 @@
         .float = .top,
     },
     .default_window_decoration = .csd,
+    // GTK draws the DINX rounded client-side border. KWM has no radius-aware
+    // border primitive, so a compositor border would remain square outside it.
     .border = .{
-        // 1px neutral border: visible enough to show window edges without being
-        // intrusive. Rounded-corner apps clip their own corners; the border
-        // rectangle stays at 1px and does not follow the app-side radius.
-        .width = 1,
+        .width = 0,
         .color = .{
             .focus   = 0x3a4352ff,
             .unfocus = 0x222a38ff,

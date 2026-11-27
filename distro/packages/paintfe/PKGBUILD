@@ -12,7 +12,7 @@ source_env="$startdir/source.env"
 : "${PAINTFE_ICON_URL:?missing PAINTFE_ICON_URL}"
 : "${PAINTFE_ICON_SHA256:?missing PAINTFE_ICON_SHA256}"
 pkgver="${PAINTFE_VERSION}"
-pkgrel=7
+pkgrel=8
 pkgdesc="Fast, lightweight raster image editor built in Rust"
 arch=('x86_64')
 url='https://github.com/kylejckson/PaintFE'
@@ -31,7 +31,7 @@ sha256sums=(
   "${PAINTFE_LICENSE_SHA256}"
   "${PAINTFE_ICON_SHA256}"
   'aaa40fd24e0a76fbe118b1a8f94633d0d63c69c9814277e154d72da80bd5c2c3'
-  '6c5cfa7be3c70ad489713a459e528acfa3984037b9ffe0b1edec7b09dffea3ac'
+  '163b47d932f6f8df59c17d9f2330fd7b0c42307418ceb5e5a73340b81fcae07b'
 )
 
 package() {

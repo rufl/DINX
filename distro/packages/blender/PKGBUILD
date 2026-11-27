@@ -9,7 +9,7 @@ source_env="$startdir/source.env"
 : "${BLENDER_SOURCE_URL:?missing BLENDER_SOURCE_URL}"
 : "${BLENDER_SOURCE_SHA256:?missing BLENDER_SOURCE_SHA256}"
 pkgver="$BLENDER_VERSION"
-pkgrel=4
+pkgrel=5
 epoch=17
 options=(!lto)
 # Blender links libshaderc_shared.so.1 for Vulkan GLSL compilation; keep
@@ -177,4 +177,16 @@ build() {
 package() {
   cd "${srcdir}/${pkgname}-${pkgver}"
   DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/blender.desktop" <<'EOF'
+[Desktop Entry]
+Name=Blender
+Comment=3D creation suite
+Exec=/usr/local/bin/blender %f
+TryExec=/usr/local/bin/blender
+Icon=blender
+Terminal=false
+Type=Application
+Categories=Graphics;3DGraphics;
+MimeType=application/x-blender;
+EOF
 }

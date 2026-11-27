@@ -130,8 +130,8 @@ sh -n "$logout" || fail 'logout helper has invalid shell syntax'
 [[ -x "$desktop_surface" ]] || fail 'PCManFM desktop wrapper is not executable'
 sh -n "$desktop_surface" || fail 'PCManFM desktop wrapper has invalid shell syntax'
 grep -Fq 'show_desktop=1' "$desktop_surface" || fail 'PCManFM profile does not force desktop icons'
-grep -Fq 'show_wm_menu=1' "$desktop_surface" || fail 'PCManFM profile does not enable the desktop context menu'
-grep -Fq 'start_required desktop' "$supervisor" || fail 'PCManFM desktop surface is not required in the main session'
+grep -Fq 'show_wm_menu=0' "$desktop_surface" || fail 'PCManFM profile does not enable the PCManFM desktop context menu'
+grep -Fq 'start_required desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$supervisor" || fail 'PCManFM desktop surface is not required in the main session'
 [[ -x "$desktop_installer" ]] || fail 'live installer desktop shortcut is not executable'
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), sys.argv[1], "exec")' "$desktop_approval" \
   || fail 'desktop approval helper has invalid Python syntax'
@@ -409,6 +409,10 @@ fi
 grep -Fq 'Exec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock action is missing'
 grep -Fq 'TryExec=/usr/local/libexec/dinx-lock' "$desktop" || fail 'launcher lock TryExec is missing'
 
+# The installer must reject an incomplete session bus before it reaches
+# `set -u` preference handling; otherwise the desktop shortcut exits silently.
+grep -Fq 'DBUS_SESSION_BUS_ADDRESS is missing' "$installer" \
+  || fail 'installer does not validate the session D-Bus address'
 # The installer still consumes the live session's saved preferences.
 grep -Fq 'LANG="$locale"' "$installer" || fail 'installer does not pass saved locale to Calamares'
 grep -Fq 'XKB_DEFAULT_LAYOUT="$keyboard"' "$installer" \

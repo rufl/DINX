@@ -497,6 +497,7 @@ if docker run "${docker_run_args[@]}" "${docker_mount_args[@]}" \
   --env DINX_PACKAGE_SIGNING_FINGERPRINT \
   --env DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING="$require_persistent" \
   --env DINX_ARTIX_IMAGE="$image" \
+  --env DINX_PRECOMPILED_ONLY="${DINX_PRECOMPILED_ONLY:-}" \
   --env DINX_BUILDER_RECIPE_SHA256="$builder_recipe_sha256" \
   --env DINX_BUILDER_IMAGE_ID="$builder_image_id" \
   --env DINX_BUILDER_REFRESH_DATE="$builder_refresh_date" \

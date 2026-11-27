@@ -111,7 +111,7 @@ on:
       - "LICENSE"
 
 permissions:
-  contents: read
+  actions: read
   id-token: write
   attestations: write
 
@@ -317,9 +317,34 @@ jobs:
             DINX_BUILDER_REFRESH=${{ steps.builder-image.outputs.refresh_date }}
             DINX_BUILDER_RECIPE_SHA256=${{ steps.builder-image.outputs.recipe_sha256 }}
           cache-from: type=gha,scope=dinx-iso-builder
-          cache-to: type=gha,scope=dinx-iso-builder,mode=max
       - name: Sync pre-compiled DINX package cache
         run: scripts/sync_dinx_cache.sh --cache-dir dist/.cache/dinx
+      - name: Download latest Mission Center package from task branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow mission-center.yml \
+            --branch feat/taskmgr/mission \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty')
+          [[ "$run_id" =~ ^[0-9]+$ ]] \
+            || { printf 'No successful Mission Center task-branch run found\n' >&2; exit 1; }
+          artifact_dir="$RUNNER_TEMP/mission-center-artifact"
+          mkdir -p "$artifact_dir" dist/.cache/dinx/pacman/pkg
+          gh run download "$run_id" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir "$artifact_dir"
+          mapfile -t packages < <(find "$artifact_dir" -type f -name 'mission-center-*.pkg.tar.zst' -print)
+          [[ "${#packages[@]}" -eq 1 ]] \
+            || { printf 'Expected exactly one Mission Center package, found %s\n' "${#packages[@]}" >&2; exit 1; }
+          cp -- "${packages[0]}" dist/.cache/dinx/pacman/pkg/
+          printf 'Using precompiled Mission Center package: %s (run %s)\n' \
+            "$(basename -- "${packages[0]}")" "$run_id"
       - name: Build with Artix artools
         id: iso-build
         env:
@@ -330,6 +355,7 @@ jobs:
           DINX_PACKAGE_SIGNING_FINGERPRINT: ${{ inputs.require_persistent_package_signing && secrets.DINX_PACKAGE_SIGNING_FINGERPRINT || '' }}
           DINX_REQUIRE_PERSISTENT_PACKAGE_SIGNING: ${{ inputs.require_persistent_package_signing }}
           DINX_ARTIX_IMAGE: artixlinux/artixlinux@sha256:e746e31ffe48f9526759711de0a3bc4cb7a8f61d7339dc9b11fe6bee4a722507
+          DINX_PRECOMPILED_ONLY: mission-center
           DINX_BUILD_CONTEXT: github-actions
           DINX_SKIP_CONTRACTS: 'true'
           DINX_SKIP_POSTBUILD_CHECKS: 'true'

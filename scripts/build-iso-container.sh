@@ -250,6 +250,10 @@ trap finish EXIT
                 local package_source_cache="$makepkg_source_cache/$package_name"
                 local package_makepkg_conf="/tmp/dinx-makepkg-$package_name.conf"
                 local status archive archive_name installed_packages_sha256 cache_key
+                local precompiled_only=false
+                case ",${DINX_PRECOMPILED_ONLY:-}," in
+                  *,"$package_name",*) precompiled_only=true ;;
+                esac
                 local -a extra_env=(
                   "CARGO_HOME=/var/cache/dinx/cargo"
                   "CARGO_TARGET_DIR=/var/cache/dinx/cargo-target/$package_name"
@@ -286,17 +290,19 @@ trap finish EXIT
                   "$package_name" "$package_dir" "$makepkg_base_conf_sha256" \
                   "$package_cache_recipe_sha256" "$installed_packages_sha256" /workspace \
                   "${makepkg_options[@]}" -- "${extra_env[@]}")
-                if package_cache_as_build_user dinx_package_cache_restore \
-                  "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
-                  printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=hit\n' \
-                    "$package_name" "$((SECONDS - package_started))"
-                  return 0
-                else
-                  status=$?
-                  if [[ "$status" -ne 1 ]]; then
-                    printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=%s cache=error\n' \
-                      "$package_name" "$((SECONDS - package_started))" "$status"
-                    return "$status"
+                if [[ "$precompiled_only" != true ]]; then
+                  if package_cache_as_build_user dinx_package_cache_restore \
+                    "$package_artifact_cache" "$package_name" "$cache_key" "$package_repo" "$signing_home"; then
+                    printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=0 cache=hit\n' \
+                      "$package_name" "$((SECONDS - package_started))"
+                    return 0
+                  else
+                    status=$?
+                    if [[ "$status" -ne 1 ]]; then
+                      printf 'dinx-build-timing package=%s elapsed_seconds=%s exit_status=%s cache=error\n' \
+                        "$package_name" "$((SECONDS - package_started))" "$status"
+                      return "$status"
+                    fi
                   fi
                 fi
                 if [[ "${DINX_FORCE_REBUILD:-false}" != true ]]; then
@@ -324,6 +330,10 @@ trap finish EXIT
                       return 0
                     fi
                   fi
+                fi
+                if [[ "$precompiled_only" == true ]]; then
+                  printf 'build-iso-container: required precompiled package unavailable: %s\n' "$package_name" >&2
+                  return 1
                 fi
                 if [[ -n ${DINX_CACHE_DIRTY_MARKER:-} ]]; then
                   touch -- "$DINX_CACHE_DIRTY_MARKER"

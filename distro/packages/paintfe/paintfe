@@ -2,7 +2,10 @@
 set -eu
 export GTK_THEME=DINX
 export GTK_APPLICATION_PREFER_DARK_THEME=1
-
+# PaintFE's wgpu backend otherwise may select X11 before the desktop has a
+# usable XWayland server. Morghulis launches it inside the native Wayland
+# session, so make that backend selection explicit.
+export PAINTFE_FORCE_WAYLAND=1
 config_home="${XDG_CONFIG_HOME:-}"
 if [ -z "$config_home" ] && [ -n "${HOME:-}" ]; then
   config_home="$HOME/.config"

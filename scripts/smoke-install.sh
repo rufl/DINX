@@ -241,7 +241,7 @@ printf 'smoke-install: root UUID=%s\n' "$root_uuid"
 printf 'smoke-install: checking installed runtime payload before boot\n'
 mkdir -p "$target_dir/var/lib/dinx"
 [[ -d "$target_dir/var/lib/pacman/local" ]] || fail 'installed pacman database is missing'
-chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel morghulis dinx-dock dinx-first-run octopi pcmanfm \
+chroot "$target_dir" /usr/bin/pacman -Q dinit dinitui dinxpanel morghulis dinx-dock dinx-first-run octopi pcmanfm wizp-lean \
   >/dev/null 2>&1 || fail 'installed core packages are missing'
 printf 'smoke-install: checking installed runtime libraries\n'
 for binary in /usr/bin/dinitui /usr/bin/dinxpanel /usr/bin/morghulis /usr/bin/dinx-dock /usr/bin/dinx-first-run /usr/bin/octopi; do

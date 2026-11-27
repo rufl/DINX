@@ -225,6 +225,40 @@ trap finish EXIT
               }
 
 
+              prepare_wizp_lean() {
+                local wizp_source_root=/tmp/dinx-wizp-source
+                local wizp_runtime_root=/tmp/dinx-eurooffice-runtime
+                local wizp_output_root=/tmp/dinx-wizp-lean-package
+                local wizp_source_archive
+                local wizp_source_stage
+                source /workspace/distro/packages/wizp-lean/source.env
+                : "${DINX_EUROOFFICE_SQUASHFS:?EuroOffice squashfs is required for wizp-lean}"
+                [[ -s "$DINX_EUROOFFICE_SQUASHFS" ]] || {
+                  printf 'build-iso-container: EuroOffice squashfs is missing: %s\n' \
+                    "$DINX_EUROOFFICE_SQUASHFS" >&2
+                  return 1
+                }
+                wizp_source_stage="$makepkg_source_cache/wizp-lean"
+                wizp_source_archive="$wizp_source_stage/${WIZP_VERSION}-${WIZP_SOURCE_COMMIT}.tar.gz"
+                scripts/cache-verified-download.sh \
+                  "$wizp_source_archive" "$WIZP_SOURCE_URL" "$WIZP_SOURCE_SHA256"
+                rm -rf -- "$wizp_source_root" "$wizp_runtime_root" "$wizp_output_root"
+                mkdir -p -- "$wizp_source_root"
+                tar -xzf "$wizp_source_archive" --strip-components=1 -C "$wizp_source_root"
+                unsquashfs -no-progress -d "$wizp_runtime_root" "$DINX_EUROOFFICE_SQUASHFS" >/dev/null
+                [[ -f "$wizp_runtime_root/opt/eurooffice/libcef.so" ]] || {
+                  printf 'build-iso-container: EuroOffice squashfs lacks /opt/eurooffice/libcef.so\n' >&2
+                  return 1
+                }
+                chown -R dinxbuild:dinxbuild "$wizp_source_root" "$wizp_runtime_root"
+                runuser -u dinxbuild -- env \
+                  WIZP_SOURCE_DIR="$wizp_source_root" \
+                  WIZP_SOURCE_COMMIT="$WIZP_SOURCE_COMMIT" \
+                  WIZP_LEAN_OUTPUT_DIR="$wizp_output_root" \
+                  EUROOFFICE_ROOT="$wizp_runtime_root/opt/eurooffice" \
+                  bash /workspace/distro/packages/wizp-lean/build.sh
+                [[ -x "$wizp_output_root/bin/launcher" ]]
+              }
 
               build_package() {
                 local package_name="$1"
@@ -264,6 +298,8 @@ trap finish EXIT
                   extra_env+=("ZIG=$zig016_root/zig")
                 elif [[ "$package_name" == pori ]]; then
                   extra_env+=("ZIG=$zig_root/zig")
+                elif [[ "$package_name" == wizp-lean ]]; then
+                  extra_env+=("WIZP_PACKAGE_DIR=/tmp/dinx-wizp-lean-package")
                 fi
 
                 installed_packages_sha256=$(pacman -Q | LC_ALL=C sort | sha256sum)
@@ -314,7 +350,9 @@ trap finish EXIT
                 if [[ -n ${DINX_CACHE_DIRTY_MARKER:-} ]]; then
                   touch -- "$DINX_CACHE_DIRTY_MARKER"
                 fi
-
+                if [[ "$package_name" == wizp-lean ]]; then
+                  prepare_wizp_lean
+                fi
                 rm -rf -- "$package_output"
                 mkdir -p -- "$package_output" "$package_source_cache" \
                   "$cargo_target_cache/$package_name" "$zig_cache/$package_name"
@@ -370,7 +408,8 @@ trap finish EXIT
                 fi
               }
               package_cache_recipe_sha256=$(
-                { declare -f package_cache_as_build_user; declare -f build_package; } | sha256sum
+                { declare -f package_cache_as_build_user; declare -f prepare_wizp_lean; \
+                  declare -f build_package; } | sha256sum
               )
               package_cache_recipe_sha256=${package_cache_recipe_sha256%% *}
               build_package ghostty-vt-runtime
@@ -518,16 +557,19 @@ trap finish EXIT
                 kitemmodels kservice kwindowsystem mpvqt qqc2-desktop-style \
                 qt6-5compat qt6-declarative
               build_package haruna
-              if [[ "$package_repository_only" != true ]]; then
               eurooffice_stage_dir=$(scripts/lib/stage-eurooffice.sh)
-              if [[ -n "$eurooffice_stage_dir" ]]; then
-                eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
-                eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
-                cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
-                GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
-                export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
-                printf 'dinx-build-timing phase=eurooffice-staged package=%s\n' "$eurooffice_package"
-              fi
+              [[ -n "$eurooffice_stage_dir" ]] || {
+                printf 'build-iso-container: EuroOffice staging is required for wizp-lean\n' >&2
+                exit 1
+              }
+              eurooffice_package=$(awk -F= '$1 == "package" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+              eurooffice_squashfs=$(awk -F= '$1 == "squashfs" { print $2; exit }' /workspace/distro/office/eurooffice.pin)
+              cp -- "$eurooffice_stage_dir/$eurooffice_package" "$package_repo/"
+              GNUPGHOME="$signing_home" gpg --batch --yes --detach-sign "$package_repo/$eurooffice_package"
+              export DINX_EUROOFFICE_SQUASHFS="$eurooffice_stage_dir/$eurooffice_squashfs"
+              printf 'dinx-build-timing phase=eurooffice-staged package=%s\n' "$eurooffice_package"
+              build_package wizp-lean
+              if [[ "$package_repository_only" != true ]]; then
               repository_seed_started=$SECONDS
               GNUPGHOME="$signing_home" repo-add --include-sigs --sign --key "$signing_key" \
                 "$package_repo/dinx.db.tar.gz" "$package_repo"/*.pkg.tar.zst

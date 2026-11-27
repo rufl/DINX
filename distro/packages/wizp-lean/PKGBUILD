@@ -1,5 +1,6 @@
 pkgname=wizp-lean
-pkgver=0.1.0
+source "$startdir/source.env"
+pkgver="$WIZP_VERSION"
 pkgrel=1
 pkgdesc='WIZP editor using DINX EuroOffice CEF 109 shared runtime'
 arch=(x86_64)

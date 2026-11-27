@@ -18,6 +18,8 @@ MANIFEST = ROOT / ".github/package-updates.json"
 # qt-sudo elevation to pkexec/polkit (DINX ships no sudo) and a second source pinned to a
 # tagless alpm_octopi_utils commit; an automated version bump would orphan both, so it is
 # bumped deliberately like deetty, regenerating the patch in the same change.
+# WIZP lean is pinned to a reviewed source commit because its Electrobun/CEF
+# ABI must remain aligned with the EuroOffice runtime.
 MANUAL_SOURCE_PINS = {
     "appmenu-glib-translator",
     "astal",
@@ -25,6 +27,7 @@ MANUAL_SOURCE_PINS = {
     "deetty",
     "dinx-gtk-themes",
     "octopi",
+    "wizp-lean",
 }
 
 

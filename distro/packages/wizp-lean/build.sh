@@ -149,8 +149,11 @@ for eurooffice_locale in "$eurooffice_root"/locales/*.pak; do
 done
 
 patch_sha=$(sha256sum "$script_dir/electrobun-cef109.patch" | awk '{print $1}')
-source_commit=$(git -C "$source_root" rev-parse HEAD 2>/dev/null || printf 'unversioned')
-cat > "$package_root/Resources/wizp-lean-cef.json" <<EOF
+source_commit=$(git -C "$source_root" rev-parse HEAD 2>/dev/null || printf '%s' "${WIZP_SOURCE_COMMIT:-unversioned}")
+if [[ -n "${WIZP_SOURCE_COMMIT:-}" && "$source_commit" != "$WIZP_SOURCE_COMMIT" ]]; then
+  printf 'wizp-lean: source checkout does not match pinned commit: %s\n' "$source_commit" >&2
+  exit 1
+fi
 {
   "schema": "dinx-wizp-lean-cef/v1",
   "wizp_source_commit": "$source_commit",

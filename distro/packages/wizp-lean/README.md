@@ -34,11 +34,15 @@ cd distro/packages/wizp-lean
 WIZP_PACKAGE_DIR=/tmp/wizp-lean-package makepkg --clean --nodeps --nocheck --noconfirm
 ```
 
-`wizp-lean` conflicts with and provides `wizp`. Install only one. The original
-`distro/packages/wizp` keeps the fully bundled CEF fallback.
-The DINX ISO profile does not select `wizp-lean` yet. The CEF 109 UI surface
-rendered, but terminal/ZIPI and settings-save smoke checks remain unresolved;
-do not promote it into the default live image until those feature tests pass.
+`wizp-lean` conflicts with and provides `wizp`. The DINX ISO profile selects
+`wizp-lean` by default and stages the pinned WIZP source archive during the ISO
+build. The original `distro/packages/wizp` remains available as the bundled-CEF
+fallback, but both packages must not be installed together.
+
+The ISO build validates package provenance, the EuroOffice CEF payload hashes,
+and the symlinked runtime layout. CEF 109 is substantially older than WIZP's
+standard CEF 147 and is end-of-life; use the bundled fallback for untrusted
+internet browsing.
 
 ## Runtime contract and measured impact
 
@@ -58,15 +62,6 @@ EuroOffice payload hashes recorded during the byte comparison:
 | `v8_context_snapshot.bin` | `474eccca3a12af4f6a37409b02dd9e8004f6675b519581d26900f759d9244a6a` |
 | `snapshot_blob.bin` | `76a8cd79ae104dc59a3390cc852c8a8b6bb057ee38dcc40903ea427475740d56` |
 
-CEF 109 is substantially older than WIZP's standard CEF 147 and is end-of-life.
-This build is for offline/live-ISO deduplication experiments, not general
-internet browsing. Keep the bundled CEF 147 package available for normal use.
-
-The isolated UI runner showed the CEF 109 WIZP window and loaded the editor
-surface, but end-to-end smoke checks did not pass: terminal/ZIPI startup and
-the settings-save assertion failed in the test environment. Do not treat this
-as full feature validation; resolve those failures before making the lean
-package a default.
 
 Measured on the EuroOffice + WIZP pair-tree using the DINX SquashFS xz/1 MiB/
 x86-BCJ options: default duplicate removal produced 354.58 MiB, while

@@ -2,8 +2,8 @@ artools-iso
 iso-profiles
 mkinitcpio
 base-devel
+bun
 bubblewrap
-bash-completion
 btop
 curl
 clang

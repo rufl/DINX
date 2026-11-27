@@ -28,8 +28,10 @@ grep -Fq 'does not claim binary, image, archive, or arbitrary MIME handling' "$r
 grep -Fq '<svg ' "$icon" || fail 'WIZP icon is not SVG'
 
 lean_pkgdir="$root/distro/packages/wizp-lean"
+lean_source="$lean_pkgdir/source.env"
 for path in \
   "$lean_pkgdir/PKGBUILD" \
+  "$lean_source" \
   "$lean_pkgdir/README.md" \
   "$lean_pkgdir/build.sh" \
   "$lean_pkgdir/electrobun-cef109.patch"; do
@@ -37,6 +39,25 @@ for path in \
 done
 bash -n "$lean_pkgdir/PKGBUILD" "$lean_pkgdir/build.sh" \
   || fail 'lean package build scripts have invalid shell syntax'
+source "$lean_source"
+[[ "$WIZP_SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || fail 'WIZP source commit is not pinned'
+[[ "$WIZP_SOURCE_URL" == "https://github.com/rufl/WIZP/archive/${WIZP_SOURCE_COMMIT}.tar.gz" ]] \
+  || fail 'WIZP source URL does not match its pinned commit'
+[[ "$WIZP_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]] || fail 'WIZP source checksum is invalid'
+grep -Fq 'source "$startdir/source.env"' "$lean_pkgdir/PKGBUILD" \
+  || fail 'lean PKGBUILD does not load its source pin'
+grep -Fq 'prepare_wizp_lean' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not prepare the pinned WIZP source'
+grep -Fq 'build_package wizp-lean' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not build wizp-lean'
+grep -Fq 'DINX_EUROOFFICE_SQUASHFS' "$root/scripts/build-iso-container.sh" \
+  || fail 'ISO builder does not provide the shared EuroOffice runtime'
+grep -Fqx 'bun' "$root/scripts/iso-builder/packages.txt" \
+  || fail 'Artix builder omits Bun for the WIZP build'
+grep -Fq '    - wizp-lean' "$root/distro/iso/iso-profiles/dinx/profile.yaml" \
+  || fail 'DINX profile does not select wizp-lean'
+grep -Fq '"wizp-lean"' "$root/distro/iso/iso-profiles/dinx/feature-groups.json" \
+  || fail 'wizp-lean is not assigned to a feature group'
 grep -Fqx 'pkgname=wizp-lean' "$lean_pkgdir/PKGBUILD" || fail 'lean PKGBUILD package name is not wizp-lean'
 grep -Fq 'eurooffice=9.3.8-5' "$lean_pkgdir/PKGBUILD" || fail 'lean package does not pin EuroOffice runtime'
 grep -Fq 'conflicts=(wizp)' "$lean_pkgdir/PKGBUILD" || fail 'lean package can coexist with bundled wizp'

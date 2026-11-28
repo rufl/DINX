@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${KWM_SOURCE_SHA256:?missing KWM_SOURCE_SHA256}"
 : "${KWM_ZIG_VERSION:?missing KWM_ZIG_VERSION}"
 pkgver="$KWM_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Dynamic tiling window manager for the River Wayland compositor'
 arch=('x86_64')
 url="$KWM_REPOSITORY"
@@ -21,8 +21,8 @@ license=('GPL-3.0-only')
 depends=('glibc' 'wayland' 'libxkbcommon')
 makedepends=('wayland-protocols' 'wayland-utils' 'zig>=0.16')
 optdepends=('kwim: river input-management helper, invoked automatically by kwm')
-source=("kwm-$pkgver.tar.gz::$KWM_SOURCE_URL")
-sha256sums=("$KWM_SOURCE_SHA256")
+source=("kwm-$pkgver.tar.gz::$KWM_SOURCE_URL" 'dinx-kwm-dock-ipc.patch')
+sha256sums=("$KWM_SOURCE_SHA256" '5d04631cdf9192332521791c47762453501e8a845e8fe33a3b686509642aa36f')
 
 
 # CI runners cannot resolve codeberg.org (DNS: NoAddressReturned), and kwm's
@@ -32,6 +32,7 @@ sha256sums=("$KWM_SOURCE_SHA256")
 prepare() {
   cd "$srcdir/kwm-$pkgver"
   sed -i 's#https://codeberg\.org/ifreund/#https://github.com/ifreund/#g' build.zig.zon
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/dinx-kwm-dock-ipc.patch"
 }
 build() {
   cd "$srcdir/kwm-$pkgver"

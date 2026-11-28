@@ -1,0 +1,284 @@
+--- a/src/kwm.zig
++++ b/src/kwm.zig
+@@ -13,11 +13,14 @@
+ const Window = @import("kwm/window.zig");
+ const Context = @import("kwm/context.zig");
+ 
++const DinxIpc = @import("kwm/dinx_ipc.zig");
+ const FDType = enum {
+     wayland,
+     signal,
+     bar_status,
+     key_repeat,
++    dinx_control,
++    dinx_client,
+ };
+ 
+ pub const Layout = @import("kwm/layout.zig");
+@@ -49,6 +52,12 @@
+     const signal_fd = try posix.signalfd(-1, &mask, 1 << @bitOffsetOf(posix.O, "NONBLOCK"));
+     defer posix.close(signal_fd);
+ 
++    var dinx_server: ?DinxIpc.Server = DinxIpc.start() catch |err| blk: {
++        log.warn("DINX dock IPC unavailable: {}", .{err});
++        break :blk null;
++    };
++    defer if (dinx_server) |server| DinxIpc.stop(server);
++
+     const fd_type_num = @typeInfo(FDType).@"enum".fields.len;
+     var fd_buffer: [fd_type_num]posix.pollfd = undefined;
+     var fd_type_buffer: [fd_type_num]FDType = undefined;
+@@ -68,6 +77,18 @@
+         try poll_fds.appendBounded(.{ .fd = signal_fd, .events = posix.POLL.IN, .revents = 0 });
+         try fd_types.appendBounded(.signal);
+ 
++        if (dinx_server) |server| {
++            try poll_fds.appendBounded(.{ .fd = server.fd, .events = posix.POLL.IN, .revents = 0 });
++            try fd_types.appendBounded(.dinx_control);
++        }
++
++        if (dinx_server) |server| {
++            if (server.client_fd) |client| {
++                try poll_fds.appendBounded(.{ .fd = client, .events = posix.POLL.IN, .revents = 0 });
++                try fd_types.appendBounded(.dinx_client);
++            }
++        }
++
+         if (ctx.bar_status_fd) |fd| {
+             try poll_fds.appendBounded(.{ .fd = fd, .events = posix.POLL.IN, .revents = 0 });
+             try fd_types.appendBounded(.bar_status);
+@@ -96,6 +117,8 @@
+                         const count = try read(u64, poll_fd.fd) orelse continue;
+                         ctx.key_repeat.?.repeat(count);
+                     },
++                    .dinx_control => if (dinx_server) |*server| DinxIpc.accept(server),
++                    .dinx_client => if (dinx_server) |*server| DinxIpc.handleClient(server),
+                 }
+             }
+         }
+--- a/src/kwm/context.zig
++++ b/src/kwm/context.zig
+@@ -63,6 +63,7 @@
+ window_to_lift: ?*Window = null,
+ windows: wl.list.Head(Window, .link) = undefined,
+ focus_stack: wl.list.Head(Window, .flink) = undefined,
++next_dinx_window_id: u64 = 1,
+ 
+ key_repeat: ?KeyRepeat,
+ 
+--- a/src/kwm/window.zig
++++ b/src/kwm/window.zig
+@@ -93,6 +93,7 @@
+ geometry_undefined: bool = false,
+ 
+ tag: u32 = 1,
++dinx_id: u64 = 0,
+ pid: i32 = 0,
+ app_id: ?[]const u8 = null,
+ title: ?[]const u8 = null,
+@@ -150,7 +151,11 @@
+     const rwm_window_node = try rwm_window.getNode();
+     errdefer rwm_window_node.destroy();
+ 
++    if (ctx.next_dinx_window_id == 0) return error.DinxWindowIdExhausted;
++    const dinx_id = ctx.next_dinx_window_id;
++    ctx.next_dinx_window_id +%= 1;
+     window.* = .{
++        .dinx_id = dinx_id,
+         .rwm_window = rwm_window,
+         .rwm_window_node = rwm_window_node,
+         .unhandled_events = try .initCapacity(ctx.gpa, 2),
+--- /dev/null
++++ b/src/kwm/dinx_ipc.zig
+@@ -0,0 +1,191 @@
++const std = @import("std");
++const posix = @import("posix");
++const Context = @import("context.zig");
++const Window = @import("window.zig");
++
++const ctx = Context.get();
++const log = std.log.scoped(.dinx_ipc);
++const max_windows = 64;
++const max_text_bytes = 512;
++const socket_type_seqpacket = 5;
++const socket_nonblock = 0x800;
++const socket_cloexec = 0x80000;
++const sockaddr_un = extern struct {
++    family: u16,
++    path: [108]u8,
++};
++
++extern "c" fn socket(domain: c_int, socket_type: c_int, protocol: c_int) c_int;
++extern "c" fn bind(fd: c_int, address: *const sockaddr_un, length: u32) c_int;
++extern "c" fn listen(fd: c_int, backlog: c_int) c_int;
++extern "c" fn accept4(fd: c_int, address: ?*anyopaque, length: ?*u32, flags: c_int) c_int;
++extern "c" fn recv(fd: c_int, buffer: [*]u8, length: usize, flags: c_int) isize;
++extern "c" fn send(fd: c_int, buffer: [*]const u8, length: usize, flags: c_int) isize;
++extern "c" fn chmod(path: [*:0]const u8, mode: u32) c_int;
++extern "c" fn unlink(path: [*:0]const u8) c_int;
++extern "c" fn getrandom(buffer: *anyopaque, length: usize, flags: u32) isize;
++
++pub const Server = struct {
++    fd: posix.fd_t,
++    client_fd: ?posix.fd_t = null,
++    path: [108:0]u8,
++    session_id: u64,
++};
++
++pub fn start() !Server {
++    const runtime_dir = ctx.env.get("XDG_RUNTIME_DIR") orelse return error.RuntimeDirectoryMissing;
++    var path_buffer: [108:0]u8 = std.mem.zeroes([108:0]u8);
++    const path_text = std.fmt.bufPrint(path_buffer[0..107], "{s}/dinx-kwm.sock", .{runtime_dir}) catch return error.SocketPathTooLong;
++    path_buffer[path_text.len] = 0;
++    const path: [:0]const u8 = path_buffer[0..path_text.len :0];
++
++    var address = sockaddr_un{ .family = 1, .path = [_]u8{0} ** 108 };
++    @memcpy(address.path[0..path_text.len], path_text);
++
++    const fd = socket(1, socket_type_seqpacket | socket_nonblock | socket_cloexec, 0);
++    if (fd < 0) return error.SocketCreateFailed;
++    errdefer posix.close(fd);
++    if (bind(fd, &address, @sizeOf(sockaddr_un)) != 0) return error.SocketBindFailed;
++    errdefer _ = unlink(path.ptr);
++    if (chmod(path.ptr, 0o600) != 0) return error.SocketPermissionFailed;
++    if (listen(fd, 8) != 0) return error.SocketListenFailed;
++
++    var session_id: u64 = 0;
++    if (getrandom(&session_id, @sizeOf(u64), 0) != @sizeOf(u64) or session_id == 0)
++        return error.SessionIdUnavailable;
++
++    log.info("DINX dock IPC listening at {s}", .{path_text});
++    return .{ .fd = fd, .client_fd = null, .path = path_buffer, .session_id = session_id };
++}
++
++pub fn stop(server: Server) void {
++    if (server.client_fd) |client| posix.close(client);
++    posix.close(server.fd);
++    _ = unlink(server.path[0..]);
++}
++
++pub fn accept(server: *Server) void {
++    if (server.client_fd != null) return;
++    const client = accept4(server.fd, null, null, socket_nonblock | socket_cloexec);
++    if (client >= 0) server.client_fd = client;
++}
++
++pub fn handleClient(server: *Server) void {
++    const client = server.client_fd orelse return;
++    var request: [128]u8 = undefined;
++    const count = recv(client, &request, request.len, 0);
++    if (count < 0) return;
++    server.client_fd = null;
++    defer posix.close(client);
++    if (count == 0) return;
++    dispatch(server.*, client, std.mem.trim(u8, request[0..@intCast(count)], " \t\r\n"));
++}
++
++
++fn dispatch(server: Server, client: posix.fd_t, request: []const u8) void {
++    if (std.mem.eql(u8, request, "LIST")) {
++        sendSnapshot(server, client);
++        return;
++    }
++
++    var tokens = std.mem.tokenizeScalar(u8, request, ' ');
++    const operation = tokens.next() orelse {
++        sendText(client, "ERR request\n");
++        return;
++    };
++    const session_text = tokens.next() orelse {
++        sendText(client, "ERR session\n");
++        return;
++    };
++    const id_text = tokens.next() orelse {
++        sendText(client, "ERR id\n");
++        return;
++    };
++    if (tokens.next() != null) {
++        sendText(client, "ERR request\n");
++        return;
++    }
++    const session_id = std.fmt.parseInt(u64, session_text, 16) catch {
++        sendText(client, "ERR session\n");
++        return;
++    };
++    if (session_id != server.session_id) {
++        sendText(client, "ERR stale-session\n");
++        return;
++    }
++    const window_id = std.fmt.parseInt(u64, id_text, 16) catch {
++        sendText(client, "ERR id\n");
++        return;
++    };
++
++    var it = ctx.windows.safeIterator(.forward);
++    while (it.next()) |window| {
++        if (window.dinx_id != window_id) continue;
++        if (std.mem.eql(u8, operation, "FOCUS")) {
++            ctx.focus(window, true);
++            sendText(client, "OK\n");
++        } else if (std.mem.eql(u8, operation, "CLOSE")) {
++            window.prepare_close();
++            sendText(client, "OK\n");
++        } else {
++            sendText(client, "ERR operation\n");
++        }
++        return;
++    }
++    sendText(client, "ERR stale-window\n");
++}
++
++fn sendSnapshot(server: Server, client: posix.fd_t) void {
++    var output: [max_windows * (max_text_bytes * 2 + 64) + 128]u8 = undefined;
++    var used: usize = 0;
++    appendFmt(&output, &used, "DINXKW/1 {x}\n", .{server.session_id}) catch return;
++
++    const focused = ctx.focused_window();
++    var it = ctx.windows.safeIterator(.forward);
++    var count: usize = 0;
++    while (it.next()) |window| {
++        if (count == max_windows) break;
++        appendFmt(&output, &used, "W {x} {d} ", .{
++            window.dinx_id,
++            @intFromBool(if (focused) |focused_window| focused_window == window else false),
++        }) catch break;
++        appendHex(&output, &used, window.app_id orelse "") catch break;
++        appendByte(&output, &used, ' ') catch break;
++        appendHex(&output, &used, window.title orelse "") catch break;
++        appendByte(&output, &used, '\n') catch break;
++        count += 1;
++    }
++    appendFmt(&output, &used, "END {d}\n", .{count}) catch return;
++    sendAll(client, output[0..used]);
++}
++
++fn appendByte(buffer: []u8, used: *usize, byte: u8) !void {
++    if (used.* >= buffer.len) return error.ResponseTooLarge;
++    buffer[used.*] = byte;
++    used.* += 1;
++}
++
++fn appendFmt(buffer: []u8, used: *usize, comptime format: []const u8, args: anytype) !void {
++    const text = std.fmt.bufPrint(buffer[used.*..], format, args) catch return error.ResponseTooLarge;
++    used.* += text.len;
++}
++
++fn appendHex(buffer: []u8, used: *usize, text: []const u8) !void {
++    if (text.len == 0) return appendByte(buffer, used, '-');
++    const digits = "0123456789abcdef";
++    for (text[0..@min(text.len, max_text_bytes)]) |byte| {
++        try appendByte(buffer, used, digits[byte >> 4]);
++        try appendByte(buffer, used, digits[byte & 0x0f]);
++    }
++}
++
++fn sendText(client: posix.fd_t, text: []const u8) void {
++    sendAll(client, text);
++}
++
++fn sendAll(client: posix.fd_t, text: []const u8) void {
++    const count = send(client, text.ptr, text.len, 0x4000); // MSG_NOSIGNAL on Linux
++    if (count < 0 or @as(usize, @intCast(count)) != text.len) {
++        log.warn("DINX dock IPC response truncated", .{});
++    }
++}

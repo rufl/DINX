@@ -19,6 +19,9 @@ dist/
 !/distro/packages/seafoam-settings/src/
 !/distro/packages/redbean/src/
 !/distro/packages/redbean/src/**
+# The Dock's checked-in Zig sources include its KWM IPC module.
+!/distro/packages/dinx-dock/src/
+!/distro/packages/dinx-dock/src/**
 /distro/packages/dinitui/src/stage/
 /distro/packages/dinxpanel/src/stage/
 /distro/packages/dinx-dock/src/stage/

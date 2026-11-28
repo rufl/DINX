@@ -10,7 +10,7 @@ source_env="$startdir/source.env"
 : "${AUDIONAUT_LICENSE_URL:?missing AUDIONAUT_LICENSE_URL}"
 : "${AUDIONAUT_LICENSE_SHA256:?missing AUDIONAUT_LICENSE_SHA256}"
 pkgver="$AUDIONAUT_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Multitrack audio editor and recorder'
 arch=('x86_64')
 url='https://github.com/kvoltmer/Audionaut'

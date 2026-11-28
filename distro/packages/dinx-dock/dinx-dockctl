@@ -1,0 +1,97 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 DINX Contributors
+# SPDX-License-Identifier: Apache-2.0
+set -eu
+
+config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+config_dir=$config_home/dinx
+config=$config_dir/appearance.json
+defaults='["org.dinx.Deetty.desktop","pcmanfm.desktop","firefox.desktop","org.dinx.Dintor.desktop","octopi.desktop","dinxpanel.desktop"]'
+
+usage() {
+    printf '%s\n' \
+        'Usage: dinx-dockctl list' \
+        '       dinx-dockctl add APP.desktop' \
+        '       dinx-dockctl remove APP.desktop' \
+        '       dinx-dockctl set-edge left|right|bottom|none' >&2
+    exit 2
+}
+
+valid_id() {
+    case $1 in ''|*[!A-Za-z0-9._-]*) return 1 ;; esac
+    case $1 in *.desktop) ;; *) return 1 ;; esac
+    [ "${#1}" -le 127 ]
+}
+
+ensure_config() {
+    mkdir -p "$config_dir"
+    chmod 700 "$config_dir"
+    if [ ! -e "$config" ]; then
+        printf '%s\n' '{"version":1,"dock":"left"}' > "$config"
+        chmod 600 "$config"
+    fi
+}
+
+reload() {
+    if pkill -HUP -x dinx-dock 2>/dev/null; then
+        return
+    fi
+    edge=$(jq -r '.dock // "left"' "$config" 2>/dev/null) || edge=left
+    case $edge in
+        left|right|bottom) ;;
+        none) return ;;
+        *) edge=left ;;
+    esac
+    dinx-dock </dev/null >/dev/null 2>&1 &
+}
+
+write_config() {
+    tmp=$(mktemp "$config_dir/.appearance.json.XXXXXX")
+    trap 'rm -f "$tmp"' EXIT HUP INT TERM
+    chmod 600 "$tmp"
+    jq "$@" "$config" > "$tmp"
+    mv -f "$tmp" "$config"
+    trap - EXIT HUP INT TERM
+}
+
+command=${1:-}
+case $command in
+    list)
+        if [ -r "$config" ]; then
+            jq -r --argjson defaults "$defaults" 'if (.favorites | type) == "array" and (.favorites | length) > 0 then .favorites[] else $defaults[] end' "$config"
+        else
+            jq -r '.[]' <<EOF
+$defaults
+EOF
+        fi
+        ;;
+    add|remove)
+        id=${2:-}
+        [ "$#" -eq 2 ] && valid_id "$id" || usage
+        ensure_config
+        if [ "$command" = add ]; then
+            write_config --argjson defaults "$defaults" --arg id "$id" \
+                '(.favorites // $defaults) as $current | .favorites = (if any($current[]; . == $id) then $current else $current + [$id] end)'
+        else
+            if jq -e --argjson defaults "$defaults" --arg id "$id" \
+                '(.favorites // $defaults) as $current | (($current | length) == 1) and ($current[0] == $id)' "$config" >/dev/null; then
+                printf '%s\n' 'dinx-dockctl: cannot remove the final favorite; use set-edge none to disable the dock' >&2
+                exit 1
+            fi
+            write_config --argjson defaults "$defaults" --arg id "$id" \
+                '(.favorites // $defaults) as $current | .favorites = [$current[] | select(. != $id)]'
+        fi
+        reload
+        ;;
+    set-edge)
+        edge=${2:-}
+        case $edge in left|right|bottom|none) ;; *) usage ;; esac
+        [ "$#" -eq 2 ] || usage
+        ensure_config
+        write_config --arg edge "$edge" '.dock = $edge'
+        reload
+        ;;
+    *)
+        usage
+        ;;
+esac

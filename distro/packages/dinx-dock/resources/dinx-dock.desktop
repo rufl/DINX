@@ -4,8 +4,8 @@
 Type=Application
 Name=DINX Dock
 Name[pt_BR]=DINX Dock
-Comment=DINX layer-shell dock for the River desktop
-Comment[pt_BR]=Dock layer-shell do DINX para a área de trabalho River
+Comment=DINX Wayland dock for River, KWM and Morghulis
+Comment[pt_BR]=Dock Wayland DINX para River, KWM e Morghulis
 Exec=dinx-dock
 TryExec=dinx-dock
 Icon=org.dinx.Dock

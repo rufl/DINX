@@ -1,9 +1,8 @@
 # DINX Dock
 
-DINX Dock is the first-party Wayland dock for the River + kwm + Morghulis
-desktop. Morghulis ships the bar, runner, quick menu, OSD and power menu, but
-no dock; this component anchors a launch strip to one screen edge through
-`gtk4-layer-shell` so kwm and river reserve its space instead of covering it.
+DINX Dock is the same first-party Wayland dock across MAIN and NEXT. It runs
+as an independent GTK4 layer-shell surface in River sessions managed by KWM
+and KWIM, with either Morghulis or Redbean as the selected DINX shell.
 
 ## Placement
 
@@ -17,6 +16,7 @@ first-run wizard writes at first login:
 `dock` accepts `left`, `right`, `bottom` or `none`. `none` keeps the dock
 unmapped and the process exits with status 0, which is what the session
 supervisor expects from an optional component that is deliberately off.
+`dinx-dockctl set-edge left|right|bottom` starts it again if it was disabled.
 
 The dock is a core shell component, so a missing, unreadable or malformed
 appearance file falls back to `left` rather than removing the launchers. Only
@@ -26,36 +26,68 @@ an explicit `"none"` disables it.
 with `pkill -HUP dinx-dock`; SIGHUP re-reads the file and rebuilds the strip,
 so placement changes apply without restarting the session.
 
-## Favorites
+## Shortcuts and settings
 
-The button list is fixed and compiled in. Each button resolves a desktop entry
-id with `g_desktop_app_info_new` and launches the resolved `GAppInfo` directly,
-with no arguments and no shell:
+The default button list is compiled in, but the list can be managed without
+editing JSON:
 
-| Button   | Desktop entry             |
-| -------- | ------------------------- |
-| Terminal | `org.dinx.Deetty.desktop` |
-| Files    | `pcmanfm.desktop`         |
-| Browser  | `firefox.desktop`         |
-| Editor   | `org.dinx.Dintor.desktop` |
-| Packages | `octopi.desktop`          |
-| Dashboard | `dinxpanel.desktop`      |
+```sh
+dinx-dockctl list
+dinx-dockctl add org.dinx.Dintor.desktop
+dinx-dockctl remove octopi.desktop
+```
 
-An entry that is absent or hidden resolves to nothing and its button is
-skipped: the dock never fails because an application is not installed. The
-icon comes from the entry's `Icon=` key and the tooltip from its localized
-`Name=`, so both follow the installed desktop entry and the session locale.
+The helper validates desktop-entry ids, preserves the other appearance
+settings, writes `appearance.json` atomically, and signals the running dock.
+The optional `favorites` array has the same effect when managed directly:
 
-The installer has no dock button on purpose: `pcmanfm --desktop` renders
-`~/Desktop`, where the session seeds an approved `Install DINX.desktop` for the
-live user and removes it on installed systems, so a pinned button would
-duplicate that affordance.
+```json
+{"version": 1, "dock": "left", "favorites": ["firefox.desktop", "pcmanfm.desktop"]}
+```
+
+Each button resolves its desktop entry with `g_desktop_app_info_new` and
+launches the resulting `GAppInfo` directly, with no shell. Missing or hidden
+entries are skipped. The icon comes from `Icon=` and the tooltip from the
+localized `Name=`.
+
+## Running windows and activity feedback
+
+KWM publishes its live window list through a private, per-user `SOCK_SEQPACKET`
+socket in `$XDG_RUNTIME_DIR`. The socket is mode `0600`; the Dock requests a
+bounded snapshot once per second and never scans processes. Window buttons use
+desktop-entry icons where `app_id` matches and group windows by app id, with a
+running underline and a stronger focused-window indicator. Hover tooltips show
+the active window title. Clicking a running favorite focuses it; clicking a
+non-running favorite launches its desktop entry.
+
+Right-clicking a running icon offers **Close window**. KWM revalidates the
+session and window id, then sends Wayland's graceful close request; it does not
+send signals or force-kill processes. This task-list API currently requires
+KWM. Without its socket, favorite launchers remain available.
+
+A successfully launched favorite can also get an accent underline when
+`show_activity` is enabled. This launch feedback is separate from live-window
+state.
+Optional settings in `appearance.json`:
+
+```json
+{
+  "icon_size": 32,
+  "edge_margin": 8,
+  "box_spacing": 8,
+  "show_activity": true
+}
+```
+
+Values are bounded to safe ranges (icon 20–48px, margin 0–32px, spacing 0–16px).
+The dock uses theme colors, 44px minimum button targets, visible keyboard
+focus, and a 14% hover magnification without changing the strip's layout.
+
 
 ## Appearance and identity
 
-Colours and fonts come from the toolkit theme the session already configured;
-the dock never forces a theme or sets `GTK_THEME`. The only style it adds is
-button padding and corner radius.
+The dock styles its compact surface and interaction states but inherits colours
+and fonts from the session theme; it never forces `GTK_THEME`.
 
 The Wayland app id and window class are `com.dinx.Dock`, taken from the program
 name. A single instance is enforced with an advisory `flock` on

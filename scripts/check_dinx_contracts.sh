@@ -29,6 +29,7 @@ checks=(
   check_firewall_tools.sh
   check_dinitui.sh
   check_dinxpanel.sh
+  check_dinx_dock.sh
   check_redbean.sh
   check_dinx_graphics_profile.sh
   check_dinx_live_autologin.sh
@@ -84,6 +85,7 @@ for smoke in \
   smoke_pori_zig.sh \
   smoke_latest_alpha_alias.sh \
   smoke_pacman_local_install.sh \
+  smoke_dinx_dockctl.sh \
   smoke_cache_verified_download.sh \
   smoke_cache_verified_extract.sh \
   smoke_package_artifact_cache.sh \

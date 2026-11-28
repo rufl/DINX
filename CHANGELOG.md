@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Align DINX Dock 0.3.0 across MAIN and NEXT: configurable favorites and bounded appearance settings; theme-aware 44px GTK4 layer-shell UI with keyboard focus; launch feedback without process polling; safely freed config parsing; and dockctl reactivation after disabling the dock.
+- Sync the latest MAIN DINX Dock docs and Zig C-header paths into NEXT, including glycin/ministream headers; bump `dinx-dock` to pkgrel 4.
 - Make the persistent-install smoke independent of the GitHub runner: isolate the target `/run`, disable GRUB os-prober and saved-entry selection, and reject generated kernel entries that point outside the disposable disk instead of replacing a broken config with a synthetic one. Fix installed-session OCR qualification for tuigreet's real sequential username/password flow and its session controls. Add offline GRUB/source-provenance regressions and prebuild source snapshots that still detect tracked-file mutation.
 - Port MAIN's Morghulis fixes: runner launch feedback and dismissal, nullable media placeholder without the missing Dragon asset, DINX lock/theme helper integration, and River tag output selection/retry with the River backend required at build time.
 - Keep NEXT's disabled creative apps out of enabled package groups and runtime launch paths; remove an orphan DINXPanel PaintFE callback. Align stale Morghulis/Redbean, tuigreet and first-run session contracts with the current supervisor, without removing optional package recipes.

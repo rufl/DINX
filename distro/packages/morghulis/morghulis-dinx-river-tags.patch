@@ -1,0 +1,96 @@
+diff --git a/src/NavBar/RiverTags.vala b/src/NavBar/RiverTags.vala
+--- a/src/NavBar/RiverTags.vala
++++ b/src/NavBar/RiverTags.vala
+@@ -1,7 +1,8 @@
+ public class RiverTags : Rolltop {
+     private AstalRiver.River _river;
+-    private AstalRiver.Output _output;
++    private AstalRiver.Output? _output;
+     private uint _total_tags;
+     private List<WorkspaceItem> _tags = new List<WorkspaceItem>();
++    private uint _output_retry = 0;
+     private const string SHIFTTAGS_PREV = "river-shifttags --occupied --shifts -1";
+     private const string SHIFTTAGS_NEXT = "river-shifttags --occupied";
+@@ -9,13 +9,9 @@ public class RiverTags : Rolltop {
+     public RiverTags(AstalRiver.River river, uint max_tags = 9) {
+         this._river = river;
+         this._total_tags = max_tags;
+-        string focused_output = river.get_focused_output();
+-        this._output = river.get_output(focused_output);
+ 
+         initialize_items();
+-
+-        _output.changed.connect(update_css);
+-        update_css();
++        select_output();
+ 
+         setup_scroll_handler();
+     }
+@@ -22,0 +22,34 @@
++
++    private void select_output() {
++        if (_output == null) {
++            string? focused_output = _river.get_focused_output();
++            if (focused_output != null) {
++                _output = _river.get_output(focused_output);
++            }
++        }
++
++        if (_output == null) {
++            unowned var outputs = _river.get_outputs();
++            if (outputs != null) {
++                foreach (var output in outputs) {
++                    _output = output;
++                    break;
++                }
++            }
++        }
++
++        if (_output == null) {
++            if (_output_retry == 0) {
++                _output_retry = Timeout.add(100, () => {
++                    _output_retry = 0;
++                    select_output();
++                    return false;
++                });
++            }
++            return;
++        }
++
++        _output.changed.connect(update_css);
++        update_css();
++    }
++
+@@ -27,9 +49,13 @@ public class RiverTags : Rolltop {
+             var tag_button = new WorkspaceItem(
+                 () => {
+-                this._output.focused_tags = 1 << tag_index;
++                if (this._output != null) {
++                    this._output.focused_tags = 1 << tag_index;
++                }
+             },
+                 null,
+                 () => {
+-                this._output.focused_tags ^= 1 << tag_index;
++                if (this._output != null) {
++                    this._output.focused_tags ^= 1 << tag_index;
++                }
+             }
+                              ) {
+@@ -83,3 +109,7 @@ public class RiverTags : Rolltop {
+     private void update_css() {
++        if (_output == null) {
++            return;
++        }
++
+         int index = 0;
+         int focused_index = -1;
+diff --git a/src/meson.build b/src/meson.build
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -7,3 +7,3 @@
+ astal_hyprland_dep = dependency('astal-hyprland-0.1', required: false)
+-astal_river_dep = dependency('astal-river-0.1', required: false)
++astal_river_dep = dependency('astal-river-0.1')
+ astal_battery_dep = dependency('astal-battery-0.1', required: false)
+

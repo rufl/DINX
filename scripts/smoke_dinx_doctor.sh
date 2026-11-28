@@ -6,11 +6,12 @@ doctor="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/bin/dinx-docto
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-mkdir -p "$tmp/bin" "$tmp/home" "$tmp/config/shikane"
+mkdir -p "$tmp/bin" "$tmp/home" "$tmp/config/shikane" "$tmp/state/dinx/logs"
 printf '# DINX wdisplays\n' > "$tmp/config/shikane/config.toml"
+printf 'mode=river status=ready\n' > "$tmp/state/dinx/session.log"
+printf 'sample wizard diagnostic\n' > "$tmp/state/dinx/logs/first-run.log"
 : > "$tmp/pacman.log"
 : > "$tmp/dinit.log"
-
 cat > "$tmp/bin/pacman" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" >> "$DINX_DOCTOR_PACMAN_LOG"
@@ -36,6 +37,7 @@ chmod +x "$tmp/bin/pacman" "$tmp/bin/dinitctl" "$tmp/bin"/*
 report=$(
   HOME="$tmp/home" \
   XDG_CONFIG_HOME="$tmp/config" \
+  XDG_STATE_HOME="$tmp/state" \
   DINX_DOCTOR_PACMAN_LOG="$tmp/pacman.log" \
   DINX_DOCTOR_DINIT_LOG="$tmp/dinit.log" \
   PATH="$tmp/bin:/usr/bin:/bin" \
@@ -61,6 +63,23 @@ if grep -Eq '(^|[[:space:]])(-S|start|stop|restart|mount)([[:space:]]|$)' "$tmp/
   printf 'smoke_dinx_doctor: mutating command reached a fixture\n' >&2
   exit 1
 fi
+
+if grep -Fq 'sample wizard diagnostic' <<<"$report"; then
+  printf 'smoke_dinx_doctor: logs leaked into the default report\n' >&2
+  exit 1
+fi
+
+logs_report=$(
+  HOME="$tmp/home" \
+  XDG_CONFIG_HOME="$tmp/config" \
+  XDG_STATE_HOME="$tmp/state" \
+  DINX_DOCTOR_PACMAN_LOG="$tmp/pacman.log" \
+  DINX_DOCTOR_DINIT_LOG="$tmp/dinit.log" \
+  PATH="$tmp/bin:/usr/bin:/bin" \
+  "$doctor" --logs
+)
+grep -Fq 'sample wizard diagnostic' <<<"$logs_report"
+grep -Fq -- '--- log: session.log ---' <<<"$logs_report"
 
 query_report=$(
   HOME="$tmp/home" \

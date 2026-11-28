@@ -22,10 +22,15 @@ run_wizard() {
     if ! [ -x "$wizard" ]; then
         return 0
     fi
-    GTK_THEME='DINX:dark' \
-    GTK_APPLICATION_PREFER_DARK_THEME=1 \
-    ADW_COLOR_SCHEME_FORCE_DARK=1 \
-    "$wizard" >/dev/null 2>&1 || true
+    if GTK_THEME='DINX:dark' \
+      GTK_APPLICATION_PREFER_DARK_THEME=1 \
+      ADW_COLOR_SCHEME_FORCE_DARK=1 \
+      "$wizard"; then
+        :
+    else
+        wizard_status=$?
+        printf 'dinx-desktop-first-run: wizard exited status=%s (non-fatal)\n' "$wizard_status" >&2
+    fi
     marker_dir=${marker%/*}
     if ! mkdir -p "$marker_dir"; then
         return 0

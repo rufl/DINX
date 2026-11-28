@@ -1,6 +1,15 @@
 #!/bin/sh
 set -u
 
+show_logs=0
+case "${1:-}" in
+  "") ;;
+  --logs) show_logs=1 ;;
+  *)
+    printf 'usage: %s [--logs]\n' "$0" >&2
+    exit 64
+    ;;
+esac
 print_value() {
   key=$1
   value=${2:-unknown}
@@ -116,3 +125,25 @@ done
 
 print_value package.transactions not-run
 print_value network.access not-run
+
+if [ "$show_logs" = 1 ]; then
+  state_home=${XDG_STATE_HOME:-${home:-/tmp}/.local/state}
+  session_dir="$state_home/dinx"
+  print_value diagnostics.logs "$session_dir/logs (last 100 lines per file)"
+  for path in "$session_dir/session.log" "$session_dir"/logs/*.log; do
+    [ -f "$path" ] && [ ! -L "$path" ] || continue
+    printf '%s\n' "--- log: ${path##*/} ---"
+    tail -n 100 -- "$path"
+  done
+  core_dir="$session_dir/cores"
+  if [ -d "$core_dir" ] && [ ! -L "$core_dir" ]; then
+    for core in "$core_dir"/*; do
+      [ -f "$core" ] && [ ! -L "$core" ] || continue
+      size=$(stat -c '%s' "$core" 2>/dev/null || printf unknown)
+      print_value "diagnostics.core.${core##*/}" "present bytes=$size"
+    done
+  fi
+  if [ -r /proc/sys/kernel/core_pattern ]; then
+    print_value diagnostics.core_pattern "$(cat /proc/sys/kernel/core_pattern 2>/dev/null)"
+  fi
+fi

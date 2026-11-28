@@ -245,7 +245,7 @@ Para registrar o estado sem alterar o sistema, execute:
 dinx-doctor
 ```
 
-O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `missing` ou `unknown`. Para incluir a lista somente leitura dos serviços do dinit de usuário, use `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`. Não use o relatório como prova de compatibilidade de hardware: brilho físico, suspensão, GPU, áudio, NTFS compartilhado e montagem de volumes ainda exigem teste no equipamento.
+O relatório usa o schema `dinx-doctor/v1` e marca capacidades ausentes como `missing` ou `unknown`. Para incluir a lista somente leitura dos serviços do dinit de usuário, use `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`; para ver as últimas 100 linhas dos logs da sessão e dos componentes, use `dinx-doctor --logs`. Core dumps são opt-in por `DINX_ENABLE_CORE_DUMPS=1` no ambiente da sessão e limitados a 64 MiB por processo. Não use o relatório como prova de compatibilidade de hardware: brilho físico, suspensão, GPU, áudio, NTFS compartilhado e montagem de volumes ainda exigem teste no equipamento.
 
 
 

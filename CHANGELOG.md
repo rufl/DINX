@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Split River and supervised-helper output into private per-component logs, expose bounded log tails through `dinx-doctor --logs`, add opt-in 64 MiB core dumps, and make optional-helper exits non-fatal. Record first-run and helper exit statuses; the first-run wizard remains synchronous, so leaving it open delays shell startup without causing a supervisor failure.
 - Trim additional builder-only payloads from the final SquashFS: gettext PO tooling/data, GTK builder tools, Python source-tree Tools and GTK Valgrind data; preserve runtime gettext commands and GTK launch/query utilities.
 - Fix seven ISO desktop regressions: validate the live Calamares session D-Bus before preference handling, route PaintFE/Blender/EuroOffice desktop entries through their DINX wrappers, seed PCManFM's desktop profile with icons and its own context menu, remove KWM's square compositor border around rounded GTK windows, and force the first-run wizard to start with the DINX dark toolkit environment.
 - Refresh Deetty/Dintor to source ref `986790fb4af78da31f0212a37706a9689b2f9a03` with a rebuilt `pkgrel=12`, consume the upstream DINX identity/qualification corrections directly, and launch no-argument Morghulis terminals as focused independent windows.

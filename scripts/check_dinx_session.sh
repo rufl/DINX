@@ -378,7 +378,17 @@ grep -Fq 'start_required idle "$libexec_dir/dinx-idle"' "$supervisor" \
 grep -Fq 'start_optional bc250 bc250-control-centerd' "$supervisor" \
   || fail 'session supervisor does not start the optional BC-250 daemon'
 grep -Fq 'set_status ready' "$supervisor" || fail 'session supervisor has no ready status boundary'
+grep -Fq 'output=$path' "$supervisor" \
+  || fail 'supervised helpers do not report their per-component log path'
+grep -Fq 'first-run exited status=$first_run_status' "$supervisor" \
+  || fail 'first-run helper exit status is not recorded'
+grep -Fq 'exec >>"$river_log" 2>&1' "$river_session" \
+  || fail 'River stdout/stderr is not captured in its session log'
+grep -Fq 'DINX_ENABLE_CORE_DUMPS' "$river_session" \
+  || fail 'River wrapper does not gate core dumps behind explicit opt-in'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
+grep -Fq 'failure=non-fatal optional=true' "$supervisor" \
+  || fail 'optional helper failures can still terminate the graphical session'
 grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
 grep -Fq 'start_required shell morghulis' "$supervisor" \
   || fail 'session supervisor does not start the Morghulis desktop shell'
@@ -424,6 +434,8 @@ grep -Fq '/etc/skel/.config/dinx/installer-preferences.json' "$installer" \
 # QEMU screen gates stay wired into the live and installed smokes.
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$session_screenshot_path" "$session_mode"' "$iso_smoke" \
   || fail 'QEMU live smoke does not check the configured graphical session surface'
+grep -Fq 'session_check_mode=session' "$iso_smoke" \
+  || fail 'QEMU post-first-run smoke does not require the River/KWM session surface'
 grep -Fq '"$script_dir/check_dinx_qemu_session.sh" "$screen_path" greeter' "$install_smoke" \
   || fail 'installed QEMU smoke does not check the agreety greeter screen'
 

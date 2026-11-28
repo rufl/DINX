@@ -242,7 +242,7 @@ To record the system state without changing it, run:
 dinx-doctor
 ```
 
-The report uses the `dinx-doctor/v1` schema and marks unavailable capabilities as `missing` or `unknown`. To include a read-only list of user dinit services, run `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`. Do not treat the report as proof of hardware compatibility: physical brightness, suspend, GPU, audio, shared NTFS and volume mounting still require testing on the machine.
+The report uses the `dinx-doctor/v1` schema and marks unavailable capabilities as `missing` or `unknown`. To include a read-only list of user dinit services, run `DINX_DOCTOR_QUERY_DINIT=1 dinx-doctor`; to inspect the last 100 lines of session/component logs, run `dinx-doctor --logs`. Core dumps are opt-in via `DINX_ENABLE_CORE_DUMPS=1` before session launch and limited to 64 MiB per process. Do not treat the report as proof of hardware compatibility: physical brightness, suspend, GPU, audio, shared NTFS and volume mounting still require testing on the machine.
 
 
 

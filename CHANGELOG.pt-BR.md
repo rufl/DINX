@@ -1,6 +1,7 @@
 # Changelog
 
 Este arquivo registra as mudanças importantes da DINX em linguagem direta. Ele não afirma que o roadmap terminou; a evidência de qualificação e os metadados do release são a fonte de verdade.
+- Separar as saídas do River e dos helpers supervisionados em logs privados por componente, oferecer trechos limitados via `dinx-doctor --logs`, habilitar core dumps opt-in limitados a 64 MiB e tornar não fatais as saídas dos helpers opcionais. Registrar status de saída do first-run e dos helpers; o wizard continua síncrono, então deixá-lo aberto atrasa o shell, mas não faz o supervisor falhar.
 - Remover payloads adicionais exclusivos de build do SquashFS final: ferramentas/dados PO do gettext, ferramentas builder do GTK, `Tools` do Python e dados Valgrind do GTK; preservar os comandos gettext de runtime e utilitários GTK de lançamento/consulta.
 - Corrigir sete regressões do desktop da ISO: validar o D-Bus da sessão live do Calamares antes de ler preferências, direcionar as entradas desktop do PaintFE/Blender/EuroOffice para os wrappers DINX, preparar o perfil do PCManFM com ícones e menu contextual próprio, remover a borda quadrada do KWM ao redor de janelas GTK arredondadas e forçar o wizard first-run a iniciar no ambiente escuro da DINX.
 - Atualizar Deetty/Dintor para o ref `986790fb4af78da31f0212a37706a9689b2f9a03` com rebuild em `pkgrel=12`, consumir diretamente as correções upstream de identidade/qualificação da DINX e abrir terminais Morghulis sem argumentos como janelas independentes focadas.

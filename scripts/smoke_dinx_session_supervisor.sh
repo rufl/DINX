@@ -10,15 +10,15 @@ libexec="$tmp/libexec"
 state="$tmp/pids"
 mkdir -p "$fakebin" "$libexec" "$state"
 
-# Required helpers: KWM, Shikane, the PolicyKit agent and the Morghulis shell
-# are resolved through PATH, the idle wrapper through DINX_SESSION_LIBEXEC. The
-# first-run glue is a short-lived foreground helper that must complete before
-# the shell starts, so it records a marker and exits.
+# Required helpers: KWM, Shikane, the PolicyKit agent, idle and Morghulis are
+# supervised children. First-run is a foreground helper that must finish before
+# the shell starts; its output is retained separately.
 make_helper() {
   name=$1
   dir=$2
   cat >"$dir/$name" <<EOF
 #!/bin/sh
+printf '%s\n' "fixture-output-$name"
 printf '%s\n' "\$\$" >"$state/$name.pid"
 while :; do /usr/bin/sleep 1; done
 EOF
@@ -32,9 +32,17 @@ make_helper dinx-pcmanfm-desktop "$libexec"
 make_helper dinx-idle "$libexec"
 cat >"$libexec/dinx-desktop-first-run" <<EOF
 #!/bin/sh
+printf '%s\n' first-run-fixture-output
 : >"$state/first-run-ran"
+exit 42
 EOF
 chmod +x "$libexec/dinx-desktop-first-run"
+cat >"$fakebin/dinx-dock" <<'EOF'
+#!/bin/sh
+printf '%s\n' optional-dock-fixture-output
+exit 23
+EOF
+chmod +x "$fakebin/dinx-dock"
 
 export DINX_SESSION_SKIP_WAYLAND_CHECK=1
 export DINX_SESSION_SKIP_DBUS_CHECK=1
@@ -96,6 +104,17 @@ if [ "$(stat -c %Y "$state/first-run-ran")" -gt "$(stat -c %Y "$state/morghulis.
   printf 'dinx_session_supervisor_smoke: Morghulis started before first-run finished\n' >&2
   exit 1
 fi
+grep -Fq 'fixture-output-kwm' "$XDG_STATE_HOME/dinx/logs/wm.log"
+grep -Fq 'first-run-fixture-output' "$XDG_STATE_HOME/dinx/logs/first-run.log"
+grep -Fq 'helper=first-run exited status=42' "$XDG_STATE_HOME/dinx/session.log"
+for _ in $(seq 1 1000); do
+  grep -Fq 'helper=dock failure=non-fatal optional=true' "$XDG_STATE_HOME/dinx/session.log" && break
+  /usr/bin/sleep 0.01
+done
+grep -Fqx 'status=ready' "$XDG_STATE_HOME/dinx/session.status"
+grep -Fq 'optional-dock-fixture-output' "$XDG_STATE_HOME/dinx/logs/dock.log"
+grep -Fq 'helper=dock exited status=23' "$XDG_STATE_HOME/dinx/session.log"
+
 kill -TERM "$(cat "$state/dinx-idle.pid")"
 wait_for_status failed
 wait "$supervisor_pid" || true

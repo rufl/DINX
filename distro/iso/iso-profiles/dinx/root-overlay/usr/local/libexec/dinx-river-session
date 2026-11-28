@@ -1,6 +1,34 @@
 #!/bin/sh
 set -eu
 
+state_home=${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}
+state_dir="$state_home/dinx"
+umask 077
+mkdir -p "$state_dir/logs"
+chmod 0700 "$state_dir" "$state_dir/logs"
+river_log="$state_dir/logs/river.log"
+exec >>"$river_log" 2>&1
+chmod 0600 "$river_log"
+printf '%s pid=%s event=session-wrapper-started\n' \
+  "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$$"
+
+if [ "${DINX_ENABLE_CORE_DUMPS:-0}" = 1 ]; then
+  core_dir="$state_dir/cores"
+  mkdir -p "$core_dir"
+  chmod 0700 "$core_dir"
+  if ulimit -c 131072 2>/dev/null; then
+    core_pattern=$(cat /proc/sys/kernel/core_pattern 2>/dev/null || printf unknown)
+    printf '%s core_dumps=enabled max_bytes=67108864 directory=%s kernel_pattern=%s\n' \
+      "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$core_dir" "$core_pattern"
+    cd "$core_dir"
+  else
+    ulimit -c 0 2>/dev/null || true
+    printf '%s core_dumps=disabled reason=limit-unavailable\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  fi
+else
+  ulimit -c 0 2>/dev/null || true
+  printf '%s core_dumps=disabled reason=opt-in-required\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+fi
 locale_charmap=$(locale charmap 2>/dev/null || true)
 case "$locale_charmap" in
   *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) ;;

@@ -90,7 +90,7 @@
          .unhandled_events = try .initCapacity(ctx.gpa, 2),
 --- /dev/null
 +++ b/src/kwm/dinx_ipc.zig
-@@ -0,0 +1,191 @@
+@@ -0,0 +1,215 @@
 +const std = @import("std");
 +const posix = @import("posix");
 +const Context = @import("context.zig");
@@ -110,12 +110,37 @@
 +
 +extern "c" fn socket(domain: c_int, socket_type: c_int, protocol: c_int) c_int;
 +extern "c" fn bind(fd: c_int, address: *const sockaddr_un, length: u32) c_int;
++extern "c" fn connect(fd: c_int, address: *const sockaddr_un, length: u32) c_int;
 +extern "c" fn listen(fd: c_int, backlog: c_int) c_int;
 +extern "c" fn accept4(fd: c_int, address: ?*anyopaque, length: ?*u32, flags: c_int) c_int;
 +extern "c" fn recv(fd: c_int, buffer: [*]u8, length: usize, flags: c_int) isize;
 +extern "c" fn send(fd: c_int, buffer: [*]const u8, length: usize, flags: c_int) isize;
 +extern "c" fn chmod(path: [*:0]const u8, mode: u32) c_int;
 +extern "c" fn unlink(path: [*:0]const u8) c_int;
++extern "c" fn statx(dirfd: c_int, path: [*:0]const u8, flags: u32, mask: std.os.linux.STATX, buf: *std.os.linux.Statx) c_int;
++
++fn bindSocket(fd: c_int, address: *const sockaddr_un, path: [*:0]const u8) !void {
++    if (bind(fd, address, @sizeOf(sockaddr_un)) == 0) return;
++    if (std.c.errno(-1) != .ADDRINUSE) return error.SocketBindFailed;
++
++    const probe = socket(1, socket_type_seqpacket | socket_cloexec, 0);
++    if (probe < 0) return error.SocketBindFailed;
++    defer posix.close(probe);
++    const probe_result = connect(probe, address, @sizeOf(sockaddr_un));
++    if (probe_result == 0) return error.SocketBindFailed;
++    const probe_errno = std.c.errno(probe_result);
++    var metadata: std.os.linux.Statx = undefined;
++    if (statx(-100, path, std.os.linux.AT.SYMLINK_NOFOLLOW, .{ .TYPE = true }, &metadata) != 0)
++        return error.SocketBindFailed;
++    if (metadata.mode & std.os.linux.S.IFMT != std.os.linux.S.IFSOCK)
++        return error.SocketBindFailed;
++    if (probe_errno != .CONNREFUSED and probe_errno != .NOENT)
++        return error.SocketBindFailed;
++    if (probe_errno == .CONNREFUSED and unlink(path) != 0 and std.c.errno(-1) != .NOENT)
++        return error.SocketBindFailed;
++    if (bind(fd, address, @sizeOf(sockaddr_un)) != 0) return error.SocketBindFailed;
++}
++
 +extern "c" fn getrandom(buffer: *anyopaque, length: usize, flags: u32) isize;
 +
 +pub const Server = struct {
@@ -138,7 +163,7 @@
 +    const fd = socket(1, socket_type_seqpacket | socket_nonblock | socket_cloexec, 0);
 +    if (fd < 0) return error.SocketCreateFailed;
 +    errdefer posix.close(fd);
-+    if (bind(fd, &address, @sizeOf(sockaddr_un)) != 0) return error.SocketBindFailed;
++    bindSocket(fd, &address, path.ptr) catch return error.SocketBindFailed;
 +    errdefer _ = unlink(path.ptr);
 +    if (chmod(path.ptr, 0o600) != 0) return error.SocketPermissionFailed;
 +    if (listen(fd, 8) != 0) return error.SocketListenFailed;

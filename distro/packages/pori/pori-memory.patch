@@ -1,0 +1,75 @@
+--- a/Pori.Ui/src/dialogs.zig
++++ b/Pori.Ui/src/dialogs.zig
+@@ -154,6 +154,7 @@
+     desc_entry: *gtk.Entry,
+     extra_entry: *gtk.Entry,
+     checks: []const CheckOpt,
++    arena: std.heap.ArenaAllocator,
+     cb: *const fn (?*anyopaque, ?MountChoice) void,
+     ud: ?*anyopaque,
+ };
+@@ -227,13 +228,14 @@
+     gtk.Box.append(content, ui.widget(desc_entry));
+ 
+     const recommended = options.optionsForFs(fs_type);
++    var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
+     var check_list: std.ArrayList(CheckOpt) = .empty;
+     if (recommended.len > 0) {
+         appendFieldLabel(content, "Recommended mount options");
+ 
+         const opts_box = gtk.Box.new(.vertical, 2);
+         for (recommended) |opt| {
+-            const resolved = options.resolveOption(std.heap.page_allocator, opt.option) catch opt.option;
++            const resolved = options.resolveOption(arena.allocator(), opt.option) catch opt.option;
+             const check = gtk.CheckButton.new();
+             const label = gtk.Label.new(ui.zFmt("<b>{s}</b>: {s}", .{ opt.option, opt.description }));
+             label.setUseMarkup(1);
+@@ -248,7 +250,7 @@
+             check.setActive(active);
+ 
+             gtk.Box.append(opts_box, ui.widget(check));
+-            check_list.append(std.heap.page_allocator, .{ .check = check, .option = resolved }) catch {};
++            check_list.append(arena.allocator(), .{ .check = check, .option = resolved }) catch {};
+         }
+         gtk.Box.append(content, ui.widget(opts_box));
+     }
+@@ -266,21 +268,25 @@
+             const o = std.mem.trim(u8, raw, " ");
+             if (o.len == 0) continue;
+             if (optionsContainSlice(recommended, o)) continue;
+-            if (!first) additional.append(std.heap.page_allocator, ',') catch {};
+-            additional.appendSlice(std.heap.page_allocator, o) catch {};
++            if (!first) additional.append(arena.allocator(), ',') catch {};
++            additional.appendSlice(arena.allocator(), o) catch {};
+             first = false;
+         }
+         gtk.Editable.setText(ui.editable(extra_entry), ui.z(additional.items));
+     }
+     gtk.Box.append(content, ui.widget(extra_entry));
+ 
+-    const ctx = std.heap.page_allocator.create(OptionsCtx) catch return;
++    const ctx = std.heap.page_allocator.create(OptionsCtx) catch {
++        arena.deinit();
++        return;
++    };
+     ctx.* = .{
+         .window = win,
+         .mount_entry = mount_entry,
+         .desc_entry = desc_entry,
+         .extra_entry = extra_entry,
+         .checks = check_list.items,
++        .arena = arena,
+         .cb = cb,
+         .ud = ud,
+     };
+@@ -389,8 +395,10 @@
+ fn closeOptions(ctx: *OptionsCtx, choice: ?MountChoice) void {
+     const cb = ctx.cb;
+     const ud = ctx.ud;
++    var arena = ctx.arena;
+     std.heap.page_allocator.destroy(ctx);
+     cb(ud, choice);
++    arena.deinit();
+ }
+ 
+ const Shell = struct {

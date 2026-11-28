@@ -93,12 +93,15 @@ strip_documentation() {
   done
 }
 
-# Build-time-only metadata is dead weight in the live/install images: the ISO
-# ships no compiler, make, cmake, pkg-config, g-ir-compiler, valac or autoconf,
-# so nothing in the image can consume headers, CMake package configs, pkg-config
-# records, GObject-Introspection source XML, Vala bindings or aclocal macros.
+# Build-time-only metadata and developer utilities are dead weight in the
+# live/install images: the ISO ships no compiler, make, cmake, pkg-config,
+# g-ir-compiler, valac or autoconf, so nothing in the image can consume
+# headers, CMake package configs, pkg-config records, GObject-Introspection
+# source XML, Vala bindings, aclocal macros, gettext PO tooling, GTK builder
+# tools or Python's source-tree Tools payload.
 # gir-1.0 holds the source XML used to generate typelibs; the runtime reads the
 # already-generated usr/lib/girepository-1.0 typelibs, which are kept.
+# Runtime gettext commands and GTK launch/query utilities stay installed.
 # usr/include/ghostty is preserved because check-iso-content.sh requires
 # usr/include/ghostty/vt.h: ghostty-vt-runtime deliberately ships the VT headers
 # alongside its library for Deetty's build contract.
@@ -137,6 +140,45 @@ strip_build_metadata() {
       rm -rf -- "$root/$rel"
       printf 'dinx-final-squashfs: removed build-only metadata path=%s\n' "$rel"
     fi
+  done
+  for rel in \
+    usr/bin/autopoint usr/bin/gettextize \
+    usr/bin/msgattrib usr/bin/msgcat usr/bin/msgcmp usr/bin/msgcomm \
+    usr/bin/msgconv usr/bin/msgexec usr/bin/msgfilter usr/bin/msgen \
+    usr/bin/msgfmt usr/bin/msggrep usr/bin/msginit usr/bin/msgmerge \
+    usr/bin/msgpre usr/bin/msguniq usr/bin/msgunfmt \
+    usr/bin/gtk4-builder-tool usr/bin/gtk4-image-tool \
+    usr/bin/gtk4-layer-demo usr/bin/gtk4-path-tool \
+    usr/bin/xgettext usr/bin/gtk4-rendernode-tool \
+    usr/share/bash-completion/completions/gtk4-builder-tool \
+    usr/share/bash-completion/completions/gtk4-image-tool \
+    usr/share/bash-completion/completions/gtk4-layer-demo \
+    usr/share/bash-completion/completions/gtk4-path-tool \
+    usr/share/bash-completion/completions/gtk4-rendernode-tool; do
+    if [[ -e "$root/$rel" ]]; then
+      rm -f -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed build-only binary path=%s\n' "$root/$rel"
+    fi
+  done
+  for rel in \
+    usr/lib/gettext usr/lib/libasprintf.so usr/lib/libasprintf.so.0 \
+    usr/lib/libasprintf.so.0.0.0 usr/lib/libgettextlib.so \
+    usr/lib/libgettextlib-1.0.so usr/lib/libgettextpo.so \
+    usr/lib/libgettextpo.so.0 usr/lib/libgettextpo.so.0.6.0 \
+    usr/lib/libgettextsrc.so usr/lib/libgettextsrc-1.0.so \
+    usr/lib/libtextstyle.so usr/lib/libtextstyle.so.0 \
+    usr/lib/libtextstyle.so.0.2.7 usr/share/emacs \
+    usr/share/gettext usr/share/gettext-1.0 \
+    usr/share/gtk-4.0/valgrind; do
+    if [[ -e "$root/$rel" ]]; then
+      rm -rf -- "$root/$rel"
+      printf 'dinx-final-squashfs: removed build-only data path=%s\n' "$root/$rel"
+    fi
+  done
+  for py in "$root"/usr/lib/python3.*; do
+    [[ -d "$py/Tools" ]] || continue
+    rm -rf -- "$py/Tools"
+    printf 'dinx-final-squashfs: removed build-only Python tools path=%s\n' "${py#$root/}/Tools"
   done
 }
 

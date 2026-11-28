@@ -375,6 +375,12 @@ grep -Fq 'start_optional bc250 bc250-control-centerd' "$supervisor" \
 grep -Fq 'set_status ready' "$supervisor" || fail 'session supervisor has no ready status boundary'
 grep -Fq 'set_status failed' "$supervisor" || fail 'session supervisor has no failure status boundary'
 grep -Fq 'stop_parent' "$supervisor" || fail 'session supervisor does not clean up the tracked compositor parent'
+grep -Fq 'stop_child "$pid"' "$supervisor" \
+  || fail 'session supervisor does not reap stopped helpers'
+grep -Fq 'kill -KILL "$pid"' "$supervisor" \
+  || fail 'session supervisor does not escalate stuck helpers'
+grep -Fq 'helper=$name exited status=$child_status' "$supervisor" \
+  || fail 'session supervisor does not log helper exit statuses'
 grep -Fqx 'shell=${DINX_SHELL:-morghulis}' "$supervisor" \
   || fail 'session supervisor does not default to the Morghulis desktop shell'
 grep -Fqx 'start_required shell "$shell"' "$supervisor" \

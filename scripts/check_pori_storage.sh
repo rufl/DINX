@@ -30,6 +30,7 @@ for path in \
   "$pori_dir/units-dinit.zig" "$pori_dir/privops-dinit.zig" \
   "$pori_dir/watch-dinit.zig" "$pori_dir/pori-dinit.patch" \
   "$pori_dir/pori-mount-service" \
+  "$pori_dir/pori-memory.patch" \
   "$repo_root/scripts/smoke_pori_zig.sh"; do
   require_file "$path"
 done
@@ -109,6 +110,14 @@ grep -Fq 'org.freedesktop.UDisks2' "$pori_dir/watch-dinit.zig" || fail 'Pori no 
 grep -Fq 'Pori-What:' "$pori_dir/units-dinit.zig" || fail 'Pori mount metadata parser is missing'
 grep -Fq 'Pori-Where:' "$pori_dir/units-dinit.zig" || fail 'Pori mount target metadata parser is missing'
 grep -Fq 'dinit mount service' "$pori_dir/pori-dinit.patch" || fail 'Pori UI does not describe dinit mount services'
+grep -Fq "'pori-memory.patch'" "$pori_dir/PKGBUILD" \
+  || fail 'Pori package does not include the bounded-allocation patch'
+grep -Fq 'patch --fuzz=0 --forward --strip=1 < "$srcdir/pori-memory.patch"' "$pori_dir/PKGBUILD" \
+  || fail 'Pori package does not apply the bounded-allocation patch'
+grep -Fq 'std.heap.ArenaAllocator' "$pori_dir/pori-memory.patch" \
+  || fail 'Pori options dialog does not use a bounded-lifetime arena'
+grep -Fq 'arena.deinit();' "$pori_dir/pori-memory.patch" \
+  || fail 'Pori options dialog does not release its arena'
 
 source "$pori_dir/source.env"
 [[ "$PORI_VERSION" =~ ^[0-9]+([.][0-9]+)+$ ]] || fail "invalid Pori version: $PORI_VERSION"

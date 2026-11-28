@@ -22,6 +22,10 @@ for required in \
   "'var/log/*'" \
   'strip_documentation()' \
   'strip_build_metadata()' \
+  'usr/bin/msgfmt' \
+  'usr/lib/gettext' \
+  'usr/share/gettext' \
+  'usr/share/gtk-4.0/valgrind' \
   'compile_dconf_database()' \
   'strip_python_bytecode()' \
   'trim_i18n_locales()' \
@@ -53,7 +57,23 @@ mkdir -p "$fixture_root/usr/share/doc/demo" "$fixture_root/usr/share/man/man1" \
   "$fixture_root/usr/lib/python3.14/__pycache__" "$fixture_root/usr/lib/python3.14/idlelib" \
   "$fixture_root/usr/share/i18n/locales" "$fixture_root/usr/share/i18n/charmaps" \
   "$fixture_root/usr/share/icons/Papirus-Dark" "$fixture_root/usr/share/icons/Papirus" \
-  "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu"
+  "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" \
+  "$fixture_root/usr/lib/gettext" "$fixture_root/usr/lib/python3.14/Tools/i18n" \
+  "$fixture_root/usr/share/gettext" "$fixture_root/usr/share/gettext-1.0/its" \
+  "$fixture_root/usr/share/emacs/site-lisp" \
+  "$fixture_root/usr/share/gtk-4.0/valgrind" \
+  "$fixture_root/usr/share/bash-completion/completions" \
+  "$fixture_root/usr/bin"
+printf 'build-only message compiler\n' > "$fixture_root/usr/bin/msgfmt"
+printf 'runtime gettext\n' > "$fixture_root/usr/bin/gettext"
+printf 'build-only GTK builder\n' > "$fixture_root/usr/bin/gtk4-builder-tool"
+printf 'build-only gettext library\n' > "$fixture_root/usr/lib/libgettextlib-1.0.so"
+printf 'build-only gettext metadata\n' > "$fixture_root/usr/share/gettext/ABOUT-NLS"
+printf 'build-only gettext ITS\n' > "$fixture_root/usr/share/gettext-1.0/its/gtkbuilder.its"
+printf 'build-only Emacs mode\n' > "$fixture_root/usr/share/emacs/site-lisp/po-mode.el"
+printf 'build-only Python tool\n' > "$fixture_root/usr/lib/python3.14/Tools/i18n/pygettext.py"
+printf 'build-only GTK valgrind data\n' > "$fixture_root/usr/share/gtk-4.0/valgrind/gtk.supp"
+printf 'build-only completion\n' > "$fixture_root/usr/share/bash-completion/completions/gtk4-builder-tool"
 printf 'license\n' > "$fixture_root/usr/share/doc/demo/LICENSE"
 printf 'runtime-irrelevant documentation\n' > "$fixture_root/usr/share/doc/demo/README"
 printf 'manual\n' > "$fixture_root/usr/share/man/man1/demo.1"
@@ -104,6 +124,20 @@ done
 [[ ! -e "$fixture_root/usr/lib/libdemo.a" \
    && ! -e "$fixture_root/usr/lib/python3.14/config-3.14-x86_64-linux-gnu" ]] \
   || fail 'static archives or Python build configuration remain in the final filesystem'
+[[ ! -e "$fixture_root/usr/bin/xgettext" \
+   && ! -e "$fixture_root/usr/bin/gtk4-rendernode-tool" \
+   && ! -e "$fixture_root/usr/bin/msgfmt" \
+   && ! -e "$fixture_root/usr/bin/gtk4-builder-tool" \
+   && ! -e "$fixture_root/usr/lib/gettext" \
+   && ! -e "$fixture_root/usr/lib/libgettextlib-1.0.so" \
+   && ! -e "$fixture_root/usr/share/gettext" \
+   && ! -e "$fixture_root/usr/share/gettext-1.0" \
+   && ! -e "$fixture_root/usr/share/emacs" \
+   && ! -e "$fixture_root/usr/share/gtk-4.0/valgrind" \
+   && ! -e "$fixture_root/usr/lib/python3.14/Tools" \
+   && ! -e "$fixture_root/usr/share/bash-completion/completions/gtk4-builder-tool" \
+   && -f "$fixture_root/usr/bin/gettext" ]] \
+  || fail 'build-only gettext/GTK/Python payload remains or runtime gettext was removed'
 
 # The system dconf default must be compiled for freedesktop consumers to see it:
 # the egui Craft apps and libadwaita/GTK apps fall back to light when the portal

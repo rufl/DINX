@@ -102,6 +102,10 @@ grep -Fq 'reason=helper-idle-exited' "$XDG_STATE_HOME/dinx/session.log" || {
   printf 'dinx_session_supervisor_smoke: helper failure reason was not logged\n' >&2
   exit 1
 }
+grep -Eq 'helper=idle exited status=[0-9]+' "$XDG_STATE_HOME/dinx/session.log" || {
+  printf 'dinx_session_supervisor_smoke: helper exit status was not logged\n' >&2
+  exit 1
+}
 for helper in kwm shikane lxqt-policykit-agent morghulis; do
   helper_stopped "$helper" || exit 1
 done

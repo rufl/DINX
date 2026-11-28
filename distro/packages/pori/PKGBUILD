@@ -6,7 +6,7 @@ source_env="$startdir/source.env"
 : "${PORI_REPOSITORY:?missing PORI_REPOSITORY}"
 : "${PORI_SOURCE_SHA256:?missing PORI_SOURCE_SHA256}"
 pkgver="$PORI_VERSION"
-pkgrel=1
+pkgrel=2
 pkgdesc='Pori dinit mount and disk manager'
 arch=('x86_64')
 url="$PORI_REPOSITORY"
@@ -21,6 +21,7 @@ source=(
   'privops-dinit.zig'
   'watch-dinit.zig'
   'pori-dinit.patch'
+  'pori-memory.patch'
   'pori-mount-service'
 )
 sha256sums=(
@@ -29,6 +30,7 @@ sha256sums=(
   'fad750841d3828eb393363d975835b267cea54f71a7ebe4be4df578f0fdfc5d5'
   '3cdb23f243c02efcba94f2aa6c81fcbd58c538d256e270cee6b93e06e14e8e9c'
   '69a2da05e42d1392f4271518613236be0315a75d654a0da4de746fff9053a7ec'
+  '2e9dd987b589fe290aeb8c3713625ef130825a507006b8a5da76a2fd5715260b'
   '7dabe12d3c7f24a2fa8189ae0b7b517527e2867362e24cb4b425f4664b7b2e5d'
 )
 
@@ -38,6 +40,7 @@ prepare() {
   cp -- "$srcdir/privops-dinit.zig" Pori.Ui/src/services/privops.zig
   cp -- "$srcdir/watch-dinit.zig" Pori.Ui/src/services/watch.zig
   patch --forward --strip=1 < "$srcdir/pori-dinit.patch"
+  patch --fuzz=0 --forward --strip=1 < "$srcdir/pori-memory.patch"
 }
 
 build() {

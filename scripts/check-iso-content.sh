@@ -346,11 +346,11 @@ required_paths=(
   etc/skel/.bashrc
   etc/skel/.config/shikane/config.toml
   "etc/skel/Desktop/Install DINX.desktop"
-  usr/share/themes/DINX/gtk-3.0/gtk.css
-  usr/share/themes/DINX/gtk-4.0/gtk.css
-  usr/share/themes/DINX/index.theme
-  usr/share/themes/DINX/gtk-3.0/gtk-dark.css
-  usr/share/themes/DINX/gtk-4.0/gtk-dark.css
+  usr/share/themes/Orchis-Dark/gtk-3.0/gtk.css
+  usr/share/themes/Orchis-Dark/gtk-4.0/gtk.css
+  usr/share/themes/Orchis-Dark/gtk-3.0/gtk-dark.css
+  usr/share/themes/Orchis-Dark/gtk-4.0/gtk-dark.css
+  usr/share/themes/Orchis-Dark/index.theme
   usr/bin/qt6ct
   usr/share/themes/adw-gtk3/gtk-3.0/gtk.css
   usr/share/themes/adw-gtk3/gtk-4.0/gtk.css
@@ -1144,32 +1144,15 @@ gtk4_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" et
 theme_json=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/dinx/theme/DINX.json)
 grep -Fq '"mSurface": "#0b0d12"' <<<"$theme_json" || fail 'DINX surface palette is missing'
 grep -Fq '"mPrimary": "#8fb8ff"' <<<"$theme_json" || fail 'DINX primary palette is missing'
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk3_settings" || fail 'GTK3 default theme is not Orchis-Dark'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk3_settings" || fail 'GTK3 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_settings" || fail 'GTK3 default icon theme is not Papirus'
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk4_settings" || fail 'GTK4 default theme is not Orchis-Dark'
 grep -Fq 'gtk-font-name=Noto Sans 10' <<<"$gtk4_settings" || fail 'GTK4 Noto Sans font contract is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_settings" || fail 'GTK4 default icon theme is not Papirus'
-gtk3_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk.css)
-grep -Fq 'background-color: #0b0d12' <<<"$gtk3_theme" || fail 'DINX GTK3 surface is missing'
-grep -Fq 'background-color: #8fb8ff' <<<"$gtk3_theme" || fail 'DINX GTK3 accent is missing'
-grep -Fq 'font-family: Noto Sans;' <<<"$gtk3_theme" || fail 'DINX GTK3 font family is missing'
-grep -Fq 'font-size: 10pt;' <<<"$gtk3_theme" || fail 'DINX GTK3 font size is missing'
-grep -Fq 'background-color: #11151d' <<<"$gtk3_theme" || fail 'DINX GTK3 control surface is missing'
-grep -Fq 'background-color: #263249' <<<"$gtk3_theme" || fail 'DINX GTK3 hover state is missing'
-if grep -Eq '#(31415d|151923|2859a8)' <<<"$gtk3_theme"; then
-  fail 'DINX GTK3 contains an out-of-contract color'
-fi
-gtk4_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk.css)
-grep -Fq 'background-color: #0b0d12' <<<"$gtk4_theme" || fail 'DINX GTK4 surface is missing'
-grep -Fq 'background-color: #8fb8ff' <<<"$gtk4_theme" || fail 'DINX GTK4 accent is missing'
-grep -Fq 'font-family: Noto Sans;' <<<"$gtk4_theme" || fail 'DINX GTK4 font family is missing'
-grep -Fq 'font-size: 10pt;' <<<"$gtk4_theme" || fail 'DINX GTK4 font size is missing'
-grep -Fq 'background-color: #11151d' <<<"$gtk4_theme" || fail 'DINX GTK4 control surface is missing'
-grep -Fq 'background-color: #263249' <<<"$gtk4_theme" || fail 'DINX GTK4 hover state is missing'
-if grep -Eq '#(31415d|151923|2859a8)' <<<"$gtk4_theme"; then
-  fail 'DINX GTK4 contains an out-of-contract color'
-fi
+gtk_index=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/Orchis-Dark/index.theme)
+grep -Fq 'Name=Orchis-Dark' <<<"$gtk_index" || fail 'Orchis GTK theme index is missing'
+grep -Fq 'GtkTheme=Orchis-Dark' <<<"$gtk_index" || fail 'Orchis GTK theme index does not select Orchis-Dark'
 calamares_stylesheet=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/calamares/branding/dinx/stylesheet.qss)
 grep -Fq 'font-family: Noto Sans;' <<<"$calamares_stylesheet" || fail 'Calamares font family is missing'
 grep -Fq 'font-size: 10pt;' <<<"$calamares_stylesheet" || fail 'Calamares font size is missing'
@@ -1187,20 +1170,13 @@ swayimg_config=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" e
 grep -Fq 'swayimg.gallery.window_color = 0xff0b0d12' <<<"$swayimg_config" || fail 'DINX Swayimg surface is missing'
 grep -Fq 'swayimg.text.font = "Noto Sans"' <<<"$swayimg_config" || fail 'Swayimg font contract is missing'
 grep -Fq 'swayimg.text.size = 10' <<<"$swayimg_config" || fail 'Swayimg text size does not match Noto Sans 10'
-gtk_index=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/index.theme)
-grep -Fq 'Name=DINX' <<<"$gtk_index" || fail 'DINX GTK theme index is missing'
-grep -Fq 'IconTheme=Papirus' <<<"$gtk_index" || fail 'DINX GTK theme does not select Papirus icons'
-gtk3_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-3.0/gtk-dark.css)
-grep -Fqx '@import url("gtk.css");' <<<"$gtk3_dark_theme" || fail 'DINX GTK3 dark bridge is missing'
-gtk4_dark_theme=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" usr/share/themes/DINX/gtk-4.0/gtk-dark.css)
-grep -Fqx '@import url("gtk.css");' <<<"$gtk4_dark_theme" || fail 'DINX GTK4 dark bridge is missing'
 
 gtk3_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-3.0/settings.ini)
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk3_system_settings" || fail 'System GTK3 theme default is not Orchis-Dark'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk3_system_settings" || fail 'System GTK3 icon default is not Papirus'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk3_system_settings" || fail 'System GTK3 dark preference is missing'
 gtk4_system_settings=$(unsquashfs -no-xattrs -no-progress -cat "$tmp_dir/rootfs.img" etc/xdg/gtk-4.0/settings.ini)
-grep -Fq 'gtk-theme-name=Adwaita' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Adwaita'
+grep -Fq 'gtk-theme-name=Orchis-Dark' <<<"$gtk4_system_settings" || fail 'System GTK4 theme default is not Orchis-Dark'
 grep -Fq 'gtk-application-prefer-dark-theme=1' <<<"$gtk4_system_settings" || fail 'System GTK4 dark preference is missing'
 grep -Fq 'gtk-icon-theme-name=Papirus' <<<"$gtk4_system_settings" || fail 'System GTK4 icon default is not Papirus'
 for firewall_link_manifest in "$manifest" "$livefs_manifest"; do
@@ -1301,7 +1277,7 @@ grep -Fq 'flock -n 9' <<<"$river_session" \
 grep -Fq 'XDG_RUNTIME_DIR=/run/dinx-session' <<<"$river_session" \
   || fail 'River live session does not use its private runtime directory'
 if grep -Eq 'GTK_THEME=' <<<"$river_session"; then
-  fail 'River session overrides the fixed DINX GTK theme'
+  fail 'River session forces a fixed GTK theme instead of honoring user selections'
 fi
 grep -Fq 'export QT_QPA_PLATFORMTHEME=qt6ct' <<<"$river_session" || fail 'Live GUI session does not force Qt6ct'
 grep -Fq 'export TERMINAL="${TERMINAL:-deetty}"' <<<"$river_session" || fail 'River session does not default to Deetty'

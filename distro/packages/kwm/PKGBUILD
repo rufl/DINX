@@ -22,7 +22,7 @@ depends=('glibc' 'wayland' 'libxkbcommon')
 makedepends=('wayland-protocols' 'wayland-utils' 'zig>=0.16')
 optdepends=('kwim: river input-management helper, invoked automatically by kwm')
 source=("kwm-$pkgver.tar.gz::$KWM_SOURCE_URL" 'dinx-kwm-dock-ipc.patch')
-sha256sums=("$KWM_SOURCE_SHA256" 'fa06bc2055bfd6dbae5e6436d3564b1d27476b2253f9efc148e8bb0639d0ea98')
+sha256sums=("$KWM_SOURCE_SHA256" 'cbc33d57d7fa505f65e79c63da13afa8141b56a43c820a0825dcb4e5ab7faa35')
 
 
 # CI runners cannot resolve codeberg.org (DNS: NoAddressReturned), and kwm's

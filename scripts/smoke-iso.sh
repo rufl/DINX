@@ -15,7 +15,7 @@ boot_screenshot_delay=${DINX_QEMU_BOOT_SCREENSHOT_DELAY:-3}
 boot_keys=${DINX_QEMU_BOOT_KEYS:-}
 post_screenshot_path=${DINX_QEMU_POST_SCREENSHOT:-}
 post_screenshot_delay=${DINX_QEMU_POST_SCREENSHOT_DELAY:-10}
-post_keys=${DINX_QEMU_POST_KEYS:-}
+post_click=${DINX_QEMU_POST_CLICK:-}
 qemu_display=${DINX_QEMU_DISPLAY:-none}
 ocr_language=${DINX_QEMU_OCR_LANG:-eng}
 qemu_video_device=${DINX_QEMU_VIDEO_DEVICE:-}
@@ -35,6 +35,10 @@ fail() {
 [[ "$memory_mb" =~ ^[1-9][0-9]*$ ]] || fail "DINX_QEMU_MEMORY must be a positive integer"
 [[ "$screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$post_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_POST_SCREENSHOT_DELAY must be a non-negative integer"
+if [[ -n "$post_click" ]]; then
+  [[ "$post_click" =~ ^[0-9]+,[0-9]+$ ]] \
+    || fail 'DINX_QEMU_POST_CLICK must be a comma-separated x,y coordinate'
+fi
 [[ "$boot_screenshot_delay" =~ ^[0-9]+$ ]] || fail "DINX_QEMU_BOOT_SCREENSHOT_DELAY must be a non-negative integer"
 [[ "$plymouth_wait_seconds" =~ ^[0-9]+$ ]] || fail 'DINX_QEMU_PLYMOUTH_WAIT_SECONDS must be a non-negative integer'
 command -v qemu-system-x86_64 >/dev/null 2>&1 || fail "required command not found: qemu-system-x86_64"
@@ -85,6 +89,13 @@ send_keys() {
     [[ "$input_status" -eq 0 ]] || return "$input_status"
     sleep 0.5
   done
+}
+
+send_mouse_click() {
+  local x y
+  IFS=, read -r x y <<< "$post_click"
+  printf 'mouse_move %s %s\nmouse_button 1\nmouse_button 0\n' "$x" "$y" \
+    | socat - "UNIX-CONNECT:$monitor_path" >/dev/null 2>&1
 }
 
 capture_screen() {
@@ -259,6 +270,10 @@ if [[ "$monitor_ready" == true ]]; then
   fi
 
   if [[ -n "$post_screenshot_path" ]]; then
+    if [[ -n "$post_click" ]]; then
+      send_mouse_click || fail 'QEMU monitor rejected post-screenshot mouse click'
+      printf 'smoke-iso: clicked QEMU at %s before post-screenshot keys\n' "$post_click"
+    fi
     if [[ -n "$post_keys" ]]; then
       send_keys "$post_keys"
       input_status=$?

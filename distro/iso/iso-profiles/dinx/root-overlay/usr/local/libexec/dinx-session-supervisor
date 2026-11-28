@@ -141,6 +141,17 @@ set_status starting
 wait_for_wayland || fail_session wayland-not-ready
 wait_for_dbus || fail_session dbus-not-ready
 
+# dbus-run-session starts before River chooses its Wayland socket and before
+# the live wrapper selects its private runtime dir. D-Bus-activated portals
+# need the final display environment, not the greeter's inherited values.
+if [ "${DINX_SESSION_SKIP_DBUS_CHECK:-0}" != 1 ]; then
+    dbus-update-activation-environment \
+        WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+        XDG_CURRENT_DESKTOP=river XDG_SESSION_TYPE=wayland \
+        GDK_BACKEND="${GDK_BACKEND:-wayland,x11}" \
+        || log 'D-Bus display environment update failed'
+fi
+
 # River 0.5 does not ship riverctl or start a window manager itself. KWM is
 # the required river-window-management-v1 implementation and starts KWIM.
 start_required wm kwm

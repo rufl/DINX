@@ -41,6 +41,8 @@ rootfs:
     - dinx-first-run
     - greetd-agreety
     - pcmanfm
+    - pcmanfm-qt
+    - gvfs
     - e2fsprogs
     - efibootmgr
     - elogind

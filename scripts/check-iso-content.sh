@@ -360,6 +360,7 @@ required_paths=(
   usr/lib/dri/vmwgfx_dri.so
   usr/share/dinx/theme/DINX.json
   usr/bin/pcmanfm
+  usr/bin/pcmanfm-qt
   usr/bin/tux-manager
   usr/local/bin/tux-manager
   usr/share/icons/hicolor/scalable/apps/tux_manager_icon.svg
@@ -368,6 +369,7 @@ required_paths=(
   usr/bin/octopi
   usr/lib/octopi/octphelper
   usr/share/applications/pcmanfm.desktop
+  usr/share/applications/pcmanfm-qt.desktop
   usr/share/applications/octopi.desktop
   usr/bin/pori
   usr/local/libexec/pori-mount-service
@@ -593,7 +595,7 @@ for image_manifest in "$manifest" "$livefs_manifest"; do
     fail 'full upstream Noto package metadata is present despite the DINX subset provider'
   fi
 done
-for package in krita inkscape godot pixelorama patchy paintfe audionaut eurooffice haruna pcmanfm blender octopi; do
+for package in krita inkscape godot pixelorama patchy paintfe audionaut eurooffice haruna pcmanfm pcmanfm-qt gvfs blender octopi; do
   grep -Eq "/var/lib/pacman/local/${package}-[^/]*/" <<<"$manifest" \
     || fail "required desktop application is not installed in rootfs: $package"
 done

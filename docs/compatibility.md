@@ -13,7 +13,7 @@ Required for the base ISO:
 - The ISO includes ZLS 0.16.0 for Dintor's Zig LSP integration. C/C++ LSP support uses `clangd` from the optional `clang` package and is not part of the default image.
 - Firefox is the default HTML, XHTML, HTTP and HTTPS handler.
 - Firewalld is installed with `firewall-config` and its Dinit-managed service enabled at boot in both live and installed systems.
-- PCManFM is the default directory handler and renders the `~/Desktop` icons through `pcmanfm --desktop`; File Roller owns archive open/create/extract actions; GParted owns standalone partition editing.
+- GTK PCManFM is the default directory handler; PCManFM-Qt renders `~/Desktop` icons, Trash and the right-click menu under River through Wayland layer-shell, with GVFS supplying Trash; File Roller owns archive actions and GParted owns standalone partition editing.
 - Pori discovers block devices through UDisks2 and persists user mounts through dinit services under `/etc/dinit.d`.
 - Keyboard navigation and XDG configuration/data locations remain usable without a private shell integration.
 

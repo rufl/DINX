@@ -43,7 +43,7 @@ grep -Fqx 'Exec=dinx-wdisplays' "$display_launcher" || fail 'Display launcher do
 for package in firewalld firewall-config file-roller fwupd galculator gapless gparted haruna flatpak paintfe krita inkscape godot pixelorama patchy pori shikane udisks2 udisks2-btrfs wdisplays firefox eurooffice papirus-icon-theme tuxmanager; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
 done
-for package in pcmanfm blender audionaut octopi pacman-contrib libdecor; do
+for package in pcmanfm pcmanfm-qt gvfs blender audionaut octopi pacman-contrib libdecor; do
   grep -Fqx "    - $package" "$profile" || fail "profile is missing $package"
   jq -e --arg package "$package" '.groups.desktop.packages | index($package) != null' "$feature_groups" >/dev/null \
     || fail "desktop feature group is missing $package"
@@ -122,7 +122,9 @@ if grep -Eq '^(Hidden|NoDisplay)=true$' "$pcmanfm_override"; then
   fail 'the pcmanfm desktop override is hidden'
 fi
 grep -Fq 'start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
-  || fail 'the DINX session supervisor does not start the PCManFM desktop surface as an optional helper'
+  || fail 'the DINX session supervisor does not start the Wayland desktop surface as an optional helper'
+grep -Fq 'exec pcmanfm-qt --desktop --profile=dinx' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-pcmanfm-desktop" \
+  || fail 'the desktop surface is not rendered by PCManFM-Qt'
 if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi

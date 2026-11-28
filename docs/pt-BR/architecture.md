@@ -39,7 +39,7 @@ O alvo é Artix Linux com dinit em x86_64. A imagem base fornece:
 - login gráfico com TTY de recuperação;
 - rede, PipeWire, D-Bus, portais, polkit e gráficos acelerados;
 - Pori para discos/montagens sobre UDisks2, com serviços persistentes dinit em `/etc/dinit.d`;
-- PCManFM como gerenciador de arquivos, handler padrão de diretórios e renderizador dos ícones de `~/Desktop` via `pcmanfm --desktop`;
+- PCManFM GTK como gerenciador de arquivos e manipulador padrão de diretórios; PCManFM-Qt para ícones, Lixeira e menu de contexto de `~/Desktop` via Wayland layer-shell, com GVFS para a Lixeira;
 - File Roller para abrir/criar/extrair arquivos compactados e GParted para particionamento independente;
 - `wdisplays` e `shikane` para configuração Wayland e reaplicação de layouts;
 - manifestos que identificam cada entrada específica da DINX;
@@ -110,7 +110,7 @@ DINX Gaming é um launcher manual oculto, não uma sessão selecionável. A ISO 
 
 Pori usa UDisks2 e grava serviços dinit `process` em `/etc/dinit.d` que aguardam dispositivos, repetem montagens, mantêm somente montagens próprias e desmontam no encerramento. Nenhuma unidade de montagem systemd é gerada.
 
-O PCManFM é o único gerenciador de arquivos base e renderiza os ícones de `~/Desktop` via `pcmanfm --desktop`. File Roller e GParted cobrem arquivos compactados e particionamento independente. O módulo `ntfs3` fornece leitura/escrita NTFS na live e no sistema instalado; `ntfs-3g` é opcional pós-instalação. Fast Startup e hibernação do Windows devem ser desativados antes de montar um volume compartilhado.
+O PCManFM GTK é o gerenciador de arquivos padrão; o PCManFM-Qt renderiza os ícones e o menu de contexto de `~/Desktop` via Wayland layer-shell. O GVFS fornece suporte à Lixeira para ambos. File Roller e GParted cobrem arquivos compactados e particionamento independente. O módulo `ntfs3` fornece leitura/escrita NTFS na live e no sistema instalado; `ntfs-3g` é opcional pós-instalação. Fast Startup e hibernação do Windows devem ser desativados antes de montar um volume compartilhado.
 
 `dinx-wdisplays` serializa exports com `flock`, substitui atomicamente o perfil `DINX wdisplays` em `~/.config/shikane/config.toml` e falha visivelmente se o reload do Shikane falhar. Shikane inicia dentro da sessão River/KWM e reaplica perfis quando as saídas mudam.
 

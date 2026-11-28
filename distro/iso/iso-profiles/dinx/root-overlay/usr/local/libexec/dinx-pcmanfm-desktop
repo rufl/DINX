@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-export GDK_BACKEND="${GDK_BACKEND:-wayland,x11}"
+export QT_QPA_PLATFORM=wayland
 export XDG_CURRENT_DESKTOP=river
 export XDG_SESSION_DESKTOP=river
 
@@ -14,29 +14,25 @@ case "$desktop_dir" in
   *) desktop_dir=${HOME:-/tmp}/Desktop; mkdir -p -- "$desktop_dir" ;;
 esac
 
-# PCManFM keeps desktop settings per profile. Seed the profile once so the
-# main River session always owns the desktop surface, icons and PCManFM's
-# right-click context menu, while preserving any user changes made later.
-config_home=${XDG_CONFIG_HOME:-${HOME:-/tmp}/.config}
-profile_dir="$config_home/pcmanfm/dinx"
+# The GTK PCManFM desktop uses the X11 root window, which is not the River
+# desktop. Its Qt port uses Wayland layer-shell for icons and the context menu.
+# A separate profile preserves the user's file-manager preferences.
+profile_dir=${XDG_CONFIG_HOME:-${HOME:-/tmp}/.config}/pcmanfm-qt/dinx
 mkdir -p -- "$profile_dir"
-if [ ! -e "$profile_dir/pcmanfm.conf" ]; then
+if [ ! -e "$profile_dir/settings.conf" ]; then
   umask 077
-  cat >"$profile_dir/pcmanfm.conf" <<'EOF'
-[config]
+  cat >"$profile_dir/settings.conf" <<'EOF'
+[Behavior]
+UseTrash=true
 
-[desktop]
-show_wm_menu=0
+[Desktop]
+DesktopShortcuts=Home, Trash
+OpenWithDefaultFileManager=true
+
+[Volume]
+MountOnStartup=false
+MountRemovable=false
+AutoRun=false
 EOF
 fi
-if [ ! -e "$profile_dir/desktop-items-0.conf" ]; then
-  umask 077
-  cat >"$profile_dir/desktop-items-0.conf" <<'EOF'
-[*]
-show_desktop=1
-sort_by=name
-sort_type=ascending
-EOF
-fi
-
-exec pcmanfm --desktop --profile=dinx
+exec pcmanfm-qt --desktop --profile=dinx

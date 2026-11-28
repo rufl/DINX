@@ -13,7 +13,7 @@ Obrigatório para a ISO base:
 - A ISO inclui o ZLS 0.16.0 para a integração LSP de Zig do Dintor. O suporte LSP para C/C++ usa `clangd` do pacote opcional `clang` e não faz parte da imagem padrão.
 - O Firefox é o manipulador padrão de HTML, XHTML, HTTP e HTTPS.
 - O Firewalld é instalado com o `firewall-config` e o serviço gerenciado pelo Dinit habilitado no boot tanto no sistema live quanto no instalado.
-- O PCManFM é o manipulador padrão de diretórios e renderiza os ícones de `~/Desktop` via `pcmanfm --desktop`; o File Roller cuida de abrir/criar/extrair arquivos compactados; o GParted cuida do particionamento independente.
+- O PCManFM GTK é o manipulador padrão de diretórios; o PCManFM-Qt renderiza ícones, Lixeira e menu de contexto de `~/Desktop` no River via Wayland layer-shell, com GVFS para a Lixeira; o File Roller cuida de arquivos compactados e o GParted de particionamento independente.
 - O Pori descobre dispositivos de bloco pelo UDisks2 e persiste montagens do usuário por serviços dinit em `/etc/dinit.d`.
 - Navegação por teclado e locais XDG de configuração/dados continuam utilizáveis sem integração privada de shell.
 

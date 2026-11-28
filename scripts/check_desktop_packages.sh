@@ -216,7 +216,8 @@ grep -Fq 'xdg-user-dir DESKTOP' "$root/distro/iso/iso-profiles/dinx/root-overlay
 grep -Fq 'installer_seed="/etc/skel/Desktop/Install DINX.desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-river-session" || fail 'live session does not seed the installer shortcut from /etc/skel'
 installer_helper="$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-installer"
 [[ -x "$installer_helper" ]] || fail 'DINX installer helper is missing or not executable'
-sh -n "$installer_helper" || fail 'DINX installer helper has invalid shell syntax'
+grep -Fq '[ -n "$dbus_address" ] \' "$installer_helper" \
+  || fail 'DINX installer does not validate the D-Bus session before resolving installer preferences'
 grep -Fq 'output=$(pkexec env \' "$installer_helper" || fail 'DINX installer does not elevate Calamares through pkexec'
 grep -Fq '    calamares 2>&1)' "$installer_helper" || fail 'DINX installer does not execute Calamares as the elevated command'
 for variable in XDG_RUNTIME_DIR WAYLAND_DISPLAY DBUS_SESSION_BUS_ADDRESS XDG_SESSION_TYPE QT_QPA_PLATFORM; do

@@ -247,8 +247,8 @@ fi
 # --- fixed dark session defaults ----------------------------------------------
 grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$profile_shell" || fail 'DINX color scheme environment contract is missing'
 grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$profile_shell" || fail 'DINX editor dark scheme contract is missing'
-grep -Fq 'DINX_COLOR_SCHEME="${DINX_COLOR_SCHEME:-dark}"' "$session_wrapper" || fail 'River session does not export the DINX default scheme'
-grep -Fq 'DINTOR_THEME="${DINTOR_THEME:-prefer-dark}"' "$session_wrapper" || fail 'River session does not export the default editor scheme'
+grep -Fqx 'export DINX_COLOR_SCHEME=dark' "$session_wrapper" || fail 'River session does not set the DINX fallback scheme'
+grep -Fqx 'export DINTOR_THEME=prefer-dark' "$session_wrapper" || fail 'River session does not set the editor fallback scheme'
 # The live per-user appearance is applied by dinx-sync-session-theme from
 # $config_home/dinx/appearance.json. The session must NOT force a dark toolkit
 # scheme through the environment: an exported GTK_APPLICATION_PREFER_DARK_THEME
@@ -494,8 +494,10 @@ grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinitui_source" || fail '
 grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinitui_source" || fail 'DinitUI action text does not use DINX on-primary'
 grep -Fq "background-color: ${dark_token[mHover]}" "$dinitui_source" || fail 'DinitUI selection does not use DINX hover'
 grep -Fq "border-color: ${dark_token[mOutline]}" "$dinitui_source" || fail 'DinitUI controls do not use DINX outline'
-grep -Fq "background: ${dark_token[mSurface]}" "$dinxpanel_source" || fail 'DINXPanel output surface does not use DINX background'
-grep -Fq "color: ${dark_token[mOnSurface]}" "$dinxpanel_source" || fail 'DINXPanel output text does not use DINX foreground'
-grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action does not use DINX primary'
-grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action text does not use DINX on-primary'
+grep -Fq 'background-color: @window_bg_color; color: @window_fg_color;' "$dinxpanel_source" \
+  || fail 'DINXPanel output surface does not follow the DINX dark toolkit scheme'
+grep -Fq 'background-color: @card_bg_color; color: @view_fg_color;' "$dinxpanel_source" \
+  || fail 'DINXPanel output view does not use theme-aware toolkit colors'
+grep -Fq 'background-color: @accent_bg_color; color: @accent_fg_color;' "$dinxpanel_source" \
+  || fail 'DINXPanel action surfaces do not use theme-aware accent colors'
 printf 'dinx_theme_contract session=river appearance_selectable=true dark_default=true palette=true static=true typography=true states=true gtk=true gtk_system=true gtk_package=true qt=true qt_palette=true qt_session_seed=true dconf_scheme=true theme_sync_input=appearance.json theme_families=DINX+Skeuos+Orchis+Fluent+Jasper patchy_darkest=true swayimg=true haruna_dark=true no_pearl=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true boot_mark=true\n'

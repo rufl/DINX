@@ -47,15 +47,16 @@ installed_lock=$(PATH="$tmp:$PATH" "$lock")
   exit 1
 }
 
-# The live session may only blank displays: no lock command, no lock action.
+# Live idle blanks the display without locking it automatically.
 live_idle=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$idle")
 [[ "$live_idle" == 'swayidle_argv=[-w][timeout][600][wlopm --off "*"][resume][wlopm --on "*"][before-sleep][wlopm --off "*"][after-resume][wlopm --on "*"]' ]] || {
   printf 'smoke_dinx_session: unexpected live idle argv: %s\n' "$live_idle" >&2
   exit 1
 }
-live_lock=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$lock" 2>&1)
-[[ "$live_lock" == 'dinx-lock: screen locking is disabled in the live session' ]] || {
-  printf 'smoke_dinx_session: live lock was not disabled: %s\n' "$live_lock" >&2
+# Live and installed sessions both expose a working explicit lock action.
+live_lock=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$lock")
+[[ "$live_lock" == 'swaylock_argv=[-f]' ]] || {
+  printf 'smoke_dinx_session: live lock did not invoke swaylock: %s\n' "$live_lock" >&2
   exit 1
 }
 [[ $(<"$DINX_WLOPM_LOG") == $'[--off][*]\n[--on][*]\n[--off][*]\n[--on][*]' ]] || {
@@ -64,4 +65,4 @@ live_lock=$(DINX_LIVE_SESSION=1 PATH="$tmp:$PATH" "$lock" 2>&1)
 }
 
 
-printf 'dinx_session_smoke live_blank=true live_lock_disabled=true installed_lock=true\n'
+printf 'dinx_session_smoke live_blank=true live_lock=true installed_lock=true\n'

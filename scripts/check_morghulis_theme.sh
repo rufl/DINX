@@ -25,9 +25,9 @@ grep -Fqx 'export XDG_CURRENT_DESKTOP=river' "$session" \
   || fail 'session must export XDG_CURRENT_DESKTOP=river for the Morghulis river backend'
 grep -Fqx 'export XDG_SESSION_DESKTOP=river' "$session" \
   || fail 'session identity is not river'
-grep -Fq 'preferences="$config_home/morghulis/preferences.json"' "$theme_sync" || fail 'theme sync is not Morghulis-specific'
-grep -Fq 'desktop-first-run-complete' "$first_run" || fail 'desktop first-run marker is missing'
-grep -Fq '"$theme_sync"' "$first_run" || fail 'first-run result is not passed to theme sync'
+grep -Fq 'appearance=$config_home/dinx/appearance.json' "$theme_sync" || fail 'theme sync does not read the canonical first-run appearance'
+grep -Fq 'gtk-theme-name "$gtk_theme"' "$theme_sync" || fail 'theme sync does not apply the selected GTK theme'
+grep -Fq 'dconf write "$color_scheme_key" "$dconf_value"' "$theme_sync" || fail 'theme sync does not apply the selected libadwaita color scheme'
 grep -Fq 'first_run_helper=${DINX_FIRST_RUN_HELPER:-$libexec_dir/dinx-desktop-first-run}' "$supervisor" || fail 'session supervisor does not launch first-run setup'
 grep -Fqx 'color_scheme_path=~/.config/qt6ct/colors/DINX.conf' "$qt" || fail 'Qt6ct does not select the DINX palette'
 grep -Fq 'gtk-application-prefer-dark-theme=1' "$gtk3" || fail 'GTK3 defaults are not dark'

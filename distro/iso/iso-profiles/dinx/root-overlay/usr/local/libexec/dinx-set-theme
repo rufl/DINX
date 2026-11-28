@@ -15,25 +15,31 @@ case "$variant" in
 esac
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}
-preferences="$config_home/morghulis/preferences.json"
-if [ -L "$preferences" ]; then
-  printf 'dinx-set-theme: preserving user-managed symlink: %s\n' "$preferences" >&2
+appearance_dir=$config_home/dinx
+appearance=$appearance_dir/appearance.json
+if [ -L "$appearance" ] || { [ -e "$appearance" ] && [ ! -f "$appearance" ]; }; then
+  printf 'dinx-set-theme: appearance state is not a regular file: %s\n' "$appearance" >&2
   exit 1
 fi
-if [ -e "$preferences" ] && [ ! -f "$preferences" ]; then
-  printf 'dinx-set-theme: not a regular settings file: %s\n' "$preferences" >&2
+command -v jq >/dev/null 2>&1 || {
+  printf '%s\n' 'dinx-set-theme: jq is required' >&2
   exit 1
+}
+mkdir -p "$appearance_dir"
+tmp=$appearance.tmp.$$
+trap 'rm -f -- "$tmp"' EXIT HUP INT TERM
+if [ -f "$appearance" ]; then
+  jq -e 'type == "object"' "$appearance" >/dev/null 2>&1 || {
+    printf 'dinx-set-theme: invalid appearance state: %s\n' "$appearance" >&2
+    exit 1
+  }
+  jq --arg variant "$variant" '.variant = $variant' "$appearance" >"$tmp"
+  mode=$(stat -c '%a' -- "$appearance" 2>/dev/null || printf '600')
+else
+  printf '{"version":1,"theme":"DINX","variant":"%s","corners":"rounded"}\n' "$variant" >"$tmp"
+  mode=600
 fi
-mkdir -p "${preferences%/*}"
-umask 077
-preferences_tmp="$preferences.tmp.$$"
-trap 'rm -f -- "$preferences_tmp"' EXIT HUP INT TERM
-printf '{"theme":{"variant":"%s"}}\n' "$variant" >"$preferences_tmp"
-mode=600
-if [ -f "$preferences" ]; then
-  mode=$(stat -c '%a' -- "$preferences" 2>/dev/null || printf '600')
-fi
-chmod "$mode" "$preferences_tmp"
-mv -f -- "$preferences_tmp" "$preferences"
+chmod "$mode" "$tmp"
+mv -f -- "$tmp" "$appearance"
 trap - EXIT HUP INT TERM
-DINX_THEME_VARIANT=$variant exec /usr/local/libexec/dinx-sync-session-theme
+exec /usr/local/libexec/dinx-sync-session-theme

@@ -37,6 +37,7 @@ esac
 [ -S "$socket" ] \
     || fail "The Wayland socket is unavailable at $socket. Wait for the desktop to finish starting, then retry."
 [ -n "$dbus_address" ] \
+    || fail 'The session has no D-Bus address. Log into the live desktop and retry.'
 preferences=${XDG_CONFIG_HOME:-${HOME:-/nonexistent}/.config}/dinx/installer-preferences.json
 if command -v jq >/dev/null 2>&1 && [ -r "$preferences" ]; then
     locale=$(jq -er '.locale | select(. == "pt_BR.UTF-8" or . == "en_US.UTF-8")' "$preferences") || locale=

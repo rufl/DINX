@@ -2,12 +2,11 @@
 set -eu
 
 state_home=${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}
-config_home=${XDG_CONFIG_HOME:-${HOME:-/tmp}/.config}
 marker="$state_home/dinx/morghulis-first-run-complete"
-preferences="$config_home/morghulis/preferences.json"
+
 
 [ -e "$marker" ] && exit 0
-mkdir -p "${marker%/*}" "${preferences%/*}"
+mkdir -p "${marker%/*}"
 variant=dark
 if command -v zenity >/dev/null 2>&1; then
   if zenity --question \
@@ -19,9 +18,5 @@ if command -v zenity >/dev/null 2>&1; then
   fi
 fi
 
-umask 077
-preferences_tmp="$preferences.tmp.$$"
-printf '{"theme":{"variant":"%s"}}\n' "$variant" >"$preferences_tmp"
-mv -f -- "$preferences_tmp" "$preferences"
-DINX_THEME_VARIANT=$variant /usr/local/libexec/dinx-sync-session-theme
+/usr/local/libexec/dinx-set-theme "$variant"
 : >"$marker"

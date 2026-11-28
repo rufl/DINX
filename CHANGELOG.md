@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fix NEXT's Calamares launcher guard that left `preferences` unassigned under `set -u`; verify both elevated launch environment propagation and a user-visible failure when the session D-Bus address is absent. Drive GTK3/GTK4, libadwaita and Qt6 theme sync from first-run `dinx/appearance.json` again, preserving the full appearance state when the Morghulis theme buttons toggle light/dark. Enable the explicit Morghulis lock action in live and installed sessions; extend session memory snapshots to include DINX Dock and Mission Center (Mission Center is not auto-started).
 - Align DINX Dock 0.3.0 across MAIN and NEXT: configurable favorites and bounded appearance settings; theme-aware 44px GTK4 layer-shell UI with keyboard focus; launch feedback without process polling; safely freed config parsing; and dockctl reactivation after disabling the dock.
 - Sync the latest MAIN DINX Dock docs and Zig C-header paths into NEXT, including glycin/ministream headers; bump `dinx-dock` to pkgrel 4.
 - Fix NEXT P0's DINX Dock build failure by including the new `src/kwm_ipc.zig` module in Git; package source trees remain checked in while generated stage output stays ignored.

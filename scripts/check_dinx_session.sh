@@ -143,8 +143,8 @@ sh -n "$palette_seed" || fail 'Qt6ct palette seed helper has invalid shell synta
 sh -n "$theme_set" || fail 'DINX theme action helper has invalid shell syntax'
 grep -Fq 'exec /usr/local/libexec/dinx-sync-session-theme' "$theme_set" \
   || fail 'DINX theme action does not synchronize all toolkits'
-grep -Fq '{"theme":{"variant":"%s"}}\n' "$theme_set" \
-  || fail 'DINX theme action does not persist the selected variant'
+grep -Fq 'jq --arg variant "$variant" '\''.variant = $variant'\''' "$theme_set" \
+  || fail 'DINX theme action does not persist the selected variant in appearance.json'
 sh -n "$theme_sync" || fail 'GTK/Qt session theme synchronizer has invalid shell syntax'
 [[ -x "$lock" ]] || fail 'lock wrapper is not executable'
 [[ -x "$idle" ]] || fail 'idle wrapper is not executable'
@@ -574,4 +574,4 @@ for doc in "$architecture" "$compatibility" "$pt_architecture" "$pt_compatibilit
   grep -Fq 'dinit' "$doc" || fail "dinit boundary is undocumented: ${doc#$root/}"
 done
 
-printf 'dinx_session_contract session=river_kwm_morghulis=true shell_default=morghulis shell_selectable=morghulis+redbean greeter=tuigreet=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=false live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+redbean+dinx-dock+dinx-first-run+greetd-tuigreet=true profiled_defaults=river=true supervisor=river required_helpers=kwm+shikane+policykit+idle+selected-shell optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'
+printf 'dinx_session_contract session=river_kwm_morghulis=true shell_default=morghulis shell_selectable=morghulis+redbean greeter=tuigreet=true greeter_account=greeter=true autologin=false x11=false uwsm=false seat_backend_probe=true single_instance_lock=true live_private_runtime=true live_lock=true live_blank=true installed_lock=true idle=true kwm_config_seed=only_when_absent qt6ct_palette_seed=true theme_env=gtk+qt=true gtk_fallback_controls=minimize+maximize+close=true gtk_dark_mode=prefer-dark-preserves-user=true roster=river+kwm+kwim+morghulis+redbean+dinx-dock+dinx-first-run+greetd-tuigreet=true profiled_defaults=river=true supervisor=river required_helpers=kwm+shikane+policykit+idle+selected-shell optional_helpers=bc250=true compositor_parent=true direct_dinit=true systemd=false desktop_launcher=executable+preapproved launcher=true qemu_screen_ocr=true\n'

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Trim additional builder-only payloads from the final SquashFS: gettext PO tooling/data, GTK builder tools, Python source-tree Tools and GTK Valgrind data; preserve runtime gettext commands and GTK launch/query utilities.
 - Fix seven ISO desktop regressions: validate the live Calamares session D-Bus before preference handling, route PaintFE/Blender/EuroOffice desktop entries through their DINX wrappers, seed PCManFM's desktop profile with icons and its own context menu, remove KWM's square compositor border around rounded GTK windows, and force the first-run wizard to start with the DINX dark toolkit environment.
 - Refresh Deetty/Dintor to source ref `986790fb4af78da31f0212a37706a9689b2f9a03` with a rebuilt `pkgrel=12`, consume the upstream DINX identity/qualification corrections directly, and launch no-argument Morghulis terminals as focused independent windows.
 - Refresh the verified Patchy AppImage pin to upstream v1.43 (SHA-256 `aea18453339be1d4553ee2a93be59c6e0f2de18147b3e9c6a0f1049246336da1`); Audionaut remains current at v1.8.0.

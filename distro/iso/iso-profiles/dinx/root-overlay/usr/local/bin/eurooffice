@@ -3,7 +3,6 @@ set -eu
 
 # MAIN consumes the pinned EuroOffice package from GitHub; keep its launcher
 # dark even when that artifact predates the current office build script.
-export GTK_THEME=DINX
 export GTK_APPLICATION_PREFER_DARK_THEME=1
 export QT_QPA_PLATFORMTHEME=qt6ct
 export QT_STYLE_OVERRIDE=Fusion

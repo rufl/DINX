@@ -43,8 +43,6 @@ done
 # user's appearance choice is committed.
 grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK' "$frontend" \
   || fail 'first-run does not force the dark libadwaita scheme at startup'
-grep -Fq 'border: 1px solid #3a4352' "$frontend" \
-  || fail 'first-run window does not use the neutral one-pixel border'
 grep -Fq '    .width = 0,' "$kwm_config" \
   || fail 'KWM window border must be disabled so GTK rounded borders are not wrapped by a square compositor border'
 grep -Fq '0x3a4352ff' "$kwm_config" \
@@ -52,9 +50,13 @@ grep -Fq '0x3a4352ff' "$kwm_config" \
 for variant in 'prefer-dark' 'prefer-light'; do
   grep -Fq "$variant" "$frontend" || fail "first-run does not offer the $variant color scheme"
 done
-for family in DINX Skeuos Orchis Fluent Jasper; do
+for family in Skeuos Orchis Fluent Jasper; do
   grep -Fq "$family" "$frontend" || fail "first-run does not offer the $family theme family"
 done
+grep -Fq 'theme: Theme = .orchis' "$frontend" || fail 'first-run default theme is not Orchis'
+if grep -Fq '    "DINX",' "$frontend"; then
+  fail 'first-run still offers the retired DINX GTK theme'
+fi
 for language in 'en-US' 'pt-BR' '"fr"' '"de"' '"nl"' '"da"' 'pt-PT' '"es"' '"it"' 'en-GB' '"uk"' '"ja"' 'zh-CN' 'zh-TW'; do
   grep -Fq "$language" "$frontend" || fail "first-run does not support EuroOffice language: $language"
 done
@@ -76,10 +78,10 @@ grep -Fq 'c.adw_application_window_set_content(window, toolbar);' "$frontend" \
 sh -n "$glue" || fail 'first-run glue has invalid shell syntax'
 grep -Fq 'DINX_FIRST_RUN_COMMAND' "$glue" || fail 'first-run glue does not allow overriding the wizard command'
 grep -Fq 'dinx-sync-session-theme' "$glue" || fail 'first-run glue does not run the theme synchronizer'
-if ! grep -Fq "GTK_THEME='DINX:dark'" "$glue" \
+if ! grep -Fq "GTK_THEME='Orchis-Dark'" "$glue" \
   || ! grep -Fq 'GTK_APPLICATION_PREFER_DARK_THEME=1' "$glue" \
   || ! grep -Fq 'ADW_COLOR_SCHEME_FORCE_DARK=1' "$glue"; then
-  fail 'first-run glue does not force the dark toolkit environment before launching the wizard'
+  fail 'first-run glue does not force the Orchis dark toolkit environment before launching the wizard'
 fi
 grep -Fq 'dinx-session.env' "$glue" || fail 'first-run glue does not publish the locale to session children'
 grep -Fq 'dinx-desktop-first-run' "$supervisor" || fail 'the supervisor does not run the first-run glue'

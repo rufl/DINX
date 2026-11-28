@@ -65,11 +65,10 @@ export MOZ_GTK_TITLEBAR_DECORATION=system
 export GTK_CSD=1
 export GTK_DECORATION_LAYOUT=:minimize,maximize,close
 
-# DINX theme defaults are intentionally dark; they may still be overridden by
-# the per-user appearance selection applied via dinx-sync-session-theme.
+# Dark is the initial default; dinx-sync-session-theme applies the user's
+# selected GTK variant and libadwaita color scheme.
 export DINX_COLOR_SCHEME=dark
 export DINTOR_THEME=prefer-dark
-export ADW_COLOR_SCHEME_FORCE_DARK=1
 export QT_QPA_PLATFORMTHEME=qt6ct
 export QT_STYLE_OVERRIDE=fusion
 

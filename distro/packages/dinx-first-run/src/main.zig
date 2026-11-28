@@ -95,7 +95,7 @@ const location_timezones = [_][]const u8{
     "Asia/Urumqi",
     "Asia/Taipei",
 };
-const Theme = enum { dinx, skeuos, orchis, fluent, jasper };
+const Theme = enum { skeuos, orchis, fluent, jasper };
 const Variant = enum { dark, light };
 const Corners = enum { rounded, square };
 const Bar = enum { top, bottom };
@@ -104,7 +104,7 @@ const Dock = enum { none, left, right, bottom };
 const Selections = struct {
     language: Language = .pt_br,
     location: Location = .brazil_sao_paulo,
-    theme: Theme = .dinx,
+    theme: Theme = .orchis,
     variant: Variant = .dark,
     corners: Corners = .rounded,
     bar: Bar = .bottom,
@@ -173,7 +173,6 @@ const Selections = struct {
 
     fn themeName(self: Selections) []const u8 {
         return switch (self.theme) {
-            .dinx => "DINX",
             .skeuos => "Skeuos",
             .orchis => "Orchis",
             .fluent => "Fluent",
@@ -270,7 +269,6 @@ fn parseLocation(value: []const u8) ?Location {
 }
 
 fn parseTheme(value: []const u8) ?Theme {
-    if (std.mem.eql(u8, value, "DINX")) return .dinx;
     if (std.mem.eql(u8, value, "Skeuos")) return .skeuos;
     if (std.mem.eql(u8, value, "Orchis")) return .orchis;
     if (std.mem.eql(u8, value, "Fluent")) return .fluent;
@@ -485,18 +483,10 @@ fn reloadDock() void {
 }
 
 fn applyFirstRunTheme() void {
-    const manager = c.adw_style_manager_get_default();
-    c.adw_style_manager_set_color_scheme(manager, c.ADW_COLOR_SCHEME_FORCE_DARK);
-    const provider = c.gtk_css_provider_new() orelse return;
-    const css =
-        "window, window.background, .background { background-color: #0b0d12; color: #d7dde8; border: 1px solid #3a4352; border-radius: 12px; }\n" ++
-        "headerbar, .titlebar { background-color: #11151d; color: #d7dde8; border-bottom: 1px solid #222a38; box-shadow: none; }\n" ++
-        "button, checkbutton, dropdown, entry { border: 1px solid #3a4352; }\n" ++
-        "button.suggested-action { background-color: #8fb8ff; color: #0b0d12; }\n";
-    c.gtk_css_provider_load_from_data(provider, css.ptr, @intCast(css.len));
-    const display = c.gdk_display_get_default() orelse return;
-    c.gtk_style_context_add_provider_for_display(display, @ptrCast(provider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    c.g_object_unref(@ptrCast(provider));
+    c.adw_style_manager_set_color_scheme(
+        c.adw_style_manager_get_default(),
+        c.ADW_COLOR_SCHEME_FORCE_DARK,
+    );
 }
 
 
@@ -564,10 +554,9 @@ const App = struct {
         if (self.theme_dropdown) |dropdown| {
             self.selections.theme = switch (c.gtk_drop_down_get_selected(dropdown)) {
                 1 => .skeuos,
-                2 => .orchis,
-                3 => .fluent,
-                4 => .jasper,
-                else => .dinx,
+                2 => .fluent,
+                3 => .jasper,
+                else => .orchis,
             };
         }
         if (self.dark_button) |button| {
@@ -790,9 +779,8 @@ const location_strings = [_:null]?[*:0]const u8{
 };
 
 const theme_strings = [_:null]?[*:0]const u8{
-    "DINX",
-    "Skeuos",
     "Orchis",
+    "Skeuos",
     "Fluent",
     "Jasper",
     null,

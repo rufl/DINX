@@ -33,11 +33,7 @@ grub_logo="$overlay/usr/share/grub/themes/artix/logo.png"
 boot_mark_source="$repo_root/design/brand/dinx-boot-mark.svg"
 dinitui_source="$repo_root/distro/packages/dinitui/src/main.zig"
 dinxpanel_source="$repo_root/distro/packages/dinxpanel/src/main.zig"
-gtk_index="$overlay/usr/share/themes/DINX/index.theme"
-gtk3="$overlay/usr/share/themes/DINX/gtk-3.0/gtk.css"
-gtk3_dark="$overlay/usr/share/themes/DINX/gtk-3.0/gtk-dark.css"
-gtk4="$overlay/usr/share/themes/DINX/gtk-4.0/gtk.css"
-gtk4_dark="$overlay/usr/share/themes/DINX/gtk-4.0/gtk-dark.css"
+orchis_theme="$overlay/usr/share/themes/Orchis-Dark"
 gtk3_settings="$overlay/etc/skel/.config/gtk-3.0/settings.ini"
 gtk4_settings="$overlay/etc/skel/.config/gtk-4.0/settings.ini"
 system_gtk3="$overlay/etc/xdg/gtk-3.0/settings.ini"
@@ -61,7 +57,6 @@ for path in "$profile" "$feature_groups" "$palette" "$profile_shell" \
   "$grub" "$grub_defaults" "$grub_logo" "$boot_mark_source" "$calamares" "$calamares_notes" "$calamares_branding" "$calamares_wordmark" \
   "$calamares_ray" "$brand_wordmark" "$brand_ray_source" "$fastfetch_logo" "$cli_issue" \
   "$qt" "$qt_palette" "$swayimg" "$dinitui_source" "$dinxpanel_source" \
-  "$gtk_index" "$gtk3" "$gtk3_dark" "$gtk4" "$gtk4_dark" \
   "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4" "$dconf_dark" \
   "$session_wrapper" "$gtk_themes_pkgbuild" "$qt_palette_seed" "$theme_sync" \
   "$patchy_launcher" "$patchy_force_darkest" "$haruna_wrapper" "$plymouth_script" "$godot_settings"; do
@@ -252,8 +247,9 @@ grep -Fqx 'export DINX_COLOR_SCHEME=dark' "$profile_shell" || fail 'DINX color s
 grep -Fqx 'export DINTOR_THEME=prefer-dark' "$profile_shell" || fail 'DINX editor dark scheme contract is missing'
 grep -Fqx 'export DINX_COLOR_SCHEME=dark' "$session_wrapper" || fail 'River session does not export the DINX dark scheme'
 grep -Fqx 'export DINTOR_THEME=prefer-dark' "$session_wrapper" || fail 'River session does not export the dark editor scheme'
-grep -Fqx 'export ADW_COLOR_SCHEME_FORCE_DARK=1' "$session_wrapper" || fail 'River session does not force dark libadwaita applications'
-grep -Fqx "export GTK_THEME='DINX:dark'" "$profile_shell" || fail 'POSIX shell does not force the dark GTK theme'
+if grep -Eq 'ADW_COLOR_SCHEME_FORCE_DARK|GTK_THEME=' "$session_wrapper" "$profile_shell"; then
+  fail 'session defaults override the selected GTK theme or libadwaita color scheme'
+fi
 grep -Fqx 'export QT_QPA_PLATFORMTHEME=qt6ct' "$session_wrapper" || fail 'River session does not force Qt6ct for GUI apps'
 grep -Fq 'qt6ct/qt6ct.conf' "$session_wrapper" || fail 'River session does not seed the Qt6ct config for existing users'
 grep -Fq 'qt6ct/colors/DINX.conf' "$session_wrapper" || fail 'River session does not seed the DINX Qt palette for existing users'
@@ -335,7 +331,7 @@ grep -Fq '[org/gnome/desktop/interface]' "$dconf_dark" || fail 'system dconf dar
 sh -n "$theme_sync" || fail 'GTK/Qt theme synchronizer has invalid shell syntax'
 grep -Fq 'appearance=$config_home/dinx/appearance.json' "$theme_sync" \
   || fail 'Theme sync does not read the DINX per-user appearance file'
-grep -Fq 'gtk_theme=DINX' "$theme_sync" || fail 'Theme sync has no DINX default GTK theme'
+grep -Fq 'theme_family=Orchis' "$theme_sync" || fail 'Theme sync has no Orchis default GTK theme'
 for supported_family in Skeuos Orchis Fluent Jasper; do
   grep -Fq "$supported_family" "$theme_sync" \
     || fail "Theme sync cannot resolve the ported GTK family: $supported_family"
@@ -366,7 +362,9 @@ fi
 [[ -x "$patchy_force_darkest" ]] || fail 'Patchy Darkest-theme helper is not executable'
 sh -n "$patchy_force_darkest" || fail 'Patchy Darkest-theme helper has invalid shell syntax'
 grep -Fq '/usr/lib/patchy/patchy-force-darkest' "$patchy_launcher" || fail 'Patchy does not force its internal Darkest theme'
-grep -Fq 'export GTK_THEME=DINX' "$patchy_launcher" || fail 'Patchy does not launch with the DINX GTK theme'
+if grep -Fq 'export GTK_THEME=' "$patchy_launcher"; then
+  fail 'Patchy launcher overrides the selected GTK theme'
+fi
 grep -Fq 'export GTK_APPLICATION_PREFER_DARK_THEME=1' "$patchy_launcher" || fail 'Patchy does not prefer the dark GTK variant'
 grep -Fq 'customThemeId=bundled:darkest.patchytheme' "$patchy_force_darkest" || fail 'Patchy internal theme is not forced to Darkest'
 grep -Fq 'colorScheme=dark' "$patchy_force_darkest" || fail 'Patchy is not forced to the dark color scheme'
@@ -438,34 +436,22 @@ grep -Fq "selected_item_color = \"${dark_token[mPrimary]}\"" "$grub" || fail 'GR
 if grep -Eq '^[[:space:]]*(desktop-image|menu_pixmap_style|selected_item_pixmap_style)[[:space:]]*=' "$grub"; then
   fail 'GRUB still uses an opaque/image-backed DINX-incompatible surface'
 fi
-grep -Fq 'Name=DINX' "$gtk_index" || fail 'GTK theme index name is missing'
-grep -Fq 'IconTheme=Papirus' "$gtk_index" || fail 'DINX GTK theme does not select Papirus icons'
-grep -Fqx '@import url("gtk.css");' "$gtk3_dark" || fail 'GTK3 dark theme bridge is missing'
-grep -Fqx '@import url("gtk.css");' "$gtk4_dark" || fail 'GTK4 dark theme bridge is missing'
+if find "$overlay/usr/share/themes/DINX" -type f -print -quit 2>/dev/null | grep -q .; then
+  fail 'the retired DINX GTK theme is still installed in the root overlay'
+fi
 for gtk_settings in "$gtk3_settings" "$gtk4_settings" "$system_gtk3" "$system_gtk4"; do
-  grep -Fq 'gtk-theme-name=Adwaita' "$gtk_settings" || fail "GTK settings omit the Adwaita theme: $gtk_settings"
+  grep -Fq 'gtk-theme-name=Orchis-Dark' "$gtk_settings" || fail "GTK settings do not default to Orchis-Dark: $gtk_settings"
   grep -Fq 'gtk-icon-theme-name=Papirus' "$gtk_settings" || fail "GTK settings omit the Papirus icon default: $gtk_settings"
   grep -Fq 'gtk-font-name=Noto Sans 10' "$gtk_settings" || fail "GTK settings omit Noto Sans 10: $gtk_settings"
   grep -Fq 'gtk-application-prefer-dark-theme=1' "$gtk_settings" || fail "GTK settings omit dark preference: $gtk_settings"
 done
-for gtk_theme in "$gtk3" "$gtk4"; do
-  grep -Fq "background-color: ${dark_token[mSurface]}" "$gtk_theme" || fail "GTK theme lacks DINX surface: $gtk_theme"
-  grep -Fq "color: ${dark_token[mOnSurface]}" "$gtk_theme" || fail "GTK theme lacks DINX foreground: $gtk_theme"
-  grep -Fq "background-color: ${dark_token[mSurfaceVariant]}" "$gtk_theme" || fail "GTK theme lacks DINX control surface: $gtk_theme"
-  grep -Fq "background-color: ${dark_token[mHover]}" "$gtk_theme" || fail "GTK theme lacks DINX hover state: $gtk_theme"
-  grep -Fq "background-color: ${dark_token[mPrimary]}" "$gtk_theme" || grep -Fq "background-color: var(--accent);" "$gtk_theme" || fail "GTK theme lacks DINX primary state: $gtk_theme"
-  grep -Fq 'font-family: Noto Sans;' "$gtk_theme" || fail "GTK theme font family is not Noto Sans: $gtk_theme"
-  grep -Fq 'font-size: 10pt;' "$gtk_theme" || fail "GTK theme font size is not 10pt: $gtk_theme"
-  if grep -Eq '#(31415d|151923|2859a8)' "$gtk_theme"; then
-    fail "GTK theme contains an out-of-contract color: $gtk_theme"
-  fi
+for gtk_theme_name in Orchis-Light Orchis-Dark Orchis-Square-Light Orchis-Square-Dark; do
+  grep -Fq "$gtk_theme_name" "$gtk_themes_pkgbuild" \
+    || fail "GTK theme package does not ship the Orchis variant: $gtk_theme_name"
 done
-grep -Fq 'border: 1px solid #3a4352' "$gtk3" \
-  || fail 'GTK3 window border is not the neutral one-pixel DINX border'
-grep -Fq -- '--border: #3a4352' "$gtk4" \
-  || fail 'GTK4 border token is not the neutral DINX border'
-grep -Fq 'border: 1px solid var(--border)' "$gtk4" \
-  || fail 'GTK4 controls do not use the one-pixel border token'
+if rg -n 'GTK_THEME=DINX|DINX:dark' "$overlay/usr/local" "$repo_root/distro/packages/patchy" >/dev/null; then
+  fail 'a launcher still forces the removed DINX GTK theme'
+fi
 grep -Fq '    .width = 0,' "$kwm_config" \
   || fail 'KWM compositor border must be disabled for rounded GTK client borders'
 grep -Fq "background: ${dark_token[mSurface]}" "$calamares" || fail 'Calamares surface does not use DINX background'
@@ -504,4 +490,4 @@ grep -Fq "background: ${dark_token[mSurface]}" "$dinxpanel_source" || fail 'DINX
 grep -Fq "color: ${dark_token[mOnSurface]}" "$dinxpanel_source" || fail 'DINXPanel output text does not use DINX foreground'
 grep -Fq "background-color: ${dark_token[mPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action does not use DINX primary'
 grep -Fq "color: ${dark_token[mOnPrimary]}" "$dinxpanel_source" || fail 'DINXPanel action text does not use DINX on-primary'
-printf 'dinx_theme_contract session=river appearance_selectable=true dark_default=true palette=true static=true typography=true states=true gtk=true gtk_system=true gtk_package=true qt=true qt_palette=true qt_session_seed=true dconf_scheme=true theme_sync_input=appearance.json theme_families=DINX+Skeuos+Orchis+Fluent+Jasper patchy_darkest=true swayimg=true haruna_dark=true no_pearl=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true boot_mark=true\n'
+printf 'dinx_theme_contract session=river appearance_selectable=true orchis_dark_default=true palette=true gtk_package=true qt=true qt_palette=true qt_session_seed=true dconf_scheme=true theme_sync_input=appearance.json theme_families=Skeuos+Orchis+Fluent+Jasper patchy_darkest=true swayimg=true haruna_dark=true no_pearl=true grub=true calamares=true branding=true wordmark_d_geometry=true ascii_logo=true boot_mark=true\n'

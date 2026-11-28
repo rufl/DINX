@@ -15,8 +15,6 @@ if not set -q XDG_CURRENT_DESKTOP
 end
 set -gx DINX_COLOR_SCHEME dark
 set -gx DINTOR_THEME prefer-dark
-set -gx ADW_COLOR_SCHEME_FORCE_DARK 1
-set -gx GTK_THEME 'DINX:dark'
 set -gx QT_STYLE_OVERRIDE fusion
 set -gx XCURSOR_THEME Adwaita
 set -gx XCURSOR_SIZE 24

@@ -15,6 +15,7 @@ boot_screenshot_delay=${DINX_QEMU_BOOT_SCREENSHOT_DELAY:-3}
 boot_keys=${DINX_QEMU_BOOT_KEYS:-}
 post_screenshot_path=${DINX_QEMU_POST_SCREENSHOT:-}
 post_screenshot_delay=${DINX_QEMU_POST_SCREENSHOT_DELAY:-10}
+post_keys=${DINX_QEMU_POST_KEYS:-}
 post_click=${DINX_QEMU_POST_CLICK:-}
 qemu_display=${DINX_QEMU_DISPLAY:-none}
 ocr_language=${DINX_QEMU_OCR_LANG:-eng}

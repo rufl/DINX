@@ -22,7 +22,7 @@ run_wizard() {
     if ! [ -x "$wizard" ]; then
         return 0
     fi
-    if GTK_THEME='DINX:dark' \
+    if GTK_THEME='Orchis-Dark' \
       GTK_APPLICATION_PREFER_DARK_THEME=1 \
       ADW_COLOR_SCHEME_FORCE_DARK=1 \
       "$wizard"; then

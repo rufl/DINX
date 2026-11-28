@@ -323,10 +323,12 @@ grep -Fq 'exec /usr/local/libexec/dinx-session-supervisor river' "$river_init" \
 if grep -Eq 'WLR_RENDERER_ALLOW_SOFTWARE|VK_DRIVER_FILES=.*lvp' "$river_session"; then
   fail 'River session still forces the failing software Vulkan path'
 fi
-grep -Fq "export GTK_THEME='DINX:dark'" "$river_session" "$shell_profile" \
-  || fail 'DINX session does not force the dark GTK theme'
-grep -Fq 'export ADW_COLOR_SCHEME_FORCE_DARK=1' "$river_session" "$shell_profile" \
-  || fail 'DINX session does not force dark libadwaita applications'
+if grep -Fq "export GTK_THEME='DINX:dark'" "$river_session" "$shell_profile"; then
+  fail 'River session still forces the retired DINX GTK theme'
+fi
+if grep -Fq 'export ADW_COLOR_SCHEME_FORCE_DARK=1' "$river_session" "$shell_profile"; then
+  fail 'River session overrides the user-selected libadwaita color scheme'
+fi
 if grep -Eiq 'systemd|systemctl|uwsm|labwc|noctalia|regreet' "$river_session" "$river_init" "$supervisor"; then
   fail 'River session path contains a retired session or systemd integration'
 fi

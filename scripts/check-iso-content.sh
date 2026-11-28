@@ -1698,7 +1698,7 @@ usr/local/share/applications/gparted.desktop|Partition Editor|Particionador|/usr
 usr/share/applications/paintfe.desktop|PaintFE|PaintFE|/usr/bin/paintfe %F
 usr/share/applications/eurooffice.desktop|EuroOffice|EuroOffice|/usr/local/bin/eurooffice %U
 usr/local/share/applications/swayimg.desktop|Image Viewer|Visualizador de Imagens|swayimg %F
-usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|env GTK_THEME=DINX GTK_APPLICATION_PREFER_DARK_THEME=1 g4music %U
+usr/local/share/applications/com.github.neithern.g4music.desktop|Music Player|Tocador de Música|g4music %U
 usr/local/share/applications/org.kde.haruna.desktop|Media Player|Tocador de Mídia|haruna %U
 usr/share/applications/com.orama_interactive.Pixelorama.desktop|Pixelorama|Pixelorama|pixelorama %u
 usr/local/share/applications/blueman-manager.desktop|Bluetooth|Bluetooth|/usr/local/libexec/dinx-bluetooth-manager

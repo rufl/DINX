@@ -18,8 +18,10 @@ trap cleanup EXIT HUP INT TERM
 home="$tmp/home"
 config_home="$tmp/config"
 profile="$tmp/dconf-profile"
-mkdir -p "$home" "$config_home/gtk-3.0" "$config_home/gtk-4.0" \
+runtime="$tmp/runtime"
+mkdir -p "$runtime" "$home" "$config_home/gtk-3.0" "$config_home/gtk-4.0" \
   "$config_home/qt6ct/colors" "$config_home/dconf"
+chmod 700 "$runtime"
 printf 'user-db:user\n' >"$profile"
 cp "$seed_palette" "$config_home/qt6ct/colors/DINX.conf"
 [[ -z "$(find "$config_home" \( -name 'preferences.json' -o -name 'last-good.json' \) -print -quit)" ]]
@@ -49,10 +51,10 @@ cat >"$tmp/appearance-port.json" <<'JSON'
 {"version":1,"theme":"Jasper","variant":"light","corners":"square"}
 JSON
 cat >"$tmp/appearance-invalid.json" <<'JSON'
-{"version":1,"theme":"Bogus","variant":"neon","corners":"diagonal"}
+{"version":1,"theme":"DINX","variant":"neon","corners":"diagonal"}
 JSON
 
-env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
+env HOME="$home" XDG_CONFIG_HOME="$config_home" XDG_RUNTIME_DIR="$runtime" DCONF_PROFILE="$profile" GIO_USE_VFS=local \
   dbus-run-session -- bash -c '
     set -euo pipefail
     theme_sync=$1
@@ -67,13 +69,13 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
       "$theme_sync" >"$tmp/stdout" 2>"$tmp/stderr"
     }
 
-    # No saved theme selection exists, yet the fixed dark appearance is applied.
+    # No saved theme selection exists, yet Orchis dark is applied by default.
     run_sync
     [[ $(dconf read "$color_scheme_key") == "'\''prefer-dark'\''" ]]
     for gtk_version in 3.0 4.0; do
       settings="$config_home/gtk-$gtk_version/settings.ini"
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 1 ]]
-      [[ $(ini_value "$settings" gtk-theme-name) == DINX ]]
+      [[ $(ini_value "$settings" gtk-theme-name) == Orchis-Dark ]]
       [[ $(ini_value "$settings" gtk-icon-theme-name) == Papirus ]]
       grep -Fqx "preserve-this=yes" "$settings"
     done
@@ -83,7 +85,7 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     [[ $(ini_value "$qt_config" icon_theme) == Papirus ]]
     [[ $(ini_value "$qt_config" style) == Fusion ]]
     grep -Fqx '\''general="Noto Sans,10"'\'' "$qt_config"
-    grep -Fq "gtk_theme=DINX prefer_dark=1" "$tmp/stdout"
+    grep -Fq "family=Orchis variant=dark corners=rounded gtk_theme=Orchis-Dark prefer_dark=1" "$tmp/stdout"
     [[ -z "$(find "$config_home" -name "*.tmp.*" -print -quit)" ]]
 
     # Idempotent: a second run changes nothing in the toolkit settings.
@@ -105,7 +107,7 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     [[ -L "$config_home/gtk-3.0/settings.ini" ]]
     grep -Fq "gtk-theme-name=UserChosen" "$symlink_target"
     grep -Fq "preserving user-managed symlink" "$tmp/stderr"
-    [[ $(ini_value "$config_home/gtk-4.0/settings.ini" gtk-theme-name) == DINX ]]
+    [[ $(ini_value "$config_home/gtk-4.0/settings.ini" gtk-theme-name) == Orchis-Dark ]]
 
     # A fresh account with no config tree is provisioned from scratch.
     fresh_config="$tmp/fresh-config"
@@ -114,12 +116,12 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     run_sync
     for gtk_version in 3.0 4.0; do
       settings="$fresh_config/gtk-$gtk_version/settings.ini"
-      [[ $(ini_value "$settings" gtk-theme-name) == DINX ]]
+      [[ $(ini_value "$settings" gtk-theme-name) == Orchis-Dark ]]
       [[ $(ini_value "$settings" gtk-application-prefer-dark-theme) == 1 ]]
     done
     [[ $(ini_value "$fresh_config/qt6ct/qt6ct.conf" custom_palette) == true ]]
 
-    # A saved DINX appearance selection drives the ported theme families and
+    # A saved appearance selection drives the ported GTK theme families and
     # their light/dark and rounded/square variants. The symlink-guard case above
     # left gtk-3.0 as a user symlink, so remove it and let the synchronizer
     # create a plain settings file again, keeping this block order-independent.
@@ -140,12 +142,13 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == false ]]
     grep -Fq "family=Jasper variant=light corners=square gtk_theme=Jasper-Square-Light prefer_dark=0" "$tmp/stdout"
 
-    # An unknown family, variant or corner value falls back to DINX dark.
+    # A retired DINX family and invalid variant/corner fall back to Orchis dark.
     cp "$tmp/appearance-invalid.json" "$config_home/dinx/appearance.json"
     run_sync
-    [[ $(ini_value "$config_home/gtk-3.0/settings.ini" gtk-theme-name) == DINX ]]
+    [[ $(ini_value "$config_home/gtk-3.0/settings.ini" gtk-theme-name) == Orchis-Dark ]]
     [[ $(ini_value "$config_home/gtk-4.0/settings.ini" gtk-application-prefer-dark-theme) == 1 ]]
     [[ $(ini_value "$config_home/qt6ct/qt6ct.conf" custom_palette) == true ]]
+    grep -Fq "family=Orchis variant=dark corners=rounded gtk_theme=Orchis-Dark prefer_dark=1" "$tmp/stdout"
     rm -f -- "$config_home/dinx/appearance.json"
 
     # With no config directory at all the synchronizer still succeeds.
@@ -154,4 +157,4 @@ env HOME="$home" XDG_CONFIG_HOME="$config_home" DCONF_PROFILE="$profile" \
     [[ ! -s "$tmp/empty-stdout" ]]
   ' smoke_dinx_theme_sync "$theme_sync" "$config_home" "$tmp"
 
-printf 'dinx_theme_sync_smoke dark_default=true appearance_selection=true ported_family_variant=true light_variant=true invalid_falls_back=true dconf_scheme=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true idempotent=true symlink_guard=true fresh_home=true empty_home=true\n'
+printf 'dinx_theme_sync_smoke orchis_dark_default=true appearance_selection=true ported_family_variant=true light_variant=true retired_family_fallback=true dconf_scheme=true gtk3=true gtk4=true qt6=true papirus_default=true icon_settings_preserved=true idempotent=true symlink_guard=true fresh_home=true empty_home=true\n'

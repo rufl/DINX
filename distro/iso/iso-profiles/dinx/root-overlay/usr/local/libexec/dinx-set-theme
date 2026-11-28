@@ -44,7 +44,7 @@ if [ -f "$appearance" ]; then
     jq --arg variant "$variant" '.variant = $variant' "$appearance" >"$tmp"
     mode=$(stat -c '%a' -- "$appearance" 2>/dev/null || printf '600')
 else
-    printf '{"version":1,"theme":"DINX","variant":"%s","corners":"rounded"}\n' "$variant" >"$tmp"
+    printf '{"version":1,"theme":"Orchis","variant":"%s","corners":"rounded"}\n' "$variant" >"$tmp"
     mode=600
 fi
 

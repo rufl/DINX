@@ -18,11 +18,11 @@ else
 fi
 
 appearance=$config_home/dinx/appearance.json
-theme_family=DINX
+theme_family=Orchis
 theme_variant=dark
 theme_corners=rounded
 if command -v jq >/dev/null 2>&1 && [ -r "$appearance" ]; then
-  parsed_theme=$(jq -er '.theme | select(. == "DINX" or . == "Skeuos" or . == "Orchis" or . == "Fluent" or . == "Jasper")' "$appearance" 2>/dev/null) || parsed_theme=
+  parsed_theme=$(jq -er '.theme | select(. == "Skeuos" or . == "Orchis" or . == "Fluent" or . == "Jasper")' "$appearance" 2>/dev/null) || parsed_theme=
   parsed_corners=$(jq -er '.corners | select(. == "rounded" or . == "square")' "$appearance" 2>/dev/null) || parsed_corners=
   parsed_variant=$(jq -er '.variant | select(. == "dark" or . == "light")' "$appearance" 2>/dev/null) || parsed_variant=
   if [ -n "$parsed_theme" ]; then
@@ -50,10 +50,9 @@ else
   square=0
 fi
 
-# DINX is the built-in root-overlay theme and has no rounded/square packaging
-# split. The four ported families resolve to exact /usr/share/themes directory
-# names shipped by dinx-gtk-themes; note Skeuos appends its corner suffix after
-# the variant while the other three brands place it before.
+# The four ported families resolve to exact /usr/share/themes directory names
+# shipped by dinx-gtk-themes; note Skeuos appends its corner suffix after the
+# variant while the other three brands place it before.
 case $theme_family in
   Skeuos)
     if [ "$square" = 1 ]; then
@@ -84,7 +83,7 @@ case $theme_family in
     fi
     ;;
   *)
-    gtk_theme=DINX
+    gtk_theme=Orchis-$variant_suffix
     ;;
 esac
 

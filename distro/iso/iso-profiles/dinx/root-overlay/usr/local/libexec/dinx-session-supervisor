@@ -178,9 +178,10 @@ if command -v gsettings >/dev/null 2>&1 \
 fi
 start_required shell morghulis
 start_optional dock dinx-dock
-# The desktop surface is a required part of the main session: without this
-# child PCManFM cannot provide desktop icons or the right-click menu.
-start_required desktop "$libexec_dir/dinx-pcmanfm-desktop"
+# The desktop surface is best-effort: a PCManFM/display startup failure must
+# not tear down River. The helper still owns the live desktop icons and menu
+# when it starts successfully.
+start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"
 start_optional bc250 bc250-control-centerd
 # KWM is supervised above as a required session component. Its default build
 # starts KWIM for river-input-management-v1.

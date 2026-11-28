@@ -132,7 +132,7 @@ sh -n "$logout" || fail 'logout helper has invalid shell syntax'
 sh -n "$desktop_surface" || fail 'PCManFM desktop wrapper has invalid shell syntax'
 grep -Fq 'show_desktop=1' "$desktop_surface" || fail 'PCManFM profile does not force desktop icons'
 grep -Fq 'show_wm_menu=0' "$desktop_surface" || fail 'PCManFM profile does not enable the PCManFM desktop context menu'
-grep -Fq 'start_required desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$supervisor" || fail 'PCManFM desktop surface is not required in the main session'
+grep -Fq 'start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$supervisor" || fail 'PCManFM desktop surface is not an optional helper in the main session'
 [[ -x "$desktop_installer" ]] || fail 'live installer desktop shortcut is not executable'
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_bytes(), sys.argv[1], "exec")' "$desktop_approval" \
   || fail 'desktop approval helper has invalid Python syntax'

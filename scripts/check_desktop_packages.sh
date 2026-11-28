@@ -121,8 +121,8 @@ grep -Fqx 'MimeType=inode/directory;' "$pcmanfm_override" || fail 'the pcmanfm d
 if grep -Eq '^(Hidden|NoDisplay)=true$' "$pcmanfm_override"; then
   fail 'the pcmanfm desktop override is hidden'
 fi
-grep -Fq 'start_required desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
-  || fail 'the DINX session supervisor does not require the PCManFM desktop surface'
+grep -Fq 'start_optional desktop "$libexec_dir/dinx-pcmanfm-desktop"' "$root/distro/iso/iso-profiles/dinx/root-overlay/usr/local/libexec/dinx-session-supervisor" \
+  || fail 'the DINX session supervisor does not start the PCManFM desktop surface as an optional helper'
 if grep -Fq 'floorp.desktop\|onlyoffice.desktop' "$mimeapps"; then
   fail 'MIME defaults retain a retired browser or office desktop entry'
 fi

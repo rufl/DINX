@@ -88,6 +88,17 @@ for helper in kwm shikane lxqt-policykit-agent dinx-idle morghulis; do
     exit 1
   }
 done
+kill -TERM "$(cat "$state/dinx-pcmanfm-desktop.pid")"
+/usr/bin/sleep 1
+grep -Fqx 'status=ready' "$XDG_STATE_HOME/dinx/session.status" || {
+  printf 'dinx_session_supervisor_smoke: optional PCManFM failure tore down the session\n' >&2
+  exit 1
+}
+if ! kill -0 "$supervisor_pid" 2>/dev/null; then
+  printf 'dinx_session_supervisor_smoke: supervisor exited after optional PCManFM failure\n' >&2
+  exit 1
+fi
+
 if [ ! -e "$state/first-run-ran" ]; then
   printf 'dinx_session_supervisor_smoke: the first-run helper never completed before the shell started\n' >&2
   exit 1

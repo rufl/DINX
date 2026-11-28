@@ -259,6 +259,9 @@ fi
 
 printf '\nMODULES=(virtio virtio_pci virtio_blk ata_generic ata_piix ext4)\n' >> "$target_dir/etc/mkinitcpio.conf"
 printf '\nGRUB_CMDLINE_LINUX="console=tty0 console=ttyS0"\nGRUB_DEFAULT=0\nGRUB_SAVEDEFAULT=false\nGRUB_DISABLE_OS_PROBER=true\nGRUB_TIMEOUT=1\nGRUB_TIMEOUT_STYLE=hidden\n' >> "$target_dir/etc/default/grub"
+mkdir -p "$target_dir/etc/default/grub.d"
+printf '# Keep the smoke test independent of host disks exposed through /dev.\nGRUB_DISABLE_OS_PROBER=true\n' \
+  > "$target_dir/etc/default/grub.d/99-dinx-smoke-isolation.cfg"
 printf 'smoke-install: generating the installed initramfs\n'
 chroot "$target_dir" /usr/bin/mkinitcpio -P >/dev/null
 
